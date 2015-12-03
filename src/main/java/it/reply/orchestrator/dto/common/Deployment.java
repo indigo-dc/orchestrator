@@ -1,6 +1,7 @@
 package it.reply.orchestrator.dto.common;
 
 import it.reply.orchestrator.enums.Status;
+import it.reply.orchestrator.enums.Tasks;
 
 import java.util.Date;
 import java.util.List;
@@ -10,7 +11,6 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 import org.springframework.hateoas.Identifiable;
-import org.springframework.scheduling.config.Task;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
@@ -30,7 +30,7 @@ public class Deployment implements Identifiable<String> {
   @JsonProperty("status")
   private Status status;
   @JsonProperty("task")
-  private Task task;
+  private Tasks task;
   @JsonProperty("resources")
   private List<Resource> resources;
 
@@ -159,7 +159,7 @@ public class Deployment implements Identifiable<String> {
    * @return The task.
    */
   @JsonProperty("task")
-  public Task getTask() {
+  public Tasks getTask() {
     return task;
   }
 
@@ -169,11 +169,11 @@ public class Deployment implements Identifiable<String> {
    *          The task.
    */
   @JsonProperty("task")
-  public void setTask(Task task) {
+  public void setTask(Tasks task) {
     this.task = task;
   }
 
-  public Deployment withTask(Task task) {
+  public Deployment withTask(Tasks task) {
     this.task = task;
     return this;
   }
