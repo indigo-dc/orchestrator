@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
-import it.reply.orchestrator.exception.NotFoudException;
+import it.reply.orchestrator.exception.http.NotFoudException;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
 
 @Service

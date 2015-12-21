@@ -1,10 +1,12 @@
 package it.reply.orchestrator.exception;
 
 import it.reply.orchestrator.dto.common.Error;
+import it.reply.orchestrator.exception.http.NotFoudException;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -54,6 +56,12 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
 
     return new Error().withCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
         .withTitle(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase()).withMessage(ex.getMessage());
+  }
+
+  protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
+      HttpHeaders headers, HttpStatus status, WebRequest request) {
+
+    return handleResponse(ex, headers, status);
   }
 
   /**

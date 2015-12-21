@@ -25,7 +25,7 @@ import it.reply.orchestrator.dto.im.InfrastructureStatus;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Tasks;
-import it.reply.orchestrator.exception.DeploymentException;
+import it.reply.orchestrator.exception.service.DeploymentException;
 
 @Service
 @PropertySource("classpath:im-config/im-java-api.properties")
