@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
+import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.exception.http.NotFoudException;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
 
@@ -36,7 +37,7 @@ public class DeploymentServiceImpl implements DeploymentService {
   }
 
   @Override
-  public Deployment createDeployment(Deployment request) {
+  public Deployment createDeployment(DeploymentRequest request) {
 
     Deployment deployment = new Deployment();
     deployment.setParameters(request.getParameters());

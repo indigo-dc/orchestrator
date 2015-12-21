@@ -7,7 +7,7 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 //@JsonPropertyOrder({ "template", "parameters" })
-public class Deployment {
+public class DeploymentRequest {
 
   // @JsonProperty("template")
   private String template;
@@ -34,7 +34,7 @@ public class Deployment {
     this.template = template;
   }
 
-  public Deployment withTemplate(String template) {
+  public DeploymentRequest withTemplate(String template) {
     this.template = template;
     return this;
   }
@@ -59,7 +59,7 @@ public class Deployment {
     this.parameters = parameters;
   }
 
-  public Deployment withParameters(Map<String, String> parameters) {
+  public DeploymentRequest withParameters(Map<String, String> parameters) {
     this.parameters = parameters;
     return this;
   }
@@ -79,10 +79,10 @@ public class Deployment {
     if (other == this) {
       return true;
     }
-    if ((other instanceof Deployment) == false) {
+    if ((other instanceof DeploymentRequest) == false) {
       return false;
     }
-    Deployment rhs = ((Deployment) other);
+    DeploymentRequest rhs = ((DeploymentRequest) other);
     return new EqualsBuilder().append(template, rhs.template).append(parameters, rhs.parameters)
         .isEquals();
   }
