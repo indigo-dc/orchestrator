@@ -1,64 +1,58 @@
 package it.reply.orchestrator.service;
 
-import it.reply.orchestrator.controller.DeploymentController;
-import it.reply.orchestrator.dto.common.Deployment;
-import it.reply.orchestrator.dto.common.Link;
-import it.reply.orchestrator.dto.request.DeploymentRequest;
-import it.reply.orchestrator.exception.NotFoudException;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
-
-import org.springframework.hateoas.mvc.ControllerLinkBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.repository.DeploymentRepository;
+import it.reply.orchestrator.exception.NotFoudException;
+import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
 
 @Service
 public class DeploymentServiceImpl implements DeploymentService {
 
-  private Map<String, Deployment> deployments = new ConcurrentHashMap<String, Deployment>();
+  @Autowired
+  private DeploymentRepository deploymentRepository;
+
+  // TODO no choice of the deploymentProvider
+  @Autowired
+  private DeploymentProviderService imService;
 
   @Override
-  public Map<String, Deployment> getDeployments() {
-    return deployments;
+  public Page<Deployment> getDeployments(Pageable pageable) {
+    return deploymentRepository.findAll(pageable);
   }
 
   @Override
-  public Deployment getDeployment(String id) {
-    if (deployments.containsKey(id)) {
-      return deployments.get(id);
+  public Deployment getDeployment(String uuid) {
+
+    if (deploymentRepository.exists(uuid)) {
+      return deploymentRepository.findOne(uuid);
     } else {
-      throw new NotFoudException("The Deployment <" + id + "> doesn't exist");
+      throw new NotFoudException("The Deployment <" + uuid + "> doesn't exist");
     }
   }
 
   @Override
-  public Deployment createDeployment(DeploymentRequest request) {
-    // dummy request handling
-    String id = UUID.randomUUID().toString();
+  public Deployment createDeployment(Deployment request) {
+
     Deployment deployment = new Deployment();
-    deployment.withId(id);
-    org.springframework.hateoas.Link hateoasLink = ControllerLinkBuilder
-        .linkTo(DeploymentController.class).slash("deployments").slash(deployment).withSelfRel();
+    deployment.setParameters(request.getParameters());
+    deployment.setTemplate(request.getTemplate());
+    deployment = deploymentRepository.save(deployment);
 
-    Link link = new Link().withHref(hateoasLink.getHref()).withRel(
-        org.springframework.hateoas.Link.REL_SELF);
-
-    List<Link> links = new ArrayList<Link>();
-    links.add(link);
-    deployment.withLinks(links);
-    deployments.put(id, deployment);
+    imService.doDeploy(deployment.getId());
     return deployment;
   }
 
   @Override
-  public void deleteDeployment(String id) {
-    if (deployments.containsKey(id)) {
-      deployments.remove(id);
+  public void deleteDeployment(String uuid) {
+    if (deploymentRepository.exists(uuid)) {
+      deploymentRepository.delete(uuid);
     } else {
-      throw new NotFoudException("The Deployment <" + id + "> doesn't exist");
+      throw new NotFoudException("The Deployment <" + uuid + "> doesn't exist");
     }
   }
 

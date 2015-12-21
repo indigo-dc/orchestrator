@@ -1,17 +1,17 @@
 package it.reply.orchestrator.service;
 
-import it.reply.orchestrator.dto.common.Deployment;
-import it.reply.orchestrator.dto.request.DeploymentRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
-import java.util.Map;
+import it.reply.orchestrator.dal.entity.Deployment;
 
 public interface DeploymentService {
 
-  public Map<String, Deployment> getDeployments();
+  public Page<Deployment> getDeployments(Pageable pageable);
 
   public Deployment getDeployment(String id);
 
-  public Deployment createDeployment(DeploymentRequest request);
+  public Deployment createDeployment(Deployment request);
 
   public void deleteDeployment(String id);
 }

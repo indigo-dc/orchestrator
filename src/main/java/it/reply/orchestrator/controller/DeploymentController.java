@@ -1,16 +1,13 @@
 package it.reply.orchestrator.controller;
 
-import it.reply.orchestrator.dto.common.Deployment;
-import it.reply.orchestrator.dto.request.DeploymentRequest;
-import it.reply.orchestrator.dto.response.Deployments;
-import it.reply.orchestrator.service.DeploymentService;
-
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.PagedResources;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,6 +17,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.resource.DeploymentResource;
+import it.reply.orchestrator.resource.DeploymentResourceAssembler;
+import it.reply.orchestrator.service.DeploymentService;
+
 @RestController
 public class DeploymentController {
 
@@ -28,27 +30,48 @@ public class DeploymentController {
   @Autowired
   private DeploymentService deploymentService;
 
-  @RequestMapping(value = "/deployments", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  public Deployments getDeployments() {
-    LOG.trace("Invoked method: getDeployments");
-    List<Deployment> deployments = new ArrayList<Deployment>(deploymentService.getDeployments()
-        .values());
+  @Autowired
+  DeploymentResourceAssembler deploymentResourceAssembler;
 
-    return new Deployments().withDeployments(deployments);
+  @ResponseStatus(HttpStatus.OK)
+  @RequestMapping(value = "/", method = RequestMethod.GET)
+  public String getOrchestrator() {
+
+    return "INDIGO-Orchestrator";
+  }
+
+  @ResponseStatus(HttpStatus.OK)
+  @RequestMapping(value = "/deployments", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  public PagedResources<DeploymentResource> getDeployments(@PageableDefault Pageable pageable,
+      PagedResourcesAssembler<Deployment> pagedAssembler) {
+
+    LOG.trace("Invoked method: getDeployments");
+
+    Page<Deployment> deployments = deploymentService.getDeployments(pageable);
+
+    PagedResources<DeploymentResource> pagedDeploymentResources = pagedAssembler
+        .toResource(deployments, deploymentResourceAssembler);
+
+    return pagedDeploymentResources;
   }
 
   @ResponseStatus(HttpStatus.CREATED)
   @RequestMapping(value = "/deployments", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-  public Deployment createDeployment(@RequestBody DeploymentRequest request) {
+  public DeploymentResource createDeployment(@RequestBody Deployment request) {
+
     LOG.trace("Invoked method: createDeployment with parameter " + request.toString());
-    return deploymentService.createDeployment(request);
+    Deployment deployment = deploymentService.createDeployment(request);
+    return deploymentResourceAssembler.toResource(deployment);
+
   }
 
+  @ResponseStatus(HttpStatus.OK)
   @RequestMapping(value = "/deployments/{deploymentId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  public Deployment getDeployment(@PathVariable("deploymentId") String id) {
+  public DeploymentResource getDeployment(@PathVariable("deploymentId") String id) {
 
     LOG.trace("Invoked method: getDeployment with id: " + id);
-    return deploymentService.getDeployment(id);
+    Deployment deployment = deploymentService.getDeployment(id);
+    return deploymentResourceAssembler.toResource(deployment);
   }
 
   @ResponseStatus(HttpStatus.NO_CONTENT)

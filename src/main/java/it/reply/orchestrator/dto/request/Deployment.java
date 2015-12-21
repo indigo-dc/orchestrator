@@ -1,27 +1,25 @@
 package it.reply.orchestrator.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
+import java.util.Map;
+
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-import java.util.Map;
+//@JsonPropertyOrder({ "template", "parameters" })
+public class Deployment {
 
-@JsonPropertyOrder({ "template", "parameters" })
-public class DeploymentRequest {
-
-  @JsonProperty("template")
+  // @JsonProperty("template")
   private String template;
-  @JsonProperty("parameters")
-  private Map<String, Object> parameters;
+  // @JsonProperty("parameters")
+  private Map<String, String> parameters;
 
   /**
    * A string containing a TOSCA YAML-formatted template.
    * 
    * @return The template
    */
-  @JsonProperty("template")
+  // @JsonProperty("template")
   public String getTemplate() {
     return template;
   }
@@ -29,14 +27,14 @@ public class DeploymentRequest {
   /**
    * 
    * @param template
-   *          The template.
+   *          The TOSCA YAML-formatted template.
    */
-  @JsonProperty("template")
+  // @JsonProperty("template")
   public void setTemplate(String template) {
     this.template = template;
   }
 
-  public DeploymentRequest withTemplate(String template) {
+  public Deployment withTemplate(String template) {
     this.template = template;
     return this;
   }
@@ -46,8 +44,8 @@ public class DeploymentRequest {
    * 
    * @return The parameters
    */
-  @JsonProperty("parameters")
-  public Map<String, Object> getParameters() {
+  // @JsonProperty("parameters")
+  public Map<String, String> getParameters() {
     return parameters;
   }
 
@@ -56,12 +54,12 @@ public class DeploymentRequest {
    * @param parameters
    *          The parameters.
    */
-  @JsonProperty("parameters")
-  public void setParameters(Map<String, Object> parameters) {
+  // @JsonProperty("parameters")
+  public void setParameters(Map<String, String> parameters) {
     this.parameters = parameters;
   }
 
-  public DeploymentRequest withParameters(Map<String, Object> parameters) {
+  public Deployment withParameters(Map<String, String> parameters) {
     this.parameters = parameters;
     return this;
   }
@@ -81,10 +79,10 @@ public class DeploymentRequest {
     if (other == this) {
       return true;
     }
-    if ((other instanceof DeploymentRequest) == false) {
+    if ((other instanceof Deployment) == false) {
       return false;
     }
-    DeploymentRequest rhs = ((DeploymentRequest) other);
+    Deployment rhs = ((Deployment) other);
     return new EqualsBuilder().append(template, rhs.template).append(parameters, rhs.parameters)
         .isEquals();
   }

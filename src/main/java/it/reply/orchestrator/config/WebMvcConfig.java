@@ -4,15 +4,17 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.web.servlet.config.annotation.DefaultServletHandlerConfigurer;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 @Configuration
+@EnableWebMvc
+@EnableSpringDataWebSupport
 @ComponentScan(basePackages = { "it.reply.orchestrator" })
-// basePackageClasses = Application.class, includeFilters = @Filter(Controller.class),
-// useDefaultFilters = false)
 public class WebMvcConfig extends WebMvcConfigurationSupport {
 
   private static final String RESOURCES_LOCATION = "/resources/";

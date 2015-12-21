@@ -1,10 +1,10 @@
 package it.reply.orchestrator.config;
 
-import javax.servlet.Filter;
-import javax.servlet.ServletRegistration;
-
 import org.springframework.web.filter.CharacterEncodingFilter;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
+
+import javax.servlet.Filter;
+import javax.servlet.ServletRegistration;
 
 public class WebAppInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
 
@@ -33,9 +33,15 @@ public class WebAppInitializer extends AbstractAnnotationConfigDispatcherServlet
     return new Filter[] { characterEncodingFilter };
   }
 
+  /**
+   * Set to throw a NoHandlerFoundException when no Handler was found.
+   */
   @Override
   protected void customizeRegistration(ServletRegistration.Dynamic registration) {
-    registration.setInitParameter("defaultHtmlEscape", "true");
-    registration.setInitParameter("spring.profiles.active", "default");
+    // registration.setInitParameter("defaultHtmlEscape", "true");
+    // registration.setInitParameter("spring.profiles.active", "default");
+
+    registration.setInitParameter("throwExceptionIfNoHandlerFound", "true");
+
   }
 }
