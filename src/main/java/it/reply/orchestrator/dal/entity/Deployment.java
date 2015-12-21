@@ -1,7 +1,7 @@
 package it.reply.orchestrator.dal.entity;
 
 import it.reply.orchestrator.enums.DeploymentProvider;
-import it.reply.orchestrator.enums.Tasks;
+import it.reply.orchestrator.enums.Task;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,7 +18,7 @@ public class Deployment extends AbstractResourceEntity {
 
   @Enumerated(EnumType.STRING)
   @Column(name = "task")
-  private Tasks task;
+  private Task task;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "deploymentProvider")
@@ -39,11 +39,11 @@ public class Deployment extends AbstractResourceEntity {
     super();
   }
 
-  public Tasks getTask() {
+  public Task getTask() {
     return task;
   }
 
-  public void setTask(Tasks task) {
+  public void setTask(Task task) {
     this.task = task;
   }
 

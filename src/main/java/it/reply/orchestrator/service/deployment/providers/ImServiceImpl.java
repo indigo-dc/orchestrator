@@ -1,7 +1,9 @@
 package it.reply.orchestrator.service.deployment.providers;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Paths;
 
 import javax.annotation.PostConstruct;
 
@@ -24,7 +26,7 @@ import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dto.im.InfrastructureStatus;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.Status;
-import it.reply.orchestrator.enums.Tasks;
+import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.DeploymentException;
 
 @Service
@@ -55,7 +57,13 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
    */
   @PostConstruct
   private void init() throws AuthFileNotFoundException, IOException, URISyntaxException {
-    imClient = new InfrastructureManagerApiClient(IM_URL, AUTH_FILE_PATH);
+    String completeFilePath = ImServiceImpl.class.getClassLoader().getResource(AUTH_FILE_PATH)
+        .toURI().getPath();
+
+    // remove initial slash from windows paths
+    completeFilePath = completeFilePath.replaceFirst("^/(.:/)", "$1");
+
+    imClient = new InfrastructureManagerApiClient(IM_URL, completeFilePath);
   }
 
   @Override
@@ -63,37 +71,37 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     Deployment deployment = deploymentRepository.findOne(deploymentUuid);
     try {
       // Update status of the deployment
-      deployment.setTask(Tasks.DEPLOY);
+      deployment.setTask(Task.DEPLOY);
       deployment.setDeploymentProvider(DeploymentProvider.IM);
-      deploymentRepository.save(deployment);
+      deployment = deploymentRepository.save(deployment);
 
       ServiceResponse response = imClient.createInfrastructure(deployment.getTemplate());
       if (!response.isReponseSuccessful()) {
-        deployment = deploymentRepository.findOne(deploymentUuid);
+        // deployment = deploymentRepository.findOne(deploymentUuid);
         deployment.setStatus(Status.CREATE_FAILED);
         deployment.setStatusReason(response.getReasonPhrase());
-        deploymentRepository.save(deployment);
+        deployment = deploymentRepository.save(deployment);
       } else {
         String[] parsedURI = response.getResult().split("/");
         infrastructureId = parsedURI[parsedURI.length - 1];
-        deployment = deploymentRepository.findOne(deploymentUuid);
+        // deployment = deploymentRepository.findOne(deploymentUuid);
         deployment.setEndpoint(infrastructureId);
-        deploymentRepository.save(deployment);
+        deployment = deploymentRepository.save(deployment);
         try {
           boolean result = doPoller();
           if (result) {
-            updateSuccess(deploymentUuid);
+            updateOnSuccess(deploymentUuid);
           } else {
-            updateError(deploymentUuid);
+            updateOnError(deploymentUuid);
           }
         } catch (Exception e) {
           LOG.error(e);
-          updateError(deploymentUuid);
+          updateOnError(deploymentUuid);
         }
       }
     } catch (AuthFileNotFoundException e) {
       LOG.error(e);
-      updateError(deploymentUuid);
+      updateOnError(deploymentUuid);
     }
   }
 
