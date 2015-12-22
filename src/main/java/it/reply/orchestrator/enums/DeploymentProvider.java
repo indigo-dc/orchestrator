@@ -2,5 +2,11 @@ package it.reply.orchestrator.enums;
 
 public enum DeploymentProvider {
 
-  IM, HEAT, CRHONOS, MARATHON;
+  //@formatter:off
+  IM,
+  HEAT,
+  CHRONOS,
+  MARATHON;
+  //@formatter:on
+
 }

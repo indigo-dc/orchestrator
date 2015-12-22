@@ -7,13 +7,13 @@ import java.util.Map;
 import org.springframework.hateoas.Link;
 
 import it.reply.orchestrator.enums.Status;
-import it.reply.orchestrator.enums.Tasks;
+import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.resource.common.AbstractResource;
 
 public class DeploymentResource extends AbstractResource {
 
   private Map<String, Object> outputs;
-  private Tasks task;
+  private Task task;
   private List<BaseResource> resources;
 
   public DeploymentResource() {
@@ -21,7 +21,7 @@ public class DeploymentResource extends AbstractResource {
   }
 
   public DeploymentResource(String uuid, List<Link> links, Map<String, Object> outputs,
-      Date creationTime, Status status, Tasks task, List<BaseResource> resources) {
+      Date creationTime, Status status, Task task, List<BaseResource> resources) {
     super(uuid, creationTime, status);
     this.outputs = outputs;
     this.task = task;
@@ -36,11 +36,11 @@ public class DeploymentResource extends AbstractResource {
     this.outputs = outputs;
   }
 
-  public Tasks getTask() {
+  public Task getTask() {
     return task;
   }
 
-  public void setTask(Tasks task) {
+  public void setTask(Task task) {
     this.task = task;
   }
 

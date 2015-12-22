@@ -76,7 +76,7 @@ public class DeploymentController {
   }
 
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @RequestMapping(value = "/deployments/{deploymentId}", method = RequestMethod.DELETE)
+  @RequestMapping(value = "/deployments/{deploymentId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
   public void deleteDeployment(@PathVariable("deploymentId") String id) {
 
     LOG.trace("Invoked method: getDeployment with id: " + id);

@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
+import it.reply.orchestrator.enums.Status;
+import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.exception.http.NotFoudException;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
@@ -29,8 +31,9 @@ public class DeploymentServiceImpl implements DeploymentService {
   @Override
   public Deployment getDeployment(String uuid) {
 
-    if (deploymentRepository.exists(uuid)) {
-      return deploymentRepository.findOne(uuid);
+    Deployment deployment = deploymentRepository.findOne(uuid);
+    if (deployment != null) {
+      return deployment;
     } else {
       throw new NotFoudException("The Deployment <" + uuid + "> doesn't exist");
     }
@@ -40,6 +43,8 @@ public class DeploymentServiceImpl implements DeploymentService {
   public Deployment createDeployment(DeploymentRequest request) {
 
     Deployment deployment = new Deployment();
+    deployment.setStatus(Status.CREATE_IN_PROGRESS);
+    deployment.setTask(Task.NONE);
     deployment.setParameters(request.getParameters());
     deployment.setTemplate(request.getTemplate());
     deployment = deploymentRepository.save(deployment);
@@ -50,8 +55,9 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   @Override
   public void deleteDeployment(String uuid) {
-    if (deploymentRepository.exists(uuid)) {
-      deploymentRepository.delete(uuid);
+    Deployment deployment = deploymentRepository.findOne(uuid);
+    if (deployment != null) {
+      deploymentRepository.delete(deployment);
     } else {
       throw new NotFoudException("The Deployment <" + uuid + "> doesn't exist");
     }

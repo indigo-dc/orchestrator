@@ -30,7 +30,7 @@ public class PersistenceConfig {
 
   private static final String ENTITY_MANAGER_PACKAGE_TO_SCAN = "entitymanager.packages.to.scan";
   private static final String HIBERNATE_HBM2DDL_AUTO = "hibernate.hbm2ddl.auto";
-  private static final String HIBERNATE_DIALETIC = "hibernate.dialect";
+  private static final String HIBERNATE_DIALECT = "hibernate.dialect";
 
   @Resource
   private Environment env;
@@ -64,7 +64,7 @@ public class PersistenceConfig {
 
     Properties jpaProperties = new Properties();
     jpaProperties.put(HIBERNATE_HBM2DDL_AUTO, env.getProperty(HIBERNATE_HBM2DDL_AUTO));
-    jpaProperties.put(HIBERNATE_DIALETIC, env.getProperty(HIBERNATE_DIALETIC));
+    jpaProperties.put(HIBERNATE_DIALECT, env.getProperty(HIBERNATE_DIALECT));
     factory.setJpaProperties(jpaProperties);
 
     factory.afterPropertiesSet();
