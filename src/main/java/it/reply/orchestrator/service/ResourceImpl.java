@@ -2,7 +2,7 @@ package it.reply.orchestrator.service;
 
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
-import it.reply.orchestrator.exception.NotFoudException;
+import it.reply.orchestrator.exception.http.NotFoudException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;

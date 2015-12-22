@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.resource.DeploymentResource;
 import it.reply.orchestrator.resource.DeploymentResourceAssembler;
 import it.reply.orchestrator.service.DeploymentService;
@@ -57,7 +58,7 @@ public class DeploymentController {
 
   @ResponseStatus(HttpStatus.CREATED)
   @RequestMapping(value = "/deployments", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-  public DeploymentResource createDeployment(@RequestBody Deployment request) {
+  public DeploymentResource createDeployment(@RequestBody DeploymentRequest request) {
 
     LOG.trace("Invoked method: createDeployment with parameter " + request.toString());
     Deployment deployment = deploymentService.createDeployment(request);
@@ -75,7 +76,7 @@ public class DeploymentController {
   }
 
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @RequestMapping(value = "/deployments/{deploymentId}", method = RequestMethod.DELETE)
+  @RequestMapping(value = "/deployments/{deploymentId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
   public void deleteDeployment(@PathVariable("deploymentId") String id) {
 
     LOG.trace("Invoked method: getDeployment with id: " + id);

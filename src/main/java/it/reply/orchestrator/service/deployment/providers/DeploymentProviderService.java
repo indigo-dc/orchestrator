@@ -2,7 +2,7 @@ package it.reply.orchestrator.service.deployment.providers;
 
 import org.springframework.scheduling.annotation.Async;
 
-import it.reply.orchestrator.exception.DeploymentException;
+import it.reply.orchestrator.exception.service.DeploymentException;
 
 public interface DeploymentProviderService {
 

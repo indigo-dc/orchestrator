@@ -9,7 +9,8 @@ import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
-import it.reply.orchestrator.exception.NotFoudException;
+import it.reply.orchestrator.dto.request.DeploymentRequest;
+import it.reply.orchestrator.exception.http.NotFoudException;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
 
 @Service
@@ -39,7 +40,7 @@ public class DeploymentServiceImpl implements DeploymentService {
   }
 
   @Override
-  public Deployment createDeployment(Deployment request) {
+  public Deployment createDeployment(DeploymentRequest request) {
 
     Deployment deployment = new Deployment();
     deployment.setStatus(Status.CREATE_IN_PROGRESS);

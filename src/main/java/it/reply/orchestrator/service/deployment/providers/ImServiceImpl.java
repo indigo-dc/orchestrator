@@ -27,7 +27,7 @@ import it.reply.orchestrator.dto.im.InfrastructureStatus;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
-import it.reply.orchestrator.exception.DeploymentException;
+import it.reply.orchestrator.exception.service.DeploymentException;
 
 @Service
 @PropertySource("classpath:im-config/im-java-api.properties")
@@ -77,14 +77,12 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
       ServiceResponse response = imClient.createInfrastructure(deployment.getTemplate());
       if (!response.isReponseSuccessful()) {
-        // deployment = deploymentRepository.findOne(deploymentUuid);
         deployment.setStatus(Status.CREATE_FAILED);
         deployment.setStatusReason(response.getReasonPhrase());
         deployment = deploymentRepository.save(deployment);
       } else {
         String[] parsedURI = response.getResult().split("/");
         infrastructureId = parsedURI[parsedURI.length - 1];
-        // deployment = deploymentRepository.findOne(deploymentUuid);
         deployment.setEndpoint(infrastructureId);
         deployment = deploymentRepository.save(deployment);
         try {

@@ -102,7 +102,6 @@
 			<artifactId>jackson-databind</artifactId>
 			<version>${jackson.version}</version>
 		</dependency>
-
 		<dependency>
 			<groupId>es.upv.i3m.grycap</groupId>
 			<artifactId>im-java-api</artifactId>
@@ -135,6 +134,7 @@
 			<version>${mockito.version}</version>
 			<scope>test</scope>
 		</dependency>
+		
 		<dependency>
 			<groupId>com.jayway.jsonpath</groupId>
 			<artifactId>json-path</artifactId>
