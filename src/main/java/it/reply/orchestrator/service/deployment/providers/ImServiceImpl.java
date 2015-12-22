@@ -1,9 +1,8 @@
 package it.reply.orchestrator.service.deployment.providers;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Paths;
+import java.util.Map;
 
 import javax.annotation.PostConstruct;
 
@@ -22,7 +21,9 @@ import es.upv.i3m.grycap.im.client.ServiceResponse;
 import es.upv.i3m.grycap.im.exceptions.AuthFileNotFoundException;
 import it.reply.orchestrator.controller.DeploymentController;
 import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
+import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.im.InfrastructureStatus;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.Status;
@@ -41,12 +42,16 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   @Value("${auth.file.path}")
   private String AUTH_FILE_PATH;
 
+  @Autowired
+  private DeploymentRepository deploymentRepository;
+
+  @Autowired
+  private ResourceRepository resourceRepository;
+
   private InfrastructureManagerApiClient imClient;
 
   private String infrastructureId;
-
-  @Autowired
-  private DeploymentRepository deploymentRepository;
+  private InfrastructureStatus status;
 
   /**
    * Initialize the {@link InfrastructureManagerApiClient}.
@@ -75,6 +80,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       deployment.setDeploymentProvider(DeploymentProvider.IM);
       deployment = deploymentRepository.save(deployment);
 
+      // TODO improve with template inputs
       ServiceResponse response = imClient.createInfrastructure(deployment.getTemplate());
       if (!response.isReponseSuccessful()) {
         deployment.setStatus(Status.CREATE_FAILED);
@@ -88,7 +94,16 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         try {
           boolean result = doPoller();
           if (result) {
+            // Update the deployment entity
             updateOnSuccess(deploymentUuid);
+            Resource resource;
+            for (Map.Entry<String, String> entry : status.getVmStates().entrySet()) {
+              resource = new Resource();
+              resource.setResourceType(entry.getKey());
+              resource.setStatus(getOrchestratorStatusFromImStatus(entry.getValue()));
+              resource.setDeployment(deployment);
+              resourceRepository.save(resource);
+            }
           } else {
             updateOnError(deploymentUuid);
           }
@@ -103,13 +118,37 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     }
   }
 
+  private Status getOrchestratorStatusFromImStatus(String value) {
+    VmStates vmState = VmStates.getEnumFromValue(value);
+    switch (vmState) {
+      case CONFIGURED:
+      case PENDING:
+        return Status.CREATE_IN_PROGRESS;
+
+      case FAILED:
+      case UNCONFIGURED:
+        return Status.CREATE_FAILED;
+
+      case RUNNING:
+        return Status.CREATE_COMPLETE;
+
+      // TODO Understand if we need other Status
+      case OFF:
+      case STOPPED:
+      case UNKNOWN:
+        return Status.UNKNOWN;
+
+      default:
+        return Status.UNKNOWN;
+    }
+  }
+
   @Override
   public boolean isDeployed() throws DeploymentException {
     try {
-      ServiceResponse response = imClient.getInfrastructureState(infrastructureId);
 
-      InfrastructureStatus status = new ObjectMapper().readValue(response.getResult(),
-          InfrastructureStatus.class);
+      ServiceResponse response = imClient.getInfrastructureState(infrastructureId);
+      status = new ObjectMapper().readValue(response.getResult(), InfrastructureStatus.class);
 
       // FIXME Are the infrastructure states equals to the VmStates?
       if (status.getState().equals(VmStates.RUNNING.toString())) {

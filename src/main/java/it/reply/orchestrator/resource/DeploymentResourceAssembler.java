@@ -8,8 +8,8 @@ import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
 import org.springframework.stereotype.Component;
 
 @Component
-public class DeploymentResourceAssembler extends
-    ResourceAssemblerSupport<Deployment, DeploymentResource> {
+public class DeploymentResourceAssembler
+    extends ResourceAssemblerSupport<Deployment, DeploymentResource> {
 
   public DeploymentResourceAssembler() {
     super(DeploymentController.class, DeploymentResource.class);
@@ -21,12 +21,15 @@ public class DeploymentResourceAssembler extends
   }
 
   private DeploymentResource getDeploymentResource(Deployment entity) {
-    // TODO
+
     DeploymentResource resource = new DeploymentResource();
     resource.setUuid(entity.getId());
     resource.setCreationTime(entity.getCreated());
+    resource.setUpdateTime(entity.getUpdated());
     resource.setStatus(entity.getStatus());
+
     resource.setTask(entity.getTask());
+
     resource.add(ControllerLinkBuilder.linkTo(DeploymentController.class).slash("deployments")
         .slash(entity).withSelfRel());
     resource.add(ControllerLinkBuilder.linkTo(DeploymentController.class).slash("deployments")

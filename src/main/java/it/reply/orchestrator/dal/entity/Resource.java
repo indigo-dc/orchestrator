@@ -6,6 +6,8 @@ import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 
 @Entity
 public class Resource extends AbstractResourceEntity {
@@ -16,6 +18,10 @@ public class Resource extends AbstractResourceEntity {
   @ElementCollection
   @Column(name = "requiredBy")
   List<String> requiredBy = new ArrayList<String>();
+
+  @ManyToOne
+  @JoinColumn(name = "deployment_uuid")
+  private Deployment deployment;
 
   public Resource() {
     super();
@@ -35,6 +41,14 @@ public class Resource extends AbstractResourceEntity {
 
   public void setRequiredBy(List<String> requiredBy) {
     this.requiredBy = requiredBy;
+  }
+
+  public Deployment getDeployment() {
+    return deployment;
+  }
+
+  public void setDeployment(Deployment deployment) {
+    this.deployment = deployment;
   }
 
 }

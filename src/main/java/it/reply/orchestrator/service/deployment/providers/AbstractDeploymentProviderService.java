@@ -16,15 +16,20 @@ public abstract class AbstractDeploymentProviderService implements DeploymentPro
   public boolean doPoller() {
     int maxRetry = 10;
     int sleepInterval = 30000;
-    while (maxRetry > 0 && !isDeployed()) {
+    boolean isDeployed = false;
+
+    while (maxRetry > 0 && !isDeployed) {
+      isDeployed = isDeployed();
+      if (isDeployed)
+        return true;
+      maxRetry--;
       try {
         Thread.sleep(sleepInterval);
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
-      maxRetry--;
     }
-    return isDeployed();
+    return false;
   }
 
   public void updateOnError(String deploymentUuid) {

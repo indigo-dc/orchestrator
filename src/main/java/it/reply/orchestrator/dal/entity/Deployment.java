@@ -1,9 +1,8 @@
 package it.reply.orchestrator.dal.entity;
 
-import it.reply.orchestrator.enums.DeploymentProvider;
-import it.reply.orchestrator.enums.Task;
-
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.persistence.Column;
@@ -12,6 +11,10 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.MapKeyColumn;
+import javax.persistence.OneToMany;
+
+import it.reply.orchestrator.enums.DeploymentProvider;
+import it.reply.orchestrator.enums.Task;
 
 @Entity
 public class Deployment extends AbstractResourceEntity {
@@ -34,6 +37,9 @@ public class Deployment extends AbstractResourceEntity {
   @MapKeyColumn(name = "name")
   @Column(name = "value")
   Map<String, String> parameters = new HashMap<String, String>();
+
+  @OneToMany
+  List<Resource> resources = new ArrayList<>();
 
   public Deployment() {
     super();
@@ -77,6 +83,14 @@ public class Deployment extends AbstractResourceEntity {
 
   public void setParameters(Map<String, String> parameters) {
     this.parameters = parameters;
+  }
+
+  public List<Resource> getResources() {
+    return resources;
+  }
+
+  public void setResources(List<Resource> resources) {
+    this.resources = resources;
   }
 
 }

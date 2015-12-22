@@ -28,7 +28,7 @@ public class BaseResourceAssembler extends ResourceAssemblerSupport<Resource, Ba
     resource.setStatus(entity.getStatus());
 
     resource.add(ControllerLinkBuilder.linkTo(DeploymentController.class).slash("deployments")
-        .slash("1").withRel("deployment"));
+        .slash(entity.getDeployment().getId()).withRel("deployment"));
     resource.add(ControllerLinkBuilder.linkTo(DeploymentController.class).slash("deployments")
         .slash(entity).slash("resources").withSelfRel());
     return resource;
