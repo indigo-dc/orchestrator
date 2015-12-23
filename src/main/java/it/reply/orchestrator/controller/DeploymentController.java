@@ -1,5 +1,11 @@
 package it.reply.orchestrator.controller;
 
+import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dto.request.DeploymentRequest;
+import it.reply.orchestrator.resource.DeploymentResource;
+import it.reply.orchestrator.resource.DeploymentResourceAssembler;
+import it.reply.orchestrator.service.DeploymentService;
+
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,12 +22,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-
-import it.reply.orchestrator.dal.entity.Deployment;
-import it.reply.orchestrator.dto.request.DeploymentRequest;
-import it.reply.orchestrator.resource.DeploymentResource;
-import it.reply.orchestrator.resource.DeploymentResourceAssembler;
-import it.reply.orchestrator.service.DeploymentService;
 
 @RestController
 public class DeploymentController {

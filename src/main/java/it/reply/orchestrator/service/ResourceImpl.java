@@ -1,6 +1,7 @@
 package it.reply.orchestrator.service;
 
 import it.reply.orchestrator.dal.entity.Resource;
+import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.exception.http.NotFoudException;
 
@@ -15,17 +16,26 @@ public class ResourceImpl implements ResourceService {
   @Autowired
   private ResourceRepository resourceRepository;
 
+  @Autowired
+  private DeploymentRepository deploymentRepository;
+
   @Override
-  public Page<Resource> getResources(Pageable pageable) {
-    return resourceRepository.findAll(pageable);
+  public Page<Resource> getResources(String deploymentId, Pageable pageable) {
+    if (deploymentRepository.exists(deploymentId)) {
+      return resourceRepository.findByDeployment_id(deploymentId, pageable);
+    } else {
+      throw new NotFoudException("The deployment <" + deploymentId + "> doesn't exist");
+    }
   }
 
   @Override
-  public Resource getResource(String uuid) {
-    if (resourceRepository.exists(uuid)) {
-      return resourceRepository.findOne(uuid);
+  public Resource getResource(String uuid, String deploymentId) {
+    Resource resource = resourceRepository.findByIdAndDeployment_id(uuid, deploymentId);
+    if (resource != null) {
+      return resource;
     } else {
-      throw new NotFoudException("The resource <" + uuid + "> doesn't exist");
+      throw new NotFoudException(
+          "The resource <" + uuid + "> in deployment <" + deploymentId + "> doesn't exist");
     }
   }
 

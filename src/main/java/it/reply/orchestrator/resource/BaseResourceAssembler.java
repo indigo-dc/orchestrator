@@ -1,12 +1,12 @@
 package it.reply.orchestrator.resource;
 
-import org.springframework.hateoas.mvc.ControllerLinkBuilder;
-import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
-import org.springframework.stereotype.Component;
-
 import it.reply.orchestrator.controller.DeploymentController;
 import it.reply.orchestrator.controller.ResourceController;
 import it.reply.orchestrator.dal.entity.Resource;
+
+import org.springframework.hateoas.mvc.ControllerLinkBuilder;
+import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
+import org.springframework.stereotype.Component;
 
 @Component
 public class BaseResourceAssembler extends ResourceAssemblerSupport<Resource, BaseResource> {
@@ -30,7 +30,7 @@ public class BaseResourceAssembler extends ResourceAssemblerSupport<Resource, Ba
     resource.add(ControllerLinkBuilder.linkTo(DeploymentController.class).slash("deployments")
         .slash(entity.getDeployment().getId()).withRel("deployment"));
     resource.add(ControllerLinkBuilder.linkTo(DeploymentController.class).slash("deployments")
-        .slash(entity).slash("resources").withSelfRel());
+        .slash(entity.getDeployment().getId()).slash("resources").slash(entity).withSelfRel());
     return resource;
   }
 }
