@@ -1,0 +1,15 @@
+it.reply.orchestrator.config
+it.reply.orchestrator.controller
+it.reply.orchestrator.dal.entity
+it.reply.orchestrator.dal.repository
+it.reply.orchestrator.dto.common
+it.reply.orchestrator.dto.im
+it.reply.orchestrator.dto.request
+it.reply.orchestrator.enums
+it.reply.orchestrator.exception
+it.reply.orchestrator.exception.http
+it.reply.orchestrator.exception.service
+it.reply.orchestrator.resource
+it.reply.orchestrator.resource.common
+it.reply.orchestrator.service
+it.reply.orchestrator.service.deployment.providers
