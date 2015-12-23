@@ -27,7 +27,7 @@ First you have to customize:
 - the IM endpoint in `/orchestrator/src/main/resources/im-config/im-java-api.properties`;
 - the authorization file in `/orchestrator/src/main/resources/im-config/auth.dat`.
 
-### Compile code
+### Compile the code
 To compile the project you need to be in the same folder as the `pom.xml` file and type:
 ```
 mvn clean install -DskipTests
@@ -40,7 +40,7 @@ Beware that, in order to run successfully the tests, you must have a running MyS
 
 At compilation completed, the `orchestrator.war` file will be put inside the `target` folder.
 
-### Docker image build
+### Build the Docker image
 
 The generated war must then be placed in the docker folder.
 
@@ -53,21 +53,28 @@ docker build -t indigodatacloud/orchestrator /path/to/the/docker/folder
 --------------
 ### With MySQL dockerized on the same host
 The orchestrator can be run in 3 steps:
+
 1. Create a docker bridge network (called `orchestrator_net`) with the command
+
     ```
     sudo docker network create --driver bridge orchestrator_net
     ```
+
 2. Run the MySQL database with the command
+
     ```
     sudo docker run --net orchestrator_net --name databaseOrchestrator -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=orchestrator -d mysql
     ```
+
 3. Run the orchestrator with the command
+
     ```
     sudo docker run --net orchestrator_net --name orchestrator1 -h orchestrator1 -p 80:8080 -d indigodatacloud/orchestrator
     ```
+
 Thanks to the first step, the orchestrator will be able to communicate with the MySQL instance using as domain name its container name (`databaseOrchestrator`)
 
-### With an external DB
+### With an external database
 
 The orchestrator can also be run using a pre-existing DB; you just need to start it with the command
 ```
