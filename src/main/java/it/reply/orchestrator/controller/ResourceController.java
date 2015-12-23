@@ -35,12 +35,13 @@ public class ResourceController {
 
   @ResponseStatus(HttpStatus.OK)
   @RequestMapping(value = "/resources", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  public PagedResources<BaseResource> getResources(@PageableDefault Pageable pageable,
+  public PagedResources<BaseResource> getResources(
+      @PathVariable("deploymentId") String deploymentId, @PageableDefault Pageable pageable,
       PagedResourcesAssembler<Resource> pagedAssembler) {
 
     LOG.trace("Invoked method: getDeployments");
 
-    Page<Resource> resources = resourceService.getResources(pageable);
+    Page<Resource> resources = resourceService.getResources(deploymentId, pageable);
 
     PagedResources<BaseResource> pagedResources = pagedAssembler.toResource(resources,
         baseResourceAssembler);
@@ -54,7 +55,7 @@ public class ResourceController {
       @PathVariable("resourceId") String resourceId) {
 
     LOG.trace("Invoked method: getResource with id: " + resourceId);
-    Resource resource = resourceService.getResource(resourceId);
+    Resource resource = resourceService.getResource(resourceId, deploymentId);
     return baseResourceAssembler.toResource(resource);
   }
 

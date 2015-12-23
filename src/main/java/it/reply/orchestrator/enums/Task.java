@@ -8,7 +8,7 @@ public enum Task {
   QOS,
   BROKERING,
   DMS,
-  DEPLOY,
+  DEPLOYER,
   UNKNOWN;
   //@formatter:on
 

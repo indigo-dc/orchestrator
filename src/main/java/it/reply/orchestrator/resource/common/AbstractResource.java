@@ -1,16 +1,16 @@
 package it.reply.orchestrator.resource.common;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+
 import it.reply.orchestrator.enums.Status;
+
+import org.springframework.hateoas.ResourceSupport;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
-
-import org.springframework.hateoas.ResourceSupport;
-
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 @JsonInclude(Include.NON_NULL)
 public class AbstractResource extends ResourceSupport {
@@ -44,21 +44,23 @@ public class AbstractResource extends ResourceSupport {
   }
 
   public void setCreationTime(Date creationTime) {
-    TimeZone tz = TimeZone.getTimeZone("UTC");
-    DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mmZ");
-    df.setTimeZone(tz);
-    this.creationTime = df.format(creationTime);
+    if (creationTime == null) {
+      return;
+    }
+
+    this.creationTime = convertDate(creationTime);
   }
 
   public String getUpdateTime() {
     return updateTime;
   }
 
-  public void setUpdateTime(String updateTime) {
-    TimeZone tz = TimeZone.getTimeZone("UTC");
-    DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mmZ");
-    df.setTimeZone(tz);
-    this.updateTime = df.format(updateTime);
+  public void setUpdateTime(Date updateTime) {
+    if (updateTime == null) {
+      return;
+    }
+
+    this.updateTime = convertDate(updateTime);
   }
 
   public void setCreationTime(String creationTime) {
@@ -73,4 +75,10 @@ public class AbstractResource extends ResourceSupport {
     this.status = status;
   }
 
+  private String convertDate(Date date) {
+    TimeZone tz = TimeZone.getTimeZone("UTC");
+    DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mmZ");
+    df.setTimeZone(tz);
+    return df.format(date);
+  }
 }

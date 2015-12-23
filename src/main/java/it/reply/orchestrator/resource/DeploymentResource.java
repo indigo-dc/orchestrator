@@ -1,14 +1,14 @@
 package it.reply.orchestrator.resource;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.hateoas.Link;
-
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.resource.common.AbstractResource;
+
+import org.springframework.hateoas.Link;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 public class DeploymentResource extends AbstractResource {
 

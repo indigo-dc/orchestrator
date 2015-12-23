@@ -7,8 +7,8 @@ import org.springframework.data.domain.Pageable;
 
 public interface ResourceService {
 
-  public Page<Resource> getResources(Pageable pageable);
+  public Page<Resource> getResources(String deploymentId, Pageable pageable);
 
-  public Resource getResource(String id);
+  public Resource getResource(String uuid, String deploymentId);
 
 }

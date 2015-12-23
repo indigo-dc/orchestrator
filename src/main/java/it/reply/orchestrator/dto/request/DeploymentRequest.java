@@ -1,17 +1,14 @@
 package it.reply.orchestrator.dto.request;
 
-import java.util.Map;
-
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
-//@JsonPropertyOrder({ "template", "parameters" })
+import java.util.Map;
+
 public class DeploymentRequest {
 
-  // @JsonProperty("template")
   private String template;
-  // @JsonProperty("parameters")
   private Map<String, String> parameters;
 
   /**
@@ -19,7 +16,6 @@ public class DeploymentRequest {
    * 
    * @return The template
    */
-  // @JsonProperty("template")
   public String getTemplate() {
     return template;
   }
@@ -29,7 +25,6 @@ public class DeploymentRequest {
    * @param template
    *          The TOSCA YAML-formatted template.
    */
-  // @JsonProperty("template")
   public void setTemplate(String template) {
     this.template = template;
   }
@@ -44,7 +39,6 @@ public class DeploymentRequest {
    * 
    * @return The parameters
    */
-  // @JsonProperty("parameters")
   public Map<String, String> getParameters() {
     return parameters;
   }
@@ -54,7 +48,6 @@ public class DeploymentRequest {
    * @param parameters
    *          The parameters.
    */
-  // @JsonProperty("parameters")
   public void setParameters(Map<String, String> parameters) {
     this.parameters = parameters;
   }
