@@ -7,21 +7,16 @@
 
     <xsl:output method="xml" indent="yes" />
 
-    <xsl:param name="orchestrator.DB.DN" />
+    <xsl:param name="orchestrator.DB.endpoint" />
     <xsl:param name="orchestrator.DB.name" />
     <xsl:param name="orchestrator.DB.user" />
 	<xsl:param name="orchestrator.DB.pwd" />
-
-<!--	<xsl:param name="orchestrator-test.DB.DN" />
-    <xsl:param name="orchestrator-test.DB.name" />
-    <xsl:param name="orchestrator-test.DB.user" />
-	<xsl:param name="orchestrator-test.DB.pwd" /> -->
 
  	<xsl:variable name="newDatasourcesDefinition">
 		<datasources xmlns="urn:jboss:domain:datasources:3.0">
 			<xa-datasource jndi-name="java:jboss/datasources/orchestrator" pool-name="orchestratorDS" enabled="true" use-java-context="true" use-ccm="true">
 				<xa-datasource-property name="URL">
-					<xsl:value-of select="concat('jdbc:mysql://', $orchestrator.DB.DN, ':3306/', $orchestrator.DB.name)" />
+					<xsl:value-of select="concat('jdbc:mysql://', $orchestrator.DB.endpoint, '/', $orchestrator.DB.name)" />
 				</xa-datasource-property>
 				<xa-datasource-class>com.mysql.jdbc.jdbc2.optional.MysqlXADataSource</xa-datasource-class>
 				<driver>mysql</driver>
@@ -39,26 +34,6 @@
 					</password>
 				</security>
 			</xa-datasource>
-<!--			<xa-datasource jndi-name="java:jboss/datasources/orchestrator-test" pool-name="orchestratorTestDS" enabled="true" use-java-context="true" use-ccm="true">
-				<xa-datasource-property name="URL">
-					<xsl:value-of select="concat('jdbc:mysql://', $orchestrator-test.DB.DN, ':3306/', $orchestrator-test.DB.name)" />
-				</xa-datasource-property>
-				<xa-datasource-class>com.mysql.jdbc.jdbc2.optional.MysqlXADataSource</xa-datasource-class>
-				<driver>mysql</driver>
-				<xa-pool>
-					<min-pool-size>1</min-pool-size>
-					<max-pool-size>20</max-pool-size>
-					<prefill>true</prefill>
-				</xa-pool>
-				<security>
-					<user-name>
-						<xsl:value-of select="$orchestrator-test.DB.user" />
-					</user-name>
-					<password>
-						<xsl:value-of select="$orchestrator-test.DB.pwd" />
-					</password>
-				</security>
-			</xa-datasource> -->
 			<drivers>
                 <driver name="mysql" module="com.mysql">
 					<xa-datasource-class>com.mysql.jdbc.jdbc2.optional.MysqlXADataSource</xa-datasource-class>
