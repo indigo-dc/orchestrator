@@ -29,6 +29,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.springtestdbunit.annotation.DatabaseSetup;
+import com.github.springtestdbunit.annotation.DatabaseTearDown;
 
 import es.upv.i3m.grycap.file.FileIO;
 import it.reply.orchestrator.config.WebAppConfigurationAware;
@@ -39,6 +40,7 @@ import it.reply.orchestrator.resource.DeploymentResource;
 import it.reply.orchestrator.service.DeploymentService;
 import it.reply.orchestrator.util.TestUtil;
 
+@DatabaseTearDown("/data/database-empty.xml")
 public class DeploymentControllerTest extends WebAppConfigurationAware {
 
   @Autowired
