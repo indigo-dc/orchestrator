@@ -14,11 +14,8 @@ You can find the REST APIs at [INDIGO OpenProject] (https://project.indigo-datac
 1.1 REQUISITES
 --------------
 
-- java 8 sdk;
-- https://github.com/indigo-dc/im-java-api
-- maven
-- docker
-- a MySQL database (in chapter 1.3 you can find instructions of how to run one inside a docker container)
+This project has been created with maven 3.3.3 and Java 1.8. Maven will take care of downloading the extra dependencies needed for the project but this project dependes on [im-java-api](https://github.com/indigo-dc/im-java-api) also.
+To run the Orchestrator you need docker and a MySQL Server on your machine. See next section to have details.
 
 1.2 INSTALLING
 --------------
