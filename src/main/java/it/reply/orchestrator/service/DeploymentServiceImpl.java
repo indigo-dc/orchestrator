@@ -35,7 +35,7 @@ public class DeploymentServiceImpl implements DeploymentService {
     if (deployment != null) {
       return deployment;
     } else {
-      throw new NotFoudException("The Deployment <" + uuid + "> doesn't exist");
+      throw new NotFoudException("The deployment <" + uuid + "> doesn't exist");
     }
   }
 
@@ -69,7 +69,7 @@ public class DeploymentServiceImpl implements DeploymentService {
         imService.doUndeploy(deployment.getId());
       }
     } else {
-      throw new NotFoudException("The Deployment <" + uuid + "> doesn't exist");
+      throw new NotFoudException("The deployment <" + uuid + "> doesn't exist");
     }
   }
 
