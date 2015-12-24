@@ -89,7 +89,7 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
     mockMvc.perform(get("/deployments/not-found")).andExpect(status().isNotFound())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.code", is(404))).andExpect(jsonPath("$.title", is("Not Found")))
-        .andExpect(jsonPath("$.message", is("The Deployment <not-found> doesn't exist")));
+        .andExpect(jsonPath("$.message", is("The deployment <not-found> doesn't exist")));
 
   }
 
@@ -124,7 +124,7 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
     mockMvc.perform(delete("/deployments/not-found"))
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.code", is(404))).andExpect(jsonPath("$.title", is("Not Found")))
-        .andExpect(jsonPath("$.message", is("The Deployment <not-found> doesn't exist")));
+        .andExpect(jsonPath("$.message", is("The deployment <not-found> doesn't exist")));
 
   }
 }
