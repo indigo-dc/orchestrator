@@ -2,6 +2,8 @@ FROM  jboss/wildfly:9.0.2.Final
 
 MAINTAINER a.brigandi@reply.it
 
+yum update & yum install -y libaio
+
 COPY /modules/ $JBOSS_HOME/modules/
 
 ENV JBOSS_CONF_FILE standalone-full-ha.xml
