@@ -29,6 +29,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.springtestdbunit.annotation.DatabaseSetup;
+import com.github.springtestdbunit.annotation.DatabaseTearDown;
 
 import es.upv.i3m.grycap.file.FileIO;
 import it.reply.orchestrator.config.WebAppConfigurationAware;
@@ -39,6 +40,7 @@ import it.reply.orchestrator.resource.DeploymentResource;
 import it.reply.orchestrator.service.DeploymentService;
 import it.reply.orchestrator.util.TestUtil;
 
+@DatabaseTearDown("/data/database-empty.xml")
 public class DeploymentControllerTest extends WebAppConfigurationAware {
 
   @Autowired
@@ -87,7 +89,7 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
     mockMvc.perform(get("/deployments/not-found")).andExpect(status().isNotFound())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.code", is(404))).andExpect(jsonPath("$.title", is("Not Found")))
-        .andExpect(jsonPath("$.message", is("The Deployment <not-found> doesn't exist")));
+        .andExpect(jsonPath("$.message", is("The deployment <not-found> doesn't exist")));
 
   }
 
@@ -122,7 +124,7 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
     mockMvc.perform(delete("/deployments/not-found"))
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.code", is(404))).andExpect(jsonPath("$.title", is("Not Found")))
-        .andExpect(jsonPath("$.message", is("The Deployment <not-found> doesn't exist")));
+        .andExpect(jsonPath("$.message", is("The deployment <not-found> doesn't exist")));
 
   }
 }
