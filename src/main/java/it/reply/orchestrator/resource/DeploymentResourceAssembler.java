@@ -34,6 +34,9 @@ public class DeploymentResourceAssembler
         .slash(entity).withSelfRel());
     resource.add(ControllerLinkBuilder.linkTo(DeploymentController.class).slash("deployments")
         .slash(entity).slash("resources").withRel("resources"));
+    resource.add(ControllerLinkBuilder.linkTo(DeploymentController.class).slash("deployments")
+        .slash(entity).slash("template").withRel("template"));
+
     return resource;
   }
 }
