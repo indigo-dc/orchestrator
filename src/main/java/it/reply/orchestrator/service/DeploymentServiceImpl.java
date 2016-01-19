@@ -5,7 +5,7 @@ import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
-import it.reply.orchestrator.exception.http.NotFoudException;
+import it.reply.orchestrator.exception.http.NotFoundException;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +35,7 @@ public class DeploymentServiceImpl implements DeploymentService {
     if (deployment != null) {
       return deployment;
     } else {
-      throw new NotFoudException("The deployment <" + uuid + "> doesn't exist");
+      throw new NotFoundException("The deployment <" + uuid + "> doesn't exist");
     }
   }
 
@@ -69,7 +69,7 @@ public class DeploymentServiceImpl implements DeploymentService {
         imService.doUndeploy(deployment.getId());
       }
     } else {
-      throw new NotFoudException("The deployment <" + uuid + "> doesn't exist");
+      throw new NotFoundException("The deployment <" + uuid + "> doesn't exist");
     }
   }
 

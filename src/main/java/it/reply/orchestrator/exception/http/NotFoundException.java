@@ -6,11 +6,11 @@ package it.reply.orchestrator.exception.http;
  * @author m.bassi
  *
  */
-public class NotFoudException extends OrchestratorApiException {
+public class NotFoundException extends OrchestratorApiException {
 
   private static final long serialVersionUID = 1L;
 
-  public NotFoudException(String message) {
+  public NotFoundException(String message) {
     super(message);
   }
 

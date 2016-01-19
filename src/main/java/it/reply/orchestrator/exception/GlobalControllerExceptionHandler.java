@@ -1,7 +1,7 @@
 package it.reply.orchestrator.exception;
 
 import it.reply.orchestrator.dto.common.Error;
-import it.reply.orchestrator.exception.http.NotFoudException;
+import it.reply.orchestrator.exception.http.NotFoundException;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -36,7 +36,7 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
   @ExceptionHandler
   @ResponseStatus(HttpStatus.NOT_FOUND)
   @ResponseBody
-  public Error handleException(NotFoudException ex) {
+  public Error handleException(NotFoundException ex) {
 
     return new Error().withCode(HttpStatus.NOT_FOUND.value())
         .withTitle(HttpStatus.NOT_FOUND.getReasonPhrase()).withMessage(ex.getMessage());

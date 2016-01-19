@@ -3,7 +3,7 @@ package it.reply.orchestrator.service;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
-import it.reply.orchestrator.exception.http.NotFoudException;
+import it.reply.orchestrator.exception.http.NotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -24,7 +24,7 @@ public class ResourceImpl implements ResourceService {
     if (deploymentRepository.exists(deploymentId)) {
       return resourceRepository.findByDeployment_id(deploymentId, pageable);
     } else {
-      throw new NotFoudException("The deployment <" + deploymentId + "> doesn't exist");
+      throw new NotFoundException("The deployment <" + deploymentId + "> doesn't exist");
     }
   }
 
@@ -34,7 +34,7 @@ public class ResourceImpl implements ResourceService {
     if (resource != null) {
       return resource;
     } else {
-      throw new NotFoudException(
+      throw new NotFoundException(
           "The resource <" + uuid + "> in deployment <" + deploymentId + "> doesn't exist");
     }
   }
