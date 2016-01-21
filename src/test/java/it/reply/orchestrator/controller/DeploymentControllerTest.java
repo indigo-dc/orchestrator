@@ -95,6 +95,22 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
   }
 
   @Test
+  public void createDeploymentWithCallbackSuccessfully() throws Exception {
+
+    DeploymentRequest request = new DeploymentRequest();
+    String callback = "http://test.test";
+    request.setCallback(callback);
+    request.setTemplate(FileIO.readUTF8File("./src/test/resources/tosca/galaxy_tosca.yaml"));
+    mockMvc
+        .perform(post("/deployments").contentType(MediaType.APPLICATION_JSON)
+            .content(TestUtil.convertObjectToJsonBytes(request)))
+        .andExpect(status().isCreated())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.callback", is(callback)))
+        .andExpect(jsonPath("$.links[0].rel", is("self")));
+  }
+
+  @Test
   public void createDeploymentBadRequest() throws Exception {
 
     mockMvc.perform(post("/deployments").contentType(MediaType.APPLICATION_JSON))
