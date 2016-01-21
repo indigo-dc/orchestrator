@@ -14,6 +14,7 @@ public class DeploymentResource extends AbstractResource {
 
   private Map<String, Object> outputs;
   private Task task;
+  private String callback;
   private List<BaseResource> resources;
 
   public DeploymentResource() {
@@ -21,10 +22,11 @@ public class DeploymentResource extends AbstractResource {
   }
 
   public DeploymentResource(String uuid, List<Link> links, Map<String, Object> outputs,
-      Date creationTime, Status status, Task task, List<BaseResource> resources) {
+      Date creationTime, Status status, Task task, String callback, List<BaseResource> resources) {
     super(uuid, creationTime, status);
     this.outputs = outputs;
     this.task = task;
+    this.callback = callback;
     this.resources = resources;
   }
 
@@ -42,6 +44,14 @@ public class DeploymentResource extends AbstractResource {
 
   public void setTask(Task task) {
     this.task = task;
+  }
+
+  public String getCallback() {
+    return callback;
+  }
+
+  public void setCallback(String callback) {
+    this.callback = callback;
   }
 
   public List<BaseResource> getResources() {
