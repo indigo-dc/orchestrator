@@ -47,6 +47,9 @@ public class DeploymentServiceImpl implements DeploymentService {
     deployment.setTask(Task.NONE);
     deployment.setParameters(request.getParameters());
     deployment.setTemplate(request.getTemplate());
+    if (request.getCallback() != null) {
+      deployment.setCallback(request.getCallback());
+    }
     deployment = deploymentRepository.save(deployment);
 
     imService.doDeploy(deployment.getId());

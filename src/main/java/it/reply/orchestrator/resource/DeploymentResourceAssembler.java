@@ -30,6 +30,10 @@ public class DeploymentResourceAssembler
 
     resource.setTask(entity.getTask());
 
+    if (entity.getCallback() != null) {
+      resource.setCallback(entity.getCallback());
+    }
+
     resource.add(ControllerLinkBuilder.linkTo(DeploymentController.class).slash("deployments")
         .slash(entity).withSelfRel());
     resource.add(ControllerLinkBuilder.linkTo(DeploymentController.class).slash("deployments")
