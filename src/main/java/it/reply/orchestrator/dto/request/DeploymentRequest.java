@@ -71,7 +71,7 @@ public class DeploymentRequest {
 
   /**
    * 
-   * @param calback
+   * @param callback
    *          the endpoint.
    */
   public void setCallback(String callback) {
