@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>it.reply.orchestrator</groupId>
 	<artifactId>orchestrator</artifactId>
-	<version>0.0.1</version>
+	<version>0.0.2</version>
 	<packaging>war</packaging>
 	<name>orchestrator</name>
 
@@ -25,6 +25,14 @@
 	</properties>
 
 	<dependencies>
+		<!-- Fix to avoid to import the library (which conflicts with the one in 
+			WildFly) -->
+		<dependency>
+			<groupId>dom4j</groupId>
+			<artifactId>dom4j</artifactId>
+			<version>1.6.1</version>
+			<scope>provided</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-core</artifactId>
@@ -107,6 +115,11 @@
 			<artifactId>im-java-api</artifactId>
 			<version>${im-java-api.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>it.reply</groupId>
+			<artifactId>workflow-manager-spring</artifactId>
+			<version>0.0.2-SNAPSHOT</version>
+		</dependency>
 
 
 		<!-- test -->
@@ -134,7 +147,7 @@
 			<version>${mockito.version}</version>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.jayway.jsonpath</groupId>
 			<artifactId>json-path</artifactId>
@@ -183,6 +196,24 @@
 				<configuration>
 					<source>${java.version}</source>
 					<target>${java.version}</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>2.6</version>
+				<configuration>
+					<archiveClasses>true</archiveClasses>
+					<webResources>
+						<resource>
+							<directory>${basedir}/src/main/resources</directory>
+							<filtering>true</filtering>
+							<targetPath>WEB-INF/classes</targetPath>
+							<includes>
+								<include>**/*.properties</include>
+								<include>im-config/*</include>
+							</includes>
+						</resource>
+					</webResources>
 				</configuration>
 			</plugin>
 			<plugin>

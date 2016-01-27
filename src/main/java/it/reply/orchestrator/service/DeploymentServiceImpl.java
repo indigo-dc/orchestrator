@@ -2,11 +2,12 @@ package it.reply.orchestrator.service;
 
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
+import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
-import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.exception.http.NotFoundException;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
+import it.reply.workflowManager.orchestrator.bpm.BusinessProcessManager;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -22,6 +23,9 @@ public class DeploymentServiceImpl implements DeploymentService {
   // TODO no choice of the deploymentProvider
   @Autowired
   private DeploymentProviderService imService;
+
+  @Autowired
+  private BusinessProcessManager wfService;
 
   @Override
   public Page<Deployment> getDeployments(Pageable pageable) {
@@ -41,7 +45,6 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   @Override
   public Deployment createDeployment(DeploymentRequest request) {
-
     Deployment deployment = new Deployment();
     deployment.setStatus(Status.CREATE_IN_PROGRESS);
     deployment.setTask(Task.NONE);
