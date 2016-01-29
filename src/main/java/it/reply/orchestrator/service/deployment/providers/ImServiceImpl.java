@@ -3,6 +3,7 @@ package it.reply.orchestrator.service.deployment.providers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import es.upv.i3m.grycap.im.api.InfrastructureManagerApiClient;
+import es.upv.i3m.grycap.im.api.RestApiBodyContentType;
 import es.upv.i3m.grycap.im.api.VmStates;
 import es.upv.i3m.grycap.im.client.ServiceResponse;
 import es.upv.i3m.grycap.im.exceptions.AuthFileNotFoundException;
@@ -84,7 +85,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       deployment = deploymentRepository.save(deployment);
 
       // TODO improve with template inputs
-      ServiceResponse response = imClient.createInfrastructure(deployment.getTemplate());
+      ServiceResponse response = imClient.createInfrastructure(deployment.getTemplate(),
+          RestApiBodyContentType.TOSCA);
       if (!response.isReponseSuccessful()) {
         updateOnError(deploymentUuid, response.getReasonPhrase());
       } else {
