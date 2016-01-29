@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class DeploymentServiceImpl implements DeploymentService {
@@ -51,8 +52,14 @@ public class DeploymentServiceImpl implements DeploymentService {
     deployment.setParameters(request.getParameters());
     deployment.setTemplate(request.getTemplate());
     deployment = deploymentRepository.save(deployment);
-
     imService.doDeploy(deployment.getId());
+    try {
+      wfService.startProcess("defaultPackage.New_Process", null,
+          BusinessProcessManager.RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
+    } catch (Exception e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
     return deployment;
   }
 
