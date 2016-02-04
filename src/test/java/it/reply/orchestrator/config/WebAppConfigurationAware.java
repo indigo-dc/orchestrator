@@ -20,7 +20,7 @@ import javax.inject.Inject;
 @RunWith(SpringJUnit4ClassRunner.class)
 @WebAppConfiguration
 @ContextConfiguration(classes = { ApplicationConfig.class, WebAppInitializer.class,
-    WebMvcConfig.class, PersistenceConfigTest.class })
+    WebMvcConfig.class, PersistenceConfigTest.class, WorklfowPersistenceConfigTest.class })
 @TestExecutionListeners({ DependencyInjectionTestExecutionListener.class,
     TransactionalTestExecutionListener.class, DbUnitTestExecutionListener.class })
 public abstract class WebAppConfigurationAware {

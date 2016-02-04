@@ -1,11 +1,12 @@
 package it.reply.orchestrator.config;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.kie.api.io.Resource;
-import org.kie.internal.io.ResourceFactory;
 import org.springframework.stereotype.Component;
 
 import it.reply.workflowManager.orchestrator.config.ConfigProducer;
@@ -15,9 +16,19 @@ public class WorkflowConfigProducerBean implements ConfigProducer {
 
   public final static String BASE_PATH = "workflows";
 
-  public final static String TEST = "New Process.bpmn2";
+  public final static WorkflowResource DEPLOY;
+  public final static WorkflowResource UNDEPLOY;
 
-  private List<Resource> resources;
+  static {
+    try {
+      DEPLOY = new WorkflowResource(BASE_PATH + "/" + "Deploy.bpmn2");
+      UNDEPLOY = new WorkflowResource(BASE_PATH + "/" + "Undeploy.bpmn2");
+    } catch (IOException e) {
+      throw new ExceptionInInitializerError(e);
+    }
+  }
+
+  private List<WorkflowResource> resources;
 
   public WorkflowConfigProducerBean() {
     initResourceList();
@@ -25,12 +36,18 @@ public class WorkflowConfigProducerBean implements ConfigProducer {
 
   private void initResourceList() {
     resources = new ArrayList<>();
-    resources.add(ResourceFactory.newClassPathResource(BASE_PATH + "/" + TEST));
+    resources.add(DEPLOY);
+    resources.add(UNDEPLOY);
     resources = Collections.unmodifiableList(resources);
   }
 
   @Override
-  public List<Resource> getResources() {
+  public List<Resource> getJbpmResources() {
+    return resources.stream().map(r -> r.getResource()).collect(Collectors.toList());
+  }
+
+  @Override
+  public List<WorkflowResource> getWorkflowResources() {
     return resources;
   }
 

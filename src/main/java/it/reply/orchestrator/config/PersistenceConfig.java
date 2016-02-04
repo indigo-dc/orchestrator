@@ -45,7 +45,9 @@ public class PersistenceConfig {
 
   @Bean
   public PlatformTransactionManager transactionManager() {
-    return new JtaTransactionManager();
+    JtaTransactionManager tm = new JtaTransactionManager();
+    // tm.setTransactionManagerName(TRANSACTION_MANAGER_JNDI_NAME);
+    return tm;
   }
 
   @Bean

@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.annotation.Nonnull;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -16,9 +17,12 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.Transient;
 
 @Entity
 public class Deployment extends AbstractResourceEntity {
+
+  private static final long serialVersionUID = 3866893436735377053L;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "task")
@@ -41,6 +45,9 @@ public class Deployment extends AbstractResourceEntity {
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "deployment")
   List<Resource> resources = new ArrayList<>();
+
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "deployment", orphanRemoval = true)
+  List<WorkflowReference> workflowReferences = new ArrayList<>();
 
   public Deployment() {
     super();
@@ -88,6 +95,20 @@ public class Deployment extends AbstractResourceEntity {
 
   public List<Resource> getResources() {
     return resources;
+  }
+
+  public List<WorkflowReference> getWorkflowReferences() {
+    return workflowReferences;
+  }
+
+  public void setWorkflowReferences(List<WorkflowReference> workflowReferences) {
+    this.workflowReferences = workflowReferences;
+  }
+
+  @Transient
+  public void addWorkflowReferences(@Nonnull WorkflowReference workflowReference) {
+    workflowReference.setDeployment(this);
+    this.workflowReferences.add(workflowReference);
   }
 
   public void setResources(List<Resource> resources) {

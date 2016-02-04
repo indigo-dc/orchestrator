@@ -77,6 +77,12 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   @Override
   public void doDeploy(String deploymentUuid) {
     Deployment deployment = deploymentRepository.findOne(deploymentUuid);
+    doDeploy(deployment);
+  }
+
+  @Override
+  public void doDeploy(Deployment deployment) {
+    String deploymentUuid = deployment.getId();
     try {
       // Update status of the deployment
       deployment.setTask(Task.DEPLOYER);
@@ -181,6 +187,12 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   @Override
   public void doUndeploy(String deploymentUuid) {
     Deployment deployment = deploymentRepository.findOne(deploymentUuid);
+    doUndeploy(deployment);
+  }
+
+  @Override
+  public void doUndeploy(Deployment deployment) {
+    String deploymentUuid = deployment.getId();
     try {
       // Update status of the deployment
       deployment.setTask(Task.DEPLOYER);
