@@ -1,12 +1,8 @@
 package it.reply.orchestrator.config;
 
 import javax.annotation.Resource;
-import javax.naming.Context;
-import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
-import org.jbpm.executor.ExecutorServiceFactory;
-import org.kie.api.executor.ExecutorService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -28,7 +24,7 @@ public class WorklfowPersistenceConfigTest {
   public DataSource workflowDataSource() {
     DriverManagerDataSource dataSource = new DriverManagerDataSource();
     dataSource.setDriverClassName(environment.getRequiredProperty("db.driver"));
-    dataSource.setUrl("jdbc:mysql://containerTest.replycloud.prv:3306/jbpm");
+    dataSource.setUrl(environment.getRequiredProperty("workflow.db.url"));
     dataSource.setUsername(environment.getRequiredProperty("db.username"));
     dataSource.setPassword(environment.getRequiredProperty("db.password"));
     return dataSource;
@@ -41,14 +37,7 @@ public class WorklfowPersistenceConfigTest {
     LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
     factory.setPersistenceUnitName(Constants.PERSISTENCE_UNIT_NAME);
     factory.setPersistenceXmlLocation("classpath:/META-INF/persistence-test.xml");
-    factory.setDataSource(workflowDataSource());
+    factory.setJtaDataSource(workflowDataSource());
     return factory;
-  }
-
-  @Bean
-  public ExecutorService executorService() throws NamingException {
-    ExecutorService executorService = ExecutorServiceFactory
-        .newExecutorService(workflowEntityManagerFactory().getObject());
-    return executorService;
   }
 }

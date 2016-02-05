@@ -27,8 +27,7 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
 
   @Override
   public RequestMappingHandlerMapping requestMappingHandlerMapping() {
-    RequestMappingHandlerMapping requestMappingHandlerMapping = super
-        .requestMappingHandlerMapping();
+    RequestMappingHandlerMapping requestMappingHandlerMapping = super.requestMappingHandlerMapping();
     requestMappingHandlerMapping.setUseSuffixPatternMatch(false);
     requestMappingHandlerMapping.setUseTrailingSlashMatch(false);
     return requestMappingHandlerMapping;

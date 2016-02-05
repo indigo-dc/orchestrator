@@ -13,6 +13,9 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.jta.JtaTransactionManager;
 
+import it.reply.workflowManager.spring.orchestrator.annotations.WorkflowPersistenceUnit;
+import it.reply.workflowManager.utils.Constants;
+
 import java.util.Properties;
 
 import javax.annotation.Resource;
@@ -46,7 +49,6 @@ public class PersistenceConfig {
   @Bean
   public PlatformTransactionManager transactionManager() {
     JtaTransactionManager tm = new JtaTransactionManager();
-    // tm.setTransactionManagerName(TRANSACTION_MANAGER_JNDI_NAME);
     return tm;
   }
 
@@ -85,5 +87,22 @@ public class PersistenceConfig {
   @Bean
   public HibernateExceptionTranslator hibernateExceptionTranslator() {
     return new HibernateExceptionTranslator();
+  }
+
+  @Bean
+  public DataSource workflowDataSource() throws NamingException {
+    Context ctx = new InitialContext();
+    return (DataSource) ctx.lookup("java:jboss/datasources/WorkflowManager/JBPM-DS");
+  }
+
+  @Bean
+  @WorkflowPersistenceUnit
+  public LocalContainerEntityManagerFactoryBean workflowEntityManagerFactory()
+      throws NamingException {
+    LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
+    factory.setPersistenceUnitName(Constants.PERSISTENCE_UNIT_NAME);
+    factory.setPersistenceXmlLocation("classpath:/META-INF/persistence.xml");
+    factory.setJtaDataSource(workflowDataSource());
+    return factory;
   }
 }
