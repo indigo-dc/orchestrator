@@ -23,10 +23,10 @@ public class WorklfowPersistenceConfigTest {
   @Bean
   public DataSource workflowDataSource() {
     DriverManagerDataSource dataSource = new DriverManagerDataSource();
-    dataSource.setDriverClassName(environment.getRequiredProperty("db.driver"));
+    dataSource.setDriverClassName(environment.getRequiredProperty("workflow.db.driver"));
     dataSource.setUrl(environment.getRequiredProperty("workflow.db.url"));
-    dataSource.setUsername(environment.getRequiredProperty("db.username"));
-    dataSource.setPassword(environment.getRequiredProperty("db.password"));
+    dataSource.setUsername(environment.getRequiredProperty("workflow.db.username"));
+    dataSource.setPassword(environment.getRequiredProperty("workflow.db.password"));
     return dataSource;
   }
 

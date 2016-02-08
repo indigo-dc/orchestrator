@@ -92,7 +92,7 @@ public class PersistenceConfig {
   @Bean
   public DataSource workflowDataSource() throws NamingException {
     Context ctx = new InitialContext();
-    return (DataSource) ctx.lookup("java:jboss/datasources/WorkflowManager/JBPM-DS");
+    return (DataSource) ctx.lookup("java:jboss/datasources/workflow");
   }
 
   @Bean
