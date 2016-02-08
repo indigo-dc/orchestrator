@@ -213,6 +213,7 @@
 				<artifactId>maven-war-plugin</artifactId>
 				<version>2.6</version>
 				<configuration>
+					<outputDirectory>${basedir}/docker</outputDirectory>
 					<archiveClasses>true</archiveClasses>
 					<webResources>
 						<resource>
