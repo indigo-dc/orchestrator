@@ -1,12 +1,27 @@
 package it.reply.orchestrator.service.deployment.providers;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.annotation.PostConstruct;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.stereotype.Service;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import es.upv.i3m.grycap.im.api.InfrastructureManagerApiClient;
+import es.upv.i3m.grycap.im.api.RestApiBodyContentType;
 import es.upv.i3m.grycap.im.api.VmStates;
 import es.upv.i3m.grycap.im.client.ServiceResponse;
-import es.upv.i3m.grycap.im.exceptions.AuthFileNotFoundException;
-
+import es.upv.i3m.grycap.im.exceptions.ImClientException;
 import it.reply.orchestrator.controller.DeploymentController;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
@@ -17,21 +32,6 @@ import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.service.DeploymentException;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.stereotype.Service;
-
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.annotation.PostConstruct;
 
 @Service
 @PropertySource("classpath:im-config/im-java-api.properties")
@@ -64,9 +64,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
    *           if an error occurred while generating the auth file URI
    */
   @PostConstruct
-  private void init() throws AuthFileNotFoundException, IOException, URISyntaxException {
-    String completeFilePath = ImServiceImpl.class.getClassLoader().getResource(AUTH_FILE_PATH)
-        .toURI().getPath();
+    private void init() throws ImClientException, IOException, URISyntaxException {
+        String completeFilePath = ImServiceImpl.class.getClassLoader().getResource(AUTH_FILE_PATH).toURI().getPath();
 
     // remove initial slash from windows paths
     completeFilePath = completeFilePath.replaceFirst("^/(.:/)", "$1");
@@ -90,7 +89,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       deployment = deploymentRepository.save(deployment);
 
       // TODO improve with template inputs
-      ServiceResponse response = imClient.createInfrastructure(deployment.getTemplate());
+      ServiceResponse response = imClient.createInfrastructure(deployment.getTemplate(),
+                RestApiBodyContentType.TOSCA);
       if (!response.isReponseSuccessful()) {
         updateOnError(deploymentUuid, response.getReasonPhrase());
       } else {
@@ -177,7 +177,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       } else {
         return false;
       }
-    } catch (AuthFileNotFoundException | IOException e) {
+    } catch (ImClientException | IOException e) {
       // TODO improve exception handling
       LOG.error(e);
       return false;
@@ -237,7 +237,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       } else {
         return false;
       }
-    } catch (AuthFileNotFoundException e) {
+    } catch (ImClientException e) {
       // TODO improve exception handling
       LOG.error(e);
       return false;

@@ -11,6 +11,8 @@ public class DeploymentRequest {
   private String template;
   private Map<String, String> parameters;
 
+  private String callback;
+
   /**
    * A string containing a TOSCA YAML-formatted template.
    * 
@@ -57,6 +59,30 @@ public class DeploymentRequest {
     return this;
   }
 
+  /**
+   * A string containing the endpoint used by the orchestrator to notify the progress of the
+   * deployment process.
+   * 
+   * @return The endpoint
+   */
+  public String getCallback() {
+    return callback;
+  }
+
+  /**
+   * 
+   * @param callback
+   *          the endpoint.
+   */
+  public void setCallback(String callback) {
+    this.callback = callback;
+  }
+
+  public DeploymentRequest withCallback(String callback) {
+    this.callback = callback;
+    return this;
+  }
+
   @Override
   public String toString() {
     return ToStringBuilder.reflectionToString(this);
@@ -64,7 +90,7 @@ public class DeploymentRequest {
 
   @Override
   public int hashCode() {
-    return new HashCodeBuilder().append(template).append(parameters).toHashCode();
+    return new HashCodeBuilder().append(template).append(parameters).append(callback).toHashCode();
   }
 
   @Override
@@ -77,7 +103,7 @@ public class DeploymentRequest {
     }
     DeploymentRequest rhs = ((DeploymentRequest) other);
     return new EqualsBuilder().append(template, rhs.template).append(parameters, rhs.parameters)
-        .isEquals();
+        .append(callback, rhs.callback).isEquals();
   }
 
 }

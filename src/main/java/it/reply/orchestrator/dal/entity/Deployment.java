@@ -35,6 +35,9 @@ public class Deployment extends AbstractResourceEntity {
   @Column(name = "endpoint")
   private String endpoint;
 
+  @Column(name = "callback")
+  private String callback;
+
   @Column(name = "template", columnDefinition = "LONGTEXT")
   private String template;
 
@@ -61,10 +64,6 @@ public class Deployment extends AbstractResourceEntity {
     this.task = task;
   }
 
-  public String getTemplate() {
-    return template;
-  }
-
   public DeploymentProvider getDeploymentProvider() {
     return deploymentProvider;
   }
@@ -79,6 +78,18 @@ public class Deployment extends AbstractResourceEntity {
 
   public void setEndpoint(String endpoint) {
     this.endpoint = endpoint;
+  }
+
+  public String getCallback() {
+    return callback;
+  }
+
+  public void setCallback(String callback) {
+    this.callback = callback;
+  }
+
+  public String getTemplate() {
+    return template;
   }
 
   public void setTemplate(String template) {
