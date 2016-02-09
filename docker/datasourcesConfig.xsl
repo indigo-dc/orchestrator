@@ -38,7 +38,7 @@
 					</password>
 				</security>
 			</xa-datasource>
-			<xa-datasource jndi-name="java:jboss/datasources/workflow" pool-name="workflowDS" enabled="true" use-java-context="true" use-ccm="true">
+			<xa-datasource jndi-name="java:jboss/datasources/WorkflowManager/JBPM-DS" pool-name="workflowDS" enabled="true" use-java-context="true" use-ccm="true">
 				<xa-datasource-property name="URL">
 					<xsl:value-of select="concat('jdbc:mysql://', $workflow.DB.endpoint, '/', $workflow.DB.name)" />
 				</xa-datasource-property>
