@@ -12,6 +12,8 @@ import javax.persistence.ManyToOne;
 @Entity
 public class Resource extends AbstractResourceEntity {
 
+  private static final long serialVersionUID = -4916577635363604624L;
+
   @Column(name = "resourceType", length = 500)
   private String resourceType;
 
