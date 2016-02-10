@@ -11,8 +11,22 @@ import java.util.List;
 
 public class BaseResource extends AbstractResource {
 
+  private String toscaNodeType;
   private String resourceType;
   private List<String> requiredBy = new ArrayList<String>();
+
+  public String getToscaNodeType() {
+    return this.toscaNodeType;
+  }
+
+  public void setToscaNodeType(String toscaNodeType) {
+    this.toscaNodeType = toscaNodeType;
+  }
+
+  public BaseResource withToscaNodeType(String toscaNodeType) {
+    this.toscaNodeType = toscaNodeType;
+    return this;
+  }
 
   public void setResourceType(String resourceType) {
     this.resourceType = resourceType;

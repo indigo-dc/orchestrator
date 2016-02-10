@@ -111,7 +111,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
                 InfrastructureStatus.class);
             for (Map.Entry<String, String> entry : status.getVmStates().entrySet()) {
               Resource resource = new Resource();
-              resource.setResourceType(entry.getKey());
+              resource.setIaasId(entry.getKey());
+              // FIXME replace the string when we have TOSCA
+              resource.setToscaNodeType("tosca.nodes.Compute");
               resource.setStatus(getOrchestratorStatusFromImStatus(entry.getValue()));
               resource.setDeployment(deployment);
               resourceRepository.save(resource);
