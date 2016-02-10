@@ -4,7 +4,7 @@
   <bpmn2:itemDefinition id="ItemDefinition_4" isCollection="false" structureRef="String"/>
   <bpmn2:signal id="Signal_1" name="NotifyCallback" structureRef="ItemDefinition_4"/>
   <bpmn2:process id="it.reply.orchestrator.Deploy" tns:packageName="it.reply.orchestrator" name="Deploy" isExecutable="true" processType="Private">
-    <bpmn2:property id="DEPLOYMENT_ID" itemSubjectRef="Undeploy.bpmn2#ItemDefinition_4" name="DEPLOYMENT_ID"/>
+    <bpmn2:property id="DEPLOYMENT_ID" itemSubjectRef="ItemDefinition_4" name="DEPLOYMENT_ID"/>
     <bpmn2:startEvent id="StartEvent_1" name="StartProcess">
       <bpmn2:outgoing>SequenceFlow_1</bpmn2:outgoing>
     </bpmn2:startEvent>
