@@ -7,6 +7,10 @@ java -jar /usr/share/java/saxon.jar -o:$JBOSS_HOME/standalone/configuration/$JBO
 	orchestrator.DB.name=$ORCHESTRATOR_DB_NAME \
 	orchestrator.DB.user=$ORCHESTRATOR_DB_USER \
 	orchestrator.DB.pwd=$ORCHESTRATOR_DB_PWD
+	workflow.DB.endpoint=$WORKFLOW_DB_ENDPOINT \
+	workflow.DB.name=$WORKFLOW_DB_NAME \
+	workflow.DB.user=$WORKFLOW_DB_USER \
+	workflow.DB.pwd=$WORKFLOW_DB_PWD
 
 CLUSTER_MESSAGING_PASSWORD="pwd"
 $JBOSS_HOME/bin/standalone.sh -c $JBOSS_CONF_FILE -Djboss.bind.address=$HOSTNAME -Djboss.bind.address.management=$HOSTNAME \

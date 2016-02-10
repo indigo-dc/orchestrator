@@ -1,13 +1,27 @@
 package it.reply.orchestrator.service.deployment.providers;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.annotation.PostConstruct;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.stereotype.Service;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import es.upv.i3m.grycap.im.api.InfrastructureManagerApiClient;
 import es.upv.i3m.grycap.im.api.RestApiBodyContentType;
 import es.upv.i3m.grycap.im.api.VmStates;
 import es.upv.i3m.grycap.im.client.ServiceResponse;
-import es.upv.i3m.grycap.im.exceptions.AuthFileNotFoundException;
-
+import es.upv.i3m.grycap.im.exceptions.ImClientException;
 import it.reply.orchestrator.controller.DeploymentController;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
@@ -65,9 +79,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
    *           if an error occurred while generating the auth file URI
    */
   @PostConstruct
-  private void init() throws AuthFileNotFoundException, IOException, URISyntaxException {
-    String completeFilePath = ImServiceImpl.class.getClassLoader().getResource(AUTH_FILE_PATH)
-        .toURI().getPath();
+    private void init() throws ImClientException, IOException, URISyntaxException {
+        String completeFilePath = ImServiceImpl.class.getClassLoader().getResource(AUTH_FILE_PATH).toURI().getPath();
 
     // remove initial slash from windows paths
     completeFilePath = completeFilePath.replaceFirst("^/(.:/)", "$1");
@@ -78,6 +91,12 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   @Override
   public void doDeploy(String deploymentUuid) {
     Deployment deployment = deploymentRepository.findOne(deploymentUuid);
+    doDeploy(deployment);
+  }
+
+  @Override
+  public void doDeploy(Deployment deployment) {
+    String deploymentUuid = deployment.getId();
     try {
       // Update status of the deployment
       deployment.setTask(Task.DEPLOYER);
@@ -86,7 +105,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
       // TODO improve with template inputs
       ServiceResponse response = imClient.createInfrastructure(deployment.getTemplate(),
-          RestApiBodyContentType.TOSCA);
+                RestApiBodyContentType.TOSCA);
       if (!response.isReponseSuccessful()) {
         updateOnError(deploymentUuid, response.getReasonPhrase());
       } else {
@@ -175,7 +194,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       } else {
         return false;
       }
-    } catch (AuthFileNotFoundException | IOException e) {
+    } catch (ImClientException | IOException e) {
       // TODO improve exception handling
       LOG.error(e);
       return false;
@@ -185,6 +204,12 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   @Override
   public void doUndeploy(String deploymentUuid) {
     Deployment deployment = deploymentRepository.findOne(deploymentUuid);
+    doUndeploy(deployment);
+  }
+
+  @Override
+  public void doUndeploy(Deployment deployment) {
+    String deploymentUuid = deployment.getId();
     try {
       // Update status of the deployment
       deployment.setTask(Task.DEPLOYER);
@@ -229,7 +254,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       } else {
         return false;
       }
-    } catch (AuthFileNotFoundException e) {
+    } catch (ImClientException e) {
       // TODO improve exception handling
       LOG.error(e);
       return false;

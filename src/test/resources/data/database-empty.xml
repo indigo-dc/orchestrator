@@ -1,4 +1,7 @@
 <dataset>
     <Deployment/>
     <Resource/>
+    <WorkflowReference/>
+    <Deployment_parameters/>
+    <Resource_requiredBy/>
 </dataset>

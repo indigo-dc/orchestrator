@@ -14,7 +14,7 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 @Configuration
 @EnableWebMvc
 @EnableSpringDataWebSupport
-@ComponentScan(basePackages = { "it.reply.orchestrator" })
+@ComponentScan(basePackages = { "it.reply.orchestrator", "it.reply.workflowManager" })
 public class WebMvcConfig extends WebMvcConfigurationSupport {
 
   private static final String RESOURCES_LOCATION = "/resources/";
@@ -27,8 +27,7 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
 
   @Override
   public RequestMappingHandlerMapping requestMappingHandlerMapping() {
-    RequestMappingHandlerMapping requestMappingHandlerMapping = super
-        .requestMappingHandlerMapping();
+    RequestMappingHandlerMapping requestMappingHandlerMapping = super.requestMappingHandlerMapping();
     requestMappingHandlerMapping.setUseSuffixPatternMatch(false);
     requestMappingHandlerMapping.setUseTrailingSlashMatch(false);
     return requestMappingHandlerMapping;

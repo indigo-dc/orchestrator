@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 
 @Configuration
-@ComponentScan(basePackages = { "it.reply.orchestrator" })
+@ComponentScan(basePackages = { "it.reply.orchestrator", "it.reply.workflowManager" })
 public class ApplicationConfigTest {
 
   @Bean

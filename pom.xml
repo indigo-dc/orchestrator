@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>it.reply.orchestrator</groupId>
 	<artifactId>orchestrator</artifactId>
-	<version>0.0.1</version>
+	<version>0.0.2-SNAPSHOT</version>
 	<packaging>war</packaging>
 	<name>orchestrator</name>
 
@@ -15,7 +15,7 @@
 		<jackson.version>2.6.4</jackson.version>
 		<hibernate.version>4.3.11.Final</hibernate.version>
 
-		<im-java-api.version>0.2.1</im-java-api.version>
+		<im-java-api.version>0.3.0</im-java-api.version>
 
 
 		<mockito.version>1.10.19</mockito.version>
@@ -25,6 +25,14 @@
 	</properties>
 
 	<dependencies>
+		<!-- Fix to avoid to import the library (which conflicts with the one in 
+			WildFly) -->
+		<dependency>
+			<groupId>dom4j</groupId>
+			<artifactId>dom4j</artifactId>
+			<version>1.6.1</version>
+			<scope>provided</scope>
+		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-core</artifactId>
@@ -68,7 +76,11 @@
 			<version>${log4j.version}</version>
 		</dependency>
 
-
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>1.7.13</version>
+		</dependency>
 
 		<dependency>
 			<groupId>javax.servlet</groupId>
@@ -107,6 +119,11 @@
 			<artifactId>im-java-api</artifactId>
 			<version>${im-java-api.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>it.reply</groupId>
+			<artifactId>workflow-manager-spring</artifactId>
+			<version>0.0.2-SNAPSHOT</version>
+		</dependency>
 
 
 
@@ -135,7 +152,7 @@
 			<version>${mockito.version}</version>
 			<scope>test</scope>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>com.jayway.jsonpath</groupId>
 			<artifactId>json-path</artifactId>
@@ -172,6 +189,13 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		
+		<dependency>
+			<groupId>org.codehaus.btm</groupId>
+			<artifactId>btm</artifactId>
+			<version>2.1.4</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -184,6 +208,25 @@
 				<configuration>
 					<source>${java.version}</source>
 					<target>${java.version}</target>
+				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-war-plugin</artifactId>
+				<version>2.6</version>
+				<configuration>
+					<outputDirectory>${basedir}/docker</outputDirectory>
+					<archiveClasses>true</archiveClasses>
+					<webResources>
+						<resource>
+							<directory>${basedir}/src/main/resources</directory>
+							<filtering>true</filtering>
+							<targetPath>WEB-INF/classes</targetPath>
+							<includes>
+								<include>**/*.properties</include>
+								<include>im-config/*</include>
+							</includes>
+						</resource>
+					</webResources>
 				</configuration>
 			</plugin>
 			<plugin>
