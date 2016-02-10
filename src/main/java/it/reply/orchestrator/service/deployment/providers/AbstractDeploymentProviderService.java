@@ -71,9 +71,6 @@ public abstract class AbstractDeploymentProviderService implements DeploymentPro
     deploymentRepository.save(deployment);
   }
 
-  /**
-   * @param deploymentUuid
-   */
   public void updateOnSuccess(String deploymentUuid) {
     Deployment deployment = deploymentRepository.findOne(deploymentUuid);
     if (deployment.getStatus() == Status.DELETE_IN_PROGRESS) {

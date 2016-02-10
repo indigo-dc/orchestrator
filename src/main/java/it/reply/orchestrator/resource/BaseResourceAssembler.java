@@ -26,7 +26,7 @@ public class BaseResourceAssembler extends ResourceAssemblerSupport<Resource, Ba
     resource.setUuid(entity.getId());
     resource.setCreationTime(entity.getCreated());
     resource.setStatus(entity.getStatus());
-
+    resource.setToscaNodeType(entity.getToscaNodeType());
     resource.add(ControllerLinkBuilder.linkTo(DeploymentController.class).slash("deployments")
         .slash(entity.getDeployment().getId()).withRel("deployment"));
     resource.add(ControllerLinkBuilder.linkTo(DeploymentController.class).slash("deployments")

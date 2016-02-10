@@ -14,8 +14,12 @@ public class Resource extends AbstractResourceEntity {
 
   private static final long serialVersionUID = -4916577635363604624L;
 
-  @Column(name = "resourceType", length = 500)
-  private String resourceType;
+  @Column(name = "iaasId", length = 500)
+  private String iaasId;
+
+  // @Enumerated(EnumType.STRING)
+  @Column(name = "toscaNodeType")
+  private String toscaNodeType;
 
   @ElementCollection
   @Column(name = "requiredBy")
@@ -29,12 +33,20 @@ public class Resource extends AbstractResourceEntity {
     super();
   }
 
-  public String getResourceType() {
-    return resourceType;
+  public String getIaasId() {
+    return iaasId;
   }
 
-  public void setResourceType(String resourceType) {
-    this.resourceType = resourceType;
+  public void setIaasId(String iaasId) {
+    this.iaasId = iaasId;
+  }
+
+  public String getToscaNodeType() {
+    return toscaNodeType;
+  }
+
+  public void setToscaNodeType(String toscaNodeType) {
+    this.toscaNodeType = toscaNodeType;
   }
 
   public List<String> getRequiredBy() {
