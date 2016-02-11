@@ -1,8 +1,11 @@
-FROM  jboss/wildfly:9.0.2.Final
+FROM jboss/wildfly:9.0.2.Final
 
 MAINTAINER a.brigandi@reply.it
 
 COPY /modules/ $JBOSS_HOME/modules/
+
+USER root
+RUN yum install -y libaio
 
 ENV JBOSS_CONF_FILE standalone-full-ha.xml
 ENV JBOSS_CONF_FILEPATH $JBOSS_HOME/standalone/configuration/$JBOSS_CONF_FILE
@@ -11,17 +14,15 @@ ENV ORCHESTRATOR_DB_ENDPOINT "databaseorchestrator:3306"
 ENV ORCHESTRATOR_DB_NAME orchestrator
 ENV ORCHESTRATOR_DB_USER root
 ENV ORCHESTRATOR_DB_PWD root
-ENV ORCHESTRATOR_DB_ENDPOINT "databaseworkflow:3306"
-ENV ORCHESTRATOR_DB_NAME workflow
-ENV ORCHESTRATOR_DB_USER root
-ENV ORCHESTRATOR_DB_PWD root
+ENV WORKFLOW_DB_ENDPOINT "databaseworkflow:3306"
+ENV WORKFLOW_DB_NAME workflow
+ENV WORKFLOW_DB_USER root
+ENV WORKFLOW_DB_PWD root
 
 COPY /otherConfigs.xsl /otherConfigs.xsl
 COPY /datasourcesConfig.xsl /datasourcesConfig.xsl
 COPY launch.sh /launch.sh
 
-USER root
-RUN yum update && yum install -y libaio
 RUN java -jar /usr/share/java/saxon.jar -o:$JBOSS_HOME/standalone/configuration/$JBOSS_CONF_FILE -s:$JBOSS_HOME/standalone/configuration/$JBOSS_CONF_FILE -xsl:/otherConfigs.xsl
 RUN chmod 777 /datasourcesConfig.xsl
 RUN chmod 777 /launch.sh
