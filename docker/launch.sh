@@ -6,7 +6,7 @@ java -jar /usr/share/java/saxon.jar -o:$JBOSS_HOME/standalone/configuration/$JBO
 	orchestrator.DB.endpoint=$ORCHESTRATOR_DB_ENDPOINT \
 	orchestrator.DB.name=$ORCHESTRATOR_DB_NAME \
 	orchestrator.DB.user=$ORCHESTRATOR_DB_USER \
-	orchestrator.DB.pwd=$ORCHESTRATOR_DB_PWD
+	orchestrator.DB.pwd=$ORCHESTRATOR_DB_PWD \
 	workflow.DB.endpoint=$WORKFLOW_DB_ENDPOINT \
 	workflow.DB.name=$WORKFLOW_DB_NAME \
 	workflow.DB.user=$WORKFLOW_DB_USER \
