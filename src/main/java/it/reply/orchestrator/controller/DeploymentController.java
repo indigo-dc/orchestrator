@@ -5,6 +5,9 @@ import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.resource.DeploymentResource;
 import it.reply.orchestrator.resource.DeploymentResourceAssembler;
 import it.reply.orchestrator.service.DeploymentService;
+import it.reply.orchestrator.validator.DeploymentRequestValidator;
+
+import javax.validation.Valid;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -16,6 +19,8 @@ import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,6 +38,11 @@ public class DeploymentController {
 
   @Autowired
   DeploymentResourceAssembler deploymentResourceAssembler;
+
+  @InitBinder
+  protected void initBinder(WebDataBinder binder) {
+    binder.setValidator(new DeploymentRequestValidator());
+  }
 
   @ResponseStatus(HttpStatus.OK)
   @RequestMapping(value = "/", method = RequestMethod.GET)
@@ -58,7 +68,7 @@ public class DeploymentController {
 
   @ResponseStatus(HttpStatus.CREATED)
   @RequestMapping(value = "/deployments", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
-  public DeploymentResource createDeployment(@RequestBody DeploymentRequest request) {
+  public DeploymentResource createDeployment(@Valid @RequestBody DeploymentRequest request) {
 
     LOG.trace("Invoked method: createDeployment with parameter " + request.toString());
     Deployment deployment = deploymentService.createDeployment(request);

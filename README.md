@@ -14,7 +14,7 @@ You can find the REST APIs at [INDIGO OpenProject] (https://project.indigo-datac
 1.1 REQUISITES
 --------------
 
-This project has been created with maven 3.3.3 and Java 1.8. Maven will take care of downloading the extra dependencies needed for the project but this project dependes on [im-java-api](https://github.com/indigo-dc/im-java-api) also.
+This project has been created with maven 3.3.3 and Java 1.8. Maven will take care of downloading the extra dependencies needed for the project but this project dependes on [im-java-api](https://github.com/indigo-dc/im-java-api) and [workflow-manager](https://github.com/ConceptReplyIT/workflow-manager) too.
 To run the Orchestrator you need docker and a MySQL Server on your machine. See next section to have details.
 
 1.2 INSTALLING
@@ -49,7 +49,7 @@ docker build -t indigodatacloud/orchestrator /path/to/the/docker/folder
 1.3 RUNNING
 --------------
 ### With MySQL dockerized on the same host
-The orchestrator can be run in 3 steps:
+The orchestrator can be run in 4 steps:
 
 1. Create a docker bridge network (called `orchestrator_net`) with the command
 
@@ -57,26 +57,33 @@ The orchestrator can be run in 3 steps:
     sudo docker network create --driver bridge orchestrator_net
     ```
 
-2. Run the MySQL database with the command
+2. Run the MySQL deployments database with the command
 
     ```
     sudo docker run --net orchestrator_net --name databaseOrchestrator -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=orchestrator -d mysql
     ```
 
-3. Run the orchestrator with the command
+3. Run the MySQL workflow database with the command
+
+    ```
+    sudo docker run --net orchestrator_net --name databaseWorkflow -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=workflow -d mysql
+    ```
+
+4. Run the orchestrator with the command
 
     ```
     sudo docker run --net orchestrator_net --name orchestrator1 -h orchestrator1 -p 80:8080 -d indigodatacloud/orchestrator
     ```
 
-Thanks to the first step, the orchestrator will be able to communicate with the MySQL instance using as domain name its container name (`databaseOrchestrator`)
+Thanks to the first step, the orchestrator will be able to communicate with the MySQL instances using as domain name their container names (`databaseOrchestrator` and `databaseWorkflow`)
 
-### With an external database
+### With external databases
 
-The orchestrator can also be run using a pre-existing DB; you just need to start it with the command
+The orchestrator can also be run using already deployed DBs; you just need to start it with the command
 ```
 sudo docker run --name orchestrator1 -h orchestrator1 -e ORCHESTRATOR_DB_ENDPOINT=DOMAIN_NAME:PORT \
   -e ORCHESTRATOR_DB_NAME=SCHEMA_NAME -e ORCHESTRATOR_DB_USER=DB_USER -e ORCHESTRATOR_DB_PWD=DB_USER_PASSWORD  \
-  -p 80:8080 -d indigodatacloud/orchestrator
+  -e WORKFLOW_DB_ENDPOINT=DOMAIN_NAME:PORT -e WORKFLOW_DB_NAME=SCHEMA_NAME -e WORKFLOW_DB_USER=DB_USER \
+  -e WORKFLOW_DB_PWD=DB_USER_PASSWORD -p 80:8080 -d indigodatacloud/orchestrator
 ```
 using as parameters (`DOMAIN_NAME`, `PORT`, `SCHEMA_NAME`, `DB_USER`, `DB_USER_PASSWORD`) the correct values.
