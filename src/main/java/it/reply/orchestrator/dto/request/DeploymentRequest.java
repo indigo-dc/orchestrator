@@ -4,12 +4,16 @@ import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
+import java.util.HashMap;
 import java.util.Map;
+
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 public class DeploymentRequest {
 
-  private String template;
-  private Map<String, String> parameters;
+  private String template = "";
+  private Map<String, Object> parameters = new HashMap<>();
 
   private String callback;
 
@@ -18,7 +22,7 @@ public class DeploymentRequest {
    * 
    * @return The template
    */
-  public String getTemplate() {
+  public @Nonnull String getTemplate() {
     return template;
   }
 
@@ -27,11 +31,11 @@ public class DeploymentRequest {
    * @param template
    *          The TOSCA YAML-formatted template.
    */
-  public void setTemplate(String template) {
+  public void setTemplate(@Nonnull String template) {
     this.template = template;
   }
 
-  public DeploymentRequest withTemplate(String template) {
+  public @Nonnull DeploymentRequest withTemplate(@Nonnull String template) {
     this.template = template;
     return this;
   }
@@ -41,7 +45,7 @@ public class DeploymentRequest {
    * 
    * @return The parameters
    */
-  public Map<String, String> getParameters() {
+  public @Nonnull Map<String, Object> getParameters() {
     return parameters;
   }
 
@@ -50,11 +54,11 @@ public class DeploymentRequest {
    * @param parameters
    *          The parameters.
    */
-  public void setParameters(Map<String, String> parameters) {
+  public void setParameters(@Nonnull Map<String, Object> parameters) {
     this.parameters = parameters;
   }
 
-  public DeploymentRequest withParameters(Map<String, String> parameters) {
+  public @Nonnull DeploymentRequest withParameters(@Nonnull Map<String, Object> parameters) {
     this.parameters = parameters;
     return this;
   }
@@ -65,7 +69,7 @@ public class DeploymentRequest {
    * 
    * @return The endpoint
    */
-  public String getCallback() {
+  public @Nullable String getCallback() {
     return callback;
   }
 
@@ -74,17 +78,17 @@ public class DeploymentRequest {
    * @param callback
    *          the endpoint.
    */
-  public void setCallback(String callback) {
+  public void setCallback(@Nullable String callback) {
     this.callback = callback;
   }
 
-  public DeploymentRequest withCallback(String callback) {
+  public @Nonnull DeploymentRequest withCallback(@Nullable String callback) {
     this.callback = callback;
     return this;
   }
 
   @Override
-  public String toString() {
+  public @Nonnull String toString() {
     return ToStringBuilder.reflectionToString(this);
   }
 
@@ -94,7 +98,10 @@ public class DeploymentRequest {
   }
 
   @Override
-  public boolean equals(Object other) {
+  public boolean equals(@Nullable Object other) {
+    if (other == null) {
+      return false;
+    }
     if (other == this) {
       return true;
     }

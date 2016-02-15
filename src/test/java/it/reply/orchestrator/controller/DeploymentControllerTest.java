@@ -82,8 +82,9 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
   public void createDeploymentSuccessfully() throws Exception {
 
     DeploymentRequest request = new DeploymentRequest();
-    Map<String, String> parameters = new HashMap<String, String>();
-    parameters.put("test-key", "test-value");
+    Map<String, Object> parameters = new HashMap<>();
+    parameters.put("test-string", "test-string");
+    parameters.put("test-int", 1);
     request.setParameters(parameters);
     request.setTemplate(FileIO.readUTF8File("./src/test/resources/tosca/galaxy_tosca.yaml"));
     mockMvc

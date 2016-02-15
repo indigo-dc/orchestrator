@@ -17,6 +17,7 @@ import it.reply.workflowManager.orchestrator.bpm.BusinessProcessManager.RUNTIME_
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.kie.api.runtime.process.ProcessInstance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,7 +61,9 @@ public class DeploymentServiceImpl implements DeploymentService {
     Deployment deployment = new Deployment();
     deployment.setStatus(Status.CREATE_IN_PROGRESS);
     deployment.setTask(Task.NONE);
-    deployment.setParameters(request.getParameters());
+    deployment.setParameters(request.getParameters().entrySet().stream()
+        .collect(Collectors.toMap(e -> ((Map.Entry<String, Object>) e).getKey(),
+            e -> ((Map.Entry<String, Object>) e).getValue().toString())));
     deployment.setTemplate(request.getTemplate());
     if (request.getCallback() != null) {
       deployment.setCallback(request.getCallback());
