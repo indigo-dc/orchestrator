@@ -1,4 +1,5 @@
-[![License](https://img.shields.io/badge/license-Apache%202-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+[![GitHub license](https://img.shields.io/github/license/indigo-dc/orchestrator.svg)]()
+[![GitHub tag](https://img.shields.io/github/tag/indigo-dc/orchestrator.svg)]()
 
 INDIGO Orchestrator
 ============================
@@ -35,11 +36,9 @@ mvn clean install
 ```
 Beware that, in order to run successfully the tests, you must have a running MySQL DB, and you need to customize the file `/orchestrator/src/test/resources/application-test.properties` accordingly.
 
-At compilation completed, the `orchestrator.war` file will be put inside the `target` folder.
+At compilation completed, the `orchestrator.war` file will be put inside the `docker` folder.
 
 ### Build the Docker image
-
-The generated war must then be placed in the docker folder.
 
 You can build the docker image with the command
 ```
