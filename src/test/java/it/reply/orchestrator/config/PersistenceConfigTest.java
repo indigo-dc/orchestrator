@@ -11,7 +11,9 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.instrument.classloading.InstrumentationLoadTimeWeaver;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.orm.hibernate4.HibernateExceptionTranslator;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
@@ -36,13 +38,10 @@ public class PersistenceConfigTest {
   @Resource
   private Environment env;
 
-  @Bean
+  @Bean(destroyMethod = "shutdown")
   public DataSource dataSource() {
-    DriverManagerDataSource dataSource = new DriverManagerDataSource();
-    dataSource.setDriverClassName(env.getRequiredProperty("db.driver"));
-    dataSource.setUrl(env.getRequiredProperty("db.url"));
-    dataSource.setUsername(env.getRequiredProperty("db.username"));
-    dataSource.setPassword(env.getRequiredProperty("db.password"));
+    EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
+    EmbeddedDatabase dataSource = builder.setType(EmbeddedDatabaseType.H2).build();
     return dataSource;
   }
 

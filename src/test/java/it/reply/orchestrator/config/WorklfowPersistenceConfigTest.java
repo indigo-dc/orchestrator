@@ -6,7 +6,9 @@ import javax.sql.DataSource;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
+import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
@@ -20,13 +22,11 @@ public class WorklfowPersistenceConfigTest {
   @Resource
   private Environment environment;
 
-  @Bean
+  @Bean(destroyMethod = "shutdown")
   public DataSource workflowDataSource() {
-    DriverManagerDataSource dataSource = new DriverManagerDataSource();
-    dataSource.setDriverClassName(environment.getRequiredProperty("workflow.db.driver"));
-    dataSource.setUrl(environment.getRequiredProperty("workflow.db.url"));
-    dataSource.setUsername(environment.getRequiredProperty("workflow.db.username"));
-    dataSource.setPassword(environment.getRequiredProperty("workflow.db.password"));
+    EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
+    EmbeddedDatabase dataSource = builder.setType(EmbeddedDatabaseType.H2)
+        .addScripts("h2-jbpm-schema.sql").build();
     return dataSource;
   }
 
