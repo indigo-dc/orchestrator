@@ -3,7 +3,6 @@ package it.reply.orchestrator.config;
 import java.io.IOException;
 import java.util.Properties;
 
-import org.springframework.beans.factory.BeanFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
