@@ -142,12 +142,6 @@
 			<version>${workflow-manager.version}</version>
 		</dependency>
 		
-<!-- 		<dependency>
-			<groupId>alien4cloud</groupId>
-			<artifactId>alien4cloud-commons</artifactId>
-			<version>${alien4cloud.version}</version>
-		</dependency> -->
-		
 		<dependency>
 			<groupId>alien4cloud</groupId>
 			<artifactId>alien4cloud-core</artifactId>
@@ -255,7 +249,7 @@
 				<artifactId>maven-war-plugin</artifactId>
 				<version>2.6</version>
 				<configuration>
-					<outputDirectory>${basedir}/docker</outputDirectory>
+ 					<outputDirectory>${basedir}/docker</outputDirectory>
 					<archiveClasses>true</archiveClasses>
 					<webResources>
 						<resource>
@@ -290,6 +284,23 @@
 					</execution>
 				</executions>
 			</plugin>
+			<!-- Automatic deploy on wildfly -->
+			<!-- <plugin>
+                <groupId>org.wildfly.plugins</groupId>
+                <artifactId>wildfly-maven-plugin</artifactId>
+                <version>1.1.0.Alpha7</version>
+                <configuration>
+               		<filename>../docker/${project.build.finalName}.${project.packaging}</filename> 
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>deploy</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin> -->
 		</plugins>
 
 	</build>
