@@ -1,13 +1,33 @@
 package it.reply.orchestrator.service.deployment.providers;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.URISyntaxException;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.stereotype.Service;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.io.ByteStreams;
 
 import es.upv.i3m.grycap.im.api.InfrastructureManagerApiClient;
 import es.upv.i3m.grycap.im.api.RestApiBodyContentType;
 import es.upv.i3m.grycap.im.api.VmStates;
 import es.upv.i3m.grycap.im.client.ServiceResponse;
 import es.upv.i3m.grycap.im.exceptions.ImClientException;
-
 import it.reply.orchestrator.controller.DeploymentController;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
@@ -18,22 +38,6 @@ import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.service.DeploymentException;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.stereotype.Service;
-
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-
-import javax.annotation.PostConstruct;
 
 @Service
 @PropertySource("classpath:im-config/im-java-api.properties")
@@ -67,13 +71,17 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
    */
   @PostConstruct
   private void init() throws ImClientException, IOException, URISyntaxException {
-    String completeFilePath = ImServiceImpl.class.getClassLoader().getResource(AUTH_FILE_PATH)
-        .toURI().getPath();
 
-    // remove initial slash from windows paths
-    completeFilePath = completeFilePath.replaceFirst("^/(.:/)", "$1");
+    InputStream inputStream = ImServiceImpl.class.getClassLoader()
+        .getResourceAsStream(AUTH_FILE_PATH);
 
-    imClient = new InfrastructureManagerApiClient(IM_URL, completeFilePath);
+    File tmp = File.createTempFile("authFileTmp", ".tmp");
+    OutputStream outStream = new FileOutputStream(tmp);
+    ByteStreams.copy(inputStream, new FileOutputStream(tmp));
+    inputStream.close();
+    outStream.close();
+
+    imClient = new InfrastructureManagerApiClient(IM_URL, tmp.getAbsolutePath());
   }
 
   @Override
