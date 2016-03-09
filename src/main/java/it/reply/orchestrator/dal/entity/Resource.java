@@ -21,6 +21,9 @@ public class Resource extends AbstractResourceEntity {
   @Column(name = "toscaNodeType")
   private String toscaNodeType;
 
+  @Column(name = "toscaNodeName")
+  private String toscaNodeName;
+
   @ElementCollection
   @Column(name = "requiredBy")
   List<String> requiredBy = new ArrayList<String>();
@@ -47,6 +50,14 @@ public class Resource extends AbstractResourceEntity {
 
   public void setToscaNodeType(String toscaNodeType) {
     this.toscaNodeType = toscaNodeType;
+  }
+
+  public String getToscaNodeName() {
+    return toscaNodeName;
+  }
+
+  public void setToscaNodeName(String toscaNodeName) {
+    this.toscaNodeName = toscaNodeName;
   }
 
   public List<String> getRequiredBy() {

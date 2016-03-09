@@ -21,12 +21,12 @@ public class BaseResourceAssembler extends ResourceAssemblerSupport<Resource, Ba
   }
 
   private BaseResource getBaseResource(Resource entity) {
-    // TODO complete the mapping
     BaseResource resource = new BaseResource();
     resource.setUuid(entity.getId());
     resource.setCreationTime(entity.getCreated());
     resource.setStatus(entity.getStatus());
     resource.setToscaNodeType(entity.getToscaNodeType());
+    resource.setToscaNodeType(entity.getToscaNodeName());
     resource.add(ControllerLinkBuilder.linkTo(DeploymentController.class).slash("deployments")
         .slash(entity.getDeployment().getId()).withRel("deployment"));
     resource.add(ControllerLinkBuilder.linkTo(DeploymentController.class).slash("deployments")

@@ -1,20 +1,5 @@
 package it.reply.orchestrator.service.deployment.providers;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import javax.annotation.PostConstruct;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.stereotype.Service;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import es.upv.i3m.grycap.im.api.InfrastructureManagerApiClient;
@@ -22,6 +7,7 @@ import es.upv.i3m.grycap.im.api.RestApiBodyContentType;
 import es.upv.i3m.grycap.im.api.VmStates;
 import es.upv.i3m.grycap.im.client.ServiceResponse;
 import es.upv.i3m.grycap.im.exceptions.ImClientException;
+
 import it.reply.orchestrator.controller.DeploymentController;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
@@ -45,6 +31,7 @@ import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
@@ -79,8 +66,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
    *           if an error occurred while generating the auth file URI
    */
   @PostConstruct
-    private void init() throws ImClientException, IOException, URISyntaxException {
-        String completeFilePath = ImServiceImpl.class.getClassLoader().getResource(AUTH_FILE_PATH).toURI().getPath();
+  private void init() throws ImClientException, IOException, URISyntaxException {
+    String completeFilePath = ImServiceImpl.class.getClassLoader().getResource(AUTH_FILE_PATH)
+        .toURI().getPath();
 
     // remove initial slash from windows paths
     completeFilePath = completeFilePath.replaceFirst("^/(.:/)", "$1");
@@ -105,7 +93,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
       // TODO improve with template inputs
       ServiceResponse response = imClient.createInfrastructure(deployment.getTemplate(),
-                RestApiBodyContentType.TOSCA);
+          RestApiBodyContentType.TOSCA);
       if (!response.isReponseSuccessful()) {
         updateOnError(deploymentUuid, response.getReasonPhrase());
       } else {
@@ -124,11 +112,21 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         try {
           boolean result = doPoller(infrastructureId, this::isDeployed);
           if (result) {
-            // Update the deployment entity
+            // Save outputs
+            es.upv.i3m.grycap.im.api.InfrastructureStatus statusResponse = imClient
+                .getInfrastructureOutputs(infrastructureId);
+
+            deployment.setOutputs(statusResponse.getProperties().entrySet().stream()
+                .collect(Collectors.toMap(e -> ((Map.Entry<String, Object>) e).getKey(),
+                    e -> ((Map.Entry<String, Object>) e).getValue().toString())));
+
+            // IM returns the list of VMs that compose the infrastructure with their status
             response = imClient.getInfrastructureState(infrastructureId);
             InfrastructureStatus status = new ObjectMapper().readValue(response.getResult(),
                 InfrastructureStatus.class);
+
             for (Map.Entry<String, String> entry : status.getVmStates().entrySet()) {
+
               Resource resource = new Resource();
               resource.setIaasId(entry.getKey());
               // FIXME replace the string when we have TOSCA

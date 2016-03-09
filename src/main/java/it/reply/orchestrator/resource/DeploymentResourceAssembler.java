@@ -5,6 +5,7 @@ import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.service.utils.MyLinkBuilder;
 
 import java.net.URI;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.StampedLock;
 
@@ -44,6 +45,8 @@ public class DeploymentResourceAssembler
     resource.setStatus(entity.getStatus());
 
     resource.setTask(entity.getTask());
+
+    resource.setOutputs((Map) entity.getOutputs());
 
     if (entity.getCallback() != null) {
       resource.setCallback(entity.getCallback());
