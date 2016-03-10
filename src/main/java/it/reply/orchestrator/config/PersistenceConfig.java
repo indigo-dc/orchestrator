@@ -1,5 +1,8 @@
 package it.reply.orchestrator.config;
 
+import it.reply.workflowManager.spring.orchestrator.annotations.WorkflowPersistenceUnit;
+import it.reply.workflowManager.utils.Constants;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
@@ -12,9 +15,6 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 import org.springframework.transaction.jta.JtaTransactionManager;
-
-import it.reply.workflowManager.spring.orchestrator.annotations.WorkflowPersistenceUnit;
-import it.reply.workflowManager.utils.Constants;
 
 import java.util.Properties;
 

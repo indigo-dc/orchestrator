@@ -1,23 +1,23 @@
 package it.reply.orchestrator.config;
 
+import it.reply.workflowManager.orchestrator.config.ConfigProducer;
+
+import org.kie.api.io.Resource;
+import org.springframework.stereotype.Component;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.kie.api.io.Resource;
-import org.springframework.stereotype.Component;
-
-import it.reply.workflowManager.orchestrator.config.ConfigProducer;
-
 @Component
 public class WorkflowConfigProducerBean implements ConfigProducer {
 
-  public final static String BASE_PATH = "workflows";
+  public static final String BASE_PATH = "workflows";
 
-  public final static WorkflowResource DEPLOY;
-  public final static WorkflowResource UNDEPLOY;
+  public static final WorkflowResource DEPLOY;
+  public static final WorkflowResource UNDEPLOY;
 
   static {
     try {
