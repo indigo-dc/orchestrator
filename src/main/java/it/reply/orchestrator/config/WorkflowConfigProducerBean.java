@@ -51,4 +51,14 @@ public class WorkflowConfigProducerBean implements ConfigProducer {
     return resources;
   }
 
+  @Override
+  public int getExecutorServiceThreadPoolSize() {
+    return 10;
+  }
+
+  @Override
+  public int getExecutorServiceInterval() {
+    return 3;
+  }
+
 }
