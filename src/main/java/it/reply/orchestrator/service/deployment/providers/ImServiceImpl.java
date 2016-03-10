@@ -10,7 +10,6 @@ import es.upv.i3m.grycap.im.api.VmStates;
 import es.upv.i3m.grycap.im.client.ServiceResponse;
 import es.upv.i3m.grycap.im.exceptions.ImClientException;
 
-import it.reply.orchestrator.controller.DeploymentController;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
@@ -45,7 +44,7 @@ import javax.annotation.PostConstruct;
 @PropertySource("classpath:im-config/im-java-api.properties")
 public class ImServiceImpl extends AbstractDeploymentProviderService {
 
-  private static final Logger LOG = LogManager.getLogger(DeploymentController.class);
+  private static final Logger LOG = LogManager.getLogger(ImServiceImpl.class);
 
   @Value("${url}")
   private String IM_URL;
