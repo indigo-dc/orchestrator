@@ -1,5 +1,10 @@
 package it.reply.orchestrator.dal.entity;
 
+import it.reply.workflowManager.orchestrator.bpm.BusinessProcessManager;
+import it.reply.workflowManager.orchestrator.bpm.BusinessProcessManager.RUNTIME_STRATEGY;
+
+import org.springframework.hateoas.Identifiable;
+
 import java.io.Serializable;
 
 import javax.persistence.Column;
@@ -10,11 +15,6 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
-
-import org.springframework.hateoas.Identifiable;
-
-import it.reply.workflowManager.orchestrator.bpm.BusinessProcessManager;
-import it.reply.workflowManager.orchestrator.bpm.BusinessProcessManager.RUNTIME_STRATEGY;
 
 @Entity
 public class WorkflowReference implements Identifiable<Long>, Serializable {

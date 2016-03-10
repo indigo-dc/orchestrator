@@ -9,15 +9,9 @@ import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.http.NotFoundException;
-import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
 import it.reply.workflowManager.exceptions.WorkflowException;
 import it.reply.workflowManager.orchestrator.bpm.BusinessProcessManager;
 import it.reply.workflowManager.orchestrator.bpm.BusinessProcessManager.RUNTIME_STRATEGY;
-
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 import org.kie.api.runtime.process.ProcessInstance;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,15 +20,16 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @Service
 public class DeploymentServiceImpl implements DeploymentService {
 
   @Autowired
   private DeploymentRepository deploymentRepository;
-
-  // TODO no choice of the deploymentProvider
-  @Autowired
-  private DeploymentProviderService imService;
 
   @Autowired
   private BusinessProcessManager wfService;

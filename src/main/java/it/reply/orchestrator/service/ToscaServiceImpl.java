@@ -1,16 +1,5 @@
 package it.reply.orchestrator.service;
 
-import com.google.common.io.ByteStreams;
-
-import org.apache.commons.lang.exception.ExceptionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
-import org.springframework.stereotype.Service;
-
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -29,16 +18,18 @@ import javax.annotation.Nonnull;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
+import org.springframework.stereotype.Service;
+
+import com.google.common.io.ByteStreams;
+
 import alien4cloud.component.repository.exception.CSARVersionAlreadyExistsException;
-import alien4cloud.model.application.Application;
-import alien4cloud.model.application.ApplicationVersion;
-import alien4cloud.model.templates.TopologyTemplate;
-import alien4cloud.model.templates.TopologyTemplateVersion;
-import alien4cloud.model.topology.Topology;
-import alien4cloud.security.AuthorizationUtil;
 import alien4cloud.security.model.Role;
-import alien4cloud.security.model.User;
-import alien4cloud.topology.TopologyService;
 import alien4cloud.tosca.ArchiveParser;
 import alien4cloud.tosca.ArchiveUploadService;
 import alien4cloud.tosca.model.ArchiveRoot;
@@ -56,9 +47,6 @@ public class ToscaServiceImpl implements ToscaService {
   @Autowired
   private ArchiveUploadService archiveUploadService;
 
-  @Autowired
-  private TopologyService topologyService;
-
   @Value("${directories.alien}/${directories.csar_repository}")
   private String alienRepoDir;
 
@@ -68,24 +56,6 @@ public class ToscaServiceImpl implements ToscaService {
   private String normativeLocalName;
   @Value("${tosca.definitions.indigo}")
   private String indigoLocalName;
-
-  private static void setAutentication() {
-    Authentication auth = new PreAuthenticatedAuthenticationToken(Role.ADMIN.name().toLowerCase(),
-        "", AuthorityUtils.createAuthorityList(Role.ADMIN.name()));
-    SecurityContextHolder.getContext().setAuthentication(auth);
-  }
-
-  public static void zip(@Nonnull InputStream fileStream, @Nonnull Path outputPath)
-      throws IOException {
-    FileUtil.touch(outputPath);
-    try (ZipOutputStream zipOutputStream = new ZipOutputStream(
-        new BufferedOutputStream(Files.newOutputStream(outputPath)))) {
-      zipOutputStream.putNextEntry(new ZipEntry("definition.yml"));
-      ByteStreams.copy(fileStream, zipOutputStream);
-      zipOutputStream.closeEntry();
-      zipOutputStream.flush();
-    }
-  }
 
   @PostConstruct
   public void init() throws IOException, CSARVersionAlreadyExistsException, ParsingException {
@@ -111,8 +81,21 @@ public class ToscaServiceImpl implements ToscaService {
 
   }
 
+  public static void zip(@Nonnull InputStream fileStream, @Nonnull Path outputPath)
+      throws IOException {
+    FileUtil.touch(outputPath);
+    try (ZipOutputStream zipOutputStream = new ZipOutputStream(
+        new BufferedOutputStream(Files.newOutputStream(outputPath)))) {
+      zipOutputStream.putNextEntry(new ZipEntry("definition.yml"));
+      ByteStreams.copy(fileStream, zipOutputStream);
+      zipOutputStream.closeEntry();
+      zipOutputStream.flush();
+    }
+  }
+
   @Override
-  public @Nonnull ArchiveRoot getArchiveRootFromTemplate(@Nonnull String toscaTemplate)
+  @Nonnull
+  public ArchiveRoot getArchiveRootFromTemplate(@Nonnull String toscaTemplate)
       throws IOException, ParsingException {
     Path zipPath = Files.createTempFile("csar", ".zip");
     try (InputStream is = new ByteArrayInputStream(toscaTemplate.getBytes());) {
@@ -125,8 +108,8 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
-  public @Nonnull String getTemplateFromTopology(@Nonnull ArchiveRoot archiveRoot)
-      throws IOException {
+  @Nonnull
+  public String getTemplateFromTopology(@Nonnull ArchiveRoot archiveRoot) throws IOException {
     Map<String, Object> velocityCtx = new HashMap<>();
     velocityCtx.put("tosca_definitions_version",
         archiveRoot.getArchive().getToscaDefinitionsVersion());
@@ -139,5 +122,11 @@ public class ToscaServiceImpl implements ToscaService {
     StringWriter writer = new StringWriter();
     VelocityUtil.generate("templates/topology-1_0_0_INDIGO.yml.vm", writer, velocityCtx);
     return writer.toString();
+  }
+
+  private static void setAutentication() {
+    Authentication auth = new PreAuthenticatedAuthenticationToken(Role.ADMIN.name().toLowerCase(),
+        "", AuthorityUtils.createAuthorityList(Role.ADMIN.name()));
+    SecurityContextHolder.getContext().setAuthentication(auth);
   }
 }

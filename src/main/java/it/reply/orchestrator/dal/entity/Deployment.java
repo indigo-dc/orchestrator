@@ -1,5 +1,8 @@
 package it.reply.orchestrator.dal.entity;
 
+import it.reply.orchestrator.enums.DeploymentProvider;
+import it.reply.orchestrator.enums.Task;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,9 +19,6 @@ import javax.persistence.FetchType;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Transient;
-
-import it.reply.orchestrator.enums.DeploymentProvider;
-import it.reply.orchestrator.enums.Task;
 
 @Entity
 public class Deployment extends AbstractResourceEntity {

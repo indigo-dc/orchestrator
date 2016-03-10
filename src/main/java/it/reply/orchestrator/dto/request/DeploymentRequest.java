@@ -22,7 +22,8 @@ public class DeploymentRequest {
    * 
    * @return The template
    */
-  public @Nonnull String getTemplate() {
+  @Nonnull
+  public String getTemplate() {
     return template;
   }
 
@@ -35,7 +36,8 @@ public class DeploymentRequest {
     this.template = template;
   }
 
-  public @Nonnull DeploymentRequest withTemplate(@Nonnull String template) {
+  @Nonnull
+  public DeploymentRequest withTemplate(@Nonnull String template) {
     this.template = template;
     return this;
   }
@@ -45,7 +47,8 @@ public class DeploymentRequest {
    * 
    * @return The parameters
    */
-  public @Nonnull Map<String, Object> getParameters() {
+  @Nonnull
+  public Map<String, Object> getParameters() {
     return parameters;
   }
 
@@ -58,7 +61,8 @@ public class DeploymentRequest {
     this.parameters = parameters;
   }
 
-  public @Nonnull DeploymentRequest withParameters(@Nonnull Map<String, Object> parameters) {
+  @Nonnull
+  public DeploymentRequest withParameters(@Nonnull Map<String, Object> parameters) {
     this.parameters = parameters;
     return this;
   }
@@ -69,7 +73,8 @@ public class DeploymentRequest {
    * 
    * @return The endpoint
    */
-  public @Nullable String getCallback() {
+  @Nullable
+  public String getCallback() {
     return callback;
   }
 
@@ -82,13 +87,15 @@ public class DeploymentRequest {
     this.callback = callback;
   }
 
-  public @Nonnull DeploymentRequest withCallback(@Nullable String callback) {
+  @Nonnull
+  public DeploymentRequest withCallback(@Nullable String callback) {
     this.callback = callback;
     return this;
   }
 
   @Override
-  public @Nonnull String toString() {
+  @Nonnull
+  public String toString() {
     return ToStringBuilder.reflectionToString(this);
   }
 
