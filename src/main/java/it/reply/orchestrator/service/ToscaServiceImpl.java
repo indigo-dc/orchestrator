@@ -9,6 +9,7 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.zip.ZipEntry;
@@ -17,6 +18,9 @@ import java.util.zip.ZipOutputStream;
 import javax.annotation.Nonnull;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -29,6 +33,7 @@ import org.springframework.stereotype.Service;
 import com.google.common.io.ByteStreams;
 
 import alien4cloud.component.repository.exception.CSARVersionAlreadyExistsException;
+import alien4cloud.model.components.Csar;
 import alien4cloud.security.model.Role;
 import alien4cloud.tosca.ArchiveParser;
 import alien4cloud.tosca.ArchiveUploadService;
@@ -40,6 +45,8 @@ import alien4cloud.utils.FileUtil;
 
 @Service
 public class ToscaServiceImpl implements ToscaService {
+
+  private static final Logger LOG = LogManager.getLogger(ToscaServiceImpl.class);
 
   @Resource
   private ArchiveParser parser;
@@ -70,13 +77,21 @@ public class ToscaServiceImpl implements ToscaService {
     try (InputStream is = cl.getResourceAsStream(basePath + "/" + normativeLocalName)) {
       Path zipFile = File.createTempFile(normativeLocalName, ".zip").toPath();
       zip(is, zipFile);
-      archiveUploadService.upload(zipFile);
+      ParsingResult<Csar> result = archiveUploadService.upload(zipFile);
+      if (!result.getContext().getParsingErrors().isEmpty()) {
+        LOG.warn("Error parsing definition {}:\n{}", () -> normativeLocalName,
+            () -> Arrays.toString(result.getContext().getParsingErrors().toArray()));
+      }
     }
 
     try (InputStream is = cl.getResourceAsStream(basePath + "/" + indigoLocalName)) {
       Path zipFile = File.createTempFile(indigoLocalName, ".zip").toPath();
       zip(is, zipFile);
-      archiveUploadService.upload(zipFile);
+      ParsingResult<Csar> result = archiveUploadService.upload(zipFile);
+      if (!result.getContext().getParsingErrors().isEmpty()) {
+        LOG.warn("Error parsing definition {}:\n{}", () -> indigoLocalName,
+            () -> Arrays.toString(result.getContext().getParsingErrors().toArray()));
+      }
     }
 
   }
