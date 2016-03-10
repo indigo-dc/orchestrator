@@ -20,15 +20,9 @@ public class AbstractResource extends ResourceSupport {
   private String updateTime;
 
   private Status status;
+  private String statusReason;
 
   public AbstractResource() {
-  }
-
-  public AbstractResource(String uuid, Date creationTime, Status status) {
-    super();
-    this.uuid = uuid;
-    setCreationTime(creationTime);
-    this.status = status;
   }
 
   public String getUuid() {
@@ -43,6 +37,12 @@ public class AbstractResource extends ResourceSupport {
     return creationTime;
   }
 
+  /**
+   * Set the creation time converting from Date.
+   * 
+   * @param creationTime
+   *          {@code Date} of creation
+   */
   public void setCreationTime(Date creationTime) {
     if (creationTime == null) {
       return;
@@ -51,10 +51,20 @@ public class AbstractResource extends ResourceSupport {
     this.creationTime = convertDate(creationTime);
   }
 
+  public void setCreationTime(String creationTime) {
+    this.creationTime = creationTime;
+  }
+
   public String getUpdateTime() {
     return updateTime;
   }
 
+  /**
+   * Set the update time converting from Date.
+   * 
+   * @param updateTime
+   *          {@code Date} of update
+   */
   public void setUpdateTime(Date updateTime) {
     if (updateTime == null) {
       return;
@@ -63,16 +73,20 @@ public class AbstractResource extends ResourceSupport {
     this.updateTime = convertDate(updateTime);
   }
 
-  public void setCreationTime(String creationTime) {
-    this.creationTime = creationTime;
-  }
-
   public Status getStatus() {
     return status;
   }
 
   public void setStatus(Status status) {
     this.status = status;
+  }
+
+  public String getStatusReason() {
+    return statusReason;
+  }
+
+  public void setStatusReason(String statusReason) {
+    this.statusReason = statusReason;
   }
 
   private String convertDate(Date date) {

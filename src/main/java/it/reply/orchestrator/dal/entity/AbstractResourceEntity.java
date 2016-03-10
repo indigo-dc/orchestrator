@@ -33,7 +33,7 @@ public abstract class AbstractResourceEntity implements Identifiable<String>, Se
   @Column(name = "status", length = 500)
   private Status status;
 
-  @Column(name = "statusReason")
+  @Column(name = "statusReason", columnDefinition = "LONGTEXT")
   private String statusReason;
 
   private Date created;

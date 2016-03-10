@@ -1,5 +1,33 @@
 package it.reply.orchestrator.service.deployment.providers;
 
+import com.google.common.io.ByteStreams;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import es.upv.i3m.grycap.im.api.InfrastructureManagerApiClient;
+import es.upv.i3m.grycap.im.api.RestApiBodyContentType;
+import es.upv.i3m.grycap.im.api.VmStates;
+import es.upv.i3m.grycap.im.client.ServiceResponse;
+import es.upv.i3m.grycap.im.exceptions.ImClientException;
+
+import it.reply.orchestrator.controller.DeploymentController;
+import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.entity.Resource;
+import it.reply.orchestrator.dal.repository.DeploymentRepository;
+import it.reply.orchestrator.dal.repository.ResourceRepository;
+import it.reply.orchestrator.dto.im.InfrastructureStatus;
+import it.reply.orchestrator.enums.DeploymentProvider;
+import it.reply.orchestrator.enums.Status;
+import it.reply.orchestrator.enums.Task;
+import it.reply.orchestrator.exception.service.DeploymentException;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.stereotype.Service;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -12,32 +40,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.stereotype.Service;
-
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.io.ByteStreams;
-
-import es.upv.i3m.grycap.im.api.InfrastructureManagerApiClient;
-import es.upv.i3m.grycap.im.api.RestApiBodyContentType;
-import es.upv.i3m.grycap.im.api.VmStates;
-import es.upv.i3m.grycap.im.client.ServiceResponse;
-import es.upv.i3m.grycap.im.exceptions.ImClientException;
-import it.reply.orchestrator.controller.DeploymentController;
-import it.reply.orchestrator.dal.entity.Deployment;
-import it.reply.orchestrator.dal.entity.Resource;
-import it.reply.orchestrator.dal.repository.DeploymentRepository;
-import it.reply.orchestrator.dal.repository.ResourceRepository;
-import it.reply.orchestrator.dto.im.InfrastructureStatus;
-import it.reply.orchestrator.enums.DeploymentProvider;
-import it.reply.orchestrator.enums.Status;
-import it.reply.orchestrator.enums.Task;
-import it.reply.orchestrator.exception.service.DeploymentException;
 
 @Service
 @PropertySource("classpath:im-config/im-java-api.properties")
@@ -103,7 +105,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       ServiceResponse response = imClient.createInfrastructure(deployment.getTemplate(),
           RestApiBodyContentType.TOSCA);
       if (!response.isReponseSuccessful()) {
-        updateOnError(deploymentUuid, response.getReasonPhrase());
+        // IM response is HTML encoded. Get the message between <pre> </pre> tag
+        String responseError = response.getResult().substring(
+            response.getResult().indexOf("<pre>") + 5, response.getResult().indexOf("</pre>"));
+        updateOnError(deploymentUuid, response.getReasonPhrase() + ": " + responseError);
       } else {
         String infrastructureId = null;
         Matcher m = UUID_PATTERN.matcher(response.getResult());
@@ -145,7 +150,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
             }
             updateOnSuccess(deploymentUuid);
           } else {
-            updateOnError(deploymentUuid);
+            updateOnError(deploymentUuid, "An error occured during the deployment of the template");
           }
         } catch (Exception e) {
           LOG.error(e);
