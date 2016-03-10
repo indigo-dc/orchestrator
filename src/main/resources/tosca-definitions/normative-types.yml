@@ -263,6 +263,34 @@ capability_types:
         default: 1
   tosca.capabilities.Connectivity:
     derived_from: tosca.capabilities.Root
+  
+  tosca.capabilities.Container.Docker:
+    derived_from: tosca.capabilities.Container
+    properties:
+      version:
+        type: list
+        required: false
+        entry_schema:
+          type: string
+      publish_all:
+        type: boolean
+#        default: false
+        required: false
+      publish_ports:
+        type: list
+        entry_schema:
+          type: integer
+        required: false
+      expose_ports:
+        type: list
+        entry_schema:
+          type: integer
+        required: false
+      volumes:
+        type: list
+        entry_schema:
+          type: string
+        required: false
 
 relationship_types:
   tosca.relationships.Root:
@@ -607,6 +635,12 @@ node_types:
         upper_bound: UNBOUNDED
         description: Connection to one or more load balanced applications
 
+  tosca.nodes.Container.Application.Docker:
+    derived_from: tosca.nodes.Container.Application
+    requirements:
+      - host: tosca.capabilities.Container.Docker
+        relationship: tosca.relationships.HostedOn
+        
 group_types:
   tosca.groups.Root:
     description: The TOSCA Group Type all other TOSCA Group Types derive from

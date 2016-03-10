@@ -1,38 +1,9 @@
 tosca_definitions_version: tosca_simple_yaml_1_0
 
 template_name: indigo_custom_types
-template_author: INDIGO
 template_version: 1.0.0-SNAPSHOT
 
 capability_types:
-
-  tosca.capabilities.Container.Docker:
-    derived_from: tosca.capabilities.Container
-    properties:
-      version:
-        type: list
-        required: false
-        entry_schema:
-          type: string
-      publish_all:
-        type: boolean
-#        default: false
-        required: false
-      publish_ports:
-        type: list
-        entry_schema:
-          type: integer
-        required: false
-      expose_ports:
-        type: list
-        entry_schema:
-          type: integer
-        required: false
-      volumes:
-        type: list
-        entry_schema:
-          type: string
-        required: false
 
   tosca.capabilities.indigo.Scalable:
     derived_from: tosca.capabilities.Scalable
@@ -64,7 +35,7 @@ capability_types:
         type: string
         required: true
         constraints:
-        - valid_values: [ torque, slurm, sge, condor, mesos ]
+        - valid_values: [ local, torque, slurm, sge, condor, mesos ]
 
   tosca.capabilities.indigo.LRMS.Torque:
     derived_from: tosca.capabilities.indigo.LRMS
@@ -75,6 +46,16 @@ capability_types:
         default: torque
         constraints:
           - equal: torque
+          
+  tosca.capabilities.indigo.LRMS.Local:
+    derived_from: tosca.capabilities.indigo.LRMS
+    properties:
+      type:
+        type: string
+        required: true
+        default: local
+        constraints:
+          - equal: local
 
 artifact_types:
 
@@ -90,12 +71,6 @@ relationship_types:
     derived_from: tosca.relationships.Root
 
 node_types:
-
-  tosca.nodes.Container.Application.Docker:
-    derived_from: tosca.nodes.Container.Application
-    requirements:
-      - host: tosca.capabilities.Container.Docker
-        relationship: tosca.relationships.HostedOn
 
   # Standard types defined in TOSCA with interfaces to install
   
@@ -214,6 +189,10 @@ node_types:
         default: 32314
         constraints: 
           - in_range: [ 1, 65535 ]
+      zabbix_server_metadata:
+        type: string
+        required: no
+        default: Linux      668c875e-9a39-4dc0-a710-17c41376c1e0
     interfaces:
       Standard:
         create: 
@@ -223,6 +202,7 @@ node_types:
           inputs:
             zabbix_server: { get_property: [ SELF, zabbix_server ] }
             zabbix_server_port: { get_property: [ SELF, zabbix_server_port ] }
+            zabbix_server_metadata: { get_property: [ SELF, zabbix_server_metadata ] }
         start:
           implementation: zabbix/zabbix_agent_start.yml
 
@@ -250,9 +230,9 @@ node_types:
         default: /home/galaxy/galaxy
         required: false
     requirements:
-      host:
-        type: tosca.capabilities.Container
-        node: tosca.nodes.Compute
+      lrms:
+        type: tosca.capabilities.indigo.LRMS
+        node: tosca.nodes.indigo.LRMS.FrontEnd
         relationship: tosca.relationships.HostedOn
     interfaces:
       Standard:
@@ -267,6 +247,7 @@ node_types:
             galaxy_install_path: { get_property: [ SELF, install_path ] }
             galaxy_admin: { get_property: [ SELF, admin ] }
             galaxy_admin_api_key: { get_property: [ SELF, admin_api_key ] }
+            galaxy_lrms: { get_property: [ SELF, lrms, type ] }
         start:
           implementation: galaxy/galaxy_start.yml
           inputs:
@@ -378,6 +359,12 @@ node_types:
         create: lrms/torque/torque_fe_install.yml
         configure: lrms/torque/torque_fe_configure.yml
         start: lrms/torque/torque_fe_start.yml
+        
+  tosca.nodes.indigo.LRMS.FrontEnd.Local:
+    derived_from: tosca.nodes.indigo.LRMS.FrontEnd
+    capabilities:
+        lrms:
+          type: tosca.capabilities.indigo.LRMS.Local
 
   tosca.nodes.indigo.Container.Runtime.Docker:
     derived_from: tosca.nodes.SoftwareComponent
