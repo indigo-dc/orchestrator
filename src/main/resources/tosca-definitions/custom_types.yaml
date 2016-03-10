@@ -1,0 +1,476 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+template_name: indigo_custom_types
+template_author: INDIGO
+template_version: 1.0.0-SNAPSHOT
+
+capability_types:
+
+  tosca.capabilities.Container.Docker:
+    derived_from: tosca.capabilities.Container
+    properties:
+      version:
+        type: list
+        required: false
+        entry_schema:
+          type: string
+      publish_all:
+        type: boolean
+#        default: false
+        required: false
+      publish_ports:
+        type: list
+        entry_schema:
+          type: integer
+        required: false
+      expose_ports:
+        type: list
+        entry_schema:
+          type: integer
+        required: false
+      volumes:
+        type: list
+        entry_schema:
+          type: string
+        required: false
+
+  tosca.capabilities.indigo.Scalable:
+    derived_from: tosca.capabilities.Scalable
+    properties:
+      min_instances:
+        type: integer
+        default: 1
+        required: no
+      max_instances:
+        type: integer
+        default: 1
+        required: no
+      count:
+        type: integer
+        description: the number of resources
+        required: no
+        default: 1
+      removal_list:
+        type: list
+        description: list of IDs of the resources to be removed
+        required: no
+        entry_schema:
+          type: string
+
+  tosca.capabilities.indigo.LRMS:
+    derived_from: tosca.capabilities.Root
+    properties:
+      type:
+        type: string
+        required: true
+        constraints:
+        - valid_values: [ torque, slurm, sge, condor, mesos ]
+
+  tosca.capabilities.indigo.LRMS.Torque:
+    derived_from: tosca.capabilities.indigo.LRMS
+    properties:
+      type:
+        type: string
+        required: true
+        default: torque
+        constraints:
+          - equal: torque
+
+artifact_types:
+
+  tosca.artifacts.Implementation.YAML:
+    derived_from: tosca.artifacts.Implementation
+    description: YAML Ansible recipe artifact
+    mime_type: text/yaml
+    file_ext: [ yaml, yml ]
+
+relationship_types:
+
+  tosca.relationships.indigo.Manages:
+    derived_from: tosca.relationships.Root
+
+node_types:
+
+  tosca.nodes.Container.Application.Docker:
+    derived_from: tosca.nodes.Container.Application
+    requirements:
+      - host: tosca.capabilities.Container.Docker
+        relationship: tosca.relationships.HostedOn
+
+  # Standard types defined in TOSCA with interfaces to install
+  
+  tosca.nodes.Database.MySQL:
+    derived_from: tosca.nodes.Database
+    requirements:
+      host:
+        type: tosca.capabilities.Container
+        relationship: tosca.relationships.HostedOn
+        node: tosca.nodes.DBMS.MySQL
+    interfaces:
+      Standard:
+        create:
+          implementation: mysql/mysql_db_configure.yml
+          inputs:
+            db_password: { get_property: [ SELF, password ] }
+            db_name: { get_property: [ SELF, name ] }
+            db_user: { get_property: [ SELF, user ] }
+            db_root_password: ""
+            db_access_host: "%"
+
+  tosca.nodes.DBMS.MySQL:
+    derived_from: tosca.nodes.DBMS
+    properties:
+      port:
+        type: integer
+        description: reflect the default MySQL server port
+        default: 3306
+      root_password:
+        type: string
+        # MySQL requires a root_password for configuration
+        required: true
+    capabilities:
+      # Further constrain the ‘host’ capability to only allow MySQL databases
+      host:
+        type: tosca.capabilities.Container
+        valid_source_types: [ tosca.nodes.Database.MySQL ]
+    interfaces:
+      Standard:
+        create: mysql/mysql_install.yml
+        configure:
+          implementation: mysql/mysql_configure.yml
+          inputs:
+            root_password: { get_property: [ SELF, root_password ] }
+            port: { get_property: [ SELF, port ] }
+
+  tosca.nodes.WebServer.Apache:
+    derived_from: tosca.nodes.WebServer
+    interfaces:
+      Standard:
+        create: 
+          implementation: apache/apache_install.yml
+        start:
+          implementation: apache/apache_start.yml
+
+# INDIGO non normative types
+
+  tosca.nodes.indigo.Database.MySQL:
+    derived_from: tosca.nodes.Database.MySQL
+    properties:
+      access_host:
+        type: string
+        required: no
+        default: "%"
+      root_password:
+        type: string
+        required: true
+    requirements:
+      host:
+        type: tosca.capabilities.Container
+        relationship: tosca.relationships.HostedOn
+        node: tosca.nodes.DBMS.MySQL
+    interfaces:
+      Standard:
+        create:
+          implementation: mysql/mysql_db_configure.yml
+          inputs:
+            db_password: { get_property: [ SELF, password ] }
+            db_name: { get_property: [ SELF, name ] }
+            db_user: { get_property: [ SELF, user ] }
+            db_root_password: { get_property: [ SELF, root_password ] }
+            db_access_host: { get_property: [ SELF, access_host ] }
+
+  tosca.nodes.indigo.Compute:
+    derived_from: tosca.nodes.indigo.MonitoredCompute
+    attributes:
+      private_address:
+        type: list
+        entry_schema:
+          type: string
+      public_address:
+        type: list
+        entry_schema:
+          type: string
+    properties:
+      public_ip:
+        type: boolean
+        required: no
+#        default: no
+    capabilities:
+      scalable:
+        type: tosca.capabilities.indigo.Scalable
+
+  tosca.nodes.indigo.MonitoredCompute:
+    derived_from: tosca.nodes.Compute
+    properties:
+      # Set the current data of the zabbix server
+      # but it can also specified in the TOSCA document
+      zabbix_server:
+        type: string
+        required: no
+        default: 90.147.170.165
+      zabbix_server_port:
+        type: integer
+        required: no
+        default: 32314
+        constraints: 
+          - in_range: [ 1, 65535 ]
+    interfaces:
+      Standard:
+        create: 
+          implementation: zabbix/zabbix_agent_install.yml
+        configure: 
+          implementation: zabbix/zabbix_agent_configure.yml
+          inputs:
+            zabbix_server: { get_property: [ SELF, zabbix_server ] }
+            zabbix_server_port: { get_property: [ SELF, zabbix_server_port ] }
+        start:
+          implementation: zabbix/zabbix_agent_start.yml
+
+  tosca.nodes.indigo.GalaxyPortal:
+    derived_from: tosca.nodes.WebServer
+    properties:
+      admin:
+        type: string
+        description: email of the admin user
+        default: admin@admin.com
+        required: false
+      admin_api_key:
+        type: string
+        description: key to access the API with admin role
+        default: not_very_secret_api_key
+        required: false
+      user:
+        type: string
+        description: username to launch the galaxy daemon
+        default: galaxy
+        required: false
+      install_path:
+        type: string
+        description: path to install the galaxy tool
+        default: /home/galaxy/galaxy
+        required: false
+    requirements:
+      host:
+        type: tosca.capabilities.Container
+        node: tosca.nodes.Compute
+        relationship: tosca.relationships.HostedOn
+    interfaces:
+      Standard:
+        create:
+          implementation: galaxy/galaxy_install.yml
+          inputs:
+            galaxy_install_path: { get_property: [ SELF, install_path ] }
+        configure:
+          implementation: galaxy/galaxy_configure.yml
+          inputs:
+            galaxy_user: { get_property: [ SELF, user ] }
+            galaxy_install_path: { get_property: [ SELF, install_path ] }
+            galaxy_admin: { get_property: [ SELF, admin ] }
+            galaxy_admin_api_key: { get_property: [ SELF, admin_api_key ] }
+        start:
+          implementation: galaxy/galaxy_start.yml
+          inputs:
+            galaxy_user: { get_property: [ SELF, user ] }
+            galaxy_install_path: { get_property: [ SELF, install_path ] }
+
+  tosca.nodes.indigo.GalaxyShedTool:
+    derived_from: tosca.nodes.WebApplication
+    properties:
+      name:
+        type: string
+        description: name of the tool
+        required: true
+      owner:
+        type: string
+        description: developer of the tool
+        required: true
+      tool_panel_section_id:
+        type: string
+        description: panel section to install the tool
+        required: true
+    requirements:
+      host:
+        type: tosca.capabilities.Container
+        node: tosca.nodes.indigo.GalaxyPortal
+        relationship: tosca.relationships.HostedOn
+    interfaces:
+      Standard:
+        create:
+          implementation: galaxy/galaxy_tools_configure.yml
+          inputs:
+            galaxy_install_path: { get_property: [ HOST, install_path ] }
+            galaxy_admin_api_key: { get_property: [ HOST, admin_api_key ] }
+            galaxy_tool_name: { get_property: [ SELF, name ] }
+            galaxy_tool_owner: { get_property: [ SELF, owner ] }
+            galaxy_tool_panel_section_id: { get_property: [ SELF, tool_panel_section_id ] }
+
+  tosca.nodes.indigo.ElasticCluster:
+    derived_from: tosca.nodes.Root
+    properties:
+      secret_token:
+        type: string
+        description: Token to access CLUES web interface
+        default: not_very_secret_token
+        required: false
+      deployment_id:
+        type: string
+        description: ID of the deployment of this elastic cluster in the orchestrator
+        required: false
+    interfaces:
+      Standard:
+        create: ec3/ec3_install.yml
+        configure:
+          implementation: ec3/ec3_configure.yml
+          inputs:
+            clues_secret_token: { get_property: [ SELF, secret_token ] }
+            clues_queue_system: { get_property: [ SELF, lrms, type ] }
+            ec3_max_instances: { get_property: [ SELF, wn, max_instances] }
+            ec3_deployment_id: { get_property: [ SELF, deployment_id] }
+        start: ec3/ec3_start.yml
+    requirements:
+      wn:
+        type: tosca.capabilities.Scalable
+        node: tosca.nodes.indigo.LRMS.WorkerNode
+        relationship: tosca.relationships.indigo.Manages
+      lrms:
+        type: tosca.capabilities.indigo.LRMS
+        node: tosca.nodes.indigo.LRMS.FrontEnd
+        relationship: tosca.relationships.HostedOn
+
+  tosca.nodes.indigo.LRMS.WorkerNode:
+    derived_from: tosca.nodes.SoftwareComponent
+    capabilities:
+        wn:
+          type: tosca.capabilities.Scalable
+          valid_source_types: [tosca.nodes.indigo.ElasticCluster]
+    requirements:
+      host:
+        type: tosca.capabilities.Container
+        node: tosca.nodes.Compute
+        relationship: tosca.relationships.HostedOn
+
+  tosca.nodes.indigo.LRMS.WorkerNode.Torque:
+    derived_from: tosca.nodes.indigo.LRMS.WorkerNode
+    interfaces:
+      Standard:
+        create: lrms/torque/torque_wn_install.yml
+        configure: lrms/torque/torque_wn_configure.yml
+        start: lrms/torque/torque_wn_start.yml
+
+  tosca.nodes.indigo.LRMS.FrontEnd:
+    derived_from: tosca.nodes.SoftwareComponent
+    capabilities:
+        lrms:
+          type: tosca.capabilities.indigo.LRMS
+    requirements:
+      host:
+        type: tosca.capabilities.Container
+        node: tosca.nodes.Compute
+        relationship: tosca.relationships.HostedOn
+
+  tosca.nodes.indigo.LRMS.FrontEnd.Torque:
+    derived_from: tosca.nodes.indigo.LRMS.FrontEnd
+    capabilities:
+        lrms:
+          type: tosca.capabilities.indigo.LRMS.Torque
+    interfaces:
+      Standard:
+        create: lrms/torque/torque_fe_install.yml
+        configure: lrms/torque/torque_fe_configure.yml
+        start: lrms/torque/torque_fe_start.yml
+
+  tosca.nodes.indigo.Container.Runtime.Docker:
+    derived_from: tosca.nodes.SoftwareComponent
+    capabilities:
+      host:
+        type: tosca.capabilities.Container.Docker
+      scalable:
+        type: tosca.capabilities.Scalable
+
+  tosca.nodes.indigo.Container.Application.Docker:
+    derived_from: tosca.nodes.Container.Application.Docker
+    properties:
+      command:
+        required: yes
+        type: string
+      uris:
+        required: no
+        type: list
+        entry_schema:
+          type: string
+
+  tosca.nodes.indigo.Container.Application.Docker.Chronos:
+    derived_from: tosca.nodes.indigo.Container.Application.Docker
+    properties:
+      schedule:
+        required: no
+        type: string
+
+  tosca.nodes.indigo.Container.Application.Docker.Marathon:
+    derived_from: tosca.nodes.indigo.Container.Application.Docker
+
+  tosca.nodes.indigo.MesosMaster:
+    derived_from: tosca.nodes.SoftwareComponent
+    interfaces:
+      Standard:
+        create: 
+          implementation: mesos/mesos_master_install.yml
+        configure: 
+          implementation: mesos/mesos_master_configure.yml
+          inputs:
+            master_ips: { get_attribute: [ HOST, public_address ] }
+        start:
+          implementation: mesos/mesos_master_start.yml
+    requirements:
+      host:
+        type: tosca.capabilities.Container
+        node: tosca.nodes.indigo.Compute
+        relationship: tosca.relationships.HostedOn
+
+  tosca.nodes.indigo.MesosSlave:
+    derived_from: tosca.nodes.SoftwareComponent
+    properties:
+      master_ips:
+        required: yes
+        type: list
+        entry_schema:
+          type: string
+    interfaces:
+      Standard:
+        create: 
+          implementation: mesos/mesos_slave_install.yml
+        configure: 
+          implementation: mesos/mesos_slave_configure.yml
+          inputs:
+            mesos_master_ips: { get_property: [ SELF, master_ips ] }
+        start:
+          implementation: mesos/mesos_slave_start.yml
+    requirements:
+      host:
+        type: tosca.capabilities.Container
+        node: tosca.nodes.indigo.Compute
+        relationship: tosca.relationships.HostedOn
+
+  tosca.nodes.indigo.MesosLoadBalancer:
+    derived_from: tosca.nodes.SoftwareComponent
+    properties:
+      master_ips:
+        required: yes
+        type: list
+        entry_schema:
+          type: string
+    interfaces:
+      Standard:
+        create: 
+          implementation: mesos/mesos_lb_install.yml
+        configure: 
+          implementation: mesos/mesos_lb_configure.yml
+          inputs:
+            mesos_master_ips: { get_property: [ SELF, master_ips ] }
+        start:
+          implementation: mesos/mesos_lb_start.yml
+    requirements:
+      host:
+        type: tosca.capabilities.Container
+        node: tosca.nodes.indigo.Compute
+        relationship: tosca.relationships.HostedOn
