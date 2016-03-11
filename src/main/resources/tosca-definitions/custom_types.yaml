@@ -73,7 +73,7 @@ relationship_types:
 node_types:
 
   # Standard types defined in TOSCA with interfaces to install
-  
+
   tosca.nodes.Database.MySQL:
     derived_from: tosca.nodes.Database
     requirements:
@@ -121,7 +121,7 @@ node_types:
     derived_from: tosca.nodes.WebServer
     interfaces:
       Standard:
-        create: 
+        create:
           implementation: apache/apache_install.yml
         start:
           implementation: apache/apache_start.yml
@@ -195,9 +195,9 @@ node_types:
         default: Linux      668c875e-9a39-4dc0-a710-17c41376c1e0
     interfaces:
       Standard:
-        create: 
+        create:
           implementation: zabbix/zabbix_agent_install.yml
-        configure: 
+        configure:
           implementation: zabbix/zabbix_agent_configure.yml
           inputs:
             zabbix_server: { get_property: [ SELF, zabbix_server ] }
@@ -400,9 +400,9 @@ node_types:
     derived_from: tosca.nodes.SoftwareComponent
     interfaces:
       Standard:
-        create: 
+        create:
           implementation: mesos/mesos_master_install.yml
-        configure: 
+        configure:
           implementation: mesos/mesos_master_configure.yml
           inputs:
             master_ips: { get_attribute: [ HOST, public_address ] }
@@ -424,9 +424,9 @@ node_types:
           type: string
     interfaces:
       Standard:
-        create: 
+        create:
           implementation: mesos/mesos_slave_install.yml
-        configure: 
+        configure:
           implementation: mesos/mesos_slave_configure.yml
           inputs:
             mesos_master_ips: { get_property: [ SELF, master_ips ] }
@@ -434,11 +434,11 @@ node_types:
           implementation: mesos/mesos_slave_start.yml
     requirements:
       host:
-        type: tosca.capabilities.Container
+        capability: tosca.capabilities.Container
         node: tosca.nodes.indigo.Compute
         relationship: tosca.relationships.HostedOn
 
-  tosca.nodes.indigo.MesosLoadBalancer:
+  tosca.nodes.indigo.MesosLoadBalancerMaster:
     derived_from: tosca.nodes.SoftwareComponent
     properties:
       master_ips:
@@ -448,16 +448,47 @@ node_types:
           type: string
     interfaces:
       Standard:
-        create: 
-          implementation: mesos/mesos_lb_install.yml
-        configure: 
-          implementation: mesos/mesos_lb_configure.yml
+        create:
+          implementation: mesos/mesos_master_lb_install.yml
+        configure:
+          implementation: mesos/mesos_master_lb_configure.yml
           inputs:
             mesos_master_ips: { get_property: [ SELF, master_ips ] }
+            lb_master_ip: { get_attribute: [ HOST, public_address ] }
         start:
-          implementation: mesos/mesos_lb_start.yml
+          implementation: mesos/mesos_master_lb_start.yml
     requirements:
       host:
-        type: tosca.capabilities.Container
+        capability: tosca.capabilities.Container
+        node: tosca.nodes.indigo.Compute
+        relationship: tosca.relationships.HostedOn
+
+  tosca.nodes.indigo.MesosLoadBalancerSlave:
+    derived_from: tosca.nodes.SoftwareComponent
+    properties:
+      master_ips:
+        required: yes
+        type: list
+        entry_schema:
+          type: string
+      lb_master_ip:
+        required: yes
+        type: list
+        entry_schema:
+          type: string
+    interfaces:
+      Standard:
+        create:
+          implementation: mesos/mesos_slave_lb_install.yml
+        configure:
+          implementation: mesos/mesos_slave_lb_configure.yml
+          inputs:
+            mesos_master_ips: { get_property: [ SELF, master_ips ] }
+            keepalived_vip: { get_property: [ SELF, lb_master_ip ] }
+        start:
+          implementation: mesos/mesos_slave_lb_start.yml
+    requirements:
+      host:
+        capability: tosca.capabilities.Container
         node: tosca.nodes.indigo.Compute
         relationship: tosca.relationships.HostedOn

@@ -369,8 +369,6 @@ node_types:
       This is the default (root) TOSCA Node Type that all other TOSCA nodes should extends.
       This allows all TOSCA nodes to have a consistent set of features for modeling and management
       (e.g, consistent definitions for requirements, capabilities, and lifecycle interfaces).
-    tags:
-      icon: /images/root.png
     attributes:
       tosca_id:
         type: string
@@ -415,8 +413,6 @@ node_types:
     description: >
       The TOSCA Compute node represents one or more real or virtual processors of software applications or services along with other essential local resources.
       Collectively, the resources the compute node represents can logically be viewed as a (real or virtual) “server”.
-    tags:
-      icon: /images/compute.png
     attributes:
       ip_address:
         type: string
@@ -467,14 +463,10 @@ node_types:
     capabilities:
       connection:
         type: tosca.capabilities.Connectivity
-    tags:
-      icon: /images/network.png
 
   tosca.nodes.SoftwareComponent:
     derived_from: tosca.nodes.Root
     description: The TOSCA SoftwareComponent node represents a generic software component that can be managed and run by a TOSCA Compute Node Type.
-    tags:
-      icon: /images/software.png
     properties:
       # domain-specific software component version
       component_version:
@@ -498,8 +490,6 @@ node_types:
         type: tosca.capabilities.Container
   tosca.nodes.WebApplication:
     derived_from: tosca.nodes.Root
-    tags:
-      icon: /images/network.png
     description: >
       The TOSCA WebApplication node represents a software application that can be managed and run by a TOSCA WebServer node.
       Specific types of web applications such as Java, etc. could be derived from this type.
@@ -517,8 +507,6 @@ node_types:
   tosca.nodes.DBMS:
     derived_from: tosca.nodes.SoftwareComponent
     description: "The TOSCA DBMS node represents a typical relational, SQL Database Management System software component or service."
-    tags:
-      icon: /images/relational_db.png
     properties:
       root_password:
         type: string
@@ -533,8 +521,6 @@ node_types:
         type: tosca.capabilities.Container
   tosca.nodes.Database:
     derived_from: tosca.nodes.Root
-    tags:
-      icon: /images/relational_db.png
     description: The TOSCA Database node represents a logical database that can be managed and hosted by a TOSCA DBMS node.
     properties:
       name:
@@ -564,8 +550,6 @@ node_types:
     description: >
       The TOSCA BlockStorage node currently represents a server-local block storage device (i.e., not shared)
       offering evenly sized blocks of data from which raw storage volumes can be created.
-    tags:
-      icon: /images/volume.png
     properties:
       size:
         type: scalar-unit.size
