@@ -1,5 +1,5 @@
-[![GitHub license](https://img.shields.io/github/license/indigo-dc/orchestrator.svg)]()
-[![GitHub tag](https://img.shields.io/github/tag/indigo-dc/orchestrator.svg)]()
+[![GitHub license](https://img.shields.io/github/license/indigo-dc/orchestrator.svg?style=flat-square)](https://github.com/indigo-dc/orchestrator/blob/master/LICENSE)
+[![GitHub release](https://img.shields.io/github/release/indigo-dc/orchestrator.svg?style=flat-square)](https://github.com/indigo-dc/orchestrator/releases/latest)
 
 INDIGO Orchestrator
 ============================
