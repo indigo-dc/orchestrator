@@ -1,9 +1,16 @@
 package it.reply.orchestrator.service;
 
+import alien4cloud.model.components.ScalarPropertyValue;
+import alien4cloud.model.topology.Capability;
+import alien4cloud.model.topology.NodeTemplate;
+import alien4cloud.tosca.parser.ParsingException;
+
 import it.reply.orchestrator.config.WorkflowConfigProducerBean;
 import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.entity.WorkflowReference;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
+import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
@@ -20,6 +27,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -30,6 +38,12 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   @Autowired
   private DeploymentRepository deploymentRepository;
+
+  @Autowired
+  private ResourceRepository resourceRepository;
+
+  @Autowired
+  private ToscaService toscaService;
 
   @Autowired
   private BusinessProcessManager wfService;
@@ -59,11 +73,40 @@ public class DeploymentServiceImpl implements DeploymentService {
     deployment.setParameters(request.getParameters().entrySet().stream()
         .collect(Collectors.toMap(e -> ((Map.Entry<String, Object>) e).getKey(),
             e -> ((Map.Entry<String, Object>) e).getValue().toString())));
-    deployment.setTemplate(request.getTemplate());
+
     if (request.getCallback() != null) {
       deployment.setCallback(request.getCallback());
     }
+
     deployment = deploymentRepository.save(deployment);
+    try {
+      String template = toscaService.customizeTemplate(request.getTemplate(), deployment.getId());
+      deployment.setTemplate(template);
+
+      Map<String, NodeTemplate> nodes = toscaService.getArchiveRootFromTemplate(template)
+          .getResult().getTopology().getNodeTemplates();
+      Resource r;
+      for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
+        Capability scalable = toscaService.getNodeCapabilityByName(entry.getValue(), "scalable");
+        int count = 1;
+        if (scalable != null) {
+          ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue) scalable.getProperties()
+              .get("count");
+          count = Integer.parseInt(scalarPropertyValue.getValue());
+        }
+        for (int i = 0; i < count; i++) {
+          r = new Resource();
+          r.setDeployment(deployment);
+          r.setStatus(Status.CREATE_IN_PROGRESS);
+          r.setToscaNodeName(entry.getKey());
+          r.setToscaNodeType(entry.getValue().getType());
+          resourceRepository.save(r);
+        }
+      }
+
+    } catch (IOException | ParsingException e) {
+      throw new OrchestratorException(e);
+    }
 
     Map<String, Object> params = new HashMap<>();
     params.put("DEPLOYMENT_ID", deployment.getId());
@@ -78,6 +121,7 @@ public class DeploymentServiceImpl implements DeploymentService {
         new WorkflowReference(pi.getId(), RUNTIME_STRATEGY.PER_PROCESS_INSTANCE));
     deployment = deploymentRepository.save(deployment);
     return deployment;
+
   }
 
   @Override

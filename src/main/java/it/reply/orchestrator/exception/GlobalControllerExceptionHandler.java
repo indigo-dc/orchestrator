@@ -2,6 +2,7 @@ package it.reply.orchestrator.exception;
 
 import it.reply.orchestrator.dto.common.Error;
 import it.reply.orchestrator.exception.http.NotFoundException;
+import it.reply.orchestrator.exception.service.TOSCAException;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -41,6 +42,22 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
 
     return new Error().withCode(HttpStatus.NOT_FOUND.value())
         .withTitle(HttpStatus.NOT_FOUND.getReasonPhrase()).withMessage(ex.getMessage());
+  }
+
+  /**
+   * Invalid TOSCA exception handler.
+   * 
+   * @param ex
+   *          the exception
+   * @return a {@code ResponseEntity} instance
+   */
+  @ExceptionHandler
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ResponseBody
+  public Error handleException(TOSCAException ex) {
+
+    return new Error().withCode(HttpStatus.BAD_REQUEST.value())
+        .withTitle(HttpStatus.BAD_REQUEST.getReasonPhrase()).withMessage(ex.getMessage());
   }
 
   /**

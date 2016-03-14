@@ -1,5 +1,35 @@
 package it.reply.orchestrator.service;
 
+import com.google.common.io.ByteStreams;
+
+import alien4cloud.component.repository.exception.CSARVersionAlreadyExistsException;
+import alien4cloud.model.components.Csar;
+import alien4cloud.model.components.ScalarPropertyValue;
+import alien4cloud.model.topology.Capability;
+import alien4cloud.model.topology.NodeTemplate;
+import alien4cloud.security.model.Role;
+import alien4cloud.tosca.ArchiveParser;
+import alien4cloud.tosca.ArchiveUploadService;
+import alien4cloud.tosca.model.ArchiveRoot;
+import alien4cloud.tosca.parser.ParsingError;
+import alien4cloud.tosca.parser.ParsingErrorLevel;
+import alien4cloud.tosca.parser.ParsingException;
+import alien4cloud.tosca.parser.ParsingResult;
+import alien4cloud.tosca.serializer.VelocityUtil;
+import alien4cloud.utils.FileUtil;
+
+import it.reply.orchestrator.exception.service.TOSCAException;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
+import org.springframework.stereotype.Service;
+
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
@@ -11,37 +41,15 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import javax.annotation.Nonnull;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
-import org.springframework.stereotype.Service;
-
-import com.google.common.io.ByteStreams;
-
-import alien4cloud.component.repository.exception.CSARVersionAlreadyExistsException;
-import alien4cloud.model.components.Csar;
-import alien4cloud.security.model.Role;
-import alien4cloud.tosca.ArchiveParser;
-import alien4cloud.tosca.ArchiveUploadService;
-import alien4cloud.tosca.model.ArchiveRoot;
-import alien4cloud.tosca.parser.ParsingException;
-import alien4cloud.tosca.parser.ParsingResult;
-import alien4cloud.tosca.serializer.VelocityUtil;
-import alien4cloud.utils.FileUtil;
 
 @Service
 public class ToscaServiceImpl implements ToscaService {
@@ -110,16 +118,13 @@ public class ToscaServiceImpl implements ToscaService {
 
   @Override
   @Nonnull
-  public ArchiveRoot getArchiveRootFromTemplate(@Nonnull String toscaTemplate)
+  public ParsingResult<ArchiveRoot> getArchiveRootFromTemplate(@Nonnull String toscaTemplate)
       throws IOException, ParsingException {
     Path zipPath = Files.createTempFile("csar", ".zip");
     try (InputStream is = new ByteArrayInputStream(toscaTemplate.getBytes());) {
       zip(is, zipPath);
     }
-    ParsingResult<ArchiveRoot> parsingResult = parser.parse(zipPath);
-    ArchiveRoot archiveRoot = parsingResult.getResult();
-    // topology.setId(UUID.randomUUID().toString());
-    return archiveRoot;
+    return parser.parse(zipPath);
   }
 
   @Override
@@ -136,12 +141,80 @@ public class ToscaServiceImpl implements ToscaService {
     velocityCtx.put("topology", archiveRoot.getTopology());
     StringWriter writer = new StringWriter();
     VelocityUtil.generate("templates/topology-1_0_0_INDIGO.yml.vm", writer, velocityCtx);
-    return writer.toString();
+    String template = writer.toString();
+    LOG.debug(template);
+    return template;
+  }
+
+  /**
+   * Customize the template with INDIGO requirements, for example it adds the deploymentId.
+   * 
+   * @param toscaTemplate
+   *          the TOSCA template
+   * @param deploymentId
+   *          the deploymentId
+   * @return the customized template
+   * 
+   * @throws ParsingException
+   *           if the template is not valid
+   * @throws IOException
+   *           if there is an IO error
+   */
+  @Override
+  public String customizeTemplate(@Nonnull String toscaTemplate, @Nonnull String deploymentId)
+      throws IOException {
+
+    ParsingResult<ArchiveRoot> result = null;
+    try {
+      result = getArchiveRootFromTemplate(toscaTemplate);
+    } catch (ParsingException e) {
+      checkParsingErrors(e.getParsingErrors());
+    }
+    checkParsingErrors(result.getContext().getParsingErrors());
+
+    addDeploymentId(result, deploymentId);
+
+    return getTemplateFromTopology(result.getResult());
+
+  }
+
+  private void checkParsingErrors(List<ParsingError> errorList) throws TOSCAException {
+    String errorMessage = "";
+    if (!errorList.isEmpty()) {
+      for (ParsingError error : errorList) {
+        if (!error.getErrorLevel().equals(ParsingErrorLevel.INFO)) {
+          errorMessage = errorMessage + error.getErrorCode() + ": " + error.getNote() + "; ";
+        }
+      }
+      throw new TOSCAException(errorMessage);
+    }
+
+  }
+
+  private void addDeploymentId(ParsingResult<ArchiveRoot> parsingResult, String deploymentId) {
+    Map<String, NodeTemplate> nodes = parsingResult.getResult().getTopology().getNodeTemplates();
+    for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
+      if (entry.getValue().getType().equals("tosca.nodes.indigo.ElasticCluster")) {
+        // Create new property with the deploymentId and set as printable
+        ScalarPropertyValue scalarPropertyValue = new ScalarPropertyValue(deploymentId);
+        scalarPropertyValue.setPrintable(true);
+        entry.getValue().getProperties().put("deployment_id", scalarPropertyValue);
+      }
+    }
   }
 
   private static void setAutentication() {
     Authentication auth = new PreAuthenticatedAuthenticationToken(Role.ADMIN.name().toLowerCase(),
         "", AuthorityUtils.createAuthorityList(Role.ADMIN.name()));
     SecurityContextHolder.getContext().setAuthentication(auth);
+  }
+
+  @Override
+  public Capability getNodeCapabilityByName(NodeTemplate node, String propertyName) {
+    for (Entry<String, Capability> entry : node.getCapabilities().entrySet()) {
+      if (entry.getKey().equals(propertyName))
+        return entry.getValue();
+    }
+    return null;
   }
 }

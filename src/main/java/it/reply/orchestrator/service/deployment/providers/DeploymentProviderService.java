@@ -21,4 +21,5 @@ public interface DeploymentProviderService {
   public void doUndeploy(Deployment deployment);
 
   public boolean isUndeployed(String deploymentUuid) throws DeploymentException;
+
 }

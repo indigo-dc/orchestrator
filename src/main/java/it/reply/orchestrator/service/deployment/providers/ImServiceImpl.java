@@ -25,6 +25,7 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -33,10 +34,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 
@@ -128,25 +132,21 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
             es.upv.i3m.grycap.im.api.InfrastructureStatus statusResponse = imClient
                 .getInfrastructureOutputs(infrastructureId);
 
-            deployment.setOutputs(statusResponse.getProperties().entrySet().stream()
-                .collect(Collectors.toMap(e -> ((Map.Entry<String, Object>) e).getKey(),
-                    e -> ((Map.Entry<String, Object>) e).getValue().toString())));
-
-            // IM returns the list of VMs that compose the infrastructure with their status
-            response = imClient.getInfrastructureState(infrastructureId);
-            InfrastructureStatus status = new ObjectMapper().readValue(response.getResult(),
-                InfrastructureStatus.class);
-
-            for (Map.Entry<String, String> entry : status.getVmStates().entrySet()) {
-
-              Resource resource = new Resource();
-              resource.setIaasId(entry.getKey());
-              // FIXME replace the string when we have TOSCA
-              resource.setToscaNodeType("tosca.nodes.Compute");
-              resource.setStatus(getOrchestratorStatusFromImStatus(entry.getValue()));
-              resource.setDeployment(deployment);
-              resourceRepository.save(resource);
+            Map<String, String> outputs = new HashMap<String, String>();
+            for (Entry<String, Object> entry : statusResponse.getProperties().entrySet()) {
+              if (entry.getValue() != null) {
+                outputs.put(entry.getKey(), entry.getValue().toString());
+              } else {
+                outputs.put(entry.getKey(), "");
+              }
             }
+            deployment.setOutputs(outputs);
+            // deployment.setOutputs(statusResponse.getProperties().entrySet().stream()
+            // .collect(Collectors.toMap(e -> ((Map.Entry<String, Object>) e).getKey(),
+            // e -> ((Map.Entry<String, Object>) e).getValue().toString())));
+
+            bindResources(deployment, infrastructureId);
+
             updateOnSuccess(deploymentUuid);
           } else {
             updateOnError(deploymentUuid, "An error occured during the deployment of the template");
@@ -268,6 +268,44 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       // TODO improve exception handling
       LOG.error(e);
       return false;
+    }
+  }
+
+  /**
+   * Match the {@link Resource} to IM vms.
+   * 
+   */
+  private void bindResources(Deployment deployment, String infrastructureId)
+      throws ImClientException {
+
+    // Get the URLs of the VMs composing the virtual infrastructure
+    String[] vmURLs = imClient.getInfrastructureInfo(infrastructureId).getResult().split("\\r?\\n");
+
+    // for each URL get the information about the VM
+    Map<String, String> vmMap = new HashMap<String, String>();
+    for (String vm : vmURLs) {
+      String vmId = null;
+      int index = vm.lastIndexOf("/");
+      if (index != -1) {
+        vmId = vm.substring(index + 1);
+      }
+      String vmInfo = imClient.getVMInfo(infrastructureId, vmId, true).getResult();
+      vmMap.put(vmId, vmInfo);
+    }
+
+    // Put all the resource status to CREATE_COMPLETE.
+    // Find the Resource from the DB and bind it with the corresponding VM
+    Page<Resource> resources = resourceRepository.findByDeployment_id(deployment.getId(), null);
+    Set<String> insered = new HashSet<String>();
+    for (Resource r : resources) {
+      for (Map.Entry<String, String> entry : vmMap.entrySet()) {
+        if (entry.getValue().contains(r.getToscaNodeName()) && !insered.contains(entry.getKey())) {
+          r.setIaasId(entry.getKey());
+          insered.add(entry.getKey());
+          break;
+        }
+      }
+
     }
   }
 

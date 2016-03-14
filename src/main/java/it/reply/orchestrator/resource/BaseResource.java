@@ -13,7 +13,6 @@ public class BaseResource extends AbstractResource {
 
   private String toscaNodeType;
   private String toscaNodeName;
-  private String resourceType;
   private List<String> requiredBy = new ArrayList<String>();
 
   public String getToscaNodeType() {
@@ -29,21 +28,16 @@ public class BaseResource extends AbstractResource {
     return this;
   }
 
+  public String getToscaNodeName() {
+    return toscaNodeName;
+  }
+
   public void setToscaNodeName(String toscaNodeName) {
     this.toscaNodeName = toscaNodeName;
   }
 
   public BaseResource withToscaNodeName(String toscaNodeName) {
     this.toscaNodeName = toscaNodeName;
-    return this;
-  }
-
-  public void setResourceType(String resourceType) {
-    this.resourceType = resourceType;
-  }
-
-  public BaseResource withResourceType(String resourceType) {
-    this.resourceType = resourceType;
     return this;
   }
 
@@ -64,23 +58,4 @@ public class BaseResource extends AbstractResource {
   public String toString() {
     return ToStringBuilder.reflectionToString(this);
   }
-
-  @Override
-  public int hashCode() {
-    return new HashCodeBuilder().append(resourceType).append(requiredBy).toHashCode();
-  }
-
-  @Override
-  public boolean equals(Object other) {
-    if (other == this) {
-      return true;
-    }
-    if ((other instanceof BaseResource) == false) {
-      return false;
-    }
-    BaseResource rhs = ((BaseResource) other);
-    return new EqualsBuilder().append(resourceType, rhs.resourceType)
-        .append(requiredBy, rhs.requiredBy).isEquals();
-  }
-
 }

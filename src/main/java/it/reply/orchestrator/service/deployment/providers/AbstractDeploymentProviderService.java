@@ -1,6 +1,7 @@
 package it.reply.orchestrator.service.deployment.providers;
 
 import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
@@ -53,12 +54,15 @@ public abstract class AbstractDeploymentProviderService implements DeploymentPro
         break;
       case CREATE_IN_PROGRESS:
         deployment.setStatus(Status.CREATE_FAILED);
+        updateResources(deployment, Status.CREATE_FAILED);
         break;
       case DELETE_IN_PROGRESS:
         deployment.setStatus(Status.DELETE_FAILED);
+        updateResources(deployment, Status.DELETE_FAILED);
         break;
       case UPDATE_IN_PROGRESS:
         deployment.setStatus(Status.UPDATE_FAILED);
+        updateResources(deployment, Status.UPDATE_FAILED);
         break;
       default:
         LOG.error("updateOnError: unsupported deployment status: {}. Setting status to {}",
@@ -85,14 +89,17 @@ public abstract class AbstractDeploymentProviderService implements DeploymentPro
           break;
         case CREATE_IN_PROGRESS:
           deployment.setStatus(Status.CREATE_COMPLETE);
+          updateResources(deployment, Status.CREATE_COMPLETE);
           break;
         case UPDATE_IN_PROGRESS:
           deployment.setStatus(Status.UPDATE_COMPLETE);
+          updateResources(deployment, Status.UPDATE_COMPLETE);
           break;
         default:
           LOG.error("updateOnSuccess: unsupported deployment status: {}. Setting status to {}",
               deployment.getStatus(), Status.UNKNOWN.toString());
           deployment.setStatus(Status.UNKNOWN);
+          updateResources(deployment, Status.UNKNOWN);
           break;
       }
       deployment.setTask(Task.NONE);
@@ -101,4 +108,9 @@ public abstract class AbstractDeploymentProviderService implements DeploymentPro
     }
   }
 
+  private void updateResources(Deployment deployment, Status status) {
+    for (Resource r : deployment.getResources()) {
+      r.setStatus(status);
+    }
+  }
 }
