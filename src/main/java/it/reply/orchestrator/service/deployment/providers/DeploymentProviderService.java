@@ -2,6 +2,7 @@ package it.reply.orchestrator.service.deployment.providers;
 
 import java.util.function.Function;
 
+import alien4cloud.tosca.model.ArchiveRoot;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.exception.service.DeploymentException;
 
@@ -11,15 +12,17 @@ public interface DeploymentProviderService {
 
   public void doDeploy(Deployment deployment);
 
-  public boolean doPoller(String deploymentUuid, final Function<String, Boolean> function)
+  public void doUpdate(String deploymentId, String template);
+
+  public boolean doPoller(final Function<String[], Boolean> function, String[] params)
       throws Exception;
 
-  public boolean isDeployed(String deploymentUuid) throws DeploymentException;
+  public boolean isDeployed(String[] params) throws DeploymentException;
 
   public void doUndeploy(String deploymentUuid);
 
   public void doUndeploy(Deployment deployment);
 
-  public boolean isUndeployed(String deploymentUuid) throws DeploymentException;
+  public boolean isUndeployed(String[] params) throws DeploymentException;
 
 }

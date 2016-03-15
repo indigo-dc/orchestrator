@@ -5,6 +5,7 @@ import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
+import it.reply.orchestrator.exception.service.DeploymentException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -20,11 +21,11 @@ public abstract class AbstractDeploymentProviderService implements DeploymentPro
   private DeploymentRepository deploymentRepository;
 
   @Override
-  public boolean doPoller(String deploymentUuid, final Function<String, Boolean> function) {
+  public boolean doPoller(final Function<String[], Boolean> function, String[] params) {
     int maxRetry = 10;
     int sleepInterval = 30000;
     Boolean isDone = false;
-    while (maxRetry > 0 && !(isDone = function.apply(deploymentUuid))) {
+    while (maxRetry > 0 && !(isDone = function.apply(params))) {
       try {
         Thread.sleep(sleepInterval);
       } catch (InterruptedException e) {
@@ -68,6 +69,7 @@ public abstract class AbstractDeploymentProviderService implements DeploymentPro
         LOG.error("updateOnError: unsupported deployment status: {}. Setting status to {}",
             deployment.getStatus(), Status.UNKNOWN.toString());
         deployment.setStatus(Status.UNKNOWN);
+        updateResources(deployment, Status.UNKNOWN);
         break;
     }
     deployment.setTask(Task.NONE);

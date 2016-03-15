@@ -1,32 +1,8 @@
 package it.reply.orchestrator.service.deployment.providers;
 
-import com.google.common.io.ByteStreams;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-
-import es.upv.i3m.grycap.im.api.InfrastructureManagerApiClient;
-import es.upv.i3m.grycap.im.api.RestApiBodyContentType;
-import es.upv.i3m.grycap.im.api.VmStates;
-import es.upv.i3m.grycap.im.client.ServiceResponse;
-import es.upv.i3m.grycap.im.exceptions.ImClientException;
-
-import it.reply.orchestrator.dal.entity.Deployment;
-import it.reply.orchestrator.dal.entity.Resource;
-import it.reply.orchestrator.dal.repository.DeploymentRepository;
-import it.reply.orchestrator.dal.repository.ResourceRepository;
-import it.reply.orchestrator.dto.im.InfrastructureStatus;
-import it.reply.orchestrator.enums.DeploymentProvider;
-import it.reply.orchestrator.enums.Status;
-import it.reply.orchestrator.enums.Task;
-import it.reply.orchestrator.exception.service.DeploymentException;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
-import org.springframework.data.domain.Page;
-import org.springframework.stereotype.Service;
+import com.google.common.io.ByteStreams;
+import com.google.common.io.Resources;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -36,6 +12,7 @@ import java.io.OutputStream;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
@@ -43,6 +20,36 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import javax.annotation.PostConstruct;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.javatuples.Pair;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
+import org.springframework.data.domain.Page;
+import org.springframework.stereotype.Service;
+
+import alien4cloud.model.topology.NodeTemplate;
+import alien4cloud.tosca.model.ArchiveRoot;
+import alien4cloud.tosca.parser.ParsingException;
+import alien4cloud.tosca.parser.ParsingResult;
+import es.upv.i3m.grycap.im.api.InfrastructureManagerApiClient;
+import es.upv.i3m.grycap.im.api.RestApiBodyContentType;
+import es.upv.i3m.grycap.im.api.VmStates;
+import es.upv.i3m.grycap.im.client.ServiceResponse;
+import es.upv.i3m.grycap.im.exceptions.ImClientException;
+import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.entity.Resource;
+import it.reply.orchestrator.dal.repository.DeploymentRepository;
+import it.reply.orchestrator.dal.repository.ResourceRepository;
+import it.reply.orchestrator.dto.im.InfrastructureStatus;
+import it.reply.orchestrator.enums.DeploymentProvider;
+import it.reply.orchestrator.enums.Status;
+import it.reply.orchestrator.enums.Task;
+import it.reply.orchestrator.exception.OrchestratorException;
+import it.reply.orchestrator.exception.service.DeploymentException;
+import it.reply.orchestrator.service.ToscaService;
 
 @Service
 @PropertySource("classpath:im-config/im-java-api.properties")
@@ -59,6 +66,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   private static final Pattern UUID_PATTERN = Pattern.compile(".*\\/([^\\/]+)\\/?");
 
   private InfrastructureManagerApiClient imClient;
+
+  @Autowired
+  private ToscaService toscaService;
 
   @Autowired
   private DeploymentRepository deploymentRepository;
@@ -126,7 +136,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         }
 
         try {
-          boolean result = doPoller(infrastructureId, this::isDeployed);
+          String[] p = new String[] { infrastructureId };
+          boolean result = doPoller(this::isDeployed, p);
           if (result) {
             // Save outputs
             es.upv.i3m.grycap.im.api.InfrastructureStatus statusResponse = imClient
@@ -141,9 +152,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
               }
             }
             deployment.setOutputs(outputs);
-            // deployment.setOutputs(statusResponse.getProperties().entrySet().stream()
-            // .collect(Collectors.toMap(e -> ((Map.Entry<String, Object>) e).getKey(),
-            // e -> ((Map.Entry<String, Object>) e).getValue().toString())));
 
             bindResources(deployment, infrastructureId);
 
@@ -160,6 +168,133 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       LOG.error(e);
       updateOnError(deploymentUuid, e);
     }
+  }
+
+  @Override
+  public void doUpdate(String deploymentId, String template) {
+
+    // Check if count is increased or if there is a removal list, other kinds of update are
+    // discarded
+    Deployment deployment = deploymentRepository.findOne(deploymentId);
+    ParsingResult<ArchiveRoot> oldParsingResult, newParsingResult;
+    try {
+      oldParsingResult = toscaService.getArchiveRootFromTemplate(deployment.getTemplate());
+      template = toscaService.customizeTemplate(template, deploymentId);
+      newParsingResult = toscaService.getArchiveRootFromTemplate(template);
+    } catch (ParsingException | IOException e) {
+      throw new OrchestratorException(e);
+    }
+    // find Count nodes into new and old template
+    Map<String, NodeTemplate> oldNodes = toscaService.getCountNodes(oldParsingResult.getResult());
+    Map<String, NodeTemplate> newNodes = toscaService.getCountNodes(newParsingResult.getResult());
+
+    // int oldCount = toscaService.getCount(oldParsingResult.getResult());
+    // int newCount = toscaService.getCount(newParsingResult.getResult());
+
+    for (Map.Entry<String, NodeTemplate> entry : oldNodes.entrySet()) {
+      if (newNodes.containsKey(entry.getKey())) {
+        int oldCount = toscaService.getCount(entry.getValue());
+        int newCount = toscaService.getCount(newNodes.get(entry.getKey()));
+        if (newCount > oldCount) {
+          Resource r;
+          for (int i = 0; i < (newCount - oldCount); i++) {
+            r = new Resource();
+            r.setDeployment(deployment);
+            r.setStatus(Status.CREATE_IN_PROGRESS);
+            r.setToscaNodeName(entry.getKey());
+            r.setToscaNodeType(entry.getValue().getType());
+            resourceRepository.save(r);
+          }
+          try {
+            ArchiveRoot root = newParsingResult.getResult();
+            Map<String, NodeTemplate> nodes = new HashMap<>();
+            nodes.put(entry.getKey(), newNodes.get(entry.getKey()));
+            root.getTopology().setNodeTemplates(nodes);
+            ServiceResponse response = imClient.addResource(deployment.getEndpoint(),
+                toscaService.getTemplateFromTopology(root), RestApiBodyContentType.TOSCA, true);
+
+            if (!response.isReponseSuccessful()) {
+              // IM response is HTML encoded. Get the message between <pre> </pre> tag
+              String responseError = response.getResult().substring(
+                  response.getResult().indexOf("<pre>") + 5,
+                  response.getResult().indexOf("</pre>"));
+              updateOnError(deploymentId, response.getReasonPhrase() + ": " + responseError);
+            } else {
+              try {
+                boolean result = doPoller(this::isDeployed,
+                    new String[] { deployment.getEndpoint() });
+                if (result) {
+
+                  // bindResources(deployment, deployment.getEndpoint());
+
+                  // updateOnSuccess(deployment.getId());
+                } else {
+                  updateOnError(deployment.getId(),
+                      "An error occured during the deployment of the template");
+                }
+              } catch (Exception e) {
+                LOG.error(e);
+                updateOnError(deployment.getId(), e);
+              }
+
+            }
+          } catch (ImClientException | IOException e) {
+            e.printStackTrace();
+          }
+        } else if (newCount < oldCount) {
+          // delete a WN.
+          List<String> removalList = toscaService.getRemovalList(newNodes.get(entry.getKey()));
+          Resource r;
+          // Find the nodes to be removed.
+          for (String resourceId : removalList) {
+            try {
+              Resource resource = resourceRepository.findOne(resourceId);
+              resource.setStatus(Status.DELETE_IN_PROGRESS);
+              resource = resourceRepository.save(resource);
+              ServiceResponse response = imClient.removeResource(deployment.getEndpoint(),
+                  resource.getIaasId());
+              if (!response.isReponseSuccessful()) {
+                if (response.getServiceStatusCode() == 404) {
+                  // updateOnSuccess(deploymentId);
+                } else {
+                  updateOnError(deploymentId, response.getReasonPhrase());
+                }
+              } else {
+
+                try {
+                  boolean result = doPoller(this::isResourceDeleted,
+                      new String[] { deployment.getEndpoint(), resource.getIaasId() });
+                  if (result) {
+                    List<Resource> resurces = deployment.getResources();
+                    resurces.remove(resource);
+                    resourceRepository.delete(resourceId);
+                  } else {
+                    updateOnError(deploymentId);
+                  }
+                } catch (Exception e) {
+                  LOG.error(e);
+                  updateOnError(deploymentId, e);
+                }
+              }
+            } catch (ImClientException e) {
+              updateOnError(deploymentId, e);
+            }
+          }
+        }
+      }
+    }
+    try {
+      bindResources(deployment, deployment.getEndpoint());
+    } catch (ImClientException e) {
+      updateOnError(deploymentId, e);
+    }
+
+    try {
+      deployment.setTemplate(toscaService.updateTemplate(template));
+    } catch (IOException e) {
+      updateOnError(deploymentId, e);
+    }
+    updateOnSuccess(deployment.getId());
   }
 
   private Status getOrchestratorStatusFromImStatus(String value) {
@@ -188,10 +323,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   }
 
   @Override
-  public boolean isDeployed(String infrastructureId) throws DeploymentException {
+  public boolean isDeployed(String[] infrastructureId) throws DeploymentException {
     try {
 
-      ServiceResponse response = imClient.getInfrastructureState(infrastructureId);
+      ServiceResponse response = imClient.getInfrastructureState(infrastructureId[0]);
       InfrastructureStatus status = new ObjectMapper().readValue(response.getResult(),
           InfrastructureStatus.class);
 
@@ -234,7 +369,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         }
       } else {
         try {
-          boolean result = doPoller(deploymentUuid, this::isUndeployed);
+          boolean result = doPoller(this::isUndeployed, new String[] { deploymentUuid });
           if (result) {
             updateOnSuccess(deploymentUuid);
           } else {
@@ -252,9 +387,28 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   }
 
   @Override
-  public boolean isUndeployed(String deploymentUuid) throws DeploymentException {
+  public boolean isUndeployed(String[] deploymentUuid) throws DeploymentException {
     try {
-      ServiceResponse response = imClient.getInfrastructureState(deploymentUuid);
+      ServiceResponse response = imClient.getInfrastructureState(deploymentUuid[0]);
+      if (!response.isReponseSuccessful()) {
+        if (response.getServiceStatusCode() == 404) {
+          return true;
+        } else {
+          return false;
+        }
+      } else {
+        return false;
+      }
+    } catch (ImClientException e) {
+      // TODO improve exception handling
+      LOG.error(e);
+      return false;
+    }
+  }
+
+  public boolean isResourceDeleted(String[] params) throws DeploymentException {
+    try {
+      ServiceResponse response = imClient.getVMInfo(params[0], params[1], true);
       if (!response.isReponseSuccessful()) {
         if (response.getServiceStatusCode() == 404) {
           return true;
@@ -293,19 +447,29 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       vmMap.put(vmId, vmInfo);
     }
 
-    // Put all the resource status to CREATE_COMPLETE.
     // Find the Resource from the DB and bind it with the corresponding VM
     Page<Resource> resources = resourceRepository.findByDeployment_id(deployment.getId(), null);
+
+    // Remove from vmMap all the resources already binded
+    for (Resource r : resources) {
+      if (r.getIaasId() != null) {
+        vmMap.remove(r.getIaasId());
+      }
+    }
+
     Set<String> insered = new HashSet<String>();
     for (Resource r : resources) {
-      for (Map.Entry<String, String> entry : vmMap.entrySet()) {
-        if (entry.getValue().contains(r.getToscaNodeName()) && !insered.contains(entry.getKey())) {
-          r.setIaasId(entry.getKey());
-          insered.add(entry.getKey());
-          break;
+      if (r.getStatus() == Status.CREATE_IN_PROGRESS
+          || r.getStatus() == Status.UPDATE_IN_PROGRESS) {
+        for (Map.Entry<String, String> entry : vmMap.entrySet()) {
+          if (entry.getValue().contains(r.getToscaNodeName())
+              && !insered.contains(entry.getKey())) {
+            r.setIaasId(entry.getKey());
+            insered.add(entry.getKey());
+            break;
+          }
         }
       }
-
     }
   }
 

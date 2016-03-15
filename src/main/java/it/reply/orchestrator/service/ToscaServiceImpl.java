@@ -3,7 +3,9 @@ package it.reply.orchestrator.service;
 import com.google.common.io.ByteStreams;
 
 import alien4cloud.component.repository.exception.CSARVersionAlreadyExistsException;
+import alien4cloud.model.components.AbstractPropertyValue;
 import alien4cloud.model.components.Csar;
+import alien4cloud.model.components.ListPropertyValue;
 import alien4cloud.model.components.ScalarPropertyValue;
 import alien4cloud.model.topology.Capability;
 import alien4cloud.model.topology.NodeTemplate;
@@ -22,6 +24,7 @@ import it.reply.orchestrator.exception.service.TOSCAException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.javatuples.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -39,6 +42,7 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -178,6 +182,19 @@ public class ToscaServiceImpl implements ToscaService {
 
   }
 
+  @Override
+  public String updateTemplate(String template) throws IOException {
+    ParsingResult<ArchiveRoot> result = null;
+    try {
+      result = getArchiveRootFromTemplate(template);
+    } catch (ParsingException e) {
+      checkParsingErrors(e.getParsingErrors());
+    }
+    checkParsingErrors(result.getContext().getParsingErrors());
+    removeRemovalList(result);
+    return getTemplateFromTopology(result.getResult());
+  }
+
   private void checkParsingErrors(List<ParsingError> errorList) throws TOSCAException {
     String errorMessage = "";
     if (!errorList.isEmpty()) {
@@ -203,6 +220,16 @@ public class ToscaServiceImpl implements ToscaService {
     }
   }
 
+  private void removeRemovalList(ParsingResult<ArchiveRoot> parsingResult) {
+    Map<String, NodeTemplate> nodes = parsingResult.getResult().getTopology().getNodeTemplates();
+    for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
+      Capability scalable = getNodeCapabilityByName(entry.getValue(), "scalable");
+      if (scalable != null && scalable.getProperties().containsKey("removal_list")) {
+        scalable.getProperties().remove("removal_list");
+      }
+    }
+  }
+
   private static void setAutentication() {
     Authentication auth = new PreAuthenticatedAuthenticationToken(Role.ADMIN.name().toLowerCase(),
         "", AuthorityUtils.createAuthorityList(Role.ADMIN.name()));
@@ -217,4 +244,69 @@ public class ToscaServiceImpl implements ToscaService {
     }
     return null;
   }
+
+  // TODO merge with getCount
+  public Map<String, NodeTemplate> getCountNodes(ArchiveRoot archiveRoot) {
+    Map<String, NodeTemplate> nodes = new HashMap<>();
+
+    for (Map.Entry<String, NodeTemplate> entry : archiveRoot.getTopology().getNodeTemplates()
+        .entrySet()) {
+      Capability scalable = getNodeCapabilityByName(entry.getValue(), "scalable");
+      if (scalable != null) {
+        ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue) scalable.getProperties()
+            .get("count");
+        // Check if this value is read from the template and is not a default value
+        if (scalarPropertyValue.isPrintable()) {
+          nodes.put(entry.getKey(), entry.getValue());
+        }
+      }
+    }
+    return nodes;
+  }
+
+  @Override
+  public int getCount(NodeTemplate nodeTemplate) {
+
+    Capability scalable = getNodeCapabilityByName(nodeTemplate, "scalable");
+    if (scalable != null) {
+      ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue) scalable.getProperties()
+          .get("count");
+      // Check if this value is read from the template and is not a default value
+      if (scalarPropertyValue.isPrintable()) {
+        return Integer.parseInt(scalarPropertyValue.getValue());
+      }
+    }
+    return -1;
+  }
+
+  @Override
+  public List<String> getRemovalList(NodeTemplate nodeTemplate) {
+    Capability scalable = getNodeCapabilityByName(nodeTemplate, "scalable");
+    if (scalable != null) {
+      ListPropertyValue listPropertyValue = (ListPropertyValue) scalable.getProperties()
+          .get("removal_list");
+      if (listPropertyValue != null) {
+        return (List<String>) (List<?>) listPropertyValue.getValue();
+      }
+    }
+    return new ArrayList<String>();
+  }
+
+  @Override
+  public String updateCount(ArchiveRoot archiveRoot, int count) throws IOException {
+    for (Map.Entry<String, NodeTemplate> entry : archiveRoot.getTopology().getNodeTemplates()
+        .entrySet()) {
+      Capability scalable = getNodeCapabilityByName(entry.getValue(), "scalable");
+      if (scalable != null) {
+        ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue) scalable.getProperties()
+            .get("count");
+        if (scalarPropertyValue.isPrintable()) {
+          scalarPropertyValue.setValue(String.valueOf(count));
+          scalable.getProperties().put("count", scalarPropertyValue);
+        }
+      }
+    }
+    return getTemplateFromTopology(archiveRoot);
+  }
+
 }

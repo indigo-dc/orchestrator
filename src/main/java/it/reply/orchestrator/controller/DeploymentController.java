@@ -76,6 +76,15 @@ public class DeploymentController {
 
   }
 
+  @ResponseStatus(HttpStatus.ACCEPTED)
+  @RequestMapping(value = "/deployments/{deploymentId}", method = RequestMethod.PUT)
+  public void updateDeployment(@PathVariable("deploymentId") String id,
+      @Valid @RequestBody DeploymentRequest request) {
+
+    LOG.trace("Invoked method: putDeployment with id: " + id);
+    deploymentService.updateDeployment(id, request);
+  }
+
   @ResponseStatus(HttpStatus.OK)
   @RequestMapping(value = "/deployments/{deploymentId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   public DeploymentResource getDeployment(@PathVariable("deploymentId") String id) {

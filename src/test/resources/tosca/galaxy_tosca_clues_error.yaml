@@ -64,7 +64,7 @@ topology_template:
         - host: torque_wn
             
     torque_wn:
-      type: tosca.nodes.indigo.Compute
+      type: tosca.nodes.indigo.Comput
       properties:
         public_ip: no
       capabilities:

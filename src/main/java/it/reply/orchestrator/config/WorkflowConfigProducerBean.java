@@ -18,11 +18,14 @@ public class WorkflowConfigProducerBean implements ConfigProducer {
 
   public static final WorkflowResource DEPLOY;
   public static final WorkflowResource UNDEPLOY;
+  public static final WorkflowResource UPDATE;
 
   static {
     try {
       DEPLOY = new WorkflowResource(BASE_PATH + "/" + "Deploy.bpmn2");
       UNDEPLOY = new WorkflowResource(BASE_PATH + "/" + "Undeploy.bpmn2");
+      UPDATE = new WorkflowResource(BASE_PATH + "/" + "Update.bpmn2");
+
     } catch (IOException e) {
       throw new ExceptionInInitializerError(e);
     }
@@ -38,6 +41,7 @@ public class WorkflowConfigProducerBean implements ConfigProducer {
     resources = new ArrayList<>();
     resources.add(DEPLOY);
     resources.add(UNDEPLOY);
+    resources.add(UPDATE);
     resources = Collections.unmodifiableList(resources);
   }
 

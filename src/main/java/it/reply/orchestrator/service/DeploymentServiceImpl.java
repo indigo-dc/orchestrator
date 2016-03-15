@@ -3,8 +3,9 @@ package it.reply.orchestrator.service;
 import alien4cloud.model.components.ScalarPropertyValue;
 import alien4cloud.model.topology.Capability;
 import alien4cloud.model.topology.NodeTemplate;
+import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingException;
-
+import alien4cloud.tosca.parser.ParsingResult;
 import it.reply.orchestrator.config.WorkflowConfigProducerBean;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
@@ -85,24 +86,7 @@ public class DeploymentServiceImpl implements DeploymentService {
 
       Map<String, NodeTemplate> nodes = toscaService.getArchiveRootFromTemplate(template)
           .getResult().getTopology().getNodeTemplates();
-      Resource r;
-      for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
-        Capability scalable = toscaService.getNodeCapabilityByName(entry.getValue(), "scalable");
-        int count = 1;
-        if (scalable != null) {
-          ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue) scalable.getProperties()
-              .get("count");
-          count = Integer.parseInt(scalarPropertyValue.getValue());
-        }
-        for (int i = 0; i < count; i++) {
-          r = new Resource();
-          r.setDeployment(deployment);
-          r.setStatus(Status.CREATE_IN_PROGRESS);
-          r.setToscaNodeName(entry.getKey());
-          r.setToscaNodeType(entry.getValue().getType());
-          resourceRepository.save(r);
-        }
-      }
+      createResources(deployment, nodes);
 
     } catch (IOException | ParsingException e) {
       throw new OrchestratorException(e);
@@ -162,4 +146,71 @@ public class DeploymentServiceImpl implements DeploymentService {
     }
   }
 
+  @Override
+  @Transactional
+  public void updateDeployment(String id, DeploymentRequest request) {
+    // Check if the new template is valid
+    ParsingResult<ArchiveRoot> parsingResult;
+    try {
+      parsingResult = toscaService.getArchiveRootFromTemplate(request.getTemplate());
+    } catch (ParsingException | IOException e) {
+      throw new OrchestratorException(e);
+    }
+    Deployment deployment = deploymentRepository.findOne(id);
+    if (deployment != null) {
+      if (deployment.getStatus() == Status.CREATE_IN_PROGRESS
+          || deployment.getStatus() == Status.UPDATE_IN_PROGRESS
+          || deployment.getStatus() == Status.DELETE_IN_PROGRESS) {
+        throw new IllegalStateException(String.format(
+            "Cannot update a deployment while status is: %s", deployment.getStatus().toString()));
+      } else {
+
+        deployment.setStatus(Status.UPDATE_IN_PROGRESS);
+        deployment.setTask(Task.NONE);
+
+        Iterator<WorkflowReference> wrIt = deployment.getWorkflowReferences().iterator();
+
+        deployment = deploymentRepository.save(deployment);
+
+        Map<String, Object> params = new HashMap<>();
+        params.put("DEPLOYMENT_ID", deployment.getId());
+        params.put("TOSCA_TEMPLATE", request.getTemplate());
+        ProcessInstance pi = null;
+        try {
+          pi = wfService.startProcess(WorkflowConfigProducerBean.UPDATE.getProcessId(), params,
+              RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
+        } catch (WorkflowException e) {
+          throw new OrchestratorException(e);
+        }
+        deployment.addWorkflowReferences(
+            new WorkflowReference(pi.getId(), RUNTIME_STRATEGY.PER_PROCESS_INSTANCE));
+        deployment = deploymentRepository.save(deployment);
+      }
+    } else
+
+    {
+      throw new NotFoundException("The deployment <" + id + "> doesn't exist");
+    }
+  }
+
+  private void createResources(Deployment deployment, Map<String, NodeTemplate> nodes) {
+    Resource r;
+    for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
+      Capability scalable = toscaService.getNodeCapabilityByName(entry.getValue(), "scalable");
+      int count = 1;
+      if (scalable != null) {
+        ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue) scalable.getProperties()
+            .get("count");
+        count = Integer.parseInt(scalarPropertyValue.getValue());
+      }
+      for (int i = 0; i < count; i++) {
+        r = new Resource();
+        r.setDeployment(deployment);
+        r.setStatus(Status.CREATE_IN_PROGRESS);
+        r.setToscaNodeName(entry.getKey());
+        r.setToscaNodeType(entry.getValue().getType());
+        resourceRepository.save(r);
+      }
+    }
+  }
 }
