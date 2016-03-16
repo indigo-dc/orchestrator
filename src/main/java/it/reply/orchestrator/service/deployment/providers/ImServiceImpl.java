@@ -188,24 +188,22 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     Map<String, NodeTemplate> oldNodes = toscaService.getCountNodes(oldParsingResult.getResult());
     Map<String, NodeTemplate> newNodes = toscaService.getCountNodes(newParsingResult.getResult());
 
-    // int oldCount = toscaService.getCount(oldParsingResult.getResult());
-    // int newCount = toscaService.getCount(newParsingResult.getResult());
+    try {
+      for (Map.Entry<String, NodeTemplate> entry : oldNodes.entrySet()) {
+        if (newNodes.containsKey(entry.getKey())) {
+          int oldCount = toscaService.getCount(entry.getValue());
+          int newCount = toscaService.getCount(newNodes.get(entry.getKey()));
+          if (newCount > oldCount) {
+            Resource r;
+            for (int i = 0; i < (newCount - oldCount); i++) {
+              r = new Resource();
+              r.setDeployment(deployment);
+              r.setStatus(Status.CREATE_IN_PROGRESS);
+              r.setToscaNodeName(entry.getKey());
+              r.setToscaNodeType(entry.getValue().getType());
+              resourceRepository.save(r);
+            }
 
-    for (Map.Entry<String, NodeTemplate> entry : oldNodes.entrySet()) {
-      if (newNodes.containsKey(entry.getKey())) {
-        int oldCount = toscaService.getCount(entry.getValue());
-        int newCount = toscaService.getCount(newNodes.get(entry.getKey()));
-        if (newCount > oldCount) {
-          Resource r;
-          for (int i = 0; i < (newCount - oldCount); i++) {
-            r = new Resource();
-            r.setDeployment(deployment);
-            r.setStatus(Status.CREATE_IN_PROGRESS);
-            r.setToscaNodeName(entry.getKey());
-            r.setToscaNodeType(entry.getValue().getType());
-            resourceRepository.save(r);
-          }
-          try {
             ArchiveRoot root = newParsingResult.getResult();
             Map<String, NodeTemplate> nodes = new HashMap<>();
             nodes.put(entry.getKey(), newNodes.get(entry.getKey()));
@@ -218,83 +216,61 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
               String responseError = response.getResult().substring(
                   response.getResult().indexOf("<pre>") + 5,
                   response.getResult().indexOf("</pre>"));
-              updateOnError(deploymentId, response.getReasonPhrase() + ": " + responseError);
+              // updateOnError(deploymentId, response.getReasonPhrase() + ": " + responseError);
+              throw new DeploymentException(response.getReasonPhrase() + ": " + responseError);
             } else {
-              try {
-                boolean result = doPoller(this::isDeployed,
-                    new String[] { deployment.getEndpoint() });
-                if (result) {
 
-                  // bindResources(deployment, deployment.getEndpoint());
-
-                  // updateOnSuccess(deployment.getId());
-                } else {
-                  updateOnError(deployment.getId(),
-                      "An error occured during the deployment of the template");
-                }
-              } catch (Exception e) {
-                LOG.error(e);
-                updateOnError(deployment.getId(), e);
+              boolean result = doPoller(this::isDeployed,
+                  new String[] { deployment.getEndpoint() });
+              if (!result) {
+                throw new DeploymentException("An error occur during the update: polling failed");
               }
-
             }
-          } catch (ImClientException | IOException e) {
-            e.printStackTrace();
-          }
-        } else if (newCount < oldCount) {
-          // delete a WN.
-          List<String> removalList = toscaService.getRemovalList(newNodes.get(entry.getKey()));
-          Resource r;
-          // Find the nodes to be removed.
-          for (String resourceId : removalList) {
-            try {
+          } else if (newCount < oldCount) {
+            // delete a WN.
+            List<String> removalList = toscaService.getRemovalList(newNodes.get(entry.getKey()));
+            if (removalList.size() != (oldCount - newCount)) {
+              throw new DeploymentException("An error occur during the update. Count is <"
+                  + newCount + "> but removal_list contains <" + removalList.size()
+                  + "> elements in the node: " + entry.getKey());
+            }
+            Resource r;
+            // Find the nodes to be removed.
+            for (String resourceId : removalList) {
               Resource resource = resourceRepository.findOne(resourceId);
               resource.setStatus(Status.DELETE_IN_PROGRESS);
               resource = resourceRepository.save(resource);
               ServiceResponse response = imClient.removeResource(deployment.getEndpoint(),
                   resource.getIaasId());
               if (!response.isReponseSuccessful()) {
-                if (response.getServiceStatusCode() == 404) {
-                  // updateOnSuccess(deploymentId);
-                } else {
-                  updateOnError(deploymentId, response.getReasonPhrase());
+                if (response.getServiceStatusCode() != 404) {
+                  throw new DeploymentException("An error occur during the update: fail to delete: "
+                      + resource.getToscaNodeName() + " with id: " + resourceId);
                 }
               } else {
-
-                try {
-                  boolean result = doPoller(this::isResourceDeleted,
-                      new String[] { deployment.getEndpoint(), resource.getIaasId() });
-                  if (result) {
-                    List<Resource> resurces = deployment.getResources();
-                    resurces.remove(resource);
-                    resourceRepository.delete(resourceId);
-                  } else {
-                    updateOnError(deploymentId);
-                  }
-                } catch (Exception e) {
-                  LOG.error(e);
-                  updateOnError(deploymentId, e);
+                boolean result = doPoller(this::isResourceDeleted,
+                    new String[] { deployment.getEndpoint(), resource.getIaasId() });
+                if (result) {
+                  List<Resource> resurces = deployment.getResources();
+                  resurces.remove(resource);
+                  resourceRepository.delete(resourceId);
+                } else {
+                  throw new DeploymentException(
+                      "An error occur during the update: polling failed " + resource.getId());
                 }
+
               }
-            } catch (ImClientException e) {
-              updateOnError(deploymentId, e);
             }
           }
         }
       }
-    }
-    try {
       bindResources(deployment, deployment.getEndpoint());
-    } catch (ImClientException e) {
+      deployment.setTemplate(toscaService.updateTemplate(template));
+      updateOnSuccess(deployment.getId());
+    } catch (ImClientException | IOException | DeploymentException e) {
       updateOnError(deploymentId, e);
     }
 
-    try {
-      deployment.setTemplate(toscaService.updateTemplate(template));
-    } catch (IOException e) {
-      updateOnError(deploymentId, e);
-    }
-    updateOnSuccess(deployment.getId());
   }
 
   private Status getOrchestratorStatusFromImStatus(String value) {

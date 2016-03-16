@@ -1,0 +1,88 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+repositories:
+  indigo_repository:
+    description: INDIGO Custom types repository
+    url: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/
+
+imports:
+  - indigo_custom_types:
+      file: custom_types.yaml
+      repository: indigo_repository
+ 
+description: >
+  TOSCA test for launching a Virtual Elastic Cluster. It will launch
+  a single front-end that will be in change of managing the elasticity
+  using the specified LRMS (torque, sge, slurm and condor) workload.
+
+topology_template:
+
+  node_templates:
+
+    elastic_cluster_front_end:
+      type: tosca.nodes.indigo.ElasticCluster
+      properties:
+        deployment_id: orchestrator_deployment_id
+      requirements:
+        - lrms: torque_front_end
+        - wn: wn_node
+
+    galaxy:
+      type: tosca.nodes.indigo.GalaxyPortal
+      requirements:
+        - lrms: torque_front_end
+
+    torque_front_end:
+      type: tosca.nodes.indigo.LRMS.FrontEnd.Torque
+      requirements:
+        - host: torque_server
+
+    torque_server:
+      type: tosca.nodes.indigo.Compute
+      properties:
+        public_ip: yes
+      capabilities:
+        host:
+          properties:
+            num_cpus: 1
+            mem_size: 1 GB
+        os:
+          properties:
+            # host Operating System image properties
+            type: linux 
+            #distribution: scientific 
+            #version: 6.6
+
+    wn_node:
+      type: tosca.nodes.indigo.LRMS.WorkerNode.Torque
+      capabilities:
+        wn:
+          properties:
+            max_instances: 5
+            min_instances: 0
+      requirements:
+        - host: torque_wn
+            
+    torque_wn:
+      type: tosca.nodes.indigo.Compute
+      properties:
+        public_ip: no
+      capabilities:
+        scalable:
+          properties:
+            count: 0
+            removal_list: [ "to-be-deleted" ]
+        host:
+          properties:
+            num_cpus: 1
+            mem_size: 1 GB
+        os:
+          properties:
+            # host Operating System image properties
+            type: linux
+            #distribution: scientific 
+            #version: 6.6
+
+  outputs:
+    galaxy_url:
+      value: { get_attribute: [ torque_server, public_address] }
