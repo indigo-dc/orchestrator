@@ -20,10 +20,10 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
   private static final String RESOURCES_LOCATION = "/resources/";
   private static final String RESOURCES_HANDLER = RESOURCES_LOCATION + "**";
 
-  @Bean
-  public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
-    return new PropertySourcesPlaceholderConfigurer();
-  }
+  // @Bean
+  // public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
+  // return new PropertySourcesPlaceholderConfigurer();
+  // }
 
   @Override
   public RequestMappingHandlerMapping requestMappingHandlerMapping() {

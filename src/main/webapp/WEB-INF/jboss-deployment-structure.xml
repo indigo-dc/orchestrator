@@ -1,0 +1,9 @@
+<jboss-deployment-structure>
+	<deployment>
+		<exclusions>
+			<!-- Exclude jackson implementation provided by Wildfly 9 (2.5.1)
+				because of https://github.com/FasterXML/jackson-databind/issues/735 -->
+			<module name="org.jboss.resteasy.resteasy-jackson2-provider" />
+		</exclusions>
+	</deployment>
+</jboss-deployment-structure>

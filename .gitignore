@@ -44,3 +44,6 @@ target/
 
 # CheckStyle
 .checkstyle
+
+# Builded war file
+/docker/*.war

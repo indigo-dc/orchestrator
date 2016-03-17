@@ -14,5 +14,7 @@ public interface DeploymentService {
 
   public Deployment createDeployment(DeploymentRequest request);
 
+  public void updateDeployment(String id, DeploymentRequest request);
+
   public void deleteDeployment(String id);
 }

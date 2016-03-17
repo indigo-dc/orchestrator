@@ -1,9 +1,9 @@
 package it.reply.orchestrator.service.utils;
 
-import java.net.URI;
-
 import org.springframework.hateoas.core.LinkBuilderSupport;
 import org.springframework.web.util.UriComponentsBuilder;
+
+import java.net.URI;
 
 public class MyLinkBuilder extends LinkBuilderSupport<MyLinkBuilder> {
 
@@ -22,13 +22,13 @@ public class MyLinkBuilder extends LinkBuilderSupport<MyLinkBuilder> {
   }
 
   public static MyLinkBuilder getNewBuilder(UriComponentsBuilder builder) {
-    UriComponentsBuilder _builder = (UriComponentsBuilder) builder.clone();
-    return new MyLinkBuilder(_builder);
+    UriComponentsBuilder uriComponentsBuilder = (UriComponentsBuilder) builder.clone();
+    return new MyLinkBuilder(uriComponentsBuilder);
   }
 
   public static MyLinkBuilder getNewBuilder(URI uri) {
-    UriComponentsBuilder _builder = UriComponentsBuilder.fromUri(uri);
-    return new MyLinkBuilder(_builder);
+    UriComponentsBuilder uriComponentsBuilder = UriComponentsBuilder.fromUri(uri);
+    return new MyLinkBuilder(uriComponentsBuilder);
   }
 
 }
