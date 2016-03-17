@@ -3,5 +3,6 @@
     <Resource/>
     <WorkflowReference/>
     <Deployment_parameters/>
+    <Deployment_outputs/>
     <Resource_requiredBy/>
 </dataset>

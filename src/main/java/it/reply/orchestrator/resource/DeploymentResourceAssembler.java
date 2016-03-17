@@ -4,19 +4,19 @@ import it.reply.orchestrator.controller.DeploymentController;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.service.utils.MyLinkBuilder;
 
+import org.springframework.hateoas.mvc.ControllerLinkBuilder;
+import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
+import org.springframework.stereotype.Component;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+
 import java.net.URI;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.StampedLock;
 
 import javax.servlet.http.HttpServletRequest;
-
-import org.springframework.hateoas.mvc.ControllerLinkBuilder;
-import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
-import org.springframework.stereotype.Component;
-import org.springframework.util.Assert;
-import org.springframework.web.context.request.RequestAttributes;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 @Component
 public class DeploymentResourceAssembler
@@ -42,8 +42,11 @@ public class DeploymentResourceAssembler
     resource.setCreationTime(entity.getCreated());
     resource.setUpdateTime(entity.getUpdated());
     resource.setStatus(entity.getStatus());
+    resource.setStatusReason(entity.getStatusReason());
 
     resource.setTask(entity.getTask());
+
+    resource.setOutputs((Map) entity.getOutputs());
 
     if (entity.getCallback() != null) {
       resource.setCallback(entity.getCallback());

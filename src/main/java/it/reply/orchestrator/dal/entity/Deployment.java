@@ -15,6 +15,7 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.FetchType;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Transient;
@@ -41,10 +42,15 @@ public class Deployment extends AbstractResourceEntity {
   @Column(name = "template", columnDefinition = "LONGTEXT")
   private String template;
 
-  @ElementCollection
+  @ElementCollection(fetch = FetchType.EAGER)
   @MapKeyColumn(name = "name")
   @Column(name = "value")
   Map<String, String> parameters = new HashMap<String, String>();
+
+  @ElementCollection(fetch = FetchType.EAGER)
+  @MapKeyColumn(name = "name")
+  @Column(name = "value")
+  Map<String, String> outputs = new HashMap<String, String>();
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "deployment")
   List<Resource> resources = new ArrayList<>();
@@ -102,6 +108,14 @@ public class Deployment extends AbstractResourceEntity {
 
   public void setParameters(Map<String, String> parameters) {
     this.parameters = parameters;
+  }
+
+  public Map<String, String> getOutputs() {
+    return outputs;
+  }
+
+  public void setOutputs(Map<String, String> outputs) {
+    this.outputs = outputs;
   }
 
   public List<Resource> getResources() {

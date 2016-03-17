@@ -1,9 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>it.reply.orchestrator</groupId>
+	<groupId>it.reply</groupId>
 	<artifactId>orchestrator</artifactId>
-	<version>0.0.2-SNAPSHOT</version>
+	<version>0.0.3-SNAPSHOT</version>
 	<packaging>war</packaging>
 	<name>orchestrator</name>
 
@@ -23,6 +23,7 @@
 
 		<checkstyle-plugin.version>2.17</checkstyle-plugin.version>
 		<workflow-manager.version>0.0.2-SNAPSHOT</workflow-manager.version>
+		<alien4cloud.version>1.1.0-INDIGO</alien4cloud.version>
 	</properties>
 
 	<dependencies>
@@ -33,6 +34,12 @@
 			<artifactId>dom4j</artifactId>
 			<version>1.6.1</version>
 			<scope>provided</scope>
+			<exclusions>
+				<exclusion>
+					<artifactId>xml-apis</artifactId>
+					<groupId>xml-apis</groupId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -120,6 +127,11 @@
 			<version>${jackson.version}</version>
 		</dependency>
 		<dependency>
+			<groupId>com.fasterxml.jackson.dataformat</groupId>
+			<artifactId>jackson-dataformat-yaml</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>es.upv.i3m.grycap</groupId>
 			<artifactId>im-java-api</artifactId>
 			<version>${im-java-api.version}</version>
@@ -129,7 +141,18 @@
 			<artifactId>workflow-manager-spring</artifactId>
 			<version>${workflow-manager.version}</version>
 		</dependency>
-
+		
+		<dependency>
+			<groupId>alien4cloud</groupId>
+			<artifactId>alien4cloud-core</artifactId>
+			<version>${alien4cloud.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>org.slf4j</groupId>
+					<artifactId>slf4j-log4j12</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
 
 
 		<!-- test -->
@@ -170,12 +193,12 @@
 			<version>${jsonpath.version}</version>
 			<scope>test</scope>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
 			<version>5.1.38</version>
 			<scope>test</scope>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>com.github.springtestdbunit</groupId>
 			<artifactId>spring-test-dbunit</artifactId>
@@ -201,6 +224,13 @@
 			<version>2.1.4</version>
 			<scope>test</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>com.h2database</groupId>
+			<artifactId>h2</artifactId>
+			<version>1.4.191</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 	<build>
@@ -219,7 +249,7 @@
 				<artifactId>maven-war-plugin</artifactId>
 				<version>2.6</version>
 				<configuration>
-					<outputDirectory>${basedir}/docker</outputDirectory>
+ 					<outputDirectory>${basedir}/docker</outputDirectory>
 					<archiveClasses>true</archiveClasses>
 					<webResources>
 						<resource>
@@ -254,6 +284,23 @@
 					</execution>
 				</executions>
 			</plugin>
+			<!-- Automatic deploy on wildfly -->
+			<!-- <plugin>
+                <groupId>org.wildfly.plugins</groupId>
+                <artifactId>wildfly-maven-plugin</artifactId>
+                <version>1.1.0.Alpha7</version>
+                <configuration>
+               		<filename>../docker/${project.build.finalName}.${project.packaging}</filename> 
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>install</phase>
+                        <goals>
+                            <goal>deploy</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin> -->
 		</plugins>
 
 	</build>
