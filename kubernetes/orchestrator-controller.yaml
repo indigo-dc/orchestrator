@@ -33,5 +33,11 @@ spec:
             value: orchestrator
           - name: WORKFLOW_DB_PWD
             value: password
+        livenessProbe:
+          httpGet:
+            path: /orchestrator
+            port: 8080
+          initialDelaySeconds: 240
+          timeoutSeconds: 5
         ports:
         - containerPort: 8080
