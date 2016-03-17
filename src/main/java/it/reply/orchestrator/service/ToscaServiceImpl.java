@@ -281,15 +281,22 @@ public class ToscaServiceImpl implements ToscaService {
 
   @Override
   public List<String> getRemovalList(NodeTemplate nodeTemplate) {
+    List<String> removalList = new ArrayList<String>();
     Capability scalable = getNodeCapabilityByName(nodeTemplate, "scalable");
     if (scalable != null) {
       ListPropertyValue listPropertyValue = (ListPropertyValue) scalable.getProperties()
           .get("removal_list");
       if (listPropertyValue != null) {
-        return (List<String>) (List<?>) listPropertyValue.getValue();
+        for (Object o : listPropertyValue.getValue()) {
+          if (o instanceof ScalarPropertyValue) {
+            removalList.add(((ScalarPropertyValue) o).getValue());
+          } else if (o instanceof String) {
+            removalList.add((String) o);
+          }
+        }
       }
     }
-    return new ArrayList<String>();
+    return removalList;
   }
 
   @Override

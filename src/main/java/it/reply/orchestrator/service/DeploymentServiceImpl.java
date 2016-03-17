@@ -16,6 +16,7 @@ import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.OrchestratorException;
+import it.reply.orchestrator.exception.http.ConflictException;
 import it.reply.orchestrator.exception.http.NotFoundException;
 import it.reply.workflowManager.exceptions.WorkflowException;
 import it.reply.workflowManager.orchestrator.bpm.BusinessProcessManager;
@@ -72,8 +73,7 @@ public class DeploymentServiceImpl implements DeploymentService {
     deployment.setStatus(Status.CREATE_IN_PROGRESS);
     deployment.setTask(Task.NONE);
     deployment.setParameters(request.getParameters().entrySet().stream()
-        .collect(Collectors.toMap(e -> ((Map.Entry<String, Object>) e).getKey(),
-            e -> ((Map.Entry<String, Object>) e).getValue().toString())));
+        .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().toString())));
 
     if (request.getCallback() != null) {
       deployment.setCallback(request.getCallback());
@@ -115,7 +115,7 @@ public class DeploymentServiceImpl implements DeploymentService {
     if (deployment != null) {
       if (deployment.getStatus() == Status.DELETE_COMPLETE
           || deployment.getStatus() == Status.DELETE_IN_PROGRESS) {
-        throw new IllegalStateException(
+        throw new ConflictException(
             String.format("Deployment already in %s state.", deployment.getStatus().toString()));
       } else {
         deployment.setStatus(Status.DELETE_IN_PROGRESS);
@@ -149,22 +149,19 @@ public class DeploymentServiceImpl implements DeploymentService {
   @Override
   @Transactional
   public void updateDeployment(String id, DeploymentRequest request) {
-    // Check if the new template is valid
-    ParsingResult<ArchiveRoot> parsingResult;
-    try {
-      parsingResult = toscaService.getArchiveRootFromTemplate(request.getTemplate());
-    } catch (ParsingException | IOException e) {
-      throw new OrchestratorException(e);
-    }
     Deployment deployment = deploymentRepository.findOne(id);
     if (deployment != null) {
-      if (deployment.getStatus() == Status.CREATE_IN_PROGRESS
-          || deployment.getStatus() == Status.UPDATE_IN_PROGRESS
-          || deployment.getStatus() == Status.DELETE_IN_PROGRESS) {
-        throw new IllegalStateException(String.format(
-            "Cannot update a deployment while status is: %s", deployment.getStatus().toString()));
-      } else {
+      if (deployment.getStatus() == Status.CREATE_COMPLETE
+          || deployment.getStatus() == Status.UPDATE_COMPLETE
+          || deployment.getStatus() == Status.UPDATE_FAILED) {
+        try {
+          // Check if the new template is valid
+          ParsingResult<ArchiveRoot> parsingResult = toscaService
+              .getArchiveRootFromTemplate(request.getTemplate());
 
+        } catch (ParsingException | IOException e) {
+          throw new OrchestratorException(e);
+        }
         deployment.setStatus(Status.UPDATE_IN_PROGRESS);
         deployment.setTask(Task.NONE);
 
@@ -185,10 +182,12 @@ public class DeploymentServiceImpl implements DeploymentService {
         deployment.addWorkflowReferences(
             new WorkflowReference(pi.getId(), RUNTIME_STRATEGY.PER_PROCESS_INSTANCE));
         deployment = deploymentRepository.save(deployment);
-      }
-    } else
+      } else {
+        throw new ConflictException(String.format("Cannot update a deployment in %s state.",
+            deployment.getStatus().toString()));
 
-    {
+      }
+    } else {
       throw new NotFoundException("The deployment <" + id + "> doesn't exist");
     }
   }

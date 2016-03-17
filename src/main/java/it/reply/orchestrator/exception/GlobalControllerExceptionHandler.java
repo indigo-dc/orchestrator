@@ -1,6 +1,7 @@
 package it.reply.orchestrator.exception;
 
 import it.reply.orchestrator.dto.common.Error;
+import it.reply.orchestrator.exception.http.ConflictException;
 import it.reply.orchestrator.exception.http.NotFoundException;
 import it.reply.orchestrator.exception.service.TOSCAException;
 
@@ -45,6 +46,22 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
   }
 
   /**
+   * Bad request exception handler.
+   * 
+   * @param ex
+   *          the exception
+   * @return a {@code ResponseEntity} instance
+   */
+  @ExceptionHandler
+  @ResponseStatus(HttpStatus.CONFLICT)
+  @ResponseBody
+  public Error handleException(ConflictException ex) {
+
+    return new Error().withCode(HttpStatus.CONFLICT.value())
+        .withTitle(HttpStatus.CONFLICT.getReasonPhrase()).withMessage(ex.getMessage());
+  }
+
+  /**
    * Invalid TOSCA exception handler.
    * 
    * @param ex
@@ -76,6 +93,7 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
         .withTitle(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase()).withMessage(ex.getMessage());
   }
 
+  @Override
   protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
       HttpHeaders headers, HttpStatus status, WebRequest request) {
 
