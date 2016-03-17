@@ -31,3 +31,11 @@ spec:
             value: "yes"
         ports:
         - containerPort: 3306
+#        volumeMounts:
+#        - mountPath: "/var/lib/mysql"
+#          name: orchestrator-database-volume
+#      volumes:
+#        - name: orchestrator-database-volume
+#          persistentVolumeClaim:
+#            claimName: orchestrator-database-pvc
+        
