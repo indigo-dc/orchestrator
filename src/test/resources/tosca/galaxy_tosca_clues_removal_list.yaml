@@ -71,7 +71,7 @@ topology_template:
         scalable:
           properties:
             count: 0
-            removal_list: [ "to-be-deleted" ]
+            removal_list: [ "to-be-deleted-1", "to-be-deleted-2" ]
         host:
           properties:
             num_cpus: 1

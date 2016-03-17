@@ -54,7 +54,8 @@ public class TOSCAServiceTest extends WebAppConfigurationAware {
   @Test
   public void getRemovalList() throws IOException, ParsingException {
     List<String> expectedRemovalList = new ArrayList<>();
-    expectedRemovalList.add("to-be-deleted");
+    expectedRemovalList.add("to-be-deleted-1");
+    expectedRemovalList.add("to-be-deleted-2");
     String template = FileIO
         .readUTF8File("./src/test/resources/tosca/galaxy_tosca_clues_removal_list.yaml");
     NodeTemplate node = toscaService.getArchiveRootFromTemplate(template).getResult().getTopology()
