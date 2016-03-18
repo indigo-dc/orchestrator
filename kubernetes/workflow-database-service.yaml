@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata: 
+  labels: 
+    service: orchestrator
+    component: workflow-database
+  name: workflow-database
+spec: 
+  ports:
+    - port: 3306
+  selector: 
+    service: orchestrator
+    component: workflow-database
