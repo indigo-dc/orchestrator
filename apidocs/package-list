@@ -12,4 +12,7 @@ it.reply.orchestrator.exception.service
 it.reply.orchestrator.resource
 it.reply.orchestrator.resource.common
 it.reply.orchestrator.service
+it.reply.orchestrator.service.commands
 it.reply.orchestrator.service.deployment.providers
+it.reply.orchestrator.service.utils
+it.reply.orchestrator.validator
