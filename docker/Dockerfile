@@ -1,23 +1,22 @@
-FROM  jboss/wildfly:9.0.2.Final
+FROM jboss/wildfly:9.0.2.Final
 
-MAINTAINER a.brigandi@reply.it
-
-yum update & yum install -y libaio
+MAINTAINER Alberto Brigandì <a.brigandi@reply.it>
 
 COPY /modules/ $JBOSS_HOME/modules/
+
+USER root
+RUN yum install -y libaio && yum clean all
 
 ENV JBOSS_CONF_FILE standalone-full-ha.xml
 ENV JBOSS_CONF_FILEPATH $JBOSS_HOME/standalone/configuration/$JBOSS_CONF_FILE
 
-ENV ORCHESTRATOR_DB_ENDPOINT "databaseorchestrator:3306"
-ENV ORCHESTRATOR_DB_NAME orchestrator
-ENV ORCHESTRATOR_DB_USER root
-ENV ORCHESTRATOR_DB_PWD root
-
+COPY /otherConfigs.xsl /otherConfigs.xsl
 COPY /datasourcesConfig.xsl /datasourcesConfig.xsl
-COPY launch.sh /launch.sh
+COPY /launch.sh /launch.sh
 
-USER root
+RUN java -jar /usr/share/java/saxon.jar -o:$JBOSS_HOME/standalone/configuration/$JBOSS_CONF_FILE -s:$JBOSS_HOME/standalone/configuration/$JBOSS_CONF_FILE -xsl:/otherConfigs.xsl
+# ADD (and so COPY too) does not honor USER: files always owned by root
+# https://github.com/docker/docker/issues/6119
 RUN chmod 777 /datasourcesConfig.xsl
 RUN chmod 777 /launch.sh
 USER jboss
@@ -43,12 +42,20 @@ EXPOSE  3528 \
 
 ENV WAR_NAME orchestrator
 
-ENTRYPOINT sh /launch.sh
-
 COPY /$WAR_NAME.war $JBOSS_HOME/standalone/deployments/$WAR_NAME.war.zip
 RUN unzip $JBOSS_HOME/standalone/deployments/$WAR_NAME.war.zip -d $JBOSS_HOME/standalone/deployments/$WAR_NAME.war \
 	&& touch $JBOSS_HOME/standalone/deployments/$WAR_NAME.war.dodeploy \
 	&& rm $JBOSS_HOME/standalone/deployments/$WAR_NAME.war.zip
 
+ENV ORCHESTRATOR_DB_ENDPOINT="databaseorchestrator:3306" \
+	ORCHESTRATOR_DB_NAME=orchestrator \
+	ORCHESTRATOR_DB_USER=root \
+	ORCHESTRATOR_DB_PWD=root \
+	WORKFLOW_DB_ENDPOINT="databaseworkflow:3306" \
+	WORKFLOW_DB_NAME=workflow \
+	WORKFLOW_DB_USER=root \
+	WORKFLOW_DB_PWD=root
+
+ENTRYPOINT sh /launch.sh
 
 

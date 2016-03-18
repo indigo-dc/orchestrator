@@ -1,9 +1,11 @@
 package it.reply.orchestrator.service.deployment.providers;
 
 import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
+import it.reply.orchestrator.exception.service.DeploymentException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,11 +21,11 @@ public abstract class AbstractDeploymentProviderService implements DeploymentPro
   private DeploymentRepository deploymentRepository;
 
   @Override
-  public boolean doPoller(String deploymentUuid, final Function<String, Boolean> function) {
+  public boolean doPoller(final Function<String[], Boolean> function, String[] params) {
     int maxRetry = 10;
     int sleepInterval = 30000;
     Boolean isDone = false;
-    while (maxRetry > 0 && !(isDone = function.apply(deploymentUuid))) {
+    while (maxRetry > 0 && !(isDone = function.apply(params))) {
       try {
         Thread.sleep(sleepInterval);
       } catch (InterruptedException e) {
@@ -53,17 +55,21 @@ public abstract class AbstractDeploymentProviderService implements DeploymentPro
         break;
       case CREATE_IN_PROGRESS:
         deployment.setStatus(Status.CREATE_FAILED);
+        updateResources(deployment, Status.CREATE_FAILED);
         break;
       case DELETE_IN_PROGRESS:
         deployment.setStatus(Status.DELETE_FAILED);
+        updateResources(deployment, Status.DELETE_FAILED);
         break;
       case UPDATE_IN_PROGRESS:
         deployment.setStatus(Status.UPDATE_FAILED);
+        updateResources(deployment, Status.UPDATE_FAILED);
         break;
       default:
         LOG.error("updateOnError: unsupported deployment status: {}. Setting status to {}",
             deployment.getStatus(), Status.UNKNOWN.toString());
         deployment.setStatus(Status.UNKNOWN);
+        updateResources(deployment, Status.UNKNOWN);
         break;
     }
     deployment.setTask(Task.NONE);
@@ -71,9 +77,6 @@ public abstract class AbstractDeploymentProviderService implements DeploymentPro
     deploymentRepository.save(deployment);
   }
 
-  /**
-   * @param deploymentUuid
-   */
   public void updateOnSuccess(String deploymentUuid) {
     Deployment deployment = deploymentRepository.findOne(deploymentUuid);
     if (deployment.getStatus() == Status.DELETE_IN_PROGRESS) {
@@ -88,14 +91,17 @@ public abstract class AbstractDeploymentProviderService implements DeploymentPro
           break;
         case CREATE_IN_PROGRESS:
           deployment.setStatus(Status.CREATE_COMPLETE);
+          updateResources(deployment, Status.CREATE_COMPLETE);
           break;
         case UPDATE_IN_PROGRESS:
           deployment.setStatus(Status.UPDATE_COMPLETE);
+          updateResources(deployment, Status.UPDATE_COMPLETE);
           break;
         default:
           LOG.error("updateOnSuccess: unsupported deployment status: {}. Setting status to {}",
               deployment.getStatus(), Status.UNKNOWN.toString());
           deployment.setStatus(Status.UNKNOWN);
+          updateResources(deployment, Status.UNKNOWN);
           break;
       }
       deployment.setTask(Task.NONE);
@@ -104,4 +110,9 @@ public abstract class AbstractDeploymentProviderService implements DeploymentPro
     }
   }
 
+  private void updateResources(Deployment deployment, Status status) {
+    for (Resource r : deployment.getResources()) {
+      r.setStatus(status);
+    }
+  }
 }

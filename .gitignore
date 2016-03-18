@@ -10,6 +10,7 @@ tmp/
 local.properties
 .settings/
 .loadpath
+target/
 
 # Eclipse Core
 .project
@@ -43,4 +44,6 @@ local.properties
 
 # CheckStyle
 .checkstyle
-/target/
+
+# Builded war file
+/docker/*.war

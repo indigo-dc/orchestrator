@@ -5,6 +5,7 @@ import it.reply.orchestrator.enums.Status;
 import org.hibernate.annotations.GenericGenerator;
 import org.springframework.hateoas.Identifiable;
 
+import java.io.Serializable;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -18,7 +19,9 @@ import javax.persistence.PreUpdate;
 import javax.persistence.Version;
 
 @MappedSuperclass
-public abstract class AbstractResourceEntity implements Identifiable<String> {
+public abstract class AbstractResourceEntity implements Identifiable<String>, Serializable {
+
+  private static final long serialVersionUID = 3797345592958668261L;
 
   @Id
   @GeneratedValue(generator = "uuid")
@@ -30,7 +33,7 @@ public abstract class AbstractResourceEntity implements Identifiable<String> {
   @Column(name = "status", length = 500)
   private Status status;
 
-  @Column(name = "statusReason")
+  @Column(name = "statusReason", columnDefinition = "LONGTEXT")
   private String statusReason;
 
   private Date created;

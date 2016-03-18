@@ -2,22 +2,27 @@ package it.reply.orchestrator.service.deployment.providers;
 
 import java.util.function.Function;
 
-import org.springframework.scheduling.annotation.Async;
-
+import alien4cloud.tosca.model.ArchiveRoot;
+import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.exception.service.DeploymentException;
 
 public interface DeploymentProviderService {
 
-  @Async
   public void doDeploy(String request);
 
-  public boolean doPoller(String deploymentUuid, final Function<String, Boolean> function)
+  public void doDeploy(Deployment deployment);
+
+  public void doUpdate(String deploymentId, String template);
+
+  public boolean doPoller(final Function<String[], Boolean> function, String[] params)
       throws Exception;
 
-  public boolean isDeployed(String deploymentUuid) throws DeploymentException;
+  public boolean isDeployed(String[] params) throws DeploymentException;
 
-  @Async
   public void doUndeploy(String deploymentUuid);
 
-  public boolean isUndeployed(String deploymentUuid) throws DeploymentException;
+  public void doUndeploy(Deployment deployment);
+
+  public boolean isUndeployed(String[] params) throws DeploymentException;
+
 }

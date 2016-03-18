@@ -4,7 +4,9 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 
 import com.github.springtestdbunit.DbUnitTestExecutionListener;
 
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
@@ -19,8 +21,9 @@ import javax.inject.Inject;
 
 @RunWith(SpringJUnit4ClassRunner.class)
 @WebAppConfiguration
-@ContextConfiguration(classes = { ApplicationConfig.class, WebAppInitializer.class,
-    WebMvcConfig.class, PersistenceConfigTest.class })
+@ContextConfiguration(classes = { ApplicationConfig.class,
+    WebAppInitializer.class, WebMvcConfig.class, PersistenceConfigTest.class,
+    WorklfowPersistenceConfigTest.class })
 @TestExecutionListeners({ DependencyInjectionTestExecutionListener.class,
     TransactionalTestExecutionListener.class, DbUnitTestExecutionListener.class })
 public abstract class WebAppConfigurationAware {
@@ -28,6 +31,17 @@ public abstract class WebAppConfigurationAware {
   @Inject
   protected WebApplicationContext wac;
   protected MockMvc mockMvc;
+
+  @BeforeClass
+  public static void generalSetup() {
+    System.setProperty(javax.naming.Context.INITIAL_CONTEXT_FACTORY,
+        "bitronix.tm.jndi.BitronixInitialContextFactory");
+  }
+
+  @AfterClass
+  public static void generalCleanup() {
+    System.clearProperty(javax.naming.Context.INITIAL_CONTEXT_FACTORY);
+  }
 
   @Before
   public void before() {

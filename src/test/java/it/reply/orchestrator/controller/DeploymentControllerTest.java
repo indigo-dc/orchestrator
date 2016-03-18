@@ -18,14 +18,18 @@ import it.reply.orchestrator.config.WebAppConfigurationAware;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.util.TestUtil;
 
+import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.portlet.MockResourceRequest;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.util.HashMap;
@@ -70,6 +74,15 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
 
   @Test
   @DatabaseSetup("/data/database-init.xml")
+  public void getDeploymentWithOutputSuccessfully() throws Exception {
+
+    mockMvc.perform(get("/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd"))
+        .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.outputs", Matchers.hasEntry("server_ip", "[10.0.0.1]")));
+  }
+
+  @Test
+  @DatabaseSetup("/data/database-init.xml")
   public void getDeploymentNotFound() throws Exception {
 
     mockMvc.perform(get("/deployments/not-found")).andExpect(status().isNotFound())
@@ -79,11 +92,13 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
   }
 
   @Test
+  @Transactional
   public void createDeploymentSuccessfully() throws Exception {
 
     DeploymentRequest request = new DeploymentRequest();
-    Map<String, String> parameters = new HashMap<String, String>();
-    parameters.put("test-key", "test-value");
+    Map<String, Object> parameters = new HashMap<>();
+    parameters.put("test-string", "test-string");
+    parameters.put("test-int", 1);
     request.setParameters(parameters);
     request.setTemplate(FileIO.readUTF8File("./src/test/resources/tosca/galaxy_tosca.yaml"));
     mockMvc
@@ -95,10 +110,11 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
   }
 
   @Test
+  @Transactional
   public void createDeploymentWithCallbackSuccessfully() throws Exception {
 
     DeploymentRequest request = new DeploymentRequest();
-    String callback = "http://test.test";
+    String callback = "http://localhost";
     request.setCallback(callback);
     request.setTemplate(FileIO.readUTF8File("./src/test/resources/tosca/galaxy_tosca.yaml"));
     mockMvc
@@ -108,6 +124,19 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.callback", is(callback)))
         .andExpect(jsonPath("$.links[0].rel", is("self")));
+  }
+
+  @Test
+  @Transactional
+  public void createDeploymentWithCallbackUnsuccessfully() throws Exception {
+    DeploymentRequest request = new DeploymentRequest();
+    String callback = "httptest.com";
+    request.setCallback(callback);
+    request.setTemplate(FileIO.readUTF8File("./src/test/resources/tosca/galaxy_tosca.yaml"));
+    mockMvc
+        .perform(post("/deployments").contentType(MediaType.APPLICATION_JSON)
+            .content(TestUtil.convertObjectToJsonBytes(request)))
+        .andExpect(status().isBadRequest());
   }
 
   @Test
