@@ -31,10 +31,10 @@ spec:
             value: "yes"
         ports:
         - containerPort: 3306
-#        volumeMounts:
-#        - mountPath: "/var/lib/mysql"
-#          name: workflow-database-volume
-#      volumes:
-#        - name: workflow-database-volume
-#          persistentVolumeClaim:
-#            claimName: workflow-database-pvc
+        volumeMounts:
+        - mountPath: "/var/lib/mysql"
+          name: workflow-database-volume
+      volumes:
+        - name: workflow-database-volume
+          persistentVolumeClaim:
+            claimName: workflow-database-pvc
