@@ -276,15 +276,15 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   private Status getOrchestratorStatusFromImStatus(String value) {
     VmStates vmState = VmStates.getEnumFromValue(value);
     switch (vmState) {
-      case CONFIGURED:
       case PENDING:
+      case RUNNING:
         return Status.CREATE_IN_PROGRESS;
 
       case FAILED:
       case UNCONFIGURED:
         return Status.CREATE_FAILED;
 
-      case RUNNING:
+      case CONFIGURED:
         return Status.CREATE_COMPLETE;
 
       // TODO Understand if we need other Status
