@@ -2,14 +2,18 @@ package it.reply.orchestrator.service.deployment.providers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Resources;
 
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URISyntaxException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -19,11 +23,9 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.annotation.PostConstruct;
-
+import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.javatuples.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
@@ -39,6 +41,7 @@ import es.upv.i3m.grycap.im.api.RestApiBodyContentType;
 import es.upv.i3m.grycap.im.api.VmStates;
 import es.upv.i3m.grycap.im.client.ServiceResponse;
 import es.upv.i3m.grycap.im.exceptions.ImClientException;
+import it.reply.orchestrator.config.Application;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
@@ -56,16 +59,24 @@ import it.reply.orchestrator.service.ToscaService;
 public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   private static final Logger LOG = LogManager.getLogger(ImServiceImpl.class);
-
+  @Value("${file.directory}")
+  private String DIR;
   @Value("${url}")
   private String IM_URL;
 
   @Value("${auth.file.path}")
   private String AUTH_FILE_PATH;
 
-  private static final Pattern UUID_PATTERN = Pattern.compile(".*\\/([^\\/]+)\\/?");
+  @Value("${opennebula.auth.file.path}")
+  private String OPENNEBULA_AUTH_FILE_PATH;
 
-  private InfrastructureManagerApiClient imClient;
+  @Value("${openstack.auth.file.path}")
+  private String OPENSTACK_AUTH_FILE_PATH;
+
+  @Value("${onedock.auth.file.path}")
+  private String ONEDOCK_AUTH_FILE_PATH;
+
+  private static final Pattern UUID_PATTERN = Pattern.compile(".*\\/([^\\/]+)\\/?");
 
   @Autowired
   private ToscaService toscaService;
@@ -79,24 +90,96 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   /**
    * Initialize the {@link InfrastructureManagerApiClient}.
    * 
+   * @throws IOException
+   * @throws FileNotFoundException
+   * @throws ImClientException
+   * 
    * @throws AuthFileNotFoundException
    *           if the file doesn't exist
    * @throws URISyntaxException
    *           if an error occurred while generating the auth file URI
    */
-  @PostConstruct
-  private void init() throws ImClientException, IOException, URISyntaxException {
+  // @PostConstruct
+  // private void init() throws ImClientException, IOException, URISyntaxException {
+  //
+  // // Load fake iaas credential
+  // InputStream inputStream = ImServiceImpl.class.getClassLoader()
+  // .getResourceAsStream(AUTH_FILE_PATH);
+  //
+  // File tmp = File.createTempFile("authFileTmp", ".tmp");
+  // OutputStream outStream = new FileOutputStream(tmp);
+  // ByteStreams.copy(inputStream, new FileOutputStream(tmp));
+  // inputStream.close();
+  // outStream.close();
+  //
+  // imClient = new InfrastructureManagerApiClient(IM_URL, tmp.getAbsolutePath());
+  // }
 
-    InputStream inputStream = ImServiceImpl.class.getClassLoader()
-        .getResourceAsStream(AUTH_FILE_PATH);
+  public enum IaaSSite {
+    OPENSTACK, OPENNEBULA, ONEDOCK
+  }
 
-    File tmp = File.createTempFile("authFileTmp", ".tmp");
-    OutputStream outStream = new FileOutputStream(tmp);
-    ByteStreams.copy(inputStream, new FileOutputStream(tmp));
-    inputStream.close();
-    outStream.close();
+  private InfrastructureManagerApiClient getClient(IaaSSite iaaSSite) {
+    try {
+      InputStream inputStream;
+      switch (iaaSSite) {
+        case OPENSTACK:
+          LOG.debug("Load {} credentials", IaaSSite.OPENSTACK.toString());
+          inputStream = ImServiceImpl.class.getClassLoader()
+              .getResourceAsStream(OPENSTACK_AUTH_FILE_PATH);
+          break;
+        case ONEDOCK:
+          LOG.debug("Load {} credentials", IaaSSite.ONEDOCK.toString());
+          // Read the proxy file
+          InputStream in = new FileInputStream(DIR + File.separator + Application.PROXY);
+          String proxy = IOUtils.toString(in);
 
-    imClient = new InfrastructureManagerApiClient(IM_URL, tmp.getAbsolutePath());
+          // read onedock auth file
+          inputStream = ImServiceImpl.class.getClassLoader()
+              .getResourceAsStream(ONEDOCK_AUTH_FILE_PATH);
+          String authFile = IOUtils.toString(inputStream, StandardCharsets.UTF_8.toString());
+
+          // replace the proxy as string
+          authFile = authFile.replace("{proxy}", proxy);
+
+          inputStream = new ByteArrayInputStream(authFile.getBytes("UTF-8"));
+          break;
+
+        case OPENNEBULA:
+          LOG.debug("Load {} credentials", IaaSSite.OPENNEBULA.toString());
+          inputStream = ImServiceImpl.class.getClassLoader()
+              .getResourceAsStream(OPENNEBULA_AUTH_FILE_PATH);
+        default:
+          LOG.debug("Load fake credentials");
+          inputStream = ImServiceImpl.class.getClassLoader().getResourceAsStream(AUTH_FILE_PATH);
+          break;
+      }
+
+      File tmp = File.createTempFile("authFileTmp", ".tmp");
+      OutputStream outStream = new FileOutputStream(tmp);
+
+      ByteStreams.copy(inputStream, new FileOutputStream(tmp));
+
+      inputStream.close();
+      outStream.close();
+      InfrastructureManagerApiClient imClient = new InfrastructureManagerApiClient(IM_URL,
+          tmp.getAbsolutePath());
+      return imClient;
+    } catch (IOException | ImClientException e) {
+      throw new OrchestratorException("Cannot load IM auth file", e);
+    }
+  }
+
+  private IaaSSite getIaaSSiteFromTosca(String template) {
+
+    if (template.contains("tosca.nodes.indigo.MesosMaster")) {
+      return IaaSSite.OPENSTACK;
+    } else if (template.contains("onedock.i3m.upv.es")) {
+      return IaaSSite.ONEDOCK;
+    } else {
+      return IaaSSite.OPENNEBULA;
+    }
+
   }
 
   @Override
@@ -113,6 +196,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       deployment.setTask(Task.DEPLOYER);
       deployment.setDeploymentProvider(DeploymentProvider.IM);
       deployment = deploymentRepository.save(deployment);
+
+      // FIXME this is a trick used only for demo purpose
+      InfrastructureManagerApiClient imClient = getClient(
+          getIaaSSiteFromTosca(deployment.getTemplate()));
 
       // TODO improve with template inputs
       ServiceResponse response = imClient.createInfrastructure(deployment.getTemplate(),
@@ -137,7 +224,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
         try {
           String[] p = new String[] { infrastructureId };
-          boolean result = doPoller(this::isDeployed, p);
+          boolean result = doPoller(this::isDeployed, p, deployment);
           if (result) {
             // Save outputs
             es.upv.i3m.grycap.im.api.InfrastructureStatus statusResponse = imClient
@@ -208,6 +295,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
             Map<String, NodeTemplate> nodes = new HashMap<>();
             nodes.put(entry.getKey(), newNodes.get(entry.getKey()));
             root.getTopology().setNodeTemplates(nodes);
+            // FIXME this is a trick used only for demo purpose
+            InfrastructureManagerApiClient imClient = getClient(
+                getIaaSSiteFromTosca(deployment.getTemplate()));
             ServiceResponse response = imClient.addResource(deployment.getEndpoint(),
                 toscaService.getTemplateFromTopology(root), RestApiBodyContentType.TOSCA, true);
 
@@ -220,8 +310,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
               throw new DeploymentException(response.getReasonPhrase() + ": " + responseError);
             } else {
 
-              boolean result = doPoller(this::isDeployed,
-                  new String[] { deployment.getEndpoint() });
+              boolean result = doPoller(this::isDeployed, new String[] { deployment.getEndpoint() },
+                  deployment);
               if (!result) {
                 throw new DeploymentException("An error occur during the update: polling failed");
               }
@@ -240,6 +330,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
               Resource resource = resourceRepository.findOne(resourceId);
               resource.setStatus(Status.DELETE_IN_PROGRESS);
               resource = resourceRepository.save(resource);
+              // FIXME this is a trick used only for demo purpose
+              InfrastructureManagerApiClient imClient = getClient(
+                  getIaaSSiteFromTosca(deployment.getTemplate()));
               ServiceResponse response = imClient.removeResource(deployment.getEndpoint(),
                   resource.getIaasId());
               if (!response.isReponseSuccessful()) {
@@ -249,7 +342,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
                 }
               } else {
                 boolean result = doPoller(this::isResourceDeleted,
-                    new String[] { deployment.getEndpoint(), resource.getIaasId() });
+                    new String[] { deployment.getEndpoint(), resource.getIaasId() }, deployment);
                 if (result) {
                   List<Resource> resurces = deployment.getResources();
                   resurces.remove(resource);
@@ -299,9 +392,12 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   }
 
   @Override
-  public boolean isDeployed(String[] infrastructureId) throws DeploymentException {
+  public boolean isDeployed(String[] infrastructureId, Deployment deployment)
+      throws DeploymentException {
     try {
-
+      // FIXME this is a trick used only for demo purpose
+      InfrastructureManagerApiClient imClient = getClient(
+          getIaaSSiteFromTosca(deployment.getTemplate()));
       ServiceResponse response = imClient.getInfrastructureState(infrastructureId[0]);
       InfrastructureStatus status = new ObjectMapper().readValue(response.getResult(),
           InfrastructureStatus.class);
@@ -336,6 +432,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       deployment.setTask(Task.DEPLOYER);
       deployment = deploymentRepository.save(deployment);
 
+      // FIXME this is a trick used only for demo purpose
+      InfrastructureManagerApiClient imClient = getClient(
+          getIaaSSiteFromTosca(deployment.getTemplate()));
       ServiceResponse response = imClient.destroyInfrastructure(deployment.getEndpoint());
       if (!response.isReponseSuccessful()) {
         if (response.getServiceStatusCode() == 404) {
@@ -345,7 +444,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         }
       } else {
         try {
-          boolean result = doPoller(this::isUndeployed, new String[] { deploymentUuid });
+          boolean result = doPoller(this::isUndeployed, new String[] { deploymentUuid },
+              deployment);
           if (result) {
             updateOnSuccess(deploymentUuid);
           } else {
@@ -363,9 +463,13 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   }
 
   @Override
-  public boolean isUndeployed(String[] deploymentUuid) throws DeploymentException {
+  public boolean isUndeployed(String[] params, Deployment deployment) throws DeploymentException {
     try {
-      ServiceResponse response = imClient.getInfrastructureState(deploymentUuid[0]);
+
+      // FIXME this is a trick used only for demo purpose
+      InfrastructureManagerApiClient imClient = getClient(
+          getIaaSSiteFromTosca(deployment.getTemplate()));
+      ServiceResponse response = imClient.getInfrastructureState(params[0]);
       if (!response.isReponseSuccessful()) {
         if (response.getServiceStatusCode() == 404) {
           return true;
@@ -382,8 +486,14 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     }
   }
 
-  public boolean isResourceDeleted(String[] params) throws DeploymentException {
+  public boolean isResourceDeleted(String[] params, Deployment deployment)
+      throws DeploymentException {
     try {
+
+      // FIXME this is a trick used only for demo purpose
+      InfrastructureManagerApiClient imClient = getClient(
+          getIaaSSiteFromTosca(deployment.getTemplate()));
+
       ServiceResponse response = imClient.getVMInfo(params[0], params[1], true);
       if (!response.isReponseSuccessful()) {
         if (response.getServiceStatusCode() == 404) {
@@ -407,6 +517,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
    */
   private void bindResources(Deployment deployment, String infrastructureId)
       throws ImClientException {
+
+    // FIXME this is a trick used only for demo purpose
+    InfrastructureManagerApiClient imClient = getClient(
+        getIaaSSiteFromTosca(deployment.getTemplate()));
 
     // Get the URLs of the VMs composing the virtual infrastructure
     String[] vmURLs = imClient.getInfrastructureInfo(infrastructureId).getResult().split("\\r?\\n");

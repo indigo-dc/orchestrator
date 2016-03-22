@@ -3,6 +3,8 @@ package it.reply.orchestrator.config;
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
 import com.github.springtestdbunit.DbUnitTestExecutionListener;
+import it.reply.orchestrator.config.PersistenceConfigTest;
+import javax.inject.Inject;
 
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -17,13 +19,10 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.context.WebApplicationContext;
 
-import javax.inject.Inject;
-
 @RunWith(SpringJUnit4ClassRunner.class)
 @WebAppConfiguration
-@ContextConfiguration(classes = { ApplicationConfig.class,
-    WebAppInitializer.class, WebMvcConfig.class, PersistenceConfigTest.class,
-    WorklfowPersistenceConfigTest.class })
+@ContextConfiguration(classes = { ApplicationConfig.class, WebAppInitializer.class,
+    WebMvcConfig.class, PersistenceConfigTest.class, WorklfowPersistenceConfigTest.class })
 @TestExecutionListeners({ DependencyInjectionTestExecutionListener.class,
     TransactionalTestExecutionListener.class, DbUnitTestExecutionListener.class })
 public abstract class WebAppConfigurationAware {

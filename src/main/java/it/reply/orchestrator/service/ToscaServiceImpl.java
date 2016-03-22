@@ -200,7 +200,7 @@ public class ToscaServiceImpl implements ToscaService {
     if (!errorList.isEmpty()) {
       for (ParsingError error : errorList) {
         if (!error.getErrorLevel().equals(ParsingErrorLevel.INFO)) {
-          errorMessage = errorMessage + error.getErrorCode() + ": " + error.getNote() + "; ";
+          errorMessage = errorMessage + error.toString() + "; ";
         }
       }
       throw new TOSCAException(errorMessage);
@@ -246,6 +246,7 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   // TODO merge with getCount
+  @Override
   public Map<String, NodeTemplate> getCountNodes(ArchiveRoot archiveRoot) {
     Map<String, NodeTemplate> nodes = new HashMap<>();
 
