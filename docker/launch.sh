@@ -15,19 +15,19 @@ java -jar /usr/share/java/saxon.jar -o:$JBOSS_HOME/standalone/configuration/$JBO
 IM_PROP_FILE="$JBOSS_HOME/standalone/deployments/$WAR_NAME.war/WEB-INF/classes/im-config/im-java-api.properties"
 
 if [[ $IM_URL ]];
-	then sed -i "s/^\(url=\).*$/\1${IM_URL}/" ${IM_PROP_FILE};
+	then sed -i "s/^\(url=\).*$/\1$(echo $IM_URL | sed -e 's/[\/&]/\\&/g')/" ${IM_PROP_FILE};
 fi;
 if [[ $PROXY_DIR ]];
-	then sed -i "s/^\(onedock\.proxy\.file\.path=\).*$/\1${PROXY_DIR}/" ${IM_PROP_FILE};
+	then sed -i "s/^\(onedock\.proxy\.file\.path=\).*$/\1$(echo $PROXY_DIR | sed -e 's/[\/&]/\\&/g')/" ${IM_PROP_FILE};
 fi;
 if [[ $OPENNEBULA_AUTH_FILE_PATH ]];
-	then sed -i "s/^\(opennebula\.auth\.file\.path=\).*$/\1${OPENNEBULA_AUTH_FILE_PATH}/" ${IM_PROP_FILE};
+	then sed -i "s/^\(opennebula\.auth\.file\.path=\).*$/\1$(echo $OPENNEBULA_AUTH_FILE_PATH | sed -e 's/[\/&]/\\&/g')/" ${IM_PROP_FILE};
 fi;
 if [[ $OPENSTACK_AUTH_FILE_PATH ]];
-	then sed -i "s/^\(openstack.auth\.file\.path=\).*$/\1${OPENSTACK_AUTH_FILE_PATH}/" ${IM_PROP_FILE};
+	then sed -i "s/^\(openstack.auth\.file\.path=\).*$/\1$(echo $OPENSTACK_AUTH_FILE_PATH | sed -e 's/[\/&]/\\&/g')/" ${IM_PROP_FILE};
 fi;
 if [[ $ONEDOCK_AUTH_FILE_PATH ]];
-	then sed -i "s/^\(onedock\.auth\.file\.path=\).*$/\1${ONEDOCK_AUTH_FILE_PATH}/" ${IM_PROP_FILE};
+	then sed -i "s/^\(onedock\.auth\.file\.path=\).*$/\1$(echo $ONEDOCK_AUTH_FILE_PATH | sed -e 's/[\/&]/\\&/g')/" ${IM_PROP_FILE};
 fi;
 
 CLUSTER_MESSAGING_PASSWORD="pwd"
