@@ -6,7 +6,9 @@ import java.io.FileOutputStream;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -23,8 +25,11 @@ import it.reply.orchestrator.exception.http.OrchestratorApiException;
 @PropertySource("classpath:im-config/im-java-api.properties")
 public class ProxyController {
 
-  @Value("${file.directory}")
-  private String DIR;
+  @Value("${onedock.proxy.file.path}")
+  private String PROXY;
+
+  @Autowired
+  private ApplicationContext ctx;
 
   private static final Logger LOG = LogManager.getLogger(ProxyController.class);
 
@@ -32,8 +37,8 @@ public class ProxyController {
   public void handleFileUpload(@RequestParam("file") MultipartFile file) {
     if (!file.isEmpty()) {
       try {
-        BufferedOutputStream stream = new BufferedOutputStream(
-            new FileOutputStream(new File(DIR + File.separator + Application.PROXY)));
+        File f = ctx.getResource(PROXY).getFile();
+        BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(f));
         FileCopyUtils.copy(file.getInputStream(), stream);
         stream.close();
       } catch (Exception e) {

@@ -28,6 +28,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
@@ -59,8 +60,13 @@ import it.reply.orchestrator.service.ToscaService;
 public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   private static final Logger LOG = LogManager.getLogger(ImServiceImpl.class);
-  @Value("${file.directory}")
-  private String DIR;
+
+  @Autowired
+  private ApplicationContext ctx;
+
+  @Value("${onedock.proxy.file.path}")
+  private String PROXY;
+
   @Value("${url}")
   private String IM_URL;
 
@@ -125,18 +131,21 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       switch (iaaSSite) {
         case OPENSTACK:
           LOG.debug("Load {} credentials", IaaSSite.OPENSTACK.toString());
-          inputStream = ImServiceImpl.class.getClassLoader()
-              .getResourceAsStream(OPENSTACK_AUTH_FILE_PATH);
+
+          inputStream = ctx.getResource(OPENSTACK_AUTH_FILE_PATH).getInputStream();
           break;
         case ONEDOCK:
           LOG.debug("Load {} credentials", IaaSSite.ONEDOCK.toString());
           // Read the proxy file
-          InputStream in = new FileInputStream(DIR + File.separator + Application.PROXY);
-          String proxy = IOUtils.toString(in);
-
+          String proxy;
+          try {
+            InputStream in = ctx.getResource(PROXY).getInputStream();
+            proxy = IOUtils.toString(in);
+          } catch (Exception e) {
+            throw new OrchestratorException("Cannot load proxy file", e);
+          }
           // read onedock auth file
-          inputStream = ImServiceImpl.class.getClassLoader()
-              .getResourceAsStream(ONEDOCK_AUTH_FILE_PATH);
+          inputStream = ctx.getResource(ONEDOCK_AUTH_FILE_PATH).getInputStream();
           String authFile = IOUtils.toString(inputStream, StandardCharsets.UTF_8.toString());
 
           // replace the proxy as string
@@ -403,7 +412,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           InfrastructureStatus.class);
 
       // FIXME Are the infrastructure states equals to the VmStates?
-      if (status.getState().equals(VmStates.RUNNING.toString())) {
+      if (status.getState().equals(VmStates.CONFIGURED.toString())) {
         return true;
       } else if (status.getState().equals(VmStates.FAILED.toString())) {
         throw new DeploymentException(
