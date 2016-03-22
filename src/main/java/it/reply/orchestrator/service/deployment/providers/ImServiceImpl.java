@@ -307,7 +307,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           InfrastructureStatus.class);
 
       // FIXME Are the infrastructure states equals to the VmStates?
-      if (status.getState().equals(VmStates.RUNNING.toString())) {
+      if (status.getState().equals(VmStates.CONFIGURED.toString())) {
         return true;
       } else if (status.getState().equals(VmStates.FAILED.toString())) {
         throw new DeploymentException(
