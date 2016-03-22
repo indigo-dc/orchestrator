@@ -38,11 +38,11 @@ spec:
           - name: PROXY_DIR
             value: "file:/proxy/proxy.pem"
           - name: OPENNEBULA_AUTH_FILE_PATH
-            value: "/secrets/opennebula-auth.dat"
+            value: "file:/secrets/opennebula-auth.dat"
           - name: OPENSTACK_AUTH_FILE_PATH
-            value: "/secrets/openstack-auth.dat"
+            value: "file:/secrets/openstack-auth.dat"
           - name: ONEDOCK_AUTH_FILE_PATH
-            value: "/secrets/onedock-auth.dat"
+            value: "file:/secrets/onedock-auth.dat"
         volumeMounts:
           - name: secrets
             mountPath: "/secrets"
