@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: orchestrator
-        image: albertobrigandi/orchestrator:latest
+        image: albertobrigandi/orchestrator:demo-0.0.3-SNAPSHOT
         imagePullPolicy: Always
         env:
           - name: ORCHESTRATOR_DB_ENDPOINT
@@ -33,6 +33,22 @@ spec:
             value: orchestrator
           - name: WORKFLOW_DB_PWD
             value: password
+          - name: IM_URL
+            value: "http://im:8800"
+          - name: PROXY_DIR
+            value: "file:/proxy/proxy.pem"
+          - name: OPENNEBULA_AUTH_FILE_PATH
+            value: "/secrets/opennebula-auth.dat"
+          - name: OPENSTACK_AUTH_FILE_PATH
+            value: "/secrets/openstack-auth.dat"
+          - name: ONEDOCK_AUTH_FILE_PATH
+            value: "/secrets/onedock-auth.dat"
+        volumeMounts:
+          - name: secrets
+            mountPath: "/secrets"
+            readOnly: true
+          - name: orchestrator-volume
+            mountPath: "/proxy"
         livenessProbe:
           httpGet:
             path: /orchestrator
@@ -41,3 +57,11 @@ spec:
           timeoutSeconds: 5
         ports:
         - containerPort: 8080
+      volumes:
+        - name: secrets
+          secret:
+            secretName: "orchestrator-deploy-secrets"
+        - name: orchestrator-volume
+          persistentVolumeClaim:
+            claimName: orchestrator-pvc
+
