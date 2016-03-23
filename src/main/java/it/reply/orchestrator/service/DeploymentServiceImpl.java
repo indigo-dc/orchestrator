@@ -3,9 +3,8 @@ package it.reply.orchestrator.service;
 import alien4cloud.model.components.ScalarPropertyValue;
 import alien4cloud.model.topology.Capability;
 import alien4cloud.model.topology.NodeTemplate;
-import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingException;
-import alien4cloud.tosca.parser.ParsingResult;
+
 import it.reply.orchestrator.config.WorkflowConfigProducerBean;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
@@ -156,16 +155,12 @@ public class DeploymentServiceImpl implements DeploymentService {
           || deployment.getStatus() == Status.UPDATE_FAILED) {
         try {
           // Check if the new template is valid
-          ParsingResult<ArchiveRoot> parsingResult = toscaService
-              .getArchiveRootFromTemplate(request.getTemplate());
-
+          toscaService.getArchiveRootFromTemplate(request.getTemplate());
         } catch (ParsingException | IOException e) {
           throw new OrchestratorException(e);
         }
         deployment.setStatus(Status.UPDATE_IN_PROGRESS);
         deployment.setTask(Task.NONE);
-
-        Iterator<WorkflowReference> wrIt = deployment.getWorkflowReferences().iterator();
 
         deployment = deploymentRepository.save(deployment);
 
@@ -193,22 +188,22 @@ public class DeploymentServiceImpl implements DeploymentService {
   }
 
   private void createResources(Deployment deployment, Map<String, NodeTemplate> nodes) {
-    Resource r;
+    Resource resource;
     for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
       Capability scalable = toscaService.getNodeCapabilityByName(entry.getValue(), "scalable");
       int count = 1;
       if (scalable != null) {
-        ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue) scalable.getProperties()
-            .get("count");
+        ScalarPropertyValue scalarPropertyValue =
+            (ScalarPropertyValue) scalable.getProperties().get("count");
         count = Integer.parseInt(scalarPropertyValue.getValue());
       }
       for (int i = 0; i < count; i++) {
-        r = new Resource();
-        r.setDeployment(deployment);
-        r.setStatus(Status.CREATE_IN_PROGRESS);
-        r.setToscaNodeName(entry.getKey());
-        r.setToscaNodeType(entry.getValue().getType());
-        resourceRepository.save(r);
+        resource = new Resource();
+        resource.setDeployment(deployment);
+        resource.setStatus(Status.CREATE_IN_PROGRESS);
+        resource.setToscaNodeName(entry.getKey());
+        resource.setToscaNodeType(entry.getValue().getType());
+        resourceRepository.save(resource);
       }
     }
   }

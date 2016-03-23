@@ -3,7 +3,7 @@ package it.reply.orchestrator.exception;
 import it.reply.orchestrator.dto.common.Error;
 import it.reply.orchestrator.exception.http.ConflictException;
 import it.reply.orchestrator.exception.http.NotFoundException;
-import it.reply.orchestrator.exception.service.TOSCAException;
+import it.reply.orchestrator.exception.service.ToscaException;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -71,7 +71,7 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
   @ExceptionHandler
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ResponseBody
-  public Error handleException(TOSCAException ex) {
+  public Error handleException(ToscaException ex) {
 
     return new Error().withCode(HttpStatus.BAD_REQUEST.value())
         .withTitle(HttpStatus.BAD_REQUEST.getReasonPhrase()).withMessage(ex.getMessage());

@@ -15,7 +15,7 @@ import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.parser.ParsingException;
 import es.upv.i3m.grycap.file.FileIO;
 import it.reply.orchestrator.config.WebAppConfigurationAware;
-import it.reply.orchestrator.exception.service.TOSCAException;
+import it.reply.orchestrator.exception.service.ToscaException;
 
 public class TOSCAServiceTest extends WebAppConfigurationAware {
 
@@ -24,7 +24,7 @@ public class TOSCAServiceTest extends WebAppConfigurationAware {
 
   private String deploymentId = "deployment_id";
 
-  @Test(expected = TOSCAException.class)
+  @Test(expected = ToscaException.class)
   public void customizeTemplateWithError() throws Exception {
 
     String template = FileIO
@@ -60,7 +60,7 @@ public class TOSCAServiceTest extends WebAppConfigurationAware {
         .readUTF8File("./src/test/resources/tosca/galaxy_tosca_clues_removal_list.yaml");
     NodeTemplate node = toscaService.getArchiveRootFromTemplate(template).getResult().getTopology()
         .getNodeTemplates().get("torque_wn");
-    List<String> removal_list = toscaService.getRemovalList(node);
-    assertEquals(expectedRemovalList, removal_list);
+    List<String> removalList = toscaService.getRemovalList(node);
+    assertEquals(expectedRemovalList, removalList);
   }
 }

@@ -3,7 +3,6 @@ package it.reply.orchestrator.service;
 import com.google.common.io.ByteStreams;
 
 import alien4cloud.component.repository.exception.CSARVersionAlreadyExistsException;
-import alien4cloud.model.components.AbstractPropertyValue;
 import alien4cloud.model.components.Csar;
 import alien4cloud.model.components.ListPropertyValue;
 import alien4cloud.model.components.ScalarPropertyValue;
@@ -20,11 +19,10 @@ import alien4cloud.tosca.parser.ParsingResult;
 import alien4cloud.tosca.serializer.VelocityUtil;
 import alien4cloud.utils.FileUtil;
 
-import it.reply.orchestrator.exception.service.TOSCAException;
+import it.reply.orchestrator.exception.service.ToscaException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.javatuples.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -76,6 +74,10 @@ public class ToscaServiceImpl implements ToscaService {
   @Value("${tosca.definitions.indigo}")
   private String indigoLocalName;
 
+  /**
+   * Load normative and non-normative types.
+   * 
+   */
   @PostConstruct
   public void init() throws IOException, CSARVersionAlreadyExistsException, ParsingException {
     if (Files.exists(Paths.get(alienRepoDir))) {
@@ -108,11 +110,15 @@ public class ToscaServiceImpl implements ToscaService {
 
   }
 
+  /**
+   * Utility to zip an inputStream.
+   * 
+   */
   public static void zip(@Nonnull InputStream fileStream, @Nonnull Path outputPath)
       throws IOException {
     FileUtil.touch(outputPath);
-    try (ZipOutputStream zipOutputStream = new ZipOutputStream(
-        new BufferedOutputStream(Files.newOutputStream(outputPath)))) {
+    try (ZipOutputStream zipOutputStream =
+        new ZipOutputStream(new BufferedOutputStream(Files.newOutputStream(outputPath)))) {
       zipOutputStream.putNextEntry(new ZipEntry("definition.yml"));
       ByteStreams.copy(fileStream, zipOutputStream);
       zipOutputStream.closeEntry();
@@ -195,7 +201,7 @@ public class ToscaServiceImpl implements ToscaService {
     return getTemplateFromTopology(result.getResult());
   }
 
-  private void checkParsingErrors(List<ParsingError> errorList) throws TOSCAException {
+  private void checkParsingErrors(List<ParsingError> errorList) throws ToscaException {
     String errorMessage = "";
     if (!errorList.isEmpty()) {
       for (ParsingError error : errorList) {
@@ -203,7 +209,7 @@ public class ToscaServiceImpl implements ToscaService {
           errorMessage = errorMessage + error.getErrorCode() + ": " + error.getNote() + "; ";
         }
       }
-      throw new TOSCAException(errorMessage);
+      throw new ToscaException(errorMessage);
     }
 
   }
@@ -239,13 +245,14 @@ public class ToscaServiceImpl implements ToscaService {
   @Override
   public Capability getNodeCapabilityByName(NodeTemplate node, String propertyName) {
     for (Entry<String, Capability> entry : node.getCapabilities().entrySet()) {
-      if (entry.getKey().equals(propertyName))
+      if (entry.getKey().equals(propertyName)) {
         return entry.getValue();
+      }
     }
     return null;
   }
 
-  // TODO merge with getCount
+  @Override
   public Map<String, NodeTemplate> getCountNodes(ArchiveRoot archiveRoot) {
     Map<String, NodeTemplate> nodes = new HashMap<>();
 
@@ -253,8 +260,8 @@ public class ToscaServiceImpl implements ToscaService {
         .entrySet()) {
       Capability scalable = getNodeCapabilityByName(entry.getValue(), "scalable");
       if (scalable != null) {
-        ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue) scalable.getProperties()
-            .get("count");
+        ScalarPropertyValue scalarPropertyValue =
+            (ScalarPropertyValue) scalable.getProperties().get("count");
         // Check if this value is read from the template and is not a default value
         if (scalarPropertyValue.isPrintable()) {
           nodes.put(entry.getKey(), entry.getValue());
@@ -269,8 +276,8 @@ public class ToscaServiceImpl implements ToscaService {
 
     Capability scalable = getNodeCapabilityByName(nodeTemplate, "scalable");
     if (scalable != null) {
-      ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue) scalable.getProperties()
-          .get("count");
+      ScalarPropertyValue scalarPropertyValue =
+          (ScalarPropertyValue) scalable.getProperties().get("count");
       // Check if this value is read from the template and is not a default value
       if (scalarPropertyValue.isPrintable()) {
         return Integer.parseInt(scalarPropertyValue.getValue());
@@ -284,8 +291,8 @@ public class ToscaServiceImpl implements ToscaService {
     List<String> removalList = new ArrayList<String>();
     Capability scalable = getNodeCapabilityByName(nodeTemplate, "scalable");
     if (scalable != null) {
-      ListPropertyValue listPropertyValue = (ListPropertyValue) scalable.getProperties()
-          .get("removal_list");
+      ListPropertyValue listPropertyValue =
+          (ListPropertyValue) scalable.getProperties().get("removal_list");
       if (listPropertyValue != null) {
         for (Object o : listPropertyValue.getValue()) {
           if (o instanceof ScalarPropertyValue) {
@@ -305,8 +312,8 @@ public class ToscaServiceImpl implements ToscaService {
         .entrySet()) {
       Capability scalable = getNodeCapabilityByName(entry.getValue(), "scalable");
       if (scalable != null) {
-        ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue) scalable.getProperties()
-            .get("count");
+        ScalarPropertyValue scalarPropertyValue =
+            (ScalarPropertyValue) scalable.getProperties().get("count");
         if (scalarPropertyValue.isPrintable()) {
           scalarPropertyValue.setValue(String.valueOf(count));
           scalable.getProperties().put("count", scalarPropertyValue);

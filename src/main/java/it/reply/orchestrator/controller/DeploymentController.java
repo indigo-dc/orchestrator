@@ -51,8 +51,18 @@ public class DeploymentController {
     return "INDIGO-Orchestrator";
   }
 
+  /**
+   * Get all deployments.
+   * 
+   * @param pageable
+   *          {@Link Pageable}
+   * @param pagedAssembler
+   *          {@link PagedResourcesAssembler}
+   * @return {@link DeploymentResource}
+   */
   @ResponseStatus(HttpStatus.OK)
-  @RequestMapping(value = "/deployments", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  @RequestMapping(value = "/deployments", method = RequestMethod.GET,
+      produces = MediaType.APPLICATION_JSON_VALUE)
   public PagedResources<DeploymentResource> getDeployments(@PageableDefault Pageable pageable,
       PagedResourcesAssembler<Deployment> pagedAssembler) {
 
@@ -60,14 +70,22 @@ public class DeploymentController {
 
     Page<Deployment> deployments = deploymentService.getDeployments(pageable);
 
-    PagedResources<DeploymentResource> pagedDeploymentResources = pagedAssembler
-        .toResource(deployments, deploymentResourceAssembler);
+    PagedResources<DeploymentResource> pagedDeploymentResources =
+        pagedAssembler.toResource(deployments, deploymentResourceAssembler);
 
     return pagedDeploymentResources;
   }
 
+  /**
+   * Create a deployment.
+   * 
+   * @param request
+   *          {@link DeploymentRequest}
+   * @return {@link DeploymentResource}
+   */
   @ResponseStatus(HttpStatus.CREATED)
-  @RequestMapping(value = "/deployments", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_VALUE)
+  @RequestMapping(value = "/deployments", method = RequestMethod.POST,
+      produces = MediaType.APPLICATION_JSON_VALUE)
   public DeploymentResource createDeployment(@Valid @RequestBody DeploymentRequest request) {
 
     LOG.trace("Invoked method: createDeployment with parameter " + request.toString());
@@ -76,6 +94,14 @@ public class DeploymentController {
 
   }
 
+  /**
+   * Update the deployment.
+   * 
+   * @param id
+   *          the deployment id
+   * @param request
+   *          {@link DeploymentRequest}
+   */
   @ResponseStatus(HttpStatus.ACCEPTED)
   @RequestMapping(value = "/deployments/{deploymentId}", method = RequestMethod.PUT)
   public void updateDeployment(@PathVariable("deploymentId") String id,
@@ -85,8 +111,16 @@ public class DeploymentController {
     deploymentService.updateDeployment(id, request);
   }
 
+  /**
+   * Get the deployment.
+   * 
+   * @param id
+   *          the deployment id
+   * @return {@link DeploymentResource}
+   */
   @ResponseStatus(HttpStatus.OK)
-  @RequestMapping(value = "/deployments/{deploymentId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  @RequestMapping(value = "/deployments/{deploymentId}", method = RequestMethod.GET,
+      produces = MediaType.APPLICATION_JSON_VALUE)
   public DeploymentResource getDeployment(@PathVariable("deploymentId") String id) {
 
     LOG.trace("Invoked method: getDeployment with id: " + id);
@@ -94,8 +128,15 @@ public class DeploymentController {
     return deploymentResourceAssembler.toResource(deployment);
   }
 
+  /**
+   * Delete the deployment.
+   * 
+   * @param id
+   *          the deployment id
+   */
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @RequestMapping(value = "/deployments/{deploymentId}", method = RequestMethod.DELETE, produces = MediaType.APPLICATION_JSON_VALUE)
+  @RequestMapping(value = "/deployments/{deploymentId}", method = RequestMethod.DELETE,
+      produces = MediaType.APPLICATION_JSON_VALUE)
   public void deleteDeployment(@PathVariable("deploymentId") String id) {
 
     LOG.trace("Invoked method: getDeployment with id: " + id);

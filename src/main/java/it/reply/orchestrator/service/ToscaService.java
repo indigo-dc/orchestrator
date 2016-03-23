@@ -1,5 +1,11 @@
 package it.reply.orchestrator.service;
 
+import alien4cloud.model.topology.Capability;
+import alien4cloud.model.topology.NodeTemplate;
+import alien4cloud.tosca.model.ArchiveRoot;
+import alien4cloud.tosca.parser.ParsingException;
+import alien4cloud.tosca.parser.ParsingResult;
+
 import com.sun.istack.NotNull;
 
 import java.io.IOException;
@@ -7,14 +13,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.annotation.Nonnull;
-
-import org.javatuples.Pair;
-
-import alien4cloud.model.topology.Capability;
-import alien4cloud.model.topology.NodeTemplate;
-import alien4cloud.tosca.model.ArchiveRoot;
-import alien4cloud.tosca.parser.ParsingException;
-import alien4cloud.tosca.parser.ParsingResult;
 
 public interface ToscaService {
 
@@ -37,9 +35,10 @@ public interface ToscaService {
   public int getCount(NodeTemplate nodeTemplate);
 
   /**
-   * Return the list of resources to be removed or an empty list
+   * Get the list of resources to be removed.
    * 
    * @param nodeTemplate
+   *          {@link NodeTemplate}
    * @return the list of resources to be removed or an empty list
    */
   public List<String> getRemovalList(NodeTemplate nodeTemplate);

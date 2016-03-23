@@ -2,25 +2,30 @@ package it.reply.orchestrator.controller;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.github.springtestdbunit.annotation.DatabaseSetup;
+import com.github.springtestdbunit.annotation.DatabaseTearDown;
+
 import java.nio.charset.Charset;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
+import org.springframework.restdocs.JUnitRestDocumentation;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
-
-import com.github.springtestdbunit.annotation.DatabaseSetup;
-import com.github.springtestdbunit.annotation.DatabaseTearDown;
 
 import es.upv.i3m.grycap.file.FileIO;
 import it.reply.orchestrator.config.WebAppConfigurationAware;
@@ -29,8 +34,12 @@ import it.reply.orchestrator.config.WebAppConfigurationAware;
 @DatabaseSetup("/data/database-resource-init.xml")
 public class TemplateControllerTest extends WebAppConfigurationAware {
 
-  @Autowired
-  private WebApplicationContext wac;
+  // @Autowired
+  // private WebApplicationContext wac;
+
+  @Rule
+  public JUnitRestDocumentation restDocumentation = new JUnitRestDocumentation(
+      "target/generated-snippets");
 
   private MockMvc mockMvc;
 
@@ -44,7 +53,11 @@ public class TemplateControllerTest extends WebAppConfigurationAware {
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
-    mockMvc = MockMvcBuilders.webAppContextSetup(wac).dispatchOptions(true).build();
+    mockMvc = MockMvcBuilders.webAppContextSetup(wac).dispatchOptions(true)
+        .apply(documentationConfiguration(this.restDocumentation))
+        .alwaysDo(document("{method-name}/{step}/", preprocessRequest(prettyPrint()),
+            preprocessResponse(prettyPrint())))
+        .build();
   }
 
   @Test
@@ -54,7 +67,7 @@ public class TemplateControllerTest extends WebAppConfigurationAware {
     String template = FileIO.readUTF8File(templatePath);
     MvcResult result = mockMvc.perform(get("/deployments/" + deploymentId + "/template"))
         .andExpect(status().isOk()).andExpect(content().contentType(MediaType.TEXT_PLAIN))
-        .andReturn();
+        .andDo(document("index")).andReturn();
 
     String content = result.getResponse().getContentAsString();
     assertEquals(content, template);

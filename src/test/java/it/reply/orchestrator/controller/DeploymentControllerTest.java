@@ -1,11 +1,17 @@
 package it.reply.orchestrator.controller;
 
 import static org.hamcrest.Matchers.is;
-
+import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.atomLinks;
+import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.linkWithRel;
+import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.links;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -13,29 +19,29 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
 
-import es.upv.i3m.grycap.file.FileIO;
-import it.reply.orchestrator.config.WebAppConfigurationAware;
-import it.reply.orchestrator.dto.request.DeploymentRequest;
-import it.reply.orchestrator.util.TestUtil;
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.annotation.Resource;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
-import org.springframework.mock.web.portlet.MockResourceRequest;
+import org.springframework.restdocs.JUnitRestDocumentation;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.annotation.Resource;
+import es.upv.i3m.grycap.file.FileIO;
+import it.reply.orchestrator.config.WebAppConfigurationAware;
+import it.reply.orchestrator.dto.request.DeploymentRequest;
+import it.reply.orchestrator.util.TestUtil;
 
 @DatabaseTearDown("/data/database-empty.xml")
 public class DeploymentControllerTest extends WebAppConfigurationAware {
@@ -48,10 +54,23 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
   @Resource
   private Environment env;
 
+  @Rule
+  public JUnitRestDocumentation restDocumentation = new JUnitRestDocumentation(
+      "target/generated-snippets");
+
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
-    mockMvc = MockMvcBuilders.webAppContextSetup(wac).dispatchOptions(true).build();
+    mockMvc = MockMvcBuilders.webAppContextSetup(wac).dispatchOptions(true)
+        .apply(documentationConfiguration(this.restDocumentation))
+        .alwaysDo(document("{method-name}/{step}/", preprocessRequest(prettyPrint()),
+            preprocessResponse(prettyPrint())))
+        .build();
+  }
+
+  @Test
+  public void orchestratorSetUp() throws Exception {
+    mockMvc.perform(get("/")).andExpect(status().isOk()).andDo(document("index"));
   }
 
   @Test
@@ -68,8 +87,12 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
   public void getDeploymentSuccessfully() throws Exception {
 
     mockMvc.perform(get("/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd"))
-        .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.uuid", is("mmd34483-d937-4578-bfdb-ebe196bf82dd")));
+        .andExpect(status().isOk())
+        .andDo(document("deployment-get", preprocessResponse(prettyPrint()),
+            links(atomLinks(), linkWithRel("self").description("This deployment"))));
+
+    // .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+    // .andExpect(jsonPath("$.uuid", is("mmd34483-d937-4578-bfdb-ebe196bf82dd")));
   }
 
   @Test

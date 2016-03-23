@@ -26,7 +26,6 @@ public class TemplateController {
    *          the uuid of the deployment
    * @return the template
    */
-  // @ResponseStatus(HttpStatus.OK)
   @RequestMapping(method = RequestMethod.GET)
   public ResponseEntity<String> getOrchestrator(@PathVariable("deploymentId") String uuid) {
     String template = templateService.getTemplate(uuid);

@@ -12,10 +12,17 @@ import java.io.IOException;
 @EnableAsync
 public class ApplicationConfig {
 
+  /**
+   * Resolves Alien4Cloud ${...} placeholders within bean definition property values and @Value
+   * annotations.
+   * 
+   */
   @Bean
   public static PropertySourcesPlaceholderConfigurer propertyPlaceholderConfigurer(
       ResourceLoader resourceLoader) throws IOException {
-    PropertySourcesPlaceholderConfigurer propertyPlaceholderConfigurer = new PropertySourcesPlaceholderConfigurer();
+
+    PropertySourcesPlaceholderConfigurer propertyPlaceholderConfigurer =
+        new PropertySourcesPlaceholderConfigurer();
     propertyPlaceholderConfigurer.setProperties(Alien4CloudConfig.alienConfig(resourceLoader));
     return propertyPlaceholderConfigurer;
   }
