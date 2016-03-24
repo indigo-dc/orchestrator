@@ -33,8 +33,8 @@ spec:
             value: orchestrator
           - name: WORKFLOW_DB_PWD
             value: password
-          - name: IM_URL
-            value: "https://im:8800"
+#          - name: IM_URL
+#            value: "https://im:8800"
           - name: PROXY_DIR
             value: "file:/proxy/proxy.pem"
           - name: OPENNEBULA_AUTH_FILE_PATH
