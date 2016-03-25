@@ -40,7 +40,7 @@ public interface ToscaService {
    * Return the list of resources to be removed or an empty list
    * 
    * @param nodeTemplate
-   * @return
+   * @return the list of resources to be removed or an empty list
    */
   public List<String> getRemovalList(NodeTemplate nodeTemplate);
 
