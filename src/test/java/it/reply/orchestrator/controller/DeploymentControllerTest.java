@@ -98,11 +98,7 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
                 fieldWithPath("content[].callback").description(
                     "The endpoint used by the orchestrator to notify the progress of the deployment process"),
                 fieldWithPath("content[].outputs").description("The outputs of the TOSCA document"),
-                fieldWithPath("content[].links[]").ignored(),
-                fieldWithPath("page.size").description("The size of the page"),
-                fieldWithPath("page.totalElements").description("The total number of elements"),
-                fieldWithPath("page.totalPages").description("The total number of the page"),
-                fieldWithPath("page.number").description("The current page"))));
+                fieldWithPath("content[].links[]").ignored(), fieldWithPath("page").ignored())));
 
     // .andExpect(jsonPath("$.content", org.hamcrest.Matchers.hasSize(1)));
   }

@@ -93,7 +93,7 @@ include::{snippets}/deployment-hypermedia/response-fields.adoc[]
 An example of link to other resource
 include::{snippets}/deployment-hypermedia/links.adoc[]
 
-An example of link when the response is paginated
+When the response is paginated, the response can include also this links:
 include::{snippets}/deployment-paged/links.adoc[]
 === Pagination
 
