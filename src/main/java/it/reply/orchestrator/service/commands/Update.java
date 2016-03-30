@@ -8,9 +8,6 @@ import org.kie.api.executor.ExecutionResults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import alien4cloud.tosca.model.ArchiveRoot;
-import alien4cloud.tosca.parser.ParsingResult;
-
 @Component
 public class Update extends BaseCommand {
 

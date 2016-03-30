@@ -1,10 +1,9 @@
 package it.reply.orchestrator.service.deployment.providers;
 
-import java.util.function.Function;
-
-import alien4cloud.tosca.model.ArchiveRoot;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.exception.service.DeploymentException;
+
+import java.util.function.Function;
 
 public interface DeploymentProviderService {
 

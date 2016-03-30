@@ -5,7 +5,6 @@ import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
-import it.reply.orchestrator.exception.service.DeploymentException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -44,6 +43,14 @@ public abstract class AbstractDeploymentProviderService implements DeploymentPro
     updateOnError(deploymentUuid, throwable.getMessage());
   }
 
+  /**
+   * Update the status of the deployment with an error message.
+   * 
+   * @param deploymentUuid
+   *          the deplyment id
+   * @param message
+   *          the error message
+   */
   public void updateOnError(String deploymentUuid, String message) {
     Deployment deployment = deploymentRepository.findOne(deploymentUuid);
     switch (deployment.getStatus()) {
@@ -77,6 +84,9 @@ public abstract class AbstractDeploymentProviderService implements DeploymentPro
     deploymentRepository.save(deployment);
   }
 
+  /**
+   * Update the status of a deployment successfully.
+   */
   public void updateOnSuccess(String deploymentUuid) {
     Deployment deployment = deploymentRepository.findOne(deploymentUuid);
     if (deployment.getStatus() == Status.DELETE_IN_PROGRESS) {

@@ -8,19 +8,19 @@ import it.reply.orchestrator.exception.OrchestratorException;
  * @author m.bassi
  *
  */
-public class TOSCAException extends OrchestratorException {
+public class ToscaException extends OrchestratorException {
 
   private static final long serialVersionUID = 1L;
 
-  public TOSCAException(String message) {
+  public ToscaException(String message) {
     super(message);
   }
 
-  public TOSCAException(Throwable cause) {
+  public ToscaException(Throwable cause) {
     super(cause);
   }
 
-  public TOSCAException(String message, Throwable cause) {
+  public ToscaException(String message, Throwable cause) {
     super(message, cause);
   }
 

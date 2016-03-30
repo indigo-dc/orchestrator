@@ -20,7 +20,7 @@
 
 		<mockito.version>1.10.19</mockito.version>
 		<jsonpath.version>2.1.0</jsonpath.version>
-
+		<snippetsDirectory>${project.build.directory}\generated-snippets</snippetsDirectory>
 		<checkstyle-plugin.version>2.17</checkstyle-plugin.version>
 		<workflow-manager.version>0.0.3-SNAPSHOT</workflow-manager.version>
 		<alien4cloud.version>1.1.0-INDIGO</alien4cloud.version>
@@ -33,6 +33,7 @@
 			<name>Concept Reply Releases Repository</name>
 			<url>http://nexusconcept.cloud.reply.eu/content/repositories/releases</url>
 		</repository>
+
 		<!-- Publish snapshots here -->
 		<snapshotRepository>
 			<id>concept-reply-nexus-repository</id>
@@ -40,12 +41,20 @@
 			<url>http://nexusconcept.cloud.reply.eu/content/repositories/public-snapshots</url>
 		</snapshotRepository>
 	</distributionManagement>
-	
+
 	<repositories>
 		<repository>
 			<id>concept-reply-nexus-repository</id>
 			<name>Concept Reply Nexus</name>
 			<url>http://nexusconcept.cloud.reply.eu/content/groups/public</url>
+		</repository>
+		<repository>
+			<id>spring-milestones</id>
+			<name>Spring Milestones</name>
+			<url>https://repo.spring.io/libs-milestone</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
 		</repository>
 	</repositories>
 
@@ -130,9 +139,9 @@
 			<version>${hibernate.version}</version>
 		</dependency>
 		<dependency>
-		    <groupId>org.hibernate</groupId>
-		    <artifactId>hibernate-validator</artifactId>
-		    <version>5.2.3.Final</version>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-validator</artifactId>
+			<version>5.2.3.Final</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
@@ -164,7 +173,7 @@
 			<artifactId>workflow-manager-spring</artifactId>
 			<version>${workflow-manager.version}</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>alien4cloud</groupId>
 			<artifactId>alien4cloud-core</artifactId>
@@ -183,6 +192,12 @@
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-test</artifactId>
 			<version>${springframework.version}</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.restdocs</groupId>
+			<artifactId>spring-restdocs-mockmvc</artifactId>
+			<version>1.1.0.M1</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -216,12 +231,8 @@
 			<version>${jsonpath.version}</version>
 			<scope>test</scope>
 		</dependency>
-		<!-- <dependency>
-			<groupId>mysql</groupId>
-			<artifactId>mysql-connector-java</artifactId>
-			<version>5.1.38</version>
-			<scope>test</scope>
-		</dependency> -->
+		<!-- <dependency> <groupId>mysql</groupId> <artifactId>mysql-connector-java</artifactId> 
+			<version>5.1.38</version> <scope>test</scope> </dependency> -->
 		<dependency>
 			<groupId>com.github.springtestdbunit</groupId>
 			<artifactId>spring-test-dbunit</artifactId>
@@ -240,7 +251,7 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.codehaus.btm</groupId>
 			<artifactId>btm</artifactId>
@@ -255,6 +266,42 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
+
+
+	<profiles>
+		<profile>
+			<id>restdocs</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.asciidoctor</groupId>
+						<artifactId>asciidoctor-maven-plugin</artifactId>
+						<version>1.5.2</version>
+						<configuration>
+							<sourceDirectory>${basedir}/asciidoc</sourceDirectory>
+							<outputDirectory>${basedir}/restdocs</outputDirectory>
+						</configuration>
+						<executions>
+							<execution>
+								<id>generate-docs</id>
+								<phase>package</phase>
+								<goals>
+									<goal>process-asciidoc</goal>
+								</goals>
+								<configuration>
+									<backend>html</backend>
+									<doctype>book</doctype>
+									<attributes>
+										<snippets>${snippetsDirectory}</snippets>
+									</attributes>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
 
 	<build>
 		<finalName>orchestrator</finalName>
@@ -272,7 +319,7 @@
 				<artifactId>maven-war-plugin</artifactId>
 				<version>2.6</version>
 				<configuration>
- 					<outputDirectory>${basedir}/docker</outputDirectory>
+					<outputDirectory>${basedir}/docker</outputDirectory>
 					<archiveClasses>true</archiveClasses>
 					<webResources>
 						<resource>
@@ -307,27 +354,15 @@
 					</execution>
 				</executions>
 			</plugin>
+
+
 			<!-- Automatic deploy on wildfly -->
-			<!-- <plugin>
-                <groupId>org.wildfly.plugins</groupId>
-                <artifactId>wildfly-maven-plugin</artifactId>
-                <version>1.1.0.Alpha7</version>
-                <configuration>
-               		<filename>../docker/${project.build.finalName}.${project.packaging}</filename> 
-                </configuration>
-                <executions>
-                    <execution>
-                        <phase>install</phase>
-                        <goals>
-                            <goal>deploy</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin> -->
+			<!-- <plugin> <groupId>org.wildfly.plugins</groupId> <artifactId>wildfly-maven-plugin</artifactId> 
+				<version>1.1.0.Alpha7</version> <configuration> <filename>../docker/${project.build.finalName}.${project.packaging}</filename> 
+				</configuration> <executions> <execution> <phase>install</phase> <goals> 
+				<goal>deploy</goal> </goals> </execution> </executions> </plugin> -->
 		</plugins>
-
 	</build>
-
 	<reporting>
 		<plugins>
 
