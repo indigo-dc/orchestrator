@@ -84,8 +84,9 @@ public class DeploymentServiceImpl implements DeploymentService {
       String template = toscaService.customizeTemplate(request.getTemplate(), deployment.getId());
       deployment.setTemplate(template);
 
-      Map<String, NodeTemplate> nodes = toscaService.getArchiveRootFromTemplate(template)
-          .getResult().getTopology().getNodeTemplates();
+      Map<String, NodeTemplate> nodes =
+          toscaService.getArchiveRootFromTemplate(template).getResult().getTopology()
+              .getNodeTemplates();
       createResources(deployment, nodes);
 
     } catch (IOException | ParsingException e) {
@@ -96,8 +97,9 @@ public class DeploymentServiceImpl implements DeploymentService {
     params.put("DEPLOYMENT_ID", deployment.getId());
     ProcessInstance pi = null;
     try {
-      pi = wfService.startProcess(WorkflowConfigProducerBean.DEPLOY.getProcessId(), params,
-          RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
+      pi =
+          wfService.startProcess(WorkflowConfigProducerBean.DEPLOY.getProcessId(), params,
+              RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
     } catch (WorkflowException e) {
       throw new OrchestratorException(e);
     }
@@ -132,8 +134,9 @@ public class DeploymentServiceImpl implements DeploymentService {
         params.put("DEPLOYMENT_ID", deployment.getId());
         ProcessInstance pi = null;
         try {
-          pi = wfService.startProcess(WorkflowConfigProducerBean.UNDEPLOY.getProcessId(), params,
-              RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
+          pi =
+              wfService.startProcess(WorkflowConfigProducerBean.UNDEPLOY.getProcessId(), params,
+                  RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
         } catch (WorkflowException e) {
           throw new OrchestratorException(e);
         }
@@ -156,8 +159,8 @@ public class DeploymentServiceImpl implements DeploymentService {
           || deployment.getStatus() == Status.UPDATE_FAILED) {
         try {
           // Check if the new template is valid
-          ParsingResult<ArchiveRoot> parsingResult = toscaService
-              .getArchiveRootFromTemplate(request.getTemplate());
+          ParsingResult<ArchiveRoot> parsingResult =
+              toscaService.getArchiveRootFromTemplate(request.getTemplate());
 
         } catch (ParsingException | IOException e) {
           throw new OrchestratorException(e);
@@ -174,8 +177,9 @@ public class DeploymentServiceImpl implements DeploymentService {
         params.put("TOSCA_TEMPLATE", request.getTemplate());
         ProcessInstance pi = null;
         try {
-          pi = wfService.startProcess(WorkflowConfigProducerBean.UPDATE.getProcessId(), params,
-              RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
+          pi =
+              wfService.startProcess(WorkflowConfigProducerBean.UPDATE.getProcessId(), params,
+                  RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
         } catch (WorkflowException e) {
           throw new OrchestratorException(e);
         }
@@ -198,9 +202,11 @@ public class DeploymentServiceImpl implements DeploymentService {
       Capability scalable = toscaService.getNodeCapabilityByName(entry.getValue(), "scalable");
       int count = 1;
       if (scalable != null) {
-        ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue) scalable.getProperties()
-            .get("count");
-        count = Integer.parseInt(scalarPropertyValue.getValue());
+        ScalarPropertyValue scalarPropertyValue =
+            (ScalarPropertyValue) scalable.getProperties().get("count");
+        if (scalarPropertyValue != null) {
+          count = Integer.parseInt(scalarPropertyValue.getValue());
+        }
       }
       for (int i = 0; i < count; i++) {
         r = new Resource();

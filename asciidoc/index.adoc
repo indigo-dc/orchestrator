@@ -1,0 +1,221 @@
+= RESTful Orchestrator API Guide
+Reply s.p.a.;
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:toc: left
+:toclevels: 4
+:sectlinks:
+
+[[overview]]
+= Overview
+
+[[overview-http-verbs]]
+== HTTP verbs
+
+RESTful notes tries to adhere as closely as possible to standard HTTP and REST conventions in its
+use of HTTP verbs.
+
+|===
+| Verb | Usage
+
+| `GET`
+| Used to retrieve a resource
+
+| `POST`
+| Used to create a new resource
+
+| `PUT`
+| Used to update an existing resource, including partial updates
+
+| `DELETE`
+| Used to delete an existing resource
+|===
+
+[[overview-http-status-codes]]
+== HTTP status codes
+
+RESTful notes tries to adhere as closely as possible to standard HTTP and REST conventions in its
+use of HTTP status codes.
+
+|===
+| Status code | Usage
+
+| `200 OK`
+| The request completed successfully
+
+| `201 Created`
+| A new resource has been created successfully. The resource's URI is available from response body will include the location of the resource
+
+| `202 Accepted`
+| An update to an existing resource has been accepted successfully
+
+| `204 No Content`
+| The request has been applied successfully
+
+| `400 Bad Request`
+| The request was malformed. The response body will include an error providing further information
+
+| `404 Not Found`
+| The requested resource did not exist
+
+| `409 Conflict`
+| The request generated a conflict. The response body will include an error providing further information
+
+| `500 Internal Server Error`
+| The request generated a server error. The response body will include an error providing further information
+
+|===
+
+[[overview-errors]]
+== Errors
+
+Whenever an error response (status code >= 400) is returned, the body will contain a JSON object
+that describes the problem. The error object has the following structure:
+
+include::{snippets}/deployment-not-found/response-fields.adoc[]
+
+For example, a request that attempts to apply a not existing deployment will produce a
+`404 Not Found` response:
+
+include::{snippets}/deployment-not-found/http-response.adoc[]
+
+[[overview-metadata]]
+== Metadata
+
+The Orchestrator adds hypermedia and pagination metadata in the responses.
+
+=== Hypermedia
+The Orchestrator uses hypermedia links (atom link) to other resources in the responses. Atom link element defines a reference 
+from an entry or feed to a Web resource.
+include::{snippets}/deployment-hypermedia/response-fields.adoc[]
+
+Links to other resource:
+include::{snippets}/deployment-hypermedia/links.adoc[]
+
+When the response is paginated, the response can include also this links:
+include::{snippets}/deployment-paged/links.adoc[]
+=== Pagination
+
+Rather than return everything from a large result, the Orchestrator response are paginated:
+include::{snippets}/deployment-pagination/response-fields.adoc[]
+
+
+[[resources-deployment]]
+== Deployment
+
+This resource represents a TOSCA template deployment.
+
+
+[[resources-index-access]]
+=== Get deployments
+
+A `GET` request is used to list all the deployments.
+
+==== Example request
+
+include::{snippets}/deployments/curl-request.adoc[]
+
+include::{snippets}/deployments/http-request.adoc[]
+
+==== Response structure
+
+include::{snippets}/deployments/response-fields.adoc[]
+
+==== Example response
+
+include::{snippets}/deployments/http-response.adoc[]
+
+
+
+
+
+
+
+[[resources-create-deployment]]
+=== Create deployment
+
+A `POST` request is used to create a deployment.
+
+
+==== Request Fields
+include::{snippets}/create-deployment/request-fields.adoc[]
+
+==== Example request
+include::{snippets}/create-deployment/curl-request.adoc[]
+
+include::{snippets}/create-deployment/http-request.adoc[]
+
+==== Response structure
+
+include::{snippets}/create-deployment/response-fields.adoc[]
+
+==== Example response
+
+include::{snippets}/create-deployment/http-response.adoc[]
+
+
+
+
+
+
+[[resources-deployment]]
+=== Get deployment
+
+A `GET` request is used to retrieve the deployment from the id.
+
+==== Example request
+
+include::{snippets}/deployment/curl-request.adoc[]
+
+include::{snippets}/deployment/http-request.adoc[]
+
+==== Response structure
+
+include::{snippets}/deployment/response-fields.adoc[]
+
+==== Example response
+
+include::{snippets}/deployment/http-response.adoc[]
+
+
+
+
+[[resources-update-deployment]]
+=== Update deployment
+
+A `PUT` request is used to update the deployment from the id.
+
+==== Example request
+
+include::{snippets}/update-deployment/curl-request.adoc[]
+
+include::{snippets}/update-deployment/http-request.adoc[]
+
+==== Response structure
+
+include::{snippets}/update-deployment/response-fields.adoc[]
+
+==== Example response
+
+include::{snippets}/update-deployment/http-response.adoc[]
+
+
+
+
+[[resources-delete-deployment]]
+=== Delete deployment
+
+A `DELETE` request is used to delete the deployment from the id.
+
+==== Example request
+
+include::{snippets}/delete-deployment/curl-request.adoc[]
+
+include::{snippets}/delete-deployment/http-request.adoc[]
+
+
+==== Example response
+
+include::{snippets}/delete-deployment/http-response.adoc[]
+

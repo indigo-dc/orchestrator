@@ -1,12 +1,18 @@
 package it.reply.orchestrator.controller;
 
 import static org.hamcrest.Matchers.is;
+
+import static org.springframework.restdocs.snippet.Attributes.attributes;
+import static org.springframework.restdocs.snippet.Attributes.key;
 import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.atomLinks;
 import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.linkWithRel;
 import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.links;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
+import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
+
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
@@ -62,18 +68,12 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
   public JUnitRestDocumentation restDocumentation =
       new JUnitRestDocumentation("target/generated-snippets");
 
-  // private RestDocumentationResultHandler document;
-
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
-
-    // this.document = document("{method-name}", preprocessResponse(prettyPrint()));
-
     mockMvc =
         MockMvcBuilders.webAppContextSetup(wac)
             .apply(documentationConfiguration(this.restDocumentation)).dispatchOptions(true)
-            // .alwaysDo(this.document)
             .build();
   }
 
@@ -96,11 +96,9 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
                 fieldWithPath("content[].task").description(
                     "The current step of the deployment process. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Task.html)"),
                 fieldWithPath("content[].callback").description(
-                    "The endpoint used by the orchestrator to notify the progress of the deployment process"),
+                    "The endpoint used by the orchestrator to notify the progress of the deployment process. (http://endpoint:port)"),
                 fieldWithPath("content[].outputs").description("The outputs of the TOSCA document"),
                 fieldWithPath("content[].links[]").ignored(), fieldWithPath("page").ignored())));
-
-    // .andExpect(jsonPath("$.content", org.hamcrest.Matchers.hasSize(1)));
   }
 
   @Test
@@ -178,7 +176,24 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
 
     mockMvc.perform(get("/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd"))
         .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.outputs", Matchers.hasEntry("server_ip", "[10.0.0.1]")));
+        .andExpect(jsonPath("$.outputs", Matchers.hasEntry("server_ip", "[10.0.0.1]")))
+
+        .andDo(document("deployment", preprocessResponse(prettyPrint()),
+
+            responseFields(fieldWithPath("links[]").ignored(),
+
+                fieldWithPath("uuid").description("The unique identifier of a resource"),
+                fieldWithPath("creationTime").description(
+                    "Creation date-time (http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14)"),
+                fieldWithPath("updateTime").description("Update date-time"),
+                fieldWithPath("status").description(
+                    "The status of the deployment. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html)"),
+                fieldWithPath("task").description(
+                    "The current step of the deployment process. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Task.html)"),
+                fieldWithPath("callback").description(
+                    "The endpoint used by the orchestrator to notify the progress of the deployment process. (http://endpoint:port)"),
+                fieldWithPath("outputs").description("The outputs of the TOSCA document"),
+                fieldWithPath("links[]").ignored())));
   }
 
   @Test
@@ -192,7 +207,7 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
             responseFields(
                 fieldWithPath("code").description("The HTTP status code"), fieldWithPath("title")
                     .description("The HTTP status name"),
-            fieldWithPath("message").description("The deployment <deployment-id> doesn't exist"))));
+            fieldWithPath("message").description("A displayable message describing the error"))));
     // andExpect(jsonPath("$.title", is("Not Found")))
     // .andExpect(jsonPath("$.message", is("The deployment <not-found> doesn't exist")));
   }
@@ -203,16 +218,61 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
 
     DeploymentRequest request = new DeploymentRequest();
     Map<String, Object> parameters = new HashMap<>();
-    parameters.put("test-string", "test-string");
-    parameters.put("test-int", 1);
+    parameters.put("cpus", 1);
+    request.setParameters(parameters);
+    request.setTemplate(FileIO.readUTF8File("./src/test/resources/tosca/compute_tosca.yaml"));
+    request.setCallback("http://localhost:8080/callback");
+    mockMvc.perform(post("/deployments").contentType(MediaType.APPLICATION_JSON)
+        .content(TestUtil.convertObjectToJsonBytes(request)))
+
+        .andDo(document("create-deployment", preprocessRequest(prettyPrint()),
+            preprocessResponse(prettyPrint()),
+            requestFields(
+                fieldWithPath("template")
+                    .description("A string containing a TOSCA YAML-formatted template"),
+                fieldWithPath("parameters").optional().description(
+                    "The input parameters of the deployment, in the form of a Map of (String, Object)"),
+                fieldWithPath("callback").description("The deployment callback URL")),
+            responseFields(fieldWithPath("links[]").ignored(),
+                fieldWithPath("uuid").description("The unique identifier of a resource"),
+                fieldWithPath("creationTime").description(
+                    "Creation date-time (http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14)"),
+                fieldWithPath("status").description(
+                    "The status of the deployment. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html)"),
+                fieldWithPath("task").description(
+                    "The current step of the deployment process. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Task.html)"),
+                fieldWithPath("outputs").description("The outputs of the TOSCA document"),
+                fieldWithPath("callback").ignored(), fieldWithPath("links[]").ignored())));
+
+    // .andExpect(status().isCreated())
+    // .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+    // .andExpect(jsonPath("$.links[0].rel", is("self")));
+  }
+
+  @Test
+  @Transactional
+  @DatabaseSetup("/data/database-init.xml")
+  public void updateDeploymentSuccessfully() throws Exception {
+
+    DeploymentRequest request = new DeploymentRequest();
+    Map<String, Object> parameters = new HashMap<>();
+    parameters.put("cpus", 1);
     request.setParameters(parameters);
     request.setTemplate(FileIO.readUTF8File("./src/test/resources/tosca/galaxy_tosca.yaml"));
-    mockMvc
-        .perform(post("/deployments").contentType(MediaType.APPLICATION_JSON)
-            .content(TestUtil.convertObjectToJsonBytes(request)))
-        .andExpect(status().isCreated())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.links[0].rel", is("self")));
+    request.setCallback("http://localhost:8080/callback");
+    mockMvc.perform(post("/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd")
+        .contentType(MediaType.APPLICATION_JSON)
+        .content(TestUtil.convertObjectToJsonBytes(request)))
+
+        .andDo(document("update-deployment", preprocessRequest(prettyPrint()),
+            preprocessResponse(prettyPrint()),
+            requestFields(
+                fieldWithPath("template")
+                    .description("A string containing a TOSCA YAML-formatted template"),
+                fieldWithPath("parameters").optional().description(
+                    "The input parameters of the deployment, in the form of a Map of (String, Object)"),
+                fieldWithPath("callback").description("The deployment callback URL"))));
+
   }
 
   @Test
@@ -250,6 +310,16 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
 
     mockMvc.perform(post("/deployments").contentType(MediaType.APPLICATION_JSON))
         .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  @DatabaseSetup("/data/database-init.xml")
+  public void deleteDeployment() throws Exception {
+
+    mockMvc.perform(delete("/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd"))
+        .andExpect(status().isNoContent()).andDo(document("delete-deployment",
+            preprocessRequest(prettyPrint()), preprocessResponse(prettyPrint())));
+
   }
 
   @Test
