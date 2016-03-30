@@ -1,7 +1,7 @@
 package it.reply.orchestrator.dal.entity;
 
-import it.reply.workflowManager.orchestrator.bpm.BusinessProcessManager;
-import it.reply.workflowManager.orchestrator.bpm.BusinessProcessManager.RUNTIME_STRATEGY;
+import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager;
+import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager.RUNTIME_STRATEGY;
 
 import org.springframework.hateoas.Identifiable;
 

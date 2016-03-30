@@ -22,9 +22,32 @@
 		<jsonpath.version>2.1.0</jsonpath.version>
 
 		<checkstyle-plugin.version>2.17</checkstyle-plugin.version>
-		<workflow-manager.version>0.0.2-SNAPSHOT</workflow-manager.version>
+		<workflow-manager.version>0.0.3-SNAPSHOT</workflow-manager.version>
 		<alien4cloud.version>1.1.0-INDIGO</alien4cloud.version>
 	</properties>
+
+	<distributionManagement>
+		<!-- Publish versioned releases here -->
+		<repository>
+			<id>concept-reply-nexus-repository</id>
+			<name>Concept Reply Releases Repository</name>
+			<url>http://nexusconcept.cloud.reply.eu/content/repositories/releases</url>
+		</repository>
+		<!-- Publish snapshots here -->
+		<snapshotRepository>
+			<id>concept-reply-nexus-repository</id>
+			<name>Concept Reply Snaphots Repository</name>
+			<url>http://nexusconcept.cloud.reply.eu/content/repositories/public-snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
+	
+	<repositories>
+		<repository>
+			<id>concept-reply-nexus-repository</id>
+			<name>Concept Reply Nexus</name>
+			<url>http://nexusconcept.cloud.reply.eu/content/groups/public</url>
+		</repository>
+	</repositories>
 
 	<dependencies>
 		<!-- Fix to avoid to import the library (which conflicts with the one in 

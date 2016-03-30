@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
-import it.reply.workflowManager.spring.orchestrator.bpm.ejbcommands.BaseCommand;
+import it.reply.workflowmanager.spring.orchestrator.bpm.ejbcommands.BaseCommand;
 
 @Component
 public class Undeploy extends BaseCommand {
