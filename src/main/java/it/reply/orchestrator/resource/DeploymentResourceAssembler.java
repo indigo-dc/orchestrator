@@ -54,13 +54,13 @@ public class DeploymentResourceAssembler
 
     // TODO Use ControllerLinkBuilder when
     // https://github.com/spring-projects/spring-hateoas/issues/408 will be resolved
-    URI _uri = null;
+    URI ctrlUri = null;
     if (isInHttpRequest()) {
-      _uri = ControllerLinkBuilder.linkTo(DeploymentController.class).toUri();
+      ctrlUri = ControllerLinkBuilder.linkTo(DeploymentController.class).toUri();
       if (uri == null) {
         long writeStamp = lock.tryWriteLock();
         if (writeStamp != 0) {
-          uri = _uri;
+          uri = ctrlUri;
           lock.unlockWrite(writeStamp);
         }
       }
@@ -69,7 +69,7 @@ public class DeploymentResourceAssembler
         try {
           long readStamp = lock.tryReadLock(30, TimeUnit.SECONDS);
           if (readStamp != 0) {
-            _uri = uri;
+            ctrlUri = uri;
             lock.unlockRead(readStamp);
           }
         } catch (InterruptedException e) {
@@ -77,15 +77,15 @@ public class DeploymentResourceAssembler
         }
       }
     }
-    if (_uri == null) {
-      _uri = URI.create("");
+    if (ctrlUri == null) {
+      ctrlUri = URI.create("");
     }
 
     resource
-        .add(MyLinkBuilder.getNewBuilder(_uri).slash("deployments").slash(entity).withSelfRel());
-    resource.add(MyLinkBuilder.getNewBuilder(_uri).slash("deployments").slash(entity)
+        .add(MyLinkBuilder.getNewBuilder(ctrlUri).slash("deployments").slash(entity).withSelfRel());
+    resource.add(MyLinkBuilder.getNewBuilder(ctrlUri).slash("deployments").slash(entity)
         .slash("resources").withRel("resources"));
-    resource.add(MyLinkBuilder.getNewBuilder(_uri).slash("deployments").slash(entity)
+    resource.add(MyLinkBuilder.getNewBuilder(ctrlUri).slash("deployments").slash(entity)
         .slash("template").withRel("template"));
     /////////////////////////////////////////////////////////////////////////////////
     return resource;

@@ -1,6 +1,11 @@
 <dataset>
-    <Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82dd" created="2015-12-11 17:14:09" status="CREATE_COMPLETE" statusReason="" updated="2015-12-11 11:11:12" version="0" callback="http://test.test" deploymentProvider="IM" endpoint="todo" task="NONE" template=""/>
-    
-    <Deployment_outputs Deployment_uuid="mmd34483-d937-4578-bfdb-ebe196bf82dd" value="[10.0.0.1]" name="server_ip" />
+	<Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82dd"
+		created="2015-12-11 17:14:09" status="CREATE_COMPLETE" updated="2015-12-11 11:11:12"
+		version="0" callback="http://test.test" deploymentProvider="IM"
+		endpoint="todo" task="NONE" template="" />
+
+
+	<Deployment_outputs Deployment_uuid="mmd34483-d937-4578-bfdb-ebe196bf82dd"
+		value="[10.0.0.1]" name="server_ip" />
 
 </dataset>

@@ -35,7 +35,8 @@ public class PersistenceConfig {
   private static final String ENTITY_MANAGER_PACKAGE_TO_SCAN = "entitymanager.packages.to.scan";
   private static final String HIBERNATE_HBM2DDL_AUTO = "hibernate.hbm2ddl.auto";
   private static final String HIBERNATE_DIALECT = "hibernate.dialect";
-  private static final String HIBERNATE_TRANSACTION_JTA_PLATFORM = "hibernate.transaction.jta.platform";
+  private static final String HIBERNATE_TRANSACTION_JTA_PLATFORM =
+      "hibernate.transaction.jta.platform";
 
   @Resource
   private Environment env;
@@ -95,6 +96,9 @@ public class PersistenceConfig {
     return (DataSource) ctx.lookup("java:jboss/datasources/WorkflowManager/JBPM-DS");
   }
 
+  /**
+   * Create a {@Link LocalContainerEntityManagerFactoryBean} for the jbpm workflow.
+   */
   @Bean
   @WorkflowPersistenceUnit
   public LocalContainerEntityManagerFactoryBean workflowEntityManagerFactory()

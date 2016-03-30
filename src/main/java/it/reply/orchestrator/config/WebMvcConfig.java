@@ -1,9 +1,7 @@
 package it.reply.orchestrator.config;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.web.servlet.config.annotation.DefaultServletHandlerConfigurer;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -27,7 +25,8 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
 
   @Override
   public RequestMappingHandlerMapping requestMappingHandlerMapping() {
-    RequestMappingHandlerMapping requestMappingHandlerMapping = super.requestMappingHandlerMapping();
+    RequestMappingHandlerMapping requestMappingHandlerMapping =
+        super.requestMappingHandlerMapping();
     requestMappingHandlerMapping.setUseSuffixPatternMatch(false);
     requestMappingHandlerMapping.setUseTrailingSlashMatch(false);
     return requestMappingHandlerMapping;

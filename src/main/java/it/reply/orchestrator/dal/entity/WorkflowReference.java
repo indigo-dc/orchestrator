@@ -25,6 +25,14 @@ public class WorkflowReference implements Identifiable<Long>, Serializable {
     super();
   }
 
+  /**
+   * Constructor with fields.
+   * 
+   * @param processId
+   *          the process id
+   * @param runtimeStrategy
+   *          the strategy {@Link RUNTIME_STRATEGY}
+   */
   public WorkflowReference(long processId, RUNTIME_STRATEGY runtimeStrategy) {
     super();
     this.processId = processId;
