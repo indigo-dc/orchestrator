@@ -14,7 +14,7 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 @Configuration
 @EnableWebMvc
 @EnableSpringDataWebSupport
-@ComponentScan(basePackages = { "it.reply.orchestrator", "it.reply.workflowManager" })
+@ComponentScan(basePackages = { "it.reply.orchestrator", "it.reply.workflowmanager" })
 public class WebMvcConfig extends WebMvcConfigurationSupport {
 
   private static final String RESOURCES_LOCATION = "/resources/";

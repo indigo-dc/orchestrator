@@ -18,9 +18,9 @@ import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.http.ConflictException;
 import it.reply.orchestrator.exception.http.NotFoundException;
-import it.reply.workflowManager.exceptions.WorkflowException;
-import it.reply.workflowManager.orchestrator.bpm.BusinessProcessManager;
-import it.reply.workflowManager.orchestrator.bpm.BusinessProcessManager.RUNTIME_STRATEGY;
+import it.reply.workflowmanager.exceptions.WorkflowException;
+import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager;
+import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager.RUNTIME_STRATEGY;
 
 import org.kie.api.runtime.process.ProcessInstance;
 import org.springframework.beans.factory.annotation.Autowired;

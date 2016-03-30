@@ -1,7 +1,7 @@
 package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.service.CallbackService;
-import it.reply.workflowManager.spring.orchestrator.bpm.ejbcommands.BaseCommand;
+import it.reply.workflowmanager.spring.orchestrator.bpm.ejbcommands.BaseCommand;
 
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
