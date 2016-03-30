@@ -1,24 +1,21 @@
 package it.reply.orchestrator.controller;
 
 import static org.hamcrest.Matchers.is;
-
-import static org.springframework.restdocs.snippet.Attributes.attributes;
-import static org.springframework.restdocs.snippet.Attributes.key;
 import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.atomLinks;
 import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.linkWithRel;
 import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.links;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
-import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
-
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
+import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -41,8 +38,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.JUnitRestDocumentation;
-import org.springframework.restdocs.mockmvc.RestDocumentationResultHandler;
-import org.springframework.restdocs.payload.JsonFieldType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
@@ -68,6 +63,9 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
   public JUnitRestDocumentation restDocumentation =
       new JUnitRestDocumentation("target/generated-snippets");
 
+  /**
+   * Set up test context.
+   */
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
@@ -230,8 +228,8 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
             requestFields(
                 fieldWithPath("template")
                     .description("A string containing a TOSCA YAML-formatted template"),
-                fieldWithPath("parameters").optional().description(
-                    "The input parameters of the deployment, in the form of a Map of (String, Object)"),
+                fieldWithPath("parameters").optional()
+                    .description("The input parameters of the deployment(Map of String, Object)"),
                 fieldWithPath("callback").description("The deployment callback URL")),
             responseFields(fieldWithPath("links[]").ignored(),
                 fieldWithPath("uuid").description("The unique identifier of a resource"),
@@ -260,7 +258,7 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
     request.setParameters(parameters);
     request.setTemplate(FileIO.readUTF8File("./src/test/resources/tosca/galaxy_tosca.yaml"));
     request.setCallback("http://localhost:8080/callback");
-    mockMvc.perform(post("/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd")
+    mockMvc.perform(put("/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd")
         .contentType(MediaType.APPLICATION_JSON)
         .content(TestUtil.convertObjectToJsonBytes(request)))
 
@@ -269,8 +267,8 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
             requestFields(
                 fieldWithPath("template")
                     .description("A string containing a TOSCA YAML-formatted template"),
-                fieldWithPath("parameters").optional().description(
-                    "The input parameters of the deployment, in the form of a Map of (String, Object)"),
+                fieldWithPath("parameters").optional()
+                    .description("The input parameters of the deployment (Map of String, Object)"),
                 fieldWithPath("callback").description("The deployment callback URL"))));
 
   }

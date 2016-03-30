@@ -51,7 +51,7 @@ public class ResourceController {
 
   @ResponseStatus(HttpStatus.OK)
   @RequestMapping(value = "/resources/{resourceId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
-  public BaseResource getDeployment(@PathVariable("deploymentId") String deploymentId,
+  public BaseResource getResource(@PathVariable("deploymentId") String deploymentId,
       @PathVariable("resourceId") String resourceId) {
 
     LOG.trace("Invoked method: getResource with id: " + resourceId);

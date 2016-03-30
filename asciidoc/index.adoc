@@ -192,9 +192,6 @@ include::{snippets}/update-deployment/curl-request.adoc[]
 
 include::{snippets}/update-deployment/http-request.adoc[]
 
-==== Response structure
-
-include::{snippets}/update-deployment/response-fields.adoc[]
 
 ==== Example response
 
@@ -219,3 +216,69 @@ include::{snippets}/delete-deployment/http-request.adoc[]
 
 include::{snippets}/delete-deployment/http-response.adoc[]
 
+
+
+
+
+[[resources-get-template]]
+=== Get template
+
+A `GET` request is used to retrieve the template associated to a deployment.
+
+==== Example request
+
+include::{snippets}/get-template/curl-request.adoc[]
+
+include::{snippets}/get-template/http-request.adoc[]
+
+
+==== Example response
+
+include::{snippets}/get-template/http-response.adoc[]
+
+
+[[resources-resource]]
+== Resource
+
+This REST resource represents a TOSCA node of the template.
+
+
+[[resources-resources]]
+=== Get Resources
+
+A `GET` request is used to list all the resources of a deployment.
+
+==== Example request
+
+include::{snippets}/resources/curl-request.adoc[]
+
+include::{snippets}/resources/http-request.adoc[]
+
+==== Response structure
+
+include::{snippets}/resources/response-fields.adoc[]
+
+==== Example response
+
+include::{snippets}/resources/http-response.adoc[]
+
+
+
+[[resources-get-resource]]
+=== Get resource
+
+A `GET` request is used to retrieve the resource from the id.
+
+==== Example request
+
+include::{snippets}/get-resource/curl-request.adoc[]
+
+include::{snippets}/get-resource/http-request.adoc[]
+
+==== Response structure
+
+include::{snippets}/get-resource/response-fields.adoc[]
+
+==== Example response
+
+include::{snippets}/get-resource/http-response.adoc[]

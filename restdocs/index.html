@@ -458,7 +458,6 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#resources-update-deployment">Update deployment</a>
 <ul class="sectlevel3">
 <li><a href="#_example_request_4">Example request</a></li>
-<li><a href="#_response_structure_4">Response structure</a></li>
 <li><a href="#_example_response_4">Example response</a></li>
 </ul>
 </li>
@@ -466,6 +465,30 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel3">
 <li><a href="#_example_request_5">Example request</a></li>
 <li><a href="#_example_response_5">Example response</a></li>
+</ul>
+</li>
+<li><a href="#resources-get-template">Get template</a>
+<ul class="sectlevel3">
+<li><a href="#_example_request_6">Example request</a></li>
+<li><a href="#_example_response_6">Example response</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li><a href="#resources-resource">Resource</a>
+<ul class="sectlevel2">
+<li><a href="#resources-resources">Get Resources</a>
+<ul class="sectlevel3">
+<li><a href="#_example_request_7">Example request</a></li>
+<li><a href="#_response_structure_4">Response structure</a></li>
+<li><a href="#_example_response_7">Example response</a></li>
+</ul>
+</li>
+<li><a href="#resources-get-resource">Get resource</a>
+<ul class="sectlevel3">
+<li><a href="#_example_request_8">Example request</a></li>
+<li><a href="#_response_structure_5">Response structure</a></li>
+<li><a href="#_example_response_8">Example response</a></li>
 </ul>
 </li>
 </ul>
@@ -931,7 +954,7 @@ Content-Length: 945
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">parameters</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Object</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The input parameters of the deployment, in the form of a Map of (String, Object)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The input parameters of the deployment(Map of String, Object)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">callback</p></td>
@@ -1024,21 +1047,21 @@ Content-Type: application/json
 Content-Length: 619
 
 {
-  "uuid" : "22558ec0-d3af-45a9-8cf3-247e0c930413",
-  "creationTime" : "2016-03-29T16:07+0000",
+  "uuid" : "df3bff91-23df-410a-a2cc-3ddbf86e791b",
+  "creationTime" : "2016-03-30T14:45+0000",
   "status" : "CREATE_IN_PROGRESS",
   "outputs" : { },
   "task" : "NONE",
   "callback" : "http://localhost:8080/callback",
   "links" : [ {
     "rel" : "self",
-    "href" : "http://localhost:8080/deployments/22558ec0-d3af-45a9-8cf3-247e0c930413"
+    "href" : "http://localhost:8080/deployments/df3bff91-23df-410a-a2cc-3ddbf86e791b"
   }, {
     "rel" : "resources",
-    "href" : "http://localhost:8080/deployments/22558ec0-d3af-45a9-8cf3-247e0c930413/resources"
+    "href" : "http://localhost:8080/deployments/df3bff91-23df-410a-a2cc-3ddbf86e791b/resources"
   }, {
     "rel" : "template",
-    "href" : "http://localhost:8080/deployments/22558ec0-d3af-45a9-8cf3-247e0c930413/template"
+    "href" : "http://localhost:8080/deployments/df3bff91-23df-410a-a2cc-3ddbf86e791b/template"
   } ]
 }</code></pre>
 </div>
@@ -1160,8 +1183,8 @@ Content-Length: 680
 <h4 id="_example_request_4"><a class="link" href="#_example_request_4">Example request</a></h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd' -i -X POST -H 'Content-Type: application/json' -d '{
-  "template" : "tosca_definitions_version: tosca_simple_yaml_1_0\n \ntopology_template:\n  inputs:\n    cpus:\n      type: integer\n      description: Number of CPUs for the server.\n      constraints:\n        - valid_values: [ 1, 2, 4, 8 ]\n \n  node_templates:\n    my_server:\n      type: tosca.nodes.Compute\n      capabilities:\n        host:\n          properties:\n            num_cpus: { get_input: cpus }\n            mem_size: 2048  MB\n            disk_size: 10 GB",
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd' -i -X PUT -H 'Content-Type: application/json' -d '{
+  "template" : "tosca_definitions_version: tosca_simple_yaml_1_0\n\nrepositories:\n  indigo_repository:\n    description: INDIGO Custom types repository\n    url: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/\n\nimports:\n  - indigo_custom_types:\n      file: custom_types.yaml\n      repository: indigo_repository\n\ndescription: &gt;\n  TOSCA test for launching a Galaxy Server also configuring the bowtie2\n  tool using Galaxy Tool Shed.\n\ntopology_template:\n\n  node_templates:\n\n    bowtie2_galaxy_tool:\n      type: tosca.nodes.indigo.GalaxyShedTool\n      properties:\n        name: bowtie2\n        owner: devteam\n        tool_panel_section_id: ngs_mapping\n      requirements:\n        - host: galaxy\n\n    galaxy:\n      type: tosca.nodes.indigo.GalaxyPortal\n      requirements:\n        - lrms: local_lrms\n\n    local_lrms:\n      type: tosca.nodes.indigo.LRMS.FrontEnd.Local\n      requirements:\n        - host: galaxy_server\n\n    galaxy_server:\n      type: tosca.nodes.indigo.Compute\n      properties:\n        public_ip: yes\n      capabilities:\n        host:\n          properties:\n            num_cpus: 1\n            mem_size: 1 GB\n        os:\n          properties:\n            type: linux\n\n  outputs:\n    galaxy_url:\n      value: { get_attribute: [ galaxy_server, public_address ] }",
   "parameters" : {
     "cpus" : 1
   },
@@ -1171,13 +1194,13 @@ Content-Length: 680
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-http" data-lang="http">POST /deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd HTTP/1.1
+<pre class="highlight"><code class="language-http" data-lang="http">PUT /deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd HTTP/1.1
 Content-Type: application/json
 Host: localhost
-Content-Length: 575
+Content-Length: 1435
 
 {
-  "template" : "tosca_definitions_version: tosca_simple_yaml_1_0\n \ntopology_template:\n  inputs:\n    cpus:\n      type: integer\n      description: Number of CPUs for the server.\n      constraints:\n        - valid_values: [ 1, 2, 4, 8 ]\n \n  node_templates:\n    my_server:\n      type: tosca.nodes.Compute\n      capabilities:\n        host:\n          properties:\n            num_cpus: { get_input: cpus }\n            mem_size: 2048  MB\n            disk_size: 10 GB",
+  "template" : "tosca_definitions_version: tosca_simple_yaml_1_0\n\nrepositories:\n  indigo_repository:\n    description: INDIGO Custom types repository\n    url: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/\n\nimports:\n  - indigo_custom_types:\n      file: custom_types.yaml\n      repository: indigo_repository\n\ndescription: &gt;\n  TOSCA test for launching a Galaxy Server also configuring the bowtie2\n  tool using Galaxy Tool Shed.\n\ntopology_template:\n\n  node_templates:\n\n    bowtie2_galaxy_tool:\n      type: tosca.nodes.indigo.GalaxyShedTool\n      properties:\n        name: bowtie2\n        owner: devteam\n        tool_panel_section_id: ngs_mapping\n      requirements:\n        - host: galaxy\n\n    galaxy:\n      type: tosca.nodes.indigo.GalaxyPortal\n      requirements:\n        - lrms: local_lrms\n\n    local_lrms:\n      type: tosca.nodes.indigo.LRMS.FrontEnd.Local\n      requirements:\n        - host: galaxy_server\n\n    galaxy_server:\n      type: tosca.nodes.indigo.Compute\n      properties:\n        public_ip: yes\n      capabilities:\n        host:\n          properties:\n            num_cpus: 1\n            mem_size: 1 GB\n        os:\n          properties:\n            type: linux\n\n  outputs:\n    galaxy_url:\n      value: { get_attribute: [ galaxy_server, public_address ] }",
   "parameters" : {
     "cpus" : 1
   },
@@ -1187,24 +1210,10 @@ Content-Length: 575
 </div>
 </div>
 <div class="sect3">
-<h4 id="_response_structure_4"><a class="link" href="#_response_structure_4">Response structure</a></h4>
-<div class="paragraph">
-<p>Unresolved directive in index.adoc - include::C:\Users\Reply\git\orchestrator\target\generated-snippets/update-deployment/response-fields.adoc[]</p>
-</div>
-</div>
-<div class="sect3">
 <h4 id="_example_response_4"><a class="link" href="#_example_response_4">Example response</a></h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-http" data-lang="http">HTTP/1.1 405 Method Not Allowed
-Content-Type: application/json;charset=UTF-8
-Content-Length: 109
-
-{
-  "code" : 405,
-  "title" : "Method Not Allowed",
-  "message" : "Request method 'POST' not supported"
-}</code></pre>
+<pre class="highlight"><code class="language-http" data-lang="http">HTTP/1.1 202 Accepted</code></pre>
 </div>
 </div>
 </div>
@@ -1237,12 +1246,323 @@ Host: localhost</code></pre>
 </div>
 </div>
 </div>
+<div class="sect2">
+<h3 id="resources-get-template"><a class="link" href="#resources-get-template">Get template</a></h3>
+<div class="paragraph">
+<p>A <code>GET</code> request is used to retrieve the template associated to a deployment.</p>
+</div>
+<div class="sect3">
+<h4 id="_example_request_6"><a class="link" href="#_example_request_6">Example request</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/0748fbe9-6c1d-4298-b88f-06188734ab42/template' -i</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-http" data-lang="http">GET /deployments/0748fbe9-6c1d-4298-b88f-06188734ab42/template HTTP/1.1
+Host: localhost</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_example_response_6"><a class="link" href="#_example_response_6">Example response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
+Content-Type: text/plain
+Content-Length: 1266
+
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+repositories:
+  indigo_repository:
+    description: INDIGO Custom types repository
+    url: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/
+
+imports:
+  - indigo_custom_types:
+      file: custom_types.yaml
+      repository: indigo_repository
+
+description: &gt;
+  TOSCA test for launching a Galaxy Server also configuring the bowtie2
+  tool using Galaxy Tool Shed.
+
+topology_template:
+
+  node_templates:
+
+    bowtie2_galaxy_tool:
+      type: tosca.nodes.indigo.GalaxyShedTool
+      properties:
+        name: bowtie2
+        owner: devteam
+        tool_panel_section_id: ngs_mapping
+      requirements:
+        - host: galaxy
+
+    galaxy:
+      type: tosca.nodes.indigo.GalaxyPortal
+      requirements:
+        - lrms: local_lrms
+
+    local_lrms:
+      type: tosca.nodes.indigo.LRMS.FrontEnd.Local
+      requirements:
+        - host: galaxy_server
+
+    galaxy_server:
+      type: tosca.nodes.indigo.Compute
+      properties:
+        public_ip: yes
+      capabilities:
+        host:
+          properties:
+            num_cpus: 1
+            mem_size: 1 GB
+        os:
+          properties:
+            type: linux
+
+  outputs:
+    galaxy_url:
+      value: { get_attribute: [ galaxy_server, public_address ] }</code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="resources-resource"><a class="link" href="#resources-resource">Resource</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This REST resource represents a TOSCA node of the template.</p>
+</div>
+<div class="sect2">
+<h3 id="resources-resources"><a class="link" href="#resources-resources">Get Resources</a></h3>
+<div class="paragraph">
+<p>A <code>GET</code> request is used to list all the resources of a deployment.</p>
+</div>
+<div class="sect3">
+<h4 id="_example_request_7"><a class="link" href="#_example_request_7">Example request</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/0748fbe9-6c1d-4298-b88f-06188734ab42/resources' -i -H 'Accept: application/json'</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-http" data-lang="http">GET /deployments/0748fbe9-6c1d-4298-b88f-06188734ab42/resources HTTP/1.1
+Accept: application/json
+Host: localhost</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_structure_4"><a class="link" href="#_response_structure_4">Response structure</a></h4>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 33%;">
+<col style="width: 33%;">
+<col style="width: 33%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">content[].uuid</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The unique identifier of a resource</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">content[].creationTime</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Creation date-time (<a href="http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14" class="bare">http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14</a>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">content[].status</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The status of the deployment. (<a href="http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html" class="bare">http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html</a>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">content[].statusReason</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The description of the state</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">content[].toscaNodeType</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The type of the represented TOSCA node</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">content[].requiredBy</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Array</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A list of nodes that require this resource</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_example_response_7"><a class="link" href="#_example_response_7">Example response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 1401
+
+{
+  "links" : [ {
+    "rel" : "self",
+    "href" : "http://localhost:8080/deployments/0748fbe9-6c1d-4298-b88f-06188734ab42/resources"
+  } ],
+  "content" : [ {
+    "uuid" : "mmd34483-d937-4578-bfdb-ebe196bf82dd",
+    "creationTime" : "2015-12-11T16:14+0000",
+    "status" : "CREATE_COMPLETE",
+    "statusReason" : "Deployed",
+    "toscaNodeType" : "tosca.nodes.Compute",
+    "requiredBy" : [ ],
+    "links" : [ {
+      "rel" : "deployment",
+      "href" : "http://localhost:8080/deployments/0748fbe9-6c1d-4298-b88f-06188734ab42"
+    }, {
+      "rel" : "self",
+      "href" : "http://localhost:8080/deployments/0748fbe9-6c1d-4298-b88f-06188734ab42/resources/mmd34483-d937-4578-bfdb-ebe196bf82dd"
+    } ]
+  }, {
+    "uuid" : "bbd34483-d937-4578-bfdb-ebe196bf82dd",
+    "creationTime" : "2015-12-11T16:14+0000",
+    "status" : "CREATE_IN_PROGRESS",
+    "statusReason" : "Deployed",
+    "toscaNodeType" : "tosca.nodes.Compute",
+    "requiredBy" : [ ],
+    "links" : [ {
+      "rel" : "deployment",
+      "href" : "http://localhost:8080/deployments/0748fbe9-6c1d-4298-b88f-06188734ab42"
+    }, {
+      "rel" : "self",
+      "href" : "http://localhost:8080/deployments/0748fbe9-6c1d-4298-b88f-06188734ab42/resources/bbd34483-d937-4578-bfdb-ebe196bf82dd"
+    } ]
+  } ],
+  "page" : {
+    "size" : 10,
+    "totalElements" : 2,
+    "totalPages" : 1,
+    "number" : 0
+  }
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="resources-get-resource"><a class="link" href="#resources-get-resource">Get resource</a></h3>
+<div class="paragraph">
+<p>A <code>GET</code> request is used to retrieve the resource from the id.</p>
+</div>
+<div class="sect3">
+<h4 id="_example_request_8"><a class="link" href="#_example_request_8">Example request</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/0748fbe9-6c1d-4298-b88f-06188734ab42/resources/mmd34483-d937-4578-bfdb-ebe196bf82dd' -i</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-http" data-lang="http">GET /deployments/0748fbe9-6c1d-4298-b88f-06188734ab42/resources/mmd34483-d937-4578-bfdb-ebe196bf82dd HTTP/1.1
+Host: localhost</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_response_structure_5"><a class="link" href="#_response_structure_5">Response structure</a></h4>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 33%;">
+<col style="width: 33%;">
+<col style="width: 33%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">uuid</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The unique identifier of a resource</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">creationTime</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Creation date-time (<a href="http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14" class="bare">http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14</a>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">status</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The status of the deployment. (<a href="http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html" class="bare">http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html</a>)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">statusReason</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The description of the state</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">toscaNodeType</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The type of the represented TOSCA node</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">requiredBy</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Array</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">A list of nodes that require this resource</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_example_response_8"><a class="link" href="#_example_response_8">Example response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
+Content-Type: application/json
+Content-Length: 534
+
+{
+  "uuid" : "mmd34483-d937-4578-bfdb-ebe196bf82dd",
+  "creationTime" : "2015-12-11T16:14+0000",
+  "status" : "CREATE_COMPLETE",
+  "statusReason" : "Deployed",
+  "toscaNodeType" : "tosca.nodes.Compute",
+  "requiredBy" : [ ],
+  "links" : [ {
+    "rel" : "deployment",
+    "href" : "http://localhost:8080/deployments/0748fbe9-6c1d-4298-b88f-06188734ab42"
+  }, {
+    "rel" : "self",
+    "href" : "http://localhost:8080/deployments/0748fbe9-6c1d-4298-b88f-06188734ab42/resources/mmd34483-d937-4578-bfdb-ebe196bf82dd"
+  } ]
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
 </div>
 </div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-03-29 18:03:57 +02:00
+Last updated 2016-03-30 16:44:37 +02:00
 </div>
 </div>
 </body>
