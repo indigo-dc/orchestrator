@@ -21,6 +21,8 @@ spec:
         image: albertobrigandi/orchestrator:demo-0.0.3-SNAPSHOT
         imagePullPolicy: Always
         env:
+          - name: ENABLE_DEBUG
+            value: 'true'
           - name: ORCHESTRATOR_DB_ENDPOINT
             value: 'orchestrator-database:3306'
           - name: ORCHESTRATOR_DB_USER
@@ -57,6 +59,7 @@ spec:
           timeoutSeconds: 5
         ports:
         - containerPort: 8080
+        - containerPort: 8787
       volumes:
         - name: secrets
           secret:
