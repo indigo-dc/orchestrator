@@ -28,9 +28,9 @@
 
 	<repositories>
 		<repository>
-			<id>concept-reply-public</id>
+			<id>concept-reply-nexus-repository-public</id>
 			<name>Concept Reply Nexus</name>
-			<url>http://nexus-concept.cloud.reply.eu/content/groups/public</url>
+			<url>http://nexusconcept.cloud.reply.eu/content/groups/public</url>
 		</repository>
 	</repositories>
 
