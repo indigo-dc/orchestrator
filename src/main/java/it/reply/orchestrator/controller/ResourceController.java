@@ -33,20 +33,8 @@ public class ResourceController {
   @Autowired
   BaseResourceAssembler baseResourceAssembler;
 
-  /**
-   * Get all the {@Link Resource} of a deployment
-   * 
-   * @param deploymentId
-   *          the deployment id
-   * @param pageable
-   *          {@Link Pageable}. Default {@Link Pageable} is used if param is null
-   * @param pagedAssembler
-   *          {@link PagedResourcesAssembler}
-   * @return the resources
-   */
   @ResponseStatus(HttpStatus.OK)
-  @RequestMapping(value = "/resources", method = RequestMethod.GET,
-      produces = MediaType.APPLICATION_JSON_VALUE)
+  @RequestMapping(value = "/resources", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
   public PagedResources<BaseResource> getResources(
       @PathVariable("deploymentId") String deploymentId, @PageableDefault Pageable pageable,
       PagedResourcesAssembler<Resource> pagedAssembler) {
@@ -55,25 +43,15 @@ public class ResourceController {
 
     Page<Resource> resources = resourceService.getResources(deploymentId, pageable);
 
-    PagedResources<BaseResource> pagedResources =
-        pagedAssembler.toResource(resources, baseResourceAssembler);
+    PagedResources<BaseResource> pagedResources = pagedAssembler.toResource(resources,
+        baseResourceAssembler);
 
     return pagedResources;
   }
 
-  /**
-   * Get a resource of the deployment.
-   * 
-   * @param deploymentId
-   *          the deployment id
-   * @param resourceId
-   *          the resource id
-   * @return {@Link BaseResource}
-   */
   @ResponseStatus(HttpStatus.OK)
-  @RequestMapping(value = "/resources/{resourceId}", method = RequestMethod.GET,
-      produces = MediaType.APPLICATION_JSON_VALUE)
-  public BaseResource getDeployment(@PathVariable("deploymentId") String deploymentId,
+  @RequestMapping(value = "/resources/{resourceId}", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
+  public BaseResource getResource(@PathVariable("deploymentId") String deploymentId,
       @PathVariable("resourceId") String resourceId) {
 
     LOG.trace("Invoked method: getResource with id: " + resourceId);
