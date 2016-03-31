@@ -215,9 +215,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       ServiceResponse response =
           imClient.createInfrastructure(deployment.getTemplate(), RestApiBodyContentType.TOSCA);
       if (!response.isReponseSuccessful()) {
+        LOG.error(response.getResult());
         // IM response is HTML encoded. Get the message between <pre> </pre> tag
         Matcher matcher = PRE_PATTERN.matcher(response.getResult());
-        String responseError = "Error during the deployment";
+        String responseError = "Error during the deployment " + response.getResult();
         if (matcher.matches()) {
           responseError = matcher.group(1);
         }
