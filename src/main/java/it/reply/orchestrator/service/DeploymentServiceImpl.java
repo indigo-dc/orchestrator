@@ -197,7 +197,7 @@ public class DeploymentServiceImpl implements DeploymentService {
   }
 
   private void createResources(Deployment deployment, Map<String, NodeTemplate> nodes) {
-    Resource r;
+    Resource res;
     for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
       Capability scalable = toscaService.getNodeCapabilityByName(entry.getValue(), "scalable");
       int count = 1;
@@ -209,12 +209,12 @@ public class DeploymentServiceImpl implements DeploymentService {
         }
       }
       for (int i = 0; i < count; i++) {
-        r = new Resource();
-        r.setDeployment(deployment);
-        r.setStatus(Status.CREATE_IN_PROGRESS);
-        r.setToscaNodeName(entry.getKey());
-        r.setToscaNodeType(entry.getValue().getType());
-        resourceRepository.save(r);
+        res = new Resource();
+        res.setDeployment(deployment);
+        res.setStatus(Status.CREATE_IN_PROGRESS);
+        res.setToscaNodeName(entry.getKey());
+        res.setToscaNodeType(entry.getValue().getType());
+        resourceRepository.save(res);
       }
     }
   }

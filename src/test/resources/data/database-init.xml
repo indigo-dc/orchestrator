@@ -6,6 +6,6 @@
 
 
 	<Deployment_outputs Deployment_uuid="mmd34483-d937-4578-bfdb-ebe196bf82dd"
-		value="[10.0.0.1]" name="server_ip" />
+		value="10.0.0.1" name="server_ip" />
 
 </dataset>
