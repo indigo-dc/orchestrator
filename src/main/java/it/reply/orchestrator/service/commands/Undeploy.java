@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
-import it.reply.workflowManager.spring.orchestrator.bpm.ejbcommands.BaseCommand;
+import it.reply.workflowmanager.spring.orchestrator.bpm.ejbcommands.BaseCommand;
 
 @Component
 public class Undeploy extends BaseCommand {
@@ -17,8 +17,8 @@ public class Undeploy extends BaseCommand {
   @Override
   protected ExecutionResults customExecute(CommandContext ctx) throws Exception {
     String deploymentId = (String) getWorkItem(ctx).getParameter("DEPLOYMENT_ID");
-    imService.doUndeploy(deploymentId);
-    return new ExecutionResults();
+    boolean result = imService.doUndeploy(deploymentId);
+    return resultOccurred(result);
   }
 
 }

@@ -21,17 +21,31 @@ public abstract class AbstractDeploymentProviderService implements DeploymentPro
   private DeploymentRepository deploymentRepository;
 
   @Override
-  public boolean doPoller(
-      final it.reply.orchestrator.service.deployment.providers.Function<String[], Deployment, Boolean> function,
-      String[] params, Deployment deployment) {
+  public boolean doPoller(final Function<Deployment, Boolean> function, Deployment deployment) {
     int maxRetry = 10;
     int sleepInterval = 30000;
     Boolean isDone = false;
-    while (maxRetry > 0 && !(isDone = function.apply(params, deployment))) {
+    while (maxRetry > 0 && !(isDone = function.apply(deployment))) {
       try {
         Thread.sleep(sleepInterval);
-      } catch (InterruptedException e) {
-        e.printStackTrace();
+      } catch (InterruptedException ex) {
+        ex.printStackTrace();
+      }
+      maxRetry--;
+    }
+    return isDone;
+  }
+
+  @Override
+  public boolean doPoller(final Function<Resource, Boolean> function, Resource resource) {
+    int maxRetry = 10;
+    int sleepInterval = 30000;
+    Boolean isDone = false;
+    while (maxRetry > 0 && !(isDone = function.apply(resource))) {
+      try {
+        Thread.sleep(sleepInterval);
+      } catch (InterruptedException ex) {
+        ex.printStackTrace();
       }
       maxRetry--;
     }

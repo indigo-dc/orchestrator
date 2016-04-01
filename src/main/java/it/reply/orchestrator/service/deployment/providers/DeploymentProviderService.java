@@ -1,29 +1,42 @@
 package it.reply.orchestrator.service.deployment.providers;
 
-import java.util.function.Function;
-
-import alien4cloud.tosca.model.ArchiveRoot;
 import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.exception.service.DeploymentException;
+
+import java.util.function.Function;
 
 public interface DeploymentProviderService {
 
-  public void doDeploy(String request);
+  public boolean doDeploy(String deploymentUuid);
 
-  public void doDeploy(Deployment deployment);
+  public boolean doDeploy(Deployment deployment);
+
+  public boolean isDeployed(String deploymentUuid) throws DeploymentException;
+
+  public boolean isDeployed(Deployment deployment) throws DeploymentException;
+
+  public void finalizeDeploy(String deploymentUuid, boolean deployed);
+
+  public void finalizeDeploy(Deployment deployment, boolean deployed);
 
   public void doUpdate(String deploymentId, String template);
 
-  public boolean doPoller(
-      final it.reply.orchestrator.service.deployment.providers.Function<String[], Deployment, Boolean> function,
-      String[] params, Deployment deployment) throws Exception;
+  public void doUpdate(Deployment deployment, String template);
 
-  public boolean isDeployed(String[] params, Deployment deployment) throws DeploymentException;
+  public boolean doUndeploy(String deploymentUuid);
 
-  public void doUndeploy(String deploymentUuid);
+  public boolean doUndeploy(Deployment deployment);
 
-  public void doUndeploy(Deployment deployment);
+  public boolean isUndeployed(String deploymentUuid) throws DeploymentException;
 
-  public boolean isUndeployed(String[] params, Deployment deployment) throws DeploymentException;
+  public boolean isUndeployed(Deployment deployment) throws DeploymentException;
+
+  public void finalizeUndeploy(String deploymentUuid, boolean undeployed);
+
+  public boolean doPoller(final Function<Deployment, Boolean> function, Deployment deployment)
+      throws Exception;
+
+  public boolean doPoller(final Function<Resource, Boolean> function, Resource resource);
 
 }
