@@ -174,7 +174,7 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
 
     mockMvc.perform(get("/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd"))
         .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.outputs", Matchers.hasEntry("server_ip", "[10.0.0.1]")))
+        .andExpect(jsonPath("$.outputs", Matchers.hasEntry("server_ip", "10.0.0.1")))
 
         .andDo(document("deployment", preprocessResponse(prettyPrint()),
 
