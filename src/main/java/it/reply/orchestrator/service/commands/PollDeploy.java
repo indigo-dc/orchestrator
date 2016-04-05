@@ -27,8 +27,8 @@ public class PollDeploy extends BaseCommand {
     ExternallyControlledPoller<String, Boolean> pollingStatus = getParameter(ctx, "pollingStatus");
     if (pollingStatus == null) {
       pollingStatus = getPoller();
-      exResults.setData("pollingStatus", pollingStatus);
     }
+    exResults.setData("pollingStatus", pollingStatus);
     try {
       Boolean result = pollingStatus.doPollEvent(deploymentId);
       if (result != null && result) {
