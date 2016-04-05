@@ -138,8 +138,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           LOG.debug("Load {} credentials", IaaSSite.ONEDOCK.toString());
           // Read the proxy file
           String proxy;
-          try {
-            InputStream in = ctx.getResource(PROXY).getInputStream();
+          try (InputStream in = ctx.getResource(PROXY).getInputStream()) {
             proxy = IOUtils.toString(in);
           } catch (Exception ex) {
             throw new OrchestratorException("Cannot load proxy file", ex);
@@ -147,13 +146,13 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           // read onedock auth file
           inputStream = ctx.getResource(ONEDOCK_AUTH_FILE_PATH).getInputStream();
           String authFile = IOUtils.toString(inputStream, StandardCharsets.UTF_8.toString());
+          inputStream.close();
 
           // replace the proxy as string
           authFile = authFile.replace("{proxy}", proxy);
 
-          inputStream = new ByteArrayInputStream(authFile.getBytes("UTF-8"));
+          inputStream = IOUtils.toInputStream(authFile, StandardCharsets.UTF_8.toString());
           break;
-
         case OPENNEBULA:
           LOG.debug("Load {} credentials", IaaSSite.OPENNEBULA.toString());
           inputStream = ctx.getResource(OPENNEBULA_AUTH_FILE_PATH).getInputStream();
@@ -166,7 +165,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
       File tmp = File.createTempFile("authFileTmp", ".tmp");
       try (OutputStream outStream = new FileOutputStream(tmp)) {
-        ByteStreams.copy(inputStream, outStream);
+        IOUtils.copy(inputStream, outStream);
       }
       InfrastructureManagerApiClient imClient = new InfrastructureManagerApiClient(IM_URL,
           tmp.getAbsolutePath());
