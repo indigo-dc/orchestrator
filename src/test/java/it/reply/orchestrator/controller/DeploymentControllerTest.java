@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
 
-import es.upv.i3m.grycap.file.FileIO;
+import es.upv.i3m.grycap.file.Utf8File;
 
 import it.reply.orchestrator.config.WebAppConfigurationAware;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
@@ -218,7 +218,7 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("cpus", 1);
     request.setParameters(parameters);
-    request.setTemplate(FileIO.readUTF8File("./src/test/resources/tosca/compute_tosca.yaml"));
+    request.setTemplate(new Utf8File("./src/test/resources/tosca/compute_tosca.yaml").read());
     request.setCallback("http://localhost:8080/callback");
     mockMvc.perform(post("/deployments").contentType(MediaType.APPLICATION_JSON)
         .content(TestUtil.convertObjectToJsonBytes(request)))
@@ -256,7 +256,7 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("cpus", 1);
     request.setParameters(parameters);
-    request.setTemplate(FileIO.readUTF8File("./src/test/resources/tosca/galaxy_tosca.yaml"));
+    request.setTemplate(new Utf8File("./src/test/resources/tosca/galaxy_tosca.yaml").read());
     request.setCallback("http://localhost:8080/callback");
     mockMvc.perform(put("/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd")
         .contentType(MediaType.APPLICATION_JSON)
@@ -280,7 +280,7 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
     DeploymentRequest request = new DeploymentRequest();
     String callback = "http://localhost";
     request.setCallback(callback);
-    request.setTemplate(FileIO.readUTF8File("./src/test/resources/tosca/galaxy_tosca.yaml"));
+    request.setTemplate(new Utf8File("./src/test/resources/tosca/galaxy_tosca.yaml").read());
     mockMvc
         .perform(post("/deployments").contentType(MediaType.APPLICATION_JSON)
             .content(TestUtil.convertObjectToJsonBytes(request)))
@@ -296,7 +296,7 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
     DeploymentRequest request = new DeploymentRequest();
     String callback = "httptest.com";
     request.setCallback(callback);
-    request.setTemplate(FileIO.readUTF8File("./src/test/resources/tosca/galaxy_tosca.yaml"));
+    request.setTemplate(new Utf8File("./src/test/resources/tosca/galaxy_tosca.yaml").read());
     mockMvc
         .perform(post("/deployments").contentType(MediaType.APPLICATION_JSON)
             .content(TestUtil.convertObjectToJsonBytes(request)))

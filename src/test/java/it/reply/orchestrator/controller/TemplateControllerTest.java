@@ -30,7 +30,8 @@ import org.springframework.web.context.WebApplicationContext;
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
 
-import es.upv.i3m.grycap.file.FileIO;
+import es.upv.i3m.grycap.file.Utf8File;
+
 import it.reply.orchestrator.config.WebAppConfigurationAware;
 
 @DatabaseTearDown("/data/database-empty.xml")
@@ -65,7 +66,7 @@ public class TemplateControllerTest extends WebAppConfigurationAware {
   @DatabaseSetup("/data/database-resource-init.xml")
   public void getTemplate() throws Exception {
 
-    String template = FileIO.readUTF8File(templatePath);
+    String template = new Utf8File(templatePath).read();
     MvcResult result =
         mockMvc.perform(get("/deployments/" + deploymentId + "/template"))
             .andExpect(status().isOk()).andExpect(content().contentType(MediaType.TEXT_PLAIN))
