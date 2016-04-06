@@ -14,6 +14,7 @@ import es.upv.i3m.grycap.im.api.RestApiBodyContentType;
 import es.upv.i3m.grycap.im.api.VmStates;
 import es.upv.i3m.grycap.im.client.ServiceResponse;
 import es.upv.i3m.grycap.im.exceptions.ImClientException;
+import es.upv.i3m.grycap.im.exceptions.NoEnumFoundException;
 
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
@@ -64,7 +65,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   @Value("${auth.file.path}")
   private String authFilePath;
 
-  private static final Pattern UUID_PATTERN = Pattern.compile(".*\\/([^\\/]+)\\/?");
+  private static final Pattern UUID_PATTERN =
+      Pattern.compile(".*\\/([^\\/]+)\\/?");
 
   private InfrastructureManagerApiClient imClient;
 
@@ -86,7 +88,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
    *           if an error occurred while generating the auth file URI
    */
   @PostConstruct
-  private void init() throws ImClientException, IOException, URISyntaxException {
+  private void init()
+      throws ImClientException, IOException, URISyntaxException {
 
     InputStream inputStream =
         ImServiceImpl.class.getClassLoader().getResourceAsStream(authFilePath);
@@ -116,14 +119,15 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       deployment = deploymentRepository.save(deployment);
 
       // TODO improve with template inputs
-      ServiceResponse response =
-          imClient.createInfrastructure(deployment.getTemplate(), RestApiBodyContentType.TOSCA);
+      ServiceResponse response = imClient.createInfrastructure(
+          deployment.getTemplate(), RestApiBodyContentType.TOSCA);
       if (!response.isReponseSuccessful()) {
         // IM response is HTML encoded. Get the message between <pre> </pre> tag
-        String responseError =
-            response.getResult().substring(response.getResult().indexOf("<pre>") + 5,
-                response.getResult().indexOf("</pre>"));
-        updateOnError(deploymentUuid, response.getReasonPhrase() + ": " + responseError);
+        String responseError = response.getResult().substring(
+            response.getResult().indexOf("<pre>") + 5,
+            response.getResult().indexOf("</pre>"));
+        updateOnError(deploymentUuid,
+            response.getReasonPhrase() + ": " + responseError);
       } else {
         String infrastructureId = null;
         Matcher matcher = UUID_PATTERN.matcher(response.getResult());
@@ -146,7 +150,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
                 imClient.getInfrastructureOutputs(infrastructureId);
 
             Map<String, String> outputs = new HashMap<String, String>();
-            for (Entry<String, Object> entry : statusResponse.getProperties().entrySet()) {
+            for (Entry<String, Object> entry : statusResponse.getProperties()
+                .entrySet()) {
               if (entry.getValue() != null) {
                 outputs.put(entry.getKey(), entry.getValue().toString());
               } else {
@@ -159,7 +164,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
             updateOnSuccess(deploymentUuid);
           } else {
-            updateOnError(deploymentUuid, "An error occured during the deployment of the template");
+            updateOnError(deploymentUuid,
+                "An error occured during the deployment of the template");
           }
         } catch (Exception e) {
           LOG.error(e);
@@ -175,21 +181,25 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   @Override
   public void doUpdate(String deploymentId, String template) {
 
-    // Check if count is increased or if there is a removal list, other kinds of update are
+    // Check if count is increased or if there is a removal list, other kinds of
+    // update are
     // discarded
     Deployment deployment = deploymentRepository.findOne(deploymentId);
     ParsingResult<ArchiveRoot> oldParsingResult;
     ParsingResult<ArchiveRoot> newParsingResult;
     try {
-      oldParsingResult = toscaService.getArchiveRootFromTemplate(deployment.getTemplate());
+      oldParsingResult =
+          toscaService.getArchiveRootFromTemplate(deployment.getTemplate());
       template = toscaService.customizeTemplate(template, deploymentId);
       newParsingResult = toscaService.getArchiveRootFromTemplate(template);
     } catch (ParsingException | IOException e) {
       throw new OrchestratorException(e);
     }
     // find Count nodes into new and old template
-    Map<String, NodeTemplate> oldNodes = toscaService.getCountNodes(oldParsingResult.getResult());
-    Map<String, NodeTemplate> newNodes = toscaService.getCountNodes(newParsingResult.getResult());
+    Map<String, NodeTemplate> oldNodes =
+        toscaService.getCountNodes(oldParsingResult.getResult());
+    Map<String, NodeTemplate> newNodes =
+        toscaService.getCountNodes(newParsingResult.getResult());
 
     try {
       for (Map.Entry<String, NodeTemplate> entry : oldNodes.entrySet()) {
@@ -213,30 +223,37 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
             root.getTopology().setNodeTemplates(nodes);
             ServiceResponse response =
                 imClient.addResource(deployment.getEndpoint(),
-                    toscaService.getTemplateFromTopology(root), RestApiBodyContentType.TOSCA, true);
+                    toscaService.getTemplateFromTopology(root),
+                    RestApiBodyContentType.TOSCA, true);
 
             if (!response.isReponseSuccessful()) {
-              // IM response is HTML encoded. Get the message between <pre> </pre> tag
-              String responseError =
-                  response.getResult().substring(response.getResult().indexOf("<pre>") + 5,
-                      response.getResult().indexOf("</pre>"));
-              // updateOnError(deploymentId, response.getReasonPhrase() + ": " + responseError);
-              throw new DeploymentException(response.getReasonPhrase() + ": " + responseError);
+              // IM response is HTML encoded. Get the message between <pre>
+              // </pre> tag
+              String responseError = response.getResult().substring(
+                  response.getResult().indexOf("<pre>") + 5,
+                  response.getResult().indexOf("</pre>"));
+              // updateOnError(deploymentId, response.getReasonPhrase() + ": " +
+              // responseError);
+              throw new DeploymentException(
+                  response.getReasonPhrase() + ": " + responseError);
             } else {
 
-              boolean result =
-                  doPoller(this::isDeployed, new String[] { deployment.getEndpoint() });
+              boolean result = doPoller(this::isDeployed,
+                  new String[] { deployment.getEndpoint() });
               if (!result) {
-                throw new DeploymentException("An error occur during the update: polling failed");
+                throw new DeploymentException(
+                    "An error occur during the update: polling failed");
               }
             }
           } else if (newCount < oldCount) {
             // delete a WN.
-            List<String> removalList = toscaService.getRemovalList(newNodes.get(entry.getKey()));
+            List<String> removalList =
+                toscaService.getRemovalList(newNodes.get(entry.getKey()));
             if (removalList.size() != (oldCount - newCount)) {
-              throw new DeploymentException("An error occur during the update. Count is <"
-                  + newCount + "> but removal_list contains <" + removalList.size()
-                  + "> elements in the node: " + entry.getKey());
+              throw new DeploymentException(
+                  "An error occur during the update. Count is <" + newCount
+                      + "> but removal_list contains <" + removalList.size()
+                      + "> elements in the node: " + entry.getKey());
             }
 
             // Find the nodes to be removed.
@@ -244,24 +261,27 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
               Resource resource = resourceRepository.findOne(resourceId);
               resource.setStatus(Status.DELETE_IN_PROGRESS);
               resource = resourceRepository.save(resource);
-              ServiceResponse response =
-                  imClient.removeResource(deployment.getEndpoint(), resource.getIaasId());
+              ServiceResponse response = imClient.removeResource(
+                  deployment.getEndpoint(), resource.getIaasId());
               if (!response.isReponseSuccessful()) {
                 if (response.getServiceStatusCode() != 404) {
-                  throw new DeploymentException("An error occur during the update: fail to delete: "
-                      + resource.getToscaNodeName() + " with id: " + resourceId);
+                  throw new DeploymentException(
+                      "An error occur during the update: fail to delete: "
+                          + resource.getToscaNodeName() + " with id: "
+                          + resourceId);
                 }
               } else {
                 boolean result =
-                    doPoller(this::isResourceDeleted,
-                        new String[] { deployment.getEndpoint(), resource.getIaasId() });
+                    doPoller(this::isResourceDeleted, new String[] {
+                        deployment.getEndpoint(), resource.getIaasId() });
                 if (result) {
                   List<Resource> resurces = deployment.getResources();
                   resurces.remove(resource);
                   resourceRepository.delete(resourceId);
                 } else {
                   throw new DeploymentException(
-                      "An error occur during the update: polling failed " + resource.getId());
+                      "An error occur during the update: polling failed "
+                          + resource.getId());
                 }
 
               }
@@ -278,7 +298,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   }
 
-  private Status getOrchestratorStatusFromImStatus(String value) {
+  private Status getOrchestratorStatusFromImStatus(String value)
+      throws NoEnumFoundException {
     VmStates vmState = VmStates.getEnumFromValue(value);
     switch (vmState) {
       case PENDING:
@@ -304,19 +325,21 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   }
 
   @Override
-  public boolean isDeployed(String[] infrastructureId) throws DeploymentException {
+  public boolean isDeployed(String[] infrastructureId)
+      throws DeploymentException {
     try {
 
-      ServiceResponse response = imClient.getInfrastructureState(infrastructureId[0]);
-      InfrastructureStatus status =
-          new ObjectMapper().readValue(response.getResult(), InfrastructureStatus.class);
+      ServiceResponse response =
+          imClient.getInfrastructureState(infrastructureId[0]);
+      InfrastructureStatus status = new ObjectMapper()
+          .readValue(response.getResult(), InfrastructureStatus.class);
 
       // FIXME Are the infrastructure states equals to the VmStates?
       if (status.getState().equals(VmStates.CONFIGURED.toString())) {
         return true;
       } else if (status.getState().equals(VmStates.FAILED.toString())) {
-        throw new DeploymentException(
-            "Fail to deploy infrastructure: <" + infrastructureId + "> " + response.getResult());
+        throw new DeploymentException("Fail to deploy infrastructure: <"
+            + infrastructureId + "> " + response.getResult());
       } else {
         return false;
       }
@@ -341,7 +364,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       deployment.setTask(Task.DEPLOYER);
       deployment = deploymentRepository.save(deployment);
 
-      ServiceResponse response = imClient.destroyInfrastructure(deployment.getEndpoint());
+      ServiceResponse response =
+          imClient.destroyInfrastructure(deployment.getEndpoint());
       if (!response.isReponseSuccessful()) {
         if (response.getServiceStatusCode() == 404) {
           updateOnSuccess(deploymentUuid);
@@ -350,7 +374,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         }
       } else {
         try {
-          boolean result = doPoller(this::isUndeployed, new String[] { deploymentUuid });
+          boolean result =
+              doPoller(this::isUndeployed, new String[] { deploymentUuid });
           if (result) {
             updateOnSuccess(deploymentUuid);
           } else {
@@ -368,9 +393,11 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   }
 
   @Override
-  public boolean isUndeployed(String[] deploymentUuid) throws DeploymentException {
+  public boolean isUndeployed(String[] deploymentUuid)
+      throws DeploymentException {
     try {
-      ServiceResponse response = imClient.getInfrastructureState(deploymentUuid[0]);
+      ServiceResponse response =
+          imClient.getInfrastructureState(deploymentUuid[0]);
       if (!response.isReponseSuccessful()) {
         if (response.getServiceStatusCode() == 404) {
           return true;
@@ -394,7 +421,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
    */
   public boolean isResourceDeleted(String[] params) throws DeploymentException {
     try {
-      ServiceResponse response = imClient.getVMInfo(params[0], params[1], true);
+      ServiceResponse response = imClient.getVmInfo(params[0], params[1], true);
       if (!response.isReponseSuccessful()) {
         if (response.getServiceStatusCode() == 404) {
           return true;
@@ -419,7 +446,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       throws ImClientException {
 
     // Get the URLs of the VMs composing the virtual infrastructure
-    String[] vmUrls = imClient.getInfrastructureInfo(infrastructureId).getResult().split("\\r?\\n");
+    String[] vmUrls = imClient.getInfrastructureInfo(infrastructureId)
+        .getResult().split("\\r?\\n");
 
     // for each URL get the information about the VM
     Map<String, String> vmMap = new HashMap<String, String>();
@@ -429,12 +457,14 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       if (index != -1) {
         vmId = vm.substring(index + 1);
       }
-      String vmInfo = imClient.getVMInfo(infrastructureId, vmId, true).getResult();
+      String vmInfo =
+          imClient.getVmInfo(infrastructureId, vmId, true).getResult();
       vmMap.put(vmId, vmInfo);
     }
 
     // Find the Resource from the DB and bind it with the corresponding VM
-    Page<Resource> resources = resourceRepository.findByDeployment_id(deployment.getId(), null);
+    Page<Resource> resources =
+        resourceRepository.findByDeployment_id(deployment.getId(), null);
 
     // Remove from vmMap all the resources already binded
     for (Resource r : resources) {
