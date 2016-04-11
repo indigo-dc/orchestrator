@@ -16,7 +16,7 @@ public class OrchestratorApiException extends OrchestratorException {
     super(message);
   }
 
-  public OrchestratorApiException(String message, Throwable e) {
-    super(message, e);
+  public OrchestratorApiException(String message, Throwable ex) {
+    super(message, ex);
   }
 }

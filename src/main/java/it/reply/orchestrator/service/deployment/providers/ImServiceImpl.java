@@ -62,7 +62,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   private ApplicationContext ctx;
 
   @Value("${onedock.proxy.file.path}")
-  private String PROXY;
+  private String proxyPath;
 
   @Value("${url}")
   private String imUrl;
@@ -71,13 +71,13 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   private String authFilePath;
 
   @Value("${opennebula.auth.file.path}")
-  private String OPENNEBULA_AUTH_FILE_PATH;
+  private String opennebulaAuthFilePath;
 
   @Value("${openstack.auth.file.path}")
-  private String OPENSTACK_AUTH_FILE_PATH;
+  private String openstackAuthFilePath;
 
   @Value("${onedock.auth.file.path}")
-  private String ONEDOCK_AUTH_FILE_PATH;
+  private String onedockAuthFilePath;
 
   private static final Pattern UUID_PATTERN = Pattern.compile(".*\\/([^\\/]+)\\/?");
   private static final Pattern PRE_PATTERN = Pattern.compile(".*<pre>(.*)<\\/pre>.*");
@@ -90,34 +90,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   @Autowired
   private ResourceRepository resourceRepository;
-
-  /**
-   * Initialize the {@link InfrastructureManagerApiClient}.
-   * 
-   * @throws IOException
-   * @throws FileNotFoundException
-   * @throws ImClientException
-   * 
-   * @throws AuthFileNotFoundException
-   *           if the file doesn't exist
-   * @throws URISyntaxException
-   *           if an error occurred while generating the auth file URI
-   */
-  // @PostConstruct
-  // private void init() throws ImClientException, IOException, URISyntaxException {
-  //
-  // // Load fake iaas credential
-  // InputStream inputStream = ImServiceImpl.class.getClassLoader()
-  // .getResourceAsStream(AUTH_FILE_PATH);
-  //
-  // File tmp = File.createTempFile("authFileTmp", ".tmp");
-  // OutputStream outStream = new FileOutputStream(tmp);
-  // ByteStreams.copy(inputStream, new FileOutputStream(tmp));
-  // inputStream.close();
-  // outStream.close();
-  //
-  // imClient = new InfrastructureManagerApiClient(IM_URL, tmp.getAbsolutePath());
-  // }
 
   public enum IaaSSite {
     // @formatter:off
@@ -132,20 +104,20 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         case OPENSTACK:
           LOG.debug("Load {} credentials", IaaSSite.OPENSTACK.toString());
 
-          inputStream = ctx.getResource(OPENSTACK_AUTH_FILE_PATH).getInputStream();
+          inputStream = ctx.getResource(openstackAuthFilePath).getInputStream();
           break;
         case ONEDOCK:
           LOG.debug("Load {} credentials", IaaSSite.ONEDOCK.toString());
           // Read the proxy file
           String proxy;
-          try (InputStream in = ctx.getResource(PROXY).getInputStream()) {
+          try (InputStream in = ctx.getResource(proxyPath).getInputStream()) {
             proxy = IOUtils.toString(in);
             proxy = proxy.replace(System.lineSeparator(), "\\\\n");
           } catch (Exception ex) {
             throw new OrchestratorException("Cannot load proxy file", ex);
           }
           // read onedock auth file
-          inputStream = ctx.getResource(ONEDOCK_AUTH_FILE_PATH).getInputStream();
+          inputStream = ctx.getResource(onedockAuthFilePath).getInputStream();
           String authFile = IOUtils.toString(inputStream, StandardCharsets.UTF_8.toString());
           inputStream.close();
 
@@ -156,7 +128,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           break;
         case OPENNEBULA:
           LOG.debug("Load {} credentials", IaaSSite.OPENNEBULA.toString());
-          inputStream = ctx.getResource(OPENNEBULA_AUTH_FILE_PATH).getInputStream();
+          inputStream = ctx.getResource(opennebulaAuthFilePath).getInputStream();
           break;
         default:
           LOG.debug("Load fake credentials");
@@ -238,7 +210,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         } else {
           updateOnError(deploymentUuid,
               String.format(
-                  "Creation of deployment < %s > : Couldn't extract infrastructureId from IM endpoint.\nIM endpoint was %s.",
+                  "Creation of deployment <%s>: Couldn't extract infrastructureId from IM endpoint."
+                      + "\nIM endpoint was %s.",
                   deploymentUuid, response.getResult()));
           return false;
         }

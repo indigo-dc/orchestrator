@@ -1,8 +1,6 @@
 package it.reply.orchestrator.controller;
 
-import java.io.BufferedOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
+import it.reply.orchestrator.exception.http.OrchestratorApiException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -17,8 +15,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
-import it.reply.orchestrator.config.Application;
-import it.reply.orchestrator.exception.http.OrchestratorApiException;
+import java.io.BufferedOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 
 @RestController
 @RequestMapping("/proxy")
@@ -26,19 +25,25 @@ import it.reply.orchestrator.exception.http.OrchestratorApiException;
 public class ProxyController {
 
   @Value("${onedock.proxy.file.path}")
-  private String PROXY;
+  private String proxy;
 
   @Autowired
   private ApplicationContext ctx;
 
   private static final Logger LOG = LogManager.getLogger(ProxyController.class);
 
+  /**
+   * Controller for proxy file upload.
+   * 
+   * @param file
+   *          the proxy file
+   */
   @RequestMapping(method = RequestMethod.POST)
   public void handleFileUpload(@RequestParam("file") MultipartFile file) {
     if (!file.isEmpty()) {
       try {
-        File f = ctx.getResource(PROXY).getFile();
-        BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(f));
+        File proxyFile = ctx.getResource(proxy).getFile();
+        BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(proxyFile));
         FileCopyUtils.copy(file.getInputStream(), stream);
         stream.close();
       } catch (Exception e) {
