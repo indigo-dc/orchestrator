@@ -1,7 +1,7 @@
 package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
-import it.reply.workflowManager.spring.orchestrator.bpm.ejbcommands.BaseCommand;
+import it.reply.workflowmanager.spring.orchestrator.bpm.ejbcommands.BaseCommand;
 
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
@@ -17,8 +17,8 @@ public class Deploy extends BaseCommand {
   @Override
   protected ExecutionResults customExecute(CommandContext ctx) throws Exception {
     String deploymentId = (String) getWorkItem(ctx).getParameter("DEPLOYMENT_ID");
-    imService.doDeploy(deploymentId);
-    return new ExecutionResults();
+    boolean result = imService.doDeploy(deploymentId);
+    return resultOccurred(result);
   }
 
 }

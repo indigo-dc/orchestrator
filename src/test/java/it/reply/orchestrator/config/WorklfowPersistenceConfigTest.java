@@ -16,8 +16,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import java.sql.SQLException;
 
-import it.reply.workflowManager.spring.orchestrator.annotations.WorkflowPersistenceUnit;
-import it.reply.workflowManager.utils.Constants;
+import it.reply.workflowmanager.spring.orchestrator.annotations.WorkflowPersistenceUnit;
+import it.reply.workflowmanager.utils.Constants;
 
 @Configuration
 @EnableTransactionManagement(proxyTargetClass = true)

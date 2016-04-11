@@ -29,6 +29,7 @@ EXPOSE  3528 \
 		8009 \
 		8080 \
 		8443 \
+		8787 \
 		9990 \
 		9993 \
 		23364 \
@@ -55,6 +56,12 @@ ENV ORCHESTRATOR_DB_ENDPOINT="databaseorchestrator:3306" \
 	WORKFLOW_DB_NAME=workflow \
 	WORKFLOW_DB_USER=root \
 	WORKFLOW_DB_PWD=root
+
+ENV IM_URL="" \
+	PROXY_DIR="" \
+	OPENNEBULA_AUTH_FILE_PATH="" \
+	OPENSTACK_AUTH_FILE_PATH="" \
+	ONEDOCK_AUTH_FILE_PATH=""
 
 ENTRYPOINT sh /launch.sh
 

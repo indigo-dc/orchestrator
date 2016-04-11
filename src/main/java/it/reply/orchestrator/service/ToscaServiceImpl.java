@@ -206,7 +206,7 @@ public class ToscaServiceImpl implements ToscaService {
     if (!errorList.isEmpty()) {
       for (ParsingError error : errorList) {
         if (!error.getErrorLevel().equals(ParsingErrorLevel.INFO)) {
-          errorMessage = errorMessage + error.getErrorCode() + ": " + error.getNote() + "; ";
+          errorMessage = errorMessage + error.toString() + "; ";
         }
       }
       throw new ToscaException(errorMessage);
@@ -237,8 +237,9 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   private static void setAutentication() {
-    Authentication auth = new PreAuthenticatedAuthenticationToken(Role.ADMIN.name().toLowerCase(),
-        "", AuthorityUtils.createAuthorityList(Role.ADMIN.name()));
+    Authentication auth =
+        new PreAuthenticatedAuthenticationToken(Role.ADMIN.name().toLowerCase(), "",
+            AuthorityUtils.createAuthorityList(Role.ADMIN.name()));
     SecurityContextHolder.getContext().setAuthentication(auth);
   }
 

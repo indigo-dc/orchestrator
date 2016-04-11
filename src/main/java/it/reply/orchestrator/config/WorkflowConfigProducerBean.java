@@ -1,6 +1,6 @@
 package it.reply.orchestrator.config;
 
-import it.reply.workflowManager.orchestrator.config.ConfigProducer;
+import it.reply.workflowmanager.orchestrator.config.ConfigProducer;
 
 import org.kie.api.io.Resource;
 import org.springframework.stereotype.Component;

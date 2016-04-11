@@ -1,7 +1,7 @@
 package it.reply.orchestrator.config;
 
-import it.reply.workflowManager.spring.orchestrator.annotations.WorkflowPersistenceUnit;
-import it.reply.workflowManager.utils.Constants;
+import it.reply.workflowmanager.spring.orchestrator.annotations.WorkflowPersistenceUnit;
+import it.reply.workflowmanager.utils.Constants;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
