@@ -36,12 +36,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -190,13 +188,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       ServiceResponse response =
           imClient.createInfrastructure(deployment.getTemplate(), RestApiBodyContentType.TOSCA);
       if (!response.isReponseSuccessful()) {
-        LOG.error(response.getResult());
-        // IM response is HTML encoded. Get the message between <pre> </pre> tag
-        Matcher matcher = PRE_PATTERN.matcher(response.getResult());
-        String responseError = "Error during the deployment " + response.getResult();
-        if (matcher.matches()) {
-          responseError = matcher.group(1);
-        }
+        String responseError = getAndLogImErrorResponse(response);
         updateOnError(deploymentUuid, response.getReasonPhrase() + ": " + responseError);
         return false;
       } else {
@@ -349,10 +341,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
                     toscaService.getTemplateFromTopology(root), RestApiBodyContentType.TOSCA, true);
 
             if (!response.isReponseSuccessful()) {
-              // IM response is HTML encoded. Get the message between <pre> </pre> tag
-              String responseError =
-                  response.getResult().substring(response.getResult().indexOf("<pre>") + 5,
-                      response.getResult().indexOf("</pre>"));
+              String responseError = getAndLogImErrorResponse(response);
               // updateOnError(deploymentId, response.getReasonPhrase() + ": " + responseError);
               throw new DeploymentException(response.getReasonPhrase() + ": " + responseError);
             } else {
@@ -383,6 +372,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
                   imClient.removeResource(deployment.getEndpoint(), resource.getIaasId());
               if (!response.isReponseSuccessful()) {
                 if (response.getServiceStatusCode() != 404) {
+                  LOG.error(response.getResult());
                   throw new DeploymentException("An error occur during the update: fail to delete: "
                       + resource.getToscaNodeName() + " with id: " + resourceId);
                 }
@@ -463,7 +453,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           updateOnSuccess(deploymentUuid);
           return true;
         } else {
-          updateOnError(deploymentUuid, response.getReasonPhrase());
+          String responseError = getAndLogImErrorResponse(response);
+          updateOnError(deploymentUuid, responseError);
           return false;
         }
       } else {
@@ -600,4 +591,14 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     }
   }
 
+  private String getAndLogImErrorResponse(ServiceResponse response) {
+    LOG.error(response.getResult());
+    // IM response is HTML encoded. Get the message between <pre> </pre> tag
+    Matcher matcher = PRE_PATTERN.matcher(response.getResult());
+    String responseError = "Error during the deployment " + response.getResult();
+    if (matcher.matches()) {
+      responseError = matcher.group(1);
+    }
+    return responseError;
+  }
 }
