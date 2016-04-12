@@ -17,8 +17,8 @@ public class Undeploy extends BaseCommand {
   @Override
   protected ExecutionResults customExecute(CommandContext ctx) throws Exception {
     String deploymentId = (String) getWorkItem(ctx).getParameter("DEPLOYMENT_ID");
-    imService.doUndeploy(deploymentId);
-    return new ExecutionResults();
+    boolean result = imService.doUndeploy(deploymentId);
+    return resultOccurred(result);
   }
 
 }
