@@ -235,9 +235,21 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       // FIXME Are the infrastructure states equals to the VmStates?
       if (status.getState().equals(VmStates.CONFIGURED.toString())) {
         return true;
-      } else if (status.getState().equals(VmStates.FAILED.toString())) {
-        throw new DeploymentException("Fail to deploy infrastructure: <"
-            + deployment.getEndpoint() + "> " + response.getResult());
+      } else if (status.getState().equals(VmStates.FAILED.toString())
+          || status.getState().equals(VmStates.UNCONFIGURED.toString())) {
+        String errorMsg =
+            String.format(
+                "Fail to deploy deployment <%s>." + "\nIM id is: <%s>" + "\nIM response is: <%s>",
+                deployment.getId(), deployment.getEndpoint(), response.getResult());
+        try {
+          // Try to get the logs of the virtual infrastructure for debug purpose.
+          ServiceResponse responseContMsg =
+              imClient.getInfrastructureContMsg(deployment.getEndpoint());
+          errorMsg = errorMsg.concat("\nIM contMsg is: " + responseContMsg.getResult());
+        } catch (Exception ex) {
+          // Do nothing
+        }
+        throw new DeploymentException(errorMsg);
       } else {
         return false;
       }
