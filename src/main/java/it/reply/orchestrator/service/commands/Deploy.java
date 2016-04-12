@@ -17,8 +17,8 @@ public class Deploy extends BaseCommand {
   @Override
   protected ExecutionResults customExecute(CommandContext ctx) throws Exception {
     String deploymentId = (String) getWorkItem(ctx).getParameter("DEPLOYMENT_ID");
-    imService.doDeploy(deploymentId);
-    return new ExecutionResults();
+    boolean result = imService.doDeploy(deploymentId);
+    return resultOccurred(result);
   }
 
 }

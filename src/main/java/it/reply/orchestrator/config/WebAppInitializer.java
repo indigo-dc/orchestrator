@@ -40,8 +40,13 @@ public class WebAppInitializer extends AbstractAnnotationConfigDispatcherServlet
   protected void customizeRegistration(ServletRegistration.Dynamic registration) {
     // registration.setInitParameter("defaultHtmlEscape", "true");
     // registration.setInitParameter("spring.profiles.active", "default");
-
+    // registration.setMultipartConfig(getMultipartConfigElement());
     registration.setInitParameter("throwExceptionIfNoHandlerFound", "true");
 
   }
+
+  // private MultipartConfigElement getMultipartConfigElement() {
+  // MultipartConfigElement multipartConfigElement = new MultipartConfigElement(Application.ROOT);
+  // return multipartConfigElement;
+  // }
 }
