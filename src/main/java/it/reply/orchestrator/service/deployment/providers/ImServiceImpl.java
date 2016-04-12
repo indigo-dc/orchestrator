@@ -12,6 +12,7 @@ import es.upv.i3m.grycap.im.api.RestApiBodyContentType;
 import es.upv.i3m.grycap.im.api.VmStates;
 import es.upv.i3m.grycap.im.client.ServiceResponse;
 import es.upv.i3m.grycap.im.exceptions.ImClientException;
+import es.upv.i3m.grycap.im.exceptions.NoEnumFoundException;
 
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
@@ -401,7 +402,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   }
 
-  private Status getOrchestratorStatusFromImStatus(String value) {
+  private Status getOrchestratorStatusFromImStatus(String value) throws NoEnumFoundException {
     VmStates vmState = VmStates.getEnumFromValue(value);
     switch (vmState) {
       case PENDING:
@@ -522,7 +523,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           getClient(getIaaSSiteFromTosca(deployment.getTemplate()));
 
       ServiceResponse response =
-          imClient.getVMInfo(deployment.getEndpoint(), resource.getIaasId(), true);
+          imClient.getVmInfo(deployment.getEndpoint(), resource.getIaasId(), true);
       if (!response.isReponseSuccessful()) {
         if (response.getServiceStatusCode() == 404) {
           return true;
@@ -561,7 +562,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       if (index != -1) {
         vmId = vm.substring(index + 1);
       }
-      String vmInfo = imClient.getVMInfo(infrastructureId, vmId, true).getResult();
+      String vmInfo = imClient.getVmInfo(infrastructureId, vmId, true).getResult();
       vmMap.put(vmId, vmInfo);
     }
 

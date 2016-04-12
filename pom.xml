@@ -15,7 +15,7 @@
 		<jackson.version>2.6.4</jackson.version>
 		<hibernate.version>4.3.11.Final</hibernate.version>
 
-		<im-java-api.version>0.3.0</im-java-api.version>
+		<im-java-api.version>0.3.1</im-java-api.version>
 
 
 		<mockito.version>1.10.19</mockito.version>
@@ -25,6 +25,38 @@
 		<workflow-manager.version>0.0.3-SNAPSHOT</workflow-manager.version>
 		<alien4cloud.version>1.1.0-INDIGO</alien4cloud.version>
 	</properties>
+
+	<distributionManagement>
+		<!-- Publish versioned releases here -->
+		<repository>
+			<id>concept-reply-nexus-repository</id>
+			<name>Concept Reply Releases Repository</name>
+			<url>http://nexusconcept.cloud.reply.eu/content/repositories/releases</url>
+		</repository>
+
+		<!-- Publish snapshots here -->
+		<snapshotRepository>
+			<id>concept-reply-nexus-repository</id>
+			<name>Concept Reply Snaphots Repository</name>
+			<url>http://nexusconcept.cloud.reply.eu/content/repositories/public-snapshots</url>
+		</snapshotRepository>
+	</distributionManagement>
+
+	<repositories>
+		<repository>
+			<id>concept-reply-nexus-repository</id>
+			<name>Concept Reply Nexus</name>
+			<url>http://nexusconcept.cloud.reply.eu/content/groups/public</url>
+		</repository>
+		<repository>
+			<id>spring-milestones</id>
+			<name>Spring Milestones</name>
+			<url>https://repo.spring.io/libs-milestone</url>
+			<snapshots>
+				<enabled>false</enabled>
+			</snapshots>
+		</repository>
+	</repositories>
 
 	<dependencies>
 		<!-- Fix to avoid to import the library (which conflicts with the one in 
@@ -243,16 +275,7 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-	<repositories>
-		<repository>
-			<id>spring-milestones</id>
-			<name>Spring Milestones</name>
-			<url>https://repo.spring.io/libs-milestone</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
+
 
 	<profiles>
 		<profile>
