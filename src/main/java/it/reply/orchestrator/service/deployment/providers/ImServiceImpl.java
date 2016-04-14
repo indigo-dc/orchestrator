@@ -187,10 +187,11 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
       // TODO improve with template inputs
       ServiceResponse response =
-          imClient.createInfrastructure(deployment.getTemplate(), RestApiBodyContentType.TOSCA);
+          imClient.createInfrastructure(deployment.getTemplate(), RestApiBodyContentType.TOSCA,
+              true);
       if (!response.isReponseSuccessful()) {
         String responseError = getAndLogImErrorResponse(response);
-        updateOnError(deploymentUuid, response.getReasonPhrase() + ": " + responseError);
+        updateOnError(deploymentUuid, responseError);
         return false;
       } else {
         String infrastructureId = null;
@@ -228,7 +229,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       // FIXME this is a trick used only for demo purpose
       InfrastructureManagerApiClient imClient =
           getClient(getIaaSSiteFromTosca(deployment.getTemplate()));
-      ServiceResponse response = imClient.getInfrastructureState(deployment.getEndpoint());
+      ServiceResponse response = imClient.getInfrastructureState(deployment.getEndpoint(), true);
       InfrastructureStatus status =
           new ObjectMapper().readValue(response.getResult(), InfrastructureStatus.class);
 
@@ -244,7 +245,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         try {
           // Try to get the logs of the virtual infrastructure for debug purpose.
           ServiceResponse responseContMsg =
-              imClient.getInfrastructureContMsg(deployment.getEndpoint());
+              imClient.getInfrastructureContMsg(deployment.getEndpoint(), true);
           errorMsg = errorMsg.concat("\nIM contMsg is: " + responseContMsg.getResult());
         } catch (Exception ex) {
           // Do nothing
@@ -351,7 +352,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
                 getClient(getIaaSSiteFromTosca(deployment.getTemplate()));
             ServiceResponse response =
                 imClient.addResource(deployment.getEndpoint(),
-                    toscaService.getTemplateFromTopology(root), RestApiBodyContentType.TOSCA, true);
+                    toscaService.getTemplateFromTopology(root), RestApiBodyContentType.TOSCA, true,
+                    true);
 
             if (!response.isReponseSuccessful()) {
               String responseError = getAndLogImErrorResponse(response);
@@ -382,7 +384,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
               InfrastructureManagerApiClient imClient =
                   getClient(getIaaSSiteFromTosca(deployment.getTemplate()));
               ServiceResponse response =
-                  imClient.removeResource(deployment.getEndpoint(), resource.getIaasId());
+                  imClient.removeResource(deployment.getEndpoint(), resource.getIaasId(), true);
               if (!response.isReponseSuccessful()) {
                 if (response.getServiceStatusCode() != 404) {
                   LOG.error(response.getResult());
@@ -460,7 +462,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         updateOnSuccess(deploymentUuid);
         return true;
       }
-      ServiceResponse response = imClient.destroyInfrastructure(deployment.getEndpoint());
+      ServiceResponse response = imClient.destroyInfrastructure(deployment.getEndpoint(), true);
       if (!response.isReponseSuccessful()) {
         if (response.getServiceStatusCode() == 404) {
           updateOnSuccess(deploymentUuid);
@@ -496,7 +498,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       if (deployment.getEndpoint() == null) {
         return true;
       }
-      ServiceResponse response = imClient.getInfrastructureState(deployment.getEndpoint());
+      ServiceResponse response = imClient.getInfrastructureState(deployment.getEndpoint(), true);
       if (!response.isReponseSuccessful()) {
         if (response.getServiceStatusCode() == 404) {
           return true;
@@ -564,7 +566,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         getClient(getIaaSSiteFromTosca(deployment.getTemplate()));
 
     // Get the URLs of the VMs composing the virtual infrastructure
-    String[] vmUrls = imClient.getInfrastructureInfo(infrastructureId).getResult().split("\\r?\\n");
+    // TODO test in case of errors
+    String[] vmUrls =
+        imClient.getInfrastructureInfo(infrastructureId, true).getResult().split("\\r?\\n");
 
     // for each URL get the information about the VM
     Map<String, String> vmMap = new HashMap<String, String>();
@@ -605,13 +609,14 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   }
 
   private String getAndLogImErrorResponse(ServiceResponse response) {
-    LOG.error(response.getResult());
-    // IM response is HTML encoded. Get the message between <pre> </pre> tag
-    Matcher matcher = PRE_PATTERN.matcher(response.getResult());
-    String responseError = "Error during the deployment " + response.getResult();
-    if (matcher.matches()) {
-      responseError = matcher.group(1);
+    try {
+      es.upv.i3m.grycap.im.pojo.Error error =
+          new ObjectMapper().readValue(response.getResult(), es.upv.i3m.grycap.im.pojo.Error.class);
+      LOG.error(error.toString());
+      return error.getMessage();
+    } catch (IOException e) {
+      LOG.error(e);
     }
-    return responseError;
+    return response.getResult();
   }
 }
