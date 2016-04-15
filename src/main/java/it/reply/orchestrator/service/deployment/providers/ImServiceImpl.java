@@ -79,7 +79,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   private String onedockAuthFilePath;
 
   private static final Pattern UUID_PATTERN = Pattern.compile(".*\\/([^\\/]+)\\/?");
-  private static final Pattern PRE_PATTERN = Pattern.compile(".*<pre>(.*)<\\/pre>.*");
 
   @Autowired
   private ToscaService toscaService;
@@ -354,6 +353,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
                 imClient.addResource(deployment.getEndpoint(),
                     toscaService.getTemplateFromTopology(root), RestApiBodyContentType.TOSCA, true,
                     true);
+
 
             if (!response.isReponseSuccessful()) {
               String responseError = getAndLogImErrorResponse(response);
