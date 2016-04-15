@@ -72,7 +72,7 @@ public class DeploymentResourceAssembler
             ctrlUri = uri;
             lock.unlockRead(readStamp);
           }
-        } catch (InterruptedException e) {
+        } catch (InterruptedException ex) {
           // DO NOTHING
         }
       }

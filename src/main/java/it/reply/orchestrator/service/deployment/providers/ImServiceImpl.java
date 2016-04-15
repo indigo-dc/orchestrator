@@ -210,9 +210,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           return false;
         }
       }
-    } catch (Exception e) {
-      LOG.error(e);
-      updateOnError(deploymentUuid, e);
+    } catch (Exception ex) {
+      LOG.error(ex);
+      updateOnError(deploymentUuid, ex);
       return false;
     }
   }
@@ -517,8 +517,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   /**
    * Check if a resource is deleted.
-   * 
-   * @return <code>true</code> if the resource is deleteted.
    */
   @Override
   public void finalizeUndeploy(String deploymentUuid, boolean undeployed) {
@@ -614,8 +612,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           new ObjectMapper().readValue(response.getResult(), es.upv.i3m.grycap.im.pojo.Error.class);
       LOG.error(error.toString());
       return error.getMessage();
-    } catch (IOException e) {
-      LOG.error(e);
+    } catch (IOException ex) {
+      LOG.error(ex);
     }
     return response.getResult();
   }

@@ -177,8 +177,8 @@ public class ToscaServiceImpl implements ToscaService {
     ParsingResult<ArchiveRoot> result = null;
     try {
       result = getArchiveRootFromTemplate(toscaTemplate);
-    } catch (ParsingException e) {
-      checkParsingErrors(e.getParsingErrors());
+    } catch (ParsingException ex) {
+      checkParsingErrors(ex.getParsingErrors());
     }
     checkParsingErrors(result.getContext().getParsingErrors());
 
@@ -193,8 +193,8 @@ public class ToscaServiceImpl implements ToscaService {
     ParsingResult<ArchiveRoot> result = null;
     try {
       result = getArchiveRootFromTemplate(template);
-    } catch (ParsingException e) {
-      checkParsingErrors(e.getParsingErrors());
+    } catch (ParsingException ex) {
+      checkParsingErrors(ex.getParsingErrors());
     }
     checkParsingErrors(result.getContext().getParsingErrors());
     removeRemovalList(result);

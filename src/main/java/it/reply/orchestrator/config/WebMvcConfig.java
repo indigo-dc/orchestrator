@@ -4,6 +4,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.web.config.EnableSpringDataWebSupport;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.commons.CommonsMultipartResolver;
 import org.springframework.web.servlet.config.annotation.DefaultServletHandlerConfigurer;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
@@ -20,10 +21,10 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
   private static final String RESOURCES_LOCATION = "/resources/";
   private static final String RESOURCES_HANDLER = RESOURCES_LOCATION + "**";
 
-  // @Bean
-  // public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
-  // return new PropertySourcesPlaceholderConfigurer();
-  // }
+  @Bean
+  public static RestTemplate restTemplate() {
+    return new RestTemplate();
+  }
 
   @Override
   public RequestMappingHandlerMapping requestMappingHandlerMapping() {
@@ -55,11 +56,4 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
     commonsMultipartResolver.setMaxUploadSize(1024000);
     return new CommonsMultipartResolver();
   }
-  // @Bean(name="multipartResolver")return multipartConfigFactory.createMultipartConfig();
-  // public CommonsMultipartResolver multipartResolver() {
-  // CommonsMultipartResolver resolver = new CommonsMultipartResolver();
-  // resolver.setDefaultEncoding("utf-8");
-  // return resolver;
-  // }
-
 }

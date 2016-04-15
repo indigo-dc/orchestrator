@@ -76,6 +76,11 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
   }
 
   @Test
+  public void getOrchestrator() throws Exception {
+    mockMvc.perform(get("/").accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
+  }
+
+  @Test
   @DatabaseSetup("/data/database-init.xml")
   public void getDeployments() throws Exception {
 
@@ -140,6 +145,13 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
 
   @Test
   @DatabaseSetup("/data/database-init.xml")
+  public void deleteAlldeploymentsNotAllowed() throws Exception {
+
+    mockMvc.perform(delete("/deployments")).andExpect(status().isMethodNotAllowed());
+  }
+
+  @Test
+  @DatabaseSetup("/data/database-init.xml")
   public void getDeploymentSuccessfully() throws Exception {
 
     mockMvc.perform(get("/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd"))
@@ -159,7 +171,8 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
                 linkWithRel("resources").description("Resources reference hyperlink")),
             responseFields(
                 fieldWithPath("links[].rel").description(
-                    "means relationship. In this case, it's a self-referencing hyperlink. More complex systems might include other relationships."),
+                    "means relationship. In this case, it's a self-referencing hyperlink."
+                        + "More complex systems might include other relationships."),
                 fieldWithPath("links[].href")
                     .description("Is a complete URL that uniquely defines the resource."),
                 fieldWithPath("uuid").ignored(), fieldWithPath("creationTime").ignored(),
@@ -201,13 +214,27 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
     mockMvc.perform(get("/deployments/deploymentId")).andExpect(status().isNotFound())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.code", is(404)))
-        .andDo(document("deployment-not-found", preprocessResponse(prettyPrint()),
-            responseFields(
-                fieldWithPath("code").description("The HTTP status code"), fieldWithPath("title")
-                    .description("The HTTP status name"),
+        .andDo(document("deployment-not-found", preprocessResponse(prettyPrint()), responseFields(
+            fieldWithPath("code").description("The HTTP status code"),
+            fieldWithPath("title").description("The HTTP status name"),
             fieldWithPath("message").description("A displayable message describing the error"))));
     // andExpect(jsonPath("$.title", is("Not Found")))
     // .andExpect(jsonPath("$.message", is("The deployment <not-found> doesn't exist")));
+  }
+
+  @Test
+  public void createDeploymentUnsupportedMediaType() throws Exception {
+    DeploymentRequest request = new DeploymentRequest();
+    Map<String, Object> parameters = new HashMap<>();
+    parameters.put("cpus", 1);
+    request.setParameters(parameters);
+    request.setTemplate(new Utf8File("./src/test/resources/tosca/compute_tosca.yaml").read());
+    request.setCallback("http://localhost:8080/callback");
+    mockMvc
+        .perform(post("/deployments").contentType(MediaType.TEXT_PLAIN)
+            .content(TestUtil.convertObjectToJsonBytes(request)))
+        .andExpect(status().isUnsupportedMediaType());
+
   }
 
   @Test
@@ -242,9 +269,38 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
                 fieldWithPath("outputs").description("The outputs of the TOSCA document"),
                 fieldWithPath("callback").ignored(), fieldWithPath("links[]").ignored())));
 
-    // .andExpect(status().isCreated())
-    // .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-    // .andExpect(jsonPath("$.links[0].rel", is("self")));
+  }
+
+  @Test
+  @Transactional
+  @DatabaseSetup("/data/database-init.xml")
+  public void updateDeploymentNotExists() throws Exception {
+    DeploymentRequest request = new DeploymentRequest();
+    Map<String, Object> parameters = new HashMap<>();
+    parameters.put("cpus", 1);
+    request.setParameters(parameters);
+    request.setTemplate(new Utf8File("./src/test/resources/tosca/galaxy_tosca.yaml").read());
+    request.setCallback("http://localhost:8080/callback");
+    mockMvc
+        .perform(put("/deployments/not-found").contentType(MediaType.APPLICATION_JSON)
+            .content(TestUtil.convertObjectToJsonBytes(request)))
+        .andExpect(jsonPath("$.code", is(404))).andExpect(jsonPath("$.title", is("Not Found")))
+        .andExpect(jsonPath("$.message", is("The deployment <not-found> doesn't exist")));
+  }
+
+  @Test
+  @Transactional
+  @DatabaseSetup("/data/database-init.xml")
+  public void updateDeploymentDeleteInProgress() throws Exception {
+    DeploymentRequest request = new DeploymentRequest();
+    request.setTemplate(new Utf8File("./src/test/resources/tosca/galaxy_tosca.yaml").read());
+    mockMvc
+        .perform(put("/deployments/mmd34483-d937-4578-bfdb-ebe196bf82de")
+            .contentType(MediaType.APPLICATION_JSON)
+            .content(TestUtil.convertObjectToJsonBytes(request)))
+        .andExpect(jsonPath("$.code", is(409))).andExpect(jsonPath("$.title", is("Conflict")))
+        .andExpect(
+            jsonPath("$.message", is("Cannot update a deployment in DELETE_IN_PROGRESS state")));
   }
 
   @Test
@@ -275,18 +331,15 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
 
   @Test
   @Transactional
-  public void createDeploymentWithCallbackSuccessfully() throws Exception {
+  public void createDeploymentWithoutCallbackSuccessfully() throws Exception {
 
     DeploymentRequest request = new DeploymentRequest();
-    String callback = "http://localhost";
-    request.setCallback(callback);
     request.setTemplate(new Utf8File("./src/test/resources/tosca/galaxy_tosca.yaml").read());
     mockMvc
         .perform(post("/deployments").contentType(MediaType.APPLICATION_JSON)
             .content(TestUtil.convertObjectToJsonBytes(request)))
         .andExpect(status().isCreated())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.callback", is(callback)))
         .andExpect(jsonPath("$.links[0].rel", is("self")));
   }
 
@@ -318,6 +371,14 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
         .andExpect(status().isNoContent()).andDo(document("delete-deployment",
             preprocessRequest(prettyPrint()), preprocessResponse(prettyPrint())));
 
+  }
+
+  @Test
+  @DatabaseSetup("/data/database-init.xml")
+  public void deleteDeploymentWithConflict() throws Exception {
+
+    mockMvc.perform(delete("/deployments/mmd34483-d937-4578-bfdb-ebe196bf82de"))
+        .andExpect(status().isConflict());
   }
 
   @Test

@@ -36,12 +36,6 @@ public class DeploymentRequest {
     this.template = template;
   }
 
-  @Nonnull
-  public DeploymentRequest withTemplate(@Nonnull String template) {
-    this.template = template;
-    return this;
-  }
-
   /**
    * The template parameters.
    * 
@@ -59,12 +53,6 @@ public class DeploymentRequest {
    */
   public void setParameters(@Nonnull Map<String, Object> parameters) {
     this.parameters = parameters;
-  }
-
-  @Nonnull
-  public DeploymentRequest withParameters(@Nonnull Map<String, Object> parameters) {
-    this.parameters = parameters;
-    return this;
   }
 
   /**
@@ -85,12 +73,6 @@ public class DeploymentRequest {
    */
   public void setCallback(@Nullable String callback) {
     this.callback = callback;
-  }
-
-  @Nonnull
-  public DeploymentRequest withCallback(@Nullable String callback) {
-    this.callback = callback;
-    return this;
   }
 
   @Override
