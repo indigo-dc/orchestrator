@@ -185,9 +185,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           getClient(getIaaSSiteFromTosca(deployment.getTemplate()));
 
       // TODO improve with template inputs
-      ServiceResponse response =
-          imClient.createInfrastructure(deployment.getTemplate(), RestApiBodyContentType.TOSCA,
-              true);
+      ServiceResponse response = imClient.createInfrastructure(deployment.getTemplate(),
+          RestApiBodyContentType.TOSCA, true);
       if (!response.isReponseSuccessful()) {
         String responseError = getAndLogImErrorResponse(response);
         updateOnError(deploymentUuid, responseError);
@@ -228,7 +227,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       // FIXME this is a trick used only for demo purpose
       InfrastructureManagerApiClient imClient =
           getClient(getIaaSSiteFromTosca(deployment.getTemplate()));
-      ServiceResponse response = imClient.getInfrastructureState(deployment.getEndpoint(), true);
+      ServiceResponse response = imClient.getInfrastructureState(deployment.getEndpoint());
       InfrastructureStatus status =
           new ObjectMapper().readValue(response.getResult(), InfrastructureStatus.class);
 
@@ -237,10 +236,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         return true;
       } else if (status.getState().equals(VmStates.FAILED.toString())
           || status.getState().equals(VmStates.UNCONFIGURED.toString())) {
-        String errorMsg =
-            String.format(
-                "Fail to deploy deployment <%s>." + "\nIM id is: <%s>" + "\nIM response is: <%s>",
-                deployment.getId(), deployment.getEndpoint(), response.getResult());
+        String errorMsg = String.format(
+            "Fail to deploy deployment <%s>." + "\nIM id is: <%s>" + "\nIM response is: <%s>",
+            deployment.getId(), deployment.getEndpoint(), response.getResult());
         try {
           // Try to get the logs of the virtual infrastructure for debug purpose.
           ServiceResponse responseContMsg =
@@ -349,11 +347,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
             // FIXME this is a trick used only for demo purpose
             InfrastructureManagerApiClient imClient =
                 getClient(getIaaSSiteFromTosca(deployment.getTemplate()));
-            ServiceResponse response =
-                imClient.addResource(deployment.getEndpoint(),
-                    toscaService.getTemplateFromTopology(root), RestApiBodyContentType.TOSCA, true,
-                    true);
-
+            ServiceResponse response = imClient.addResource(deployment.getEndpoint(),
+                toscaService.getTemplateFromTopology(root), RestApiBodyContentType.TOSCA, true,
+                true);
 
             if (!response.isReponseSuccessful()) {
               String responseError = getAndLogImErrorResponse(response);
@@ -498,7 +494,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       if (deployment.getEndpoint() == null) {
         return true;
       }
-      ServiceResponse response = imClient.getInfrastructureState(deployment.getEndpoint(), true);
+      ServiceResponse response = imClient.getInfrastructureState(deployment.getEndpoint());
       if (!response.isReponseSuccessful()) {
         if (response.getServiceStatusCode() == 404) {
           return true;
