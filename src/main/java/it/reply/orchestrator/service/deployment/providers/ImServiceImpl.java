@@ -78,7 +78,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   @Value("${onedock.auth.file.path}")
   private String onedockAuthFilePath;
 
-  private static final Pattern UUID_PATTERN = Pattern.compile(".*\\/([^\\/]+)\\/?");
+  private static final Pattern UUID_PATTERN = Pattern.compile(".*\\/([^\"\\/]+)\\/?\"?");
 
   @Autowired
   private ToscaService toscaService;
