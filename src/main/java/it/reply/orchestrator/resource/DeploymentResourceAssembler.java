@@ -46,7 +46,7 @@ public class DeploymentResourceAssembler
 
     resource.setTask(entity.getTask());
 
-    resource.setOutputs((Map) entity.getOutputs());
+    resource.setOutputs(entity.getOutputs());
 
     if (entity.getCallback() != null) {
       resource.setCallback(entity.getCallback());

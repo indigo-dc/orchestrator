@@ -25,6 +25,7 @@ import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.ToscaService;
+import it.reply.utils.json.JsonUtility;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
@@ -278,7 +279,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         Map<String, String> outputs = new HashMap<String, String>();
         for (Entry<String, Object> entry : statusResponse.getProperties().entrySet()) {
           if (entry.getValue() != null) {
-            outputs.put(entry.getKey(), entry.getValue().toString());
+            outputs.put(entry.getKey(), JsonUtility.serializeJson(entry.getValue()));
           } else {
             outputs.put(entry.getKey(), "");
           }
