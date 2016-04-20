@@ -1,11 +1,14 @@
 <dataset>
-	<Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82dd"
-		created="2015-12-11 17:14:09" status="CREATE_COMPLETE" updated="2015-12-11 11:11:12"
-		version="0" callback="http://test.test" deploymentProvider="IM"
-		endpoint="todo" task="NONE" template="" />
+  <Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82dd" created="2015-12-11 17:14:09"
+    status="CREATE_COMPLETE" updated="2015-12-11 11:11:12" version="0" callback="http://test-server.com"
+    deploymentProvider="IM" endpoint="todo" task="NONE" template="" />
+
+  <Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82de" created="2015-12-11 17:14:09"
+    status="DELETE_IN_PROGRESS" updated="2015-12-11 11:11:12" version="0" deploymentProvider="IM"
+    endpoint="" task="NONE" template="" />
 
 
-	<Deployment_outputs Deployment_uuid="mmd34483-d937-4578-bfdb-ebe196bf82dd"
-		value="10.0.0.1" name="server_ip" />
+  <Deployment_outputs Deployment_uuid="mmd34483-d937-4578-bfdb-ebe196bf82dd"
+    value="10.0.0.1" name="server_ip" />
 
 </dataset>

@@ -30,7 +30,7 @@ public class DeploymentRequestValidator implements Validator {
       } else {
         try {
           URI.create(callbackUrl).toURL();
-        } catch (Exception e) {
+        } catch (Exception ex) {
           errors.rejectValue("callback", "callback.malformed", "Callback URL is malformed");
         }
       }

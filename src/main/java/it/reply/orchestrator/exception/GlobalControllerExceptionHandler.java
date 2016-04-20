@@ -46,7 +46,7 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
   }
 
   /**
-   * Bad request exception handler.
+   * Conflict exception handler.
    * 
    * @param ex
    *          the exception
@@ -169,8 +169,9 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
    */
   private ResponseEntity<Object> handleResponse(Exception ex, HttpHeaders headers,
       HttpStatus status) {
-    Error error = new Error().withCode(status.value()).withTitle(status.getReasonPhrase())
-        .withMessage(ex.getMessage());
+    Error error =
+        new Error().withCode(status.value()).withTitle(status.getReasonPhrase())
+            .withMessage(ex.getMessage());
 
     return new ResponseEntity<Object>(error, headers, status);
 

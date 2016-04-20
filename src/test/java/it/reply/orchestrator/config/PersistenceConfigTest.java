@@ -1,10 +1,10 @@
 package it.reply.orchestrator.config;
 
-import java.util.Properties;
+import bitronix.tm.BitronixTransactionManager;
+import bitronix.tm.TransactionManagerServices;
 
-import javax.annotation.Resource;
-import javax.naming.NamingException;
-import javax.sql.DataSource;
+import com.github.springtestdbunit.annotation.DatabaseSetup;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -20,10 +20,11 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.jta.JtaTransactionManager;
 
-import com.github.springtestdbunit.annotation.DatabaseSetup;
+import java.util.Properties;
 
-import bitronix.tm.BitronixTransactionManager;
-import bitronix.tm.TransactionManagerServices;
+import javax.annotation.Resource;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
 
 @Configuration
 @PropertySource(value = { "classpath:application-test.properties" })
@@ -33,7 +34,8 @@ public class PersistenceConfigTest {
   private static final String ENTITY_MANAGER_PACKAGE_TO_SCAN = "entitymanager.packages.to.scan";
   private static final String HIBERNATE_HBM2DDL_AUTO = "hibernate.hbm2ddl.auto";
   private static final String HIBERNATE_DIALECT = "hibernate.dialect";
-  private static final String HIBERNATE_TRANSACTION_JTA_PLATFORM = "hibernate.transaction.jta.platform";
+  private static final String HIBERNATE_TRANSACTION_JTA_PLATFORM =
+      "hibernate.transaction.jta.platform";
 
   @Resource
   private Environment env;

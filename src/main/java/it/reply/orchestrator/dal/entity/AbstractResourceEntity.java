@@ -46,6 +46,7 @@ public abstract class AbstractResourceEntity implements Identifiable<String>, Se
     this.id = null;
   }
 
+  @Override
   public String getId() {
     return id;
   }

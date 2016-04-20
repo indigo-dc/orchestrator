@@ -46,7 +46,7 @@ public class DeploymentResourceAssembler
 
     resource.setTask(entity.getTask());
 
-    resource.setOutputs((Map) entity.getOutputs());
+    resource.setOutputs(entity.getOutputs());
 
     if (entity.getCallback() != null) {
       resource.setCallback(entity.getCallback());
@@ -72,7 +72,7 @@ public class DeploymentResourceAssembler
             ctrlUri = uri;
             lock.unlockRead(readStamp);
           }
-        } catch (InterruptedException e) {
+        } catch (InterruptedException ex) {
           // DO NOTHING
         }
       }

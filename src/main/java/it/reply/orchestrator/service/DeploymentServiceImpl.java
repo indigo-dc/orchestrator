@@ -89,8 +89,8 @@ public class DeploymentServiceImpl implements DeploymentService {
               .getNodeTemplates();
       createResources(deployment, nodes);
 
-    } catch (IOException | ParsingException e) {
-      throw new OrchestratorException(e);
+    } catch (IOException | ParsingException ex) {
+      throw new OrchestratorException(ex);
     }
 
     Map<String, Object> params = new HashMap<>();
@@ -100,8 +100,8 @@ public class DeploymentServiceImpl implements DeploymentService {
       pi =
           wfService.startProcess(WorkflowConfigProducerBean.DEPLOY.getProcessId(), params,
               RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
-    } catch (WorkflowException e) {
-      throw new OrchestratorException(e);
+    } catch (WorkflowException ex) {
+      throw new OrchestratorException(ex);
     }
     deployment.addWorkflowReferences(
         new WorkflowReference(pi.getId(), RUNTIME_STRATEGY.PER_PROCESS_INSTANCE));
@@ -137,8 +137,8 @@ public class DeploymentServiceImpl implements DeploymentService {
           pi =
               wfService.startProcess(WorkflowConfigProducerBean.UNDEPLOY.getProcessId(), params,
                   RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
-        } catch (WorkflowException e) {
-          throw new OrchestratorException(e);
+        } catch (WorkflowException ex) {
+          throw new OrchestratorException(ex);
         }
         deployment.addWorkflowReferences(
             new WorkflowReference(pi.getId(), RUNTIME_STRATEGY.PER_PROCESS_INSTANCE));
@@ -162,8 +162,8 @@ public class DeploymentServiceImpl implements DeploymentService {
           ParsingResult<ArchiveRoot> parsingResult =
               toscaService.getArchiveRootFromTemplate(request.getTemplate());
 
-        } catch (ParsingException | IOException e) {
-          throw new OrchestratorException(e);
+        } catch (ParsingException | IOException ex) {
+          throw new OrchestratorException(ex);
         }
         deployment.setStatus(Status.UPDATE_IN_PROGRESS);
         deployment.setTask(Task.NONE);
@@ -180,14 +180,14 @@ public class DeploymentServiceImpl implements DeploymentService {
           pi =
               wfService.startProcess(WorkflowConfigProducerBean.UPDATE.getProcessId(), params,
                   RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
-        } catch (WorkflowException e) {
-          throw new OrchestratorException(e);
+        } catch (WorkflowException ex) {
+          throw new OrchestratorException(ex);
         }
         deployment.addWorkflowReferences(
             new WorkflowReference(pi.getId(), RUNTIME_STRATEGY.PER_PROCESS_INSTANCE));
         deployment = deploymentRepository.save(deployment);
       } else {
-        throw new ConflictException(String.format("Cannot update a deployment in %s state.",
+        throw new ConflictException(String.format("Cannot update a deployment in %s state",
             deployment.getStatus().toString()));
 
       }
