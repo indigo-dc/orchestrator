@@ -1,8 +1,7 @@
 package it.reply.orchestrator.config;
 
-import javax.annotation.Resource;
-import javax.naming.NamingException;
-import javax.sql.DataSource;
+import it.reply.workflowmanager.spring.orchestrator.annotations.WorkflowPersistenceUnit;
+import it.reply.workflowmanager.utils.Constants;
 
 import org.h2.tools.Server;
 import org.springframework.context.annotation.Bean;
@@ -16,8 +15,9 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import java.sql.SQLException;
 
-import it.reply.workflowmanager.spring.orchestrator.annotations.WorkflowPersistenceUnit;
-import it.reply.workflowmanager.utils.Constants;
+import javax.annotation.Resource;
+import javax.naming.NamingException;
+import javax.sql.DataSource;
 
 @Configuration
 @EnableTransactionManagement(proxyTargetClass = true)
@@ -29,8 +29,8 @@ public class WorklfowPersistenceConfigTest {
   @Bean(destroyMethod = "shutdown")
   public DataSource workflowDataSource() {
     EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
-    EmbeddedDatabase dataSource = builder.setType(EmbeddedDatabaseType.H2)
-        .addScripts("h2-jbpm-schema.sql").build();
+    EmbeddedDatabase dataSource =
+        builder.setType(EmbeddedDatabaseType.H2).addScripts("h2-jbpm-schema.sql").build();
     return dataSource;
   }
 

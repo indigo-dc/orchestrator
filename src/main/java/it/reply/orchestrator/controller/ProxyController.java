@@ -46,9 +46,9 @@ public class ProxyController {
         BufferedOutputStream stream = new BufferedOutputStream(new FileOutputStream(proxyFile));
         FileCopyUtils.copy(file.getInputStream(), stream);
         stream.close();
-      } catch (Exception e) {
-        LOG.error(e);
-        throw new OrchestratorApiException("Error durung the upload", e);
+      } catch (Exception ex) {
+        LOG.error(ex);
+        throw new OrchestratorApiException("Error durung the upload", ex);
 
       }
     } else {

@@ -26,8 +26,8 @@ public class WorkflowConfigProducerBean implements ConfigProducer {
       UNDEPLOY = new WorkflowResource(BASE_PATH + "/" + "Undeploy.bpmn2");
       UPDATE = new WorkflowResource(BASE_PATH + "/" + "Update.bpmn2");
 
-    } catch (IOException e) {
-      throw new ExceptionInInitializerError(e);
+    } catch (IOException ex) {
+      throw new ExceptionInInitializerError(ex);
     }
   }
 

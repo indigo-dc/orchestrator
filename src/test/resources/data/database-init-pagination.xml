@@ -1,50 +1,39 @@
 <dataset>
-	<Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82dd"
-		created="2015-12-11 17:14:09" status="CREATE_COMPLETE" updated="2015-12-11 11:11:12"
-		version="0" callback="http://test.test" deploymentProvider="IM"
-		endpoint="todo" task="NONE" template="" />
-	<Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82de"
-		created="2015-12-11 17:14:09" status="CREATE_COMPLETE" updated="2015-12-11 11:11:12"
-		version="0" callback="http://test.test" deploymentProvider="IM"
-		endpoint="todo" task="NONE" template="" />
-	<Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82df"
-		created="2015-12-11 17:14:09" status="CREATE_COMPLETE" updated="2015-12-11 11:11:12"
-		version="0" callback="http://test.test" deploymentProvider="IM"
-		endpoint="todo" task="NONE" template="" />
-	<Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82dg"
-		created="2015-12-11 17:14:09" status="CREATE_COMPLETE" updated="2015-12-11 11:11:12"
-		version="0" callback="http://test.test" deploymentProvider="IM"
-		endpoint="todo" task="NONE" template="" />
-	<Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82dh"
-		created="2015-12-11 17:14:09" status="CREATE_COMPLETE" updated="2015-12-11 11:11:12"
-		version="0" callback="http://test.test" deploymentProvider="IM"
-		endpoint="todo" task="NONE" template="" />
-	<Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82di"
-		created="2015-12-11 17:14:09" status="CREATE_COMPLETE" updated="2015-12-11 11:11:12"
-		version="0" callback="http://test.test" deploymentProvider="IM"
-		endpoint="todo" task="NONE" template="" />
-	<Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82dl"
-		created="2015-12-11 17:14:09" status="CREATE_COMPLETE" updated="2015-12-11 11:11:12"
-		version="0" callback="http://test.test" deploymentProvider="IM"
-		endpoint="todo" task="NONE" template="" />
-	<Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82dm"
-		created="2015-12-11 17:14:09" status="CREATE_COMPLETE" updated="2015-12-11 11:11:12"
-		version="0" callback="http://test.test" deploymentProvider="IM"
-		endpoint="todo" task="NONE" template="" />
-	<Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82dn"
-		created="2015-12-11 17:14:09" status="CREATE_COMPLETE" updated="2015-12-11 11:11:12"
-		version="0" callback="http://test.test" deploymentProvider="IM"
-		endpoint="todo" task="NONE" template="" />
-	<Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82do"
-		created="2015-12-11 17:14:09" status="CREATE_COMPLETE" updated="2015-12-11 11:11:12"
-		version="0" callback="http://test.test" deploymentProvider="IM"
-		endpoint="todo" task="NONE" template="" />
-	<Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82dp"
-		created="2015-12-11 17:14:09" status="CREATE_COMPLETE" updated="2015-12-11 11:11:12"
-		version="0" callback="http://test.test" deploymentProvider="IM"
-		endpoint="todo" task="NONE" template="" />
+  <Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82dd" created="2015-12-11 17:14:09"
+    status="CREATE_COMPLETE" updated="2015-12-11 11:11:12" version="0" callback="http://test.test"
+    deploymentProvider="IM" endpoint="todo" task="NONE" template="" />
+  <Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82de" created="2015-12-11 17:14:09"
+    status="CREATE_COMPLETE" updated="2015-12-11 11:11:12" version="0" callback="http://test.test"
+    deploymentProvider="IM" endpoint="todo" task="NONE" template="" />
+  <Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82df" created="2015-12-11 17:14:09"
+    status="CREATE_COMPLETE" updated="2015-12-11 11:11:12" version="0" callback="http://test.test"
+    deploymentProvider="IM" endpoint="todo" task="NONE" template="" />
+  <Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82dg" created="2015-12-11 17:14:09"
+    status="CREATE_COMPLETE" updated="2015-12-11 11:11:12" version="0" callback="http://test.test"
+    deploymentProvider="IM" endpoint="todo" task="NONE" template="" />
+  <Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82dh" created="2015-12-11 17:14:09"
+    status="CREATE_COMPLETE" updated="2015-12-11 11:11:12" version="0" callback="http://test.test"
+    deploymentProvider="IM" endpoint="todo" task="NONE" template="" />
+  <Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82di" created="2015-12-11 17:14:09"
+    status="CREATE_COMPLETE" updated="2015-12-11 11:11:12" version="0" callback="http://test.test"
+    deploymentProvider="IM" endpoint="todo" task="NONE" template="" />
+  <Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82dl" created="2015-12-11 17:14:09"
+    status="CREATE_COMPLETE" updated="2015-12-11 11:11:12" version="0" callback="http://test.test"
+    deploymentProvider="IM" endpoint="todo" task="NONE" template="" />
+  <Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82dm" created="2015-12-11 17:14:09"
+    status="CREATE_COMPLETE" updated="2015-12-11 11:11:12" version="0" callback="http://test.test"
+    deploymentProvider="IM" endpoint="todo" task="NONE" template="" />
+  <Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82dn" created="2015-12-11 17:14:09"
+    status="CREATE_COMPLETE" updated="2015-12-11 11:11:12" version="0" callback="http://test.test"
+    deploymentProvider="IM" endpoint="todo" task="NONE" template="" />
+  <Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82do" created="2015-12-11 17:14:09"
+    status="CREATE_COMPLETE" updated="2015-12-11 11:11:12" version="0" callback="http://test.test"
+    deploymentProvider="IM" endpoint="todo" task="NONE" template="" />
+  <Deployment uuid="mmd34483-d937-4578-bfdb-ebe196bf82dp" created="2015-12-11 17:14:09"
+    status="CREATE_COMPLETE" updated="2015-12-11 11:11:12" version="0" callback="http://test.test"
+    deploymentProvider="IM" endpoint="todo" task="NONE" template="" />
 
-	<Deployment_outputs Deployment_uuid="mmd34483-d937-4578-bfdb-ebe196bf82dd"
-		value="10.0.0.1" name="server_ip" />
+  <Deployment_outputs Deployment_uuid="mmd34483-d937-4578-bfdb-ebe196bf82dd"
+    value="&quot;10.0.0.1&quot;" name="server_ip" />
 
 </dataset>

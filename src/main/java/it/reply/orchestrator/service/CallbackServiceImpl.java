@@ -17,7 +17,10 @@ public class CallbackServiceImpl implements CallbackService {
   private DeploymentRepository deploymentRepository;
 
   @Autowired
-  DeploymentResourceAssembler deploymentResourceAssembler;
+  private DeploymentResourceAssembler deploymentResourceAssembler;
+
+  @Autowired
+  private RestTemplate restTemplate;
 
   @Override
   public boolean doCallback(String deploymentId) {
@@ -28,7 +31,6 @@ public class CallbackServiceImpl implements CallbackService {
   @Override
   public boolean doCallback(Deployment deployment) {
     if (deployment.getCallback() != null) {
-      RestTemplate restTemplate = new RestTemplate();
       DeploymentResource deploymentResource = deploymentResourceAssembler.toResource(deployment);
       ResponseEntity<?> response = restTemplate.postForEntity(deployment.getCallback(),
           deploymentResource, Object.class);
