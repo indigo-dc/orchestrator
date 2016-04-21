@@ -54,10 +54,8 @@ public class ResourceControllerTest extends WebAppConfigurationAware {
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
-    mockMvc =
-        MockMvcBuilders.webAppContextSetup(wac)
-            .apply(documentationConfiguration(this.restDocumentation)).dispatchOptions(true)
-            .build();
+    mockMvc = MockMvcBuilders.webAppContextSetup(wac)
+        .apply(documentationConfiguration(this.restDocumentation)).dispatchOptions(true).build();
   }
 
   @Test
@@ -79,15 +77,13 @@ public class ResourceControllerTest extends WebAppConfigurationAware {
                 fieldWithPath("content[].uuid").description("The unique identifier of a resource"),
                 fieldWithPath("content[].creationTime").description(
                     "Creation date-time (http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14)"),
-            fieldWithPath("content[].status").description(
-                "The status of the deployment. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html)"),
-            fieldWithPath("content[].statusReason").optional()
-                .description("The description of the state"),
-            fieldWithPath("content[].toscaNodeType").optional()
-                .description("The type of the represented TOSCA node"),
-            fieldWithPath("content[].requiredBy")
-                .description("A list of nodes that require this resource"),
-            fieldWithPath("content[].links[]").ignored(), fieldWithPath("page").ignored())));
+                fieldWithPath("content[].state").description(
+                    "The status of the resource. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/NodeStates.html)"),
+                fieldWithPath("content[].toscaNodeType").optional()
+                    .description("The type of the represented TOSCA node"),
+                fieldWithPath("content[].requiredBy")
+                    .description("A list of nodes that require this resource"),
+                fieldWithPath("content[].links[]").ignored(), fieldWithPath("page").ignored())));
 
   }
 
@@ -110,13 +106,12 @@ public class ResourceControllerTest extends WebAppConfigurationAware {
         .andExpect(jsonPath("$.links[1].rel", equalTo("self")))
         .andExpect(jsonPath("$.links[1].href",
             endsWith("/deployments/" + deploymentId + "/resources/" + resourceId)))
-        .andDo(document("get-resource", preprocessResponse(prettyPrint()),
-            responseFields(fieldWithPath("uuid").description("The unique identifier of a resource"),
-                fieldWithPath("creationTime").description(
-                    "Creation date-time (http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14)"),
-            fieldWithPath("status").description(
-                "The status of the deployment. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html)"),
-            fieldWithPath("statusReason").optional().description("The description of the state"),
+        .andDo(document("get-resource", preprocessResponse(prettyPrint()), responseFields(
+            fieldWithPath("uuid").description("The unique identifier of a resource"),
+            fieldWithPath("creationTime").description(
+                "Creation date-time (http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14)"),
+            fieldWithPath("state").description(
+                "The status of the resource. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/NodeStates.html)"),
             fieldWithPath("toscaNodeType").optional()
                 .description("The type of the represented TOSCA node"),
             fieldWithPath("requiredBy").description("A list of nodes that require this resource"),

@@ -18,8 +18,8 @@ public class Update extends BaseCommand {
   protected ExecutionResults customExecute(CommandContext ctx) throws Exception {
     String deploymentId = (String) getWorkItem(ctx).getParameter("DEPLOYMENT_ID");
     String template = (String) getWorkItem(ctx).getParameter("TOSCA_TEMPLATE");
-    imService.doUpdate(deploymentId, template);
-    return new ExecutionResults();
+    boolean result = imService.doUpdate(deploymentId, template);
+    return resultOccurred(result);
   }
 
 }

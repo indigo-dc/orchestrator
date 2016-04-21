@@ -2,7 +2,10 @@ package it.reply.orchestrator.service.deployment.providers;
 
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
+import it.reply.orchestrator.dal.entity.WorkflowReference;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
+import it.reply.orchestrator.dal.repository.ResourceRepository;
+import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
 
@@ -10,6 +13,9 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.function.Function;
 
 public abstract class AbstractDeploymentProviderService implements DeploymentProviderService {
@@ -137,8 +143,44 @@ public abstract class AbstractDeploymentProviderService implements DeploymentPro
   }
 
   private void updateResources(Deployment deployment, Status status) {
-    for (Resource r : deployment.getResources()) {
-      r.setStatus(status);
+
+    for (Resource resource : deployment.getResources()) {
+      if (status.equals(Status.CREATE_COMPLETE) || status.equals(Status.UPDATE_COMPLETE)) {
+        switch (resource.getState()) {
+          case INITIAL:
+          case CREATING:
+          case CREATED:
+          case CONFIGURING:
+          case CONFIGURED:
+          case STARTING:
+            resource.setState(NodeStates.STARTED);
+            break;
+          case STARTED:
+            break;
+          case DELETING:
+            // Resource should be deleted into bindresource function
+            resource.setState(NodeStates.ERROR);
+            break;
+          default:
+            resource.setState(NodeStates.ERROR);
+            break;
+        }
+      } else {
+        switch (resource.getState()) {
+          case INITIAL:
+          case CREATING:
+          case CREATED:
+          case CONFIGURING:
+          case CONFIGURED:
+          case STARTING:
+          case STOPPING:
+          case DELETING:
+            resource.setState(NodeStates.ERROR);
+            break;
+          default:
+            break;
+        }
+      }
     }
   }
 }

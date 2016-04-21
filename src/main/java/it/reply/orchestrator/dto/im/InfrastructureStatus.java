@@ -2,6 +2,8 @@ package it.reply.orchestrator.dto.im;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import org.apache.commons.lang3.builder.ToStringBuilder;
+
 import java.util.Map;
 
 public class InfrastructureStatus {
@@ -31,4 +33,8 @@ public class InfrastructureStatus {
     this.state = state;
   }
 
+  @Override
+  public String toString() {
+    return ToStringBuilder.reflectionToString(this);
+  }
 }

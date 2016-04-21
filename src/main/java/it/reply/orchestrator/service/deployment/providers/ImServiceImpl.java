@@ -5,6 +5,7 @@ import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingException;
 import alien4cloud.tosca.parser.ParsingResult;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import es.upv.i3m.grycap.im.api.InfrastructureManagerApiClient;
@@ -20,6 +21,7 @@ import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.im.InfrastructureStatus;
 import it.reply.orchestrator.enums.DeploymentProvider;
+import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.OrchestratorException;
@@ -43,6 +45,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -80,6 +83,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   private String onedockAuthFilePath;
 
   private static final Pattern UUID_PATTERN = Pattern.compile(".*\\/([^\"\\/]+)\\/?\"?");
+  private static final Pattern VMID_PATTERN = Pattern.compile(".*\\/([0-9]+)\\/?\"?$");
 
   @Autowired
   private ToscaService toscaService;
@@ -229,9 +233,12 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       InfrastructureManagerApiClient imClient =
           getClient(getIaaSSiteFromTosca(deployment.getTemplate()));
       ServiceResponse response = imClient.getInfrastructureState(deployment.getEndpoint());
+      if (response.getServiceStatusCode() != 200) {
+        throw new DeploymentException(response.getResult());
+      }
       InfrastructureStatus status =
           new ObjectMapper().readValue(response.getResult(), InfrastructureStatus.class);
-
+      LOG.debug(status.toString());
       // FIXME Are the infrastructure states equals to the VmStates?
       if (status.getState().equals(VmStates.CONFIGURED.toString())) {
         return true;
@@ -300,17 +307,16 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   }
 
   @Override
-  public void doUpdate(String deploymentId, String template) {
+  public boolean doUpdate(String deploymentId, String template) {
     Deployment deployment = deploymentRepository.findOne(deploymentId);
-    doUpdate(deployment, template);
+    return doUpdate(deployment, template);
   }
 
   @Override
-  public void doUpdate(Deployment deployment, String template) {
+  public boolean doUpdate(Deployment deployment, String template) {
 
     // Check if count is increased or if there is a removal list, other kinds of update are
     // discarded
-
     ParsingResult<ArchiveRoot> oldParsingResult;
     ParsingResult<ArchiveRoot> newParsingResult;
     try {
@@ -326,6 +332,13 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     Map<String, NodeTemplate> newNodes = toscaService.getCountNodes(newParsingResult.getResult());
 
     try {
+      // Create the new template with the nodes to be added
+      ArchiveRoot root = newParsingResult.getResult();
+      Map<String, NodeTemplate> nodes = new HashMap<>();
+
+      // List of vmIds to be removed
+      List<String> vmIds = new ArrayList<String>();
+
       for (Map.Entry<String, NodeTemplate> entry : oldNodes.entrySet()) {
         if (newNodes.containsKey(entry.getKey())) {
           int oldCount = toscaService.getCount(entry.getValue());
@@ -335,34 +348,14 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
             for (int i = 0; i < (newCount - oldCount); i++) {
               resource = new Resource();
               resource.setDeployment(deployment);
-              resource.setStatus(Status.CREATE_IN_PROGRESS);
+              resource.setState(NodeStates.CREATING);
               resource.setToscaNodeName(entry.getKey());
               resource.setToscaNodeType(entry.getValue().getType());
               resourceRepository.save(resource);
             }
-
-            ArchiveRoot root = newParsingResult.getResult();
-            Map<String, NodeTemplate> nodes = new HashMap<>();
             nodes.put(entry.getKey(), newNodes.get(entry.getKey()));
-            root.getTopology().setNodeTemplates(nodes);
             // FIXME this is a trick used only for demo purpose
-            InfrastructureManagerApiClient imClient =
-                getClient(getIaaSSiteFromTosca(deployment.getTemplate()));
-            ServiceResponse response = imClient.addResource(deployment.getEndpoint(),
-                toscaService.getTemplateFromTopology(root), RestApiBodyContentType.TOSCA, true,
-                true);
 
-            if (!response.isReponseSuccessful()) {
-              String responseError = getAndLogImErrorResponse(response);
-              // updateOnError(deploymentId, response.getReasonPhrase() + ": " + responseError);
-              throw new DeploymentException(response.getReasonPhrase() + ": " + responseError);
-            } else {
-
-              boolean result = doPoller(this::isDeployed, deployment);
-              if (!result) {
-                throw new DeploymentException("An error occur during the update: polling failed");
-              }
-            }
           } else if (newCount < oldCount) {
             // delete a WN.
             List<String> removalList = toscaService.getRemovalList(newNodes.get(entry.getKey()));
@@ -375,40 +368,54 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
             // Find the nodes to be removed.
             for (String resourceId : removalList) {
               Resource resource = resourceRepository.findOne(resourceId);
-              resource.setStatus(Status.DELETE_IN_PROGRESS);
+              resource.setState(NodeStates.DELETING);
               resource = resourceRepository.save(resource);
-              // FIXME this is a trick used only for demo purpose
-              InfrastructureManagerApiClient imClient =
-                  getClient(getIaaSSiteFromTosca(deployment.getTemplate()));
-              ServiceResponse response =
-                  imClient.removeResource(deployment.getEndpoint(), resource.getIaasId(), true);
-              if (!response.isReponseSuccessful()) {
-                if (response.getServiceStatusCode() != 404) {
-                  LOG.error(response.getResult());
-                  throw new DeploymentException("An error occur during the update: fail to delete: "
-                      + resource.getToscaNodeName() + " with id: " + resourceId);
-                }
-              } else {
-                boolean result = doPoller(this::isResourceDeleted, resource);
-                if (result) {
-                  List<Resource> resurces = deployment.getResources();
-                  resurces.remove(resource);
-                  resourceRepository.delete(resourceId);
-                } else {
-                  throw new DeploymentException(
-                      "An error occur during the update: polling failed " + resource.getId());
-                }
-
-              }
+              vmIds.add(resource.getIaasId());
             }
           }
         }
       }
-      bindResources(deployment, deployment.getEndpoint());
+      // Pulisco gli output e aggiungo i nodi da creare
+      root.getTopology().setOutputs(null);
+      root.getTopology().setNodeTemplates(nodes);
+
+      // CREATE
+      if (!root.getTopology().isEmpty()) {
+        InfrastructureManagerApiClient imClient =
+            getClient(getIaaSSiteFromTosca(deployment.getTemplate()));
+        ServiceResponse response = imClient.addResource(deployment.getEndpoint(),
+            toscaService.getTemplateFromTopology(root), RestApiBodyContentType.TOSCA, true, true);
+
+        if (!response.isReponseSuccessful()) {
+          String responseError = getAndLogImErrorResponse(response);
+          throw new DeploymentException(response.getReasonPhrase() + ": " + responseError);
+        }
+      }
+      // DELETE
+
+      // FIXME this is a trick used only for demo purpose
+      if (vmIds.size() > 0) {
+        InfrastructureManagerApiClient imClient =
+            getClient(getIaaSSiteFromTosca(deployment.getTemplate()));
+        ServiceResponse response = imClient.removeResource(deployment.getEndpoint(), vmIds, true);
+        if (!response.isReponseSuccessful()) {
+          if (response.getServiceStatusCode() != 404) {
+            LOG.error(response.getResult());
+            throw new DeploymentException(
+                "An error occur during the update: fail to delete: " + response.getResult());
+          }
+        }
+      }
+
+      // Da mettere dopo il polling
+      // Posso chiamare isDeployed per test e poi generalizzare il metodo
+      // bindResources(deployment, deployment.getEndpoint());
       deployment.setTemplate(toscaService.updateTemplate(template));
-      updateOnSuccess(deployment.getId());
+      // updateOnSuccess(deployment.getId());
+      return true;
     } catch (ImClientException | IOException | DeploymentException ex) {
       updateOnError(deployment.getId(), ex);
+      return false;
     }
 
   }
@@ -562,45 +569,61 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
     // Get the URLs of the VMs composing the virtual infrastructure
     // TODO test in case of errors
-    String[] vmUrls =
-        imClient.getInfrastructureInfo(infrastructureId, true).getResult().split("\\r?\\n");
-
-    // for each URL get the information about the VM
-    Map<String, String> vmMap = new HashMap<String, String>();
-    for (String vm : vmUrls) {
-      String vmId = null;
-      int index = vm.lastIndexOf("/");
-      if (index != -1) {
-        vmId = vm.substring(index + 1);
-      }
-      String vmInfo = imClient.getVmInfo(infrastructureId, vmId, true).getResult();
-      vmMap.put(vmId, vmInfo);
+    ServiceResponse response = imClient.getInfrastructureInfo(infrastructureId, true);
+    if (!response.isReponseSuccessful()) {
+      String error = getAndLogImErrorResponse(response);
+      throw new DeploymentException(error);
     }
 
-    // Find the Resource from the DB and bind it with the corresponding VM
-    Page<Resource> resources = resourceRepository.findByDeployment_id(deployment.getId(), null);
+    try {
+      List<String> vmUrls =
+          JsonUtility.deserializeJson(response.getResult(), new TypeReference<List<String>>() {
+          });
 
-    // Remove from vmMap all the resources already binded
-    for (Resource r : resources) {
-      if (r.getIaasId() != null) {
-        vmMap.remove(r.getIaasId());
-      }
-    }
+      // for each URL get the information about the VM
+      Map<String, String> vmMap = new HashMap<String, String>();
+      for (String vm : vmUrls) {
 
-    Set<String> insered = new HashSet<String>();
-    for (Resource r : resources) {
-      if (r.getStatus() == Status.CREATE_IN_PROGRESS
-          || r.getStatus() == Status.UPDATE_IN_PROGRESS) {
-        for (Map.Entry<String, String> entry : vmMap.entrySet()) {
-          if (entry.getValue().contains(r.getToscaNodeName())
-              && !insered.contains(entry.getKey())) {
-            r.setIaasId(entry.getKey());
-            insered.add(entry.getKey());
-            break;
-          }
+        Matcher matcher = VMID_PATTERN.matcher(vm);
+        if (matcher.matches()) {
+          String vmId = matcher.group(1);
+          String vmInfo = imClient.getVmInfo(infrastructureId, vmId, true).getResult();
+          vmMap.put(vmId, vmInfo);
+        } else {
+          throw new DeploymentException("Error reading IM virtual machine id");
         }
       }
+
+      // Find the Resource from the DB and bind it with the corresponding VM
+      Page<Resource> resources = resourceRepository.findByDeployment_id(deployment.getId(), null);
+
+      // Remove from vmMap all the resources already binded
+      for (Resource r : resources) {
+        if (r.getIaasId() != null) {
+          vmMap.remove(r.getIaasId());
+        }
+      }
+
+      Set<String> insered = new HashSet<String>();
+      for (Resource r : resources) {
+        if (r.getState() == NodeStates.CREATING || r.getState() == NodeStates.CONFIGURING
+            || r.getState() == NodeStates.ERROR) {
+          for (Map.Entry<String, String> entry : vmMap.entrySet()) {
+            if (entry.getValue().contains(r.getToscaNodeName())
+                && !insered.contains(entry.getKey())) {
+              r.setIaasId(entry.getKey());
+              insered.add(entry.getKey());
+              break;
+            }
+          }
+        } else if (r.getState() == NodeStates.DELETING) {
+          deployment.getResources().remove(r);
+        }
+      }
+    } catch (IOException ex) {
+      throw new DeploymentException("Cannot deserialize IM response", ex);
     }
+
   }
 
   private String getAndLogImErrorResponse(ServiceResponse response) {
@@ -614,4 +637,5 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     }
     return response.getResult();
   }
+
 }
