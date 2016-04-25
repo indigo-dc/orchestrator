@@ -23,7 +23,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
 
+import es.upv.i3m.grycap.file.NoNullOrEmptyFile;
 import es.upv.i3m.grycap.file.Utf8File;
+import es.upv.i3m.grycap.im.exceptions.FileException;
 
 import it.reply.orchestrator.config.WebAppConfigurationAware;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
@@ -43,6 +45,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
+import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -228,7 +231,7 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("cpus", 1);
     request.setParameters(parameters);
-    request.setTemplate(new Utf8File("./src/test/resources/tosca/compute_tosca.yaml").read());
+    request.setTemplate(getFileContentAsString("./src/test/resources/tosca/compute_tosca.yaml"));
     request.setCallback("http://localhost:8080/callback");
     mockMvc
         .perform(post("/deployments").contentType(MediaType.TEXT_PLAIN)
@@ -245,7 +248,7 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("cpus", 1);
     request.setParameters(parameters);
-    request.setTemplate(new Utf8File("./src/test/resources/tosca/compute_tosca.yaml").read());
+    request.setTemplate(getFileContentAsString("./src/test/resources/tosca/compute_tosca.yaml"));
     request.setCallback("http://localhost:8080/callback");
     mockMvc.perform(post("/deployments").contentType(MediaType.APPLICATION_JSON)
         .content(TestUtil.convertObjectToJsonBytes(request)))
@@ -279,7 +282,7 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("cpus", 1);
     request.setParameters(parameters);
-    request.setTemplate(new Utf8File("./src/test/resources/tosca/galaxy_tosca.yaml").read());
+    request.setTemplate(getFileContentAsString("./src/test/resources/tosca/galaxy_tosca.yaml"));
     request.setCallback("http://localhost:8080/callback");
     mockMvc
         .perform(put("/deployments/not-found").contentType(MediaType.APPLICATION_JSON)
@@ -293,7 +296,7 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
   @DatabaseSetup("/data/database-init.xml")
   public void updateDeploymentDeleteInProgress() throws Exception {
     DeploymentRequest request = new DeploymentRequest();
-    request.setTemplate(new Utf8File("./src/test/resources/tosca/galaxy_tosca.yaml").read());
+    request.setTemplate(getFileContentAsString("./src/test/resources/tosca/galaxy_tosca.yaml"));
     mockMvc
         .perform(put("/deployments/mmd34483-d937-4578-bfdb-ebe196bf82de")
             .contentType(MediaType.APPLICATION_JSON)
@@ -312,7 +315,7 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("cpus", 1);
     request.setParameters(parameters);
-    request.setTemplate(new Utf8File("./src/test/resources/tosca/galaxy_tosca.yaml").read());
+    request.setTemplate(getFileContentAsString("./src/test/resources/tosca/galaxy_tosca.yaml"));
     request.setCallback("http://localhost:8080/callback");
     mockMvc.perform(put("/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd")
         .contentType(MediaType.APPLICATION_JSON)
@@ -334,7 +337,7 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
   public void createDeploymentWithoutCallbackSuccessfully() throws Exception {
 
     DeploymentRequest request = new DeploymentRequest();
-    request.setTemplate(new Utf8File("./src/test/resources/tosca/galaxy_tosca.yaml").read());
+    request.setTemplate(getFileContentAsString("./src/test/resources/tosca/galaxy_tosca.yaml"));
     mockMvc
         .perform(post("/deployments").contentType(MediaType.APPLICATION_JSON)
             .content(TestUtil.convertObjectToJsonBytes(request)))
@@ -349,7 +352,7 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
     DeploymentRequest request = new DeploymentRequest();
     String callback = "httptest.com";
     request.setCallback(callback);
-    request.setTemplate(new Utf8File("./src/test/resources/tosca/galaxy_tosca.yaml").read());
+    request.setTemplate(getFileContentAsString("./src/test/resources/tosca/galaxy_tosca.yaml"));
     mockMvc
         .perform(post("/deployments").contentType(MediaType.APPLICATION_JSON)
             .content(TestUtil.convertObjectToJsonBytes(request)))
@@ -388,5 +391,9 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.code", is(404))).andExpect(jsonPath("$.title", is("Not Found")))
         .andExpect(jsonPath("$.message", is("The deployment <not-found> doesn't exist")));
+  }
+  
+  private String getFileContentAsString(String fileUri) throws FileException{
+    return new NoNullOrEmptyFile(new Utf8File(Paths.get(fileUri))).read();
   }
 }
