@@ -416,9 +416,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       }
       deployment.setTemplate(toscaService.updateTemplate(template));
       return true;
-    } catch (ImClientException | IOException |
-
-        DeploymentException ex) {
+    } catch (ImClientException | IOException | DeploymentException ex) {
       updateOnError(deployment.getId(), ex);
       return false;
     }
