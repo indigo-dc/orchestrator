@@ -886,7 +886,7 @@ Host: localhost</code></pre>
 <div class="content">
 <pre class="highlight"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 943
+Content-Length: 1597
 
 {
   "links" : [ {
@@ -902,7 +902,7 @@ Content-Length: 943
       "server_ip" : "10.0.0.1"
     },
     "task" : "NONE",
-    "callback" : "http://test.test",
+    "callback" : "http://test-server.com",
     "links" : [ {
       "rel" : "self",
       "href" : "http://localhost:8080/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd"
@@ -913,10 +913,27 @@ Content-Length: 943
       "rel" : "template",
       "href" : "http://localhost:8080/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd/template"
     } ]
+  }, {
+    "uuid" : "mmd34483-d937-4578-bfdb-ebe196bf82de",
+    "creationTime" : "2015-12-11T16:14+0000",
+    "updateTime" : "2015-12-11T10:11+0000",
+    "status" : "DELETE_IN_PROGRESS",
+    "outputs" : { },
+    "task" : "NONE",
+    "links" : [ {
+      "rel" : "self",
+      "href" : "http://localhost:8080/deployments/mmd34483-d937-4578-bfdb-ebe196bf82de"
+    }, {
+      "rel" : "resources",
+      "href" : "http://localhost:8080/deployments/mmd34483-d937-4578-bfdb-ebe196bf82de/resources"
+    }, {
+      "rel" : "template",
+      "href" : "http://localhost:8080/deployments/mmd34483-d937-4578-bfdb-ebe196bf82de/template"
+    } ]
   } ],
   "page" : {
     "size" : 10,
-    "totalElements" : 1,
+    "totalElements" : 2,
     "totalPages" : 1,
     "number" : 0
   }
@@ -1047,21 +1064,21 @@ Content-Type: application/json
 Content-Length: 619
 
 {
-  "uuid" : "53557dd2-55fd-4d44-88d0-d348a673a325",
-  "creationTime" : "2016-04-01T10:54+0000",
+  "uuid" : "cbba86fa-dcaa-43db-8063-2bee4c765d92",
+  "creationTime" : "2016-04-27T13:04+0000",
   "status" : "CREATE_IN_PROGRESS",
   "outputs" : { },
   "task" : "NONE",
   "callback" : "http://localhost:8080/callback",
   "links" : [ {
     "rel" : "self",
-    "href" : "http://localhost:8080/deployments/53557dd2-55fd-4d44-88d0-d348a673a325"
+    "href" : "http://localhost:8080/deployments/cbba86fa-dcaa-43db-8063-2bee4c765d92"
   }, {
     "rel" : "resources",
-    "href" : "http://localhost:8080/deployments/53557dd2-55fd-4d44-88d0-d348a673a325/resources"
+    "href" : "http://localhost:8080/deployments/cbba86fa-dcaa-43db-8063-2bee4c765d92/resources"
   }, {
     "rel" : "template",
-    "href" : "http://localhost:8080/deployments/53557dd2-55fd-4d44-88d0-d348a673a325/template"
+    "href" : "http://localhost:8080/deployments/cbba86fa-dcaa-43db-8063-2bee4c765d92/template"
   } ]
 }</code></pre>
 </div>
@@ -1147,7 +1164,7 @@ Host: localhost</code></pre>
 <div class="content">
 <pre class="highlight"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 678
+Content-Length: 684
 
 {
   "uuid" : "mmd34483-d937-4578-bfdb-ebe196bf82dd",
@@ -1158,7 +1175,7 @@ Content-Length: 678
     "server_ip" : "10.0.0.1"
   },
   "task" : "NONE",
-  "callback" : "http://test.test",
+  "callback" : "http://test-server.com",
   "links" : [ {
     "rel" : "self",
     "href" : "http://localhost:8080/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd"
@@ -1387,14 +1404,9 @@ Host: localhost</code></pre>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Creation date-time (<a href="http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14" class="bare">http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14</a>)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">content[].status</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">content[].state</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The status of the deployment. (<a href="http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html" class="bare">http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html</a>)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">content[].statusReason</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The description of the state</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The status of the resource. (<a href="http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/NodeStates.html" class="bare">http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/NodeStates.html</a>)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">content[].toscaNodeType</p></td>
@@ -1415,7 +1427,7 @@ Host: localhost</code></pre>
 <div class="content">
 <pre class="highlight"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 1401
+Content-Length: 1313
 
 {
   "links" : [ {
@@ -1425,8 +1437,7 @@ Content-Length: 1401
   "content" : [ {
     "uuid" : "mmd34483-d937-4578-bfdb-ebe196bf82dd",
     "creationTime" : "2015-12-11T16:14+0000",
-    "status" : "CREATE_COMPLETE",
-    "statusReason" : "Deployed",
+    "state" : "STARTED",
     "toscaNodeType" : "tosca.nodes.Compute",
     "requiredBy" : [ ],
     "links" : [ {
@@ -1439,8 +1450,7 @@ Content-Length: 1401
   }, {
     "uuid" : "bbd34483-d937-4578-bfdb-ebe196bf82dd",
     "creationTime" : "2015-12-11T16:14+0000",
-    "status" : "CREATE_IN_PROGRESS",
-    "statusReason" : "Deployed",
+    "state" : "CREATING",
     "toscaNodeType" : "tosca.nodes.Compute",
     "requiredBy" : [ ],
     "links" : [ {
@@ -1508,14 +1518,9 @@ Host: localhost</code></pre>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Creation date-time (<a href="http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14" class="bare">http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14</a>)</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">status</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">state</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The status of the deployment. (<a href="http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html" class="bare">http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html</a>)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock">statusReason</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The description of the state</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The status of the resource. (<a href="http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/NodeStates.html" class="bare">http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/NodeStates.html</a>)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock">toscaNodeType</p></td>
@@ -1536,13 +1541,12 @@ Host: localhost</code></pre>
 <div class="content">
 <pre class="highlight"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json
-Content-Length: 534
+Content-Length: 493
 
 {
   "uuid" : "mmd34483-d937-4578-bfdb-ebe196bf82dd",
   "creationTime" : "2015-12-11T16:14+0000",
-  "status" : "CREATE_COMPLETE",
-  "statusReason" : "Deployed",
+  "state" : "STARTED",
   "toscaNodeType" : "tosca.nodes.Compute",
   "requiredBy" : [ ],
   "links" : [ {
@@ -1562,7 +1566,7 @@ Content-Length: 534
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2016-04-01 11:54:48 +02:00
+Last updated 2016-04-26 14:19:49 +02:00
 </div>
 </div>
 </body>
