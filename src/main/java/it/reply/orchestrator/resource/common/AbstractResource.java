@@ -3,8 +3,6 @@ package it.reply.orchestrator.resource.common;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
-import it.reply.orchestrator.enums.Status;
-
 import org.springframework.hateoas.ResourceSupport;
 
 import java.text.DateFormat;
@@ -18,9 +16,6 @@ public class AbstractResource extends ResourceSupport {
   private String uuid;
   private String creationTime;
   private String updateTime;
-
-  private Status status;
-  private String statusReason;
 
   public AbstractResource() {
   }
@@ -71,22 +66,6 @@ public class AbstractResource extends ResourceSupport {
     }
 
     this.updateTime = convertDate(updateTime);
-  }
-
-  public Status getStatus() {
-    return status;
-  }
-
-  public void setStatus(Status status) {
-    this.status = status;
-  }
-
-  public String getStatusReason() {
-    return statusReason;
-  }
-
-  public void setStatusReason(String statusReason) {
-    this.statusReason = statusReason;
   }
 
   private String convertDate(Date date) {

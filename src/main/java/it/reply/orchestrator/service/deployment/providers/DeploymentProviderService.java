@@ -22,9 +22,9 @@ public interface DeploymentProviderService {
 
   public void finalizeDeploy(Deployment deployment, boolean deployed);
 
-  public void doUpdate(String deploymentId, String template);
+  public boolean doUpdate(String deploymentId, String template);
 
-  public void doUpdate(Deployment deployment, String template);
+  public boolean doUpdate(Deployment deployment, String template);
 
   public boolean doUndeploy(String deploymentUuid);
 

@@ -6,6 +6,7 @@ import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingException;
 import alien4cloud.tosca.parser.ParsingResult;
+
 import it.reply.orchestrator.config.WorkflowConfigProducerBean;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
@@ -13,6 +14,7 @@ import it.reply.orchestrator.dal.entity.WorkflowReference;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
+import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.OrchestratorException;
@@ -84,9 +86,8 @@ public class DeploymentServiceImpl implements DeploymentService {
       String template = toscaService.customizeTemplate(request.getTemplate(), deployment.getId());
       deployment.setTemplate(template);
 
-      Map<String, NodeTemplate> nodes =
-          toscaService.getArchiveRootFromTemplate(template).getResult().getTopology()
-              .getNodeTemplates();
+      Map<String, NodeTemplate> nodes = toscaService.getArchiveRootFromTemplate(template)
+          .getResult().getTopology().getNodeTemplates();
       createResources(deployment, nodes);
 
     } catch (IOException | ParsingException ex) {
@@ -97,9 +98,8 @@ public class DeploymentServiceImpl implements DeploymentService {
     params.put("DEPLOYMENT_ID", deployment.getId());
     ProcessInstance pi = null;
     try {
-      pi =
-          wfService.startProcess(WorkflowConfigProducerBean.DEPLOY.getProcessId(), params,
-              RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
+      pi = wfService.startProcess(WorkflowConfigProducerBean.DEPLOY.getProcessId(), params,
+          RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
     } catch (WorkflowException ex) {
       throw new OrchestratorException(ex);
     }
@@ -121,6 +121,7 @@ public class DeploymentServiceImpl implements DeploymentService {
             String.format("Deployment already in %s state.", deployment.getStatus().toString()));
       } else {
         deployment.setStatus(Status.DELETE_IN_PROGRESS);
+        deployment.setStatusReason("");
         deployment.setTask(Task.NONE);
         Iterator<WorkflowReference> wrIt = deployment.getWorkflowReferences().iterator();
         while (wrIt.hasNext()) {
@@ -134,9 +135,8 @@ public class DeploymentServiceImpl implements DeploymentService {
         params.put("DEPLOYMENT_ID", deployment.getId());
         ProcessInstance pi = null;
         try {
-          pi =
-              wfService.startProcess(WorkflowConfigProducerBean.UNDEPLOY.getProcessId(), params,
-                  RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
+          pi = wfService.startProcess(WorkflowConfigProducerBean.UNDEPLOY.getProcessId(), params,
+              RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
         } catch (WorkflowException ex) {
           throw new OrchestratorException(ex);
         }
@@ -177,9 +177,8 @@ public class DeploymentServiceImpl implements DeploymentService {
         params.put("TOSCA_TEMPLATE", request.getTemplate());
         ProcessInstance pi = null;
         try {
-          pi =
-              wfService.startProcess(WorkflowConfigProducerBean.UPDATE.getProcessId(), params,
-                  RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
+          pi = wfService.startProcess(WorkflowConfigProducerBean.UPDATE.getProcessId(), params,
+              RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
         } catch (WorkflowException ex) {
           throw new OrchestratorException(ex);
         }
@@ -211,7 +210,7 @@ public class DeploymentServiceImpl implements DeploymentService {
       for (int i = 0; i < count; i++) {
         resource = new Resource();
         resource.setDeployment(deployment);
-        resource.setStatus(Status.CREATE_IN_PROGRESS);
+        resource.setState(NodeStates.CREATING);
         resource.setToscaNodeName(entry.getKey());
         resource.setToscaNodeType(entry.getValue().getType());
         resourceRepository.save(resource);

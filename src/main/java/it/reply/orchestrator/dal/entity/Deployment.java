@@ -1,6 +1,7 @@
 package it.reply.orchestrator.dal.entity;
 
 import it.reply.orchestrator.enums.DeploymentProvider;
+import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
 
 import java.util.ArrayList;
@@ -24,6 +25,13 @@ import javax.persistence.Transient;
 public class Deployment extends AbstractResourceEntity {
 
   private static final long serialVersionUID = 3866893436735377053L;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "status", length = 500)
+  private Status status;
+
+  @Column(name = "statusReason", columnDefinition = "LONGTEXT")
+  private String statusReason;
 
   @Enumerated(EnumType.STRING)
   @Column(name = "task")
@@ -52,7 +60,7 @@ public class Deployment extends AbstractResourceEntity {
   @Column(name = "value")
   Map<String, String> outputs = new HashMap<String, String>();
 
-  @OneToMany(cascade = CascadeType.ALL, mappedBy = "deployment")
+  @OneToMany(cascade = CascadeType.ALL, mappedBy = "deployment", orphanRemoval = true)
   List<Resource> resources = new ArrayList<>();
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "deployment", orphanRemoval = true)
@@ -60,6 +68,22 @@ public class Deployment extends AbstractResourceEntity {
 
   public Deployment() {
     super();
+  }
+
+  public Status getStatus() {
+    return status;
+  }
+
+  public void setStatus(Status status) {
+    this.status = status;
+  }
+
+  public String getStatusReason() {
+    return statusReason;
+  }
+
+  public void setStatusReason(String statusReason) {
+    this.statusReason = statusReason;
   }
 
   public Task getTask() {

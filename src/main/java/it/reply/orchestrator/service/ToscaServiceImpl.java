@@ -245,9 +245,12 @@ public class ToscaServiceImpl implements ToscaService {
 
   @Override
   public Capability getNodeCapabilityByName(NodeTemplate node, String propertyName) {
-    for (Entry<String, Capability> entry : node.getCapabilities().entrySet()) {
-      if (entry.getKey().equals(propertyName)) {
-        return entry.getValue();
+    if (node != null && node.getCapabilities() != null) {
+      for (Entry<String, Capability> entry : node.getCapabilities()
+          .entrySet()) {
+        if (entry.getKey().equals(propertyName)) {
+          return entry.getValue();
+        }
       }
     }
     return null;

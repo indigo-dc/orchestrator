@@ -29,13 +29,6 @@ public abstract class AbstractResourceEntity implements Identifiable<String>, Se
   @Column(name = "uuid", unique = true)
   private String id;
 
-  @Enumerated(EnumType.STRING)
-  @Column(name = "status", length = 500)
-  private Status status;
-
-  @Column(name = "statusReason", columnDefinition = "LONGTEXT")
-  private String statusReason;
-
   private Date created;
   private Date updated;
 
@@ -53,22 +46,6 @@ public abstract class AbstractResourceEntity implements Identifiable<String>, Se
 
   public void setId(String id) {
     this.id = id;
-  }
-
-  public Status getStatus() {
-    return status;
-  }
-
-  public void setStatus(Status status) {
-    this.status = status;
-  }
-
-  public String getStatusReason() {
-    return statusReason;
-  }
-
-  public void setStatusReason(String statusReason) {
-    this.statusReason = statusReason;
   }
 
   public void setCreated(Date created) {
@@ -107,8 +84,8 @@ public abstract class AbstractResourceEntity implements Identifiable<String>, Se
 
   @Override
   public String toString() {
-    return "AbstractResourceEntity [id=" + id + ", status=" + status + ", created=" + created
-        + ", updated=" + updated + "]";
+    return "AbstractResourceEntity [id=" + id + ", created=" + created + ", updated=" + updated
+        + "]";
   }
 
 }

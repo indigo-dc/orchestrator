@@ -16,4 +16,8 @@ public class DeploymentException extends OrchestratorApiException {
     super(message);
   }
 
+  public DeploymentException(String message, Exception ex) {
+    super(message, ex);
+  }
+
 }

@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
 
+import es.upv.i3m.grycap.file.NoNullOrEmptyFile;
 import es.upv.i3m.grycap.file.Utf8File;
 
 import it.reply.orchestrator.config.WebAppConfigurationAware;
@@ -29,6 +30,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.nio.charset.Charset;
+import java.nio.file.Paths;
 
 @DatabaseTearDown("/data/database-empty.xml")
 public class TemplateControllerTest extends WebAppConfigurationAware {
@@ -61,7 +63,7 @@ public class TemplateControllerTest extends WebAppConfigurationAware {
   @DatabaseSetup("/data/database-resource-init.xml")
   public void getTemplate() throws Exception {
 
-    String template = new Utf8File(templatePath).read();
+    String template = new NoNullOrEmptyFile(new Utf8File(Paths.get(templatePath))).read();
     MvcResult result = mockMvc.perform(get("/deployments/" + deploymentId + "/template"))
         .andExpect(status().isOk()).andExpect(content().contentType(MediaType.TEXT_PLAIN))
         .andDo(document("get-template")).andReturn();

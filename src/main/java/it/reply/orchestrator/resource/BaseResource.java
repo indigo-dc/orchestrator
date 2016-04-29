@@ -1,9 +1,9 @@
 package it.reply.orchestrator.resource;
 
+import it.reply.orchestrator.enums.NodeStates;
+import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.resource.common.AbstractResource;
 
-import org.apache.commons.lang3.builder.EqualsBuilder;
-import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.util.ArrayList;
@@ -11,9 +11,18 @@ import java.util.List;
 
 public class BaseResource extends AbstractResource {
 
+  private NodeStates state;
   private String toscaNodeType;
   private String toscaNodeName;
   private List<String> requiredBy = new ArrayList<String>();
+
+  public NodeStates getState() {
+    return state;
+  }
+
+  public void setState(NodeStates state) {
+    this.state = state;
+  }
 
   public String getToscaNodeType() {
     return this.toscaNodeType;
