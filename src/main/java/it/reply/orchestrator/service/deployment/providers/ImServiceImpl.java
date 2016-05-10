@@ -354,6 +354,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       // List of vmIds to be removed
       List<String> vmIds = new ArrayList<String>();
 
+      // Find difference between the old template and the new
       for (Map.Entry<String, NodeTemplate> entry : oldNodes.entrySet()) {
         if (newNodes.containsKey(entry.getKey())) {
           int oldCount = toscaService.getCount(entry.getValue());
@@ -381,11 +382,30 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
               resource = resourceRepository.save(resource);
               vmIds.add(resource.getIaasId());
             }
+          } else if (newCount == oldCount && removalList.size() == 0) {
+            // do nothing
           } else {
             throw new DeploymentException("An error occur during the update. Count is <" + newCount
                 + "> but removal_list contains <" + removalList.size() + "> elements in the node: "
                 + entry.getKey());
           }
+        }
+      }
+
+      // Find if there is a new TOSCA node
+      for (Map.Entry<String, NodeTemplate> entry : newNodes.entrySet()) {
+        if (!oldNodes.containsKey(entry.getKey())) {
+          int count = toscaService.getCount(newNodes.get(entry.getKey()));
+          Resource resource;
+          for (int i = 0; i < count; i++) {
+            resource = new Resource();
+            resource.setDeployment(deployment);
+            resource.setState(NodeStates.CREATING);
+            resource.setToscaNodeName(entry.getKey());
+            resource.setToscaNodeType(entry.getValue().getType());
+            resourceRepository.save(resource);
+          }
+          nodes.put(entry.getKey(), newNodes.get(entry.getKey()));
         }
       }
 
