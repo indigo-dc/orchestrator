@@ -1,12 +1,6 @@
 package it.reply.orchestrator.service;
 
 import static org.junit.Assert.assertEquals;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
-
-import com.github.springtestdbunit.annotation.DatabaseSetup;
-import com.github.springtestdbunit.annotation.DatabaseTearDown;
 
 import it.reply.orchestrator.config.WebAppConfigurationAware;
 import it.reply.orchestrator.dto.slam.SlamPreferences;
@@ -14,9 +8,6 @@ import it.reply.orchestrator.dto.slam.SlamPreferences;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpMethod;
-import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.web.client.RestTemplate;
 
 public class SlamServiceTest extends WebAppConfigurationAware {
 
@@ -25,8 +16,8 @@ public class SlamServiceTest extends WebAppConfigurationAware {
 
   // private MockRestServiceServer mockServer;
 
-  @Autowired
-  private RestTemplate restTemplate;
+  // @Autowired
+  // private RestTemplate restTemplate;
 
   @Before
   public void setUp() {

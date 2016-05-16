@@ -17,7 +17,7 @@ public class SlamServiceImpl implements SlamService {
   @Autowired
   private RestTemplate restTemplate;
 
-  @Value("${url}")
+  @Value("${slam.url}")
   private String url;
 
   @Value("${preferences}")

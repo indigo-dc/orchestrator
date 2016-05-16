@@ -1,5 +1,6 @@
 package it.reply.orchestrator.service;
 
+import it.reply.orchestrator.dto.cmdb.Provider;
 import it.reply.orchestrator.exception.service.DeploymentException;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,11 +17,14 @@ public class CmdbServiceImpl implements CmdbService {
   @Autowired
   private RestTemplate restTemplate;
 
-  @Value("${url}")
+  @Value("${cmdb.url}")
   private String url;
 
   @Value("${service.id}")
   private String serviceIdUrlPath;
+
+  @Value("${provider.id}")
+  private String providerIdUrlPath;
 
   @Override
   public it.reply.orchestrator.dto.cmdb.Service getServiceById(String id) {
@@ -31,6 +35,17 @@ public class CmdbServiceImpl implements CmdbService {
       return response.getBody();
     }
     throw new DeploymentException("Unable to find service <" + id + "> in the CMDB."
+        + response.getStatusCode().toString() + " " + response.getStatusCode().getReasonPhrase());
+  }
+
+  @Override
+  public Provider getProviderById(String id) {
+    ResponseEntity<Provider> response =
+        restTemplate.getForEntity(url.concat(providerIdUrlPath).concat(id), Provider.class);
+    if (response.getStatusCode().is2xxSuccessful()) {
+      return response.getBody();
+    }
+    throw new DeploymentException("Unable to find provider <" + id + "> in the CMDB."
         + response.getStatusCode().toString() + " " + response.getStatusCode().getReasonPhrase());
   }
 

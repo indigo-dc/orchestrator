@@ -17,7 +17,7 @@ public class Data {
   @JsonProperty("provider_id")
   private String providerId;
   @JsonProperty("type")
-  private String type;
+  private Type type;
 
   @JsonProperty("service_type")
   public String getServiceType() {
@@ -65,16 +65,16 @@ public class Data {
   }
 
   @JsonProperty("type")
-  public String getType() {
+  public Type getType() {
     return type;
   }
 
   @JsonProperty("type")
-  public void setType(String type) {
+  public void setType(Type type) {
     this.type = type;
   }
 
-  public Data withType(String type) {
+  public Data withType(Type type) {
     this.type = type;
     return this;
   }
