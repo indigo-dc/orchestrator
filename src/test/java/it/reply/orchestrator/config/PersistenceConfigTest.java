@@ -8,7 +8,6 @@ import com.github.springtestdbunit.annotation.DatabaseSetup;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.instrument.classloading.InstrumentationLoadTimeWeaver;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
@@ -27,7 +26,6 @@ import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 @Configuration
-@PropertySource(value = { "classpath:application-test.properties" })
 @DatabaseSetup("database-init.xml")
 public class PersistenceConfigTest {
 
