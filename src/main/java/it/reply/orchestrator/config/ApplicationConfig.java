@@ -1,7 +1,10 @@
 package it.reply.orchestrator.config;
 
+import it.reply.orchestrator.config.security.WebSecurityConfig;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.scheduling.annotation.EnableAsync;
@@ -10,6 +13,7 @@ import java.io.IOException;
 
 @Configuration
 @EnableAsync
+@Import(WebSecurityConfig.class)
 public class ApplicationConfig {
 
   /**
