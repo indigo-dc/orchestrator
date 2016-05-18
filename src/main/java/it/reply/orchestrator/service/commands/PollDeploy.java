@@ -12,12 +12,14 @@ import it.reply.workflowmanager.spring.orchestrator.bpm.ejbcommands.BaseCommand;
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 @Component
 public class PollDeploy extends BaseCommand {
 
   @Autowired
+  @Qualifier("IM")
   private DeploymentProviderService imService;
 
   @Override
@@ -47,27 +49,28 @@ public class PollDeploy extends BaseCommand {
 
     long timeoutTime = 30 * 60 * 1000;
 
-    PollingBehaviour<String, Boolean> pollBehavior = new AbstractPollingBehaviour<String, Boolean>(
-        timeoutTime) {
+    PollingBehaviour<String, Boolean> pollBehavior =
+        new AbstractPollingBehaviour<String, Boolean>(timeoutTime) {
 
-      private static final long serialVersionUID = -5994059867039967783L;
+          private static final long serialVersionUID = -5994059867039967783L;
 
-      @Override
-      public Boolean doPolling(String deploymentId) throws PollingException {
-        try {
-          ImServiceImpl imService = OrchestratorContextBean.getBean(ImServiceImpl.class);
-          return imService.isDeployed(deploymentId);
-        } catch (Exception ex) {
-          throw new PollingException("Polling for deploy - error occured: " + ex.getMessage(), ex);
-        }
-      }
+          @Override
+          public Boolean doPolling(String deploymentId) throws PollingException {
+            try {
+              ImServiceImpl imService = OrchestratorContextBean.getBean(ImServiceImpl.class);
+              return imService.isDeployed(deploymentId);
+            } catch (Exception ex) {
+              throw new PollingException("Polling for deploy - error occured: " + ex.getMessage(),
+                  ex);
+            }
+          }
 
-      @Override
-      public boolean pollExit(Boolean pollResult) {
-        return pollResult != null && pollResult;
-      }
+          @Override
+          public boolean pollExit(Boolean pollResult) {
+            return pollResult != null && pollResult;
+          }
 
-    };
+        };
 
     return new ExternallyControlledPoller<String, Boolean>(pollBehavior, 3);
   }

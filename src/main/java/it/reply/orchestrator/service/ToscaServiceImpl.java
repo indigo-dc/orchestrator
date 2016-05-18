@@ -1,13 +1,15 @@
 package it.reply.orchestrator.service;
 
-import com.google.common.io.ByteStreams;
-
 import alien4cloud.component.repository.exception.CSARVersionAlreadyExistsException;
+import alien4cloud.exception.InvalidArgumentException;
+import alien4cloud.model.components.AbstractPropertyValue;
 import alien4cloud.model.components.Csar;
 import alien4cloud.model.components.ListPropertyValue;
+import alien4cloud.model.components.PropertyValue;
 import alien4cloud.model.components.ScalarPropertyValue;
 import alien4cloud.model.topology.Capability;
 import alien4cloud.model.topology.NodeTemplate;
+import alien4cloud.model.topology.RelationshipTemplate;
 import alien4cloud.security.model.Role;
 import alien4cloud.tosca.ArchiveParser;
 import alien4cloud.tosca.ArchiveUploadService;
@@ -18,6 +20,8 @@ import alien4cloud.tosca.parser.ParsingException;
 import alien4cloud.tosca.parser.ParsingResult;
 import alien4cloud.tosca.serializer.VelocityUtil;
 import alien4cloud.utils.FileUtil;
+
+import com.google.common.io.ByteStreams;
 
 import it.reply.orchestrator.exception.service.ToscaException;
 
@@ -134,7 +138,14 @@ public class ToscaServiceImpl implements ToscaService {
     try (InputStream is = new ByteArrayInputStream(toscaTemplate.getBytes());) {
       zip(is, zipPath);
     }
-    return parser.parse(zipPath);
+    try {
+      return parser.parse(zipPath);
+    } catch (InvalidArgumentException iae) {
+      // FIXME NOTE that InvalidArgumentException should not be thrown by the parse method, but it
+      // is...
+      // throw new ParsingException("DUMMY", new ParsingError(ErrorCode.INVALID_YAML, ));
+      throw iae;
+    }
   }
 
   @Override
@@ -152,7 +163,13 @@ public class ToscaServiceImpl implements ToscaService {
     StringWriter writer = new StringWriter();
     VelocityUtil.generate("templates/topology-1_0_0_INDIGO.yml.vm", writer, velocityCtx);
     String template = writer.toString();
+
+    // Log the warning because Alien4Cloud uses an hard-coded Velocity template to encode the string
+    // and some information might be missing!!
+    LOG.warn(
+        "TOSCA template conversion from in-memory: WARNING: Some nodes or properties might be missing!! Use at your own risk!");
     LOG.debug(template);
+
     return template;
   }
 
@@ -169,10 +186,23 @@ public class ToscaServiceImpl implements ToscaService {
    *           if the template is not valid
    * @throws IOException
    *           if there is an IO error
+   * @throws ToscaException
    */
   @Override
   public String customizeTemplate(@Nonnull String toscaTemplate, @Nonnull String deploymentId)
-      throws IOException {
+      throws IOException, ToscaException, ParsingException {
+
+    ArchiveRoot ar = parseTemplate(toscaTemplate);
+
+    addDeploymentId(ar, deploymentId);
+
+    return getTemplateFromTopology(ar);
+
+  }
+
+  @Override
+  public ArchiveRoot parseTemplate(@Nonnull String toscaTemplate)
+      throws IOException, ParsingException, ToscaException {
 
     ParsingResult<ArchiveRoot> result = null;
     try {
@@ -182,9 +212,7 @@ public class ToscaServiceImpl implements ToscaService {
     }
     checkParsingErrors(result.getContext().getParsingErrors());
 
-    addDeploymentId(result, deploymentId);
-
-    return getTemplateFromTopology(result.getResult());
+    return result.getResult();
 
   }
 
@@ -214,8 +242,8 @@ public class ToscaServiceImpl implements ToscaService {
 
   }
 
-  private void addDeploymentId(ParsingResult<ArchiveRoot> parsingResult, String deploymentId) {
-    Map<String, NodeTemplate> nodes = parsingResult.getResult().getTopology().getNodeTemplates();
+  private void addDeploymentId(ArchiveRoot parsingResult, String deploymentId) {
+    Map<String, NodeTemplate> nodes = parsingResult.getTopology().getNodeTemplates();
     for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
       if (entry.getValue().getType().equals("tosca.nodes.indigo.ElasticCluster")) {
         // Create new property with the deploymentId and set as printable
@@ -237,21 +265,66 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   private static void setAutentication() {
-    Authentication auth =
-        new PreAuthenticatedAuthenticationToken(Role.ADMIN.name().toLowerCase(), "",
-            AuthorityUtils.createAuthorityList(Role.ADMIN.name()));
+    Authentication auth = new PreAuthenticatedAuthenticationToken(Role.ADMIN.name().toLowerCase(),
+        "", AuthorityUtils.createAuthorityList(Role.ADMIN.name()));
     SecurityContextHolder.getContext().setAuthentication(auth);
   }
 
   @Override
   public Capability getNodeCapabilityByName(NodeTemplate node, String propertyName) {
     if (node != null && node.getCapabilities() != null) {
-      for (Entry<String, Capability> entry : node.getCapabilities()
-          .entrySet()) {
+      for (Entry<String, Capability> entry : node.getCapabilities().entrySet()) {
         if (entry.getKey().equals(propertyName)) {
           return entry.getValue();
         }
       }
+    }
+    return null;
+  }
+
+  @Override
+  public AbstractPropertyValue getNodePropertyByName(NodeTemplate node, String propertyName) {
+    if (node != null && node.getProperties() != null) {
+      for (Entry<String, AbstractPropertyValue> entry : node.getProperties().entrySet()) {
+        if (entry.getKey().equals(propertyName)) {
+          return entry.getValue();
+        }
+      }
+    }
+    return null;
+  }
+
+  public AbstractPropertyValue getCapabilityPropertyByName(Capability capability,
+      String propertyName) {
+    if (capability != null && capability.getProperties() != null) {
+      for (Entry<String, AbstractPropertyValue> entry : capability.getProperties().entrySet()) {
+        if (entry.getKey().equals(propertyName)) {
+          return entry.getValue();
+        }
+      }
+    }
+    return null;
+  }
+
+  @Override
+  public PropertyValue<?> getNodePropertyValueByName(NodeTemplate node, String propertyName) {
+    return (PropertyValue<?>) getNodePropertyByName(node, propertyName);
+  }
+
+  @Override
+  public PropertyValue<?> getCapabilityPropertyValueByName(Capability capability,
+      String propertyName) {
+    return (PropertyValue<?>) getCapabilityPropertyByName(capability, propertyName);
+  }
+
+  public RelationshipTemplate getRelationshipTemplateByCapabilityName(
+      Map<String, RelationshipTemplate> relationships, String capabilityName) {
+    if (relationships == null)
+      return null;
+
+    for (Map.Entry<String, RelationshipTemplate> relationship : relationships.entrySet()) {
+      if (relationship.getValue().getTargetedCapabilityName().equals(capabilityName))
+        return relationship.getValue();
     }
     return null;
   }

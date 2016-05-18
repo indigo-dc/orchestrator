@@ -2,20 +2,16 @@ package it.reply.orchestrator.service.deployment.providers;
 
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
-import it.reply.orchestrator.dal.entity.WorkflowReference;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
-import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
+import it.reply.orchestrator.exception.service.DeploymentException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 import java.util.function.Function;
 
 public abstract class AbstractDeploymentProviderService implements DeploymentProviderService {
@@ -55,6 +51,52 @@ public abstract class AbstractDeploymentProviderService implements DeploymentPro
       maxRetry--;
     }
     return isDone;
+  }
+
+  protected DeploymentRepository getDeploymentRepository() {
+    return deploymentRepository;
+  }
+
+  @Override
+  public boolean doDeploy(String deploymentUuid) {
+    Deployment deployment = deploymentRepository.findOne(deploymentUuid);
+    return doDeploy(deployment);
+  }
+
+  @Override
+  public boolean isDeployed(String deploymentUuid) throws DeploymentException {
+    Deployment deployment = deploymentRepository.findOne(deploymentUuid);
+    return isDeployed(deployment);
+  }
+
+  @Override
+  public void finalizeDeploy(String deploymentUuid, boolean deployed) {
+    Deployment deployment = deploymentRepository.findOne(deploymentUuid);
+    finalizeDeploy(deployment, deployed);
+  }
+
+  @Override
+  public boolean doUpdate(String deploymentId, String template) {
+    Deployment deployment = deploymentRepository.findOne(deploymentId);
+    return doUpdate(deployment, template);
+  }
+
+  @Override
+  public boolean doUndeploy(String deploymentUuid) {
+    Deployment deployment = deploymentRepository.findOne(deploymentUuid);
+    return doUndeploy(deployment);
+  }
+
+  @Override
+  public boolean isUndeployed(String deploymentUuid) throws DeploymentException {
+    Deployment deployment = deploymentRepository.findOne(deploymentUuid);
+    return isUndeployed(deployment);
+  }
+
+  @Override
+  public void finalizeUndeploy(String deploymentUuid, boolean undeployed) {
+    Deployment deployment = deploymentRepository.findOne(deploymentUuid);
+    finalizeUndeploy(deployment, undeployed);
   }
 
   public void updateOnError(String deploymentUuid) {

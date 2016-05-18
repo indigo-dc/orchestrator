@@ -82,12 +82,32 @@ public class DeploymentServiceImpl implements DeploymentService {
     }
 
     deployment = deploymentRepository.save(deployment);
+    Map<String, NodeTemplate> nodes = null;
+    boolean isChronosDeployment = false;
     try {
-      String template = toscaService.customizeTemplate(request.getTemplate(), deployment.getId());
-      deployment.setTemplate(template);
+      // Parse once
+      ArchiveRoot parsingResult = toscaService.parseTemplate(request.getTemplate());
 
-      Map<String, NodeTemplate> nodes = toscaService.getArchiveRootFromTemplate(template)
-          .getResult().getTopology().getNodeTemplates();
+      nodes = parsingResult.getTopology().getNodeTemplates();
+
+      // FIXME: Temporary - just for test
+      isChronosDeployment = isChronosDeployment(nodes);
+
+      if (!isChronosDeployment) {
+        // FIXME (BAD HACK) IM templates need some parameters to be added, but regenerating the
+        // template string with the current library is risky (loses some information!!)
+        // Re-parse and customize
+        String template = toscaService.customizeTemplate(request.getTemplate(), deployment.getId());
+        deployment.setTemplate(template);
+
+        // Re-parse with the updated nodes
+        nodes = toscaService.getArchiveRootFromTemplate(template).getResult().getTopology()
+            .getNodeTemplates();
+      } else {
+        deployment.setTemplate(request.getTemplate());
+      }
+
+      // Create internal resources representation (to store in DB)
       createResources(deployment, nodes);
 
     } catch (IOException | ParsingException ex) {
@@ -96,6 +116,11 @@ public class DeploymentServiceImpl implements DeploymentService {
 
     Map<String, Object> params = new HashMap<>();
     params.put("DEPLOYMENT_ID", deployment.getId());
+
+    // FIXME: Temporary - just for test
+    params.put(WF_PARAM_DEPLOYMENT_TYPE,
+        (isChronosDeployment ? DEPLOYMENT_TYPE_CHRONOS : DEPLOYMENT_TYPE_TOSCA));
+
     ProcessInstance pi = null;
     try {
       pi = wfService.startProcess(WorkflowConfigProducerBean.DEPLOY.getProcessId(), params,
@@ -110,6 +135,25 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   }
 
+  /**
+   * Temporary method to decide whether a given deployment has to be deployed using Chronos (<b>just
+   * for experiments</b>). <br/>
+   * Currently, if there is at least one node whose name contains 'Chronos', the deployment is done
+   * with Chronos.
+   * 
+   * @param nodes
+   *          the template nodes.
+   * @return <tt>true</tt> if Chronos, <tt>false</tt> otherwise.
+   */
+  private static boolean isChronosDeployment(Map<String, NodeTemplate> nodes) {
+    for (Map.Entry<String, NodeTemplate> node : nodes.entrySet()) {
+      if (node.getValue().getType().contains("Chronos")) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   @Override
   @Transactional
   public void deleteDeployment(String uuid) {
@@ -120,19 +164,26 @@ public class DeploymentServiceImpl implements DeploymentService {
         throw new ConflictException(
             String.format("Deployment already in %s state.", deployment.getStatus().toString()));
       } else {
+        // Update deployment status
         deployment.setStatus(Status.DELETE_IN_PROGRESS);
         deployment.setStatusReason("");
         deployment.setTask(Task.NONE);
+        deployment = deploymentRepository.save(deployment);
+
+        // Abort all WF currently active on this deployment
         Iterator<WorkflowReference> wrIt = deployment.getWorkflowReferences().iterator();
         while (wrIt.hasNext()) {
           WorkflowReference wr = wrIt.next();
           wfService.abortProcess(wr.getProcessId(), wr.getRuntimeStrategy());
           wrIt.remove();
         }
-        deployment = deploymentRepository.save(deployment);
 
         Map<String, Object> params = new HashMap<>();
         params.put("DEPLOYMENT_ID", deployment.getId());
+
+        // FIXME: Temporary - just for test
+        params.put(WF_PARAM_DEPLOYMENT_TYPE, deployment.getDeploymentProvider().name());
+
         ProcessInstance pi = null;
         try {
           pi = wfService.startProcess(WorkflowConfigProducerBean.UNDEPLOY.getProcessId(), params,
