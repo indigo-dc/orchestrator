@@ -1,7 +1,5 @@
 package it.reply.orchestrator.config.security;
 
-import com.google.common.collect.Sets;
-
 import it.reply.orchestrator.service.security.IndigoUserInfoFetcher;
 import it.reply.orchestrator.service.security.UserInfoIntrospectingTokenService;
 
@@ -52,8 +50,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Configuration
   public static class OidcConfig {
-    @Value("${OIDC.issuer}")
-    private String oidcIssuer;
+
+    @Value("${OIDC.issuers}")
+    private Set<String> oidcIssuers;
 
     @Value("${OIDC.clientID}")
     private String oidcClientId;
@@ -64,17 +63,14 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     @Value("${OIDC.cacheTokens}")
     private boolean oidcCacheTokens;
 
+    @Value("${OIDC.clientScopes}")
     private Set<String> oidcClientScopes;
-
-    public void setClientScopes(@Value("${OIDC.clientScopes}") String scopesString) {
-      oidcClientScopes = Sets.newHashSet(scopesString.split(", ?"));
-    }
 
     @Bean
     protected ServerConfigurationService serverConfigurationService() {
       DynamicServerConfigurationService serverConfigurationService =
           new DynamicServerConfigurationService();
-      serverConfigurationService.setWhitelist(Sets.newHashSet(oidcIssuer));
+      serverConfigurationService.setWhitelist(oidcIssuers);
       return serverConfigurationService;
     }
 
@@ -85,7 +81,9 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
       client.setClientSecret(oidcClientSecret);
       client.setScope(oidcClientScopes);
       Map<String, RegisteredClient> clients = new HashMap<>();
-      clients.put(oidcIssuer, client);
+      for (String issuer : oidcIssuers) {
+        clients.put(issuer, client);
+      }
 
       StaticClientConfigurationService clientConfigurationService =
           new StaticClientConfigurationService();

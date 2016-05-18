@@ -6,6 +6,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.scheduling.annotation.EnableAsync;
 
@@ -31,4 +33,8 @@ public class ApplicationConfig {
     return propertyPlaceholderConfigurer;
   }
 
+  @Bean
+  public ConversionService conversionService() {
+    return new DefaultConversionService();
+  }
 }
