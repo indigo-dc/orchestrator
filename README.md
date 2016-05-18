@@ -80,7 +80,7 @@ Besides those used to link the orchestrator to the DBs, there are other environm
 
 ### Configure security
  1. `SECURITY_ENABLE`: if set to `true` enable AAI OAuth2 authentication and authorization
- 2. `OIDC_ISSUERS`: String containing a list of comma separed value of whitelisted AAI token issuers
+ 2. `OIDC_ISSUERS`: String containing a list of comma separated value of whitelisted AAI token issuers
  3. `OIDC_CLIENT_ID`: The OAuth2 client ID
  4. `OIDC_CLIENT_SECRET` The OAuth2 client secret
  
