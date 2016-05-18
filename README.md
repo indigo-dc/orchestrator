@@ -73,3 +73,14 @@ sudo docker run --name orchestrator1 -h orchestrator1 -e ORCHESTRATOR_DB_ENDPOIN
   -e WORKFLOW_DB_PWD=DB_USER_PASSWORD -p 80:8080 -d indigodatacloud/orchestrator
 ```
 using as parameters (`DOMAIN_NAME`, `PORT`, `SCHEMA_NAME`, `DB_USER`, `DB_USER_PASSWORD`) the correct values.
+
+1.4 CONFIGURING
+--------------
+Besides those used to link the orchestrator to the DBs, there are other environment variables that can be set in order to configure the orchestrator behaviour.
+
+### Configure security
+ 1. `SECURITY_ENABLE`: if set to `true` enable AAI OAuth2 authentication and authorization
+ 2. `OIDC_ISSUERS`: String containing a list of comma separed value of whitelisted AAI token issuers
+ 3. `OIDC_CLIENT_ID`: The OAuth2 client ID
+ 4. `OIDC_CLIENT_SECRET` The OAuth2 client secret
+ 
