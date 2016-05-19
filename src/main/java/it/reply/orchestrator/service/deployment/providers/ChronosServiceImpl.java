@@ -369,7 +369,7 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
    * @return <tt>true</tt> if all jobs have been deleted, <tt>false</tt> otherwise.
    */
   public boolean doUndeploy(Deployment deployment) {
-    // TODO Delete all Jobs on Chronos
+    // Delete all Jobs on Chronos
 
     try {
       // Generate INDIGOJob graph
