@@ -4,9 +4,11 @@ import alien4cloud.model.components.ComplexPropertyValue;
 import alien4cloud.model.components.DeploymentArtifact;
 import alien4cloud.model.components.ListPropertyValue;
 import alien4cloud.model.components.PropertyValue;
+import alien4cloud.model.components.ScalarPropertyValue;
 import alien4cloud.model.topology.Capability;
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.model.topology.RelationshipTemplate;
+import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.normative.SizeType;
 import alien4cloud.tosca.parser.ParsingException;
 
@@ -61,20 +63,21 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
   @Autowired
   ToscaService toscaService;
 
+  @Autowired
+  private ResourceRepository resourceRepository;
+
   /**
-   * Temporary method to load Chronos connection properties from file (<b>just for experimental
-   * purpose</b>).
+   * Temporary method to load properties from file (<b>just for experimental purpose</b>).
    * 
    * @return the properties.
    */
-  public Properties readChronosProperties() {
-    String path = "chronos.properties";
+  public Properties readProperties(String path) {
     final Properties properties = new Properties();
     try (InputStream in = getClass().getClassLoader().getResourceAsStream(path)) {
       properties.load(in);
     } catch (Exception ex) {
       throw new RuntimeException(
-          "Failed to load properties file ('" + path + "') in 'test/resources' folder");
+          "Failed to load properties file ('" + path + "') in classpath 'resources' folder");
     }
     return properties;
   }
@@ -86,7 +89,7 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
    * @return the Chronos client.
    */
   public Chronos getChronosClient() {
-    Properties properties = readChronosProperties();
+    Properties properties = readProperties("chronos.properties");
     String endpoint = properties.getProperty("endpoint");
     String username = properties.getProperty("username");
     String password = properties.getProperty("password");
@@ -96,6 +99,23 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
     Chronos client = ChronosClient.getInstanceWithBasicAuth(endpoint, username, password);
 
     return client;
+  }
+
+  /**
+   * Temporary method to generate default OneData settings.
+   * 
+   * @return the {@link OneData} settings.
+   */
+  protected OneData generateStubOneData() {
+    Properties properties = readProperties("onedata.properties");
+    String token = properties.getProperty("token");
+    String space = properties.getProperty("space");
+    String path = properties.getProperty("path");
+    String provider = properties.getProperty("provider");
+
+    LOG.info(String.format("Generating OneData settings with parameters: %s", properties));
+
+    return new OneData(token, space, path, provider);
   }
 
   public Collection<Job> getJobs(Chronos client) {
@@ -117,7 +137,8 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
 
       // Generate INDIGOJob graph
       LOG.debug("Generating job graph for deployment <{}>", deployment.getId());
-      Multimap<JobDependencyType, IndigoJob> jobgraph = generateJobGraph(deployment);
+      Multimap<JobDependencyType, IndigoJob> jobgraph =
+          generateJobGraph(deployment, generateStubOneData());
 
       // Create Jobs in the required order on Chronos
       LOG.debug("Launching jobs for deployment <{}> on Chronos", deployment.getId());
@@ -223,7 +244,8 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       // Generate INDIGOJob graph
       // FIXME: Do not regenerate every time (just for prototyping!)
       LOG.debug("Generating job graph for deployment <{}>", deployment.getId());
-      Multimap<JobDependencyType, IndigoJob> jobgraph = generateJobGraph(deployment);
+      Multimap<JobDependencyType, IndigoJob> jobgraph =
+          generateJobGraph(deployment, generateStubOneData());
 
       Chronos client = getChronosClient();
 
@@ -375,7 +397,8 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       // Generate INDIGOJob graph
       // FIXME: Do not regenerate every time (just for prototyping!)
       LOG.debug("Generating job graph for deployment <{}>", deployment.getId());
-      Multimap<JobDependencyType, IndigoJob> jobgraph = generateJobGraph(deployment);
+      Multimap<JobDependencyType, IndigoJob> jobgraph =
+          generateJobGraph(deployment, generateStubOneData());
 
       // Create Jobs in the required order on Chronos
       LOG.debug("Deleting jobs for deployment <{}> on Chronos", deployment.getId());
@@ -473,9 +496,6 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
 
   }
 
-  @Autowired
-  private ResourceRepository resourceRepository;
-
   /**
    * Creates the {@link INDIGOJob} graph based on the given {@link Deployment} (the TOSCA template
    * is parsed).
@@ -484,7 +504,8 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
    *          the input deployment.
    * @return the job graph.
    */
-  protected Multimap<JobDependencyType, IndigoJob> generateJobGraph(Deployment deployment) {
+  protected Multimap<JobDependencyType, IndigoJob> generateJobGraph(Deployment deployment,
+      OneData odParams) {
     String deploymentId = deployment.getId();
     Multimap<JobDependencyType, IndigoJob> jobGraph = HashMultimap.create();
     Map<String, IndigoJob> jobs = new HashMap<String, ChronosServiceImpl.IndigoJob>();
@@ -492,8 +513,13 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
     // Parse TOSCA template
     Map<String, NodeTemplate> nodes = null;
     try {
-      nodes = toscaService.getArchiveRootFromTemplate(deployment.getTemplate()).getResult()
-          .getTopology().getNodeTemplates();
+      String customizedTemplate = deployment.getTemplate();
+      // FIXME TEMPORARY - Replace hard-coded properties in nodes
+      customizedTemplate = replaceHardCodedParams(customizedTemplate, odParams);
+
+      ArchiveRoot ar = toscaService.getArchiveRootFromTemplate(customizedTemplate).getResult();
+
+      nodes = ar.getTopology().getNodeTemplates();
     } catch (IOException | ParsingException ex) {
       throw new OrchestratorException(ex);
     }
@@ -542,9 +568,7 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
     }
 
     // Update jobs hierarchy with roles to create the graph
-    for (
-
-    Map.Entry<String, IndigoJob> job : jobs.entrySet()) {
+    for (Map.Entry<String, IndigoJob> job : jobs.entrySet()) {
       IndigoJob indigoJob = job.getValue();
 
       // Switch node type
@@ -569,6 +593,67 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
     return jobGraph;
   }
 
+  /**
+   * TEMPORARY method to replace hardcoded INDIGO params in TOSCA template (i.e. OneData) string.
+   * 
+   * @param template
+   *          the string TOSCA template.
+   * @param od
+   *          the OneData settings.
+   */
+  protected String replaceHardCodedParams(String template, OneData od) {
+
+    // Replace OneData properties
+    template = template.replace("TOKEN_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getToken());
+    template = template.replace("DATA_SPACE_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getSpace());
+    template = template.replace("PATH_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getPath());
+    template =
+        template.replace("ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getProvider());
+
+    return template;
+  }
+
+  public static class OneData {
+    private String token;
+    private String space;
+    private String path;
+    private String provider;
+
+    public OneData(String token, String space, String path, String provider) {
+      super();
+      this.token = token;
+      this.space = space;
+      this.path = path;
+      this.provider = provider;
+    }
+
+    public String getToken() {
+      return token;
+    }
+
+    public String getSpace() {
+      return space;
+    }
+
+    public String getPath() {
+      return path;
+    }
+
+    public String getProvider() {
+      return provider;
+    }
+
+  }
+
+  protected void putStringProperty(NodeTemplate nodeTemplate, String name, String value) {
+    ScalarPropertyValue scalarPropertyValue = new ScalarPropertyValue(value);
+    scalarPropertyValue.setPrintable(true);
+    if (nodeTemplate.getProperties() == null) {
+      nodeTemplate.setProperties(new HashMap<>());
+    }
+    nodeTemplate.getProperties().put(name, scalarPropertyValue);
+  }
+
   protected boolean isChronosNode(NodeTemplate nodeTemplate) {
     return nodeTemplate.getType().equals("tosca.nodes.indigo.Container.Application.Docker.Chronos");
   }
@@ -582,7 +667,6 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
     return nodeName.equals("chronos_job_upload") ? Lists.newArrayList("chronos_job") : null;
   }
 
-  @SuppressWarnings("unchecked")
   protected Job createJob(Map<String, NodeTemplate> nodes, String deploymentId, String nodeName,
       NodeTemplate nodeTemplate) {
     try {
@@ -631,12 +715,14 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       // Docker image
       // TODO Remove hard-coded?
       String supportedType = "tosca.artifacts.Deployment.Image.Container.Docker";
-      DeploymentArtifact image = nodeTemplate.getArtifacts().get("image");
+      DeploymentArtifact image;
       // <image> artifact available
-      if (image == null)
+      if (nodeTemplate.getArtifacts() == null
+          || (image = nodeTemplate.getArtifacts().get("image")) == null) {
         throw new IllegalArgumentException(
             String.format("<image> artifact not found in node <%s> of type <%s>", nodeName,
                 nodeTemplate.getType()));
+      }
 
       // <image> artifact type check
       if (!image.getArtifactType().equals(supportedType)) {
@@ -672,18 +758,19 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       Container container = new Container();
       container.setType("DOCKER");
       container.setImage((String) nodeTemplate.getArtifacts().get("image").getFile());
-      if (dockerNumCpus != null)
+      if (dockerNumCpus != null) {
         chronosJob.setCpus(dockerNumCpus);
-      if (dockerMemSize != null)
+      }
+      if (dockerMemSize != null) {
         chronosJob.setMem(dockerMemSize);
+      }
 
       chronosJob.setContainer(container);
 
       return chronosJob;
     } catch (Exception ex) {
-      throw new RuntimeException(
-          String.format("Failed to parse node <%s> of type <%s>", nodeName, nodeTemplate.getType()),
-          ex);
+      throw new RuntimeException(String.format("Failed to parse node <%s> of type <%s>: %s",
+          nodeName, nodeTemplate.getType(), ex.getMessage()), ex);
     }
   }
 
@@ -691,6 +778,13 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
     FRESH, FAILURE, SUCCESS;
   }
 
+  /**
+   * Computes the Chronos job's state based on current success and error count.
+   * 
+   * @param job
+   *          the {@link Job}.
+   * @return the {@link JobState}.
+   */
   public static JobState getLastState(Job job) {
     // State = Fresh (success + error = 0), Success (success > 0), Failure (error > 0)
     // NOTE that Chronos increments the error only after all the retries has failed (x retries -> +1

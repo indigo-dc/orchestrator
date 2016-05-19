@@ -91,6 +91,8 @@ public class DeploymentServiceImpl implements DeploymentService {
 
       nodes = parsingResult.getTopology().getNodeTemplates();
 
+      // FIXME: Define function to decide DeploymentProvider (Temporary - just for prototyping)
+      isChronosDeployment = isChronosDeployment(nodes);
       if (!isChronosDeployment) {
         // FIXME (BAD HACK) IM templates need some parameters to be added, but regenerating the
         // template string with the current library is risky (loses some information!!)
@@ -115,8 +117,7 @@ public class DeploymentServiceImpl implements DeploymentService {
     Map<String, Object> params = new HashMap<>();
     params.put("DEPLOYMENT_ID", deployment.getId());
 
-    // FIXME: Define function to decide DeploymentProvider (Temporary - just for prototyping)
-    isChronosDeployment = isChronosDeployment(nodes);
+    // FIXME Put in deployment provider field
     params.put(WF_PARAM_DEPLOYMENT_TYPE,
         (isChronosDeployment ? DEPLOYMENT_TYPE_CHRONOS : DEPLOYMENT_TYPE_TOSCA));
 

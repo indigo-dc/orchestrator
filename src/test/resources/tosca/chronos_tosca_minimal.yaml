@@ -25,10 +25,14 @@ topology_template:
         description: 'Execute app'
         #command: /bin/bash env #fails!
         command: env
-        uris: ['http://a.it','http://b.it']
+        uris: []
         retries: 3
         environment_variables:
-          INPUT_ONEDATA_SPACE: 'tbd'
+          #OUTPUT_FILENAMES: { get_input: output_filenames }
+          ONEDATA_SERVICE_TOKEN: 'TOKEN_TO_BE_SET_BY_THE_ORCHESTRATOR'
+          ONEDATA_SPACE: 'DATA_SPACE_TO_BE_SET_BY_THE_ORCHESTRATOR'
+          ONEDATA_PATH: 'PATH_TO_BE_SET_BY_THE_ORCHESTRATOR'
+          ONEDATA_PROVIDERS: 'ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR'
       artifacts:
         image:
           file: libmesos/ubuntu
@@ -45,17 +49,25 @@ topology_template:
             mem_size: 512 MB
 
     chronos_job_upload:
-        type: tosca.nodes.indigo.Container.Application.Docker.Chronos
-        properties:
-          description: 'Upload output data'
-          command: '/bin/bash run.sh'
-          retries: 3
-          environment_variables:
-            ONEDATA_SERVICE_TOKEN: 'TOKEN_TO_BE_SET_BY_THE_ORCHESTRATOR'
-            ONEDATA_SPACE: 'DATA_SPACE_TO_BE_SET_BY_THE_ORCHESTRATOR'
-            ONEDATA_PATH: 'PATH_TO_BE_SET_BY_THE_ORCHESTRATOR'
-            ONEDATA_PROVIDERS: 'ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR'
-        artifacts:
-          image:
-            file: indigodatacloud/jobuploader
-            type: tosca.artifacts.Deployment.Image.Container.Docker
+      type: tosca.nodes.indigo.Container.Application.Docker.Chronos
+      properties:
+        description: 'Upload output data'
+        command: '/bin/bash run.sh'
+        retries: 3
+        environment_variables:
+          #OUTPUT_PROTOCOL: { get_input: output_protocol }
+          #OUTPUT_ENDPOINT: { get_input: output_endpoint }
+          #OUTPUT_PATH: { get_input: output_path }
+          #OUTPUT_USERNAME: { get_input: output_username }
+          #OUTPUT_PASSWORD: { get_input: output_password }
+          #OUTPUT_TENANT: { get_input: output_tenant }
+          #OUTPUT_REGION: { get_input: output_region }
+          #OUTPUT_FILENAMES: { get_input: output_filenames }
+          ONEDATA_SERVICE_TOKEN: 'TOKEN_TO_BE_SET_BY_THE_ORCHESTRATOR'
+          ONEDATA_SPACE: 'DATA_SPACE_TO_BE_SET_BY_THE_ORCHESTRATOR'
+          ONEDATA_PATH: 'PATH_TO_BE_SET_BY_THE_ORCHESTRATOR'
+          ONEDATA_PROVIDERS: 'ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR'
+      artifacts:
+        image:
+          file: indigodatacloud/jobuploader
+          type: tosca.artifacts.Deployment.Image.Container.Docker
