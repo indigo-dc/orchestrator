@@ -254,7 +254,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           } catch (Exception ex) {
             // Do nothing
           }
-          throw new DeploymentException(errorMsg);
+          DeploymentException ex = new DeploymentException(errorMsg);
+          updateOnError(deployment.getId(), ex);
+          throw ex;
         default:
           return false;
       }
@@ -612,4 +614,5 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   private void logImErrorResponse(ImClientErrorException exception) {
     LOG.error(exception.getResponseError().getFormattedErrorMessage());
   }
+
 }
