@@ -5,7 +5,6 @@ import alien4cloud.model.topology.Capability;
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingException;
-import alien4cloud.tosca.parser.ParsingResult;
 
 import it.reply.orchestrator.config.WorkflowConfigProducerBean;
 import it.reply.orchestrator.dal.entity.Deployment;
@@ -14,10 +13,12 @@ import it.reply.orchestrator.dal.entity.WorkflowReference;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
+import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.OrchestratorException;
+import it.reply.orchestrator.exception.http.BadRequestException;
 import it.reply.orchestrator.exception.http.ConflictException;
 import it.reply.orchestrator.exception.http.NotFoundException;
 import it.reply.workflowmanager.exceptions.WorkflowException;
@@ -90,9 +91,6 @@ public class DeploymentServiceImpl implements DeploymentService {
 
       nodes = parsingResult.getTopology().getNodeTemplates();
 
-      // FIXME: Temporary - just for test
-      isChronosDeployment = isChronosDeployment(nodes);
-
       if (!isChronosDeployment) {
         // FIXME (BAD HACK) IM templates need some parameters to be added, but regenerating the
         // template string with the current library is risky (loses some information!!)
@@ -117,7 +115,8 @@ public class DeploymentServiceImpl implements DeploymentService {
     Map<String, Object> params = new HashMap<>();
     params.put("DEPLOYMENT_ID", deployment.getId());
 
-    // FIXME: Temporary - just for test
+    // FIXME: Define function to decide DeploymentProvider (Temporary - just for prototyping)
+    isChronosDeployment = isChronosDeployment(nodes);
     params.put(WF_PARAM_DEPLOYMENT_TYPE,
         (isChronosDeployment ? DEPLOYMENT_TYPE_CHRONOS : DEPLOYMENT_TYPE_TOSCA));
 
@@ -205,21 +204,24 @@ public class DeploymentServiceImpl implements DeploymentService {
   public void updateDeployment(String id, DeploymentRequest request) {
     Deployment deployment = deploymentRepository.findOne(id);
     if (deployment != null) {
+
+      if (deployment.getDeploymentProvider() == DeploymentProvider.CHRONOS) {
+        // Chronos deployments cannot be updated
+        throw new BadRequestException("Chronos deployments cannot be updated.");
+      }
+
       if (deployment.getStatus() == Status.CREATE_COMPLETE
           || deployment.getStatus() == Status.UPDATE_COMPLETE
           || deployment.getStatus() == Status.UPDATE_FAILED) {
         try {
           // Check if the new template is valid
-          ParsingResult<ArchiveRoot> parsingResult =
-              toscaService.getArchiveRootFromTemplate(request.getTemplate());
+          toscaService.getArchiveRootFromTemplate(request.getTemplate());
 
         } catch (ParsingException | IOException ex) {
           throw new OrchestratorException(ex);
         }
         deployment.setStatus(Status.UPDATE_IN_PROGRESS);
         deployment.setTask(Task.NONE);
-
-        Iterator<WorkflowReference> wrIt = deployment.getWorkflowReferences().iterator();
 
         deployment = deploymentRepository.save(deployment);
 

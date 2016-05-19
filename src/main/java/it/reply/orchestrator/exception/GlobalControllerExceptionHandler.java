@@ -1,6 +1,7 @@
 package it.reply.orchestrator.exception;
 
 import it.reply.orchestrator.dto.common.Error;
+import it.reply.orchestrator.exception.http.BadRequestException;
 import it.reply.orchestrator.exception.http.ConflictException;
 import it.reply.orchestrator.exception.http.NotFoundException;
 import it.reply.orchestrator.exception.service.ToscaException;
@@ -72,6 +73,22 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ResponseBody
   public Error handleException(ToscaException ex) {
+
+    return new Error().withCode(HttpStatus.BAD_REQUEST.value())
+        .withTitle(HttpStatus.BAD_REQUEST.getReasonPhrase()).withMessage(ex.getMessage());
+  }
+
+  /**
+   * Bad request exception handler.
+   * 
+   * @param ex
+   *          the exception
+   * @return a {@code ResponseEntity} instance
+   */
+  @ExceptionHandler
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ResponseBody
+  public Error handleException(BadRequestException ex) {
 
     return new Error().withCode(HttpStatus.BAD_REQUEST.value())
         .withTitle(HttpStatus.BAD_REQUEST.getReasonPhrase()).withMessage(ex.getMessage());
@@ -169,9 +186,8 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
    */
   private ResponseEntity<Object> handleResponse(Exception ex, HttpHeaders headers,
       HttpStatus status) {
-    Error error =
-        new Error().withCode(status.value()).withTitle(status.getReasonPhrase())
-            .withMessage(ex.getMessage());
+    Error error = new Error().withCode(status.value()).withTitle(status.getReasonPhrase())
+        .withMessage(ex.getMessage());
 
     return new ResponseEntity<Object>(error, headers, status);
 
