@@ -259,6 +259,14 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       for (IndigoJob job : topoOrder) {
         String jobName = job.getChronosJob().getName();
         Job updatedJob = getJobStatus(client, jobName);
+        if (updatedJob == null) {
+          String errorMsg =
+              String.format("Failed to deploy deployment <%s>. Chronos job <%s> does not exist",
+                  deployment.getId(), jobName);
+          LOG.error(errorMsg);
+          throw new DeploymentException(errorMsg);
+        }
+
         JobState jobState = getLastState(updatedJob);
         LOG.debug("Status for Chronos job <{}> is <{}>", jobName, jobState);
 
@@ -312,11 +320,19 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
     }
   }
 
+  /**
+   * 
+   * @param client
+   * @param name
+   * @return the {@link Job} or <tt>null</tt> if no such job exist.
+   * @throws RuntimeException
+   *           if an error occurred retrieving job status.
+   */
   protected Job getJobStatus(Chronos client, String name) throws RuntimeException {
     try {
       Collection<Job> jobList = client.getJob(name);
       if (jobList.isEmpty()) {
-        throw new RuntimeException("Empty list");
+        return null;
       }
 
       return jobList.iterator().next();
