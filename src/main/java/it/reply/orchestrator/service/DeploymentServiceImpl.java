@@ -86,8 +86,9 @@ public class DeploymentServiceImpl implements DeploymentService {
     Map<String, NodeTemplate> nodes = null;
     boolean isChronosDeployment = false;
     try {
-      // Parse once
-      ArchiveRoot parsingResult = toscaService.parseTemplate(request.getTemplate());
+      // Parse once, validate structure and user's inputs, replace user's input
+      ArchiveRoot parsingResult =
+          toscaService.prepareTemplate(request.getTemplate(), deployment.getParameters());
 
       nodes = parsingResult.getTopology().getNodeTemplates();
 
@@ -101,8 +102,8 @@ public class DeploymentServiceImpl implements DeploymentService {
         deployment.setTemplate(template);
 
         // Re-parse with the updated nodes
-        nodes = toscaService.getArchiveRootFromTemplate(template).getResult().getTopology()
-            .getNodeTemplates();
+        parsingResult = toscaService.prepareTemplate(template, deployment.getParameters());
+        nodes = parsingResult.getTopology().getNodeTemplates();
       } else {
         deployment.setTemplate(request.getTemplate());
       }
@@ -215,8 +216,9 @@ public class DeploymentServiceImpl implements DeploymentService {
           || deployment.getStatus() == Status.UPDATE_COMPLETE
           || deployment.getStatus() == Status.UPDATE_FAILED) {
         try {
-          // Check if the new template is valid
-          toscaService.getArchiveRootFromTemplate(request.getTemplate());
+          // Check if the new template is valid: parse, validate structure and user's inputs,
+          // replace user's inputs
+          toscaService.prepareTemplate(request.getTemplate(), deployment.getParameters());
 
         } catch (ParsingException | IOException ex) {
           throw new OrchestratorException(ex);

@@ -50,6 +50,9 @@ public class Deployment extends AbstractResourceEntity {
   @Column(name = "template", columnDefinition = "LONGTEXT")
   private String template;
 
+  /**
+   * The user's inputs to the template.
+   */
   @ElementCollection(fetch = FetchType.EAGER)
   @MapKeyColumn(name = "name")
   @Column(name = "value")
@@ -126,10 +129,16 @@ public class Deployment extends AbstractResourceEntity {
     this.template = template;
   }
 
+  /**
+   * The user's inputs to the template.
+   */
   public Map<String, String> getParameters() {
     return parameters;
   }
 
+  /**
+   * The user's inputs to the template.
+   */
   public void setParameters(Map<String, String> parameters) {
     this.parameters = parameters;
   }

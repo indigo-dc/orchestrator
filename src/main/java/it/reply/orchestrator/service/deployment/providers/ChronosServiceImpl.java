@@ -530,10 +530,15 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
     Map<String, NodeTemplate> nodes = null;
     try {
       String customizedTemplate = deployment.getTemplate();
-      // FIXME TEMPORARY - Replace hard-coded properties in nodes
+      /*
+       * FIXME TEMPORARY - Replace hard-coded properties in nodes (WARNING: Cannot be done when
+       * receiving the template because we still miss OneData settings that are obtained during the
+       * WF after the site choice, which in turns depends on the template nodes and properties...)
+       */
       customizedTemplate = replaceHardCodedParams(customizedTemplate, odParams);
 
-      ArchiveRoot ar = toscaService.getArchiveRootFromTemplate(customizedTemplate).getResult();
+      // Re-parse template (TODO: serialize the template in-memory representation?)
+      ArchiveRoot ar = toscaService.prepareTemplate(customizedTemplate, deployment.getParameters());
 
       nodes = ar.getTopology().getNodeTemplates();
     } catch (IOException | ParsingException ex) {

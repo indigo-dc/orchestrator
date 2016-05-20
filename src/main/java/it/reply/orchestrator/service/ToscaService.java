@@ -1,6 +1,7 @@
 package it.reply.orchestrator.service;
 
 import alien4cloud.model.components.AbstractPropertyValue;
+import alien4cloud.model.components.PropertyDefinition;
 import alien4cloud.model.components.PropertyValue;
 import alien4cloud.model.topology.Capability;
 import alien4cloud.model.topology.NodeTemplate;
@@ -41,6 +42,35 @@ public interface ToscaService {
       throws IOException, ToscaException, ParsingException;
 
   /**
+   * Verifies that all the template's required inputs are present in the user's input list.
+   * 
+   * @param templateInputs
+   *          the templates's defined inputs.
+   * @param inputs
+   *          the user's input list.
+   * @throws ToscaException
+   *           in case a required input is not present in the user's input or if the user's input
+   *           value doesn't match the defined input type.
+   */
+  public void validateUserInputs(Map<String, PropertyDefinition> templateInputs,
+      Map<String, String> inputs) throws ToscaException;
+
+  /**
+   * Replaces TOSCA input functions with the actual input values (user's input values or default
+   * ones).
+   * 
+   * @param archiveRoot
+   *          the in-memory TOSCA template.
+   * @param inputs
+   *          the user's inputs to the template.
+   * @throws ToscaException
+   *           if the input replacement fails TODO.
+   */
+  @Nonnull
+  public void replaceInputFunctions(@Nonnull ArchiveRoot archiveRoot, Map<String, String> inputs)
+      throws ToscaException;
+
+  /**
    * Parse the TOSCA template (string) and get the in-memory representation.<br/>
    * This also checks for validation errors.
    * 
@@ -56,6 +86,40 @@ public interface ToscaService {
    */
   @Nonnull
   public ArchiveRoot parseTemplate(@Nonnull String toscaTemplate)
+      throws IOException, ParsingException, ToscaException;
+
+  /**
+   * As for {@link #parseTemplate(String)} but also validates user's inputs.
+   * 
+   * @param toscaTemplate
+   *          the TOSCA template as string.
+   * @return an {@link ArchiveRoot} representing the template.
+   * @throws IOException
+   *           if an I/O error occurs (converting the string to a CSAR zipped archive internally).
+   * @throws ParsingException
+   *           if parsing errors occur.
+   * @throws ToscaException
+   *           if validation errors occur.
+   */
+  @Nonnull
+  public ArchiveRoot parseAndValidateTemplate(@Nonnull String toscaTemplate,
+      Map<String, String> inputs) throws IOException, ParsingException, ToscaException;
+
+  /**
+   * As for {@link #parseAndValidateTemplate(String)} but also replaces the user's inputs.
+   * 
+   * @param toscaTemplate
+   *          the TOSCA template as string.
+   * @return an {@link ArchiveRoot} representing the template.
+   * @throws IOException
+   *           if an I/O error occurs (converting the string to a CSAR zipped archive internally).
+   * @throws ParsingException
+   *           if parsing errors occur.
+   * @throws ToscaException
+   *           if validation errors occur.
+   */
+  @Nonnull
+  public ArchiveRoot prepareTemplate(@Nonnull String toscaTemplate, Map<String, String> inputs)
       throws IOException, ParsingException, ToscaException;
 
   @Nonnull

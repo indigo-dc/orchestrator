@@ -5,6 +5,7 @@ import alien4cloud.exception.InvalidArgumentException;
 import alien4cloud.model.components.AbstractPropertyValue;
 import alien4cloud.model.components.Csar;
 import alien4cloud.model.components.ListPropertyValue;
+import alien4cloud.model.components.PropertyDefinition;
 import alien4cloud.model.components.PropertyValue;
 import alien4cloud.model.components.ScalarPropertyValue;
 import alien4cloud.model.topology.Capability;
@@ -67,6 +68,9 @@ public class ToscaServiceImpl implements ToscaService {
 
   @Autowired
   private ArchiveUploadService archiveUploadService;
+
+  @Autowired
+  private IndigoInputsPreProcessorService indigoInputsPreProcessorService;
 
   @Value("${directories.alien}/${directories.csar_repository}")
   private String alienRepoDir;
@@ -198,6 +202,55 @@ public class ToscaServiceImpl implements ToscaService {
 
     return getTemplateFromTopology(ar);
 
+  }
+
+  @Override
+  public void replaceInputFunctions(ArchiveRoot archiveRoot, Map<String, String> inputs)
+      throws ToscaException {
+    indigoInputsPreProcessorService.processGetInput(archiveRoot, inputs);
+  }
+
+  @Override
+  public ArchiveRoot parseAndValidateTemplate(String toscaTemplate, Map<String, String> inputs)
+      throws IOException, ParsingException, ToscaException {
+    ArchiveRoot ar = parseTemplate(toscaTemplate);
+    validateUserInputs(ar.getTopology().getInputs(), inputs);
+    return ar;
+  }
+
+  @Override
+  public ArchiveRoot prepareTemplate(String toscaTemplate, Map<String, String> inputs)
+      throws IOException, ParsingException, ToscaException {
+    ArchiveRoot ar = parseAndValidateTemplate(toscaTemplate, inputs);
+    replaceInputFunctions(ar, inputs);
+    return ar;
+  }
+
+  @Override
+  public void validateUserInputs(Map<String, PropertyDefinition> templateInputs,
+      Map<String, String> inputs) throws ToscaException {
+
+    // Check if every required input has been given by the user
+    for (Map.Entry<String, PropertyDefinition> templateInput : templateInputs.entrySet()) {
+      if (templateInput.getValue().isRequired() && !inputs.containsKey(templateInput.getKey())) {
+        // Input required and not in user's input list -> error
+        throw new ToscaException(
+            String.format("Input <%s> is required and is not present in the user's input list",
+                templateInput.getKey()));
+      } else {
+        if (!templateInput.getValue().isRequired()
+            && templateInput.getValue().getDefault() == null) {
+          // Input not required and no default value -> error
+          throw new ToscaException(String.format(
+              "Input <%s> is neither required nor has a default value", templateInput.getKey()));
+        }
+      }
+    }
+
+    // Reference:
+    // http://docs.oasis-open.org/tosca/TOSCA-Simple-Profile-YAML/v1.0/csprd02/TOSCA-Simple-Profile-YAML-v1.0-csprd02.html#TYPE_YAML_STRING
+    // FIXME Check input type compatibility ?
+    // templateInput.getValue().getType()
   }
 
   @Override
