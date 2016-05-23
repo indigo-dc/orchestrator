@@ -57,7 +57,7 @@ public class IndigoInputsPreProcessorService {
    * @throws ToscaException
    *           if the input replacement fails.
    */
-  public void processGetInput(ArchiveRoot archiveRoot, Map<String, String> inputs)
+  public void processGetInput(ArchiveRoot archiveRoot, Map<String, Object> inputs)
       throws ToscaException {
 
     Map<String, NodeTemplate> nodes = archiveRoot.getTopology().getNodeTemplates();
@@ -102,7 +102,7 @@ public class IndigoInputsPreProcessorService {
   }
 
   protected void processGetInput(Map<String, PropertyDefinition> templateInputs,
-      Map<String, String> inputs, Map<String, AbstractPropertyValue> properties,
+      Map<String, Object> inputs, Map<String, AbstractPropertyValue> properties,
       String objectName) {
 
     if (properties != null) {
@@ -119,7 +119,7 @@ public class IndigoInputsPreProcessorService {
   }
 
   protected AbstractPropertyValue processGetInput(Map<String, PropertyDefinition> templateInputs,
-      Map<String, String> inputs, AbstractPropertyValue propertyValue, String propertyName,
+      Map<String, Object> inputs, AbstractPropertyValue propertyValue, String propertyName,
       String objectName) {
     // Only FunctionPropertyValue are interesting
     if (propertyValue instanceof FunctionPropertyValue) {
@@ -132,7 +132,7 @@ public class IndigoInputsPreProcessorService {
           // Alien4Cloud already validates existing input name
           PropertyDefinition templateInput = templateInputs.get(inputName);
           // Look for user's given input
-          String inputValue = inputs.get(inputName);
+          Object inputValue = inputs.get(inputName);
 
           // If not null, replace the input value. Otherwise, use default value.
           if (inputValue == null) {
@@ -144,7 +144,20 @@ public class IndigoInputsPreProcessorService {
               objectName, propertyName, inputName, inputValue);
 
           // Replace property value (was Function, now Scalar)
-          return new ScalarPropertyValue(inputValue);
+          if (inputValue instanceof String || inputValue instanceof Boolean
+              || inputValue instanceof Integer || inputValue instanceof Double) {
+            return new ScalarPropertyValue(inputValue.toString());
+          } else if (inputValue instanceof List) {
+            return new ListPropertyValue((List) ((List) inputValue).stream()
+                .map(e -> new ScalarPropertyValue(e.toString())).collect(Collectors.toList()));
+          } else if (inputValue instanceof Map) {
+            return new ComplexPropertyValue((Map) inputValue);
+          } else {
+            throw new IllegalArgumentException(
+                String.format("Unsupported input type for value <%s> of class <%s>", inputValue,
+                    inputValue.getClass()));
+          }
+
         } catch (Exception ex) {
           throw new ToscaException(String.format(
               "Failed to replace input function on object <%s>, property <%s>, parameters <%s>: %s",

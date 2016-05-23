@@ -75,8 +75,9 @@ public class DeploymentServiceImpl implements DeploymentService {
     Deployment deployment = new Deployment();
     deployment.setStatus(Status.CREATE_IN_PROGRESS);
     deployment.setTask(Task.NONE);
-    deployment.setParameters(request.getParameters().entrySet().stream()
-        .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().toString())));
+    // deployment.setParameters(request.getParameters().entrySet().stream()
+    // .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().toString())));
+    deployment.setParameters(request.getParameters());
 
     if (request.getCallback() != null) {
       deployment.setCallback(request.getCallback());

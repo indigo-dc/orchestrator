@@ -53,7 +53,7 @@ public interface ToscaService {
    *           value doesn't match the defined input type.
    */
   public void validateUserInputs(Map<String, PropertyDefinition> templateInputs,
-      Map<String, String> inputs) throws ToscaException;
+      Map<String, Object> inputs) throws ToscaException;
 
   /**
    * Replaces TOSCA input functions with the actual input values (user's input values or default
@@ -67,7 +67,7 @@ public interface ToscaService {
    *           if the input replacement fails TODO.
    */
   @Nonnull
-  public void replaceInputFunctions(@Nonnull ArchiveRoot archiveRoot, Map<String, String> inputs)
+  public void replaceInputFunctions(@Nonnull ArchiveRoot archiveRoot, Map<String, Object> inputs)
       throws ToscaException;
 
   /**
@@ -103,7 +103,7 @@ public interface ToscaService {
    */
   @Nonnull
   public ArchiveRoot parseAndValidateTemplate(@Nonnull String toscaTemplate,
-      Map<String, String> inputs) throws IOException, ParsingException, ToscaException;
+      Map<String, Object> inputs) throws IOException, ParsingException, ToscaException;
 
   /**
    * As for {@link #parseAndValidateTemplate(String)} but also replaces the user's inputs.
@@ -119,7 +119,7 @@ public interface ToscaService {
    *           if validation errors occur.
    */
   @Nonnull
-  public ArchiveRoot prepareTemplate(@Nonnull String toscaTemplate, Map<String, String> inputs)
+  public ArchiveRoot prepareTemplate(@Nonnull String toscaTemplate, Map<String, Object> inputs)
       throws IOException, ParsingException, ToscaException;
 
   @Nonnull

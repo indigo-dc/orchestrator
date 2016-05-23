@@ -205,13 +205,13 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
-  public void replaceInputFunctions(ArchiveRoot archiveRoot, Map<String, String> inputs)
+  public void replaceInputFunctions(ArchiveRoot archiveRoot, Map<String, Object> inputs)
       throws ToscaException {
     indigoInputsPreProcessorService.processGetInput(archiveRoot, inputs);
   }
 
   @Override
-  public ArchiveRoot parseAndValidateTemplate(String toscaTemplate, Map<String, String> inputs)
+  public ArchiveRoot parseAndValidateTemplate(String toscaTemplate, Map<String, Object> inputs)
       throws IOException, ParsingException, ToscaException {
     ArchiveRoot ar = parseTemplate(toscaTemplate);
     validateUserInputs(ar.getTopology().getInputs(), inputs);
@@ -219,7 +219,7 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
-  public ArchiveRoot prepareTemplate(String toscaTemplate, Map<String, String> inputs)
+  public ArchiveRoot prepareTemplate(String toscaTemplate, Map<String, Object> inputs)
       throws IOException, ParsingException, ToscaException {
     ArchiveRoot ar = parseAndValidateTemplate(toscaTemplate, inputs);
     replaceInputFunctions(ar, inputs);
@@ -228,7 +228,7 @@ public class ToscaServiceImpl implements ToscaService {
 
   @Override
   public void validateUserInputs(Map<String, PropertyDefinition> templateInputs,
-      Map<String, String> inputs) throws ToscaException {
+      Map<String, Object> inputs) throws ToscaException {
 
     // Check if every required input has been given by the user
     for (Map.Entry<String, PropertyDefinition> templateInput : templateInputs.entrySet()) {
@@ -370,6 +370,7 @@ public class ToscaServiceImpl implements ToscaService {
     return (PropertyValue<?>) getCapabilityPropertyByName(capability, propertyName);
   }
 
+  @Override
   public RelationshipTemplate getRelationshipTemplateByCapabilityName(
       Map<String, RelationshipTemplate> relationships, String capabilityName) {
     if (relationships == null)

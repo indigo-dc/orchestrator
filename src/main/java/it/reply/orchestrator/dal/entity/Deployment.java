@@ -1,9 +1,14 @@
 package it.reply.orchestrator.dal.entity;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
+import it.reply.utils.json.JsonUtility;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,6 +16,7 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 import javax.persistence.CascadeType;
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -19,6 +25,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 import javax.persistence.Transient;
 
 @Entity
@@ -53,10 +60,17 @@ public class Deployment extends AbstractResourceEntity {
   /**
    * The user's inputs to the template.
    */
+  @Transient
+  // @ElementCollection(fetch = FetchType.EAGER)
+  // @MapKeyColumn(name = "name")
+  // @Column(name = "value")
+  Map<String, Object> parameters = null;
+
   @ElementCollection(fetch = FetchType.EAGER)
   @MapKeyColumn(name = "name")
   @Column(name = "value")
-  Map<String, String> parameters = new HashMap<String, String>();
+  @CollectionTable(name = "parameters")
+  private Map<String, String> parametersSerialized = new HashMap<>();
 
   @ElementCollection(fetch = FetchType.EAGER)
   @MapKeyColumn(name = "name")
@@ -131,17 +145,65 @@ public class Deployment extends AbstractResourceEntity {
 
   /**
    * The user's inputs to the template.
+   *
+   * @throws IOException
+   * @throws JsonMappingException
+   * @throws JsonParseException
    */
-  public Map<String, String> getParameters() {
+  public synchronized Map<String, Object> getParameters() {
+
+    if (parameters != null) {
+      return parameters;
+    }
+
+    parameters = new HashMap<>();
+    for (Map.Entry<String, String> serializedParam : parametersSerialized.entrySet()) {
+      Object paramObject = null;
+      if (serializedParam.getValue() != null) {
+        try {
+          paramObject = JsonUtility.deserializeJson(serializedParam.getValue(), Object.class);
+        } catch (IOException ex) {
+          throw new RuntimeException("Failed to deserialize parameters in JSON", ex);
+        }
+      }
+
+      parameters.put(serializedParam.getKey(), paramObject);
+    }
+
     return parameters;
   }
 
   /**
    * The user's inputs to the template.
+   *
+   * @throws IOException
+   * @throws JsonMappingException
+   * @throws JsonParseException
    */
-  public void setParameters(Map<String, String> parameters) {
-    this.parameters = parameters;
+  public synchronized void setParameters(Map<String, Object> parameters) {
+    parametersSerialized = new HashMap<>();
+    for (Map.Entry<String, Object> parameter : parameters.entrySet()) {
+      String paramString = null;
+      if (parameter.getValue() != null) {
+        try {
+          paramString = JsonUtility.serializeJson(parameter.getValue());
+        } catch (IOException ex) {
+          throw new RuntimeException("Failed to serialize parameters in JSON", ex);
+        }
+      }
+
+      parametersSerialized.put(parameter.getKey(), paramString);
+    }
+    this.parameters = null;
   }
+
+  // public Map<String, Object> getParameters() {
+  // return parameters;
+  // }
+  //
+  // public void setParameters(Map<String, Object> parameters) {
+  // this.parameters = parameters;
+  // }
 
   public Map<String, String> getOutputs() {
     return outputs;

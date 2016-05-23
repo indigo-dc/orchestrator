@@ -1,5 +1,6 @@
 package it.reply.orchestrator.service.deployment.providers;
 
+import alien4cloud.model.components.AbstractPropertyValue;
 import alien4cloud.model.components.ComplexPropertyValue;
 import alien4cloud.model.components.DeploymentArtifact;
 import alien4cloud.model.components.ListPropertyValue;
@@ -406,6 +407,7 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
    *          the deployment.
    * @return <tt>true</tt> if all jobs have been deleted, <tt>false</tt> otherwise.
    */
+  @Override
   public boolean doUndeploy(Deployment deployment) {
     // Delete all Jobs on Chronos
 
@@ -716,7 +718,7 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       if (inputUris != null && !inputUris.getValue().isEmpty()) {
         // Convert List<Object> to List<String>
         chronosJob.setUris(inputUris.getValue().stream()
-            .map(e -> (String) ((PropertyValue<?>) e).getValue()).collect(Collectors.toList()));
+            .map(e -> ((PropertyValue<?>) e).getValue().toString()).collect(Collectors.toList()));
 
       }
 
@@ -778,7 +780,10 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
 
       Container container = new Container();
       container.setType("DOCKER");
-      container.setImage((String) nodeTemplate.getArtifacts().get("image").getFile());
+
+      container
+          .setImage((String) ((PropertyValue<?>) nodeTemplate.getArtifacts().get("image").getFile())
+              .getValue());
       if (dockerNumCpus != null) {
         chronosJob.setCpus(dockerNumCpus);
       }
