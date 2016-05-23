@@ -1,6 +1,5 @@
 package it.reply.orchestrator.service.deployment.providers;
 
-import alien4cloud.model.components.AbstractPropertyValue;
 import alien4cloud.model.components.ComplexPropertyValue;
 import alien4cloud.model.components.DeploymentArtifact;
 import alien4cloud.model.components.ListPropertyValue;
@@ -8,7 +7,6 @@ import alien4cloud.model.components.PropertyValue;
 import alien4cloud.model.components.ScalarPropertyValue;
 import alien4cloud.model.topology.Capability;
 import alien4cloud.model.topology.NodeTemplate;
-import alien4cloud.model.topology.RelationshipTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.normative.SizeType;
 import alien4cloud.tosca.parser.ParsingException;
@@ -487,12 +485,18 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
     }
 
     private Job chronosJob;
+    private String toscaNodeName;
     private Collection<IndigoJob> children = new ArrayList<>();
     private Collection<IndigoJob> parents = new ArrayList<>();
 
-    public IndigoJob(Job chronosJob) {
+    public IndigoJob(String toscaNodeName, Job chronosJob) {
       super();
+      this.toscaNodeName = toscaNodeName;
       this.chronosJob = chronosJob;
+    }
+
+    public String getToscaNodeName() {
+      return toscaNodeName;
     }
 
     public Job getChronosJob() {
@@ -509,7 +513,7 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
 
     @Override
     public String toString() {
-      return "IndigoJob [chronosJob=" + chronosJob.getName();
+      return "IndigoJob [toscaNodeName=" + toscaNodeName + ", chronosJob=" + chronosJob.getName();
     }
 
   }
@@ -556,8 +560,8 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       String nodeName = node.getKey();
       if (isChronosNode(nodeTemplate)) {
         Job chronosJob = createJob(nodes, deploymentId, nodeName, nodeTemplate);
-
-        IndigoJob job = new IndigoJob(chronosJob);
+        ;
+        IndigoJob job = new IndigoJob(nodeName, chronosJob);
         jobs.put(nodeName, job);
       }
     }
@@ -683,11 +687,17 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
 
   protected List<String> getJobParents(NodeTemplate nodeTemplate, String nodeName,
       Map<String, NodeTemplate> nodes) {
-    // FIXME Implement parent extraction
-    // Requirement parentNode = nodeTemplate.getRequirements().get("job_predecessor");
+    // Get Chronos parent job dependency
+    String parentJobCapabilityName = "parent_job";
+    Map<String, NodeTemplate> parentJobs =
+        toscaService.getAssociatedNodesByCapability(nodes, nodeTemplate, parentJobCapabilityName);
 
-    // STUB !
-    return nodeName.equals("chronos_job_upload") ? Lists.newArrayList("chronos_job") : null;
+    if (parentJobs.isEmpty()) {
+      return null;
+    } else {
+      // WARNING: cycle check is done later!
+      return Lists.newArrayList(parentJobs.keySet());
+    }
   }
 
   protected Job createJob(Map<String, NodeTemplate> nodes, String deploymentId, String nodeName,
@@ -759,14 +769,16 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
 
       // Get Docker host dependency
       String dockerCapabilityName = "host";
-      RelationshipTemplate dockerRelationship =
-          toscaService.getRelationshipTemplateByCapabilityName(nodeTemplate.getRelationships(),
-              dockerCapabilityName);
+      Map<String, NodeTemplate> dockerRelationships =
+          toscaService.getAssociatedNodesByCapability(nodes, nodeTemplate, dockerCapabilityName);
       Double dockerNumCpus = null;
       Double dockerMemSize = null;
-      if (dockerRelationship != null) {
-        String dockerNodeName = dockerRelationship.getTarget();
-        NodeTemplate dockerNode = nodes.get(dockerNodeName);
+      if (!dockerRelationships.isEmpty()) {
+        /*
+         * WARNING: The TOSCA validation should already check the limits (currently Alien4Cloud does
+         * not...)
+         */
+        NodeTemplate dockerNode = dockerRelationships.values().iterator().next();
         Capability dockerCapability = dockerNode.getCapabilities().get(dockerCapabilityName);
         dockerNumCpus = Double.parseDouble((String) toscaService
             .getCapabilityPropertyValueByName(dockerCapability, "num_cpus").getValue());

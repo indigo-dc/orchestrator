@@ -135,8 +135,24 @@ public interface ToscaService {
   public PropertyValue<?> getCapabilityPropertyValueByName(Capability capability,
       String propertyName);
 
-  public RelationshipTemplate getRelationshipTemplateByCapabilityName(
+  public List<RelationshipTemplate> getRelationshipTemplatesByCapabilityName(
       Map<String, RelationshipTemplate> relationships, String capabilityName);
+
+  /**
+   * Finds all the nodes associated to the given {@link NodeTemplate} with a capability with the
+   * given name.
+   * 
+   * @param nodes
+   *          the template's node map.
+   * @param nodeTemplate
+   *          the origin node.
+   * @param capabilityName
+   *          the name of the capability.
+   * @return a map with the nodes (and their names) associated to the origin node with given
+   *         capability.
+   */
+  public Map<String, NodeTemplate> getAssociatedNodesByCapability(Map<String, NodeTemplate> nodes,
+      NodeTemplate nodeTemplate, String capabilityName);
 
   public Map<String, NodeTemplate> getCountNodes(ArchiveRoot archiveRoot);
 

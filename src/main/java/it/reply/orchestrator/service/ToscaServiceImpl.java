@@ -371,16 +371,37 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
-  public RelationshipTemplate getRelationshipTemplateByCapabilityName(
+  public Map<String, NodeTemplate> getAssociatedNodesByCapability(Map<String, NodeTemplate> nodes,
+      NodeTemplate nodeTemplate, String capabilityName) {
+    Map<String, NodeTemplate> associatedNodes = new HashMap<>();
+
+    List<RelationshipTemplate> relationships =
+        getRelationshipTemplatesByCapabilityName(nodeTemplate.getRelationships(), capabilityName);
+    if (!relationships.isEmpty()) {
+      for (RelationshipTemplate relationship : relationships) {
+        String associatedNodeName = relationship.getTarget();
+        associatedNodes.put(associatedNodeName, nodes.get(associatedNodeName));
+      }
+    }
+
+    return associatedNodes;
+  }
+
+  @Override
+  public List<RelationshipTemplate> getRelationshipTemplatesByCapabilityName(
       Map<String, RelationshipTemplate> relationships, String capabilityName) {
-    if (relationships == null)
-      return null;
+
+    List<RelationshipTemplate> relationshipTemplates = new ArrayList<>();
+    if (relationships == null) {
+      return relationshipTemplates;
+    }
 
     for (Map.Entry<String, RelationshipTemplate> relationship : relationships.entrySet()) {
-      if (relationship.getValue().getTargetedCapabilityName().equals(capabilityName))
-        return relationship.getValue();
+      if (relationship.getValue().getTargetedCapabilityName().equals(capabilityName)) {
+        relationshipTemplates.add(relationship.getValue());
+      }
     }
-    return null;
+    return relationshipTemplates;
   }
 
   @Override
