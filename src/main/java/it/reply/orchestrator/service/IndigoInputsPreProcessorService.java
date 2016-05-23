@@ -2,8 +2,12 @@ package it.reply.orchestrator.service;
 
 import alien4cloud.deployment.InputsPreProcessorService;
 import alien4cloud.model.components.AbstractPropertyValue;
+import alien4cloud.model.components.ComplexPropertyValue;
+import alien4cloud.model.components.DeploymentArtifact;
 import alien4cloud.model.components.FunctionPropertyValue;
+import alien4cloud.model.components.ListPropertyValue;
 import alien4cloud.model.components.PropertyDefinition;
+import alien4cloud.model.components.PropertyValue;
 import alien4cloud.model.components.ScalarPropertyValue;
 import alien4cloud.model.topology.Capability;
 import alien4cloud.model.topology.NodeTemplate;
@@ -11,14 +15,20 @@ import alien4cloud.model.topology.RelationshipTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.normative.ToscaFunctionConstants;
 
+import com.google.common.collect.Maps;
+
 import it.reply.orchestrator.exception.service.ToscaException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Inputs pre-processor service manages pre-processing of inputs parameters in a Topology.
@@ -78,6 +88,15 @@ public class IndigoInputsPreProcessorService {
             processGetInput(templateInputs, inputs, capability.getProperties(), capaEntry.getKey());
           }
         }
+        // process node's artifacts
+        if (nodeTemplate.getArtifacts() != null) {
+          for (Entry<String, DeploymentArtifact> artifactEntry : nodeTemplate.getArtifacts()
+              .entrySet()) {
+            DeploymentArtifact artifact = artifactEntry.getValue();
+            artifact.setFile(processGetInput(templateInputs, inputs, artifact.getFile(), "file",
+                artifactEntry.getKey()));
+          }
+        }
       }
     }
   }
@@ -89,44 +108,85 @@ public class IndigoInputsPreProcessorService {
     if (properties != null) {
       // For each property
       for (Map.Entry<String, AbstractPropertyValue> propEntry : properties.entrySet()) {
-        // Only FunctionPropertyValue are interesting
-        if (propEntry.getValue() instanceof FunctionPropertyValue) {
-          FunctionPropertyValue function = (FunctionPropertyValue) propEntry.getValue();
-          // Only INPUT functions are interesting
-          if (ToscaFunctionConstants.GET_INPUT.equals(function.getFunction())) {
-
-            try {
-              String inputName = function.getParameters().get(0);
-              // Alien4Cloud already validates existing input name
-              PropertyDefinition templateInput = templateInputs.get(inputName);
-              // Look for user's given input
-              String inputValue = inputs.get(inputName);
-
-              // If not null, replace the input value. Otherwise, use default value.
-              if (inputValue == null) {
-                inputValue = templateInput.getDefault();
-              }
-
-              // Replace property value (was Function, now Scalar)
-              propEntry.setValue(new ScalarPropertyValue(inputValue));
-
-              LOG.debug(
-                  "TOSCA input function replacement: object <{}>, property <{}>, input name <{}>, input value <{}>",
-                  objectName, propEntry.getKey(), inputName, inputValue);
-            } catch (Exception ex) {
-              throw new ToscaException(String.format(
-                  "Failed to replace input function on object <%s>, property <%s>, parameters <%s>: %s",
-                  objectName, propEntry.getKey(), function.getParameters(), ex.getMessage()), ex);
-            }
-          } else {
-            String msg = String.format(
-                "Function <%s> detected for property <%s> while only <get_input> should be authorized.",
-                function.getFunction(), propEntry.getKey());
-            LOG.error(msg);
-            throw new ToscaException(msg);
-          }
+        AbstractPropertyValue newValue;
+        // Replace function value with the replaced value (if changed)
+        if ((newValue = processGetInput(templateInputs, inputs, propEntry.getValue(),
+            propEntry.getKey(), objectName)) != propEntry.getValue()) {
+          propEntry.setValue(newValue);
         }
       }
     }
+  }
+
+  protected AbstractPropertyValue processGetInput(Map<String, PropertyDefinition> templateInputs,
+      Map<String, String> inputs, AbstractPropertyValue propertyValue, String propertyName,
+      String objectName) {
+    // Only FunctionPropertyValue are interesting
+    if (propertyValue instanceof FunctionPropertyValue) {
+      FunctionPropertyValue function = (FunctionPropertyValue) propertyValue;
+      // Only INPUT functions are interesting
+      if (ToscaFunctionConstants.GET_INPUT.equals(function.getFunction())) {
+
+        try {
+          String inputName = function.getParameters().get(0);
+          // Alien4Cloud already validates existing input name
+          PropertyDefinition templateInput = templateInputs.get(inputName);
+          // Look for user's given input
+          String inputValue = inputs.get(inputName);
+
+          // If not null, replace the input value. Otherwise, use default value.
+          if (inputValue == null) {
+            inputValue = templateInput.getDefault();
+          }
+
+          LOG.debug(
+              "TOSCA input function replacement: object <{}>, property <{}>, input name <{}>, input value <{}>",
+              objectName, propertyName, inputName, inputValue);
+
+          // Replace property value (was Function, now Scalar)
+          return new ScalarPropertyValue(inputValue);
+        } catch (Exception ex) {
+          throw new ToscaException(String.format(
+              "Failed to replace input function on object <%s>, property <%s>, parameters <%s>: %s",
+              objectName, propertyName, function.getParameters(), ex.getMessage()), ex);
+        }
+      } else {
+        String msg = String.format(
+            "Function <%s> detected for property <%s> while only <get_input> should be authorized.",
+            function.getFunction(), propertyName);
+        LOG.error(msg);
+        throw new ToscaException(msg);
+      }
+    } else {
+      // Complex or List properties might contain other function as their values
+      if (propertyValue instanceof ComplexPropertyValue
+          || propertyValue instanceof ListPropertyValue) {
+        Map<String, Object> myMap = new HashMap<>();
+        if (propertyValue instanceof ListPropertyValue) {
+          List<Object> list = ((ListPropertyValue) propertyValue).getValue();
+          for (int i = 0; i < ((ListPropertyValue) propertyValue).getValue().size(); i++) {
+            myMap.put("<list-item-" + i + ">", list.get(i));
+          }
+        }
+
+        myMap = ((ComplexPropertyValue) propertyValue).getValue();
+
+        // Look for function in the value
+        for (Map.Entry<String, Object> complexEntry : myMap.entrySet()) {
+          // Only AbstractPropertyValue values can have functions in them
+          if (complexEntry.getValue() instanceof AbstractPropertyValue) {
+            AbstractPropertyValue newValue;
+            // Replace function value with the replaced value (if changed)
+            if ((newValue = processGetInput(templateInputs, inputs,
+                (AbstractPropertyValue) complexEntry.getValue(), complexEntry.getKey(),
+                propertyName)) != complexEntry.getValue()) {
+              complexEntry.setValue(newValue);
+            }
+          }
+
+        }
+      }
+    }
+    return propertyValue;
   }
 }
