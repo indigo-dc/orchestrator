@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>it.reply</groupId>
 	<artifactId>orchestrator</artifactId>
-	<version>0.0.4-SNAPSHOT</version>
+	<version>0.0.5-SNAPSHOT</version>
 	<packaging>war</packaging>
 	<name>orchestrator</name>
 
@@ -25,7 +25,7 @@
 		<snippetsDirectory>${project.build.directory}\generated-snippets</snippetsDirectory>
 		<checkstyle-plugin.version>2.17</checkstyle-plugin.version>
 		<workflow-manager.version>0.0.3-SNAPSHOT</workflow-manager.version>
-		<alien4cloud.version>1.1.0-INDIGO1</alien4cloud.version>
+		<alien4cloud.version>1.1.0-INDIGO2-SNAPSHOT</alien4cloud.version>
 	</properties>
 
 	<distributionManagement>
