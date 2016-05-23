@@ -11,6 +11,10 @@ description: >
 data_types:
   tosca.datatypes.Root:
     description: The TOSCA root Data Type all other TOSCA base Data Types derive from.
+
+  string:
+    derived_from: tosca.datatypes.Root
+
   tosca.datatypes.Credential:
     derived_from: tosca.datatypes.Root
     description: The Credential type is a complex TOSCA data Type used when describing authorization credentials used to access network accessible resources.

@@ -440,12 +440,12 @@ node_types:
         required: no
         type: integer
     capabilities:
-      job_successor:
+      parent_job:
         type: tosca.capabilities.indigo.Container.Application.Docker.Chronos
         valid_source_types: [tosca.nodes.indigo.Container.Application.Docker.Chronos]
         occurrences: [0, UNBOUNDED]
     requirements:
-      job_predecessor:
+      parent_job:
         type: tosca.capabilities.indigo.Container.Application.Docker.Chronos
         node: tosca.nodes.indigo.Container.Application.Docker.Chronos
         relationship: tosca.relationships.DependsOn
