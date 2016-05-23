@@ -32,8 +32,9 @@ if [[ $ONEDOCK_AUTH_FILE_PATH ]];
 fi;
 
 # CUSTOMIZE SECURITY PROPERTIES
-if [[ $SECURITY_ENABLE ]];
-	then sed -i "s/^\(security\.enabled=\).*$/\1$(echo $SECURITY_ENABLE | sed -e 's/[\/&]/\\&/g')/" ${SECURITY_PROP_FILE};
+if [ $SECURITY_ENABLE = "true"];
+	then sed -i "s/^\(security\.enabled=\).*$/\1$(echo 'true' | sed -e 's/[\/&]/\\&/g')/" ${SECURITY_PROP_FILE};
+	else sed -i "s/^\(security\.enabled=\).*$/\1$(echo 'false' | sed -e 's/[\/&]/\\&/g')/" ${SECURITY_PROP_FILE};
 fi;
 
 if [[ $OIDC_ISSUERS ]];
