@@ -26,6 +26,7 @@ import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.enums.DeploymentProvider;
+import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
@@ -141,7 +142,7 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
 
       // Create Jobs in the required order on Chronos
       LOG.debug("Launching jobs for deployment <{}> on Chronos", deployment.getId());
-      createJobsOnChronos(jobgraph, getChronosClient());
+      createJobsOnChronos(deployment, jobgraph, getChronosClient());
 
       return true;
     } catch (RuntimeException exception) { // Chronos job launch error
@@ -157,8 +158,8 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
     }
   }
 
-  protected void createJobsOnChronos(Multimap<JobDependencyType, IndigoJob> jobgraph,
-      Chronos client) {
+  protected void createJobsOnChronos(Deployment deployment,
+      Multimap<JobDependencyType, IndigoJob> jobgraph, Chronos client) {
     // Create Jobs in the required order on Chronos
 
     IndigoJob currentJob = null;
@@ -182,9 +183,13 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
 
         LOG.debug("Created job on Chronos: name <{}>, {}", currentJob.getChronosJob().getName(),
             nodeTypeMsg);
+        // Update job status
+        updateResource(deployment, currentJob, NodeStates.CREATED);
       }
 
     } catch (ChronosException exception) { // Chronos job launch error
+      // Update job status
+      updateResource(deployment, currentJob, NodeStates.ERROR);
       // TODO use a custom exception ?
       throw new RuntimeException(
           String.format("Failed to launch job <%s> on Chronos. Status Code: <%s>",
@@ -259,10 +264,12 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
         String jobName = job.getChronosJob().getName();
         Job updatedJob = getJobStatus(client, jobName);
         if (updatedJob == null) {
-          String errorMsg =
-              String.format("Failed to deploy deployment <%s>. Chronos job <%s> does not exist",
-                  deployment.getId(), jobName);
+          String errorMsg = String.format(
+              "Failed to deploy deployment <%s>. Chronos job <%s> (id: <%s>) does not exist",
+              deployment.getId(), job.getToscaNodeName(), jobName);
           LOG.error(errorMsg);
+          // Update job status
+          updateResource(deployment, job, NodeStates.ERROR);
           throw new DeploymentException(errorMsg);
         }
 
@@ -270,15 +277,31 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
         LOG.debug("Status for Chronos job <{}> is <{}>", jobName, jobState);
 
         // Go ahead only if the job succeeded
-        if (!checkJobState(deployment.getId(), jobName, jobState)) {
-          return false;
+        if (jobState != JobState.SUCCESS) {
+          if (jobState != JobState.FAILURE) {
+            // Job still in progress
+            return false;
+          } else {
+            // Job failed -> Deployment failed!
+            String errorMsg = String.format(
+                "Failed to deploy deployment <%s>. Chronos job <%s> (id: <%s>) status is <%s>",
+                deployment.getId(), job.getToscaNodeName(), jobName, jobState);
+            LOG.error(errorMsg);
+            // Update job status
+            updateResource(deployment, job, NodeStates.ERROR);
+            throw new DeploymentException(errorMsg);
+          }
+        } else {
+          // Update job status
+          updateResource(deployment, job, NodeStates.STARTED);
         }
       }
 
       // Here all task succeeded -> deployment is ready
       return true;
     } catch (DeploymentException dex) {
-      // Deploy failed; let caller know (as for the method definitiion)
+      // Deploy failed; let caller know (as for the method definition)
+      updateOnError(deployment.getId(), dex);
       throw dex;
     } catch (RuntimeException ex) {
       LOG.error("Failed to update deployment <{}>", ex);
@@ -291,32 +314,13 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
 
   }
 
-  /**
-   * 
-   * @param deploymentId
-   * @param jobName
-   * @param jobState
-   * @return <tt>true</tt> if the job succeeded, <tt>false</tt> if the job is still in progress.
-   * @throws DeploymentException
-   *           if the job failed.
-   */
-  protected boolean checkJobState(String deploymentId, String jobName, JobState jobState)
-      throws DeploymentException {
-    if (jobState == JobState.SUCCESS) {
-      return true;
-    }
+  private void updateResource(Deployment deployment, IndigoJob job, NodeStates state) {
 
-    if (jobState != JobState.FAILURE) {
-      // Job still in progress
-      return false;
-    } else {
-      // Job failed -> Deployment failed!
-      String errorMsg =
-          String.format("Failed to deploy deployment <%s>. Chronos job <%s> status is <%s>",
-              deploymentId, jobName, jobState);
-      LOG.error(errorMsg);
-      throw new DeploymentException(errorMsg);
-    }
+    // Find the Resource from DB
+    Resource resource = resourceRepository
+        .findByToscaNodeNameAndDeployment_id(job.getToscaNodeName(), deployment.getId());
+    resource.setState(state);
+    // resourceRepository.save(resource);
   }
 
   /**
@@ -416,9 +420,13 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       Multimap<JobDependencyType, IndigoJob> jobgraph =
           generateJobGraph(deployment, generateStubOneData());
 
+      for (Resource resource : deployment.getResources()) {
+        resource.setState(NodeStates.DELETING);
+      }
+
       // Create Jobs in the required order on Chronos
       LOG.debug("Deleting jobs for deployment <{}> on Chronos", deployment.getId());
-      deleteJobsOnChronos(jobgraph, getChronosClient(), true);
+      deleteJobsOnChronos(deployment, jobgraph, getChronosClient(), true);
 
       return true;
     } catch (RuntimeException exception) { // Chronos job launch error
@@ -447,8 +455,8 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
    *          tries to delete every other job.
    * @return <tt>true</tt> if all jobs have been deleted, <tt>false</tt> otherwise.
    */
-  protected boolean deleteJobsOnChronos(Multimap<JobDependencyType, IndigoJob> jobgraph,
-      Chronos client, boolean failAtFirst) {
+  protected boolean deleteJobsOnChronos(Deployment deployment,
+      Multimap<JobDependencyType, IndigoJob> jobgraph, Chronos client, boolean failAtFirst) {
 
     IndigoJob currentJob = null;
     boolean failed = false;
@@ -467,6 +475,9 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
         LOG.error(errorMsg);
         failed = true;
 
+        // Update job status
+        updateResource(deployment, currentJob, NodeStates.ERROR);
+
         // Only throw exception in required
         if (failAtFirst) {
           // TODO use a custom exception ?
@@ -476,7 +487,6 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
     }
 
     return !failed;
-
   }
 
   public static class IndigoJob {

@@ -24,6 +24,7 @@ import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
+import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
@@ -556,5 +557,47 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   private void logImErrorResponse(ImClientErrorException exception) {
     LOG.error(exception.getResponseError().getFormattedErrorMessage());
+  }
+
+  // FIXME Remove once IM handles single nodes state update
+  /**
+   * Update the status of the deployment with an error message.
+   * 
+   * @param deploymentUuid
+   *          the deployment id
+   * @param message
+   *          the error message
+   */
+  public void updateOnError(String deploymentUuid, String message) {
+    Deployment deployment = deploymentRepository.findOne(deploymentUuid);
+    switch (deployment.getStatus()) {
+      case CREATE_FAILED:
+      case UPDATE_FAILED:
+      case DELETE_FAILED:
+        LOG.warn("Deployment < {} > was already in {} state.", deploymentUuid,
+            deployment.getStatus());
+        break;
+      case CREATE_IN_PROGRESS:
+        deployment.setStatus(Status.CREATE_FAILED);
+        updateResources(deployment, Status.CREATE_FAILED);
+        break;
+      case DELETE_IN_PROGRESS:
+        deployment.setStatus(Status.DELETE_FAILED);
+        updateResources(deployment, Status.DELETE_FAILED);
+        break;
+      case UPDATE_IN_PROGRESS:
+        deployment.setStatus(Status.UPDATE_FAILED);
+        updateResources(deployment, Status.UPDATE_FAILED);
+        break;
+      default:
+        LOG.error("updateOnError: unsupported deployment status: {}. Setting status to {}",
+            deployment.getStatus(), Status.UNKNOWN.toString());
+        deployment.setStatus(Status.UNKNOWN);
+        updateResources(deployment, Status.UNKNOWN);
+        break;
+    }
+    deployment.setTask(Task.NONE);
+    deployment.setStatusReason(message);
+    deploymentRepository.save(deployment);
   }
 }

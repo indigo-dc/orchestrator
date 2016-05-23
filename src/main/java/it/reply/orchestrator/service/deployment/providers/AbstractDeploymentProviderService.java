@@ -111,7 +111,7 @@ public abstract class AbstractDeploymentProviderService implements DeploymentPro
    * Update the status of the deployment with an error message.
    * 
    * @param deploymentUuid
-   *          the deplyment id
+   *          the deployment id
    * @param message
    *          the error message
    */
@@ -126,21 +126,17 @@ public abstract class AbstractDeploymentProviderService implements DeploymentPro
         break;
       case CREATE_IN_PROGRESS:
         deployment.setStatus(Status.CREATE_FAILED);
-        updateResources(deployment, Status.CREATE_FAILED);
         break;
       case DELETE_IN_PROGRESS:
         deployment.setStatus(Status.DELETE_FAILED);
-        updateResources(deployment, Status.DELETE_FAILED);
         break;
       case UPDATE_IN_PROGRESS:
         deployment.setStatus(Status.UPDATE_FAILED);
-        updateResources(deployment, Status.UPDATE_FAILED);
         break;
       default:
         LOG.error("updateOnError: unsupported deployment status: {}. Setting status to {}",
             deployment.getStatus(), Status.UNKNOWN.toString());
         deployment.setStatus(Status.UNKNOWN);
-        updateResources(deployment, Status.UNKNOWN);
         break;
     }
     deployment.setTask(Task.NONE);
@@ -184,7 +180,7 @@ public abstract class AbstractDeploymentProviderService implements DeploymentPro
     }
   }
 
-  private void updateResources(Deployment deployment, Status status) {
+  protected void updateResources(Deployment deployment, Status status) {
 
     for (Resource resource : deployment.getResources()) {
       if (status.equals(Status.CREATE_COMPLETE) || status.equals(Status.UPDATE_COMPLETE)) {
