@@ -63,6 +63,22 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
   }
 
   /**
+   * Bad Request exception handler.
+   * 
+   * @param ex
+   *          the exception
+   * @return a {@code ResponseEntity} instance
+   */
+  @ExceptionHandler
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  @ResponseBody
+  public Error handleException(BadRequestException ex) {
+
+    return new Error().withCode(HttpStatus.BAD_REQUEST.value())
+        .withTitle(HttpStatus.BAD_REQUEST.getReasonPhrase()).withMessage(ex.getMessage());
+  }
+
+  /**
    * Invalid TOSCA exception handler.
    * 
    * @param ex
@@ -73,22 +89,6 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   @ResponseBody
   public Error handleException(ToscaException ex) {
-
-    return new Error().withCode(HttpStatus.BAD_REQUEST.value())
-        .withTitle(HttpStatus.BAD_REQUEST.getReasonPhrase()).withMessage(ex.getMessage());
-  }
-
-  /**
-   * Bad request exception handler.
-   * 
-   * @param ex
-   *          the exception
-   * @return a {@code ResponseEntity} instance
-   */
-  @ExceptionHandler
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
-  @ResponseBody
-  public Error handleException(BadRequestException ex) {
 
     return new Error().withCode(HttpStatus.BAD_REQUEST.value())
         .withTitle(HttpStatus.BAD_REQUEST.getReasonPhrase()).withMessage(ex.getMessage());

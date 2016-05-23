@@ -16,7 +16,6 @@ import java.util.Map;
 
 import javax.annotation.Nonnull;
 import javax.persistence.CascadeType;
-import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -25,7 +24,6 @@ import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
-import javax.persistence.Table;
 import javax.persistence.Transient;
 
 @Entity
@@ -61,16 +59,12 @@ public class Deployment extends AbstractResourceEntity {
    * The user's inputs to the template.
    */
   @Transient
-  // @ElementCollection(fetch = FetchType.EAGER)
-  // @MapKeyColumn(name = "name")
-  // @Column(name = "value")
-  Map<String, Object> parameters = null;
+  Map<String, Object> unserializedParameters = null;
 
   @ElementCollection(fetch = FetchType.EAGER)
   @MapKeyColumn(name = "name")
   @Column(name = "value")
-  @CollectionTable(name = "parameters")
-  private Map<String, String> parametersSerialized = new HashMap<>();
+  private Map<String, String> parameters = new HashMap<>();
 
   @ElementCollection(fetch = FetchType.EAGER)
   @MapKeyColumn(name = "name")
@@ -152,12 +146,12 @@ public class Deployment extends AbstractResourceEntity {
    */
   public synchronized Map<String, Object> getParameters() {
 
-    if (parameters != null) {
-      return parameters;
+    if (unserializedParameters != null) {
+      return unserializedParameters;
     }
 
-    parameters = new HashMap<>();
-    for (Map.Entry<String, String> serializedParam : parametersSerialized.entrySet()) {
+    unserializedParameters = new HashMap<>();
+    for (Map.Entry<String, String> serializedParam : parameters.entrySet()) {
       Object paramObject = null;
       if (serializedParam.getValue() != null) {
         try {
@@ -167,10 +161,10 @@ public class Deployment extends AbstractResourceEntity {
         }
       }
 
-      parameters.put(serializedParam.getKey(), paramObject);
+      unserializedParameters.put(serializedParam.getKey(), paramObject);
     }
 
-    return parameters;
+    return unserializedParameters;
   }
 
   /**
@@ -181,7 +175,7 @@ public class Deployment extends AbstractResourceEntity {
    * @throws JsonParseException
    */
   public synchronized void setParameters(Map<String, Object> parameters) {
-    parametersSerialized = new HashMap<>();
+    this.parameters = new HashMap<>();
     for (Map.Entry<String, Object> parameter : parameters.entrySet()) {
       String paramString = null;
       if (parameter.getValue() != null) {
@@ -192,18 +186,10 @@ public class Deployment extends AbstractResourceEntity {
         }
       }
 
-      parametersSerialized.put(parameter.getKey(), paramString);
+      this.parameters.put(parameter.getKey(), paramString);
     }
-    this.parameters = null;
+    this.unserializedParameters = null;
   }
-
-  // public Map<String, Object> getParameters() {
-  // return parameters;
-  // }
-  //
-  // public void setParameters(Map<String, Object> parameters) {
-  // this.parameters = parameters;
-  // }
 
   public Map<String, String> getOutputs() {
     return outputs;

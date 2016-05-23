@@ -21,6 +21,7 @@ import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.http.BadRequestException;
 import it.reply.orchestrator.exception.http.ConflictException;
 import it.reply.orchestrator.exception.http.NotFoundException;
+import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.workflowmanager.exceptions.WorkflowException;
 import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager;
 import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager.RUNTIME_STRATEGY;
@@ -36,7 +37,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Service
 public class DeploymentServiceImpl implements DeploymentService {
@@ -72,26 +72,27 @@ public class DeploymentServiceImpl implements DeploymentService {
   @Override
   @Transactional
   public Deployment createDeployment(DeploymentRequest request) {
-    Deployment deployment = new Deployment();
-    deployment.setStatus(Status.CREATE_IN_PROGRESS);
-    deployment.setTask(Task.NONE);
-    // deployment.setParameters(request.getParameters().entrySet().stream()
-    // .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().toString())));
-    deployment.setParameters(request.getParameters());
-
-    if (request.getCallback() != null) {
-      deployment.setCallback(request.getCallback());
-    }
-
-    deployment = deploymentRepository.save(deployment);
-    Map<String, NodeTemplate> nodes = null;
+    Map<String, NodeTemplate> nodes;
+    Deployment deployment;
     boolean isChronosDeployment = false;
+
     try {
       // Parse once, validate structure and user's inputs, replace user's input
       ArchiveRoot parsingResult =
-          toscaService.prepareTemplate(request.getTemplate(), deployment.getParameters());
+          toscaService.prepareTemplate(request.getTemplate(), request.getParameters());
 
       nodes = parsingResult.getTopology().getNodeTemplates();
+
+      deployment = new Deployment();
+      deployment.setStatus(Status.CREATE_IN_PROGRESS);
+      deployment.setTask(Task.NONE);
+      deployment.setParameters(request.getParameters());
+
+      if (request.getCallback() != null) {
+        deployment.setCallback(request.getCallback());
+      }
+
+      deployment = deploymentRepository.save(deployment);
 
       // FIXME: Define function to decide DeploymentProvider (Temporary - just for prototyping)
       isChronosDeployment = isChronosDeployment(nodes);
@@ -112,8 +113,12 @@ public class DeploymentServiceImpl implements DeploymentService {
       // Create internal resources representation (to store in DB)
       createResources(deployment, nodes);
 
-    } catch (IOException | ParsingException ex) {
-      throw new OrchestratorException(ex);
+    } catch (IOException ex) {
+      throw new OrchestratorException(ex.getMessage(), ex);
+    } catch (ParsingException ex) {
+      throw new BadRequestException("Template is invalid: " + ex.getMessage());
+    } catch (ToscaException ex) {
+      throw new BadRequestException("Template is invalid: " + ex.getMessage());
     }
 
     Map<String, Object> params = new HashMap<>();

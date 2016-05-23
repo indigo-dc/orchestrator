@@ -158,18 +158,19 @@ capability_types:
         default: source
         constraints:
           - valid_values: [ source, target, peer ]
-    # ports:
-    #   type: map
-    #   description: The optional map of ports the Endpoint supports (if more than one).
-    #   required: false
-    #   constraints:
-    #     - min_length: 1
-    #   entry_schema:
-    #     type: PortSpec
-    # attributes:
-    #   ip_address:
-    #     type: string
-    #     description: This is the IP address as propagated up by the associated node’s host (Compute) container.
+      ports:
+        type: map
+        description: The optional map of ports the Endpoint supports (if more than one).
+        required: false
+        entry_schema:
+          type: integer
+          required: no
+          constraints: 
+            - in_range: [ 1, 65535 ]
+    attributes:
+      ip_address:
+        type: string
+        description: This is the IP address as propagated up by the associated node’s host (Compute) container.
   tosca.capabilities.Endpoint.Public:
     derived_from: tosca.capabilities.Endpoint
     description: >

@@ -231,6 +231,10 @@ public class ToscaServiceImpl implements ToscaService {
       Map<String, Object> inputs) throws ToscaException {
 
     // Check if every required input has been given by the user
+    if (templateInputs == null) {
+      return;
+    }
+
     for (Map.Entry<String, PropertyDefinition> templateInput : templateInputs.entrySet()) {
       if (templateInput.getValue().isRequired() && !inputs.containsKey(templateInput.getKey())) {
         // Input required and not in user's input list -> error

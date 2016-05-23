@@ -7,15 +7,12 @@ import alien4cloud.model.components.DeploymentArtifact;
 import alien4cloud.model.components.FunctionPropertyValue;
 import alien4cloud.model.components.ListPropertyValue;
 import alien4cloud.model.components.PropertyDefinition;
-import alien4cloud.model.components.PropertyValue;
 import alien4cloud.model.components.ScalarPropertyValue;
 import alien4cloud.model.topology.Capability;
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.model.topology.RelationshipTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.normative.ToscaFunctionConstants;
-
-import com.google.common.collect.Maps;
 
 import it.reply.orchestrator.exception.service.ToscaException;
 
@@ -27,7 +24,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -128,6 +124,10 @@ public class IndigoInputsPreProcessorService {
       if (ToscaFunctionConstants.GET_INPUT.equals(function.getFunction())) {
 
         try {
+          if (templateInputs == null) {
+            throw new IllegalArgumentException("Empty template input list");
+          }
+
           String inputName = function.getParameters().get(0);
           // Alien4Cloud already validates existing input name
           PropertyDefinition templateInput = templateInputs.get(inputName);

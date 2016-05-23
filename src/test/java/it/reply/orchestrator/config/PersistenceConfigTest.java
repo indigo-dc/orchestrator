@@ -5,10 +5,13 @@ import bitronix.tm.TransactionManagerServices;
 
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 
+import it.reply.orchestrator.controller.DeploymentController;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.env.Environment;
 import org.springframework.instrument.classloading.InstrumentationLoadTimeWeaver;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
@@ -20,6 +23,8 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.jta.JtaTransactionManager;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.Properties;
 
 import javax.annotation.Resource;
@@ -27,9 +32,10 @@ import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 @Configuration
-@PropertySource(value = { "classpath:application-test.properties" })
 @DatabaseSetup("database-init.xml")
 public class PersistenceConfigTest {
+
+  private static final Logger LOG = LogManager.getLogger(PersistenceConfigTest.class);
 
   private static final String ENTITY_MANAGER_PACKAGE_TO_SCAN = "entitymanager.packages.to.scan";
   private static final String HIBERNATE_HBM2DDL_AUTO = "hibernate.hbm2ddl.auto";
@@ -59,11 +65,17 @@ public class PersistenceConfigTest {
     factory.setJpaVendorAdapter(vendorAdapter);
     factory.setPackagesToScan(this.env.getProperty(ENTITY_MANAGER_PACKAGE_TO_SCAN));
 
+    LOG.debug(env.getProperty(ENTITY_MANAGER_PACKAGE_TO_SCAN));
+    LOG.debug(env.getProperty(HIBERNATE_HBM2DDL_AUTO));
+    LOG.debug(env.getProperty(HIBERNATE_DIALECT));
+    LOG.debug(env.getProperty(HIBERNATE_TRANSACTION_JTA_PLATFORM));
+
     Properties jpaProperties = new Properties();
     jpaProperties.put(HIBERNATE_HBM2DDL_AUTO, env.getProperty(HIBERNATE_HBM2DDL_AUTO));
     jpaProperties.put(HIBERNATE_DIALECT, env.getProperty(HIBERNATE_DIALECT));
     jpaProperties.put(HIBERNATE_TRANSACTION_JTA_PLATFORM,
         env.getProperty(HIBERNATE_TRANSACTION_JTA_PLATFORM));
+
     factory.setJpaProperties(jpaProperties);
 
     factory.afterPropertiesSet();

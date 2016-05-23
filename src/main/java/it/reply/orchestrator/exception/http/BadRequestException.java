@@ -15,4 +15,7 @@ public class BadRequestException extends OrchestratorApiException {
     super(message);
   }
 
+  public BadRequestException(String message, Throwable ex) {
+    super(message, ex);
+  }
 }

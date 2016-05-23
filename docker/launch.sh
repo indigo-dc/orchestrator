@@ -13,6 +13,7 @@ java -jar /usr/share/java/saxon.jar -o:$JBOSS_HOME/standalone/configuration/$JBO
 	workflow.DB.pwd=$WORKFLOW_DB_PWD
 
 IM_PROP_FILE="$JBOSS_HOME/standalone/deployments/$WAR_NAME.war/WEB-INF/classes/im-config/im-java-api.properties"
+SECURITY_PROP_FILE="$JBOSS_HOME/standalone/deployments/$WAR_NAME.war/WEB-INF/classes/security.properties"
 
 if [[ $IM_URL ]];
 	then sed -i "s/^\(url=\).*$/\1$(echo $IM_URL | sed -e 's/[\/&]/\\&/g')/" ${IM_PROP_FILE};
@@ -29,6 +30,25 @@ fi;
 if [[ $ONEDOCK_AUTH_FILE_PATH ]];
 	then sed -i "s/^\(onedock\.auth\.file\.path=\).*$/\1$(echo $ONEDOCK_AUTH_FILE_PATH | sed -e 's/[\/&]/\\&/g')/" ${IM_PROP_FILE};
 fi;
+
+# CUSTOMIZE SECURITY PROPERTIES
+if [ $SECURITY_ENABLE = "true"];
+	then sed -i "s/^\(security\.enabled=\).*$/\1$(echo 'true' | sed -e 's/[\/&]/\\&/g')/" ${SECURITY_PROP_FILE};
+	else sed -i "s/^\(security\.enabled=\).*$/\1$(echo 'false' | sed -e 's/[\/&]/\\&/g')/" ${SECURITY_PROP_FILE};
+fi;
+
+if [[ $OIDC_ISSUERS ]];
+	then sed -i "s/^\(OIDC\.issuers=\).*$/\1$(echo $OIDC_ISSUERS | sed -e 's/[\/&]/\\&/g')/" ${SECURITY_PROP_FILE};
+fi;
+
+if [[ $OIDC_CLIENT_ID ]];
+	then sed -i "s/^\(OIDC\.clientID=\).*$/\1$(echo $OIDC_CLIENT_ID | sed -e 's/[\/&]/\\&/g')/" ${SECURITY_PROP_FILE};
+fi;
+
+if [[ $OIDC_CLIENT_SECRET ]];
+	then sed -i "s/^\(OIDC\.clientSecret=\).*$/\1$(echo $OIDC_CLIENT_SECRET | sed -e 's/[\/&]/\\&/g')/" ${SECURITY_PROP_FILE};
+fi;
+################################
 
 if [ "${ENABLE_DEBUG}" = "true" ];
 	then DEBUG_ARG="--debug";
