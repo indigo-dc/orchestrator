@@ -11,6 +11,8 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<java.version>1.8</java.version>
 		<springframework.version>4.2.2.RELEASE</springframework.version>
+		<spring.security.version>4.1.0.RELEASE</spring.security.version>
+		<openid.connect.version>1.2.6</openid.connect.version>
 		<log4j.version>2.5</log4j.version>
 		<jackson.version>2.6.4</jackson.version>
 		<hibernate.version>4.3.11.Final</hibernate.version>
@@ -23,7 +25,7 @@
 		<snippetsDirectory>${project.build.directory}\generated-snippets</snippetsDirectory>
 		<checkstyle-plugin.version>2.17</checkstyle-plugin.version>
 		<workflow-manager.version>0.0.3-SNAPSHOT</workflow-manager.version>
-		<alien4cloud.version>1.1.0-INDIGO</alien4cloud.version>
+		<alien4cloud.version>1.1.0-INDIGO2-SNAPSHOT</alien4cloud.version>
 	</properties>
 
 	<distributionManagement>
@@ -59,6 +61,18 @@
 	</repositories>
 
 	<dependencies>
+		<!-- Fix for java.lang.NoSuchFieldError: REFLECTION -->
+		<dependency>
+			<groupId>com.sun.xml.bind</groupId>
+			<artifactId>jaxb-core</artifactId>
+			<version>2.2.11</version>
+		</dependency>
+		<dependency>
+			<groupId>com.sun.xml.bind</groupId>
+			<artifactId>jaxb-impl</artifactId>
+			<version>2.2.11</version>
+		</dependency>
+		<!--           -->
 		<!-- Fix to avoid to import the library (which conflicts with the one in 
 			WildFly) -->
 		<dependency>
@@ -103,7 +117,31 @@
 			<artifactId>spring-plugin-core</artifactId>
 			<version>1.2.0.RELEASE</version>
 		</dependency>
-
+		<dependency>
+	        <groupId>org.springframework.security</groupId>
+	        <artifactId>spring-security-config</artifactId>
+			<version>${spring.security.version}</version>
+	    </dependency>
+    	<dependency>
+	        <groupId>org.springframework.security</groupId>
+	        <artifactId>spring-security-core</artifactId>
+			<version>${spring.security.version}</version>
+	    </dependency>
+		<dependency>
+	        <groupId>org.springframework.security</groupId>
+	        <artifactId>spring-security-web</artifactId>
+			<version>${spring.security.version}</version>
+	    </dependency>
+	    <dependency>
+	        <groupId>org.springframework.security.oauth</groupId>
+    	    <artifactId>spring-security-oauth2</artifactId>
+    	    <version>2.0.9.RELEASE</version>
+    	</dependency>
+	    <dependency>
+			<groupId>org.mitre</groupId>
+			<artifactId>openid-connect-client</artifactId>
+			<version>${openid.connect.version}</version>
+		</dependency>
 		<!-- Logging -->
 		<dependency>
 			<groupId>org.apache.logging.log4j</groupId>

@@ -134,7 +134,9 @@ public class ToscaServiceImpl implements ToscaService {
     try (InputStream is = new ByteArrayInputStream(toscaTemplate.getBytes());) {
       zip(is, zipPath);
     }
-    return parser.parse(zipPath);
+    ParsingResult<ArchiveRoot> result = parser.parse(zipPath);
+    checkParsingErrors(result.getContext().getParsingErrors());
+    return result;
   }
 
   @Override
@@ -172,7 +174,7 @@ public class ToscaServiceImpl implements ToscaService {
    */
   @Override
   public String customizeTemplate(@Nonnull String toscaTemplate, @Nonnull String deploymentId)
-      throws IOException {
+      throws IOException, ToscaException {
 
     ParsingResult<ArchiveRoot> result = null;
     try {
@@ -237,17 +239,15 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   private static void setAutentication() {
-    Authentication auth =
-        new PreAuthenticatedAuthenticationToken(Role.ADMIN.name().toLowerCase(), "",
-            AuthorityUtils.createAuthorityList(Role.ADMIN.name()));
+    Authentication auth = new PreAuthenticatedAuthenticationToken(Role.ADMIN.name().toLowerCase(),
+        "", AuthorityUtils.createAuthorityList(Role.ADMIN.name()));
     SecurityContextHolder.getContext().setAuthentication(auth);
   }
 
   @Override
   public Capability getNodeCapabilityByName(NodeTemplate node, String propertyName) {
     if (node != null && node.getCapabilities() != null) {
-      for (Entry<String, Capability> entry : node.getCapabilities()
-          .entrySet()) {
+      for (Entry<String, Capability> entry : node.getCapabilities().entrySet()) {
         if (entry.getKey().equals(propertyName)) {
           return entry.getValue();
         }

@@ -10,6 +10,7 @@ import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestExecutionListeners;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
 import org.springframework.test.context.transaction.TransactionalTestExecutionListener;
@@ -23,6 +24,7 @@ import javax.inject.Inject;
 @WebAppConfiguration
 @ContextConfiguration(classes = { ApplicationConfig.class, WebAppInitializer.class,
     WebMvcConfig.class, PersistenceConfigTest.class, WorklfowPersistenceConfigTest.class })
+@TestPropertySource(locations = { "classpath:application-test.properties" })
 @TestExecutionListeners({ DependencyInjectionTestExecutionListener.class,
     TransactionalTestExecutionListener.class, DbUnitTestExecutionListener.class })
 public abstract class WebAppConfigurationAware {

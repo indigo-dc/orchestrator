@@ -27,6 +27,7 @@ import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
+import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.utils.json.JsonUtility;
 
@@ -253,7 +254,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           } catch (Exception ex) {
             // Do nothing
           }
-          throw new DeploymentException(errorMsg);
+          DeploymentException ex = new DeploymentException(errorMsg);
+          updateOnError(deployment.getId(), ex);
+          throw ex;
         default:
           return false;
       }
@@ -339,7 +342,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       oldParsingResult = toscaService.getArchiveRootFromTemplate(deployment.getTemplate());
       template = toscaService.customizeTemplate(template, deployment.getId());
       newParsingResult = toscaService.getArchiveRootFromTemplate(template);
-    } catch (ParsingException | IOException ex) {
+    } catch (ParsingException | IOException | ToscaException ex) {
       throw new OrchestratorException(ex);
     }
     // find Count nodes into new and old template
@@ -611,4 +614,5 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   private void logImErrorResponse(ImClientErrorException exception) {
     LOG.error(exception.getResponseError().getFormattedErrorMessage());
   }
+
 }
