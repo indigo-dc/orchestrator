@@ -8,6 +8,8 @@ import alien4cloud.tosca.parser.ParsingResult;
 
 import com.sun.istack.NotNull;
 
+import it.reply.orchestrator.exception.service.ToscaException;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +27,7 @@ public interface ToscaService {
 
   @Nonnull
   public String customizeTemplate(@Nonnull String toscaTemplate, @NotNull String deploymentId)
-      throws IOException;
+      throws IOException, ToscaException;
 
   @Nonnull
   public Capability getNodeCapabilityByName(NodeTemplate node, String propertyName);

@@ -18,8 +18,11 @@ import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.OrchestratorException;
+import it.reply.orchestrator.exception.http.BadRequestException;
 import it.reply.orchestrator.exception.http.ConflictException;
 import it.reply.orchestrator.exception.http.NotFoundException;
+import it.reply.orchestrator.exception.http.OrchestratorApiException;
+import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.workflowmanager.exceptions.WorkflowException;
 import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager;
 import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager.RUNTIME_STRATEGY;
@@ -71,27 +74,34 @@ public class DeploymentServiceImpl implements DeploymentService {
   @Override
   @Transactional
   public Deployment createDeployment(DeploymentRequest request) {
-    Deployment deployment = new Deployment();
-    deployment.setStatus(Status.CREATE_IN_PROGRESS);
-    deployment.setTask(Task.NONE);
-    deployment.setParameters(request.getParameters().entrySet().stream()
-        .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().toString())));
+    Map<String, NodeTemplate> nodes;
+    Deployment deployment;
 
-    if (request.getCallback() != null) {
-      deployment.setCallback(request.getCallback());
-    }
-
-    deployment = deploymentRepository.save(deployment);
     try {
-      String template = toscaService.customizeTemplate(request.getTemplate(), deployment.getId());
-      deployment.setTemplate(template);
+      // Read the incoming template
+      nodes = toscaService.getArchiveRootFromTemplate(request.getTemplate()).getResult()
+          .getTopology().getNodeTemplates();
+      deployment = new Deployment();
+      deployment.setStatus(Status.CREATE_IN_PROGRESS);
+      deployment.setTask(Task.NONE);
+      deployment.setParameters(request.getParameters().entrySet().stream()
+          .collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue().toString())));
 
-      Map<String, NodeTemplate> nodes = toscaService.getArchiveRootFromTemplate(template)
-          .getResult().getTopology().getNodeTemplates();
+      if (request.getCallback() != null) {
+        deployment.setCallback(request.getCallback());
+      }
       createResources(deployment, nodes);
 
-    } catch (IOException | ParsingException ex) {
-      throw new OrchestratorException(ex);
+      deployment = deploymentRepository.save(deployment);
+      deployment
+          .setTemplate(toscaService.customizeTemplate(request.getTemplate(), deployment.getId()));
+
+    } catch (IOException ex) {
+      throw new OrchestratorException(ex.getMessage(), ex);
+    } catch (ParsingException ex) {
+      throw new BadRequestException("Template is invalid: " + ex.getMessage());
+    } catch (ToscaException ex) {
+      throw new BadRequestException("Template is invalid: " + ex.getMessage());
     }
 
     Map<String, Object> params = new HashMap<>();

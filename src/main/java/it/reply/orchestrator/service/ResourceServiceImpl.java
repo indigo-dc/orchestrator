@@ -11,7 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
-public class ResourceImpl implements ResourceService {
+public class ResourceServiceImpl implements ResourceService {
 
   @Autowired
   private ResourceRepository resourceRepository;
