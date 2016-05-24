@@ -41,20 +41,22 @@ import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.traverse.TopologicalOrderIterator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.stream.Collectors;
 
 @Service
 @Qualifier("CHRONOS")
+@PropertySource("${chronos.auth.file.path}")
 public class ChronosServiceImpl extends AbstractDeploymentProviderService
     implements DeploymentProviderService {
 
@@ -66,21 +68,21 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
   @Autowired
   private ResourceRepository resourceRepository;
 
-  /**
-   * Temporary method to load properties from file (<b>just for experimental purpose</b>).
-   * 
-   * @return the properties.
-   */
-  public Properties readProperties(String path) {
-    final Properties properties = new Properties();
-    try (InputStream in = getClass().getClassLoader().getResourceAsStream(path)) {
-      properties.load(in);
-    } catch (Exception ex) {
-      throw new RuntimeException(
-          "Failed to load properties file ('" + path + "') in classpath 'resources' folder");
-    }
-    return properties;
-  }
+  @Value("${chronos.endpoint}")
+  private String endpoint;
+  @Value("${chronos.username}")
+  private String username;
+  @Value("${chronos.password}")
+  private String password;
+
+  @Value("${onedata.token}")
+  private String token;
+  @Value("${onedata.space}")
+  private String space;
+  @Value("${onedata.path}")
+  private String path;
+  @Value("${onedata.provider}")
+  private String provider;
 
   /**
    * Temporary method to instantiate a default Chronos client (<b>just for experimental purpose</b>
@@ -89,11 +91,6 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
    * @return the Chronos client.
    */
   public Chronos getChronosClient() {
-    Properties properties = readProperties("chronos.properties");
-    String endpoint = properties.getProperty("endpoint");
-    String username = properties.getProperty("username");
-    String password = properties.getProperty("password");
-
     LOG.info(String.format("Generating Chronos client with parameters: URL=%s, username=%s",
         endpoint, username));
     Chronos client = ChronosClient.getInstanceWithBasicAuth(endpoint, username, password);
@@ -107,13 +104,9 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
    * @return the {@link OneData} settings.
    */
   protected OneData generateStubOneData() {
-    Properties properties = readProperties("onedata.properties");
-    String token = properties.getProperty("token");
-    String space = properties.getProperty("space");
-    String path = properties.getProperty("path");
-    String provider = properties.getProperty("provider");
 
-    LOG.info(String.format("Generating OneData settings with parameters: %s", properties));
+    LOG.info(String.format("Generating OneData settings with parameters: %s",
+        Arrays.asList(token, space, path, provider)));
 
     return new OneData(token, space, path, provider);
   }
