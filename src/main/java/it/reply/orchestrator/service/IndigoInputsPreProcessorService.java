@@ -145,7 +145,8 @@ public class IndigoInputsPreProcessorService {
 
           // Replace property value (was Function, now Scalar)
           if (inputValue instanceof String || inputValue instanceof Boolean
-              || inputValue instanceof Integer || inputValue instanceof Double) {
+              || inputValue instanceof Integer || inputValue instanceof Double
+              || inputValue instanceof Float) {
             return new ScalarPropertyValue(inputValue.toString());
           } else if (inputValue instanceof List) {
             return new ListPropertyValue((List) ((List) inputValue).stream()
