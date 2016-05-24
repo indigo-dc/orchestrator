@@ -20,11 +20,11 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 
 /**
  * Inputs pre-processor service manages pre-processing of inputs parameters in a Topology.
@@ -114,6 +114,7 @@ public class IndigoInputsPreProcessorService {
     }
   }
 
+  @SuppressWarnings("unchecked")
   protected AbstractPropertyValue processGetInput(Map<String, PropertyDefinition> templateInputs,
       Map<String, Object> inputs, AbstractPropertyValue propertyValue, String propertyName,
       String objectName) {
@@ -144,20 +145,29 @@ public class IndigoInputsPreProcessorService {
               objectName, propertyName, inputName, inputValue);
 
           // Replace property value (was Function, now Scalar)
+          AbstractPropertyValue val;
           if (inputValue instanceof String || inputValue instanceof Boolean
               || inputValue instanceof Integer || inputValue instanceof Double
               || inputValue instanceof Float) {
-            return new ScalarPropertyValue(inputValue.toString());
+            val = new ScalarPropertyValue(inputValue.toString());
           } else if (inputValue instanceof List) {
-            return new ListPropertyValue((List) ((List) inputValue).stream()
-                .map(e -> new ScalarPropertyValue(e.toString())).collect(Collectors.toList()));
+            List<Object> list = new ArrayList<>();
+            for (Object entry : ((List<?>) inputValue)) {
+              val = new ScalarPropertyValue(entry.toString());
+              val.setPrintable(true);
+              list.add(val);
+            }
+            val = new ListPropertyValue(list);
           } else if (inputValue instanceof Map) {
-            return new ComplexPropertyValue((Map) inputValue);
+            val = new ComplexPropertyValue((Map<String, Object>) inputValue);
           } else {
             throw new IllegalArgumentException(
                 String.format("Unsupported input type for value <%s> of class <%s>", inputValue,
                     inputValue.getClass()));
           }
+
+          val.setPrintable(true);
+          return val;
 
         } catch (Exception ex) {
           throw new ToscaException(String.format(
