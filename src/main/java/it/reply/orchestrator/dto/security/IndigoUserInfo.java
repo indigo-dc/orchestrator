@@ -19,6 +19,12 @@ public class IndigoUserInfo extends DefaultUserInfo {
   private List<Group> groups;
   private String organizationName;
 
+  /**
+   * Create an IndigoUserInfo copying the fields from a {@link UserInfo} object.
+   * 
+   * @param other
+   *          the {@link UserInfo} to copy from.
+   */
   public IndigoUserInfo(UserInfo other) {
     this.setSub(other.getSub());
     this.setPreferredUsername(other.getPreferredUsername());
@@ -79,6 +85,13 @@ public class IndigoUserInfo extends DefaultUserInfo {
     }
   }
 
+  /**
+   * Create a {@link UserInfo} from its JSON representation.
+   * 
+   * @param obj
+   *          {@link JsonObject} containing the JSON representation.
+   * @return the UserInfo.
+   */
   public static UserInfo fromJson(JsonObject obj) {
     IndigoUserInfo result = new IndigoUserInfo(DefaultUserInfo.fromJson(obj));
     if (obj.has(GROUPS_KEY) && obj.get(GROUPS_KEY).isJsonArray()) {
