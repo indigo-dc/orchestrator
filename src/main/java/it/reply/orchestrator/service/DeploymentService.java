@@ -8,13 +8,18 @@ import org.springframework.data.domain.Pageable;
 
 public interface DeploymentService {
 
-  public Page<Deployment> getDeployments(Pageable pageable);
+	public static final String WF_PARAM_DEPLOYMENT_ID = "DEPLOYMENT_ID";
+	public static final String WF_PARAM_DEPLOYMENT_TYPE = "DEPLOYMENT_TYPE";
+	public static final String DEPLOYMENT_TYPE_CHRONOS = "CHRONOS";
+	public static final String DEPLOYMENT_TYPE_TOSCA = "TOSCA";
 
-  public Deployment getDeployment(String id);
+	public Page<Deployment> getDeployments(Pageable pageable);
 
-  public Deployment createDeployment(DeploymentRequest request);
+	public Deployment getDeployment(String id);
 
-  public void updateDeployment(String id, DeploymentRequest request);
+	public Deployment createDeployment(DeploymentRequest request);
 
-  public void deleteDeployment(String id);
+	public void updateDeployment(String id, DeploymentRequest request);
+
+	public void deleteDeployment(String id);
 }

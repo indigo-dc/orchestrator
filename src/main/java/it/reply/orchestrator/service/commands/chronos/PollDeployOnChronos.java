@@ -1,9 +1,9 @@
-package it.reply.orchestrator.service.commands;
+package it.reply.orchestrator.service.commands.chronos;
 
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.exception.service.DeploymentException;
+import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
-import it.reply.orchestrator.service.deployment.providers.ImServiceImpl;
 import it.reply.utils.misc.polling.AbstractPollingBehaviour;
 import it.reply.utils.misc.polling.ExternallyControlledPoller;
 import it.reply.utils.misc.polling.ExternallyControlledPoller.PollingStatus;
@@ -19,18 +19,19 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PollDeploy extends BaseCommand {
+public class PollDeployOnChronos extends BaseCommand {
 
   public static final String WF_PARAM_POLLING_STATUS = "statusPoller";
 
   @Autowired
-  @Qualifier("IM")
-  private DeploymentProviderService imService;
+  @Qualifier("CHRONOS")
+  private DeploymentProviderService chronosService;
 
   @Override
   protected ExecutionResults customExecute(CommandContext ctx) throws Exception {
     String deploymentId = getParameter(ctx, "DEPLOYMENT_ID");
     ExecutionResults exResults = new ExecutionResults();
+
     ExternallyControlledPoller<String, Status> statusPoller =
         getParameter(ctx, WF_PARAM_POLLING_STATUS);
     if (statusPoller == null) {
@@ -42,7 +43,7 @@ public class PollDeploy extends BaseCommand {
       statusPoller.doPollEvent(deploymentId);
       if (statusPoller.getPollStatus() == PollingStatus.ENDED) {
         // Polling ended successfully -> Deployment completed -> Finalize (update template)
-        imService.finalizeDeploy(deploymentId, true);
+        chronosService.finalizeDeploy(deploymentId, true);
         return resultOccurred(true, exResults);
       } else {
         // Deployment is not ready yet
@@ -50,7 +51,7 @@ public class PollDeploy extends BaseCommand {
       }
     } catch (PollingException ex) {
       // Polling unsuccessful -> Deploy failed -> Finalize (update template)
-      imService.finalizeDeploy(deploymentId, false);
+      chronosService.finalizeDeploy(deploymentId, false);
       return resultOccurred(true, exResults);
     }
   }
@@ -67,8 +68,9 @@ public class PollDeploy extends BaseCommand {
           @Override
           public Status doPolling(String deploymentId) throws PollingException {
             try {
-              ImServiceImpl imService = OrchestratorContextBean.getBean(ImServiceImpl.class);
-              if (imService.isDeployed(deploymentId)) {
+              ChronosServiceImpl chronosService =
+                  OrchestratorContextBean.getBean(ChronosServiceImpl.class);
+              if (chronosService.isDeployed(deploymentId)) {
                 return Status.CREATE_COMPLETE;
               } else {
                 return Status.CREATE_IN_PROGRESS;
