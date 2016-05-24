@@ -299,7 +299,8 @@ public class ToscaServiceImpl implements ToscaService {
 
   }
 
-  private void addDeploymentId(ArchiveRoot parsingResult, String deploymentId) {
+  @Override
+  public void addDeploymentId(ArchiveRoot parsingResult, String deploymentId) {
     Map<String, NodeTemplate> nodes = parsingResult.getTopology().getNodeTemplates();
     for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
       if (entry.getValue().getType().equals("tosca.nodes.indigo.ElasticCluster")) {

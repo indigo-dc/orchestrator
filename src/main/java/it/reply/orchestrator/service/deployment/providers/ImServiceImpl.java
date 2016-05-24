@@ -183,12 +183,17 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       deployment.setDeploymentProvider(DeploymentProvider.IM);
       deployment = deploymentRepository.save(deployment);
 
+      ArchiveRoot ar =
+          toscaService.prepareTemplate(deployment.getTemplate(), deployment.getParameters());
+      toscaService.addDeploymentId(ar, deploymentUuid);
+      String imCustomizedTemplate = toscaService.getTemplateFromTopology(ar);
+
       // FIXME this is a trick used only for demo purpose
       InfrastructureManager im = getClient(getIaaSSiteFromTosca(deployment.getTemplate()));
 
-      // TODO improve with template inputs
+      // Deploy on IM
       InfrastructureUri infrastructureUri =
-          im.createInfrastructure(deployment.getTemplate(), BodyContentType.TOSCA);
+          im.createInfrastructure(imCustomizedTemplate, BodyContentType.TOSCA);
 
       String infrastructureId = infrastructureUri.getInfrastructureId();
       if (infrastructureId != null) {

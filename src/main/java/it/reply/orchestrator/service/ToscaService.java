@@ -41,6 +41,8 @@ public interface ToscaService {
   public String customizeTemplate(@Nonnull String toscaTemplate, @NotNull String deploymentId)
       throws IOException, ToscaException, ParsingException;
 
+  public void addDeploymentId(ArchiveRoot parsingResult, String deploymentId);
+
   /**
    * Verifies that all the template's required inputs are present in the user's input list.
    * 

@@ -86,6 +86,7 @@ public class DeploymentServiceImpl implements DeploymentService {
       deployment = new Deployment();
       deployment.setStatus(Status.CREATE_IN_PROGRESS);
       deployment.setTask(Task.NONE);
+      deployment.setTemplate(request.getTemplate());
       deployment.setParameters(request.getParameters());
 
       if (request.getCallback() != null) {
@@ -96,19 +97,6 @@ public class DeploymentServiceImpl implements DeploymentService {
 
       // FIXME: Define function to decide DeploymentProvider (Temporary - just for prototyping)
       isChronosDeployment = isChronosDeployment(nodes);
-      if (!isChronosDeployment) {
-        // FIXME (BAD HACK) IM templates need some parameters to be added, but regenerating the
-        // template string with the current library is risky (loses some information!!)
-        // Re-parse and customize
-        String template = toscaService.customizeTemplate(request.getTemplate(), deployment.getId());
-        deployment.setTemplate(template);
-
-        // Re-parse with the updated nodes
-        parsingResult = toscaService.prepareTemplate(template, deployment.getParameters());
-        nodes = parsingResult.getTopology().getNodeTemplates();
-      } else {
-        deployment.setTemplate(request.getTemplate());
-      }
 
       // Create internal resources representation (to store in DB)
       createResources(deployment, nodes);
