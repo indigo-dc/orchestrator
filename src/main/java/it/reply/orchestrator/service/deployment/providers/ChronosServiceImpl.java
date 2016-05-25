@@ -459,8 +459,15 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       currentJob = job;
 
       try {
-        client.deleteJob(job.getChronosJob().getName());
-        LOG.debug("Deleted job on Chronos: name <{}>", currentJob.getChronosJob().getName());
+        String jobName = job.getChronosJob().getName();
+
+        // Chronos API hack (to avoid error 400 if the job to delete does not exist)
+        if (getJobStatus(client, jobName) == null) {
+          LOG.debug("Job on Chronos does not exist: name <{}>", jobName);
+        } else {
+          client.deleteJob(jobName);
+          LOG.debug("Deleted job on Chronos: name <{}>", jobName);
+        }
       } catch (ChronosException ce) {
         // Just log the error
         String errorMsg = String.format("Failed to delete job <%s> on Chronos. Status Code: <%s>",
