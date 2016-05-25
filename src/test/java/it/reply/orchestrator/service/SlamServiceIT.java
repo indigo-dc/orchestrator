@@ -2,14 +2,17 @@ package it.reply.orchestrator.service;
 
 import static org.junit.Assert.assertEquals;
 
+import it.reply.orchestrator.IntegrationTest;
 import it.reply.orchestrator.config.WebAppConfigurationAware;
 import it.reply.orchestrator.dto.slam.SlamPreferences;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class SlamServiceTest extends WebAppConfigurationAware {
+@Category(IntegrationTest.class)
+public class SlamServiceIT extends WebAppConfigurationAware {
 
   @Autowired
   private SlamService service;

@@ -2,6 +2,7 @@ package it.reply.orchestrator.service;
 
 import static org.junit.Assert.assertEquals;
 
+import it.reply.orchestrator.IntegrationTest;
 import it.reply.orchestrator.config.WebAppConfigurationAware;
 import it.reply.orchestrator.dto.cmdb.Data;
 import it.reply.orchestrator.dto.cmdb.Provider;
@@ -11,10 +12,12 @@ import it.reply.orchestrator.dto.cmdb.Type;
 
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.experimental.categories.Category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.client.RestTemplate;
 
-public class CmdbServiceTest extends WebAppConfigurationAware {
+@Category(IntegrationTest.class)
+public class CmdbServiceIT extends WebAppConfigurationAware {
 
   private final String recasId = "4401ac5dc8cfbbb737b0a02575e6f4bc";
   private final String recasProviderName = "provider-RECAS-BARI";

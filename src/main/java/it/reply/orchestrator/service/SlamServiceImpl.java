@@ -27,7 +27,7 @@ public class SlamServiceImpl implements SlamService {
   public SlamPreferences getCustomerPreferences() {
 
     ResponseEntity<SlamPreferences> response = restTemplate
-        .getForEntity(url.concat(preferences).concat("/indigo-demo"), SlamPreferences.class);
+        .getForEntity(url.concat(preferences).concat("/indigo-dc"), SlamPreferences.class);
     if (response.getStatusCode().is2xxSuccessful()) {
       return response.getBody();
     }

@@ -31,7 +31,14 @@ To compile the project you need to be in the same folder as the `pom.xml` file a
 mvn clean install
 ```
 This command compiles the code and creates a war package, `orchestrator.war`, which will be put inside the `docker` folder.
-
+If you want run only unit-test type:
+```
+mvn test
+```
+otherwise if you want run integration test type (or use surefire.skip=true property to skip unit tests)
+```
+mvn integration-test
+```
 ### Build the Docker image
 
 You can build the docker image with the command
