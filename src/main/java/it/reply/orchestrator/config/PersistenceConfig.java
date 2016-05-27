@@ -38,6 +38,7 @@ public class PersistenceConfig {
 
   private static final String ENTITY_MANAGER_PACKAGE_TO_SCAN = "entitymanager.packages.to.scan";
   private static final String HIBERNATE_HBM2DDL_AUTO = "hibernate.hbm2ddl.auto";
+  private static final String HIBERNATE_SHOW_SQL = "hibernate.show_sql";
   private static final String HIBERNATE_DIALECT = "hibernate.dialect";
   private static final String HIBERNATE_TRANSACTION_JTA_PLATFORM =
       "hibernate.transaction.jta.platform";
@@ -71,7 +72,7 @@ public class PersistenceConfig {
 
     HibernateJpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
     vendorAdapter.setGenerateDdl(Boolean.TRUE);
-    vendorAdapter.setShowSql(Boolean.TRUE);
+    vendorAdapter.setShowSql(Boolean.valueOf(this.env.getProperty(HIBERNATE_SHOW_SQL)));
 
     factory.setJtaDataSource(dataSource());
     factory.setJpaVendorAdapter(vendorAdapter);
