@@ -1,7 +1,9 @@
 package it.reply.orchestrator.dto;
 
+import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.PaaSMetric;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
 import it.reply.orchestrator.dto.slam.SlamPreferences;
+import it.reply.utils.json.JsonUtility;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -13,6 +15,8 @@ public class RankCloudProvidersMessage implements Serializable {
 
   private static final long serialVersionUID = 6559999818418491070L;
 
+  private String deploymentId;
+
   private SlamPreferences slamPreferences;
 
   /**
@@ -20,10 +24,21 @@ public class RankCloudProvidersMessage implements Serializable {
    */
   private Map<String, CloudProvider> cloudProviders = new HashMap<>();
 
-  private Map<String, List<it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.PaaSMetric>> cloudProvidersMonitoringData =
-      new HashMap<>();
+  private Map<String, List<PaaSMetric>> cloudProvidersMonitoringData = new HashMap<>();
 
   private List<RankedCloudProvider> rankedCloudProviders = new ArrayList<>();
+
+  public RankCloudProvidersMessage(String deploymentId) {
+    this.deploymentId = deploymentId;
+  }
+
+  public String getDeploymentId() {
+    return deploymentId;
+  }
+
+  public void setDeploymentId(String deploymentId) {
+    this.deploymentId = deploymentId;
+  }
 
   public SlamPreferences getSlamPreferences() {
     return slamPreferences;
@@ -41,14 +56,12 @@ public class RankCloudProvidersMessage implements Serializable {
     this.cloudProviders = cloudProviders;
   }
 
-  public
-      Map<String, List<it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.PaaSMetric>>
-      getCloudProvidersMonitoringData() {
+  public Map<String, List<PaaSMetric>> getCloudProvidersMonitoringData() {
     return cloudProvidersMonitoringData;
   }
 
-  public void setCloudProvidersMonitoringData(
-      Map<String, List<it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.PaaSMetric>> cloudProvidersMonitoringData) {
+  public void
+      setCloudProvidersMonitoringData(Map<String, List<PaaSMetric>> cloudProvidersMonitoringData) {
     this.cloudProvidersMonitoringData = cloudProvidersMonitoringData;
   }
 
@@ -62,9 +75,11 @@ public class RankCloudProvidersMessage implements Serializable {
 
   @Override
   public String toString() {
-    return "RankCloudProvidersMessage [slamPreferences=" + slamPreferences + ", cloudProviders="
-        + cloudProviders + ", cloudProvidersMonitoringData=" + cloudProvidersMonitoringData
-        + ", rankedCloudProviders=" + rankedCloudProviders + "]";
+    try {
+      return JsonUtility.serializeJson(this);
+    } catch (Exception ex) {
+      throw new RuntimeException(ex.getMessage(), ex);
+    }
   }
 
 }

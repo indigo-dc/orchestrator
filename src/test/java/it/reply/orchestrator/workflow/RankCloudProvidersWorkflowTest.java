@@ -88,7 +88,7 @@ public class RankCloudProvidersWorkflowTest {// extends WebAppConfigurationAware
 
     // Init params: empty RCPM
     Map<String, Object> params = new HashMap<>();
-    RankCloudProvidersMessage rcpm = new RankCloudProvidersMessage();
+    RankCloudProvidersMessage rcpm = new RankCloudProvidersMessage(null);
     params.put(WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE, rcpm);
 
     ProcessInstance processInstance = null;

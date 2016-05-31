@@ -113,7 +113,7 @@ public class DeploymentServiceImpl implements DeploymentService {
     params.put("DEPLOYMENT_ID", deployment.getId());
 
     // FIXME Put in deployment provider field
-    params.put(WF_PARAM_DEPLOYMENT_TYPE,
+    params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_TYPE,
         (isChronosDeployment ? DEPLOYMENT_TYPE_CHRONOS : DEPLOYMENT_TYPE_TOSCA));
 
     ProcessInstance pi = null;
@@ -177,7 +177,8 @@ public class DeploymentServiceImpl implements DeploymentService {
         params.put("DEPLOYMENT_ID", deployment.getId());
 
         // FIXME: Temporary - just for test
-        params.put(WF_PARAM_DEPLOYMENT_TYPE, deployment.getDeploymentProvider().name());
+        params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_TYPE,
+            deployment.getDeploymentProvider().name());
 
         ProcessInstance pi = null;
         try {

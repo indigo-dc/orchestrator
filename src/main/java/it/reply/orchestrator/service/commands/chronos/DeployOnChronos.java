@@ -4,7 +4,7 @@ import it.infn.ba.indigo.chronos.client.Chronos;
 import it.infn.ba.indigo.chronos.client.model.v1.Container;
 import it.infn.ba.indigo.chronos.client.model.v1.Job;
 import it.infn.ba.indigo.chronos.client.utils.ChronosException;
-import it.reply.orchestrator.service.DeploymentService;
+import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
 import it.reply.workflowmanager.spring.orchestrator.bpm.ejbcommands.BaseCommand;
@@ -32,7 +32,7 @@ public class DeployOnChronos extends BaseCommand {
   @Override
   protected ExecutionResults customExecute(CommandContext ctx) throws Exception {
     String deploymentId =
-        (String) getWorkItem(ctx).getParameter(DeploymentService.WF_PARAM_DEPLOYMENT_ID);
+        (String) getWorkItem(ctx).getParameter(WorkflowConstants.WF_PARAM_DEPLOYMENT_ID);
     boolean result = chronosService.doDeploy(deploymentId);
     return resultOccurred(result);
   }

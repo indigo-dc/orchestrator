@@ -74,11 +74,22 @@ public class Deployment extends AbstractResourceEntity {
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "deployment", orphanRemoval = true)
   List<Resource> resources = new ArrayList<>();
 
+  @Column(name = "cloudProviderName", length = 128)
+  String cloudProviderName;
+
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "deployment", orphanRemoval = true)
   List<WorkflowReference> workflowReferences = new ArrayList<>();
 
   public Deployment() {
     super();
+  }
+
+  public String getCloudProviderName() {
+    return cloudProviderName;
+  }
+
+  public void setCloudProviderName(String cloudProviderName) {
+    this.cloudProviderName = cloudProviderName;
   }
 
   public Status getStatus() {
