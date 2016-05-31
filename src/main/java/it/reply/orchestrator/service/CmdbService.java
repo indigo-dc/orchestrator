@@ -9,4 +9,5 @@ public interface CmdbService {
 
   public Provider getProviderById(String id);
 
+  public String getUrl();
 }

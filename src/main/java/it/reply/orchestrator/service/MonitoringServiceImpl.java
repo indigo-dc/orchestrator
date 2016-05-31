@@ -22,6 +22,11 @@ public class MonitoringServiceImpl implements MonitoringService {
   private RestTemplate restTemplate;
 
   @Override
+  public String getUrl() {
+    return url;
+  }
+
+  @Override
   public MonitoringWrappedResponsePaas getProviderData(String providerId) {
 
     ResponseEntity<MonitoringResponse> response =

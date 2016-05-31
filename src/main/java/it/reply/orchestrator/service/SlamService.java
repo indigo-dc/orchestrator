@@ -6,4 +6,5 @@ public interface SlamService {
 
   public SlamPreferences getCustomerPreferences();
 
+  public String getUrl();
 }

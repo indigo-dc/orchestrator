@@ -20,7 +20,7 @@
     <hibernate.version>4.3.11.Final</hibernate.version>
 
     <im-java-api.version>0.4.2</im-java-api.version>
-    <monitoring.pillar.domain.version>1.8.0-FINAL</monitoring.pillar.domain.version>
+    <monitoring.pillar.domain.version>1.8.1-FINAL</monitoring.pillar.domain.version>
 
     <mockito.version>1.10.19</mockito.version>
     <jsonpath.version>2.1.0</jsonpath.version>
@@ -62,7 +62,7 @@
     </repository>
   </repositories>
 
-  <dependencies>
+  <dependencies> 
     <!-- Fix for java.lang.NoSuchFieldError: REFLECTION -->
     <dependency>
       <groupId>com.sun.xml.bind</groupId>
@@ -155,11 +155,11 @@
       <version>${log4j.version}</version>
     </dependency>
 
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-log4j12</artifactId>
-      <version>1.7.13</version>
-    </dependency>
+<!--     <dependency> -->
+<!--       <groupId>org.slf4j</groupId> -->
+<!--       <artifactId>slf4j-log4j12</artifactId> -->
+<!--       <version>1.7.13</version> -->
+<!--     </dependency> -->
 
     <dependency>
       <groupId>javax.servlet</groupId>

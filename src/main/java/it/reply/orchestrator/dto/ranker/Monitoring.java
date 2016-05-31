@@ -10,6 +10,7 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,7 +19,9 @@ import javax.annotation.Generated;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({ "provider", "metrics" })
-public class Monitoring {
+public class Monitoring implements Serializable {
+
+  private static final long serialVersionUID = 6559999818418491070L;
 
   @JsonProperty("provider")
   private String provider;

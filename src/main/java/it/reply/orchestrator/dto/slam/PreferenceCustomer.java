@@ -11,6 +11,7 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,7 +22,9 @@ import javax.annotation.Generated;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({ "service_type", "priority" })
-public class PreferenceCustomer {
+public class PreferenceCustomer implements Serializable {
+
+  private static final long serialVersionUID = 6559999818418491070L;
 
   @JsonProperty("service_type")
   private String serviceType;

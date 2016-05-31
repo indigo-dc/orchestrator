@@ -1,5 +1,7 @@
 package it.reply.orchestrator.dto.ranker;
 
+import java.io.Serializable;
+
 /**
  * Temporary response mapping - use imported library from CloudProviderRanker project when
  * available.
@@ -8,7 +10,10 @@ package it.reply.orchestrator.dto.ranker;
  *
  */
 
-public class RankedCloudProvider {
+public class RankedCloudProvider implements Serializable {
+
+  private static final long serialVersionUID = 6559999818418491070L;
+
   private String name;
   private float rank;
   private boolean ranked;

@@ -27,6 +27,11 @@ public class CmdbServiceImpl implements CmdbService {
   private String providerIdUrlPath;
 
   @Override
+  public String getUrl() {
+    return url;
+  }
+
+  @Override
   public it.reply.orchestrator.dto.cmdb.Service getServiceById(String id) {
 
     ResponseEntity<it.reply.orchestrator.dto.cmdb.Service> response = restTemplate.getForEntity(

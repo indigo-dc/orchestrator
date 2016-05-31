@@ -7,8 +7,12 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+import java.io.Serializable;
+
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class Restrictions {
+public class Restrictions implements Serializable {
+
+  private static final long serialVersionUID = 6559999818418491070L;
 
   @JsonProperty("total_guaranteed")
   private Integer totalGuaranteed;

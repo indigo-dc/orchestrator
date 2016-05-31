@@ -11,6 +11,7 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -19,7 +20,9 @@ import javax.annotation.Generated;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({ "sla_id", "service_id" })
-public class Priority {
+public class Priority implements Serializable {
+
+  private static final long serialVersionUID = 6559999818418491070L;
 
   @JsonProperty("sla_id")
   private String slaId;

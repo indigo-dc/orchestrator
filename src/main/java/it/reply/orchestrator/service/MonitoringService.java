@@ -6,4 +6,5 @@ public interface MonitoringService {
 
   public MonitoringWrappedResponsePaas getProviderData(String providerId);
 
+  public String getUrl();
 }

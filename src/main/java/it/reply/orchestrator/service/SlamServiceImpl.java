@@ -24,6 +24,11 @@ public class SlamServiceImpl implements SlamService {
   private String preferences;
 
   @Override
+  public String getUrl() {
+    return url;
+  }
+
+  @Override
   public SlamPreferences getCustomerPreferences() {
 
     ResponseEntity<SlamPreferences> response = restTemplate
