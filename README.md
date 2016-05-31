@@ -91,3 +91,6 @@ Besides those used to link the orchestrator to the DBs, there are other environm
  3. `OIDC_CLIENT_ID`: The OAuth2 client ID
  4. `OIDC_CLIENT_SECRET` The OAuth2 client secret
  
+### Configure Chronos
+ 1. `CHRONOS_AUTH_FILE_PATH`: the path to the property file containing credentials for Chronos and OneData service space for Chronos.
+You can also edit the file `chronos/chronos.properties` directly in the deployment folder.

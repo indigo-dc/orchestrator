@@ -1,7 +1,8 @@
 package it.reply.orchestrator.exception.http;
 
 /**
- * Exception thrown when a resource doesn't exist.
+ * Exception thrown when the client request is bad (i.e. wrong information, wrong resource status,
+ * etc)
  * 
  * @author m.bassi
  *
@@ -17,5 +18,4 @@ public class BadRequestException extends OrchestratorApiException {
   public BadRequestException(String message, Throwable ex) {
     super(message, ex);
   }
-
 }

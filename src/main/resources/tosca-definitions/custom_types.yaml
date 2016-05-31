@@ -91,6 +91,9 @@ capability_types:
         type: list
         entry_schema:
           type: tosca.datatypes.Credential
+  
+  tosca.capabilities.indigo.Container.Application.Docker.Chronos:
+    derived_from: tosca.capabilities.Root
 
 artifact_types:
 
@@ -152,7 +155,6 @@ node_types:
         create: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mysql/mysql_install.yml
         configure:
           implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mysql/mysql_configure.yml
-  
           inputs:
             root_password: { get_property: [ SELF, root_password ] }
             port: { get_property: [ SELF, port ] }
@@ -165,7 +167,6 @@ node_types:
           implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/apache/apache_install.yml
         start:
           implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/apache/apache_start.yml
-
 
 # INDIGO non normative types
 
@@ -285,7 +286,6 @@ node_types:
           inputs:
             galaxy_install_path: { get_property: [ SELF, install_path ] }
             galaxy_user: { get_property: [ SELF, user ] }
-            galaxy_install_path: { get_property: [ SELF, install_path ] }
             galaxy_admin: { get_property: [ SELF, admin ] }
             galaxy_admin_api_key: { get_property: [ SELF, admin_api_key ] }
             galaxy_lrms: { get_property: [ SELF, lrms, type ] }
@@ -433,20 +433,24 @@ node_types:
       schedule:
         required: no
         type: string
-      name:
-        required: no
-        type: string
       description:
         required: no
         type: string
       retries:
         required: no
         type: integer
-      parents:
-        required: no
-        type: list
-        entry_schema:
-          type: string
+    capabilities:
+      parent_job:
+        type: tosca.capabilities.indigo.Container.Application.Docker.Chronos
+        valid_source_types: [tosca.nodes.indigo.Container.Application.Docker.Chronos]
+        occurrences: [0, UNBOUNDED]
+    requirements:
+      parent_job:
+        type: tosca.capabilities.indigo.Container.Application.Docker.Chronos
+        node: tosca.nodes.indigo.Container.Application.Docker.Chronos
+        relationship: tosca.relationships.DependsOn
+        occurrences: [0, 1]
+
 
   tosca.nodes.indigo.Container.Application.Docker.Marathon:
     derived_from: tosca.nodes.indigo.Container.Application.Docker
@@ -517,7 +521,6 @@ node_types:
         capability: tosca.capabilities.Container
         node: tosca.nodes.indigo.Compute
         relationship: tosca.relationships.HostedOn
-
   tosca.nodes.indigo.MesosLoadBalancerSlave:
     derived_from: tosca.nodes.SoftwareComponent
     properties:

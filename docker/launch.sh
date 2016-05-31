@@ -14,6 +14,7 @@ java -jar /usr/share/java/saxon.jar -o:$JBOSS_HOME/standalone/configuration/$JBO
 
 IM_PROP_FILE="$JBOSS_HOME/standalone/deployments/$WAR_NAME.war/WEB-INF/classes/im-config/im-java-api.properties"
 SECURITY_PROP_FILE="$JBOSS_HOME/standalone/deployments/$WAR_NAME.war/WEB-INF/classes/security.properties"
+CHRONOS_PROP_FILE="$JBOSS_HOME/standalone/deployments/$WAR_NAME.war/WEB-INF/classes/chronos/chronos.properties"
 
 if [[ $IM_URL ]];
 	then sed -i "s/^\(url=\).*$/\1$(echo $IM_URL | sed -e 's/[\/&]/\\&/g')/" ${IM_PROP_FILE};
@@ -29,6 +30,10 @@ if [[ $OPENSTACK_AUTH_FILE_PATH ]];
 fi;
 if [[ $ONEDOCK_AUTH_FILE_PATH ]];
 	then sed -i "s/^\(onedock\.auth\.file\.path=\).*$/\1$(echo $ONEDOCK_AUTH_FILE_PATH | sed -e 's/[\/&]/\\&/g')/" ${IM_PROP_FILE};
+fi;
+
+if [[ $CHRONOS_AUTH_FILE_PATH ]];
+	then sed -i "s/^\(chronos\.auth\.file\.path=\).*$/\1$(echo $CHRONOS_AUTH_FILE_PATH | sed -e 's/[\/&]/\\&/g')/" ${CHRONOS_PROP_FILE};
 fi;
 
 # CUSTOMIZE SECURITY PROPERTIES

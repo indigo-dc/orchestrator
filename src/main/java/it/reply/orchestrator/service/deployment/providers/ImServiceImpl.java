@@ -24,6 +24,7 @@ import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
+import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
@@ -35,6 +36,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.PropertySource;
@@ -58,6 +60,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @Service
+@Qualifier("IM")
 @PropertySource("classpath:im-config/im-java-api.properties")
 public class ImServiceImpl extends AbstractDeploymentProviderService {
 
@@ -172,12 +175,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   }
 
   @Override
-  public boolean doDeploy(String deploymentUuid) {
-    Deployment deployment = deploymentRepository.findOne(deploymentUuid);
-    return doDeploy(deployment);
-  }
-
-  @Override
   public boolean doDeploy(Deployment deployment) {
     String deploymentUuid = deployment.getId();
     try {
@@ -186,12 +183,17 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       deployment.setDeploymentProvider(DeploymentProvider.IM);
       deployment = deploymentRepository.save(deployment);
 
+      ArchiveRoot ar =
+          toscaService.prepareTemplate(deployment.getTemplate(), deployment.getParameters());
+      toscaService.addDeploymentId(ar, deploymentUuid);
+      String imCustomizedTemplate = toscaService.getTemplateFromTopology(ar);
+
       // FIXME this is a trick used only for demo purpose
       InfrastructureManager im = getClient(getIaaSSiteFromTosca(deployment.getTemplate()));
 
-      // TODO improve with template inputs
+      // Deploy on IM
       InfrastructureUri infrastructureUri =
-          im.createInfrastructure(deployment.getTemplate(), BodyContentType.TOSCA);
+          im.createInfrastructure(imCustomizedTemplate, BodyContentType.TOSCA);
 
       String infrastructureId = infrastructureUri.getInfrastructureId();
       if (infrastructureId != null) {
@@ -218,12 +220,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       updateOnError(deploymentUuid, ex);
       return false;
     }
-  }
-
-  @Override
-  public boolean isDeployed(String deploymentUuid) throws DeploymentException {
-    Deployment deployment = deploymentRepository.findOne(deploymentUuid);
-    return isDeployed(deployment);
   }
 
   @Override
@@ -283,12 +279,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   }
 
   @Override
-  public void finalizeDeploy(String deploymentUuid, boolean deployed) {
-    Deployment deployment = deploymentRepository.findOne(deploymentUuid);
-    finalizeDeploy(deployment, deployed);
-  }
-
-  @Override
   public void finalizeDeploy(Deployment deployment, boolean deployed) {
     if (deployed) {
       try {
@@ -321,12 +311,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     } else {
       updateOnError(deployment.getId());
     }
-  }
-
-  @Override
-  public boolean doUpdate(String deploymentId, String template) {
-    Deployment deployment = deploymentRepository.findOne(deploymentId);
-    return doUpdate(deployment, template);
   }
 
   @Override
@@ -446,12 +430,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   }
 
   @Override
-  public boolean doUndeploy(String deploymentUuid) {
-    Deployment deployment = deploymentRepository.findOne(deploymentUuid);
-    return doUndeploy(deployment);
-  }
-
-  @Override
   public boolean doUndeploy(Deployment deployment) {
     String deploymentUuid = deployment.getId();
     try {
@@ -488,12 +466,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   }
 
   @Override
-  public boolean isUndeployed(String deploymentUuid) throws DeploymentException {
-    Deployment deployment = deploymentRepository.findOne(deploymentUuid);
-    return isUndeployed(deployment);
-  }
-
-  @Override
   public boolean isUndeployed(Deployment deployment) throws DeploymentException {
     try {
       // FIXME this is a trick used only for demo purpose
@@ -521,11 +493,11 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
    * Check if a resource is deleted.
    */
   @Override
-  public void finalizeUndeploy(String deploymentUuid, boolean undeployed) {
+  public void finalizeUndeploy(Deployment deployment, boolean undeployed) {
     if (undeployed) {
-      updateOnSuccess(deploymentUuid);
+      updateOnSuccess(deployment.getId());
     } else {
-      updateOnError(deploymentUuid);
+      updateOnError(deployment.getId());
     }
   }
 
@@ -615,4 +587,45 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     LOG.error(exception.getResponseError().getFormattedErrorMessage());
   }
 
+  // FIXME Remove once IM handles single nodes state update
+  /**
+   * Update the status of the deployment with an error message.
+   * 
+   * @param deploymentUuid
+   *          the deployment id
+   * @param message
+   *          the error message
+   */
+  public void updateOnError(String deploymentUuid, String message) {
+    Deployment deployment = deploymentRepository.findOne(deploymentUuid);
+    switch (deployment.getStatus()) {
+      case CREATE_FAILED:
+      case UPDATE_FAILED:
+      case DELETE_FAILED:
+        LOG.warn("Deployment < {} > was already in {} state.", deploymentUuid,
+            deployment.getStatus());
+        break;
+      case CREATE_IN_PROGRESS:
+        deployment.setStatus(Status.CREATE_FAILED);
+        updateResources(deployment, Status.CREATE_FAILED);
+        break;
+      case DELETE_IN_PROGRESS:
+        deployment.setStatus(Status.DELETE_FAILED);
+        updateResources(deployment, Status.DELETE_FAILED);
+        break;
+      case UPDATE_IN_PROGRESS:
+        deployment.setStatus(Status.UPDATE_FAILED);
+        updateResources(deployment, Status.UPDATE_FAILED);
+        break;
+      default:
+        LOG.error("updateOnError: unsupported deployment status: {}. Setting status to {}",
+            deployment.getStatus(), Status.UNKNOWN.toString());
+        deployment.setStatus(Status.UNKNOWN);
+        updateResources(deployment, Status.UNKNOWN);
+        break;
+    }
+    deployment.setTask(Task.NONE);
+    deployment.setStatusReason(message);
+    deploymentRepository.save(deployment);
+  }
 }

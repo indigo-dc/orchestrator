@@ -11,6 +11,17 @@ public class IndigoOAuth2Authentication extends OAuth2Authentication {
   OAuth2AccessToken token;
   UserInfo userInfo;
 
+  /**
+   * Generate an {@link IndigoOAuth2Authentication}.
+   * 
+   * @param authentication
+   *          the {@link OAuth2Authentication}.
+   * @param token
+   *          the {@link OAuth2AccessToken}.
+   * @param userInfo
+   *          the {@link UserInfo}. Can be null (i.e. the client is authenticating with its own
+   *          credentials).
+   */
   public IndigoOAuth2Authentication(OAuth2Authentication authentication, OAuth2AccessToken token,
       UserInfo userInfo) {
     super(authentication.getOAuth2Request(), authentication.getUserAuthentication());
