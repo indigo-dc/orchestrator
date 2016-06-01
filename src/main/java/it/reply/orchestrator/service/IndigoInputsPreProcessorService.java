@@ -191,10 +191,9 @@ public class IndigoInputsPreProcessorService {
           for (int i = 0; i < ((ListPropertyValue) propertyValue).getValue().size(); i++) {
             myMap.put("<list-item-" + i + ">", list.get(i));
           }
+        } else {
+           myMap = ((ComplexPropertyValue) propertyValue).getValue();
         }
-
-        myMap = ((ComplexPropertyValue) propertyValue).getValue();
-
         // Look for function in the value
         for (Map.Entry<String, Object> complexEntry : myMap.entrySet()) {
           // Only AbstractPropertyValue values can have functions in them
