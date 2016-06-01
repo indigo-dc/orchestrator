@@ -1,5 +1,6 @@
 package it.reply.orchestrator.controller;
 
+import it.reply.domain.dsl.prisma.DebugInformations;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.resource.DeploymentResource;
@@ -10,6 +11,8 @@ import it.reply.orchestrator.validator.DeploymentRequestValidator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -26,12 +29,24 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.net.InetAddress;
+
 import javax.validation.Valid;
 
 @RestController
+@PropertySource("classpath:version.properties")
 public class DeploymentController {
 
   private static final Logger LOG = LogManager.getLogger(DeploymentController.class);
+
+  @Value("${build.version}")
+  private String projectVersion;
+
+  @Value("${build.revision}")
+  private String projectRevision;
+
+  @Value("${build.timestamp}")
+  private String projectTimestamp;
 
   @Autowired
   private DeploymentService deploymentService;
@@ -47,8 +62,26 @@ public class DeploymentController {
   @ResponseStatus(HttpStatus.OK)
   @RequestMapping(value = "/", method = RequestMethod.GET)
   public String getOrchestrator() {
-
     return "INDIGO-Orchestrator";
+  }
+
+  @ResponseStatus(HttpStatus.OK)
+  @RequestMapping(value = "/info", method = RequestMethod.GET)
+  public DebugInformations getInfo() {
+    DebugInformations info = new DebugInformations();
+    info.setProjectVersion(projectVersion);
+    info.setProjectRevision(projectRevision);
+    info.setProjectTimestamp(projectTimestamp);
+
+    String hostname;
+    try {
+      hostname = InetAddress.getLocalHost().getHostName();
+    } catch (Exception ex) {
+      hostname = "-NOT AVAILABLE-";
+    }
+    info.setServerHostname(hostname);
+
+    return info;
   }
 
   /**

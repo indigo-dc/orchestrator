@@ -7,8 +7,18 @@
 	<packaging>war</packaging>
 	<name>orchestrator</name>
 
+	<scm>
+		<url>https://github.com/indigo-dc/orchestrator.git</url>
+		<connection>scm:git:https://github.com/indigo-dc/orchestrator.git</connection>
+		<developerConnection>scm:git:https://github.com/indigo-dc/orchestrator.git</developerConnection>
+		<tag>HEAD</tag>
+	</scm>
+
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+		<version.buildnumber.plugin>1.4</version.buildnumber.plugin>
+
 		<java.version>1.8</java.version>
 		<springframework.version>4.2.2.RELEASE</springframework.version>
 		<spring.security.version>4.1.0.RELEASE</spring.security.version>
@@ -73,7 +83,7 @@
 			<artifactId>jaxb-impl</artifactId>
 			<version>2.2.11</version>
 		</dependency>
-		<!--           -->
+		<!-- -->
 		<!-- Fix to avoid to import the library (which conflicts with the one in 
 			WildFly) -->
 		<dependency>
@@ -119,26 +129,26 @@
 			<version>1.2.0.RELEASE</version>
 		</dependency>
 		<dependency>
-	        <groupId>org.springframework.security</groupId>
-	        <artifactId>spring-security-config</artifactId>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-config</artifactId>
 			<version>${spring.security.version}</version>
-	    </dependency>
-    	<dependency>
-	        <groupId>org.springframework.security</groupId>
-	        <artifactId>spring-security-core</artifactId>
-			<version>${spring.security.version}</version>
-	    </dependency>
+		</dependency>
 		<dependency>
-	        <groupId>org.springframework.security</groupId>
-	        <artifactId>spring-security-web</artifactId>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-core</artifactId>
 			<version>${spring.security.version}</version>
-	    </dependency>
-	    <dependency>
-	        <groupId>org.springframework.security.oauth</groupId>
-    	    <artifactId>spring-security-oauth2</artifactId>
-    	    <version>2.0.9.RELEASE</version>
-    	</dependency>
-	    <dependency>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-web</artifactId>
+			<version>${spring.security.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security.oauth</groupId>
+			<artifactId>spring-security-oauth2</artifactId>
+			<version>2.0.9.RELEASE</version>
+		</dependency>
+		<dependency>
 			<groupId>org.mitre</groupId>
 			<artifactId>openid-connect-client</artifactId>
 			<version>${openid.connect.version}</version>
@@ -241,7 +251,7 @@
 			<artifactId>chronos-client</artifactId>
 			<version>${chronos-client.version}</version>
 		</dependency>
-		
+
 		<!-- Graph library -->
 		<dependency>
 			<groupId>org.jgrapht</groupId>
@@ -366,6 +376,137 @@
 	</profiles>
 
 	<build>
+		<pluginManagement>
+			<!-- All plugins ordered by shortname (antrun, assembly ...) -->
+			<plugins>
+
+				<!-- REFERENCE: https://raymondhlee.wordpress.com/2014/10/25/using-maven-build-number-plugin-to-load-code-revision-details/ -->
+				<!-- This plugin's configuration is used to store Eclipse m2e settings 
+					only. It has no influence on the Maven build itself. -->
+				<!-- WARNING: IT IS NOT A REAL PLUGIN !! -->
+				<!-- If you are using Eclipse, you also need to update the Maven plugin 
+					lifecycle mapping to enable the build number plugin. Otherwise, Eclipse auto 
+					build will overwrite the resolved build properties file created by the build 
+					number plugin, e.g. in /target/classes, with the one in your source path. 
+					Add the below in the pom file as child to the <build> tag: -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>org.codehaus.mojo</groupId>
+										<artifactId>buildnumber-maven-plugin</artifactId>
+										<versionRange>[1.0,)</versionRange>
+										<goals>
+											<goal>create</goal>
+											<goal>create-timestamp</goal>
+											<goal>create-metadata</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<execute>
+											<runOnIncremental>true</runOnIncremental>
+										</execute>
+									</action>
+								</pluginExecution>
+
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.apache.maven.plugins
+										</groupId>
+										<artifactId>
+											maven-dependency-plugin
+										</artifactId>
+										<versionRange>
+											[2.0,)
+										</versionRange>
+										<goals>
+											<goal>
+												unpack
+											</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
+
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+
+				<!-- Build number plugin -->
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>buildnumber-maven-plugin</artifactId>
+					<version>${version.buildnumber.plugin}</version>
+					<configuration>
+						<!-- Do not check for modification in the SCM -->
+						<!-- doCheck and doUpdate actually talk to repository if it's true, 
+							Check would check that there are no local changes. Update would update it -->
+						<doCheck>false</doCheck>
+						<doUpdate>false</doUpdate>
+
+						<!-- Settings for buildnumber:create-metadata goal: -->
+						<!-- Make the property file available for jar/war as a classpath resource -->
+						<addOutputDirectoryToResources>true</addOutputDirectoryToResources>
+						<!-- Deploy to Maven repo -->
+						<attach>true</attach>
+
+						<!-- <timestampFormat>{0,date,yyyy-MM-dd_HH-mm-ss}</timestampFormat> -->
+						<!-- The ${buildNumber} exported Maven variable content -->
+						<!-- <format>{0}</format> -->
+						<!-- <items> -->
+						<!-- <item>timestamp</item> -->
+						<!-- </items> -->
+
+						<!-- This ensures that even if we are not connected to scm -->
+						<!-- <revisiononscmfailure> -->
+
+						<!-- Generate sequence build number based on: build number and timestamp -->
+						<!-- The ${buildNumber} exported Maven variable content -->
+						<!-- <format>{0,date,yyyyMMdd-HHmmss}</format> -->
+						<!-- <items> -->
+						<!-- <item>timestamp</item> -->
+						<!-- </items> -->
+						<!-- </revisiononscmfailure> -->
+					</configuration>
+					<executions>
+						<!-- <execution> -->
+						<!-- <id>get-scm-revision-initialize</id> -->
+						<!-- <phase>initialize</phase> -->
+						<!-- <goals> -->
+						<!-- <goal>create</goal> -->
+						<!-- </goals> -->
+						<!-- </execution> -->
+						<execution>
+							<id>get-scm-revision-validate</id>
+							<phase>validate</phase>
+							<goals>
+								<goal>create</goal>
+								<goal>create-timestamp</goal>
+								<goal>create-metadata</goal>
+							</goals>
+						</execution>
+						<!-- <execution> -->
+						<!-- <id>get-scm-revision-generate-resources</id> -->
+						<!-- <phase>generate-resources</phase> -->
+						<!-- <goals> -->
+						<!-- <goal>create-metadata</goal> -->
+						<!-- </goals> -->
+						<!-- </execution> -->
+					</executions>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+
 		<finalName>orchestrator</finalName>
 		<plugins>
 			<plugin>
@@ -417,6 +558,11 @@
 				</executions>
 			</plugin>
 
+			<!-- Set properties containing the scm revision and other build metadata -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>buildnumber-maven-plugin</artifactId>
+			</plugin>
 
 			<!-- Automatic deploy on wildfly -->
 			<!-- <plugin> <groupId>org.wildfly.plugins</groupId> <artifactId>wildfly-maven-plugin</artifactId> 
@@ -424,6 +570,27 @@
 				</configuration> <executions> <execution> <phase>install</phase> <goals> 
 				<goal>deploy</goal> </goals> </execution> </executions> </plugin> -->
 		</plugins>
+
+		<resources>
+			<!-- Filter .properties and replace placeholders (using Maven properties 
+				or filtered properties - from the '<build> -> <filters'> section of the POM) -->
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>true</filtering>
+				<includes>
+					<include>**/*.properties</include>
+				</includes>
+			</resource>
+			<!-- Also include in the final package the other resources, not being 
+				.properties, without filtering them -->
+			<resource>
+				<directory>src/main/resources</directory>
+				<filtering>false</filtering>
+				<excludes>
+					<exclude>**/*.properties</exclude>
+				</excludes>
+			</resource>
+		</resources>
 	</build>
 	<reporting>
 		<plugins>
