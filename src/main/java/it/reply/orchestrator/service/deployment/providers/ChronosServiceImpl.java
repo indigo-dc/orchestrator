@@ -20,6 +20,7 @@ import it.infn.ba.indigo.chronos.client.ChronosClient;
 import it.infn.ba.indigo.chronos.client.model.v1.Container;
 import it.infn.ba.indigo.chronos.client.model.v1.EnvironmentVariable;
 import it.infn.ba.indigo.chronos.client.model.v1.Job;
+import it.infn.ba.indigo.chronos.client.model.v1.Parameters;
 import it.infn.ba.indigo.chronos.client.utils.ChronosException;
 import it.reply.orchestrator.controller.DeploymentController;
 import it.reply.orchestrator.dal.entity.Deployment;
@@ -297,7 +298,7 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       updateOnError(deployment.getId(), dex);
       throw dex;
     } catch (RuntimeException ex) {
-      LOG.error("Failed to update deployment <{}>", ex);
+      LOG.error(String.format("Failed to update deployment <%s>", deployment.getId()), ex);
       return false;
     }
 
@@ -802,6 +803,14 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
 
       Container container = new Container();
       container.setType("DOCKER");
+
+      // Run the container in Privileged Mode
+      Parameters param = new Parameters();
+      param.setKey("privileged");
+      param.setValue("true");
+      Collection<Parameters> parameters = new ArrayList<Parameters>();
+      parameters.add(param);
+      container.setParameters(parameters);
 
       container
           .setImage((String) ((PropertyValue<?>) nodeTemplate.getArtifacts().get("image").getFile())

@@ -63,7 +63,7 @@ public class Deployment extends AbstractResourceEntity {
 
   @ElementCollection(fetch = FetchType.EAGER)
   @MapKeyColumn(name = "name")
-  @Column(name = "value")
+  @Column(name = "value", columnDefinition = "TEXT")
   private Map<String, String> parameters = new HashMap<>();
 
   @ElementCollection(fetch = FetchType.EAGER)
