@@ -1,6 +1,6 @@
 package it.reply.orchestrator.service.commands.chronos;
 
-import it.reply.orchestrator.service.DeploymentService;
+import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
 import it.reply.workflowmanager.spring.orchestrator.bpm.ejbcommands.BaseCommand;
 
@@ -20,7 +20,7 @@ public class UndeployOnChronos extends BaseCommand {
   @Override
   protected ExecutionResults customExecute(CommandContext ctx) throws Exception {
     String deploymentId =
-        (String) getWorkItem(ctx).getParameter(DeploymentService.WF_PARAM_DEPLOYMENT_ID);
+        (String) getWorkItem(ctx).getParameter(WorkflowConstants.WF_PARAM_DEPLOYMENT_ID);
     boolean result = chronosService.doUndeploy(deploymentId);
     chronosService.finalizeUndeploy(deploymentId, result);
     return resultOccurred(result);
