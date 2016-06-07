@@ -9,5 +9,8 @@
     <Root level="INFO">
       <AppenderRef ref="Console" />
     </Root>
+    <logger name="it.reply" level="DEBUG" additivity="false">
+      <AppenderRef ref="Console" />
+    </logger>
   </Loggers>
 </Configuration>

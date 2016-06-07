@@ -3,6 +3,7 @@ package it.reply.orchestrator.service.commands;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
+import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
 import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.orchestrator.service.deployment.providers.DeploymentStatusHelper;
@@ -15,6 +16,12 @@ import org.kie.api.executor.ExecutionResults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+/**
+ * Choose Cloud Provider and update Deployment/Message with the selected one data.
+ * 
+ * @author l.biava
+ *
+ */
 @Component
 public class UpdateDeployment extends BaseCommand {
 
@@ -32,9 +39,8 @@ public class UpdateDeployment extends BaseCommand {
     RankCloudProvidersMessage rankCloudProvidersMessage =
         (RankCloudProvidersMessage) getWorkItem(ctx)
             .getParameter(WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE);
-    //
-    // String deploymentId =
-    // (String) getWorkItem(ctx).getParameter(WorkflowConstants.WF_PARAM_DEPLOYMENT_ID);
+    DeploymentMessage deploymentMessage = (DeploymentMessage) getWorkItem(ctx)
+        .getParameter(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE);
 
     ExecutionResults exResults = new ExecutionResults();
     try {
@@ -42,11 +48,10 @@ public class UpdateDeployment extends BaseCommand {
         throw new IllegalArgumentException(String.format("WF parameter <%s> cannot be null",
             WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE));
       }
-
-      // if (deploymentId == null) {
-      // throw new IllegalArgumentException(String.format("WF parameter <%s> cannot be null",
-      // WorkflowConstants.WF_PARAM_DEPLOYMENT_ID));
-      // }
+      if (deploymentMessage == null) {
+        throw new IllegalArgumentException(String.format("WF parameter <%s> cannot be null",
+            WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE));
+      }
 
       // TODO: Move elsewhere
       // Choose Cloud Provider
@@ -67,7 +72,10 @@ public class UpdateDeployment extends BaseCommand {
           deploymentRepository.findOne(rankCloudProvidersMessage.getDeploymentId());
       deployment.setCloudProviderName(chosenCp.getName());
 
+      // FIXME Set/update all required selected CP data
+
       exResults.getData().putAll(resultOccurred(true).getData());
+      exResults.setData(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
     } catch (Exception ex) {
       LOG.error(ex);
       exResults.getData().putAll(resultOccurred(false).getData());

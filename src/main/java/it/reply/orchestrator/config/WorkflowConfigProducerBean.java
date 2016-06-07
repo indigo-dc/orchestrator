@@ -65,7 +65,7 @@ public class WorkflowConfigProducerBean implements ConfigProducer {
 
   @Override
   public int getExecutorServiceInterval() {
-    return 3;
+    return 1;
   }
 
 }

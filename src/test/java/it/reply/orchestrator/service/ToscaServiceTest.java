@@ -40,8 +40,8 @@ public class ToscaServiceTest extends WebAppConfigurationAware {
   @Rule
   public ExpectedException thrown = ExpectedException.none();
 
-  private static final String TEMPLATES_BASE_DIR = "./src/test/resources/tosca/";
-  private static final String TEMPLATES_INPUT_BASE_DIR = TEMPLATES_BASE_DIR + "inputs/";
+  public static final String TEMPLATES_BASE_DIR = "./src/test/resources/tosca/";
+  public static final String TEMPLATES_INPUT_BASE_DIR = TEMPLATES_BASE_DIR + "inputs/";
 
   private String deploymentId = "deployment_id";
 

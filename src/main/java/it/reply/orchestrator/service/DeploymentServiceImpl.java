@@ -12,6 +12,7 @@ import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.entity.WorkflowReference;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
+import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
@@ -35,7 +36,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.Map;
 
 @Service
@@ -116,6 +116,13 @@ public class DeploymentServiceImpl implements DeploymentService {
     params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_TYPE,
         (isChronosDeployment ? DEPLOYMENT_TYPE_CHRONOS : DEPLOYMENT_TYPE_TOSCA));
 
+    // Build deployment message
+    DeploymentMessage deploymentMessage = new DeploymentMessage();
+    deploymentMessage.setDeploymentId(deployment.getId());
+    deploymentMessage.setDeploymentProvider(
+        (isChronosDeployment ? DeploymentProvider.CHRONOS : DeploymentProvider.IM));
+    params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
+
     ProcessInstance pi = null;
     try {
       pi = wfService.startProcess(WorkflowConfigProducerBean.DEPLOY.getProcessId(), params,
@@ -166,12 +173,12 @@ public class DeploymentServiceImpl implements DeploymentService {
         deployment = deploymentRepository.save(deployment);
 
         // Abort all WF currently active on this deployment
-        Iterator<WorkflowReference> wrIt = deployment.getWorkflowReferences().iterator();
-        while (wrIt.hasNext()) {
-          WorkflowReference wr = wrIt.next();
-          wfService.abortProcess(wr.getProcessId(), wr.getRuntimeStrategy());
-          wrIt.remove();
-        }
+        // Iterator<WorkflowReference> wrIt = deployment.getWorkflowReferences().iterator();
+        // while (wrIt.hasNext()) {
+        // WorkflowReference wr = wrIt.next();
+        // wfService.abortProcess(wr.getProcessId(), wr.getRuntimeStrategy());
+        // wrIt.remove();
+        // }
 
         Map<String, Object> params = new HashMap<>();
         params.put("DEPLOYMENT_ID", deployment.getId());
@@ -180,15 +187,21 @@ public class DeploymentServiceImpl implements DeploymentService {
         params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_TYPE,
             deployment.getDeploymentProvider().name());
 
-        ProcessInstance pi = null;
-        try {
-          pi = wfService.startProcess(WorkflowConfigProducerBean.UNDEPLOY.getProcessId(), params,
-              RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
-        } catch (WorkflowException ex) {
-          throw new OrchestratorException(ex);
-        }
+        // Build deployment message
+        DeploymentMessage deploymentMessage = new DeploymentMessage();
+        deploymentMessage.setDeploymentId(deployment.getId());
+        deploymentMessage.setDeploymentProvider(deployment.getDeploymentProvider());
+        params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
+
+        // ProcessInstance pi = null;
+        // try {
+        // pi = wfService.startProcess(WorkflowConfigProducerBean.UNDEPLOY.getProcessId(), params,
+        // RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
+        // } catch (WorkflowException ex) {
+        // throw new OrchestratorException(ex);
+        // }
         deployment.addWorkflowReferences(
-            new WorkflowReference(pi.getId(), RUNTIME_STRATEGY.PER_PROCESS_INSTANCE));
+            new WorkflowReference(998, RUNTIME_STRATEGY.PER_PROCESS_INSTANCE));
         deployment = deploymentRepository.save(deployment);
       }
     } else {
@@ -223,9 +236,20 @@ public class DeploymentServiceImpl implements DeploymentService {
 
         deployment = deploymentRepository.save(deployment);
 
+        // !! WARNING !! That's an hack to avoid an obscure NonUniqueObjetException on the new
+        // WorkflowReference created after the WF start
+        deployment.getWorkflowReferences().size();
+
         Map<String, Object> params = new HashMap<>();
         params.put("DEPLOYMENT_ID", deployment.getId());
         params.put("TOSCA_TEMPLATE", request.getTemplate());
+
+        // Build deployment message
+        DeploymentMessage deploymentMessage = new DeploymentMessage();
+        deploymentMessage.setDeploymentId(deployment.getId());
+        deploymentMessage.setDeploymentProvider(deployment.getDeploymentProvider());
+        params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
+
         ProcessInstance pi = null;
         try {
           pi = wfService.startProcess(WorkflowConfigProducerBean.UPDATE.getProcessId(), params,

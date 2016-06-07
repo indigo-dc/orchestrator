@@ -44,6 +44,12 @@ public class Resource extends AbstractResourceEntity {
     super();
   }
 
+  public Resource(String toscaNodeName) {
+    super();
+    this.toscaNodeName = toscaNodeName;
+    state = NodeStates.INITIAL;
+  }
+
   public NodeStates getState() {
     return state;
   }

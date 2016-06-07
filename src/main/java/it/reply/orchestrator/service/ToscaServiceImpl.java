@@ -420,7 +420,7 @@ public class ToscaServiceImpl implements ToscaService {
         ScalarPropertyValue scalarPropertyValue =
             (ScalarPropertyValue) scalable.getProperties().get("count");
         // Check if this value is read from the template and is not a default value
-        if (scalarPropertyValue.isPrintable()) {
+        if (scalarPropertyValue != null && scalarPropertyValue.isPrintable()) {
           nodes.put(entry.getKey(), entry.getValue());
         }
       }

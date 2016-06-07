@@ -11,9 +11,7 @@ import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.normative.SizeType;
 import alien4cloud.tosca.parser.ParsingException;
 
-import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
-import com.google.common.collect.Multimap;
 
 import it.infn.ba.indigo.chronos.client.Chronos;
 import it.infn.ba.indigo.chronos.client.ChronosClient;
@@ -26,13 +24,14 @@ import it.reply.orchestrator.controller.DeploymentController;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
+import it.reply.orchestrator.dto.deployment.DeploymentMessage;
+import it.reply.orchestrator.dto.deployment.DeploymentMessage.TemplateTopologicalOrderIterator;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.ToscaService;
-import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl.IndigoJob.JobDependencyType;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -47,6 +46,7 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -117,26 +117,48 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
   }
 
   @Override
-  public boolean doDeploy(Deployment deployment) {
+  public boolean doDeploy(DeploymentMessage deploymentMessage) {
+
+    Deployment deployment = deploymentMessage.getDeployment();
 
     try {
-      // Update status of the deployment
-      deployment.setTask(Task.DEPLOYER);
-      deployment.setDeploymentProvider(DeploymentProvider.CHRONOS);
-      deployment = getDeploymentRepository().save(deployment);
+      // Update status of the deployment - if not already done (remember the Iterative mode)
+      if (deployment.getTask() != Task.DEPLOYER) {
+        deployment.setTask(Task.DEPLOYER);
+        deployment.setDeploymentProvider(DeploymentProvider.CHRONOS);
+        deployment = getDeploymentRepository().save(deployment);
+      }
 
       // TODO Get/Check Chronos cluster
 
       // TODO Replace attribute, inputs, temporary-hard-coded properties in the TOSCA template
 
       // Generate INDIGOJob graph
-      LOG.debug("Generating job graph for deployment <{}>", deployment.getId());
-      Multimap<JobDependencyType, IndigoJob> jobgraph =
-          generateJobGraph(deployment, generateStubOneData());
+      if (deploymentMessage.getChronosJobGraph() == null) {
+        LOG.debug("Generating job graph for deployment <{}>", deployment.getId());
+        deploymentMessage.setChronosJobGraph(generateJobGraph(deployment, generateStubOneData()));
+      }
 
-      // Create Jobs in the required order on Chronos
+      // Create nodes iterator if not done yet
+      if (deploymentMessage.getTemplateTopologicalOrderIterator() == null) {
+        // Create topological order
+        List<IndigoJob> topoOrder = getJobsTopologicalOrder(deploymentMessage.getChronosJobGraph());
+
+        deploymentMessage.setTemplateTopologicalOrderIterator(
+            new TemplateTopologicalOrderIterator(topoOrder.stream()
+                .map(e -> new Resource(e.getToscaNodeName())).collect(Collectors.toList())));
+      }
+
+      // Create Jobs in the required order on Chronos (but 1 at each invocation)
       LOG.debug("Launching jobs for deployment <{}> on Chronos", deployment.getId());
-      createJobsOnChronos(deployment, jobgraph, getChronosClient());
+      if (!createJobsOnChronosIteratively(deployment, deploymentMessage.getChronosJobGraph(),
+          deploymentMessage.getTemplateTopologicalOrderIterator(), getChronosClient())) {
+        // No more jobs to create
+        deploymentMessage.setCreateComplete(true);
+        // Start over with the polling check
+        deploymentMessage.getTemplateTopologicalOrderIterator().reset();
+        return true;
+      }
 
       return true;
     } catch (RuntimeException exception) { // Chronos job launch error
@@ -152,43 +174,59 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
     }
   }
 
-  protected void createJobsOnChronos(Deployment deployment,
-      Multimap<JobDependencyType, IndigoJob> jobgraph, Chronos client) {
+  /**
+   * 
+   * @param deployment
+   * @param topoOrder
+   * @param templateTopologicalOrderIterator
+   * @param client
+   * @return <tt>true</tt> if there are more nodes to create, <tt>false</tt> otherwise.
+   */
+  protected boolean createJobsOnChronosIteratively(Deployment deployment,
+      Map<String, IndigoJob> jobgraph,
+      TemplateTopologicalOrderIterator templateTopologicalOrderIterator, Chronos client) {
+
     // Create Jobs in the required order on Chronos
+    Resource currentNode = templateTopologicalOrderIterator.getCurrent();
+    if (currentNode == null) {
+      return false;
+    }
 
-    IndigoJob currentJob = null;
+    IndigoJob currentJob = jobgraph.get(currentNode.getToscaNodeName());
+
+    // Create jobs based on the topological order
     try {
-      // Create topological order
-      List<IndigoJob> topoOrder = getJobsTopologicalOrder(jobgraph);
-
-      // Create jobs based on the topological order
-      for (IndigoJob job : topoOrder) {
-        currentJob = job;
-        String nodeTypeMsg;
-        if (job.getParents().isEmpty()) {
-          // Scheduled job (not dependent)
-          nodeTypeMsg = "scheduled";
-          client.createJob(job.getChronosJob());
-        } else {
-          // Dependent job
-          nodeTypeMsg = String.format("parents <%s>", job.getChronosJob().getParents());
-          client.createDependentJob(job.getChronosJob());
-        }
-
-        LOG.debug("Created job on Chronos: name <{}>, {}", currentJob.getChronosJob().getName(),
-            nodeTypeMsg);
-        // Update job status
-        updateResource(deployment, currentJob, NodeStates.CREATED);
+      String nodeTypeMsg;
+      if (currentJob.getParents().isEmpty()) {
+        // Scheduled job (not dependent)
+        nodeTypeMsg = "scheduled";
+        client.createJob(currentJob.getChronosJob());
+      } else {
+        // Dependent job
+        nodeTypeMsg = String.format("parents <%s>", currentJob.getChronosJob().getParents());
+        client.createDependentJob(currentJob.getChronosJob());
       }
+
+      LOG.debug("Created job on Chronos: name <{}>, {} ({}/{})",
+          currentJob.getChronosJob().getName(), nodeTypeMsg,
+          templateTopologicalOrderIterator.getPosition() + 1,
+          templateTopologicalOrderIterator.getNodeSize());
+      // Update job status
+      updateResource(deployment, currentJob, NodeStates.CREATED);
+      // The node in the iterator is not actually an entity (serialization issues)
+      currentNode.setState(NodeStates.CREATED);
 
     } catch (ChronosException exception) { // Chronos job launch error
       // Update job status
       updateResource(deployment, currentJob, NodeStates.ERROR);
+      currentNode.setState(NodeStates.ERROR);
       // TODO use a custom exception ?
       throw new RuntimeException(
           String.format("Failed to launch job <%s> on Chronos. Status Code: <%s>",
               currentJob.getChronosJob().getName(), exception.getStatus()));
     }
+
+    return templateTopologicalOrderIterator.getNext() != null;
   }
 
   /**
@@ -200,8 +238,7 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
    * @throws IllegalArgumentException
    *           if the graph has cycles (hence no topological order exists).
    */
-  protected List<IndigoJob>
-      getJobsTopologicalOrder(Multimap<JobDependencyType, IndigoJob> jobgraph) {
+  protected List<IndigoJob> getJobsTopologicalOrder(Map<String, IndigoJob> jobgraph) {
     DefaultDirectedGraph<IndigoJob, DefaultEdge> graph =
         new DefaultDirectedGraph<IndigoJob, DefaultEdge>(DefaultEdge.class);
 
@@ -236,63 +273,80 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
   }
 
   @Override
-  public boolean isDeployed(Deployment deployment) throws DeploymentException {
+  public boolean isDeployed(DeploymentMessage deploymentMessage) throws DeploymentException {
 
+    Deployment deployment = deploymentMessage.getDeployment();
+    deploymentMessage.setSkipPollInterval(false);
     try {
-      // Generate INDIGOJob graph
-      // FIXME: Do not regenerate every time (just for prototyping!)
-      LOG.debug("Generating job graph for deployment <{}>", deployment.getId());
-      Multimap<JobDependencyType, IndigoJob> jobgraph =
-          generateJobGraph(deployment, generateStubOneData());
 
       Chronos client = getChronosClient();
 
       // Follow the Job graph and poll Chronos (higher -less dependent- jobs first) and
       // fail-fast
 
-      // Create topological order
-      List<IndigoJob> topoOrder = getJobsTopologicalOrder(jobgraph);
-
       // Check jobs status based on the topological order
-      for (IndigoJob job : topoOrder) {
-        String jobName = job.getChronosJob().getName();
-        Job updatedJob = getJobStatus(client, jobName);
-        if (updatedJob == null) {
+      TemplateTopologicalOrderIterator templateTopologicalOrderIterator =
+          deploymentMessage.getTemplateTopologicalOrderIterator();
+
+      Resource currentNode = templateTopologicalOrderIterator.getCurrent();
+      // No nodes left -> all task succeeded -> deployment is ready
+      if (currentNode == null) {
+        return true;
+      }
+
+      IndigoJob job = deploymentMessage.getChronosJobGraph().get(currentNode.getToscaNodeName());
+
+      String jobName = job.getChronosJob().getName();
+      Job updatedJob = getJobStatus(client, jobName);
+      if (updatedJob == null) {
+        String errorMsg = String.format(
+            "Failed to deploy deployment <%s>. Chronos job <%s> (id: <%s>) does not exist",
+            deployment.getId(), job.getToscaNodeName(), jobName);
+        LOG.error(errorMsg);
+        // Update job status
+        updateResource(deployment, job, NodeStates.ERROR);
+        throw new DeploymentException(errorMsg);
+      }
+
+      JobState jobState = getLastState(updatedJob);
+      LOG.debug("Status for Chronos job <{}> is <{}>", jobName, jobState);
+
+      // Go ahead only if the job succeeded
+      if (jobState != JobState.SUCCESS) {
+        if (jobState != JobState.FAILURE) {
+          // Job still in progress
+          LOG.debug("Polling again job <{}> for deployment <{}>", jobName, deployment.getId());
+          // Wait before retrying to poll on the same node
+          deploymentMessage.setSkipPollInterval(false);
+          return false;
+        } else {
+          // Job failed -> Deployment failed!
           String errorMsg = String.format(
-              "Failed to deploy deployment <%s>. Chronos job <%s> (id: <%s>) does not exist",
-              deployment.getId(), job.getToscaNodeName(), jobName);
+              "Failed to deploy deployment <%s>. Chronos job <%s> (id: <%s>) status is <%s>",
+              deployment.getId(), job.getToscaNodeName(), jobName, jobState);
           LOG.error(errorMsg);
           // Update job status
           updateResource(deployment, job, NodeStates.ERROR);
+          currentNode.setState(NodeStates.ERROR);
           throw new DeploymentException(errorMsg);
         }
+      } else {
+        // Update job status
+        updateResource(deployment, job, NodeStates.STARTED);
+        currentNode.setState(NodeStates.STARTED);
 
-        JobState jobState = getLastState(updatedJob);
-        LOG.debug("Status for Chronos job <{}> is <{}>", jobName, jobState);
-
-        // Go ahead only if the job succeeded
-        if (jobState != JobState.SUCCESS) {
-          if (jobState != JobState.FAILURE) {
-            // Job still in progress
-            return false;
-          } else {
-            // Job failed -> Deployment failed!
-            String errorMsg = String.format(
-                "Failed to deploy deployment <%s>. Chronos job <%s> (id: <%s>) status is <%s>",
-                deployment.getId(), job.getToscaNodeName(), jobName, jobState);
-            LOG.error(errorMsg);
-            // Update job status
-            updateResource(deployment, job, NodeStates.ERROR);
-            throw new DeploymentException(errorMsg);
-          }
+        if (templateTopologicalOrderIterator.getNext() != null) {
+          // Poll the following node next time - Disable poll interval
+          LOG.debug("Polling next job for deployment <{}>", deployment.getId());
+          deploymentMessage.setSkipPollInterval(true);
+          return false;
         } else {
-          // Update job status
-          updateResource(deployment, job, NodeStates.STARTED);
+          // No more jobs
+          LOG.debug("Polling complete for deployment <{}>", deployment.getId());
+          deploymentMessage.setPollComplete(true);
+          return true;
         }
       }
-
-      // Here all task succeeded -> deployment is ready
-      return true;
     } catch (DeploymentException dex) {
       // Deploy failed; let caller know (as for the method definition)
       updateOnError(deployment.getId(), dex);
@@ -341,7 +395,7 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
   }
 
   @Override
-  public void finalizeDeploy(Deployment deployment, boolean deployed) {
+  public void finalizeDeploy(DeploymentMessage deploymentMessage, boolean deployed) {
     if (deployed) {
       try {
 
@@ -355,15 +409,15 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
          */
 
         // Update deployment status
-        updateOnSuccess(deployment.getId());
+        updateOnSuccess(deploymentMessage.getDeploymentId());
       } catch (Exception ex) {
         LOG.error(ex);
         // Update deployment status
-        updateOnError(deployment.getId(), ex);
+        updateOnError(deploymentMessage.getDeploymentId(), ex);
       }
     } else {
       // Update deployment status
-      updateOnError(deployment.getId());
+      updateOnError(deploymentMessage.getDeploymentId());
     }
 
     // TODO (?) Update resources attributes on DB?
@@ -371,23 +425,23 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
   }
 
   @Override
-  public boolean doUpdate(Deployment deployment, String template) {
+  public boolean doUpdate(DeploymentMessage deploymentMessage, String template) {
     throw new UnsupportedOperationException("Chronos job deployments do not support update.");
   }
 
   @Override
-  public boolean isUndeployed(Deployment deployment) throws DeploymentException {
+  public boolean isUndeployed(DeploymentMessage deploymentMessage) throws DeploymentException {
     // Nothing to wait here... All the jobs are delete immediately.
     return true;
   }
 
   @Override
-  public void finalizeUndeploy(Deployment deployment, boolean undeployed) {
+  public void finalizeUndeploy(DeploymentMessage deploymentMessage, boolean undeployed) {
 
     if (undeployed) {
-      updateOnSuccess(deployment.getId());
+      updateOnSuccess(deploymentMessage.getDeploymentId());
     } else {
-      updateOnError(deployment.getId());
+      updateOnError(deploymentMessage.getDeploymentId());
     }
 
     // TODO (?) Update resources attributes on DB?
@@ -404,23 +458,46 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
    * @return <tt>true</tt> if all jobs have been deleted, <tt>false</tt> otherwise.
    */
   @Override
-  public boolean doUndeploy(Deployment deployment) {
+  public boolean doUndeploy(DeploymentMessage deploymentMessage) {
     // Delete all Jobs on Chronos
+    Deployment deployment = deploymentMessage.getDeployment();
 
     try {
       // Generate INDIGOJob graph
       // FIXME: Do not regenerate every time (just for prototyping!)
-      LOG.debug("Generating job graph for deployment <{}>", deployment.getId());
-      Multimap<JobDependencyType, IndigoJob> jobgraph =
-          generateJobGraph(deployment, generateStubOneData());
-
-      for (Resource resource : deployment.getResources()) {
-        resource.setState(NodeStates.DELETING);
+      // Generate INDIGOJob graph
+      if (deploymentMessage.getChronosJobGraph() == null) {
+        LOG.debug("Generating job graph for deployment <{}>", deployment.getId());
+        deploymentMessage.setChronosJobGraph(generateJobGraph(deployment, generateStubOneData()));
       }
+
+      // Create nodes iterator if not done yet
+      if (deploymentMessage.getTemplateTopologicalOrderIterator() == null) {
+        // Create topological order
+        List<IndigoJob> topoOrder = getJobsTopologicalOrder(deploymentMessage.getChronosJobGraph());
+
+        deploymentMessage.setTemplateTopologicalOrderIterator(
+            new TemplateTopologicalOrderIterator(topoOrder.stream()
+                .map(e -> new Resource(e.getToscaNodeName())).collect(Collectors.toList())));
+      }
+
+      TemplateTopologicalOrderIterator templateTopologicalOrderIterator =
+          deploymentMessage.getTemplateTopologicalOrderIterator();
 
       // Create Jobs in the required order on Chronos
       LOG.debug("Deleting jobs for deployment <{}> on Chronos", deployment.getId());
-      deleteJobsOnChronos(deployment, jobgraph, getChronosClient(), true);
+
+      deleteJobsOnChronosIteratively(deployment, deploymentMessage.getChronosJobGraph(),
+          templateTopologicalOrderIterator, getChronosClient(), true);
+
+      if (templateTopologicalOrderIterator.getNext() != null) {
+        // Delete the following node
+        LOG.debug("Deleting next node for deployment <{}>", deployment.getId());
+      } else {
+        // No more nodes
+        LOG.debug("All nodes deleted for deployment <{}>", deployment.getId());
+        deploymentMessage.setDeleteComplete(true);
+      }
 
       return true;
     } catch (RuntimeException exception) { // Chronos job launch error
@@ -449,48 +526,58 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
    *          tries to delete every other job.
    * @return <tt>true</tt> if all jobs have been deleted, <tt>false</tt> otherwise.
    */
-  protected boolean deleteJobsOnChronos(Deployment deployment,
-      Multimap<JobDependencyType, IndigoJob> jobgraph, Chronos client, boolean failAtFirst) {
+  protected boolean deleteJobsOnChronosIteratively(Deployment deployment,
+      Map<String, IndigoJob> jobgraph,
+      TemplateTopologicalOrderIterator templateTopologicalOrderIterator, Chronos client,
+      boolean failAtFirst) {
 
-    IndigoJob currentJob = null;
+    Resource currentNode = templateTopologicalOrderIterator.getCurrent();
+    if (currentNode == null) {
+      return false;
+    }
+
+    IndigoJob currentJob = jobgraph.get(currentNode.getToscaNodeName());
     boolean failed = false;
 
-    // Delete all jobs
-    for (IndigoJob job : jobgraph.values()) {
-      currentJob = job;
+    // Delete current job (all jobs iteratively)
+    try {
+      updateResource(deployment, currentJob, NodeStates.DELETING);
+      currentNode.setState(NodeStates.DELETING);
 
-      try {
-        String jobName = job.getChronosJob().getName();
+      String jobName = currentJob.getChronosJob().getName();
 
-        // Chronos API hack (to avoid error 400 if the job to delete does not exist)
-        if (getJobStatus(client, jobName) == null) {
-          LOG.debug("Job on Chronos does not exist: name <{}>", jobName);
-        } else {
-          client.deleteJob(jobName);
-          LOG.debug("Deleted job on Chronos: name <{}>", jobName);
-        }
-      } catch (ChronosException ce) {
-        // Just log the error
-        String errorMsg = String.format("Failed to delete job <%s> on Chronos. Status Code: <%s>",
-            currentJob.getChronosJob().getName(), ce.getStatus());
-        LOG.error(errorMsg);
-        failed = true;
+      // Chronos API hack (to avoid error 400 if the job to delete does not exist)
+      if (getJobStatus(client, jobName) == null) {
+        LOG.debug("Job on Chronos does not exist: name <{}>", jobName);
+      } else {
+        client.deleteJob(jobName);
+        LOG.debug("Deleted job on Chronos: name <{}>", jobName);
+      }
+    } catch (ChronosException ce) {
+      // Just log the error
+      String errorMsg = String.format("Failed to delete job <%s> on Chronos. Status Code: <%s>",
+          currentJob.getChronosJob().getName(), ce.getStatus());
+      LOG.error(errorMsg);
+      failed = true;
 
-        // Update job status
-        updateResource(deployment, currentJob, NodeStates.ERROR);
+      // Update job status
+      updateResource(deployment, currentJob, NodeStates.ERROR);
+      currentNode.setState(NodeStates.ERROR);
 
-        // Only throw exception in required
-        if (failAtFirst) {
-          // TODO use a custom exception ?
-          throw new RuntimeException(errorMsg);
-        }
+      // Only throw exception if required
+      if (failAtFirst) {
+        // TODO use a custom exception ?
+        throw new RuntimeException(errorMsg);
       }
     }
 
     return !failed;
   }
 
-  public static class IndigoJob {
+  public static class IndigoJob implements Serializable {
+
+    private static final long serialVersionUID = -1037947811308004122L;
+
     public enum JobDependencyType {
       START, INTERMEDIATE, END
     }
@@ -537,10 +624,8 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
    *          the input deployment.
    * @return the job graph.
    */
-  protected Multimap<JobDependencyType, IndigoJob> generateJobGraph(Deployment deployment,
-      OneData odParams) {
+  protected Map<String, IndigoJob> generateJobGraph(Deployment deployment, OneData odParams) {
     String deploymentId = deployment.getId();
-    Multimap<JobDependencyType, IndigoJob> jobGraph = HashMultimap.create();
     Map<String, IndigoJob> jobs = new HashMap<String, ChronosServiceImpl.IndigoJob>();
 
     // Parse TOSCA template
@@ -571,7 +656,6 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       String nodeName = node.getKey();
       if (isChronosNode(nodeTemplate)) {
         Job chronosJob = createJob(nodes, deploymentId, nodeName, nodeTemplate);
-        ;
         IndigoJob job = new IndigoJob(nodeName, chronosJob);
         jobs.put(nodeName, job);
       }
@@ -605,30 +689,11 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       }
     }
 
-    // Update jobs hierarchy with roles to create the graph
-    for (Map.Entry<String, IndigoJob> job : jobs.entrySet()) {
-      IndigoJob indigoJob = job.getValue();
-
-      // Switch node type
-      if (indigoJob.getParents().isEmpty()) {
-        // START node
-        jobGraph.put(JobDependencyType.START, indigoJob);
-      } else {
-        if (indigoJob.getChildren().isEmpty()) {
-          // END node
-          jobGraph.put(JobDependencyType.END, indigoJob);
-        } else {
-          // INTERMEDIATE node
-          jobGraph.put(JobDependencyType.INTERMEDIATE, indigoJob);
-        }
-      }
-    }
-
     // Validate (no cycles!)
     // FIXME Shouldn't just return the topological order ?
-    getJobsTopologicalOrder(jobGraph);
+    getJobsTopologicalOrder(jobs);
 
-    return jobGraph;
+    return jobs;
   }
 
   /**
