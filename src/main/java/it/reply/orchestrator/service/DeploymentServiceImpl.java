@@ -36,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 @Service
@@ -173,12 +174,12 @@ public class DeploymentServiceImpl implements DeploymentService {
         deployment = deploymentRepository.save(deployment);
 
         // Abort all WF currently active on this deployment
-        // Iterator<WorkflowReference> wrIt = deployment.getWorkflowReferences().iterator();
-        // while (wrIt.hasNext()) {
-        // WorkflowReference wr = wrIt.next();
-        // wfService.abortProcess(wr.getProcessId(), wr.getRuntimeStrategy());
-        // wrIt.remove();
-        // }
+        Iterator<WorkflowReference> wrIt = deployment.getWorkflowReferences().iterator();
+        while (wrIt.hasNext()) {
+          WorkflowReference wr = wrIt.next();
+          wfService.abortProcess(wr.getProcessId(), wr.getRuntimeStrategy());
+          wrIt.remove();
+        }
 
         Map<String, Object> params = new HashMap<>();
         params.put("DEPLOYMENT_ID", deployment.getId());
@@ -193,15 +194,15 @@ public class DeploymentServiceImpl implements DeploymentService {
         deploymentMessage.setDeploymentProvider(deployment.getDeploymentProvider());
         params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
 
-        // ProcessInstance pi = null;
-        // try {
-        // pi = wfService.startProcess(WorkflowConfigProducerBean.UNDEPLOY.getProcessId(), params,
-        // RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
-        // } catch (WorkflowException ex) {
-        // throw new OrchestratorException(ex);
-        // }
+        ProcessInstance pi = null;
+        try {
+          pi = wfService.startProcess(WorkflowConfigProducerBean.UNDEPLOY.getProcessId(), params,
+              RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
+        } catch (WorkflowException ex) {
+          throw new OrchestratorException(ex);
+        }
         deployment.addWorkflowReferences(
-            new WorkflowReference(998, RUNTIME_STRATEGY.PER_PROCESS_INSTANCE));
+            new WorkflowReference(pi.getId(), RUNTIME_STRATEGY.PER_PROCESS_INSTANCE));
         deployment = deploymentRepository.save(deployment);
       }
     } else {
