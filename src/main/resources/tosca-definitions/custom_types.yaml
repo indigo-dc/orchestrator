@@ -436,7 +436,6 @@ node_types:
           type: string
         description: List of IPs of the WNs
         required: false
-        default: []
     capabilities:
         lrms:
           type: tosca.capabilities.indigo.LRMS
