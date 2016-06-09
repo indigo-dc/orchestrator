@@ -12,7 +12,8 @@ import java.util.regex.Pattern;
 
 public class TemplateGeneratorHelper {
   public static void main(String args[]) throws FileException {
-    System.out.println(generateChronosTemplate(1000));
+    System.out.println(
+        generateChronosTemplate(10000).replace(System.getProperty("line.separator"), "\\n"));
   }
 
   public static String generateChronosTemplate(int nodeNumber) throws FileException {

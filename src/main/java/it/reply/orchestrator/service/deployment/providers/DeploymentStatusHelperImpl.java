@@ -50,7 +50,9 @@ public class DeploymentStatusHelperImpl implements DeploymentStatusHelper {
         break;
     }
     deployment.setTask(Task.NONE);
-    deployment.setStatusReason(message);
+    if (message != null) {
+      deployment.setStatusReason(message);
+    }
     deploymentRepository.save(deployment);
   }
 
