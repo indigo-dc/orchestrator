@@ -35,6 +35,8 @@ public class DeploymentMessage implements Serializable {
   private boolean pollComplete;
   private boolean skipPollInterval;
 
+  private String oauth2Token;
+
   /**
    * TEMPORARY Chronos Job Graph (to avoid regenerating the template representation each time).
    */
@@ -111,6 +113,14 @@ public class DeploymentMessage implements Serializable {
 
   public void setSkipPollInterval(boolean skipPollInterval) {
     this.skipPollInterval = skipPollInterval;
+  }
+
+  public String getOauth2Token() {
+    return oauth2Token;
+  }
+
+  public void setOauth2Token(String oauth2Token) {
+    this.oauth2Token = oauth2Token;
   }
 
   @Override

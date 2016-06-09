@@ -8,8 +8,8 @@ public class IndigoOAuth2Authentication extends OAuth2Authentication {
 
   private static final long serialVersionUID = -1868480964470168415L;
 
-  OAuth2AccessToken token;
-  UserInfo userInfo;
+  private OAuth2AccessToken token;
+  private UserInfo userInfo;
 
   /**
    * Generate an {@link IndigoOAuth2Authentication}.
@@ -25,7 +25,23 @@ public class IndigoOAuth2Authentication extends OAuth2Authentication {
   public IndigoOAuth2Authentication(OAuth2Authentication authentication, OAuth2AccessToken token,
       UserInfo userInfo) {
     super(authentication.getOAuth2Request(), authentication.getUserAuthentication());
+    this.setToken(token);
+    this.setUserInfo(userInfo);
+  }
+
+  public OAuth2AccessToken getToken() {
+    return token;
+  }
+
+  public void setToken(OAuth2AccessToken token) {
     this.token = token;
+  }
+
+  public UserInfo getUserInfo() {
+    return userInfo;
+  }
+
+  public void setUserInfo(UserInfo userInfo) {
     this.userInfo = userInfo;
   }
 
