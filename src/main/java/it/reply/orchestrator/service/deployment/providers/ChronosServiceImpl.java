@@ -218,8 +218,8 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
         client.createDependentJob(currentJob.getChronosJob());
       }
 
-      LOG.debug("Created job on Chronos: name <{}>, {} ({}/{})",
-          currentJob.getChronosJob().getName(), nodeTypeMsg,
+      LOG.debug("Created job for deployment <{}> on Chronos: name <{}>, {} ({}/{})",
+          deployment.getId(), currentJob.getChronosJob().getName(), nodeTypeMsg,
           templateTopologicalOrderIterator.getPosition() + 1,
           templateTopologicalOrderIterator.getNodeSize());
       // Update job status
@@ -376,8 +376,8 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
     }
 
     JobState jobState = getLastState(updatedJob);
-    LOG.debug("Status for Chronos job <{}> is <{}> ({}/{})", jobName, jobState,
-        templateTopologicalOrderIterator.getPosition() + 1,
+    LOG.debug("Status of Chronos job <{}> for deployment <{}> is <{}> ({}/{})", jobName,
+        deployment.getId(), jobState, templateTopologicalOrderIterator.getPosition() + 1,
         templateTopologicalOrderIterator.getNodeSize());
 
     // Go ahead only if the job succeeded
@@ -591,29 +591,29 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
 
     // Delete current job (all jobs iteratively)
     try {
-      updateResource(deployment, currentJob, NodeStates.DELETING);
-      currentNode.setState(NodeStates.DELETING);
+      try {
+        updateResource(deployment, currentJob, NodeStates.DELETING);
+        currentNode.setState(NodeStates.DELETING);
 
-      String jobName = currentJob.getChronosJob().getName();
+        String jobName = currentJob.getChronosJob().getName();
 
-      // Chronos API hack (to avoid error 400 if the job to delete does not exist)
-      if (getJobStatus(client, jobName) == null) {
-        LOG.debug("Deleted Chronos job <{}> - did not exist ({}/{})", jobName,
-            templateTopologicalOrderIterator.getPosition() + 1,
-            templateTopologicalOrderIterator.getNodeSize());
-      } else {
         client.deleteJob(jobName);
-        LOG.debug("Deleted Chronos job <{}> ({}/{})", jobName,
-            templateTopologicalOrderIterator.getPosition() + 1,
-            templateTopologicalOrderIterator.getNodeSize());
-      }
-    } catch (ChronosException ce) {
-      // Just log the error
-      String errorMsg = String.format("Failed to delete job <%s> on Chronos. Status Code: <%s>",
-          currentJob.getChronosJob().getName(), ce.getStatus());
-      LOG.error(errorMsg);
-      failed = true;
 
+        LOG.debug("Deleted Chronos job <{}> for deployment <{}> ({}/{})", jobName,
+            deployment.getId(), templateTopologicalOrderIterator.getPosition() + 1,
+            templateTopologicalOrderIterator.getNodeSize());
+      } catch (ChronosException ce) {
+        // Chronos API hack (to avoid error 400 if the job to delete does not exist)
+        if (ce.getStatus() != 400 && ce.getStatus() != 404) {
+          throw new RuntimeException(String.format("Status Code: <%s>", ce.getStatus()));
+        }
+      }
+    } catch (Exception ex) {
+      // Just log the error
+      String errorMsg = String.format("Failed to delete job <%s> on Chronos: %s", ex.getMessage());
+      LOG.error(errorMsg);
+
+      failed = true;
       // Update job status
       updateResource(deployment, currentJob, NodeStates.ERROR);
       currentNode.setState(NodeStates.ERROR);
