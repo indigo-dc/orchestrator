@@ -18,6 +18,12 @@ You can find the REST APIs docs [orchestrator-rest-doc] (http://indigo-dc.github
 This project has been created with maven 3.3.3 and Java 1.8. Maven will take care of downloading the extra dependencies needed for the project but this project dependes on [im-java-api](https://github.com/indigo-dc/im-java-api) and [workflow-manager](https://github.com/ConceptReplyIT/workflow-manager) too.
 To run the Orchestrator you need [Docker](https://www.docker.com) and a MySQL Server instance (which may be local, remote, or in a docker container). See next section to have details.
 
+1.1.1 MySQL
+-----------
+
+The MySQL server needs the following customized settings (use `my.cnf` file to edit those settings):
+- `max_allowed_packet = 256M`
+
 1.2 INSTALLING
 --------------
 
