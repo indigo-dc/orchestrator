@@ -60,6 +60,16 @@ capability_types:
         constraints:
           - equal: torque
 
+  tosca.capabilities.indigo.LRMS.Slurm:
+    derived_from: tosca.capabilities.indigo.LRMS
+    properties:
+      type:
+        type: string
+        required: true
+        default: slurm
+        constraints:
+          - equal: slurm
+
   tosca.capabilities.indigo.LRMS.Local:
     derived_from: tosca.capabilities.indigo.LRMS
     properties:
@@ -91,9 +101,10 @@ capability_types:
         type: list
         entry_schema:
           type: tosca.datatypes.Credential
-  
+
   tosca.capabilities.indigo.Container.Application.Docker.Chronos:
     derived_from: tosca.capabilities.Root
+
 
 artifact_types:
 
@@ -290,6 +301,18 @@ node_types:
             galaxy_admin_api_key: { get_property: [ SELF, admin_api_key ] }
             galaxy_lrms: { get_property: [ SELF, lrms, type ] }
 
+  tosca.nodes.indigo.GalaxyWN:
+    derived_from: tosca.nodes.SoftwareComponent
+    requirements:
+      host:
+        type: tosca.capabilities.Container
+        node: tosca.nodes.Compute
+        relationship: tosca.relationships.HostedOn
+    interfaces:
+      Standard:
+        configure:
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/galaxy/galaxy_wn_configure.yml
+
   tosca.nodes.indigo.GalaxyShedTool:
     derived_from: tosca.nodes.WebApplication
     properties:
@@ -333,17 +356,25 @@ node_types:
         type: string
         description: ID of the deployment of this elastic cluster in the orchestrator
         required: false
+      orchestrator_url:
+        type: string
+        description: URL of the orchestrator
+        required: false
+        default: http://orchestrator01.indigo.recas.ba.infn.it:8080
+    artifacts:
+      docker_agent_role:
+        file: indigo-dc.clues
+        type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
-        create: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/ec3/ec3_install.yml
-        configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/ec3/ec3_configure.yml
+        create:
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/ec3/ec3_install.yml
           inputs:
             clues_secret_token: { get_property: [ SELF, secret_token ] }
             clues_queue_system: { get_property: [ SELF, lrms, type ] }
             ec3_max_instances: { get_property: [ SELF, wn, max_instances] }
             ec3_deployment_id: { get_property: [ SELF, deployment_id] }
-        start: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/ec3/ec3_start.yml
+            orchestrator_url: { get_property: [ SELF, orchestrator_url] }
     requirements:
       wn:
         type: tosca.capabilities.Scalable
@@ -356,10 +387,15 @@ node_types:
 
   tosca.nodes.indigo.LRMS.WorkerNode:
     derived_from: tosca.nodes.SoftwareComponent
+    properties:
+      front_end_ip:
+        type: string
+        description: IP of the Front-End node
+        required: true
     capabilities:
-        wn:
-          type: tosca.capabilities.Scalable
-          valid_source_types: [tosca.nodes.indigo.ElasticCluster]
+      wn:
+        type: tosca.capabilities.Scalable
+        valid_source_types: [tosca.nodes.indigo.ElasticCluster]
     requirements:
       host:
         type: tosca.capabilities.Container
@@ -370,12 +406,36 @@ node_types:
     derived_from: tosca.nodes.indigo.LRMS.WorkerNode
     interfaces:
       Standard:
-        create: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/lrms/torque/torque_wn_install.yml
-        configure: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/lrms/torque/torque_wn_configure.yml
-        start: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/lrms/torque/torque_wn_start.yml
+        configure:
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/lrms/torque/torque_wn_install.yml
+          inputs:
+            torque_front_end_ip: { get_property: [ SELF, front_end_ip ] }
+
+  tosca.nodes.indigo.LRMS.WorkerNode.Slurm:
+    derived_from: tosca.nodes.indigo.LRMS.WorkerNode
+    artifacts:
+      slurm_role:
+        file: indigo-dc.slurm
+        type: tosca.artifacts.AnsibleGalaxy.role
+      nfs_role:
+        file: indigo-dc.nfs
+        type: tosca.artifacts.AnsibleGalaxy.role
+    interfaces:
+      Standard:
+        configure:
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/lrms/slurm/slurm_wn_install.yml
+          inputs:
+            slurm_front_end_ip: { get_property: [ SELF, front_end_ip ] }
 
   tosca.nodes.indigo.LRMS.FrontEnd:
     derived_from: tosca.nodes.SoftwareComponent
+    properties:
+      wn_ips:
+        type: list
+        entry_schema:
+          type: string
+        description: List of IPs of the WNs
+        required: false
     capabilities:
         lrms:
           type: tosca.capabilities.indigo.LRMS
@@ -392,9 +452,29 @@ node_types:
           type: tosca.capabilities.indigo.LRMS.Torque
     interfaces:
       Standard:
-        create: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/lrms/torque/torque_fe_install.yml
-        configure: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/lrms/torque/torque_fe_configure.yml
-        start: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/lrms/torque/torque_fe_start.yml
+        configure:
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/lrms/torque/torque_fe_install.yml
+          inputs:
+            torque_wn_ips: { get_property: [ SELF, wn_ips ] }
+
+  tosca.nodes.indigo.LRMS.FrontEnd.Slurm:
+    derived_from: tosca.nodes.indigo.LRMS.FrontEnd
+    artifacts:
+      slurm_role:
+        file: indigo-dc.slurm
+        type: tosca.artifacts.AnsibleGalaxy.role
+      nfs_role:
+        file: indigo-dc.nfs
+        type: tosca.artifacts.AnsibleGalaxy.role
+    capabilities:
+        lrms:
+          type: tosca.capabilities.indigo.LRMS.Slurm
+    interfaces:
+      Standard:
+        configure:
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/lrms/slurm/slurm_fe_install.yml
+          inputs:
+            wn_ips: { get_property: [ SELF, wn_ips ] }
 
   tosca.nodes.indigo.LRMS.FrontEnd.Local:
     derived_from: tosca.nodes.indigo.LRMS.FrontEnd
@@ -450,7 +530,6 @@ node_types:
         node: tosca.nodes.indigo.Container.Application.Docker.Chronos
         relationship: tosca.relationships.DependsOn
         occurrences: [0, 1]
-
 
   tosca.nodes.indigo.Container.Application.Docker.Marathon:
     derived_from: tosca.nodes.indigo.Container.Application.Docker
@@ -521,6 +600,7 @@ node_types:
         capability: tosca.capabilities.Container
         node: tosca.nodes.indigo.Compute
         relationship: tosca.relationships.HostedOn
+
   tosca.nodes.indigo.MesosLoadBalancerSlave:
     derived_from: tosca.nodes.SoftwareComponent
     properties:
@@ -574,3 +654,33 @@ node_types:
       credential:
         type: tosca.datatypes.Credential
         required: true
+
+  tosca.nodes.indigo.HadoopMaster:
+    derived_from: tosca.nodes.SoftwareComponent
+    artifacts:
+      hadoop_role:
+        file: indigo-dc.hadoop
+        type: tosca.artifacts.AnsibleGalaxy.role
+    interfaces:
+      Standard:
+        configure:
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/hadoop/hadoop_master_install.yml
+          inputs:
+            hadoop_master_ip: { get_attribute: [ HOST, private_address, 0 ] }
+
+  tosca.nodes.indigo.HadoopSlave:
+    derived_from: tosca.nodes.SoftwareComponent
+    properties:
+      master_ip:
+        required: yes
+        type: string
+    artifacts:
+      hadoop_role:
+        file: indigo-dc.hadoop
+        type: tosca.artifacts.AnsibleGalaxy.role
+    interfaces:
+      Standard:
+        configure:
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/hadoop/hadoop_wn_install.yml
+          inputs:
+            hadoop_master_ip: { get_property: [ SELF, master_ip ] }
