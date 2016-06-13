@@ -24,6 +24,8 @@ import alien4cloud.utils.FileUtil;
 
 import com.google.common.io.ByteStreams;
 
+import it.reply.orchestrator.dto.CloudProvider;
+import it.reply.orchestrator.dto.cmdb.Image;
 import it.reply.orchestrator.exception.service.ToscaException;
 
 import org.apache.logging.log4j.LogManager;
@@ -296,6 +298,125 @@ public class ToscaServiceImpl implements ToscaService {
       }
       throw new ToscaException(errorMessage);
     }
+
+  }
+
+  @Override
+  public void contextualizeImages(ArchiveRoot parsingResult, CloudProvider cloudProvider) {
+    try {
+      Map<String, NodeTemplate> nodes = parsingResult.getTopology().getNodeTemplates();
+      for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
+        NodeTemplate node = entry.getValue();
+        // Only indigo.Compute nodes are relevant
+        // FIXME: Check inheritance of tosca.nodes.indigo.Compute
+        if (node.getType().equals("tosca.nodes.indigo.Compute")) {
+          Capability osCapability = null;
+          if (node.getCapabilities() == null
+              || (osCapability = node.getCapabilities().get("os")) == null) {
+            // The node doesn't have an OS Capability -> need to add a dummy one to hold a random
+            // image for underlying deployment systems
+            LOG.debug(String.format("Generating default OperatingSystem capability for node <%s>",
+                node.getName()));
+            if (node.getCapabilities() == null) {
+              node.setCapabilities(new HashMap<>());
+            }
+            osCapability = new Capability();
+            osCapability.setType("tosca.capabilities.indigo.OperatingSystem");
+            node.getCapabilities().put("os", osCapability);
+          }
+
+          // We've got an OS capability -> Check the attributes to find best match for the image
+          Image imageMetadata = new Image();
+          if (osCapability.getProperties().get("image") != null) {
+            imageMetadata.setImageName(
+                (String) getCapabilityPropertyValueByName(osCapability, "image").getValue());
+          }
+          if (osCapability.getProperties().get("architecture") != null) {
+            imageMetadata.setArchitecture(
+                (String) getCapabilityPropertyValueByName(osCapability, "architecture").getValue());
+          }
+          if (osCapability.getProperties().get("type") != null) {
+            imageMetadata.setType(
+                (String) getCapabilityPropertyValueByName(osCapability, "type").getValue());
+          }
+          if (osCapability.getProperties().get("distribution") != null) {
+            imageMetadata.setDistribution(
+                (String) getCapabilityPropertyValueByName(osCapability, "distribution").getValue());
+          }
+          if (osCapability.getProperties().get("version") != null) {
+            imageMetadata.setVersion(
+                (String) getCapabilityPropertyValueByName(osCapability, "version").getValue());
+          }
+
+          Image image = getBestImageForCloudProvider(imageMetadata, cloudProvider);
+
+          // No image match found -> throw error
+          if (image == null) {
+            LOG.error(
+                String.format("Failed to found a match in provider <%s> for image metadata <%s>",
+                    cloudProvider.getId(), imageMetadata));
+            throw new IllegalArgumentException(
+                String.format("Failed to found a match in provider <%s> for image metadata <%s>",
+                    cloudProvider.getId(), imageMetadata));
+          }
+
+          // Found a good image -> replace the image attribute with the provider-specific ID
+          LOG.debug(String.format(
+              "Found image match in <%s> for image metadata <%s>, provider-specific image id <%s>",
+              cloudProvider.getId(), imageMetadata, image.getImageId()));
+          ScalarPropertyValue scalarPropertyValue = new ScalarPropertyValue(image.getImageId());
+          scalarPropertyValue.setPrintable(true);
+          osCapability.getProperties().put("image", scalarPropertyValue);
+
+        }
+      }
+    } catch (Exception ex) {
+      throw new RuntimeException("Failed to contextualize images: " + ex.getMessage(), ex);
+    }
+  }
+
+  protected Image getBestImageForCloudProvider(Image imageMetadata, CloudProvider cloudProvider) {
+    for (Image image : cloudProvider.getCmdbProviderImages()) {
+      // FIXME: Image name has actually priority on the other fields?
+      // FIXME: How to handle exact image name not found, but possibility to use a base image +
+      // Ansible roles?
+
+      // Match image name (has priority)
+      if (imageMetadata.getImageName() != null) {
+        if (!imageMetadata.getImageName().equals(image.getImageName())) {
+          continue;
+        }
+        return image;
+      }
+
+      // Match or skip image based on each additional optional attribute
+      if (imageMetadata.getType() != null) {
+        if (!imageMetadata.getType().equals(image.getType())) {
+          continue;
+        }
+      }
+
+      if (imageMetadata.getArchitecture() != null) {
+        if (!imageMetadata.getArchitecture().equals(image.getArchitecture())) {
+          continue;
+        }
+      }
+
+      if (imageMetadata.getDistribution() != null) {
+        if (!imageMetadata.getDistribution().equals(image.getDistribution())) {
+          continue;
+        }
+      }
+
+      if (imageMetadata.getVersion() != null) {
+        if (!imageMetadata.getVersion().equals(image.getVersion())) {
+          continue;
+        }
+      }
+
+      return image;
+    }
+    return null;
 
   }
 

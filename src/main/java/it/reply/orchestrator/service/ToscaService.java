@@ -12,6 +12,7 @@ import alien4cloud.tosca.parser.ParsingResult;
 
 import com.sun.istack.NotNull;
 
+import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.exception.service.ToscaException;
 
 import java.io.IOException;
@@ -42,6 +43,17 @@ public interface ToscaService {
       throws IOException, ToscaException, ParsingException;
 
   public void addDeploymentId(ArchiveRoot parsingResult, String deploymentId);
+
+  /**
+   * Replace images data in 'tosca.capabilities.indigo.OperatingSystem' capabilities in the TOSCA
+   * template with the provider-specific identifier.
+   * 
+   * @param parsingResult
+   *          the in-memory TOSCA template.
+   * @param cloudProvider
+   *          the chosen cloud provider data.
+   */
+  public void contextualizeImages(ArchiveRoot parsingResult, CloudProvider cloudProvider);
 
   /**
    * Verifies that all the template's required inputs are present in the user's input list.

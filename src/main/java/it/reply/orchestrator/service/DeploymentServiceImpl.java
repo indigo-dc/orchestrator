@@ -184,6 +184,8 @@ public class DeploymentServiceImpl implements DeploymentService {
         Map<String, Object> params = new HashMap<>();
         params.put("DEPLOYMENT_ID", deployment.getId());
 
+        // FIXME: if the WF fails before setting deployment.getDeploymentProvider(), we should just
+        // delete the failed deployment ?
         // FIXME: Temporary - just for test
         params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_TYPE,
             deployment.getDeploymentProvider().name());

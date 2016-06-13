@@ -34,7 +34,9 @@ public class GetCMDBData extends BaseRankCloudProvidersCommand {
         serviceEntry.setValue(cmdbService.getServiceById(serviceEntry.getKey()));
       }
 
-      // TODO Get other data (i.e. OneData, Images mapping, etc)
+      cp.setCmdbProviderImages(cmdbService.getImagesByProvider(cp.getId()));
+
+      // FIXME Get other data (i.e. OneData, Images mapping, etc)
     }
 
     return rankCloudProvidersMessage;
