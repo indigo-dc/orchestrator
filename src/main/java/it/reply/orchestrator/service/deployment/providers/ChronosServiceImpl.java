@@ -333,8 +333,10 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       updateOnError(deployment.getId(), dex);
       throw dex;
     } catch (RuntimeException ex) {
-      LOG.error(String.format("Failed to update deployment <%s>", deployment.getId()), ex);
-      return false;
+      // Temporary error
+      LOG.error(String.format("Failed to update status of deployment <%s>", deployment.getId()),
+          ex);
+      throw ex;
     }
 
     // TODO (?) Update resources attributes on DB?
