@@ -52,13 +52,13 @@ public class Deployment extends AbstractResourceEntity {
 
   @ElementCollection(fetch = FetchType.EAGER)
   @MapKeyColumn(name = "name")
-  @Column(name = "value")
-  Map<String, String> parameters = new HashMap<String, String>();
+  @Column(name = "value", columnDefinition = "TEXT")
+  private Map<String, String> parameters = new HashMap<String, String>();
 
   @ElementCollection(fetch = FetchType.EAGER)
   @MapKeyColumn(name = "name")
-  @Column(name = "value")
-  Map<String, String> outputs = new HashMap<String, String>();
+  @Column(name = "value", columnDefinition = "TEXT")
+  private Map<String, String> outputs = new HashMap<String, String>();
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "deployment", orphanRemoval = true)
   List<Resource> resources = new ArrayList<>();
