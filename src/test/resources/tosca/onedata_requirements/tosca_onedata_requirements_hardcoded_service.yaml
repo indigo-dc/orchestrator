@@ -1,0 +1,35 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+imports:
+  - indigo_custom_types: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/custom_types.yaml
+
+description: >
+  TOSCA examples for specifying a Chronos Job that runs an application using the input stored at some URL and uploads the output data to an http(s) or ftp(s) or webdav(s) repository
+
+topology_template:
+
+  node_templates:
+    chronos_job:
+      type: tosca.nodes.indigo.Container.Application.Docker.Chronos
+      properties:
+        schedule: 'R0/2015-12-25T17:22:00Z/PT1M'
+        description: 'Execute Application'
+        command: 'env'        
+        retries: 3
+        environment_variables:
+          ONEDATA_SERVICE_TOKEN: "TOKEN_TO_BE_SET_BY_THE_ORCHESTRATOR"
+          ONEDATA_SPACE: "DATA_SPACE_TO_BE_SET_BY_THE_ORCHESTRATOR"
+          ONEDATA_PATH: "PATH_TO_BE_SET_BY_THE_ORCHESTRATOR"
+          ONEDATA_PROVIDERS: "ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR"
+
+    chronos_job_upload:
+        type: tosca.nodes.indigo.Container.Application.Docker.Chronos
+        properties:
+          description: 'Upload output data'
+          command: /bin/bash run.sh
+          retries: 3
+          environment_variables:
+            ONEDATA_SERVICE_TOKEN: "TOKEN_TO_BE_SET_BY_THE_ORCHESTRATOR"
+            ONEDATA_SPACE: "DATA_SPACE_TO_BE_SET_BY_THE_ORCHESTRATOR"
+            ONEDATA_PATH: "PATH_TO_BE_SET_BY_THE_ORCHESTRATOR"
+            ONEDATA_PROVIDERS: "ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR"

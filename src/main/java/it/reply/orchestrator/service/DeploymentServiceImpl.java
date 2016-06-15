@@ -1,5 +1,11 @@
 package it.reply.orchestrator.service;
 
+import alien4cloud.model.components.ScalarPropertyValue;
+import alien4cloud.model.topology.Capability;
+import alien4cloud.model.topology.NodeTemplate;
+import alien4cloud.tosca.model.ArchiveRoot;
+import alien4cloud.tosca.parser.ParsingException;
+
 import it.reply.orchestrator.config.WorkflowConfigProducerBean;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
@@ -7,6 +13,7 @@ import it.reply.orchestrator.dal.entity.WorkflowReference;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
+import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
@@ -33,12 +40,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
-import alien4cloud.model.components.ScalarPropertyValue;
-import alien4cloud.model.topology.Capability;
-import alien4cloud.model.topology.NodeTemplate;
-import alien4cloud.tosca.model.ArchiveRoot;
-import alien4cloud.tosca.parser.ParsingException;
 
 @Service
 public class DeploymentServiceImpl implements DeploymentService {
@@ -80,6 +81,7 @@ public class DeploymentServiceImpl implements DeploymentService {
     Map<String, NodeTemplate> nodes;
     Deployment deployment;
     boolean isChronosDeployment = false;
+    Map<String, OneData> odRequirements = new HashMap<>();
 
     try {
       // Parse once, validate structure and user's inputs, replace user's input
@@ -102,6 +104,12 @@ public class DeploymentServiceImpl implements DeploymentService {
 
       // FIXME: Define function to decide DeploymentProvider (Temporary - just for prototyping)
       isChronosDeployment = isChronosDeployment(nodes);
+
+      if (isChronosDeployment) {
+        // Extract OneData requirements from template
+        odRequirements =
+            toscaService.extractOneDataRequirements(parsingResult, request.getParameters());
+      }
 
       // Create internal resources representation (to store in DB)
       createResources(deployment, nodes);
@@ -129,6 +137,7 @@ public class DeploymentServiceImpl implements DeploymentService {
     deploymentMessage.setDeploymentId(deployment.getId());
     deploymentMessage.setDeploymentProvider(
         (isChronosDeployment ? DeploymentProvider.CHRONOS : DeploymentProvider.IM));
+    deploymentMessage.setOneDataRequirements(odRequirements);
     params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
 
     ProcessInstance pi = null;
