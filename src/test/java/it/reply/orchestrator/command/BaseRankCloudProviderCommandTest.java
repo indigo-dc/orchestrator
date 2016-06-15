@@ -23,7 +23,7 @@ public abstract class BaseRankCloudProviderCommandTest extends WebAppConfigurati
 
   @Before
   public void setUp() {
-    mockServer = MockRestServiceServer.createServer(restTemplate);
+    mockServer = MockRestServiceServer.bindTo(restTemplate).ignoreExpectOrder(true).build();
   }
 
   protected String getDeploymentId() {
