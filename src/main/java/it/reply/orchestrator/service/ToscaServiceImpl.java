@@ -377,16 +377,19 @@ public class ToscaServiceImpl implements ToscaService {
 
   protected Image getBestImageForCloudProvider(Image imageMetadata, CloudProvider cloudProvider) {
     for (Image image : cloudProvider.getCmdbProviderImages()) {
-      // FIXME: Image name has actually priority on the other fields?
-      // FIXME: How to handle exact image name not found, but possibility to use a base image +
-      // Ansible roles?
-
-      // Match image name (has priority)
+      // Match image name first (for INDIGO specific use case, if the image cannot be found with the
+      // specified name it means that a base image + Ansible configuration have to be used -> the
+      // base image will be chosen with the other filters and image metadata - architecture, type,
+      // distro, version)
       if (imageMetadata.getImageName() != null) {
-        if (!imageMetadata.getImageName().equals(image.getImageName())) {
-          continue;
+        if (imageMetadata.getImageName().equals(image.getImageName())) {
+          LOG.debug("Image <{}> found with name <{}>", image.getImageId(),
+              imageMetadata.getImageName());
+          return image;
+        } else {
+          LOG.debug("Image not found with name <{}>, trying with other fields: <{}>",
+              imageMetadata.getImageName(), imageMetadata);
         }
-        return image;
       }
 
       // Match or skip image based on each additional optional attribute
@@ -414,6 +417,7 @@ public class ToscaServiceImpl implements ToscaService {
         }
       }
 
+      LOG.debug("Image <{}> found with fields: <{}>", imageMetadata.getImageId(), imageMetadata);
       return image;
     }
     return null;
