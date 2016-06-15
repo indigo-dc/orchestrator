@@ -46,10 +46,10 @@ public class CmdbServiceIT extends WebAppConfigurationAware {
         .withEndpoint("http://cloud.recas.ba.infn.it:5000/v2.0")
         .withProviderId("provider-RECAS-BARI").withType(Type.COMPUTE);
 
-    Service s = new Service().withId(recasId).withRev("1-256d36283315ea9bb045e6d5038657b6")
+    Service service = new Service().withId(recasId).withRev("1-256d36283315ea9bb045e6d5038657b6")
         .withType("service").withData(data);
 
-    assertEquals(s, serviceRecas);
+    assertEquals(service, serviceRecas);
 
     // mockServer.verify();
 
@@ -67,10 +67,10 @@ public class CmdbServiceIT extends WebAppConfigurationAware {
             .withCountry("Italy").withCountryCode("IT").withRoc("NGI_IT").withSubgrid("")
             .withGiisUrl("ldap://cloud-bdii.recas.ba.infn.it:2170/GLUE2DomainID=RECAS-BARI,o=glue");
 
-    Provider p = new Provider().withId(recasProviderName)
+    Provider provider = new Provider().withId(recasProviderName)
         .withRev("1-c7dbe4d8be30aa4c0f14d3ad0411d962").withType("provider").withData(data);
 
-    assertEquals(p, providerRecas);
+    assertEquals(provider, providerRecas);
 
     // mockServer.verify();
 

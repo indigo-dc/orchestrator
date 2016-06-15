@@ -11,7 +11,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class TemplateGeneratorHelper {
-  public static void main(String args[]) throws FileException {
+  public static void main(String[] args) throws FileException {
     System.out.println(
         generateChronosTemplate(10000).replace(System.getProperty("line.separator"), "\\n"));
   }
@@ -20,18 +20,18 @@ public class TemplateGeneratorHelper {
     String baseTemplate = getFileContentAsString(
         ToscaServiceTest.TEMPLATES_BASE_DIR + "chronos_tosca_generator.yaml");
 
-    Pattern p = Pattern.compile("(?s)<pattern>(.*?)<\\/pattern>");
-    Matcher m = p.matcher(baseTemplate);
+    Pattern pat = Pattern.compile("(?s)<pattern>(.*?)<\\/pattern>");
+    Matcher matcher = pat.matcher(baseTemplate);
 
-    m.find();
-    String pattern = (m.group(1)).toString();
+    matcher.find();
+    String pattern = (matcher.group(1)).toString();
 
     StringBuilder sb = new StringBuilder();
     for (int i = 0; i < nodeNumber; i++) {
       sb.append(String.format(pattern, i));
     }
 
-    return m.replaceFirst(sb.toString());
+    return matcher.replaceFirst(sb.toString());
   }
 
   private static String getFileContentAsString(String fileUri) throws FileException {

@@ -141,7 +141,8 @@ public class IndigoInputsPreProcessorService {
           }
 
           LOG.debug(
-              "TOSCA input function replacement: object <{}>, property <{}>, input name <{}>, input value <{}>",
+              "TOSCA input function replacement: "
+                  + "object <{}>, property <{}>, input name <{}>, input value <{}>",
               objectName, propertyName, inputName, inputValue);
 
           // Replace property value (was Function, now Scalar)
@@ -192,7 +193,7 @@ public class IndigoInputsPreProcessorService {
             myMap.put("<list-item-" + i + ">", list.get(i));
           }
         } else {
-           myMap = ((ComplexPropertyValue) propertyValue).getValue();
+          myMap = ((ComplexPropertyValue) propertyValue).getValue();
         }
         // Look for function in the value
         for (Map.Entry<String, Object> complexEntry : myMap.entrySet()) {

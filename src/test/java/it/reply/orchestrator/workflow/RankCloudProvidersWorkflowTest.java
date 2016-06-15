@@ -36,7 +36,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class RankCloudProvidersWorkflowTest {// extends WebAppConfigurationAware {
+public class RankCloudProvidersWorkflowTest { // extends WebAppConfigurationAware {
 
   static final Logger LOG = LogManager.getLogger(RankCloudProvidersWorkflowTest.class);
 

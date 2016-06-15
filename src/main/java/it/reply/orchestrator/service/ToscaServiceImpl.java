@@ -1,5 +1,7 @@
 package it.reply.orchestrator.service;
 
+import com.google.common.io.ByteStreams;
+
 import alien4cloud.component.repository.exception.CSARVersionAlreadyExistsException;
 import alien4cloud.exception.InvalidArgumentException;
 import alien4cloud.model.components.AbstractPropertyValue;
@@ -21,8 +23,6 @@ import alien4cloud.tosca.parser.ParsingException;
 import alien4cloud.tosca.parser.ParsingResult;
 import alien4cloud.tosca.serializer.VelocityUtil;
 import alien4cloud.utils.FileUtil;
-
-import com.google.common.io.ByteStreams;
 
 import it.reply.orchestrator.exception.service.ToscaException;
 
@@ -170,31 +170,16 @@ public class ToscaServiceImpl implements ToscaService {
 
     // Log the warning because Alien4Cloud uses an hard-coded Velocity template to encode the string
     // and some information might be missing!!
-    LOG.warn(
-        "TOSCA template conversion from in-memory: WARNING: Some nodes or properties might be missing!! Use at your own risk!");
+    LOG.warn("TOSCA template conversion from in-memory: "
+        + "WARNING: Some nodes or properties might be missing!! Use at your own risk!");
     LOG.debug(template);
 
     return template;
   }
 
-  /**
-   * Customize the template with INDIGO requirements, for example it adds the deploymentId.
-   * 
-   * @param toscaTemplate
-   *          the TOSCA template
-   * @param deploymentId
-   *          the deploymentId
-   * @return the customized template
-   * 
-   * @throws ParsingException
-   *           if the template is not valid
-   * @throws IOException
-   *           if there is an IO error
-   * @throws ToscaException
-   */
   @Override
   public String customizeTemplate(@Nonnull String toscaTemplate, @Nonnull String deploymentId)
-      throws IOException, ToscaException, ParsingException {
+      throws IOException, ToscaException {
 
     ArchiveRoot ar = parseTemplate(toscaTemplate);
 
@@ -259,7 +244,7 @@ public class ToscaServiceImpl implements ToscaService {
 
   @Override
   public ArchiveRoot parseTemplate(@Nonnull String toscaTemplate)
-      throws IOException, ParsingException, ToscaException {
+      throws IOException, ToscaException {
 
     ParsingResult<ArchiveRoot> result = null;
     try {
@@ -352,6 +337,15 @@ public class ToscaServiceImpl implements ToscaService {
     return null;
   }
 
+  /**
+   * Find a property with a given name in a capability.
+   * 
+   * @param capability
+   *          the capability
+   * @param propertyName
+   *          the name of the property
+   * @return the {@link AbstractPropertyValue} containing the property value
+   */
   public AbstractPropertyValue getCapabilityPropertyByName(Capability capability,
       String propertyName) {
     if (capability != null && capability.getProperties() != null) {

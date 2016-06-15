@@ -8,7 +8,7 @@ import com.github.springtestdbunit.annotation.DatabaseTearDown;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.service.SlamService;
 import it.reply.orchestrator.service.commands.BaseRankCloudProvidersCommand;
-import it.reply.orchestrator.service.commands.GetSLAM;
+import it.reply.orchestrator.service.commands.GetSlam;
 import it.reply.orchestrator.workflow.RankCloudProvidersWorkflowTest;
 
 import org.junit.Test;
@@ -19,7 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class GetSLAMCommandTest extends BaseRankCloudProviderCommandTest {
 
   @Autowired
-  private GetSLAM getSLAMCommand;
+  private GetSlam getSLAMCommand;
 
   @Autowired
   private SlamService slamService;

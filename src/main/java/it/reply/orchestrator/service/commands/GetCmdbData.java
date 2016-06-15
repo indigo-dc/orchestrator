@@ -11,14 +11,14 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 @Component
-public class GetCMDBData extends BaseRankCloudProvidersCommand {
+public class GetCmdbData extends BaseRankCloudProvidersCommand {
 
   @Autowired
   private CmdbService cmdbService;
 
   @Override
-  protected RankCloudProvidersMessage
-      customExecute(RankCloudProvidersMessage rankCloudProvidersMessage) {
+  protected RankCloudProvidersMessage customExecute(
+      RankCloudProvidersMessage rankCloudProvidersMessage) {
 
     // Get CMDB data for each Cloud Provider
     for (Map.Entry<String, CloudProvider> providerEntry : rankCloudProvidersMessage

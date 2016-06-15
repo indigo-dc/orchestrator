@@ -10,14 +10,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class GetSLAM extends BaseRankCloudProvidersCommand {
+public class GetSlam extends BaseRankCloudProvidersCommand {
 
   @Autowired
   private SlamService slamService;
 
   @Override
-  protected RankCloudProvidersMessage
-      customExecute(RankCloudProvidersMessage rankCloudProvidersMessage) {
+  protected RankCloudProvidersMessage customExecute(
+      RankCloudProvidersMessage rankCloudProvidersMessage) {
     rankCloudProvidersMessage.setSlamPreferences(slamService.getCustomerPreferences());
 
     // Get VO (customer) preferences and SLAs (infer available Cloud Providers from it)

@@ -39,6 +39,7 @@ public class ProviderData implements Serializable {
   private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
   /**
+   * Get the id of the provider.
    * 
    * @return The id
    */
@@ -48,6 +49,7 @@ public class ProviderData implements Serializable {
   }
 
   /**
+   * Set the id of the provider.
    * 
    * @param id
    *          The id
@@ -63,6 +65,7 @@ public class ProviderData implements Serializable {
   }
 
   /**
+   * Get the primary key of the provider.
    * 
    * @return The primaryKey
    */
@@ -72,6 +75,7 @@ public class ProviderData implements Serializable {
   }
 
   /**
+   * Set the primary key of the provider.
    * 
    * @param primaryKey
    *          The primary_key
@@ -87,6 +91,7 @@ public class ProviderData implements Serializable {
   }
 
   /**
+   * Get the name of the provider.
    * 
    * @return The name
    */
@@ -96,6 +101,7 @@ public class ProviderData implements Serializable {
   }
 
   /**
+   * Set the name of the provider.
    * 
    * @param name
    *          The name
@@ -111,6 +117,7 @@ public class ProviderData implements Serializable {
   }
 
   /**
+   * Get the country of the provider.
    * 
    * @return The country
    */
@@ -120,6 +127,7 @@ public class ProviderData implements Serializable {
   }
 
   /**
+   * Set the country of the provider.
    * 
    * @param country
    *          The country
@@ -135,6 +143,7 @@ public class ProviderData implements Serializable {
   }
 
   /**
+   * Get the country code of the provider.
    * 
    * @return The countryCode
    */
@@ -144,6 +153,7 @@ public class ProviderData implements Serializable {
   }
 
   /**
+   * Set the country code of the provider.
    * 
    * @param countryCode
    *          The country_code
@@ -159,6 +169,7 @@ public class ProviderData implements Serializable {
   }
 
   /**
+   * Get the ROC of the provider.
    * 
    * @return The roc
    */
@@ -168,6 +179,7 @@ public class ProviderData implements Serializable {
   }
 
   /**
+   * Set the ROC of the provider.
    * 
    * @param roc
    *          The roc
@@ -183,6 +195,7 @@ public class ProviderData implements Serializable {
   }
 
   /**
+   * Get the subgrid of the provider.
    * 
    * @return The subgrid
    */
@@ -192,6 +205,7 @@ public class ProviderData implements Serializable {
   }
 
   /**
+   * Set the subgrid of the provider.
    * 
    * @param subgrid
    *          The subgrid
@@ -207,6 +221,7 @@ public class ProviderData implements Serializable {
   }
 
   /**
+   * Get the giisUrl of the provider.
    * 
    * @return The giisUrl
    */
@@ -216,6 +231,7 @@ public class ProviderData implements Serializable {
   }
 
   /**
+   * Set the giisUrl of the provider.
    * 
    * @param giisUrl
    *          The giis_url

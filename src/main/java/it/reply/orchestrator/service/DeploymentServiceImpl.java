@@ -1,5 +1,11 @@
 package it.reply.orchestrator.service;
 
+import alien4cloud.model.components.ScalarPropertyValue;
+import alien4cloud.model.topology.Capability;
+import alien4cloud.model.topology.NodeTemplate;
+import alien4cloud.tosca.model.ArchiveRoot;
+import alien4cloud.tosca.parser.ParsingException;
+
 import it.reply.orchestrator.config.WorkflowConfigProducerBean;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
@@ -33,12 +39,6 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
-
-import alien4cloud.model.components.ScalarPropertyValue;
-import alien4cloud.model.topology.Capability;
-import alien4cloud.model.topology.NodeTemplate;
-import alien4cloud.tosca.model.ArchiveRoot;
-import alien4cloud.tosca.parser.ParsingException;
 
 @Service
 public class DeploymentServiceImpl implements DeploymentService {

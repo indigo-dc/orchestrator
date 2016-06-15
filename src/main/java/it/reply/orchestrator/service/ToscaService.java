@@ -31,15 +31,31 @@ public interface ToscaService {
    * <b>WARNING: Some nodes or properties might be missing!! Use at your own risk!</b>
    * 
    * @param archiveRoot
-   * @return
+   *          the {@link ArchiveRoot} from which serialize the TOSCA template
+   * @return the serialized TOSCA template
    * @throws IOException
+   *           if there is an error serializing the template
    */
   @Nonnull
   public String getTemplateFromTopology(@Nonnull ArchiveRoot archiveRoot) throws IOException;
 
+  /**
+   * Customize the template with INDIGO requirements, for example it adds the deploymentId.
+   * 
+   * @param toscaTemplate
+   *          the TOSCA template
+   * @param deploymentId
+   *          the deploymentId
+   * @return the customized template
+   * 
+   * @throws IOException
+   *           if there is an IO error
+   * @throws ToscaException
+   *           if the template is not valid
+   */
   @Nonnull
   public String customizeTemplate(@Nonnull String toscaTemplate, @NotNull String deploymentId)
-      throws IOException, ToscaException, ParsingException;
+      throws IOException, ToscaException;
 
   public void addDeploymentId(ArchiveRoot parsingResult, String deploymentId);
 
