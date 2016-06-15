@@ -78,6 +78,11 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
   }
 
   @Test
+  public void getInfo() throws Exception {
+    mockMvc.perform(get("/info").accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
+  }
+
+  @Test
   @DatabaseSetup("/data/database-init.xml")
   public void getDeployments() throws Exception {
 
