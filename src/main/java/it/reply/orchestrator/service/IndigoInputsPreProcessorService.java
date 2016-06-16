@@ -179,8 +179,8 @@ public class IndigoInputsPreProcessorService {
         String msg = String.format(
             "Function <%s> detected for property <%s> while only <get_input> should be authorized.",
             function.getFunction(), propertyName);
-        LOG.error(msg);
-        throw new ToscaException(msg);
+        LOG.warn(msg);
+        // throw new ToscaException(msg);
       }
     } else {
       // Complex or List properties might contain other function as their values
