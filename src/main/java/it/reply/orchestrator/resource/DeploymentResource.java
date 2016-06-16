@@ -20,6 +20,7 @@ public class DeploymentResource extends AbstractResource {
   private Task task;
   private String callback;
   private List<BaseResource> resources;
+  private String cloudProviderName;
 
   public DeploymentResource() {
     super();
@@ -71,6 +72,14 @@ public class DeploymentResource extends AbstractResource {
 
   public void setResources(List<BaseResource> resources) {
     this.resources = resources;
+  }
+
+  public String getCloudProviderName() {
+    return cloudProviderName;
+  }
+
+  public void setCloudProviderName(String cloudProviderName) {
+    this.cloudProviderName = cloudProviderName;
   }
 
 }

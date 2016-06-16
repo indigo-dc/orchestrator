@@ -1,6 +1,10 @@
 package it.reply.orchestrator.dto.common;
 
-public class Error {
+import java.io.Serializable;
+
+public class Error implements Serializable {
+
+  private static final long serialVersionUID = 6559999818418491070L;
 
   private Integer code;
   private String title;

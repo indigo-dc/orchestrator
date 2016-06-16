@@ -10,10 +10,13 @@ import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
+import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 @Entity
+@Table(indexes = { @Index(columnList = "toscaNodeName"), @Index(columnList = "deployment_uuid") })
 public class Resource extends AbstractResourceEntity {
 
   private static final long serialVersionUID = -4916577635363604624L;
@@ -42,6 +45,18 @@ public class Resource extends AbstractResourceEntity {
 
   public Resource() {
     super();
+  }
+
+  /**
+   * Creates a new Resource object.
+   * 
+   * @param toscaNodeName
+   *          the TOSCA node name of the resource
+   */
+  public Resource(String toscaNodeName) {
+    super();
+    this.toscaNodeName = toscaNodeName;
+    state = NodeStates.INITIAL;
   }
 
   public NodeStates getState() {

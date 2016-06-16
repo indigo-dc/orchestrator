@@ -14,6 +14,10 @@ java -jar /usr/share/java/saxon.jar -o:$JBOSS_HOME/standalone/configuration/$JBO
 
 IM_PROP_FILE="$JBOSS_HOME/standalone/deployments/$WAR_NAME.war/WEB-INF/classes/im-config/im-java-api.properties"
 SECURITY_PROP_FILE="$JBOSS_HOME/standalone/deployments/$WAR_NAME.war/WEB-INF/classes/security.properties"
+CHRONOS_PROP_FILE="$JBOSS_HOME/standalone/deployments/$WAR_NAME.war/WEB-INF/classes/chronos/chronos.properties"
+CMDB_PROP_FILE="$JBOSS_HOME/standalone/deployments/$WAR_NAME.war/WEB-INF/classes/cmdb/cmdb.properties"
+SLAM_PROP_FILE="$JBOSS_HOME/standalone/deployments/$WAR_NAME.war/WEB-INF/classes/slam/slam.properties"
+CPR_PROP_FILE="$JBOSS_HOME/standalone/deployments/$WAR_NAME.war/WEB-INF/classes/cloud-provider-ranker/cloud-provider-ranker.properties"
 
 if [[ $IM_URL ]];
 	then sed -i "s/^\(url=\).*$/\1$(echo $IM_URL | sed -e 's/[\/&]/\\&/g')/" ${IM_PROP_FILE};
@@ -29,6 +33,30 @@ if [[ $OPENSTACK_AUTH_FILE_PATH ]];
 fi;
 if [[ $ONEDOCK_AUTH_FILE_PATH ]];
 	then sed -i "s/^\(onedock\.auth\.file\.path=\).*$/\1$(echo $ONEDOCK_AUTH_FILE_PATH | sed -e 's/[\/&]/\\&/g')/" ${IM_PROP_FILE};
+fi;
+
+if [[ $CHRONOS_ENDPOINT ]];
+	then sed -i "s/^\(chronos\.endpoint=\).*$/\1$(echo $CHRONOS_ENDPOINT | sed -e 's/[\/&]/\\&/g')/" ${CHRONOS_PROP_FILE};
+fi;
+
+if [[ $CHRONOS_USERNAME ]];
+	then sed -i "s/^\(chronos\.username=\).*$/\1$(echo $CHRONOS_USERNAME | sed -e 's/[\/&]/\\&/g')/" ${CHRONOS_PROP_FILE};
+fi;
+
+if [[ $CHRONOS_PASSWORD ]];
+	then sed -i "s/^\(chronos\.password=\).*$/\1$(echo $CHRONOS_PASSWORD | sed -e 's/[\/&]/\\&/g')/" ${CHRONOS_PROP_FILE};
+fi;
+
+if [[ $CMDB_ENDPOINT ]];
+	then sed -i "s/^\(cmdb\.url=\).*$/\1$(echo $CMDB_ENDPOINT | sed -e 's/[\/&]/\\&/g')/" ${CMDB_PROP_FILE};
+fi;
+
+if [[ $SLAM_ENDPOINT ]];
+	then sed -i "s/^\(slam\.url=\).*$/\1$(echo $SLAM_ENDPOINT | sed -e 's/[\/&]/\\&/g')/" ${SLAM_PROP_FILE};
+fi;
+
+if [[ $CPR_ENDPOINT ]];
+	then sed -i "s/^\(cloud-provider-ranker\.url=\).*$/\1$(echo $CPR_ENDPOINT | sed -e 's/[\/&]/\\&/g')/" ${CPR_PROP_FILE};
 fi;
 
 # CUSTOMIZE SECURITY PROPERTIES

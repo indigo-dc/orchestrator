@@ -19,12 +19,14 @@ public class WorkflowConfigProducerBean implements ConfigProducer {
   public static final WorkflowResource DEPLOY;
   public static final WorkflowResource UNDEPLOY;
   public static final WorkflowResource UPDATE;
+  public static final WorkflowResource RANK_CLOUD_PROVIDERS;
 
   static {
     try {
       DEPLOY = new WorkflowResource(BASE_PATH + "/" + "Deploy.bpmn2");
       UNDEPLOY = new WorkflowResource(BASE_PATH + "/" + "Undeploy.bpmn2");
       UPDATE = new WorkflowResource(BASE_PATH + "/" + "Update.bpmn2");
+      RANK_CLOUD_PROVIDERS = new WorkflowResource(BASE_PATH + "/" + "RankCloudProviders.bpmn2");
 
     } catch (IOException ex) {
       throw new ExceptionInInitializerError(ex);
@@ -42,6 +44,7 @@ public class WorkflowConfigProducerBean implements ConfigProducer {
     resources.add(DEPLOY);
     resources.add(UNDEPLOY);
     resources.add(UPDATE);
+    resources.add(RANK_CLOUD_PROVIDERS);
     resources = Collections.unmodifiableList(resources);
   }
 
@@ -62,7 +65,7 @@ public class WorkflowConfigProducerBean implements ConfigProducer {
 
   @Override
   public int getExecutorServiceInterval() {
-    return 3;
+    return 2;
   }
 
 }

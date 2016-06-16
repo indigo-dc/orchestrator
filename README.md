@@ -18,6 +18,12 @@ You can find the REST APIs docs [orchestrator-rest-doc] (http://indigo-dc.github
 This project has been created with maven 3.3.3 and Java 1.8. Maven will take care of downloading the extra dependencies needed for the project but this project dependes on [im-java-api](https://github.com/indigo-dc/im-java-api) and [workflow-manager](https://github.com/ConceptReplyIT/workflow-manager) too.
 To run the Orchestrator you need [Docker](https://www.docker.com) and a MySQL Server instance (which may be local, remote, or in a docker container). See next section to have details.
 
+1.1.1 MySQL
+-----------
+
+The MySQL server needs the following customized settings (use `my.cnf` file to edit those settings):
+- `max_allowed_packet = 256M`
+
 1.2 INSTALLING
 --------------
 
@@ -31,7 +37,14 @@ To compile the project you need to be in the same folder as the `pom.xml` file a
 mvn clean install
 ```
 This command compiles the code and creates a war package, `orchestrator.war`, which will be put inside the `docker` folder.
-
+If you want run only unit-test type:
+```
+mvn test
+```
+otherwise if you want run integration test type (or use surefire.skip=true property to skip unit tests)
+```
+mvn integration-test
+```
 ### Build the Docker image
 
 You can build the docker image with the command
@@ -84,3 +97,6 @@ Besides those used to link the orchestrator to the DBs, there are other environm
  3. `OIDC_CLIENT_ID`: The OAuth2 client ID
  4. `OIDC_CLIENT_SECRET` The OAuth2 client secret
  
+### Configure Chronos
+ 1. `CHRONOS_AUTH_FILE_PATH`: the path to the property file containing credentials for Chronos and OneData service space for Chronos.
+You can also edit the file `chronos/chronos.properties` directly in the deployment folder.

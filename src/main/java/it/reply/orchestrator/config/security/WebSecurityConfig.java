@@ -15,10 +15,9 @@ import org.mitre.openid.connect.client.service.impl.DynamicServerConfigurationSe
 import org.mitre.openid.connect.client.service.impl.StaticClientConfigurationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -46,12 +45,17 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
   static final Logger LOG = LogManager.getLogger(WebSecurityConfig.class);
 
+  @Autowired
+  private ApplicationContext applicationContext;
+
   @Value("${security.enabled}")
   private boolean securityEnabled;
 
   @Configuration
-  @ConditionalOnProperty(name = "security.enabled", havingValue = "true")
   public static class OidcConfig {
+
+    @Value("${security.enabled}")
+    private boolean securityEnabled;
 
     @Value("${OIDC.issuers}")
     private Set<String> oidcIssuers;
@@ -70,54 +74,76 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Bean
     protected ServerConfigurationService serverConfigurationService() {
-      DynamicServerConfigurationService serverConfigurationService =
-          new DynamicServerConfigurationService();
-      serverConfigurationService.setWhitelist(oidcIssuers);
-      return serverConfigurationService;
+      if (securityEnabled) {
+        DynamicServerConfigurationService serverConfigurationService =
+            new DynamicServerConfigurationService();
+        serverConfigurationService.setWhitelist(oidcIssuers);
+        return serverConfigurationService;
+      } else {
+        return null;
+      }
     }
 
     @Bean
     protected ClientConfigurationService clientConfigurationService() {
-      RegisteredClient client = new RegisteredClient();
-      client.setClientId(oidcClientId);
-      client.setClientSecret(oidcClientSecret);
-      client.setScope(oidcClientScopes);
-      Map<String, RegisteredClient> clients = new HashMap<>();
-      for (String issuer : oidcIssuers) {
-        clients.put(issuer, client);
+      if (securityEnabled) {
+        RegisteredClient client = new RegisteredClient();
+        client.setClientId(oidcClientId);
+        client.setClientSecret(oidcClientSecret);
+        client.setScope(oidcClientScopes);
+        Map<String, RegisteredClient> clients = new HashMap<>();
+        for (String issuer : oidcIssuers) {
+          clients.put(issuer, client);
+        }
+
+        StaticClientConfigurationService clientConfigurationService =
+            new StaticClientConfigurationService();
+        clientConfigurationService.setClients(clients);
+
+        return clientConfigurationService;
+      } else {
+        return null;
       }
-
-      StaticClientConfigurationService clientConfigurationService =
-          new StaticClientConfigurationService();
-      clientConfigurationService.setClients(clients);
-
-      return clientConfigurationService;
     }
 
     @Bean
     protected UserInfoFetcher userInfoFetcher() {
-      return new IndigoUserInfoFetcher();
+      if (securityEnabled) {
+        return new IndigoUserInfoFetcher();
+      } else {
+        return null;
+      }
     }
 
     @Bean
     protected IntrospectionConfigurationService introspectionConfigurationService() {
-      JWTParsingIntrospectionConfigurationService introspectionConfigurationService =
-          new JWTParsingIntrospectionConfigurationService();
-      introspectionConfigurationService.setServerConfigurationService(serverConfigurationService());
-      introspectionConfigurationService.setClientConfigurationService(clientConfigurationService());
-      return introspectionConfigurationService;
+      if (securityEnabled) {
+        JWTParsingIntrospectionConfigurationService introspectionConfigurationService =
+            new JWTParsingIntrospectionConfigurationService();
+        introspectionConfigurationService
+            .setServerConfigurationService(serverConfigurationService());
+        introspectionConfigurationService
+            .setClientConfigurationService(clientConfigurationService());
+        return introspectionConfigurationService;
+      } else {
+        return null;
+      }
     }
 
     @Bean
     protected ResourceServerTokenServices introspectingTokenService() {
-      UserInfoIntrospectingTokenService introspectingTokenService =
-          new UserInfoIntrospectingTokenService();
-      introspectingTokenService
-          .setIntrospectionConfigurationService(introspectionConfigurationService());
-      introspectingTokenService.setCacheTokens(oidcCacheTokens);
-      introspectingTokenService.setServerConfigurationService(serverConfigurationService());
-      introspectingTokenService.setUserInfoFetcher(userInfoFetcher());
-      return introspectingTokenService;
+      if (securityEnabled) {
+        UserInfoIntrospectingTokenService introspectingTokenService =
+            new UserInfoIntrospectingTokenService();
+        introspectingTokenService
+            .setIntrospectionConfigurationService(introspectionConfigurationService());
+        introspectingTokenService.setCacheTokens(oidcCacheTokens);
+        introspectingTokenService.setServerConfigurationService(serverConfigurationService());
+        introspectingTokenService.setUserInfoFetcher(userInfoFetcher());
+        return introspectingTokenService;
+      } else {
+        return null;
+      }
     }
   }
 
@@ -156,10 +182,6 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     }
   }
 
-  @Autowired
-  @Lazy
-  private ResourceServerTokenServices tokenServices;
-
   @Override
   public void configure(HttpSecurity http) throws Exception {
     if (securityEnabled) {
@@ -168,7 +190,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
           .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
       ResourceServerSecurityConfigurer configurer = new ResourceServerSecurityConfigurer();
       configurer.setBuilder(http);
-      configurer.tokenServices(tokenServices);
+      configurer.tokenServices(applicationContext.getBean(ResourceServerTokenServices.class));
       configurer.configure(http);
 
       // TODO Customize the authentication entry point in order to align the response body error

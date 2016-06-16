@@ -3,11 +3,16 @@ package it.reply.orchestrator.service;
 import com.google.common.io.ByteStreams;
 
 import alien4cloud.component.repository.exception.CSARVersionAlreadyExistsException;
+import alien4cloud.exception.InvalidArgumentException;
+import alien4cloud.model.components.AbstractPropertyValue;
 import alien4cloud.model.components.Csar;
 import alien4cloud.model.components.ListPropertyValue;
+import alien4cloud.model.components.PropertyDefinition;
+import alien4cloud.model.components.PropertyValue;
 import alien4cloud.model.components.ScalarPropertyValue;
 import alien4cloud.model.topology.Capability;
 import alien4cloud.model.topology.NodeTemplate;
+import alien4cloud.model.topology.RelationshipTemplate;
 import alien4cloud.security.model.Role;
 import alien4cloud.tosca.ArchiveParser;
 import alien4cloud.tosca.ArchiveUploadService;
@@ -63,6 +68,9 @@ public class ToscaServiceImpl implements ToscaService {
 
   @Autowired
   private ArchiveUploadService archiveUploadService;
+
+  @Autowired
+  private IndigoInputsPreProcessorService indigoInputsPreProcessorService;
 
   @Value("${directories.alien}/${directories.csar_repository}")
   private String alienRepoDir;
@@ -134,9 +142,14 @@ public class ToscaServiceImpl implements ToscaService {
     try (InputStream is = new ByteArrayInputStream(toscaTemplate.getBytes());) {
       zip(is, zipPath);
     }
-    ParsingResult<ArchiveRoot> result = parser.parse(zipPath);
-    checkParsingErrors(result.getContext().getParsingErrors());
-    return result;
+    try {
+      return parser.parse(zipPath);
+    } catch (InvalidArgumentException iae) {
+      // FIXME NOTE that InvalidArgumentException should not be thrown by the parse method, but it
+      // is...
+      // throw new ParsingException("DUMMY", new ParsingError(ErrorCode.INVALID_YAML, ));
+      throw iae;
+    }
   }
 
   @Override
@@ -154,26 +167,83 @@ public class ToscaServiceImpl implements ToscaService {
     StringWriter writer = new StringWriter();
     VelocityUtil.generate("templates/topology-1_0_0_INDIGO.yml.vm", writer, velocityCtx);
     String template = writer.toString();
+
+    // Log the warning because Alien4Cloud uses an hard-coded Velocity template to encode the string
+    // and some information might be missing!!
+    LOG.warn("TOSCA template conversion from in-memory: "
+        + "WARNING: Some nodes or properties might be missing!! Use at your own risk!");
     LOG.debug(template);
+
     return template;
   }
 
-  /**
-   * Customize the template with INDIGO requirements, for example it adds the deploymentId.
-   * 
-   * @param toscaTemplate
-   *          the TOSCA template
-   * @param deploymentId
-   *          the deploymentId
-   * @return the customized template
-   * 
-   * @throws ParsingException
-   *           if the template is not valid
-   * @throws IOException
-   *           if there is an IO error
-   */
   @Override
   public String customizeTemplate(@Nonnull String toscaTemplate, @Nonnull String deploymentId)
+      throws IOException, ToscaException {
+
+    ArchiveRoot ar = parseTemplate(toscaTemplate);
+
+    addDeploymentId(ar, deploymentId);
+
+    return getTemplateFromTopology(ar);
+
+  }
+
+  @Override
+  public void replaceInputFunctions(ArchiveRoot archiveRoot, Map<String, Object> inputs)
+      throws ToscaException {
+    indigoInputsPreProcessorService.processGetInput(archiveRoot, inputs);
+  }
+
+  @Override
+  public ArchiveRoot parseAndValidateTemplate(String toscaTemplate, Map<String, Object> inputs)
+      throws IOException, ParsingException, ToscaException {
+    ArchiveRoot ar = parseTemplate(toscaTemplate);
+    validateUserInputs(ar.getTopology().getInputs(), inputs);
+    return ar;
+  }
+
+  @Override
+  public ArchiveRoot prepareTemplate(String toscaTemplate, Map<String, Object> inputs)
+      throws IOException, ParsingException, ToscaException {
+    ArchiveRoot ar = parseAndValidateTemplate(toscaTemplate, inputs);
+    replaceInputFunctions(ar, inputs);
+    return ar;
+  }
+
+  @Override
+  public void validateUserInputs(Map<String, PropertyDefinition> templateInputs,
+      Map<String, Object> inputs) throws ToscaException {
+
+    // Check if every required input has been given by the user
+    if (templateInputs == null) {
+      return;
+    }
+
+    for (Map.Entry<String, PropertyDefinition> templateInput : templateInputs.entrySet()) {
+      if (templateInput.getValue().isRequired() && !inputs.containsKey(templateInput.getKey())) {
+        // Input required and not in user's input list -> error
+        throw new ToscaException(
+            String.format("Input <%s> is required and is not present in the user's input list",
+                templateInput.getKey()));
+      } else {
+        if (!templateInput.getValue().isRequired()
+            && templateInput.getValue().getDefault() == null) {
+          // Input not required and no default value -> error
+          throw new ToscaException(String.format(
+              "Input <%s> is neither required nor has a default value", templateInput.getKey()));
+        }
+      }
+    }
+
+    // Reference:
+    // http://docs.oasis-open.org/tosca/TOSCA-Simple-Profile-YAML/v1.0/csprd02/TOSCA-Simple-Profile-YAML-v1.0-csprd02.html#TYPE_YAML_STRING
+    // FIXME Check input type compatibility ?
+    // templateInput.getValue().getType()
+  }
+
+  @Override
+  public ArchiveRoot parseTemplate(@Nonnull String toscaTemplate)
       throws IOException, ToscaException {
 
     ParsingResult<ArchiveRoot> result = null;
@@ -184,9 +254,7 @@ public class ToscaServiceImpl implements ToscaService {
     }
     checkParsingErrors(result.getContext().getParsingErrors());
 
-    addDeploymentId(result, deploymentId);
-
-    return getTemplateFromTopology(result.getResult());
+    return result.getResult();
 
   }
 
@@ -216,8 +284,9 @@ public class ToscaServiceImpl implements ToscaService {
 
   }
 
-  private void addDeploymentId(ParsingResult<ArchiveRoot> parsingResult, String deploymentId) {
-    Map<String, NodeTemplate> nodes = parsingResult.getResult().getTopology().getNodeTemplates();
+  @Override
+  public void addDeploymentId(ArchiveRoot parsingResult, String deploymentId) {
+    Map<String, NodeTemplate> nodes = parsingResult.getTopology().getNodeTemplates();
     for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
       if (entry.getValue().getType().equals("tosca.nodes.indigo.ElasticCluster")) {
         // Create new property with the deploymentId and set as printable
@@ -257,6 +326,84 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
+  public AbstractPropertyValue getNodePropertyByName(NodeTemplate node, String propertyName) {
+    if (node != null && node.getProperties() != null) {
+      for (Entry<String, AbstractPropertyValue> entry : node.getProperties().entrySet()) {
+        if (entry.getKey().equals(propertyName)) {
+          return entry.getValue();
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * Find a property with a given name in a capability.
+   * 
+   * @param capability
+   *          the capability
+   * @param propertyName
+   *          the name of the property
+   * @return the {@link AbstractPropertyValue} containing the property value
+   */
+  public AbstractPropertyValue getCapabilityPropertyByName(Capability capability,
+      String propertyName) {
+    if (capability != null && capability.getProperties() != null) {
+      for (Entry<String, AbstractPropertyValue> entry : capability.getProperties().entrySet()) {
+        if (entry.getKey().equals(propertyName)) {
+          return entry.getValue();
+        }
+      }
+    }
+    return null;
+  }
+
+  @Override
+  public PropertyValue<?> getNodePropertyValueByName(NodeTemplate node, String propertyName) {
+    return (PropertyValue<?>) getNodePropertyByName(node, propertyName);
+  }
+
+  @Override
+  public PropertyValue<?> getCapabilityPropertyValueByName(Capability capability,
+      String propertyName) {
+    return (PropertyValue<?>) getCapabilityPropertyByName(capability, propertyName);
+  }
+
+  @Override
+  public Map<String, NodeTemplate> getAssociatedNodesByCapability(Map<String, NodeTemplate> nodes,
+      NodeTemplate nodeTemplate, String capabilityName) {
+    Map<String, NodeTemplate> associatedNodes = new HashMap<>();
+
+    List<RelationshipTemplate> relationships =
+        getRelationshipTemplatesByCapabilityName(nodeTemplate.getRelationships(), capabilityName);
+    if (!relationships.isEmpty()) {
+      for (RelationshipTemplate relationship : relationships) {
+        String associatedNodeName = relationship.getTarget();
+        associatedNodes.put(associatedNodeName, nodes.get(associatedNodeName));
+      }
+    }
+
+    return associatedNodes;
+  }
+
+  @Override
+  public List<RelationshipTemplate> getRelationshipTemplatesByCapabilityName(
+      Map<String, RelationshipTemplate> relationships, String capabilityName) {
+
+    List<RelationshipTemplate> relationshipTemplates = new ArrayList<>();
+    if (relationships == null) {
+      return relationshipTemplates;
+    }
+
+    for (Map.Entry<String, RelationshipTemplate> relationship : relationships.entrySet()) {
+      if (relationship.getValue().getTargetedCapabilityName().equals(capabilityName)) {
+        relationshipTemplates.add(relationship.getValue());
+      }
+    }
+    return relationshipTemplates;
+  }
+
+  @Override
   public Map<String, NodeTemplate> getCountNodes(ArchiveRoot archiveRoot) {
     Map<String, NodeTemplate> nodes = new HashMap<>();
 
@@ -267,7 +414,7 @@ public class ToscaServiceImpl implements ToscaService {
         ScalarPropertyValue scalarPropertyValue =
             (ScalarPropertyValue) scalable.getProperties().get("count");
         // Check if this value is read from the template and is not a default value
-        if (scalarPropertyValue.isPrintable()) {
+        if (scalarPropertyValue != null && scalarPropertyValue.isPrintable()) {
           nodes.put(entry.getKey(), entry.getValue());
         }
       }
