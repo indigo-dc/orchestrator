@@ -393,9 +393,9 @@ node_types:
         description: IP of the Front-End node
         required: true
     capabilities:
-      wn:
-        type: tosca.capabilities.Scalable
-        valid_source_types: [tosca.nodes.indigo.ElasticCluster]
+        wn:
+          type: tosca.capabilities.Scalable
+          valid_source_types: [tosca.nodes.indigo.ElasticCluster]
     requirements:
       host:
         type: tosca.capabilities.Container
@@ -536,16 +536,71 @@ node_types:
 
   tosca.nodes.indigo.MesosMaster:
     derived_from: tosca.nodes.SoftwareComponent
+    properties:
+      # Set the current data of the mesos server
+      # but it can also specified in the TOSCA document
+      consul_servers:
+        type: string
+        required: no
+        default: localhost
+      zookeeper_host_list:
+        type: string
+        required: no
+        default: localhost
+      zookeeper_peers:
+        type: string
+        required: no
+        default: localhost
+      mesos_masters_list:
+        type: string
+        required: no
+        default: localhost
+      marathon_username:
+        type: string
+        required: no
+        default: admin
+      marathon_password:
+        type: string
+        required: yes
+      chronos_username:
+        type: string
+        required: no
+        default: admin
+      chronos_password:
+        type: string
+        required: yes
+    artifacts:
+      docker_agent_role:
+        file: indigo-dc.docker
+        type: tosca.artifacts.AnsibleGalaxy.role
+      consul_agent_role:
+        file: indigo-dc.consul
+        type: tosca.artifacts.AnsibleGalaxy.role
+      zookeeper_agent_role:
+        file: indigo-dc.zookeeper
+        type: tosca.artifacts.AnsibleGalaxy.role
+      mesos_agent_role:
+        file: indigo-dc.mesos
+        type: tosca.artifacts.AnsibleGalaxy.role
+      marathon_agent_role:
+        file: indigo-dc.marathon
+        type: tosca.artifacts.AnsibleGalaxy.role
+      chronos_agent_role:
+        file: indigo-dc.chronos
+        type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
-        create:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/mesos_master_install.yml
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/mesos_master_configure.yml
+          implementation: mesos/mesos_master_install.yml
           inputs:
-            master_ips: { get_attribute: [ HOST, public_address ] }
-        start:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/mesos_master_start.yml
+            consul_server_ips: { get_attribute: [ HOST, public_address ] }
+            zookeeper_host_list_ips: { get_attribute: [ HOST, public_address ] }
+            zookeeper_peers_ips: { get_attribute: [ HOST, public_address ] }
+            mesos_masters_list_ips: { get_attribute: [ HOST, public_address ] }
+            marathon_user: { get_property: [ SELF, marathon_username ] }
+            marathon_pass: { get_property: [ SELF, marathon_password ] }
+            chronos_user: { get_property: [ SELF, chronos_username ] }
+            chronos_pass: { get_property: [ SELF, chronos_password ] }
     requirements:
       host:
         type: tosca.capabilities.Container
@@ -555,28 +610,46 @@ node_types:
   tosca.nodes.indigo.MesosSlave:
     derived_from: tosca.nodes.SoftwareComponent
     properties:
+      # Set the current data of the mesos server
+      # but it can also specified in the TOSCA document
       master_ips:
         required: yes
         type: list
         entry_schema:
           type: string
+      consul_servers:
+        type: string
+        required: no
+        default: localhost
+      mesos_masters_list:
+        type: string
+        required: no
+        default: localhost
+    artifacts:
+      docker_agent_role:
+        file: indigo-dc.docker
+        type: tosca.artifacts.AnsibleGalaxy.role
+      consul_agent_role:
+        file: indigo-dc.consul
+        type: tosca.artifacts.AnsibleGalaxy.role
+      mesos_agent_role:
+        file: indigo-dc.mesos
+        type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         create:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/mesos_slave_install.yml
-        configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/mesos_slave_configure.yml
+          implementation: mesos/mesos_slave_install.yml
           inputs:
             mesos_master_ips: { get_property: [ SELF, master_ips ] }
-        start:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/mesos_slave_start.yml
+            consul_server_ips: { get_property: [ SELF, master_ips ] }
+            mesos_masters_list_ips: { get_property: [ SELF, master_ips ] }
     requirements:
       host:
-        capability: tosca.capabilities.Container
+        type: tosca.capabilities.Container
         node: tosca.nodes.indigo.Compute
         relationship: tosca.relationships.HostedOn
 
-  tosca.nodes.indigo.MesosLoadBalancerMaster:
+  tosca.nodes.indigo.MesosLoadBalancer:
     derived_from: tosca.nodes.SoftwareComponent
     properties:
       master_ips:
@@ -587,47 +660,13 @@ node_types:
     interfaces:
       Standard:
         create:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/mesos_master_lb_install.yml
-        configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/mesos_master_lb_configure.yml
+          implementation: mesos/mesos_lb_install.yml
           inputs:
-            mesos_master_ips: { get_property: [ SELF, master_ips ] }
+            consul_server_ips: { get_property: [ SELF, master_ips ] }
             lb_master_ip: { get_attribute: [ HOST, public_address ] }
-        start:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/mesos_master_lb_start.yml
     requirements:
       host:
-        capability: tosca.capabilities.Container
-        node: tosca.nodes.indigo.Compute
-        relationship: tosca.relationships.HostedOn
-
-  tosca.nodes.indigo.MesosLoadBalancerSlave:
-    derived_from: tosca.nodes.SoftwareComponent
-    properties:
-      master_ips:
-        required: yes
-        type: list
-        entry_schema:
-          type: string
-      lb_master_ip:
-        required: yes
-        type: list
-        entry_schema:
-          type: string
-    interfaces:
-      Standard:
-        create:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/mesos_slave_lb_install.yml
-        configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/mesos_slave_lb_configure.yml
-          inputs:
-            mesos_master_ips: { get_property: [ SELF, master_ips ] }
-            keepalived_vip: { get_property: [ SELF, lb_master_ip ] }
-        start:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/mesos_slave_lb_start.yml
-    requirements:
-      host:
-        capability: tosca.capabilities.Container
+        type: tosca.capabilities.Container
         node: tosca.nodes.indigo.Compute
         relationship: tosca.relationships.HostedOn
 
@@ -684,3 +723,43 @@ node_types:
           implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/hadoop/hadoop_wn_install.yml
           inputs:
             hadoop_master_ip: { get_property: [ SELF, master_ip ] }
+
+  tosca.nodes.indigo.HaddockApp:
+    derived_from: tosca.nodes.SoftwareComponent
+    properties:
+      haddock_app_name:
+        type: string
+        description: Haddocking application
+        required: true
+        constraints:
+        - valid_values: [ disvis, powerfit ]
+    artifacts:
+      galaxy_role:
+        file: indigo-dc.disvis-powerfit
+        type: tosca.artifacts.AnsibleGalaxy.role
+    interfaces:
+      Standard:
+        configure:
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/haddock/haddock_install.yml
+          inputs:
+            haddock_app_name: { get_property: [ SELF, haddock_app_name ] }
+
+  tosca.nodes.indigo.Disvis:
+    derived_from: tosca.nodes.indigo.HaddockApp
+    properties:
+      haddock_app_name:
+        type: string
+        required: true
+        default: disvis
+        constraints:
+          - equal: disvis
+
+  tosca.nodes.indigo.Powerfit:
+    derived_from: tosca.nodes.indigo.HaddockApp
+    properties:
+      haddock_app_name:
+        type: string
+        required: true
+        default: powerfit
+        constraints:
+          - equal: powerfit
