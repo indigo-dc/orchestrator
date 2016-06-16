@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
 
-import it.reply.orchestrator.config.WebAppConfigurationAware;
+import it.reply.orchestrator.config.specific.WebAppConfigurationAware;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.util.TestUtil;
 import it.reply.orchestrator.utils.CommonUtils;

@@ -5,7 +5,7 @@ import static org.junit.Assert.assertEquals;
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
 
-import it.reply.orchestrator.config.WebAppConfigurationAware;
+import it.reply.orchestrator.config.specific.WebAppConfigurationAware;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.exception.http.NotFoundException;
 

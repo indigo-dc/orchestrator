@@ -1,6 +1,6 @@
 package it.reply.orchestrator.command;
 
-import it.reply.orchestrator.config.WebAppConfigurationAware;
+import it.reply.orchestrator.config.specific.WebAppConfigurationAware;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.orchestrator.service.commands.BaseRankCloudProvidersCommand;

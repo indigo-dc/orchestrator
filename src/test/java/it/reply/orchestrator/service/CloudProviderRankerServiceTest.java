@@ -5,7 +5,7 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-import it.reply.orchestrator.config.WebAppConfigurationAware;
+import it.reply.orchestrator.config.specific.WebAppConfigurationAwareIT;
 import it.reply.orchestrator.dto.ranker.CloudProviderRankerRequest;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
 import it.reply.utils.json.JsonUtility;
@@ -21,7 +21,7 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Arrays;
 import java.util.List;
 
-public class CloudProviderRankerServiceTest extends WebAppConfigurationAware {
+public class CloudProviderRankerServiceTest extends WebAppConfigurationAwareIT {
 
   @Autowired
   private CloudProviderRankerService cloudProviderRankerService;
