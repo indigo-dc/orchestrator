@@ -2,6 +2,7 @@ package it.reply.orchestrator.dto.deployment;
 
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
+import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl.IndigoJob;
 
@@ -34,6 +35,8 @@ public class DeploymentMessage implements Serializable {
   private boolean deleteComplete;
   private boolean pollComplete;
   private boolean skipPollInterval;
+
+  private CloudProvider chosenCloudProvider;
 
   private String oauth2Token;
 
@@ -113,6 +116,14 @@ public class DeploymentMessage implements Serializable {
 
   public void setSkipPollInterval(boolean skipPollInterval) {
     this.skipPollInterval = skipPollInterval;
+  }
+
+  public CloudProvider getChosenCloudProvider() {
+    return chosenCloudProvider;
+  }
+
+  public void setChosenCloudProvider(CloudProvider chosenCloudProvider) {
+    this.chosenCloudProvider = chosenCloudProvider;
   }
 
   public String getOauth2Token() {

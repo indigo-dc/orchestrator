@@ -67,6 +67,10 @@ public class UpdateDeployment extends BaseCommand {
       }
       LOG.debug("Selected Cloud Provider is: {}", chosenCp);
 
+      // Set the chosen CP in deploymentMessage
+      deploymentMessage.setChosenCloudProvider(
+          rankCloudProvidersMessage.getCloudProviders().get(chosenCp.getName()));
+
       // Update Deployment
       Deployment deployment =
           deploymentRepository.findOne(rankCloudProvidersMessage.getDeploymentId());
