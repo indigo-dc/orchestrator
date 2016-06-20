@@ -57,7 +57,16 @@ public interface ToscaService {
   public String customizeTemplate(@Nonnull String toscaTemplate, @NotNull String deploymentId)
       throws IOException, ToscaException;
 
-  public void addDeploymentId(ArchiveRoot parsingResult, String deploymentId);
+  /**
+   * Adds the parameters needed for 'tosca.nodes.indigo.ElasticCluster' nodes (deployment_id,
+   * orchestrator_url).
+   * 
+   * @param parsingResult
+   *          .
+   * @param deploymentId
+   *          .
+   */
+  public void addElasticClusterParameters(ArchiveRoot parsingResult, String deploymentId);
 
   /**
    * Verifies that all the template's required inputs are present in the user's input list.

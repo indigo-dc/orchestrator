@@ -187,7 +187,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
       ArchiveRoot ar =
           toscaService.prepareTemplate(deployment.getTemplate(), deployment.getParameters());
-      toscaService.addDeploymentId(ar, deploymentUuid);
+      toscaService.addElasticClusterParameters(ar, deploymentUuid);
       String imCustomizedTemplate = toscaService.getTemplateFromTopology(ar);
 
       // FIXME this is a trick used only for demo purpose

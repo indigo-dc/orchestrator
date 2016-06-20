@@ -19,6 +19,12 @@ topology_template:
         - lrms: torque_front_end
         - wn: wn_node
 
+    elastic_cluster_front_end_2:
+      type: tosca.nodes.indigo.ElasticCluster
+      requirements:
+        - lrms: torque_front_end
+        - wn: wn_node
+
     torque_front_end:
       type: tosca.nodes.indigo.LRMS.FrontEnd.Torque
       properties:
@@ -51,7 +57,7 @@ topology_template:
             min_instances: 0
       requirements:
         - host: torque_wn
-            
+
     torque_wn:
       type: tosca.nodes.indigo.Compute
       capabilities:

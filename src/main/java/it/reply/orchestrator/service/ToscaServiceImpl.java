@@ -1,7 +1,5 @@
 package it.reply.orchestrator.service;
 
-import com.google.common.io.ByteStreams;
-
 import alien4cloud.component.repository.exception.CSARVersionAlreadyExistsException;
 import alien4cloud.exception.InvalidArgumentException;
 import alien4cloud.model.components.AbstractPropertyValue;
@@ -23,6 +21,8 @@ import alien4cloud.tosca.parser.ParsingException;
 import alien4cloud.tosca.parser.ParsingResult;
 import alien4cloud.tosca.serializer.VelocityUtil;
 import alien4cloud.utils.FileUtil;
+
+import com.google.common.io.ByteStreams;
 
 import it.reply.orchestrator.exception.service.ToscaException;
 
@@ -81,6 +81,8 @@ public class ToscaServiceImpl implements ToscaService {
   private String normativeLocalName;
   @Value("${tosca.definitions.indigo}")
   private String indigoLocalName;
+  @Value("${orchestrator.url}")
+  private String orchestratorUrl;
 
   /**
    * Load normative and non-normative types.
@@ -183,7 +185,7 @@ public class ToscaServiceImpl implements ToscaService {
 
     ArchiveRoot ar = parseTemplate(toscaTemplate);
 
-    addDeploymentId(ar, deploymentId);
+    addElasticClusterParameters(ar, deploymentId);
 
     return getTemplateFromTopology(ar);
 
@@ -285,7 +287,7 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
-  public void addDeploymentId(ArchiveRoot parsingResult, String deploymentId) {
+  public void addElasticClusterParameters(ArchiveRoot parsingResult, String deploymentId) {
     Map<String, NodeTemplate> nodes = parsingResult.getTopology().getNodeTemplates();
     for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
       if (entry.getValue().getType().equals("tosca.nodes.indigo.ElasticCluster")) {
@@ -293,6 +295,10 @@ public class ToscaServiceImpl implements ToscaService {
         ScalarPropertyValue scalarPropertyValue = new ScalarPropertyValue(deploymentId);
         scalarPropertyValue.setPrintable(true);
         entry.getValue().getProperties().put("deployment_id", scalarPropertyValue);
+        // Create new property with the orchestrator_url and set as printable
+        scalarPropertyValue = new ScalarPropertyValue(orchestratorUrl);
+        scalarPropertyValue.setPrintable(true);
+        entry.getValue().getProperties().put("orchestrator_url", scalarPropertyValue);
       }
     }
   }
