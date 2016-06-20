@@ -21,6 +21,7 @@ import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
+import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
@@ -99,23 +100,44 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   @Autowired
   private ResourceRepository resourceRepository;
 
-  public enum IaaSSite {
-    // @formatter:off
-    OPENSTACK, OPENNEBULA, ONEDOCK
-    // @formatter:on
-  }
+  private InfrastructureManager getClient(DeploymentMessage dm) {
+    // LOG.debug("Load {} credentials", cpe.getIaasType());
+    // switch (cpe.getIaasType()) {
+    // case ONEDOCK:
+    // break;
+    // case OPENNEBULA:
+    // InfrastructureManager im = new InfrastructureManager(imUrl, tmp.toPath());
+    // break;
+    // case OPENSTACK:
+    // InfrastructureManager im = new InfrastructureManager(imUrl, tmp.toPath());
+    // break;
+    //
+    // }
+    //
+    // AuthorizationHeader ah = new AuthorizationHeader();
+    // // Authenticate to IM with the OAuth2 token
+    // Credential<?> cred = ImTokenCredential.getBuilder().withToken(dm.getOauth2Token()).build();
+    // ah.addCredential(cred);
+    //
+    // cred = VmrcCredential.getBuilder().withUsername("demo").withPassword("pwd")
+    // .withHost("http://servproject.i3m.upv.es:8080/vmrc/vmrc").build();
+    // ah.addCredential(cred);
+    // cred = OpenstackCredential.getBuilder().withId("ost").withUsername("usr").withPassword("pwd")
+    // .withTenant("tenant").withServiceRegion("recas-cloud")
+    // .withHost("https://cloud.recas.ba.infn.it:5000").build();
+    // InfrastructureManager im = new InfrastructureManager(imUrl, ah);
+    // }
+    // FIXME Use CMDB EP!
 
-  private InfrastructureManager getClient(IaaSSite iaaSSite) {
+    IaaSType iaasType = dm.getChosenCloudProviderEndpoint().getIaasType();
     InputStream inputStream = null;
     try {
-      switch (iaaSSite) {
+      LOG.debug("Load {} credentials with: {}", iaasType, dm.getChosenCloudProviderEndpoint());
+      switch (iaasType) {
         case OPENSTACK:
-          LOG.debug("Load {} credentials", IaaSSite.OPENSTACK.toString());
-
           inputStream = ctx.getResource(openstackAuthFilePath).getInputStream();
           break;
         case ONEDOCK:
-          LOG.debug("Load {} credentials", IaaSSite.ONEDOCK.toString());
           // Read the proxy file
           String proxy;
           try (InputStream in = ctx.getResource(proxyPath).getInputStream()) {
@@ -135,13 +157,11 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           inputStream = IOUtils.toInputStream(authFile, StandardCharsets.UTF_8.toString());
           break;
         case OPENNEBULA:
-          LOG.debug("Load {} credentials", IaaSSite.OPENNEBULA.toString());
           inputStream = ctx.getResource(opennebulaAuthFilePath).getInputStream();
           break;
         default:
-          LOG.debug("Load fake credentials");
-          inputStream = ctx.getResource(authFilePath).getInputStream();
-          break;
+          throw new IllegalArgumentException(
+              String.format("Unsupported provider type <%s>", iaasType));
       }
 
       File tmp = File.createTempFile("authFileTmp", ".tmp");
@@ -163,17 +183,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     }
   }
 
-  private IaaSSite getIaaSSiteFromTosca(String template) {
-
-    if (template.contains("tosca.nodes.indigo.MesosMaster")) {
-      return IaaSSite.OPENSTACK;
-    } else if (template.contains("onedock.i3m.upv.es")) {
-      return IaaSSite.ONEDOCK;
-    } else {
-      return IaaSSite.OPENNEBULA;
-    }
-  }
-
   @Override
   public boolean doDeploy(DeploymentMessage deploymentMessage) {
     Deployment deployment = deploymentMessage.getDeployment();
@@ -190,8 +199,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       toscaService.contextualizeImages(ar, deploymentMessage.getChosenCloudProvider());
       String imCustomizedTemplate = toscaService.getTemplateFromTopology(ar);
 
-      // FIXME this is a trick used only for demo purpose
-      InfrastructureManager im = getClient(getIaaSSiteFromTosca(deployment.getTemplate()));
+      // Generate IM Client
+      InfrastructureManager im = getClient(deploymentMessage);
 
       // Deploy on IM
       InfrastructureUri infrastructureUri =
@@ -230,8 +239,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     Deployment deployment = deploymentMessage.getDeployment();
     InfrastructureManager im = null;
     try {
-      // FIXME this is a trick used only for demo purpose
-      im = getClient(getIaaSSiteFromTosca(deployment.getTemplate()));
+      // Generate IM Client
+      im = getClient(deploymentMessage);
 
       InfrastructureState infrastructureState = im.getInfrastructureState(deployment.getEndpoint());
       LOG.debug(infrastructureState.toString());
@@ -291,8 +300,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     Deployment deployment = deploymentMessage.getDeployment();
     if (deployed) {
       try {
-        // FIXME this is a trick used only for demo purpose
-        InfrastructureManager im = getClient(getIaaSSiteFromTosca(deployment.getTemplate()));
+        // Generate IM Client
+        InfrastructureManager im = getClient(deploymentMessage);
+
         if (deployment.getOutputs().isEmpty()) {
           InfOutputValues outputValues = im.getInfrastructureOutputs(deployment.getEndpoint());
           Map<String, String> outputs = new HashMap<String, String>();
@@ -305,7 +315,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           }
           deployment.setOutputs(outputs);
         }
-        bindResources(deployment, deployment.getEndpoint());
+        bindResources(deployment, deployment.getEndpoint(), im);
 
         updateOnSuccess(deployment.getId());
 
@@ -411,13 +421,14 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         }
       }
 
+      // Generate IM Client
+      InfrastructureManager im = getClient(deploymentMessage);
+
       // Pulisco gli output e aggiungo i nodi da creare
       root.getTopology().setOutputs(null);
       root.getTopology().setNodeTemplates(nodes);
       if (!root.getTopology().isEmpty()) {
         try {
-          InfrastructureManager im = getClient(getIaaSSiteFromTosca(deployment.getTemplate()));
-
           im.addResource(deployment.getEndpoint(), toscaService.getTemplateFromTopology(root),
               BodyContentType.TOSCA);
         } catch (ImClientErrorException exception) {
@@ -428,8 +439,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       // DELETE
       if (vmIds.size() > 0) {
         try {
-          // FIXME this is a trick used only for demo purpose
-          InfrastructureManager im = getClient(getIaaSSiteFromTosca(deployment.getTemplate()));
           im.removeResource(deployment.getEndpoint(), vmIds);
         } catch (ImClientErrorException exception) {
           throw new DeploymentException(
@@ -454,8 +463,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       deployment.setTask(Task.DEPLOYER);
       deployment = deploymentRepository.save(deployment);
 
-      // FIXME this is a trick used only for demo purpose
-      InfrastructureManager im = getClient(getIaaSSiteFromTosca(deployment.getTemplate()));
+      // Generate IM Client
+      InfrastructureManager im = getClient(deploymentMessage);
+
       if (deployment.getEndpoint() == null) {
         // updateOnSuccess(deploymentUuid);
         deploymentMessage.setDeleteComplete(true);
@@ -489,8 +499,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
     Deployment deployment = deploymentMessage.getDeployment();
     try {
-      // FIXME this is a trick used only for demo purpose
-      InfrastructureManager im = getClient(getIaaSSiteFromTosca(deployment.getTemplate()));
+      // Generate IM Client
+      InfrastructureManager im = getClient(deploymentMessage);
 
       // TODO verificare
       if (deployment.getEndpoint() == null) {
@@ -525,35 +535,32 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     }
   }
 
-  private boolean isResourceDeleted(Resource resource) {
-    try {
-      Deployment deployment = resource.getDeployment();
-      // FIXME this is a trick used only for demo purpose
-      InfrastructureManager im = getClient(getIaaSSiteFromTosca(deployment.getTemplate()));
-
-      im.getVmInfo(deployment.getEndpoint(), resource.getIaasId());
-      return false;
-
-    } catch (ImClientErrorException exception) {
-      ResponseError error = getImResponseError(exception);
-      return error.is404Error();
-
-    } catch (ImClientException ex) {
-      // TODO improve exception handling
-      LOG.error(ex);
-      return false;
-    }
-  }
+  // private boolean isResourceDeleted(Resource resource) {
+  // try {
+  // Deployment deployment = resource.getDeployment();
+  // // Generate IM Client
+  // InfrastructureManager im = getClient(deploymentMessage);
+  //
+  // im.getVmInfo(deployment.getEndpoint(), resource.getIaasId());
+  // return false;
+  //
+  // } catch (ImClientErrorException exception) {
+  // ResponseError error = getImResponseError(exception);
+  // return error.is404Error();
+  //
+  // } catch (ImClientException ex) {
+  // // TODO improve exception handling
+  // LOG.error(ex);
+  // return false;
+  // }
+  // }
 
   /**
    * Match the {@link Resource} to IM vms.
    * 
    */
-  private void bindResources(Deployment deployment, String infrastructureId)
-      throws ImClientException {
-
-    // FIXME this is a trick used only for demo purpose
-    InfrastructureManager im = getClient(getIaaSSiteFromTosca(deployment.getTemplate()));
+  private void bindResources(Deployment deployment, String infrastructureId,
+      InfrastructureManager im) throws ImClientException {
 
     // Get the URLs of the VMs composing the virtual infrastructure
     // TODO test in case of errors

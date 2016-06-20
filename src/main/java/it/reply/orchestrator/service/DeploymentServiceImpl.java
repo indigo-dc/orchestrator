@@ -122,11 +122,7 @@ public class DeploymentServiceImpl implements DeploymentService {
         (isChronosDeployment ? DEPLOYMENT_TYPE_CHRONOS : DEPLOYMENT_TYPE_TOSCA));
 
     // Build deployment message
-    DeploymentMessage deploymentMessage = new DeploymentMessage();
-    if (oauth2TokenService.isSecurityEnabled()) {
-      deploymentMessage.setOauth2Token(oauth2TokenService.getOAuth2Token());
-    }
-    deploymentMessage.setDeploymentId(deployment.getId());
+    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment);
     deploymentMessage.setDeploymentProvider(
         (isChronosDeployment ? DeploymentProvider.CHRONOS : DeploymentProvider.IM));
     params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
@@ -142,6 +138,19 @@ public class DeploymentServiceImpl implements DeploymentService {
         new WorkflowReference(pi.getId(), RUNTIME_STRATEGY.PER_PROCESS_INSTANCE));
     deployment = deploymentRepository.save(deployment);
     return deployment;
+
+  }
+
+  protected DeploymentMessage buildDeploymentMessage(Deployment deployment) {
+    DeploymentMessage deploymentMessage = new DeploymentMessage();
+    if (oauth2TokenService.isSecurityEnabled()) {
+      deploymentMessage.setOauth2Token(oauth2TokenService.getOAuth2Token());
+    }
+    deploymentMessage.setDeploymentId(deployment.getId());
+    deploymentMessage.setDeploymentProvider(deployment.getDeploymentProvider());
+    deploymentMessage.setChosenCloudProviderEndpoint(deployment.getCloudProviderEndpoint());
+
+    return deploymentMessage;
 
   }
 
@@ -198,12 +207,7 @@ public class DeploymentServiceImpl implements DeploymentService {
             deployment.getDeploymentProvider().name());
 
         // Build deployment message
-        DeploymentMessage deploymentMessage = new DeploymentMessage();
-        if (oauth2TokenService.isSecurityEnabled()) {
-          deploymentMessage.setOauth2Token(oauth2TokenService.getOAuth2Token());
-        }
-        deploymentMessage.setDeploymentId(deployment.getId());
-        deploymentMessage.setDeploymentProvider(deployment.getDeploymentProvider());
+        DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment);
         params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
 
         ProcessInstance pi = null;
@@ -258,12 +262,7 @@ public class DeploymentServiceImpl implements DeploymentService {
         params.put("TOSCA_TEMPLATE", request.getTemplate());
 
         // Build deployment message
-        DeploymentMessage deploymentMessage = new DeploymentMessage();
-        if (oauth2TokenService.isSecurityEnabled()) {
-          deploymentMessage.setOauth2Token(oauth2TokenService.getOAuth2Token());
-        }
-        deploymentMessage.setDeploymentId(deployment.getId());
-        deploymentMessage.setDeploymentProvider(deployment.getDeploymentProvider());
+        DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment);
         params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
 
         ProcessInstance pi = null;
