@@ -1,5 +1,7 @@
 package it.reply.orchestrator.service;
 
+import com.google.common.io.ByteStreams;
+
 import alien4cloud.component.repository.exception.CSARVersionAlreadyExistsException;
 import alien4cloud.exception.InvalidArgumentException;
 import alien4cloud.model.components.AbstractPropertyValue;
@@ -21,8 +23,6 @@ import alien4cloud.tosca.parser.ParsingException;
 import alien4cloud.tosca.parser.ParsingResult;
 import alien4cloud.tosca.serializer.VelocityUtil;
 import alien4cloud.utils.FileUtil;
-
-import com.google.common.io.ByteStreams;
 
 import it.reply.orchestrator.exception.service.ToscaException;
 
