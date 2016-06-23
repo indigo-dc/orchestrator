@@ -4,7 +4,7 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 
 import com.github.springtestdbunit.DbUnitTestExecutionListener;
 
-import it.reply.orchestrator.config.ApplicationConfig;
+import it.reply.orchestrator.config.ApplicationConfigTest;
 import it.reply.orchestrator.config.PersistenceConfigTest;
 import it.reply.orchestrator.config.WebAppInitializer;
 import it.reply.orchestrator.config.WebMvcConfig;
@@ -37,7 +37,7 @@ import javax.inject.Inject;
 @WebAppConfiguration
 @ContextHierarchy({
     @ContextConfiguration(name = "baseContext",
-        classes = { ApplicationConfig.class, WebAppInitializer.class, WebMvcConfig.class,
+        classes = { ApplicationConfigTest.class, WebAppInitializer.class, WebMvcConfig.class,
             PersistenceConfigTest.class, WorklfowPersistenceConfigTest.class }),
     @ContextConfiguration(name = "workflowContext",
         classes = { WebAppConfigurationAware.Config.class }) })

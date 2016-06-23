@@ -2,6 +2,7 @@ package it.reply.orchestrator.service;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 
 import alien4cloud.model.components.AbstractPropertyValue;
@@ -26,6 +27,7 @@ import org.junit.rules.ExpectedException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
+import java.net.URL;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -46,7 +48,7 @@ public class ToscaServiceTest extends WebAppConfigurationAware {
   private String deploymentId = "deployment_id";
 
   @Test(expected = ToscaException.class)
-  public void customizeTemplateWithError() throws Exception {
+  public void customizeTemplateWithInvalidTemplate() throws Exception {
 
     String template = getFileContentAsString(TEMPLATES_BASE_DIR + "galaxy_tosca_clues_error.yaml");
     toscaService.customizeTemplate(template, deploymentId);
@@ -54,22 +56,28 @@ public class ToscaServiceTest extends WebAppConfigurationAware {
 
   @SuppressWarnings("unchecked")
   @Test
-  public void customizeTemplateWithDeplymentIdSuccessfully() throws Exception {
+  public void customizeTemplate() throws Exception {
 
     String template = getFileContentAsString(TEMPLATES_BASE_DIR + "galaxy_tosca_clues.yaml");
     String customizedTemplate = toscaService.customizeTemplate(template, deploymentId);
-    String templateDeploymentId = "";
     Map<String, NodeTemplate> nodes = toscaService.getArchiveRootFromTemplate(customizedTemplate)
         .getResult().getTopology().getNodeTemplates();
+
     for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
       if (entry.getValue().getType().equals("tosca.nodes.indigo.ElasticCluster")) {
-        templateDeploymentId =
+        String templateDeploymentId =
             ((PropertyValue<String>) entry.getValue().getProperties().get("deployment_id"))
                 .getValue();
+
+        String templateOrchestratorUrl =
+            ((PropertyValue<String>) entry.getValue().getProperties().get("orchestrator_url"))
+                .getValue();
+
+        assertEquals(deploymentId, templateDeploymentId);
+        assertNotNull(new URL(templateOrchestratorUrl));
       }
     }
 
-    assertEquals(deploymentId, templateDeploymentId);
   }
 
   @Test

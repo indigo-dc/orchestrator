@@ -10,7 +10,7 @@ import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 @ComponentScan(basePackages = { "it.reply.orchestrator", "it.reply.workflowmanager" },
     excludeFilters = { @ComponentScan.Filter(type = FilterType.REGEX,
         pattern = "it.reply.orchestrator.config.specific.*") })
-public class ApplicationConfigTest {
+public class ApplicationConfigTest extends ApplicationConfig {
 
   @Bean
   public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {

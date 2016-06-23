@@ -8,7 +8,7 @@
           "priority": [
             {
               "sla_id": "4401ac5dc8cfbbb737b0a02575ee53f6",
-              "service_id": "4401ac5dc8cfbbb737b0a02575e8040f"
+              "service_id": "4401ac5dc8cfbbb737b0a02575e81d9b"
             },
             {
               "sla_id": "4401ac5dc8cfbbb737b0a02575ee3b58",
@@ -52,7 +52,7 @@
       "services": [
         {
           "type": "compute",
-          "service_id": "4401ac5dc8cfbbb737b0a02575e8040f",
+          "service_id": "4401ac5dc8cfbbb737b0a02575e81d9b",
           "targets": [
             {
               "type": "computing_time",

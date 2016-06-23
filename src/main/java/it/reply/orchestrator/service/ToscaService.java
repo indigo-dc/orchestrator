@@ -12,6 +12,7 @@ import alien4cloud.tosca.parser.ParsingResult;
 
 import com.sun.istack.NotNull;
 
+import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.exception.service.ToscaException;
 
 import java.io.IOException;
@@ -57,7 +58,41 @@ public interface ToscaService {
   public String customizeTemplate(@Nonnull String toscaTemplate, @NotNull String deploymentId)
       throws IOException, ToscaException;
 
-  public void addDeploymentId(ArchiveRoot parsingResult, String deploymentId);
+  /**
+   * Adds the parameters needed for 'tosca.nodes.indigo.ElasticCluster' nodes (deployment_id,
+   * orchestrator_url).
+   * 
+   * @param parsingResult
+   *          .
+   * @param deploymentId
+   *          .
+   */
+  public void addElasticClusterParameters(ArchiveRoot parsingResult, String deploymentId);
+
+  /**
+   * Replace images data in 'tosca.capabilities.indigo.OperatingSystem' capabilities in the TOSCA
+   * template with the provider-specific identifier.
+   * 
+   * @param parsingResult
+   *          the in-memory TOSCA template.
+   * @param cloudProvider
+   *          the chosen cloud provider data.
+   */
+  public void contextualizeImages(ArchiveRoot parsingResult, CloudProvider cloudProvider);
+
+  /**
+   * Find matches for images data in 'tosca.capabilities.indigo.OperatingSystem' capabilities in the
+   * TOSCA template with the provider-specific identifier.
+   * 
+   * @param parsingResult
+   *          the in-memory TOSCA template.
+   * @param cloudProvider
+   *          the chosen cloud provider data.
+   * @param replace
+   *          whether to actually replace the image IDs or just do a dry-run.
+   */
+  public void contextualizeImages(ArchiveRoot parsingResult, CloudProvider cloudProvider,
+      boolean replace);
 
   /**
    * Verifies that all the template's required inputs are present in the user's input list.

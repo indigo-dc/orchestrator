@@ -132,7 +132,7 @@ public class RankCloudProvidersWorkflowTest { // extends WebAppConfigurationAwar
 
   public static void mockSlam(MockRestServiceServer mockServer, String baseUrl) throws Exception {
     String response =
-        "{\"preferences\":[{\"customer\":\"indigo-dc\",\"preferences\":[{\"service_type\":\"compute\",\"priority\":[{\"sla_id\":\"4401ac5dc8cfbbb737b0a02575ee53f6\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e8040f\",\"weight\":0.5},{\"sla_id\":\"4401ac5dc8cfbbb737b0a02575ee3b58\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"weight\":0.5}]}],\"id\":\"4401ac5dc8cfbbb737b0a02575ee0e55\"}],\"sla\":[{\"customer\":\"indigo-dc\",\"provider\":\"provider-UPV-GRyCAP\",\"start_date\":\"11.01.2016+15:50:00\",\"end_date\":\"11.02.2016+15:50:00\",\"services\":[{\"type\":\"compute\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"targets\":[{\"type\":\"public_ip\",\"unit\":\"none\",\"restrictions\":{\"total_limit\":100,\"total_guaranteed\":10}}]}],\"id\":\"4401ac5dc8cfbbb737b0a02575ee3b58\"},{\"customer\":\"indigo-dc\",\"provider\":\"provider-RECAS-BARI\",\"start_date\":\"11.01.2016+15:50:00\",\"end_date\":\"11.02.2016+15:50:00\",\"services\":[{\"type\":\"compute\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e8040f\",\"targets\":[{\"type\":\"computing_time\",\"unit\":\"h\",\"restrictions\":{\"total_guaranteed\":200}}]}],\"id\":\"4401ac5dc8cfbbb737b0a02575ee53f6\"}]}";
+        "{\"preferences\":[{\"customer\":\"indigo-dc\",\"preferences\":[{\"service_type\":\"compute\",\"priority\":[{\"sla_id\":\"4401ac5dc8cfbbb737b0a02575ee53f6\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e81d9b\",\"weight\":0.5},{\"sla_id\":\"4401ac5dc8cfbbb737b0a02575ee3b58\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"weight\":0.5}]}],\"id\":\"4401ac5dc8cfbbb737b0a02575ee0e55\"}],\"sla\":[{\"customer\":\"indigo-dc\",\"provider\":\"provider-UPV-GRyCAP\",\"start_date\":\"11.01.2016+15:50:00\",\"end_date\":\"11.02.2016+15:50:00\",\"services\":[{\"type\":\"compute\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e81d9b\",\"targets\":[{\"type\":\"public_ip\",\"unit\":\"none\",\"restrictions\":{\"total_limit\":100,\"total_guaranteed\":10}}]}],\"id\":\"4401ac5dc8cfbbb737b0a02575ee3b58\"},{\"customer\":\"indigo-dc\",\"provider\":\"provider-RECAS-BARI\",\"start_date\":\"11.01.2016+15:50:00\",\"end_date\":\"11.02.2016+15:50:00\",\"services\":[{\"type\":\"compute\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"targets\":[{\"type\":\"computing_time\",\"unit\":\"h\",\"restrictions\":{\"total_guaranteed\":200}}]}],\"id\":\"4401ac5dc8cfbbb737b0a02575ee53f6\"}]}";
 
     mockServer.expect(requestTo(baseUrl + "preferences/indigo-dc"))
         .andExpect(method(HttpMethod.GET))
@@ -148,10 +148,19 @@ public class RankCloudProvidersWorkflowTest { // extends WebAppConfigurationAwar
             MediaType.APPLICATION_JSON));
 
     // Service: Compute on provider-RECAS-BARI
-    mockServer.expect(requestTo(baseUrl + "service/id/4401ac5dc8cfbbb737b0a02575e8040f"))
+    mockServer.expect(requestTo(baseUrl + "service/id/4401ac5dc8cfbbb737b0a02575e6f4bc"))
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess(
-            "{\"_id\":\"4401ac5dc8cfbbb737b0a02575e8040f\",\"_rev\":\"2-be00f87438604f04d353233daabc562c\",\"data\":{\"service_type\":\"eu.egi.cloud.vm-management.occi\",\"endpoint\":\"http://onedock.i3m.upv.es:11443\",\"provider_id\":\"provider-UPV-GRyCAP\",\"type\":\"compute\"},\"type\":\"service\"}",
+            "{\"_id\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"_rev\":\"1-256d36283315ea9bb045e6d5038657b6\",\"data\":{\"service_type\":\"eu.egi.cloud.vm-management.openstack\",\"endpoint\":\"http://cloud.recas.ba.infn.it:5000/v2.0\",\"provider_id\":\"provider-RECAS-BARI\",\"type\":\"compute\"},\"type\":\"service\"}",
+            MediaType.APPLICATION_JSON));
+
+    // Images: Compute service on provider-RECAS-BARI
+    mockServer
+        .expect(requestTo(baseUrl
+            + "service/id/4401ac5dc8cfbbb737b0a02575e6f4bc/has_many/images?include_docs=true"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess(
+            "{\n  \"total_rows\": 44,\n  \"offset\": 3,\n  \"rows\": [\n    {\n      \"id\": \"7efc59c5db69ea67c5100de0f726d41e\",\n      \"key\": [\n        \"4401ac5dc8cfbbb737b0a02575e6f4bc\",\n        \"images\"\n      ],\n      \"value\": {\n        \"image_id\": \"303d8324-69a7-4372-be24-1d68703affd7\",\n        \"image_name\": \"indigodatacloud/ubuntu-sshd:14.04-devel\",\n        \"service\": \"4401ac5dc8cfbbb737b0a02575e6f4bc\"\n      },\n      \"doc\": {\n        \"_id\": \"7efc59c5db69ea67c5100de0f726d41e\",\n        \"_rev\": \"1-583b38e80f989b7f39b8ddd5d28c4c76\",\n        \"type\": \"image\",\n        \"data\": {\n          \"image_id\": \"303d8324-69a7-4372-be24-1d68703affd7\",\n          \"image_name\": \"indigodatacloud/ubuntu-sshd:14.04-devel\",\n          \"architecture\": \"x86_64\",\n          \"type\": \"linux\",\n          \"distribution\": \"ubuntu\",\n          \"version\": \"14.04\",\n          \"service\": \"4401ac5dc8cfbbb737b0a02575e6f4bc\"\n        }\n      }\n    },\n    {\n      \"id\": \"7efc59c5db69ea67c5100de0f726e0a0\",\n      \"key\": [\n        \"4401ac5dc8cfbbb737b0a02575e6f4bc\",\n        \"images\"\n      ],\n      \"value\": {\n        \"image_id\": \"0de96743-4a12-4470-b8b2-6dc260977a40\",\n        \"image_name\": \"indigodatacloud/centos-sshd:7-devel\",\n        \"service\": \"4401ac5dc8cfbbb737b0a02575e6f4bc\"\n      },\n      \"doc\": {\n        \"_id\": \"7efc59c5db69ea67c5100de0f726e0a0\",\n        \"_rev\": \"1-948dae5f4b7e1096036af3f0cca37f89\",\n        \"type\": \"image\",\n        \"data\": {\n          \"image_id\": \"0de96743-4a12-4470-b8b2-6dc260977a40\",\n          \"image_name\": \"indigodatacloud/centos-sshd:7-devel\",\n          \"architecture\": \"x86_64\",\n          \"type\": \"linux\",\n          \"distribution\": \"centos\",\n          \"version\": \"7\",\n          \"service\": \"4401ac5dc8cfbbb737b0a02575e6f4bc\"\n        }\n      }\n    }\n  ]\n}",
             MediaType.APPLICATION_JSON));
 
     // Provider: provider-UPV-GRyCAP
@@ -162,10 +171,19 @@ public class RankCloudProvidersWorkflowTest { // extends WebAppConfigurationAwar
             MediaType.APPLICATION_JSON));
 
     // Service: Compute on provider-UPV-GRyCAP
-    mockServer.expect(requestTo(baseUrl + "service/id/4401ac5dc8cfbbb737b0a02575e6f4bc"))
+    mockServer.expect(requestTo(baseUrl + "service/id/4401ac5dc8cfbbb737b0a02575e81d9b"))
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess(
-            "{\"_id\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"_rev\":\"1-256d36283315ea9bb045e6d5038657b6\",\"data\":{\"service_type\":\"eu.egi.cloud.vm-management.openstack\",\"endpoint\":\"http://cloud.recas.ba.infn.it:5000/v2.0\",\"provider_id\":\"provider-RECAS-BARI\",\"type\":\"compute\"},\"type\":\"service\"}",
+            "{\"_id\":\"4401ac5dc8cfbbb737b0a02575e81d9b\",\"_rev\":\"2-be00f87438604f04d353233daabc562c\",\"data\":{\"service_type\":\"eu.egi.cloud.vm-management.occi\",\"endpoint\":\"http://onedock.i3m.upv.es:11443\",\"provider_id\":\"provider-UPV-GRyCAP\",\"type\":\"compute\"},\"type\":\"service\"}",
+            MediaType.APPLICATION_JSON));
+
+    // Images: Compute service on provider-UPV-GRyCAP
+    mockServer
+        .expect(requestTo(baseUrl
+            + "service/id/4401ac5dc8cfbbb737b0a02575e81d9b/has_many/images?include_docs=true"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess(
+            "{\n  \"total_rows\": 42,\n  \"offset\": 0,\n  \"rows\": [\n    {\n      \"id\": \"7efc59c5db69ea67c5100de0f7236866\",\n      \"key\": [\n        \"4401ac5dc8cfbbb737b0a02575e81d9b\",\n        \"images\"\n      ],\n      \"value\": {\n        \"image_id\": \"1\",\n        \"image_name\": \"indigodatacloud/ubuntu-sshd:14.04-devel\",\n        \"service\": \"4401ac5dc8cfbbb737b0a02575e81d9b\"\n      },\n      \"doc\": {\n        \"_id\": \"7efc59c5db69ea67c5100de0f7236866\",\n        \"_rev\": \"2-105db8faf961d5aa0a215b67942c1821\",\n        \"type\": \"image\",\n        \"data\": {\n          \"image_id\": \"1\",\n          \"image_name\": \"indigodatacloud/ubuntu-sshd:14.04-devel\",\n          \"architecture\": \"x86_64\",\n          \"type\": \"linux\",\n          \"distribution\": \"ubuntu\",\n          \"version\": \"14.04\",\n          \"service\": \"4401ac5dc8cfbbb737b0a02575e81d9b\"\n        }\n      }\n    },\n    {\n      \"id\": \"7efc59c5db69ea67c5100de0f724f37a\",\n      \"key\": [\n        \"4401ac5dc8cfbbb737b0a02575e81d9b\",\n        \"images\"\n      ],\n      \"value\": {\n        \"image_id\": \"1\",\n        \"image_name\": \"image-create-test\",\n        \"service\": \"4401ac5dc8cfbbb737b0a02575e81d9b\"\n      },\n      \"doc\": {\n        \"_id\": \"7efc59c5db69ea67c5100de0f724f37a\",\n        \"_rev\": \"1-c9bf9d0d3f69738da930d97b8002b2c4\",\n        \"type\": \"image\",\n        \"data\": {\n          \"image_id\": \"1\",\n          \"image_name\": \"image-create-test\",\n          \"architecture\": \"x86_64\",\n          \"type\": \"linux\",\n          \"distribution\": \"ubuntu\",\n          \"version\": \"14.04\",\n          \"service\": \"4401ac5dc8cfbbb737b0a02575e81d9b\"\n        }\n      }\n    },\n    {\n      \"id\": \"7efc59c5db69ea67c5100de0f72580e9\",\n      \"key\": [\n        \"4401ac5dc8cfbbb737b0a02575e81d9b\",\n        \"images\"\n      ],\n      \"value\": {\n        \"image_id\": \"xxx\",\n        \"image_name\": \"image-create-test\",\n        \"service\": \"4401ac5dc8cfbbb737b0a02575e81d9b\"\n      },\n      \"doc\": {\n        \"_id\": \"7efc59c5db69ea67c5100de0f72580e9\",\n        \"_rev\": \"1-180d402f4985bbd00692937a9bcf717c\",\n        \"type\": \"image\",\n        \"data\": {\n          \"image_id\": \"xxx\",\n          \"image_name\": \"image-create-test\",\n          \"architecture\": \"x86_64\",\n          \"type\": \"linux\",\n          \"distribution\": \"ubuntu\",\n          \"version\": \"14.04\",\n          \"service\": \"4401ac5dc8cfbbb737b0a02575e81d9b\"\n        }\n      }\n    }\n  ]\n}",
             MediaType.APPLICATION_JSON));
 
   }
