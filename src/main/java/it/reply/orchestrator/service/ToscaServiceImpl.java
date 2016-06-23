@@ -371,23 +371,26 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   protected Image getBestImageForCloudProvider(Image imageMetadata, CloudProvider cloudProvider) {
-    for (Image image : cloudProvider.getCmdbProviderImages()) {
-      // Match image name first (for INDIGO specific use case, if the image cannot be found with the
-      // specified name it means that a base image + Ansible configuration have to be used -> the
-      // base image will be chosen with the other filters and image metadata - architecture, type,
-      // distro, version)
-      if (imageMetadata.getImageName() != null) {
 
-        if (matchImageNameAndTag(imageMetadata.getImageName(), image.getImageName())) {
-          LOG.debug("Image <{}> found with name <{}>", image.getImageId(),
-              imageMetadata.getImageName());
-          return image;
-        } else {
-          LOG.debug("Image not found with name <{}>, trying with other fields: <{}>",
-              imageMetadata.getImageName(), imageMetadata);
-        }
+    // Match image name first (for INDIGO specific use case, if the image cannot be found with the
+    // specified name it means that a base image + Ansible configuration have to be used -> the
+    // base image will be chosen with the other filters and image metadata - architecture, type,
+    // distro, version)
+    if (imageMetadata.getImageName() != null) {
+      Image imageWithName =
+          findImageWithNameOnCloudProvider(imageMetadata.getImageName(), cloudProvider);
+
+      if (imageWithName != null) {
+        LOG.debug("Image <{}> found with name <{}>", imageWithName.getImageId(),
+            imageMetadata.getImageName());
+        return imageWithName;
+      } else {
+        LOG.debug("Image not found with name <{}>, trying with other fields: <{}>",
+            imageMetadata.getImageName(), imageMetadata);
       }
+    }
 
+    for (Image image : cloudProvider.getCmdbProviderImages()) {
       // Match or skip image based on each additional optional attribute
       if (imageMetadata.getType() != null) {
         if (!imageMetadata.getType().equalsIgnoreCase(image.getType())) {
@@ -418,6 +421,16 @@ public class ToscaServiceImpl implements ToscaService {
     }
     return null;
 
+  }
+
+  protected Image findImageWithNameOnCloudProvider(String requiredImageName,
+      CloudProvider cloudProvider) {
+    for (Image image : cloudProvider.getCmdbProviderImages()) {
+      if (matchImageNameAndTag(requiredImageName, image.getImageName())) {
+        return image;
+      }
+    }
+    return null;
   }
 
   protected boolean matchImageNameAndTag(String requiredImageName, String availableImageName) {
