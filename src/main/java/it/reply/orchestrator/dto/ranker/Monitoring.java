@@ -28,6 +28,14 @@ public class Monitoring implements Serializable {
   @JsonProperty("metrics")
   private List<PaaSMetric> metrics = new ArrayList<PaaSMetric>();
 
+  /**
+   * Creates a new monitoring object.
+   * 
+   * @param provider
+   *          the provider
+   * @param metrics
+   *          the metrics
+   */
   public Monitoring(String provider, List<PaaSMetric> metrics) {
     super();
     this.provider = provider;
@@ -35,6 +43,7 @@ public class Monitoring implements Serializable {
   }
 
   /**
+   * Get the provider.
    * 
    * @return The provider
    */
@@ -44,6 +53,7 @@ public class Monitoring implements Serializable {
   }
 
   /**
+   * Set the provider.
    * 
    * @param provider
    *          The provider
@@ -59,6 +69,7 @@ public class Monitoring implements Serializable {
   }
 
   /**
+   * Get the monitoring metrics.
    * 
    * @return The metrics
    */
@@ -68,6 +79,7 @@ public class Monitoring implements Serializable {
   }
 
   /**
+   * Set the monitoring metrics.
    * 
    * @param metrics
    *          The metrics

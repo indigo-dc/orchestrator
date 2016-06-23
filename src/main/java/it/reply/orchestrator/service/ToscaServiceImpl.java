@@ -1,5 +1,7 @@
 package it.reply.orchestrator.service;
 
+import com.google.common.io.ByteStreams;
+
 import alien4cloud.component.repository.exception.CSARVersionAlreadyExistsException;
 import alien4cloud.exception.InvalidArgumentException;
 import alien4cloud.model.components.AbstractPropertyValue;
@@ -21,8 +23,6 @@ import alien4cloud.tosca.parser.ParsingException;
 import alien4cloud.tosca.parser.ParsingResult;
 import alien4cloud.tosca.serializer.VelocityUtil;
 import alien4cloud.utils.FileUtil;
-
-import com.google.common.io.ByteStreams;
 
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.Image;
@@ -83,6 +83,8 @@ public class ToscaServiceImpl implements ToscaService {
   private String normativeLocalName;
   @Value("${tosca.definitions.indigo}")
   private String indigoLocalName;
+  @Value("${orchestrator.url}")
+  private String orchestratorUrl;
 
   /**
    * Load normative and non-normative types.
@@ -172,35 +174,20 @@ public class ToscaServiceImpl implements ToscaService {
 
     // Log the warning because Alien4Cloud uses an hard-coded Velocity template to encode the string
     // and some information might be missing!!
-    LOG.warn(
-        "TOSCA template conversion from in-memory: WARNING: Some nodes or properties might be missing!! Use at your own risk!");
+    LOG.warn("TOSCA template conversion from in-memory: "
+        + "WARNING: Some nodes or properties might be missing!! Use at your own risk!");
     LOG.debug(template);
 
     return template;
   }
 
-  /**
-   * Customize the template with INDIGO requirements, for example it adds the deploymentId.
-   * 
-   * @param toscaTemplate
-   *          the TOSCA template
-   * @param deploymentId
-   *          the deploymentId
-   * @return the customized template
-   * 
-   * @throws ParsingException
-   *           if the template is not valid
-   * @throws IOException
-   *           if there is an IO error
-   * @throws ToscaException
-   */
   @Override
   public String customizeTemplate(@Nonnull String toscaTemplate, @Nonnull String deploymentId)
-      throws IOException, ToscaException, ParsingException {
+      throws IOException, ToscaException {
 
     ArchiveRoot ar = parseTemplate(toscaTemplate);
 
-    addDeploymentId(ar, deploymentId);
+    addElasticClusterParameters(ar, deploymentId);
 
     return getTemplateFromTopology(ar);
 
@@ -261,7 +248,7 @@ public class ToscaServiceImpl implements ToscaService {
 
   @Override
   public ArchiveRoot parseTemplate(@Nonnull String toscaTemplate)
-      throws IOException, ParsingException, ToscaException {
+      throws IOException, ToscaException {
 
     ParsingResult<ArchiveRoot> result = null;
     try {
@@ -425,7 +412,7 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
-  public void addDeploymentId(ArchiveRoot parsingResult, String deploymentId) {
+  public void addElasticClusterParameters(ArchiveRoot parsingResult, String deploymentId) {
     Map<String, NodeTemplate> nodes = parsingResult.getTopology().getNodeTemplates();
     for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
       if (entry.getValue().getType().equals("tosca.nodes.indigo.ElasticCluster")) {
@@ -433,6 +420,10 @@ public class ToscaServiceImpl implements ToscaService {
         ScalarPropertyValue scalarPropertyValue = new ScalarPropertyValue(deploymentId);
         scalarPropertyValue.setPrintable(true);
         entry.getValue().getProperties().put("deployment_id", scalarPropertyValue);
+        // Create new property with the orchestrator_url and set as printable
+        scalarPropertyValue = new ScalarPropertyValue(orchestratorUrl);
+        scalarPropertyValue.setPrintable(true);
+        entry.getValue().getProperties().put("orchestrator_url", scalarPropertyValue);
       }
     }
   }
@@ -477,6 +468,15 @@ public class ToscaServiceImpl implements ToscaService {
     return null;
   }
 
+  /**
+   * Find a property with a given name in a capability.
+   * 
+   * @param capability
+   *          the capability
+   * @param propertyName
+   *          the name of the property
+   * @return the {@link AbstractPropertyValue} containing the property value
+   */
   public AbstractPropertyValue getCapabilityPropertyByName(Capability capability,
       String propertyName) {
     if (capability != null && capability.getProperties() != null) {

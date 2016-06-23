@@ -15,7 +15,7 @@ import com.github.springtestdbunit.annotation.DatabaseTearDown;
 import es.upv.i3m.grycap.file.NoNullOrEmptyFile;
 import es.upv.i3m.grycap.file.Utf8File;
 
-import it.reply.orchestrator.config.WebAppConfigurationAware;
+import it.reply.orchestrator.config.specific.WebAppConfigurationAware;
 
 import org.junit.Before;
 import org.junit.Rule;

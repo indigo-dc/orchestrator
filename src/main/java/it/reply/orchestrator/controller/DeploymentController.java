@@ -65,6 +65,11 @@ public class DeploymentController {
     return "INDIGO-Orchestrator";
   }
 
+  /**
+   * Get the orchestrator status info.
+   * 
+   * @return the orchestrator status info.
+   */
   @ResponseStatus(HttpStatus.OK)
   @RequestMapping(value = "/info", method = RequestMethod.GET)
   public DebugInformations getInfo() {
@@ -94,7 +99,7 @@ public class DeploymentController {
    * @return {@link DeploymentResource}
    */
   @ResponseStatus(HttpStatus.OK)
-  @RequestMapping(value = "/deployments", method = RequestMethod.GET,
+  @RequestMapping(value = "/deployments", method = RequestMethod.GET, 
       produces = MediaType.APPLICATION_JSON_VALUE)
   public PagedResources<DeploymentResource> getDeployments(@PageableDefault Pageable pageable,
       PagedResourcesAssembler<Deployment> pagedAssembler) {
@@ -117,7 +122,7 @@ public class DeploymentController {
    * @return {@link DeploymentResource}
    */
   @ResponseStatus(HttpStatus.CREATED)
-  @RequestMapping(value = "/deployments", method = RequestMethod.POST,
+  @RequestMapping(value = "/deployments", method = RequestMethod.POST, 
       produces = MediaType.APPLICATION_JSON_VALUE)
   public DeploymentResource createDeployment(@Valid @RequestBody DeploymentRequest request) {
 
@@ -152,7 +157,7 @@ public class DeploymentController {
    * @return {@link DeploymentResource}
    */
   @ResponseStatus(HttpStatus.OK)
-  @RequestMapping(value = "/deployments/{deploymentId}", method = RequestMethod.GET,
+  @RequestMapping(value = "/deployments/{deploymentId}", method = RequestMethod.GET, 
       produces = MediaType.APPLICATION_JSON_VALUE)
   public DeploymentResource getDeployment(@PathVariable("deploymentId") String id) {
 
@@ -168,7 +173,7 @@ public class DeploymentController {
    *          the deployment id
    */
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @RequestMapping(value = "/deployments/{deploymentId}", method = RequestMethod.DELETE,
+  @RequestMapping(value = "/deployments/{deploymentId}", method = RequestMethod.DELETE, 
       produces = MediaType.APPLICATION_JSON_VALUE)
   public void deleteDeployment(@PathVariable("deploymentId") String id) {
 

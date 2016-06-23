@@ -32,6 +32,7 @@ public class CloudProviderRankerRequest implements Serializable {
   private List<Monitoring> monitoring = new ArrayList<Monitoring>();
 
   /**
+   * Get the preferences for the customer.
    * 
    * @return The preferences
    */
@@ -41,6 +42,7 @@ public class CloudProviderRankerRequest implements Serializable {
   }
 
   /**
+   * Set the preferences for the customer.
    * 
    * @param preferences
    *          The preferences
@@ -56,6 +58,7 @@ public class CloudProviderRankerRequest implements Serializable {
   }
 
   /**
+   * Get the sla for the customer.
    * 
    * @return The sla
    */
@@ -65,6 +68,7 @@ public class CloudProviderRankerRequest implements Serializable {
   }
 
   /**
+   * Set the sla for the customer.
    * 
    * @param sla
    *          The sla
@@ -80,6 +84,7 @@ public class CloudProviderRankerRequest implements Serializable {
   }
 
   /**
+   * Get the monitoring data for the customer.
    * 
    * @return The monitoring
    */
@@ -89,6 +94,7 @@ public class CloudProviderRankerRequest implements Serializable {
   }
 
   /**
+   * Set the monitoring data for the customer.
    * 
    * @param monitoring
    *          The monitoring

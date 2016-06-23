@@ -186,7 +186,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
       ArchiveRoot ar =
           toscaService.prepareTemplate(deployment.getTemplate(), deployment.getParameters());
-      toscaService.addDeploymentId(ar, deploymentUuid);
+      toscaService.addElasticClusterParameters(ar, deploymentUuid);
       toscaService.contextualizeImages(ar, deploymentMessage.getChosenCloudProvider());
       String imCustomizedTemplate = toscaService.getTemplateFromTopology(ar);
 
@@ -257,6 +257,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           }
           DeploymentException ex = new DeploymentException(errorMsg);
           updateOnError(deployment.getId(), ex);
+          LOG.error(errorMsg);
           throw ex;
         default:
           return false;
@@ -279,6 +280,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       } catch (Exception ex) {
         // Do nothing
       }
+      LOG.error(errorMsg);
       throw new DeploymentException(errorMsg);
     }
   }
@@ -337,7 +339,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
       // Get TOSCA in-memory repr. of new template
       newAr = toscaService.prepareTemplate(template, deployment.getParameters());
-      toscaService.addDeploymentId(newAr, deployment.getId());
+      toscaService.addElasticClusterParameters(newAr, deployment.getId());
       toscaService.contextualizeImages(newAr, deploymentMessage.getChosenCloudProvider());
     } catch (ParsingException | IOException | ToscaException ex) {
       throw new OrchestratorException(ex);
@@ -618,7 +620,11 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
    * @param message
    *          the error message
    */
+  @Override
   public void updateOnError(String deploymentUuid, String message) {
+    // WARNING: In IM we don't have the resource mapping yet, so we update all the resources
+    // FIXME Remove once IM handles single nodes state update!!!! And pay attention to the
+    // AbstractDeploymentProviderService.updateOnError method!
     Deployment deployment = deploymentRepository.findOne(deploymentUuid);
     switch (deployment.getStatus()) {
       case CREATE_FAILED:
@@ -647,7 +653,12 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         break;
     }
     deployment.setTask(Task.NONE);
-    deployment.setStatusReason(message);
+    // Do not delete a previous statusReason if there's no explicit value! (used when isDeploy
+    // reports an error and then the PollDeploy task calls the finalizeDeploy, which also uses this
+    // method but does not have any newer statusReason)
+    if (message != null) {
+      deployment.setStatusReason(message);
+    }
     deploymentRepository.save(deployment);
   }
 }

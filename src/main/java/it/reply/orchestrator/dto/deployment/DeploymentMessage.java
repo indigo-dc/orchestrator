@@ -38,6 +38,8 @@ public class DeploymentMessage implements Serializable {
 
   private CloudProvider chosenCloudProvider;
 
+  private String oauth2Token;
+
   /**
    * TEMPORARY Chronos Job Graph (to avoid regenerating the template representation each time).
    */
@@ -116,12 +118,20 @@ public class DeploymentMessage implements Serializable {
     this.skipPollInterval = skipPollInterval;
   }
 
-  public CloudProvider getChosenCloudProvider() {
+ public CloudProvider getChosenCloudProvider() {
     return chosenCloudProvider;
   }
 
   public void setChosenCloudProvider(CloudProvider chosenCloudProvider) {
     this.chosenCloudProvider = chosenCloudProvider;
+  }
+
+  public String getOauth2Token() {
+    return oauth2Token;
+  }
+
+  public void setOauth2Token(String oauth2Token) {
+    this.oauth2Token = oauth2Token;
   }
 
   @Override

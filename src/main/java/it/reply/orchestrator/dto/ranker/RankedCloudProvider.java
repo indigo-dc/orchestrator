@@ -22,6 +22,18 @@ public class RankedCloudProvider implements Serializable {
   public RankedCloudProvider() {
   }
 
+  /**
+   * Generates a new RankedCloudProvider representation.
+   * 
+   * @param name
+   *          the name of the cloud provider
+   * @param rank
+   *          the rank of the clou provider
+   * @param ranked
+   *          the ranking status of the cloud provider
+   * @param error
+   *          the error generated during the ranking, if any
+   */
   public RankedCloudProvider(String name, float rank, boolean ranked, String error) {
     this.name = name;
     this.rank = rank;
@@ -74,27 +86,36 @@ public class RankedCloudProvider implements Serializable {
 
   @Override
   public boolean equals(Object obj) {
-    if (this == obj)
+    if (this == obj) {
       return true;
-    if (obj == null)
+    }
+    if (obj == null) {
       return false;
-    if (getClass() != obj.getClass())
+    }
+    if (getClass() != obj.getClass()) {
       return false;
+    }
     RankedCloudProvider other = (RankedCloudProvider) obj;
     if (errorReason == null) {
-      if (other.errorReason != null)
+      if (other.errorReason != null) {
         return false;
-    } else if (!errorReason.equals(other.errorReason))
+      }
+    } else if (!errorReason.equals(other.errorReason)) {
       return false;
+    }
     if (name == null) {
-      if (other.name != null)
+      if (other.name != null) {
         return false;
-    } else if (!name.equals(other.name))
+      }
+    } else if (!name.equals(other.name)) {
       return false;
-    if (Float.floatToIntBits(rank) != Float.floatToIntBits(other.rank))
+    }
+    if (Float.floatToIntBits(rank) != Float.floatToIntBits(other.rank)) {
       return false;
-    if (ranked != other.ranked)
+    }
+    if (ranked != other.ranked) {
       return false;
+    }
     return true;
   }
 

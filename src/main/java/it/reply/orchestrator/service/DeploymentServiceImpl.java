@@ -23,6 +23,7 @@ import it.reply.orchestrator.exception.http.BadRequestException;
 import it.reply.orchestrator.exception.http.ConflictException;
 import it.reply.orchestrator.exception.http.NotFoundException;
 import it.reply.orchestrator.exception.service.ToscaException;
+import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.workflowmanager.exceptions.WorkflowException;
 import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager;
 import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager.RUNTIME_STRATEGY;
@@ -53,6 +54,9 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   @Autowired
   private BusinessProcessManager wfService;
+
+  @Autowired
+  private OAuth2TokenService oauth2TokenService;
 
   @Override
   public Page<Deployment> getDeployments(Pageable pageable) {
@@ -119,6 +123,9 @@ public class DeploymentServiceImpl implements DeploymentService {
 
     // Build deployment message
     DeploymentMessage deploymentMessage = new DeploymentMessage();
+    if (oauth2TokenService.isSecurityEnabled()) {
+      deploymentMessage.setOauth2Token(oauth2TokenService.getOAuth2Token());
+    }
     deploymentMessage.setDeploymentId(deployment.getId());
     deploymentMessage.setDeploymentProvider(
         (isChronosDeployment ? DeploymentProvider.CHRONOS : DeploymentProvider.IM));
@@ -192,6 +199,9 @@ public class DeploymentServiceImpl implements DeploymentService {
 
         // Build deployment message
         DeploymentMessage deploymentMessage = new DeploymentMessage();
+        if (oauth2TokenService.isSecurityEnabled()) {
+          deploymentMessage.setOauth2Token(oauth2TokenService.getOAuth2Token());
+        }
         deploymentMessage.setDeploymentId(deployment.getId());
         deploymentMessage.setDeploymentProvider(deployment.getDeploymentProvider());
         params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
@@ -249,6 +259,9 @@ public class DeploymentServiceImpl implements DeploymentService {
 
         // Build deployment message
         DeploymentMessage deploymentMessage = new DeploymentMessage();
+        if (oauth2TokenService.isSecurityEnabled()) {
+          deploymentMessage.setOauth2Token(oauth2TokenService.getOAuth2Token());
+        }
         deploymentMessage.setDeploymentId(deployment.getId());
         deploymentMessage.setDeploymentProvider(deployment.getDeploymentProvider());
         params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);

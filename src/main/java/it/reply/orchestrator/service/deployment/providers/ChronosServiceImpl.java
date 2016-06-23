@@ -1,5 +1,7 @@
 package it.reply.orchestrator.service.deployment.providers;
 
+import com.google.common.collect.Lists;
+
 import alien4cloud.model.components.ComplexPropertyValue;
 import alien4cloud.model.components.DeploymentArtifact;
 import alien4cloud.model.components.ListPropertyValue;
@@ -10,8 +12,6 @@ import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.normative.SizeType;
 import alien4cloud.tosca.parser.ParsingException;
-
-import com.google.common.collect.Lists;
 
 import it.infn.ba.indigo.chronos.client.Chronos;
 import it.infn.ba.indigo.chronos.client.ChronosClient;
@@ -188,9 +188,13 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
   /**
    * 
    * @param deployment
-   * @param topoOrder
+   *          the deployment from which create the jobs
+   * @param jobgraph
+   *          the graph of the jobs
    * @param templateTopologicalOrderIterator
+   *          the topological order iterator of the jobs
    * @param client
+   *          the Chronos client to use
    * @return <tt>true</tt> if there are more nodes to create, <tt>false</tt> otherwise.
    */
   protected boolean createJobsOnChronosIteratively(Deployment deployment,
@@ -348,9 +352,13 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
   /**
    * 
    * @param deployment
+   *          the deployment from which create the jobs
    * @param jobgraph
+   *          the graph of the jobs
    * @param templateTopologicalOrderIterator
+   *          the topological order iterator of the jobs
    * @param client
+   *          the Chronos client to use
    * @return <tt>true</tt> if the currently checked node is ready, <tt>false</tt> if still in
    *         progress.
    * @throws DeploymentException
@@ -419,7 +427,9 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
   /**
    * 
    * @param client
+   *          the Chronos client to use
    * @param name
+   *          the name of the Chronos job
    * @return the {@link Job} or <tt>null</tt> if no such job exist.
    * @throws RuntimeException
    *           if an error occurred retrieving job status.
@@ -498,8 +508,8 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
    * Deletes all the deployment jobs from Chronos. <br/>
    * Also logs possible errors and updates the deployment status.
    * 
-   * @param deployment
-   *          the deployment.
+   * @param deploymentMessage
+   *          the deployment message.
    * @return <tt>true</tt> if all jobs have been deleted, <tt>false</tt> otherwise.
    */
   @Override
@@ -643,6 +653,14 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
     private Collection<IndigoJob> children = new ArrayList<>();
     private Collection<IndigoJob> parents = new ArrayList<>();
 
+    /**
+     * Generates a new IndigoJob representation.
+     * 
+     * @param toscaNodeName
+     *          the name of the TOSCA node associated to the job
+     * @param chronosJob
+     *          the {@link Job Chronos job} associated to the job
+     */
     public IndigoJob(String toscaNodeName, Job chronosJob) {
       super();
       this.toscaNodeName = toscaNodeName;
@@ -782,6 +800,18 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
     private String path;
     private String provider;
 
+    /**
+     * Generates a new OneData representation.
+     * 
+     * @param token
+     *          the token
+     * @param space
+     *          the space
+     * @param path
+     *          the path
+     * @param provider
+     *          the provider
+     */
     public OneData(String token, String space, String path, String provider) {
       super();
       this.token = token;
@@ -895,7 +925,8 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       // <image> artifact type check
       if (!image.getArtifactType().equals(supportedType)) {
         throw new IllegalArgumentException(String.format(
-            "Unsupported artifact type for <image> artifact in node <%s> of type <%s>. Given <%s>, supported <%s>",
+            "Unsupported artifact type for <image> artifact in node <%s> of type <%s>. "
+                + "Given <%s>, supported <%s>",
             nodeName, nodeTemplate.getType(),
             nodeTemplate.getArtifacts().get("image").getArtifactType(), supportedType));
       }

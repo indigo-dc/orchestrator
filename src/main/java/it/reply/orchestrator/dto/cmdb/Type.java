@@ -25,6 +25,11 @@ public enum Type {
     return namesMap.get(StringUtils.lowerCase(value));
   }
 
+  /**
+   * Returns the String representation of the {@link Type}.
+   * 
+   * @return the enum value
+   */
   @JsonValue
   public String toValue() {
     for (Entry<String, Type> entry : namesMap.entrySet()) {

@@ -19,6 +19,14 @@ public class OAuth2TokenService {
     return securityEnabled;
   }
 
+  /**
+   * Get the current OAuth2 token.
+   * 
+   * @return the OAuth2 token.
+   * @throws IllegalStateException
+   *           if the security is disabled, the user is not authenticated or the call is made of an
+   *           HTTP session.
+   */
   public String getOAuth2Token() {
     if (!securityEnabled) {
       throw new IllegalStateException("Security is not enabled");
@@ -28,6 +36,6 @@ public class OAuth2TokenService {
       throw new IllegalStateException("User is not authenticated");
     }
     IndigoOAuth2Authentication indigoAuth = (IndigoOAuth2Authentication) auth;
-    return indigoAuth.getPrincipal().toString();
+    return indigoAuth.getToken().getValue();
   }
 }

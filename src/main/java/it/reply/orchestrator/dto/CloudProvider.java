@@ -29,6 +29,9 @@ public class CloudProvider implements Serializable {
   private Map<String, Service> cmdbProviderServices = new HashMap<>();
   private List<Image> cmdbProviderImages = new ArrayList<>();
 
+  public CloudProvider() {
+  }
+
   public CloudProvider(String id) {
     this.id = id;
   }

@@ -1,8 +1,5 @@
 package it.reply.orchestrator.dal.entity;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
@@ -68,7 +65,7 @@ public class Deployment extends AbstractResourceEntity {
 
   @ElementCollection(fetch = FetchType.EAGER)
   @MapKeyColumn(name = "name")
-  @Column(name = "value")
+  @Column(name = "value", columnDefinition = "TEXT")
   Map<String, String> outputs = new HashMap<String, String>();
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "deployment", orphanRemoval = true)
@@ -150,10 +147,6 @@ public class Deployment extends AbstractResourceEntity {
 
   /**
    * The user's inputs to the template.
-   *
-   * @throws IOException
-   * @throws JsonMappingException
-   * @throws JsonParseException
    */
   public synchronized Map<String, Object> getParameters() {
 
@@ -181,9 +174,6 @@ public class Deployment extends AbstractResourceEntity {
   /**
    * The user's inputs to the template.
    *
-   * @throws IOException
-   * @throws JsonMappingException
-   * @throws JsonParseException
    */
   public synchronized void setParameters(Map<String, Object> parameters) {
     this.parameters = new HashMap<>();
