@@ -76,9 +76,20 @@ public class CloudProvider implements Serializable {
     this.cmdbProviderImages = cmdbProviderImages;
   }
 
+  /**
+   * Look for a Service in the current Provider of the given Type.
+   * 
+   * @param type
+   *          the type.
+   * @return the Service if found, <tt>null</tt> otherwise.
+   */
   public Service getCmbdProviderServiceByType(Type type) {
-    // FIXME implement getCmbdProviderServiceByType
-    throw new UnsupportedOperationException("NOT IMPLEMENTED");
+    for (Service service : cmdbProviderServices.values()) {
+      if (service.getData().getType().equals(type)) {
+        return service;
+      }
+    }
+    return null;
   }
 
 }

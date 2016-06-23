@@ -36,6 +36,8 @@ public class Image implements Serializable {
   private String distribution;
   @JsonProperty("version")
   private String version;
+  @JsonProperty("service")
+  private String service;
   @JsonIgnore
   private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -183,6 +185,30 @@ public class Image implements Serializable {
     return this;
   }
 
+  /**
+   * 
+   * @return The service
+   */
+  @JsonProperty("service")
+  public String getService() {
+    return service;
+  }
+
+  /**
+   * 
+   * @param service
+   *          The service
+   */
+  @JsonProperty("service")
+  public void setService(String service) {
+    this.service = service;
+  }
+
+  public Image withService(String service) {
+    this.service = service;
+    return this;
+  }
+
   @Override
   public String toString() {
     return ToStringBuilder.reflectionToString(this);
@@ -206,7 +232,8 @@ public class Image implements Serializable {
   @Override
   public int hashCode() {
     return new HashCodeBuilder().append(imageId).append(imageName).append(architecture).append(type)
-        .append(distribution).append(version).append(additionalProperties).toHashCode();
+        .append(distribution).append(version).append(service).append(additionalProperties)
+        .toHashCode();
   }
 
   @Override
@@ -221,7 +248,8 @@ public class Image implements Serializable {
     return new EqualsBuilder().append(imageId, rhs.imageId).append(imageName, rhs.imageName)
         .append(architecture, rhs.architecture).append(type, rhs.type)
         .append(distribution, rhs.distribution).append(version, rhs.version)
-        .append(additionalProperties, rhs.additionalProperties).isEquals();
+        .append(service, rhs.service).append(additionalProperties, rhs.additionalProperties)
+        .isEquals();
   }
 
 }
