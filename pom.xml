@@ -41,7 +41,7 @@
 		<snippetsDirectory>${project.build.directory}\generated-snippets</snippetsDirectory>
 		<checkstyle-plugin.version>2.17</checkstyle-plugin.version>
 		<workflow-manager.version>0.0.3-FINAL</workflow-manager.version>
-		<alien4cloud.version>1.1.0-INDIGO2-SNAPSHOT</alien4cloud.version>
+		<alien4cloud.version>1.1.0-INDIGO2-ALPHA.1</alien4cloud.version>
 		<chronos-client.version>0.0.1-BETA.1</chronos-client.version>
 	</properties>
 
