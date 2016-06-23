@@ -60,6 +60,6 @@ public abstract class BaseRankCloudProvidersCommand extends BaseCommand {
   }
 
   protected abstract RankCloudProvidersMessage
-      customExecute(RankCloudProvidersMessage rankCloudProvidersMessage);
+      customExecute(RankCloudProvidersMessage rankCloudProvidersMessage) throws Exception;
 
 }

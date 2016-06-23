@@ -290,6 +290,12 @@ public class ToscaServiceImpl implements ToscaService {
 
   @Override
   public void contextualizeImages(ArchiveRoot parsingResult, CloudProvider cloudProvider) {
+    contextualizeImages(parsingResult, cloudProvider, true);
+  }
+
+  @Override
+  public void contextualizeImages(ArchiveRoot parsingResult, CloudProvider cloudProvider,
+      boolean replace) {
     try {
       Map<String, NodeTemplate> nodes = parsingResult.getTopology().getNodeTemplates();
       for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
@@ -351,9 +357,11 @@ public class ToscaServiceImpl implements ToscaService {
           LOG.debug(String.format(
               "Found image match in <%s> for image metadata <%s>, provider-specific image id <%s>",
               cloudProvider.getId(), imageMetadata, image.getImageId()));
-          ScalarPropertyValue scalarPropertyValue = new ScalarPropertyValue(image.getImageId());
-          scalarPropertyValue.setPrintable(true);
-          osCapability.getProperties().put("image", scalarPropertyValue);
+          if (replace) {
+            ScalarPropertyValue scalarPropertyValue = new ScalarPropertyValue(image.getImageId());
+            scalarPropertyValue.setPrintable(true);
+            osCapability.getProperties().put("image", scalarPropertyValue);
+          }
 
         }
       }
