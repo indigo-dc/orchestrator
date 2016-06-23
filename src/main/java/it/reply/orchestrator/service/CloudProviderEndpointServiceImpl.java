@@ -17,25 +17,19 @@ public class CloudProviderEndpointServiceImpl {
 
   public RankedCloudProvider chooseCloudProvider(Deployment deployment,
       RankCloudProvidersMessage rankCloudProvidersMessage) {
-    // Choose Cloud Provider
-    IaaSType iaasType = getIaaSTypeFromTosca(deployment.getTemplate());
-
-    LOG.debug("Choosing Cloud Provider based on: {}, IaaSType: {}",
-        rankCloudProvidersMessage.getRankedCloudProviders(), iaasType);
 
     // TODO Check ranker errors (i.e. providers with ranked = false)
     RankedCloudProvider chosenCp = null;
     for (RankedCloudProvider rcp : rankCloudProvidersMessage.getRankedCloudProviders()) {
       // Choose the one with lowest rank AND that matches iaasType (TEMPORARY)
-      if ((isCompatible(iaasType, getProviderIaaSType(rankCloudProvidersMessage, rcp.getName())))
-          && (chosenCp == null || rcp.getRank() < chosenCp.getRank())) {
+      if (chosenCp == null || rcp.getRank() < chosenCp.getRank()) {
         chosenCp = rcp;
       }
     }
 
     if (chosenCp == null) {
-      String errorMsg = String.format("No Cloud Provider found for: {}, IaaSType: {}",
-          rankCloudProvidersMessage.getRankedCloudProviders(), iaasType);
+      String errorMsg = String.format("No Cloud Provider found for: {}",
+          rankCloudProvidersMessage.getRankedCloudProviders());
       LOG.error(errorMsg);
       throw new IllegalArgumentException(errorMsg);
     }
@@ -47,7 +41,7 @@ public class CloudProviderEndpointServiceImpl {
   public CloudProviderEndpoint getCloudProviderEndpoint(Deployment deployment,
       RankCloudProvidersMessage rankCloudProvidersMessage, RankedCloudProvider chosenCp) {
 
-    IaaSType iaasType = getIaaSTypeFromTosca(deployment.getTemplate());
+    IaaSType iaasType = getProviderIaaSType(rankCloudProvidersMessage, chosenCp.getName());
 
     CloudProviderEndpoint cpe = new CloudProviderEndpoint();
 
@@ -61,32 +55,32 @@ public class CloudProviderEndpointServiceImpl {
     return cpe;
   }
 
-  /**
-   * TEMPORARY method to decide whether it is needed to coerce CP choice based on template content
-   * (i.e. currently used to force Mesos cluster deployment on OpenStack).
-   * 
-   * @param template
-   *          .
-   * @return .
-   */
-  public IaaSType getIaaSTypeFromTosca(String template) {
+  // /**
+  // * TEMPORARY method to decide whether it is needed to coerce CP choice based on template content
+  // * (i.e. currently used to force Mesos cluster deployment on OpenStack).
+  // *
+  // * @param template
+  // * .
+  // * @return .
+  // */
+  // public IaaSType getIaaSTypeFromTosca(String template) {
+  //
+  // if (template.contains("tosca.nodes.indigo.MesosMaster")) {
+  // return IaaSType.OPENSTACK;
+  // } else {
+  // return IaaSType.OPENNEBULA;
+  // }
+  // }
 
-    if (template.contains("tosca.nodes.indigo.MesosMaster")) {
-      return IaaSType.OPENSTACK;
-    } else {
-      return IaaSType.OPENNEBULA;
-    }
-  }
-
-  protected boolean isCompatible(IaaSType requiredType, IaaSType providerType) {
-    if (requiredType == providerType) {
-      return true;
-    } else if (providerType == IaaSType.OPENNEBULA) {
-      return true;
-    } else {
-      return false;
-    }
-  }
+  // protected boolean isCompatible(IaaSType requiredType, IaaSType providerType) {
+  // if (requiredType == providerType) {
+  // return true;
+  // } else if (providerType == IaaSType.OPENNEBULA) {
+  // return true;
+  // } else {
+  // return false;
+  // }
+  // }
 
   protected IaaSType getProviderIaaSType(RankCloudProvidersMessage rankCloudProvidersMessage,
       String providerName) {

@@ -113,8 +113,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
             authString = IOUtils.toString(is);
           }
           if (oauth2TokenService.isSecurityEnabled()) {
-            authString.replaceAll("InfrastructureManager; username = .+; password = .+",
-                "InfrastructureManager; token = " + dm.getOauth2Token());
+            authString =
+                authString.replaceAll("InfrastructureManager; username = .+; password = .+",
+                    "InfrastructureManager; token = " + dm.getOauth2Token());
           }
           break;
         case OPENNEBULA:
