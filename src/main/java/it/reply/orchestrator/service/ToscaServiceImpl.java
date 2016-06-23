@@ -369,7 +369,8 @@ public class ToscaServiceImpl implements ToscaService {
       // base image will be chosen with the other filters and image metadata - architecture, type,
       // distro, version)
       if (imageMetadata.getImageName() != null) {
-        if (imageMetadata.getImageName().equals(image.getImageName())) {
+
+        if (matchImageNameAndTag(imageMetadata.getImageName(), image.getImageName())) {
           LOG.debug("Image <{}> found with name <{}>", image.getImageId(),
               imageMetadata.getImageName());
           return image;
@@ -381,25 +382,25 @@ public class ToscaServiceImpl implements ToscaService {
 
       // Match or skip image based on each additional optional attribute
       if (imageMetadata.getType() != null) {
-        if (!imageMetadata.getType().equals(image.getType())) {
+        if (!imageMetadata.getType().equalsIgnoreCase(image.getType())) {
           continue;
         }
       }
 
       if (imageMetadata.getArchitecture() != null) {
-        if (!imageMetadata.getArchitecture().equals(image.getArchitecture())) {
+        if (!imageMetadata.getArchitecture().equalsIgnoreCase(image.getArchitecture())) {
           continue;
         }
       }
 
       if (imageMetadata.getDistribution() != null) {
-        if (!imageMetadata.getDistribution().equals(image.getDistribution())) {
+        if (!imageMetadata.getDistribution().equalsIgnoreCase(image.getDistribution())) {
           continue;
         }
       }
 
       if (imageMetadata.getVersion() != null) {
-        if (!imageMetadata.getVersion().equals(image.getVersion())) {
+        if (!imageMetadata.getVersion().equalsIgnoreCase(image.getVersion())) {
           continue;
         }
       }
@@ -409,6 +410,27 @@ public class ToscaServiceImpl implements ToscaService {
     }
     return null;
 
+  }
+
+  protected boolean matchImageNameAndTag(String requiredImageName, String availableImageName) {
+    // Extract Docker tag if available
+    String[] requiredImageNameSplit = requiredImageName.split(":");
+    String requiredImageBaseName = requiredImageNameSplit[0];
+    String requiredImageTag =
+        (requiredImageNameSplit.length > 1 ? requiredImageNameSplit[1] : null);
+
+    String[] availableImageNameSplit = availableImageName.split(":");
+    String availableImageBaseName = availableImageNameSplit[0];
+    String availableImageTag =
+        (availableImageNameSplit.length > 1 ? availableImageNameSplit[1] : null);
+
+    // Match name
+    boolean nameMatch = requiredImageBaseName.equals(availableImageBaseName);
+    // Match tag (if not given the match is true)
+    boolean tagMatch =
+        (requiredImageTag != null ? requiredImageTag.equals(availableImageTag) : true);
+
+    return nameMatch && tagMatch;
   }
 
   @Override
