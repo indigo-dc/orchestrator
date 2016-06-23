@@ -120,7 +120,7 @@ public class DeploymentMessage implements Serializable {
     this.skipPollInterval = skipPollInterval;
   }
 
- public CloudProvider getChosenCloudProvider() {
+  public CloudProvider getChosenCloudProvider() {
     return chosenCloudProvider;
   }
 

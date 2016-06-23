@@ -1,7 +1,5 @@
 package it.reply.orchestrator.service;
 
-import com.sun.istack.NotNull;
-
 import alien4cloud.model.components.AbstractPropertyValue;
 import alien4cloud.model.components.PropertyDefinition;
 import alien4cloud.model.components.PropertyValue;
@@ -11,6 +9,8 @@ import alien4cloud.model.topology.RelationshipTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingException;
 import alien4cloud.tosca.parser.ParsingResult;
+
+import com.sun.istack.NotNull;
 
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.exception.service.ToscaException;

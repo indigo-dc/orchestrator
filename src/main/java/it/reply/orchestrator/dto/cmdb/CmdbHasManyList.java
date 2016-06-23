@@ -21,85 +21,58 @@ import javax.annotation.Generated;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({ "total_rows", "offset", "rows" })
-public class CmdbHasManyList<ROW_TYPE> {
+public class CmdbHasManyList<ROWT> {
 
   @JsonProperty("total_rows")
   private Long totalRows;
   @JsonProperty("offset")
   private Long offset;
   @JsonProperty("rows")
-  private List<ROW_TYPE> rows = new ArrayList<>();
+  private List<ROWT> rows = new ArrayList<>();
   @JsonIgnore
   private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
-  /**
-   * 
-   * @return The totalRows
-   */
   @JsonProperty("total_rows")
   public Long getTotalRows() {
     return totalRows;
   }
 
-  /**
-   * 
-   * @param totalRows
-   *          The total_rows
-   */
   @JsonProperty("total_rows")
   public void setTotalRows(Long totalRows) {
     this.totalRows = totalRows;
   }
 
-  public CmdbHasManyList<ROW_TYPE> withTotalRows(Long totalRows) {
+  public CmdbHasManyList<ROWT> withTotalRows(Long totalRows) {
     this.totalRows = totalRows;
     return this;
   }
 
-  /**
-   * 
-   * @return The offset
-   */
   @JsonProperty("offset")
   public Long getOffset() {
     return offset;
   }
 
-  /**
-   * 
-   * @param offset
-   *          The offset
-   */
   @JsonProperty("offset")
   public void setOffset(Long offset) {
     this.offset = offset;
   }
 
-  public CmdbHasManyList<ROW_TYPE> withOffset(Long offset) {
+  public CmdbHasManyList<ROWT> withOffset(Long offset) {
     this.offset = offset;
     return this;
   }
 
-  /**
-   * 
-   * @return The rows
-   */
   @JsonProperty("rows")
-  public List<ROW_TYPE> getRows() {
+  public List<ROWT> getRows() {
     return rows;
   }
 
-  /**
-   * 
-   * @param rows
-   *          The rows
-   */
   @JsonProperty("rows")
-  public void setRows(List<ROW_TYPE> rows) {
+  public void setRows(List<ROWT> rows) {
     this.rows = rows;
   }
 
-  public CmdbHasManyList<ROW_TYPE> withRows(List<ROW_TYPE> rows) {
+  public CmdbHasManyList<ROWT> withRows(List<ROWT> rows) {
     this.rows = rows;
     return this;
   }
@@ -119,7 +92,7 @@ public class CmdbHasManyList<ROW_TYPE> {
     this.additionalProperties.put(name, value);
   }
 
-  public CmdbHasManyList<ROW_TYPE> withAdditionalProperty(String name, Object value) {
+  public CmdbHasManyList<ROWT> withAdditionalProperty(String name, Object value) {
     this.additionalProperties.put(name, value);
     return this;
   }
@@ -139,7 +112,7 @@ public class CmdbHasManyList<ROW_TYPE> {
       return false;
     }
     @SuppressWarnings("unchecked")
-    CmdbHasManyList<ROW_TYPE> rhs = ((CmdbHasManyList<ROW_TYPE>) other);
+    CmdbHasManyList<ROWT> rhs = ((CmdbHasManyList<ROWT>) other);
     return new EqualsBuilder().append(totalRows, rhs.totalRows).append(offset, rhs.offset)
         .append(rows, rhs.rows).append(additionalProperties, rhs.additionalProperties).isEquals();
   }

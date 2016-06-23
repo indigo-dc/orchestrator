@@ -23,20 +23,11 @@ public class CmdbImageRow {
   @JsonProperty("doc")
   private CmdbImage image;
 
-  /**
-   * 
-   * @return The id
-   */
   @JsonProperty("id")
   public String getId() {
     return id;
   }
 
-  /**
-   * 
-   * @param id
-   *          The id
-   */
   @JsonProperty("id")
   public void setId(String id) {
     this.id = id;
@@ -47,20 +38,11 @@ public class CmdbImageRow {
     return this;
   }
 
-  /**
-   * 
-   * @return The key
-   */
   @JsonProperty("key")
   public List<String> getKey() {
     return key;
   }
 
-  /**
-   * 
-   * @param key
-   *          The key
-   */
   @JsonProperty("key")
   public void setKey(List<String> key) {
     this.key = key;
@@ -71,20 +53,11 @@ public class CmdbImageRow {
     return this;
   }
 
-  /**
-   * 
-   * @return The image
-   */
   @JsonProperty("doc")
   public CmdbImage getImage() {
     return image;
   }
 
-  /**
-   * 
-   * @param image
-   *          The image
-   */
   @JsonProperty("doc")
   public void setImage(CmdbImage image) {
     this.image = image;

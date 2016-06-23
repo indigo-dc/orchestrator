@@ -15,6 +15,15 @@ import org.springframework.stereotype.Service;
 public class CloudProviderEndpointServiceImpl {
   private static final Logger LOG = LogManager.getLogger(CloudProviderEndpointServiceImpl.class);
 
+  /**
+   * Choose a Cloud Provider.
+   * 
+   * @param deployment
+   *          .
+   * @param rankCloudProvidersMessage
+   *          .
+   * @return .
+   */
   public RankedCloudProvider chooseCloudProvider(Deployment deployment,
       RankCloudProvidersMessage rankCloudProvidersMessage) {
 
@@ -38,6 +47,17 @@ public class CloudProviderEndpointServiceImpl {
     return chosenCp;
   }
 
+  /**
+   * .
+   * 
+   * @param deployment
+   *          .
+   * @param rankCloudProvidersMessage
+   *          .
+   * @param chosenCp
+   *          .
+   * @return .
+   */
   public CloudProviderEndpoint getCloudProviderEndpoint(Deployment deployment,
       RankCloudProvidersMessage rankCloudProvidersMessage, RankedCloudProvider chosenCp) {
 

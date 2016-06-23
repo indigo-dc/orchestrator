@@ -41,20 +41,11 @@ public class Image implements Serializable {
   @JsonIgnore
   private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
-  /**
-   * 
-   * @return The imageId
-   */
   @JsonProperty("image_id")
   public String getImageId() {
     return imageId;
   }
 
-  /**
-   * 
-   * @param imageId
-   *          The image_id
-   */
   @JsonProperty("image_id")
   public void setImageId(String imageId) {
     this.imageId = imageId;
@@ -65,20 +56,11 @@ public class Image implements Serializable {
     return this;
   }
 
-  /**
-   * 
-   * @return The imageName
-   */
   @JsonProperty("image_name")
   public String getImageName() {
     return imageName;
   }
 
-  /**
-   * 
-   * @param imageName
-   *          The image_name
-   */
   @JsonProperty("image_name")
   public void setImageName(String imageName) {
     this.imageName = imageName;
@@ -89,20 +71,11 @@ public class Image implements Serializable {
     return this;
   }
 
-  /**
-   * 
-   * @return The architecture
-   */
   @JsonProperty("architecture")
   public String getArchitecture() {
     return architecture;
   }
 
-  /**
-   * 
-   * @param architecture
-   *          The architecture
-   */
   @JsonProperty("architecture")
   public void setArchitecture(String architecture) {
     this.architecture = architecture;
@@ -113,20 +86,11 @@ public class Image implements Serializable {
     return this;
   }
 
-  /**
-   * 
-   * @return The type
-   */
   @JsonProperty("type")
   public String getType() {
     return type;
   }
 
-  /**
-   * 
-   * @param type
-   *          The type
-   */
   @JsonProperty("type")
   public void setType(String type) {
     this.type = type;
@@ -137,20 +101,11 @@ public class Image implements Serializable {
     return this;
   }
 
-  /**
-   * 
-   * @return The distribution
-   */
   @JsonProperty("distribution")
   public String getDistribution() {
     return distribution;
   }
 
-  /**
-   * 
-   * @param distribution
-   *          The distribution
-   */
   @JsonProperty("distribution")
   public void setDistribution(String distribution) {
     this.distribution = distribution;
@@ -161,20 +116,11 @@ public class Image implements Serializable {
     return this;
   }
 
-  /**
-   * 
-   * @return The version
-   */
   @JsonProperty("version")
   public String getVersion() {
     return version;
   }
 
-  /**
-   * 
-   * @param version
-   *          The version
-   */
   @JsonProperty("version")
   public void setVersion(String version) {
     this.version = version;
@@ -185,20 +131,11 @@ public class Image implements Serializable {
     return this;
   }
 
-  /**
-   * 
-   * @return The service
-   */
   @JsonProperty("service")
   public String getService() {
     return service;
   }
 
-  /**
-   * 
-   * @param service
-   *          The service
-   */
   @JsonProperty("service")
   public void setService(String service) {
     this.service = service;

@@ -32,20 +32,11 @@ public class CmdbImage {
   @JsonIgnore
   private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
-  /**
-   *
-   * @return The id
-   */
   @JsonProperty("_id")
   public String getId() {
     return id;
   }
 
-  /**
-   *
-   * @param id
-   *          The _id
-   */
   @JsonProperty("_id")
   public void setId(String id) {
     this.id = id;
@@ -56,20 +47,11 @@ public class CmdbImage {
     return this;
   }
 
-  /**
-   *
-   * @return The rev
-   */
   @JsonProperty("_rev")
   public String getRev() {
     return rev;
   }
 
-  /**
-   *
-   * @param rev
-   *          The _rev
-   */
   @JsonProperty("_rev")
   public void setRev(String rev) {
     this.rev = rev;
@@ -80,20 +62,11 @@ public class CmdbImage {
     return this;
   }
 
-  /**
-   *
-   * @return The type
-   */
   @JsonProperty("type")
   public String getType() {
     return type;
   }
 
-  /**
-   *
-   * @param type
-   *          The type
-   */
   @JsonProperty("type")
   public void setType(String type) {
     this.type = type;
@@ -104,20 +77,11 @@ public class CmdbImage {
     return this;
   }
 
-  /**
-   *
-   * @return The data
-   */
   @JsonProperty("data")
   public Image getData() {
     return data;
   }
 
-  /**
-   *
-   * @param data
-   *          The data
-   */
   @JsonProperty("data")
   public void setData(Image data) {
     this.data = data;
