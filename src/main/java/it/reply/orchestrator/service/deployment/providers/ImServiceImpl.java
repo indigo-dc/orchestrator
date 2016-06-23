@@ -3,7 +3,6 @@ package it.reply.orchestrator.service.deployment.providers;
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingException;
-import alien4cloud.tosca.parser.ParsingResult;
 
 import es.upv.i3m.grycap.im.InfrastructureManager;
 import es.upv.i3m.grycap.im.States;
@@ -188,6 +187,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       ArchiveRoot ar =
           toscaService.prepareTemplate(deployment.getTemplate(), deployment.getParameters());
       toscaService.addElasticClusterParameters(ar, deploymentUuid);
+      toscaService.contextualizeImages(ar, deploymentMessage.getChosenCloudProvider());
       String imCustomizedTemplate = toscaService.getTemplateFromTopology(ar);
 
       // FIXME this is a trick used only for demo purpose
@@ -329,23 +329,28 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     // Check if count is increased or if there is a removal list, other kinds of update are
     // discarded
 
-    ParsingResult<ArchiveRoot> oldParsingResult;
-    ParsingResult<ArchiveRoot> newParsingResult;
+    ArchiveRoot oldAr;
+    ArchiveRoot newAr;
     try {
       // FIXME Fugly
-      oldParsingResult = toscaService.getArchiveRootFromTemplate(deployment.getTemplate());
-      template = toscaService.customizeTemplate(template, deployment.getId());
-      newParsingResult = toscaService.getArchiveRootFromTemplate(template);
+
+      // Get TOSCA in-memory repr. of current template
+      oldAr = toscaService.prepareTemplate(deployment.getTemplate(), deployment.getParameters());
+
+      // Get TOSCA in-memory repr. of new template
+      newAr = toscaService.prepareTemplate(template, deployment.getParameters());
+      toscaService.addElasticClusterParameters(newAr, deployment.getId());
+      toscaService.contextualizeImages(newAr, deploymentMessage.getChosenCloudProvider());
     } catch (ParsingException | IOException | ToscaException ex) {
       throw new OrchestratorException(ex);
     }
     // find Count nodes into new and old template
-    Map<String, NodeTemplate> oldNodes = toscaService.getCountNodes(oldParsingResult.getResult());
-    Map<String, NodeTemplate> newNodes = toscaService.getCountNodes(newParsingResult.getResult());
+    Map<String, NodeTemplate> oldNodes = toscaService.getCountNodes(oldAr);
+    Map<String, NodeTemplate> newNodes = toscaService.getCountNodes(newAr);
 
     try {
       // Create the new template with the nodes to be added
-      ArchiveRoot root = newParsingResult.getResult();
+      ArchiveRoot root = newAr;
       Map<String, NodeTemplate> nodes = new HashMap<>();
 
       // List of vmIds to be removed

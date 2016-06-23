@@ -3,6 +3,7 @@ package it.reply.orchestrator.service;
 import static org.junit.Assert.assertEquals;
 
 import it.reply.orchestrator.config.specific.WebAppConfigurationAwareIT;
+import it.reply.orchestrator.dto.cmdb.CmdbImage;
 import it.reply.orchestrator.dto.cmdb.Data;
 import it.reply.orchestrator.dto.cmdb.Provider;
 import it.reply.orchestrator.dto.cmdb.ProviderData;
@@ -11,6 +12,8 @@ import it.reply.orchestrator.dto.cmdb.Type;
 
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.List;
 
 /**
  * This integration test makes real request to the CMDB APIs.
@@ -52,6 +55,23 @@ public class CmdbServiceIT extends WebAppConfigurationAwareIT {
         .withRev("1-c7dbe4d8be30aa4c0f14d3ad0411d962").withType("provider").withData(data);
 
     assertEquals(provider, providerRecas);
+  }
+
+  @Test
+  public void getImageForServiceTest() throws Exception {
+
+    List<CmdbImage> recasImages = service.getImagesByService(recasId);
+
+    // ProviderData data =
+    // new ProviderData().withId("476").withPrimaryKey("83757G0").withName("RECAS-BARI")
+    // .withCountry("Italy").withCountryCode("IT").withRoc("NGI_IT").withSubgrid("")
+    // .withGiisUrl("ldap://cloud-bdii.recas.ba.infn.it:2170/GLUE2DomainID=RECAS-BARI,o=glue");
+    //
+    // Provider p = new Provider().withId(recasProviderName)
+    // .withRev("1-c7dbe4d8be30aa4c0f14d3ad0411d962").withType("provider").withData(data);
+
+    // assertEquals(p, providerRecas);
+
   }
 
 }

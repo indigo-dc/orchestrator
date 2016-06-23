@@ -24,6 +24,8 @@ import alien4cloud.tosca.parser.ParsingResult;
 import alien4cloud.tosca.serializer.VelocityUtil;
 import alien4cloud.utils.FileUtil;
 
+import it.reply.orchestrator.dto.CloudProvider;
+import it.reply.orchestrator.dto.cmdb.Image;
 import it.reply.orchestrator.exception.service.ToscaException;
 
 import org.apache.logging.log4j.LogManager;
@@ -284,6 +286,159 @@ public class ToscaServiceImpl implements ToscaService {
       throw new ToscaException(errorMessage);
     }
 
+  }
+
+  @Override
+  public void contextualizeImages(ArchiveRoot parsingResult, CloudProvider cloudProvider) {
+    contextualizeImages(parsingResult, cloudProvider, true);
+  }
+
+  @Override
+  public void contextualizeImages(ArchiveRoot parsingResult, CloudProvider cloudProvider,
+      boolean replace) {
+    try {
+      Map<String, NodeTemplate> nodes = parsingResult.getTopology().getNodeTemplates();
+      for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
+        NodeTemplate node = entry.getValue();
+        // Only indigo.Compute nodes are relevant
+        // FIXME: Check inheritance of tosca.nodes.indigo.Compute
+        if (node.getType().equals("tosca.nodes.indigo.Compute")) {
+          Capability osCapability = null;
+          if (node.getCapabilities() == null
+              || (osCapability = node.getCapabilities().get("os")) == null) {
+            // The node doesn't have an OS Capability -> need to add a dummy one to hold a random
+            // image for underlying deployment systems
+            LOG.debug(String.format("Generating default OperatingSystem capability for node <%s>",
+                node.getName()));
+            if (node.getCapabilities() == null) {
+              node.setCapabilities(new HashMap<>());
+            }
+            osCapability = new Capability();
+            osCapability.setType("tosca.capabilities.indigo.OperatingSystem");
+            node.getCapabilities().put("os", osCapability);
+          }
+
+          // We've got an OS capability -> Check the attributes to find best match for the image
+          Image imageMetadata = new Image();
+          if (osCapability.getProperties().get("image") != null) {
+            imageMetadata.setImageName(
+                (String) getCapabilityPropertyValueByName(osCapability, "image").getValue());
+          }
+          if (osCapability.getProperties().get("architecture") != null) {
+            imageMetadata.setArchitecture(
+                (String) getCapabilityPropertyValueByName(osCapability, "architecture").getValue());
+          }
+          if (osCapability.getProperties().get("type") != null) {
+            imageMetadata.setType(
+                (String) getCapabilityPropertyValueByName(osCapability, "type").getValue());
+          }
+          if (osCapability.getProperties().get("distribution") != null) {
+            imageMetadata.setDistribution(
+                (String) getCapabilityPropertyValueByName(osCapability, "distribution").getValue());
+          }
+          if (osCapability.getProperties().get("version") != null) {
+            imageMetadata.setVersion(
+                (String) getCapabilityPropertyValueByName(osCapability, "version").getValue());
+          }
+
+          Image image = getBestImageForCloudProvider(imageMetadata, cloudProvider);
+
+          // No image match found -> throw error
+          if (image == null) {
+            LOG.error(
+                String.format("Failed to found a match in provider <%s> for image metadata <%s>",
+                    cloudProvider.getId(), imageMetadata));
+            throw new IllegalArgumentException(
+                String.format("Failed to found a match in provider <%s> for image metadata <%s>",
+                    cloudProvider.getId(), imageMetadata));
+          }
+
+          // Found a good image -> replace the image attribute with the provider-specific ID
+          LOG.debug(String.format(
+              "Found image match in <%s> for image metadata <%s>, provider-specific image id <%s>",
+              cloudProvider.getId(), imageMetadata, image.getImageId()));
+          if (replace) {
+            ScalarPropertyValue scalarPropertyValue = new ScalarPropertyValue(image.getImageId());
+            scalarPropertyValue.setPrintable(true);
+            osCapability.getProperties().put("image", scalarPropertyValue);
+          }
+
+        }
+      }
+    } catch (Exception ex) {
+      throw new RuntimeException("Failed to contextualize images: " + ex.getMessage(), ex);
+    }
+  }
+
+  protected Image getBestImageForCloudProvider(Image imageMetadata, CloudProvider cloudProvider) {
+    for (Image image : cloudProvider.getCmdbProviderImages()) {
+      // Match image name first (for INDIGO specific use case, if the image cannot be found with the
+      // specified name it means that a base image + Ansible configuration have to be used -> the
+      // base image will be chosen with the other filters and image metadata - architecture, type,
+      // distro, version)
+      if (imageMetadata.getImageName() != null) {
+
+        if (matchImageNameAndTag(imageMetadata.getImageName(), image.getImageName())) {
+          LOG.debug("Image <{}> found with name <{}>", image.getImageId(),
+              imageMetadata.getImageName());
+          return image;
+        } else {
+          LOG.debug("Image not found with name <{}>, trying with other fields: <{}>",
+              imageMetadata.getImageName(), imageMetadata);
+        }
+      }
+
+      // Match or skip image based on each additional optional attribute
+      if (imageMetadata.getType() != null) {
+        if (!imageMetadata.getType().equalsIgnoreCase(image.getType())) {
+          continue;
+        }
+      }
+
+      if (imageMetadata.getArchitecture() != null) {
+        if (!imageMetadata.getArchitecture().equalsIgnoreCase(image.getArchitecture())) {
+          continue;
+        }
+      }
+
+      if (imageMetadata.getDistribution() != null) {
+        if (!imageMetadata.getDistribution().equalsIgnoreCase(image.getDistribution())) {
+          continue;
+        }
+      }
+
+      if (imageMetadata.getVersion() != null) {
+        if (!imageMetadata.getVersion().equalsIgnoreCase(image.getVersion())) {
+          continue;
+        }
+      }
+
+      LOG.debug("Image <{}> found with fields: <{}>", imageMetadata.getImageId(), imageMetadata);
+      return image;
+    }
+    return null;
+
+  }
+
+  protected boolean matchImageNameAndTag(String requiredImageName, String availableImageName) {
+    // Extract Docker tag if available
+    String[] requiredImageNameSplit = requiredImageName.split(":");
+    String requiredImageBaseName = requiredImageNameSplit[0];
+    String requiredImageTag =
+        (requiredImageNameSplit.length > 1 ? requiredImageNameSplit[1] : null);
+
+    String[] availableImageNameSplit = availableImageName.split(":");
+    String availableImageBaseName = availableImageNameSplit[0];
+    String availableImageTag =
+        (availableImageNameSplit.length > 1 ? availableImageNameSplit[1] : null);
+
+    // Match name
+    boolean nameMatch = requiredImageBaseName.equals(availableImageBaseName);
+    // Match tag (if not given the match is true)
+    boolean tagMatch =
+        (requiredImageTag != null ? requiredImageTag.equals(availableImageTag) : true);
+
+    return nameMatch && tagMatch;
   }
 
   @Override
