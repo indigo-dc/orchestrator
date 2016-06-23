@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>it.reply</groupId>
 	<artifactId>orchestrator</artifactId>
-	<version>0.0.5-SNAPSHOT</version>
+	<version>1.0.0-ALPHA.1</version>
 	<packaging>war</packaging>
 	<name>orchestrator</name>
 
