@@ -73,8 +73,6 @@ public class CloudProviderEndpointServiceImpl {
 
     if (template.contains("tosca.nodes.indigo.MesosMaster")) {
       return IaaSType.OPENSTACK;
-    } else if (template.contains("onedock.i3m.upv.es")) {
-      return IaaSType.ONEDOCK;
     } else {
       return IaaSType.OPENNEBULA;
     }
@@ -83,8 +81,7 @@ public class CloudProviderEndpointServiceImpl {
   protected boolean isCompatible(IaaSType requiredType, IaaSType providerType) {
     if (requiredType == providerType) {
       return true;
-    } else if (requiredType == IaaSType.ONEDOCK && providerType == IaaSType.OPENNEBULA) {
-      // OneDock is a special case of OneNebula -.-
+    } else if (providerType == IaaSType.OPENNEBULA) {
       return true;
     } else {
       return false;

@@ -14,7 +14,7 @@ public class CloudProviderEndpoint implements Serializable {
 
   public enum IaaSType {
     // @formatter:off
-    OPENSTACK, OPENNEBULA, ONEDOCK
+    OPENSTACK, OPENNEBULA
     // @formatter:on
   }
 

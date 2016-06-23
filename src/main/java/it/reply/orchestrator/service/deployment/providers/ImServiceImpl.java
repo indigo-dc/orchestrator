@@ -6,6 +6,10 @@ import alien4cloud.tosca.parser.ParsingException;
 
 import es.upv.i3m.grycap.im.InfrastructureManager;
 import es.upv.i3m.grycap.im.States;
+import es.upv.i3m.grycap.im.auth.AuthorizationHeader;
+import es.upv.i3m.grycap.im.auth.credential.Credential;
+import es.upv.i3m.grycap.im.auth.credential.im.ImCredential.ImTokenCredential;
+import es.upv.i3m.grycap.im.auth.credential.opennebula.OpenNebulaTokenCredential;
 import es.upv.i3m.grycap.im.exceptions.ImClientErrorException;
 import es.upv.i3m.grycap.im.exceptions.ImClientException;
 import es.upv.i3m.grycap.im.pojo.InfOutputValues;
@@ -31,6 +35,7 @@ import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.service.ToscaService;
+import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.utils.json.JsonUtility;
 
 import org.apache.commons.io.IOUtils;
@@ -44,11 +49,8 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
-import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -70,6 +72,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   @Autowired
   private ApplicationContext ctx;
 
+  @Autowired
+  private OAuth2TokenService oauth2TokenService;
+
   @Value("${onedock.proxy.file.path}")
   private String proxyPath;
 
@@ -78,9 +83,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   @Value("${auth.file.path}")
   private String authFilePath;
-
-  @Value("${opennebula.auth.file.path}")
-  private String opennebulaAuthFilePath;
 
   @Value("${openstack.auth.file.path}")
   private String openstackAuthFilePath;
@@ -101,85 +103,59 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   private ResourceRepository resourceRepository;
 
   private InfrastructureManager getClient(DeploymentMessage dm) {
-    // LOG.debug("Load {} credentials", cpe.getIaasType());
-    // switch (cpe.getIaasType()) {
-    // case ONEDOCK:
-    // break;
-    // case OPENNEBULA:
-    // InfrastructureManager im = new InfrastructureManager(imUrl, tmp.toPath());
-    // break;
-    // case OPENSTACK:
-    // InfrastructureManager im = new InfrastructureManager(imUrl, tmp.toPath());
-    // break;
-    //
-    // }
-    //
-    // AuthorizationHeader ah = new AuthorizationHeader();
-    // // Authenticate to IM with the OAuth2 token
-    // Credential<?> cred = ImTokenCredential.getBuilder().withToken(dm.getOauth2Token()).build();
-    // ah.addCredential(cred);
-    //
-    // cred = VmrcCredential.getBuilder().withUsername("demo").withPassword("pwd")
-    // .withHost("http://servproject.i3m.upv.es:8080/vmrc/vmrc").build();
-    // ah.addCredential(cred);
-    // cred = OpenstackCredential.getBuilder().withId("ost").withUsername("usr").withPassword("pwd")
-    // .withTenant("tenant").withServiceRegion("recas-cloud")
-    // .withHost("https://cloud.recas.ba.infn.it:5000").build();
-    // InfrastructureManager im = new InfrastructureManager(imUrl, ah);
-    // }
-    // FIXME Use CMDB EP!
-
     IaaSType iaasType = dm.getChosenCloudProviderEndpoint().getIaasType();
-    InputStream inputStream = null;
+    String authString = null;
     try {
       LOG.debug("Load {} credentials with: {}", iaasType, dm.getChosenCloudProviderEndpoint());
       switch (iaasType) {
         case OPENSTACK:
-          inputStream = ctx.getResource(openstackAuthFilePath).getInputStream();
-          break;
-        case ONEDOCK:
-          // Read the proxy file
-          String proxy;
-          try (InputStream in = ctx.getResource(proxyPath).getInputStream()) {
-            proxy = IOUtils.toString(in);
-            proxy = proxy.replace(System.lineSeparator(), "\\\\n");
-          } catch (Exception ex) {
-            throw new OrchestratorException("Cannot load proxy file", ex);
+          try (InputStream is = ctx.getResource(openstackAuthFilePath).getInputStream()) {
+            authString = IOUtils.toString(is);
           }
-          // read onedock auth file
-          inputStream = ctx.getResource(onedockAuthFilePath).getInputStream();
-          String authFile = IOUtils.toString(inputStream, StandardCharsets.UTF_8.toString());
-          inputStream.close();
-
-          // replace the proxy as string
-          authFile = authFile.replace("{proxy}", proxy);
-
-          inputStream = IOUtils.toInputStream(authFile, StandardCharsets.UTF_8.toString());
+          if (oauth2TokenService.isSecurityEnabled()) {
+            authString.replaceAll("InfrastructureManager; username = .+; password = .+",
+                "InfrastructureManager; token = " + dm.getOauth2Token());
+          }
           break;
         case OPENNEBULA:
-          inputStream = ctx.getResource(opennebulaAuthFilePath).getInputStream();
+          if (oauth2TokenService.isSecurityEnabled()) {
+            AuthorizationHeader ah = new AuthorizationHeader();
+            Credential<?> cred =
+                ImTokenCredential.getBuilder().withToken(dm.getOauth2Token()).build();
+            ah.addCredential(cred);
+            cred = OpenNebulaTokenCredential.getBuilder().withId("onedock")
+                .withHost(dm.getChosenCloudProviderEndpoint().getCpEndpoint())
+                .withToken(dm.getOauth2Token()).build();
+            ah.addCredential(cred);
+            InfrastructureManager im = new InfrastructureManager(imUrl, ah);
+            return im;
+          } else {
+            // Read the proxy file
+            String proxy;
+            try (InputStream in = ctx.getResource(proxyPath).getInputStream()) {
+              proxy = IOUtils.toString(in);
+              proxy = proxy.replace(System.lineSeparator(), "\\\\n");
+            } catch (Exception ex) {
+              throw new OrchestratorException("Cannot load proxy file", ex);
+            }
+            // read onedock auth file
+            try (InputStream in = ctx.getResource(onedockAuthFilePath).getInputStream()) {
+              authString = IOUtils.toString(in, StandardCharsets.UTF_8.toString());
+            }
+            // replace the proxy as string
+            authString = authString.replace("{proxy}", proxy);
+          }
           break;
+        // inputStream = ctx.getResource(opennebulaAuthFilePath).getInputStream();
+        // break;
         default:
           throw new IllegalArgumentException(
               String.format("Unsupported provider type <%s>", iaasType));
       }
-
-      File tmp = File.createTempFile("authFileTmp", ".tmp");
-      try (OutputStream outStream = new FileOutputStream(tmp)) {
-        IOUtils.copy(inputStream, outStream);
-      }
-      InfrastructureManager im = new InfrastructureManager(imUrl, tmp.toPath());
+      InfrastructureManager im = new InfrastructureManager(imUrl, authString);
       return im;
     } catch (IOException | ImClientException ex) {
       throw new OrchestratorException("Cannot load IM auth file", ex);
-    } finally {
-      if (inputStream != null) {
-        try {
-          inputStream.close();
-        } catch (IOException ex) {
-          LOG.catching(ex);
-        }
-      }
     }
   }
 
