@@ -154,7 +154,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
             Credential<?> cred =
                 ImTokenCredential.getBuilder().withToken(dm.getOauth2Token()).build();
             ah.addCredential(cred);
-            cred = OpenNebulaTokenCredential.getBuilder().withId("onedock")
+            cred = OpenNebulaTokenCredential.getBuilder().withId("one")
                 .withHost(dm.getChosenCloudProviderEndpoint().getCpEndpoint())
                 .withToken(dm.getOauth2Token()).build();
             ah.addCredential(cred);

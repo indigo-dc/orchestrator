@@ -61,7 +61,7 @@ if [[ $CPR_ENDPOINT ]];
 fi;
 
 # CUSTOMIZE SECURITY PROPERTIES
-if [ $SECURITY_ENABLE = "true"];
+if [ $SECURITY_ENABLE = "true" ];
 	then sed -i "s/^\(security\.enabled=\).*$/\1$(echo 'true' | sed -e 's/[\/&]/\\&/g')/" ${SECURITY_PROP_FILE};
 	else sed -i "s/^\(security\.enabled=\).*$/\1$(echo 'false' | sed -e 's/[\/&]/\\&/g')/" ${SECURITY_PROP_FILE};
 fi;
