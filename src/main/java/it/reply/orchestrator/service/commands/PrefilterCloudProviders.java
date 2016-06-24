@@ -34,8 +34,8 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
   private ToscaService toscaService;
 
   @Override
-  protected RankCloudProvidersMessage
-      customExecute(RankCloudProvidersMessage rankCloudProvidersMessage) throws Exception {
+  protected RankCloudProvidersMessage customExecute(
+      RankCloudProvidersMessage rankCloudProvidersMessage) throws Exception {
     // TODO Filter cloud providers (i.e. based on OneData)
 
     Deployment deployment =
@@ -50,7 +50,7 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
     while (it.hasNext()) {
       Map.Entry<String, CloudProvider> entry = it.next();
       try {
-        toscaService.contextualizeImages(ar, entry.getValue(), false);
+        toscaService.contextualizeImages(null, ar, entry.getValue(), false);
       } catch (Exception ex) {
         // Failed to match all required images -> discard provider
         LOG.debug("Discarded provider {} because it doesn't match images requirements"

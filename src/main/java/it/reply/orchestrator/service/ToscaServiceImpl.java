@@ -26,6 +26,9 @@ import alien4cloud.utils.FileUtil;
 
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.Image;
+import it.reply.orchestrator.dto.cmdb.Type;
+import it.reply.orchestrator.enums.DeploymentProvider;
+import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.exception.service.ToscaException;
 
 import org.apache.logging.log4j.LogManager;
@@ -44,6 +47,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -289,13 +293,14 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
-  public void contextualizeImages(ArchiveRoot parsingResult, CloudProvider cloudProvider) {
-    contextualizeImages(parsingResult, cloudProvider, true);
+  public void contextualizeImages(DeploymentProvider deploymentProvider, ArchiveRoot parsingResult,
+      CloudProvider cloudProvider) {
+    contextualizeImages(deploymentProvider, parsingResult, cloudProvider, true);
   }
 
   @Override
-  public void contextualizeImages(ArchiveRoot parsingResult, CloudProvider cloudProvider,
-      boolean replace) {
+  public void contextualizeImages(DeploymentProvider deploymentProvider, ArchiveRoot parsingResult,
+      CloudProvider cloudProvider, boolean replace) {
     try {
       Map<String, NodeTemplate> nodes = parsingResult.getTopology().getNodeTemplates();
       for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
@@ -358,7 +363,26 @@ public class ToscaServiceImpl implements ToscaService {
               "Found image match in <%s> for image metadata <%s>, provider-specific image id <%s>",
               cloudProvider.getId(), imageMetadata, image.getImageId()));
           if (replace) {
-            ScalarPropertyValue scalarPropertyValue = new ScalarPropertyValue(image.getImageId());
+            String imageId = image.getImageId();
+            if (deploymentProvider != null && deploymentProvider == DeploymentProvider.IM) {
+              StringBuilder sb = new StringBuilder();
+              switch (CloudProviderEndpointServiceImpl.getProviderIaaSType(cloudProvider)) {
+                case OPENSTACK:
+                  sb.append("ost://");
+                  break;
+                case OPENNEBULA:
+                  sb.append("one://");
+                  break;
+                default:
+                  throw new DeploymentException(
+                      "Unknown IaaSType of cloud provider " + cloudProvider);
+              }
+              URL endpoint = new URL(
+                  cloudProvider.getCmbdProviderServiceByType(Type.COMPUTE).getData().getEndpoint());
+              sb.append(endpoint.getHost()).append("/").append(imageId);
+              imageId = sb.toString();
+            }
+            ScalarPropertyValue scalarPropertyValue = new ScalarPropertyValue(imageId);
             scalarPropertyValue.setPrintable(true);
             osCapability.getProperties().put("image", scalarPropertyValue);
           }
