@@ -22,6 +22,7 @@ import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.http.BadRequestException;
 import it.reply.orchestrator.exception.http.ConflictException;
 import it.reply.orchestrator.exception.http.NotFoundException;
+import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.workflowmanager.exceptions.WorkflowException;
@@ -200,11 +201,20 @@ public class DeploymentServiceImpl implements DeploymentService {
         Map<String, Object> params = new HashMap<>();
         params.put("DEPLOYMENT_ID", deployment.getId());
 
-        // FIXME: if the WF fails before setting deployment.getDeploymentProvider(), we should just
-        // delete the failed deployment ?
         // FIXME: Temporary - just for test
-        params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_TYPE,
-            deployment.getDeploymentProvider().name());
+        if (deployment.getDeploymentProvider() != null) {
+          params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_TYPE,
+              deployment.getDeploymentProvider().name());
+        } else {
+          if (deployment.getEndpoint() != null) {
+            throw new DeploymentException(String.format(
+                "Error deleting deploy <%s>: Deployment provider is null but the endpoint is <%s>",
+                deployment.getId(), deployment.getEndpoint()));
+          } else {
+            deploymentRepository.delete(deployment);
+            return;
+          }
+        }
 
         // Build deployment message
         DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment);
