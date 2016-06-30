@@ -967,6 +967,10 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       parameters.add(param);
       container.setParameters(parameters);
 
+      // FIXME ForcePullImage must be parametrizable by tosca template
+      container.setForcePullImage(true);
+      ////////////////////////////////////////////////////////////////
+
       container
           .setImage((String) ((PropertyValue<?>) nodeTemplate.getArtifacts().get("image").getFile())
               .getValue());
