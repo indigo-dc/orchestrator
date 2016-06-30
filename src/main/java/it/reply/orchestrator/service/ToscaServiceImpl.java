@@ -414,6 +414,11 @@ public class ToscaServiceImpl implements ToscaService {
       }
     }
 
+    if (imageMetadata.getType() == null && imageMetadata.getArchitecture() == null
+        && imageMetadata.getDistribution() == null && imageMetadata.getVersion() == null) {
+      return null;
+    }
+
     for (Image image : cloudProvider.getCmdbProviderImages()) {
       // Match or skip image based on each additional optional attribute
       if (imageMetadata.getType() != null) {
