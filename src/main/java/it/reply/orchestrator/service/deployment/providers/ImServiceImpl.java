@@ -124,6 +124,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
                   authString.replaceAll("InfrastructureManager; username = .+; password = .+",
                       "InfrastructureManager; token = " + dm.getOauth2Token());
             }
+            authString = authString.replaceAll("\n", "\\\\n");
           } else {
             String endpoint = dm.getChosenCloudProviderEndpoint().getCpEndpoint();
             OpenstackAuthVersion authVersion = OpenstackAuthVersion.PASSWORD_2_0;
@@ -173,6 +174,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
             try (InputStream in = ctx.getResource(onedockAuthFilePath).getInputStream()) {
               authString = IOUtils.toString(in, StandardCharsets.UTF_8.toString());
             }
+            authString = authString.replaceAll("\n", "\\\\n");
             // replace the proxy as string
             authString = authString.replace("{proxy}", proxy);
           }
