@@ -297,91 +297,97 @@ public class ToscaServiceImpl implements ToscaService {
   public void contextualizeImages(DeploymentProvider deploymentProvider, ArchiveRoot parsingResult,
       CloudProvider cloudProvider, boolean replace) {
     try {
-      Map<String, NodeTemplate> nodes = parsingResult.getTopology().getNodeTemplates();
-      for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
-        NodeTemplate node = entry.getValue();
-        // Only indigo.Compute nodes are relevant
-        // FIXME: Check inheritance of tosca.nodes.indigo.Compute
-        if (node.getType().equals("tosca.nodes.indigo.Compute")) {
-          Capability osCapability = null;
-          if (node.getCapabilities() == null
-              || (osCapability = node.getCapabilities().get("os")) == null) {
-            // The node doesn't have an OS Capability -> need to add a dummy one to hold a random
-            // image for underlying deployment systems
-            LOG.debug(String.format("Generating default OperatingSystem capability for node <%s>",
-                node.getName()));
-            if (node.getCapabilities() == null) {
-              node.setCapabilities(new HashMap<>());
-            }
-            osCapability = new Capability();
-            osCapability.setType("tosca.capabilities.indigo.OperatingSystem");
-            node.getCapabilities().put("os", osCapability);
-          }
-
-          // We've got an OS capability -> Check the attributes to find best match for the image
-          Image imageMetadata = new Image();
-          if (osCapability.getProperties().get("image") != null) {
-            imageMetadata.setImageName(
-                (String) getCapabilityPropertyValueByName(osCapability, "image").getValue());
-          }
-          if (osCapability.getProperties().get("architecture") != null) {
-            imageMetadata.setArchitecture(
-                (String) getCapabilityPropertyValueByName(osCapability, "architecture").getValue());
-          }
-          if (osCapability.getProperties().get("type") != null) {
-            imageMetadata.setType(
-                (String) getCapabilityPropertyValueByName(osCapability, "type").getValue());
-          }
-          if (osCapability.getProperties().get("distribution") != null) {
-            imageMetadata.setDistribution(
-                (String) getCapabilityPropertyValueByName(osCapability, "distribution").getValue());
-          }
-          if (osCapability.getProperties().get("version") != null) {
-            imageMetadata.setVersion(
-                (String) getCapabilityPropertyValueByName(osCapability, "version").getValue());
-          }
-
-          Image image = getBestImageForCloudProvider(imageMetadata, cloudProvider);
-
-          // No image match found -> throw error
-          if (image == null) {
-            LOG.error(
-                String.format("Failed to found a match in provider <%s> for image metadata <%s>",
-                    cloudProvider.getId(), imageMetadata));
-            throw new IllegalArgumentException(
-                String.format("Failed to found a match in provider <%s> for image metadata <%s>",
-                    cloudProvider.getId(), imageMetadata));
-          }
-
-          // Found a good image -> replace the image attribute with the provider-specific ID
-          LOG.debug(String.format(
-              "Found image match in <%s> for image metadata <%s>, provider-specific image id <%s>",
-              cloudProvider.getId(), imageMetadata, image.getImageId()));
-          if (replace) {
-            String imageId = image.getImageId();
-            if (deploymentProvider != null && deploymentProvider == DeploymentProvider.IM) {
-              StringBuilder sb = new StringBuilder();
-              switch (CloudProviderEndpointServiceImpl.getProviderIaaSType(cloudProvider)) {
-                case OPENSTACK:
-                  sb.append("ost://");
-                  break;
-                case OPENNEBULA:
-                  sb.append("one://");
-                  break;
-                default:
-                  throw new DeploymentException(
-                      "Unknown IaaSType of cloud provider " + cloudProvider);
+      if (parsingResult.getTopology() != null) {
+        Map<String, NodeTemplate> nodes = parsingResult.getTopology().getNodeTemplates();
+        if (nodes != null) {
+          for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
+            NodeTemplate node = entry.getValue();
+            // Only indigo.Compute nodes are relevant
+            // FIXME: Check inheritance of tosca.nodes.indigo.Compute
+            if (node.getType().equals("tosca.nodes.indigo.Compute")) {
+              Capability osCapability = null;
+              if (node.getCapabilities() == null
+                  || (osCapability = node.getCapabilities().get("os")) == null) {
+                // The node doesn't have an OS Capability -> need to add a dummy one to hold a
+                // random image for underlying deployment systems
+                LOG.debug(String.format(
+                    "Generating default OperatingSystem capability for node <%s>", node.getName()));
+                if (node.getCapabilities() == null) {
+                  node.setCapabilities(new HashMap<>());
+                }
+                osCapability = new Capability();
+                osCapability.setType("tosca.capabilities.indigo.OperatingSystem");
+                node.getCapabilities().put("os", osCapability);
               }
-              URL endpoint = new URL(
-                  cloudProvider.getCmbdProviderServiceByType(Type.COMPUTE).getData().getEndpoint());
-              sb.append(endpoint.getHost()).append("/").append(imageId);
-              imageId = sb.toString();
-            }
-            ScalarPropertyValue scalarPropertyValue = new ScalarPropertyValue(imageId);
-            scalarPropertyValue.setPrintable(true);
-            osCapability.getProperties().put("image", scalarPropertyValue);
-          }
 
+              // We've got an OS capability -> Check the attributes to find best match for the image
+              Image imageMetadata = new Image();
+              if (osCapability.getProperties().get("image") != null) {
+                imageMetadata.setImageName(
+                    (String) getCapabilityPropertyValueByName(osCapability, "image").getValue());
+              }
+              if (osCapability.getProperties().get("architecture") != null) {
+                imageMetadata.setArchitecture(
+                    (String) getCapabilityPropertyValueByName(osCapability, "architecture")
+                        .getValue());
+              }
+              if (osCapability.getProperties().get("type") != null) {
+                imageMetadata.setType(
+                    (String) getCapabilityPropertyValueByName(osCapability, "type").getValue());
+              }
+              if (osCapability.getProperties().get("distribution") != null) {
+                imageMetadata.setDistribution(
+                    (String) getCapabilityPropertyValueByName(osCapability, "distribution")
+                        .getValue());
+              }
+              if (osCapability.getProperties().get("version") != null) {
+                imageMetadata.setVersion(
+                    (String) getCapabilityPropertyValueByName(osCapability, "version").getValue());
+              }
+
+              Image image = getBestImageForCloudProvider(imageMetadata, cloudProvider);
+
+              // No image match found -> throw error
+              if (image == null) {
+                LOG.error(String.format(
+                    "Failed to found a match in provider <%s> for image metadata <%s>",
+                    cloudProvider.getId(), imageMetadata));
+                throw new IllegalArgumentException(String.format(
+                    "Failed to found a match in provider <%s> for image metadata <%s>",
+                    cloudProvider.getId(), imageMetadata));
+              }
+
+              // Found a good image -> replace the image attribute with the provider-specific ID
+              LOG.debug(String.format(
+                  "Found image match in <%s> for image metadata <%s>, provider-specific image id <%s>",
+                  cloudProvider.getId(), imageMetadata, image.getImageId()));
+              if (replace) {
+                String imageId = image.getImageId();
+                if (deploymentProvider != null && deploymentProvider == DeploymentProvider.IM) {
+                  StringBuilder sb = new StringBuilder();
+                  switch (CloudProviderEndpointServiceImpl.getProviderIaaSType(cloudProvider)) {
+                    case OPENSTACK:
+                      sb.append("ost://");
+                      break;
+                    case OPENNEBULA:
+                      sb.append("one://");
+                      break;
+                    default:
+                      throw new DeploymentException(
+                          "Unknown IaaSType of cloud provider " + cloudProvider);
+                  }
+                  URL endpoint = new URL(cloudProvider.getCmbdProviderServiceByType(Type.COMPUTE)
+                      .getData().getEndpoint());
+                  sb.append(endpoint.getHost()).append("/").append(imageId);
+                  imageId = sb.toString();
+                }
+                ScalarPropertyValue scalarPropertyValue = new ScalarPropertyValue(imageId);
+                scalarPropertyValue.setPrintable(true);
+                osCapability.getProperties().put("image", scalarPropertyValue);
+              }
+
+            }
+          }
         }
       }
     } catch (Exception ex) {
@@ -480,27 +486,35 @@ public class ToscaServiceImpl implements ToscaService {
 
   @Override
   public void addElasticClusterParameters(ArchiveRoot parsingResult, String deploymentId) {
-    Map<String, NodeTemplate> nodes = parsingResult.getTopology().getNodeTemplates();
-    for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
-      if (entry.getValue().getType().equals("tosca.nodes.indigo.ElasticCluster")) {
-        // Create new property with the deploymentId and set as printable
-        ScalarPropertyValue scalarPropertyValue = new ScalarPropertyValue(deploymentId);
-        scalarPropertyValue.setPrintable(true);
-        entry.getValue().getProperties().put("deployment_id", scalarPropertyValue);
-        // Create new property with the orchestrator_url and set as printable
-        scalarPropertyValue = new ScalarPropertyValue(orchestratorUrl);
-        scalarPropertyValue.setPrintable(true);
-        entry.getValue().getProperties().put("orchestrator_url", scalarPropertyValue);
+    if (parsingResult.getTopology() != null) {
+      Map<String, NodeTemplate> nodes = parsingResult.getTopology().getNodeTemplates();
+      if (nodes != null) {
+        for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
+          if (entry.getValue().getType().equals("tosca.nodes.indigo.ElasticCluster")) {
+            // Create new property with the deploymentId and set as printable
+            ScalarPropertyValue scalarPropertyValue = new ScalarPropertyValue(deploymentId);
+            scalarPropertyValue.setPrintable(true);
+            entry.getValue().getProperties().put("deployment_id", scalarPropertyValue);
+            // Create new property with the orchestrator_url and set as printable
+            scalarPropertyValue = new ScalarPropertyValue(orchestratorUrl);
+            scalarPropertyValue.setPrintable(true);
+            entry.getValue().getProperties().put("orchestrator_url", scalarPropertyValue);
+          }
+        }
       }
     }
   }
 
   private void removeRemovalList(ParsingResult<ArchiveRoot> parsingResult) {
-    Map<String, NodeTemplate> nodes = parsingResult.getResult().getTopology().getNodeTemplates();
-    for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
-      Capability scalable = getNodeCapabilityByName(entry.getValue(), "scalable");
-      if (scalable != null && scalable.getProperties().containsKey("removal_list")) {
-        scalable.getProperties().remove("removal_list");
+    if (parsingResult.getResult().getTopology() != null) {
+      Map<String, NodeTemplate> nodes = parsingResult.getResult().getTopology().getNodeTemplates();
+      if (nodes != null) {
+        for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
+          Capability scalable = getNodeCapabilityByName(entry.getValue(), "scalable");
+          if (scalable != null && scalable.getProperties().containsKey("removal_list")) {
+            scalable.getProperties().remove("removal_list");
+          }
+        }
       }
     }
   }
@@ -604,16 +618,19 @@ public class ToscaServiceImpl implements ToscaService {
   @Override
   public Map<String, NodeTemplate> getCountNodes(ArchiveRoot archiveRoot) {
     Map<String, NodeTemplate> nodes = new HashMap<>();
-
-    for (Map.Entry<String, NodeTemplate> entry : archiveRoot.getTopology().getNodeTemplates()
-        .entrySet()) {
-      Capability scalable = getNodeCapabilityByName(entry.getValue(), "scalable");
-      if (scalable != null) {
-        ScalarPropertyValue scalarPropertyValue =
-            (ScalarPropertyValue) scalable.getProperties().get("count");
-        // Check if this value is read from the template and is not a default value
-        if (scalarPropertyValue != null && scalarPropertyValue.isPrintable()) {
-          nodes.put(entry.getKey(), entry.getValue());
+    if (archiveRoot.getTopology() != null) {
+      Map<String, NodeTemplate> allNodes = archiveRoot.getTopology().getNodeTemplates();
+      if (allNodes != null) {
+        for (Map.Entry<String, NodeTemplate> entry : allNodes.entrySet()) {
+          Capability scalable = getNodeCapabilityByName(entry.getValue(), "scalable");
+          if (scalable != null) {
+            ScalarPropertyValue scalarPropertyValue =
+                (ScalarPropertyValue) scalable.getProperties().get("count");
+            // Check if this value is read from the template and is not a default value
+            if (scalarPropertyValue != null && scalarPropertyValue.isPrintable()) {
+              nodes.put(entry.getKey(), entry.getValue());
+            }
+          }
         }
       }
     }
@@ -655,21 +672,21 @@ public class ToscaServiceImpl implements ToscaService {
     return removalList;
   }
 
-  @Override
-  public String updateCount(ArchiveRoot archiveRoot, int count) throws IOException {
-    for (Map.Entry<String, NodeTemplate> entry : archiveRoot.getTopology().getNodeTemplates()
-        .entrySet()) {
-      Capability scalable = getNodeCapabilityByName(entry.getValue(), "scalable");
-      if (scalable != null) {
-        ScalarPropertyValue scalarPropertyValue =
-            (ScalarPropertyValue) scalable.getProperties().get("count");
-        if (scalarPropertyValue.isPrintable()) {
-          scalarPropertyValue.setValue(String.valueOf(count));
-          scalable.getProperties().put("count", scalarPropertyValue);
-        }
-      }
-    }
-    return getTemplateFromTopology(archiveRoot);
-  }
+  // @Override
+  // public String updateCount(ArchiveRoot archiveRoot, int count) throws IOException {
+  // for (Map.Entry<String, NodeTemplate> entry : archiveRoot.getTopology().getNodeTemplates()
+  // .entrySet()) {
+  // Capability scalable = getNodeCapabilityByName(entry.getValue(), "scalable");
+  // if (scalable != null) {
+  // ScalarPropertyValue scalarPropertyValue =
+  // (ScalarPropertyValue) scalable.getProperties().get("count");
+  // if (scalarPropertyValue.isPrintable()) {
+  // scalarPropertyValue.setValue(String.valueOf(count));
+  // scalable.getProperties().put("count", scalarPropertyValue);
+  // }
+  // }
+  // }
+  // return getTemplateFromTopology(archiveRoot);
+  // }
 
 }

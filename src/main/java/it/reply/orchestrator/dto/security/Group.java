@@ -2,6 +2,9 @@ package it.reply.orchestrator.dto.security;
 
 import com.google.gson.JsonObject;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
+
 import java.io.Serializable;
 
 public class Group implements Serializable {
@@ -60,35 +63,17 @@ public class Group implements Serializable {
 
   @Override
   public int hashCode() {
-    final int prime = 31;
-    int result = 1;
-    result = prime * result + ((id == null) ? 0 : id.hashCode());
-    result = prime * result + ((name == null) ? 0 : name.hashCode());
-    return result;
+    return new HashCodeBuilder().appendSuper(super.hashCode()).append(this.getId())
+        .append(this.getName()).build();
   }
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof Group)) {
+    if (obj == null || !(obj instanceof Group)) {
       return false;
     }
-
     Group other = (Group) obj;
-
-    if (id == null) {
-      if (other.id != null) {
-        return false;
-      }
-    } else if (!id.equals(other.id)) {
-      return false;
-    }
-    if (name == null) {
-      if (other.name != null) {
-        return false;
-      }
-    } else if (!name.equals(other.name)) {
-      return false;
-    }
-    return true;
+    return new EqualsBuilder().appendSuper(super.equals(other)).append(this.getId(), other.getId())
+        .append(this.getName(), other.getName()).build();
   }
 }
