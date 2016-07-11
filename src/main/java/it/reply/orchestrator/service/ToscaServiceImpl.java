@@ -223,24 +223,19 @@ public class ToscaServiceImpl implements ToscaService {
   public void validateUserInputs(Map<String, PropertyDefinition> templateInputs,
       Map<String, Object> inputs) throws ToscaException {
 
-    // Check if every required input has been given by the user
+    // No input to validate
     if (templateInputs == null) {
       return;
     }
 
+    // Check if every required input has been given by the user or has a default value
     for (Map.Entry<String, PropertyDefinition> templateInput : templateInputs.entrySet()) {
-      if (templateInput.getValue().isRequired() && !inputs.containsKey(templateInput.getKey())) {
-        // Input required and not in user's input list -> error
+      if (templateInput.getValue().isRequired() && templateInput.getValue().getDefault() == null
+          && !inputs.containsKey(templateInput.getKey())) {
+        // Input required and no value to replace -> error
         throw new ToscaException(
-            String.format("Input <%s> is required and is not present in the user's input list",
-                templateInput.getKey()));
-      } else {
-        if (!templateInput.getValue().isRequired()
-            && templateInput.getValue().getDefault() == null) {
-          // Input not required and no default value -> error
-          throw new ToscaException(String.format(
-              "Input <%s> is neither required nor has a default value", templateInput.getKey()));
-        }
+            String.format("Input <%s> is required and is not present in the user's input list,"
+                + " nor has a default value", templateInput.getKey()));
       }
     }
 

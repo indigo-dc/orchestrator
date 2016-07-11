@@ -163,14 +163,14 @@ public class ToscaServiceTest extends WebAppConfigurationAware {
   }
 
   @Test
-  public void checkUserInputRequiredInputNotInList() throws Exception {
+  public void checkUserInputRequiredNoDefaultValueNotGiven() throws Exception {
     checkUserInputGeneric("tosca_inputs_required_not_given.yaml", "required and is not present");
   }
 
   @Test
-  public void checkUserInputNotRequiredWithoutDefaultValue() throws Exception {
-    checkUserInputGeneric("tosca_inputs_not_required_without_default.yaml",
-        "neither required nor has a default value");
+  public void checkUserInputNotRequiredNoDefaultValueNotGiven() throws Exception {
+    checkUserInputGeneric("tosca_inputs_not_required_no_default_not_given.yaml",
+        "No given input or default value available");
   }
 
   @Test

@@ -138,6 +138,12 @@ public class IndigoInputsPreProcessorService {
           // If not null, replace the input value. Otherwise, use default value.
           if (inputValue == null) {
             inputValue = templateInput.getDefault();
+
+            // No given input or default value available -> error
+            if (inputValue == null) {
+              throw new IllegalArgumentException(
+                  String.format("No given input or default value available"));
+            }
           }
 
           LOG.debug(
