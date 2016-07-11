@@ -228,5 +228,5 @@ public interface ToscaService {
 
   public String updateTemplate(String template) throws IOException;
 
-  public String updateCount(ArchiveRoot archiveRoot, int count) throws IOException;
+  // public String updateCount(ArchiveRoot archiveRoot, int count) throws IOException;
 }

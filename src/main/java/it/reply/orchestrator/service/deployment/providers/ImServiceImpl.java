@@ -106,7 +106,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   @Autowired
   private ResourceRepository resourceRepository;
 
-  private InfrastructureManager getClient(DeploymentMessage dm) {
+  protected InfrastructureManager getClient(DeploymentMessage dm) {
     IaaSType iaasType = dm.getChosenCloudProviderEndpoint().getIaasType();
     String authString = null;
     try {
