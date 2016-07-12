@@ -99,10 +99,12 @@ public class DeploymentServiceImpl implements DeploymentService {
         deployment.setCallback(request.getCallback());
       }
 
-      deployment = deploymentRepository.save(deployment);
-
       // FIXME: Define function to decide DeploymentProvider (Temporary - just for prototyping)
       isChronosDeployment = isChronosDeployment(nodes);
+      deployment.setDeploymentProvider(
+          (isChronosDeployment ? DeploymentProvider.CHRONOS : DeploymentProvider.IM));
+
+      deployment = deploymentRepository.save(deployment);
 
       // Create internal resources representation (to store in DB)
       createResources(deployment, nodes);
@@ -124,8 +126,6 @@ public class DeploymentServiceImpl implements DeploymentService {
 
     // Build deployment message
     DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment);
-    deploymentMessage.setDeploymentProvider(
-        (isChronosDeployment ? DeploymentProvider.CHRONOS : DeploymentProvider.IM));
     params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
 
     ProcessInstance pi = null;

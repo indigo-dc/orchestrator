@@ -48,6 +48,10 @@ if [[ $CHRONOS_PASSWORD ]];
 	then sed -i "s/^\(chronos\.password=\).*$/\1$(echo $CHRONOS_PASSWORD | sed -e 's/[\/&]/\\&/g')/" ${CHRONOS_PROP_FILE};
 fi;
 
+if [[ $CHRONOS_PROVIDER ]];
+	then sed -i "s/^\(chronos\.cloudProviderName=\).*$/\1$(echo $CHRONOS_PROVIDER | sed -e 's/[\/&]/\\&/g')/" ${CHRONOS_PROP_FILE};
+fi;
+
 if [[ $CMDB_ENDPOINT ]];
 	then sed -i "s/^\(cmdb\.url=\).*$/\1$(echo $CMDB_ENDPOINT | sed -e 's/[\/&]/\\&/g')/" ${CMDB_PROP_FILE};
 fi;
