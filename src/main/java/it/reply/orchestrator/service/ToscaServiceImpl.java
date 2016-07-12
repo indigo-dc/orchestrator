@@ -415,8 +415,8 @@ public class ToscaServiceImpl implements ToscaService {
       }
     }
 
-    if (imageMetadata.getType() == null && imageMetadata.getArchitecture() == null
-        && imageMetadata.getDistribution() == null && imageMetadata.getVersion() == null) {
+    // TODO remove this dirty hack
+    if (imageMetadata.getImageName().equalsIgnoreCase("linux-ubuntu-14.04-vmi")) {
       return null;
     }
 
