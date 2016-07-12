@@ -523,7 +523,16 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       // Generate INDIGOJob graph
       if (deploymentMessage.getChronosJobGraph() == null) {
         LOG.debug("Generating job graph for deployment <{}>", deployment.getId());
-        deploymentMessage.setChronosJobGraph(generateJobGraph(deployment, generateStubOneData()));
+        try {
+          deploymentMessage.setChronosJobGraph(generateJobGraph(deployment, generateStubOneData()));
+        } catch (Exception e2) {
+          LOG.error("Parsing error for deployment <{}> on Chronos -> No resource to delete",
+              deployment.getId(), e2);
+          // No resource to delete -> delete completed
+          deploymentMessage.setDeleteComplete(true);
+          return true;
+        }
+
       }
 
       // Create nodes iterator if not done yet
@@ -565,8 +574,9 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
     } catch (RuntimeException exception) { // Chronos job launch error
       // TODO use a custom exception ?
       updateOnError(deployment.getId(), exception.getMessage());
-      LOG.error("Failed to delete jobs for deployment <{}> on Chronos", exception);
-      // The job chain creation failed: Just return false...
+      LOG.error("Failed to delete jobs for deployment <{}> on Chronos", deployment.getId(),
+          exception);
+      // The job chain deletion failed: Just return false...
       return false;
     } catch (Exception ex) {
       LOG.error("Failed to clean Chronos deployment <{}>", ex);
