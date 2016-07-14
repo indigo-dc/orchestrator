@@ -52,6 +52,7 @@ public class ControllerTestUtils {
     resource.setUpdated(new Date());
     resource.setState(NodeStates.CREATED);
     resource.setToscaNodeType("tosca.nodes.Compute");
+    resource.setToscaNodeName("node_" + UUID.randomUUID().toString());
     resource.setDeployment(deployment);
     return resource;
   }
