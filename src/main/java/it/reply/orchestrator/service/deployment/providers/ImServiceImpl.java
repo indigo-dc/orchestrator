@@ -6,12 +6,12 @@ import alien4cloud.tosca.parser.ParsingException;
 
 import es.upv.i3m.grycap.im.InfrastructureManager;
 import es.upv.i3m.grycap.im.States;
-import es.upv.i3m.grycap.im.auth.AuthorizationHeader;
-import es.upv.i3m.grycap.im.auth.credential.Credential;
-import es.upv.i3m.grycap.im.auth.credential.im.ImCredential.ImTokenCredential;
-import es.upv.i3m.grycap.im.auth.credential.opennebula.OpenNebulaTokenCredential;
-import es.upv.i3m.grycap.im.auth.credential.openstack.OpenstackAuthVersion;
-import es.upv.i3m.grycap.im.auth.credential.openstack.OpenstackCredential;
+import es.upv.i3m.grycap.im.auth.credentials.AuthorizationHeader;
+import es.upv.i3m.grycap.im.auth.credentials.Credentials;
+import es.upv.i3m.grycap.im.auth.credentials.providers.ImCredentials;
+import es.upv.i3m.grycap.im.auth.credentials.providers.OpenNebulaCredentials;
+import es.upv.i3m.grycap.im.auth.credentials.providers.OpenStackCredentials;
+import es.upv.i3m.grycap.im.auth.credentials.providers.OpenstackAuthVersion;
 import es.upv.i3m.grycap.im.exceptions.ImClientErrorException;
 import es.upv.i3m.grycap.im.exceptions.ImClientException;
 import es.upv.i3m.grycap.im.pojo.InfOutputValues;
@@ -138,12 +138,11 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
               }
             }
             AuthorizationHeader ah = new AuthorizationHeader();
-            Credential<?> cred =
-                ImTokenCredential.getBuilder().withToken(dm.getOauth2Token()).build();
+            Credentials cred = ImCredentials.buildCredentials().withToken(dm.getOauth2Token());
             ah.addCredential(cred);
-            cred = OpenstackCredential.getBuilder().withId("ost").withTenant("oidc")
+            cred = OpenStackCredentials.buildCredentials().withTenant("oidc")
                 .withUsername("indigo-dc").withPassword(dm.getOauth2Token()).withHost(endpoint)
-                .withAuthVersion(authVersion).build();
+                .withAuthVersion(authVersion);
             ah.addCredential(cred);
             InfrastructureManager im = new InfrastructureManager(imUrl, ah);
             return im;
@@ -152,12 +151,11 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         case OPENNEBULA:
           if (oauth2TokenService.isSecurityEnabled()) {
             AuthorizationHeader ah = new AuthorizationHeader();
-            Credential<?> cred =
-                ImTokenCredential.getBuilder().withToken(dm.getOauth2Token()).build();
+            Credentials cred = ImCredentials.buildCredentials().withToken(dm.getOauth2Token());
             ah.addCredential(cred);
-            cred = OpenNebulaTokenCredential.getBuilder().withId("one")
+            cred = OpenNebulaCredentials.buildCredentials()
                 .withHost(dm.getChosenCloudProviderEndpoint().getCpEndpoint())
-                .withToken(dm.getOauth2Token()).build();
+                .withToken(dm.getOauth2Token());
             ah.addCredential(cred);
             InfrastructureManager im = new InfrastructureManager(imUrl, ah);
             return im;
