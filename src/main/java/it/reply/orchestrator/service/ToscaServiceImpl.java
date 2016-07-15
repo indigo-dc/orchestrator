@@ -24,6 +24,8 @@ import alien4cloud.tosca.parser.ParsingResult;
 import alien4cloud.tosca.serializer.VelocityUtil;
 import alien4cloud.utils.FileUtil;
 
+import es.upv.i3m.grycap.im.auth.credentials.ServiceProvider;
+
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.Image;
 import it.reply.orchestrator.dto.cmdb.Type;
@@ -359,7 +361,8 @@ public class ToscaServiceImpl implements ToscaService {
 
               // Found a good image -> replace the image attribute with the provider-specific ID
               LOG.debug(String.format(
-                  "Found image match in <%s> for image metadata <%s>, provider-specific image id <%s>",
+                  "Found image match in <%s> for image metadata <%s>, "
+                      + "provider-specific image id <%s>",
                   cloudProvider.getId(), imageMetadata, image.getImageId()));
               if (replace) {
                 String imageId = image.getImageId();
@@ -367,10 +370,10 @@ public class ToscaServiceImpl implements ToscaService {
                   StringBuilder sb = new StringBuilder();
                   switch (CloudProviderEndpointServiceImpl.getProviderIaaSType(cloudProvider)) {
                     case OPENSTACK:
-                      sb.append("ost://");
+                      sb.append(ServiceProvider.OPENSTACK.getId());
                       break;
                     case OPENNEBULA:
-                      sb.append("one://");
+                      sb.append(ServiceProvider.OPENNEBULA.getId());
                       break;
                     default:
                       throw new DeploymentException(
@@ -378,7 +381,7 @@ public class ToscaServiceImpl implements ToscaService {
                   }
                   URL endpoint = new URL(cloudProvider.getCmbdProviderServiceByType(Type.COMPUTE)
                       .getData().getEndpoint());
-                  sb.append(endpoint.getHost()).append("/").append(imageId);
+                  sb.append("://").append(endpoint.getHost()).append("/").append(imageId);
                   imageId = sb.toString();
                 }
                 ScalarPropertyValue scalarPropertyValue = new ScalarPropertyValue(imageId);
