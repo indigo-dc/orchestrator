@@ -104,6 +104,8 @@ public class ResourceControllerTest {
                     "The status of the resource. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/NodeStates.html)"),
                 fieldWithPath("content[].toscaNodeType").optional()
                     .description("The type of the represented TOSCA node"),
+                fieldWithPath("content[].toscaNodeName").optional()
+                    .description("The name of the represented TOSCA node"),
                 fieldWithPath("content[].requiredBy")
                     .description("A list of nodes that require this resource"),
                 fieldWithPath("content[].links[]").ignored(), fieldWithPath("page").ignored())));
@@ -146,6 +148,8 @@ public class ResourceControllerTest {
                 "The status of the resource. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/NodeStates.html)"),
             fieldWithPath("toscaNodeType").optional()
                 .description("The type of the represented TOSCA node"),
+            fieldWithPath("toscaNodeName").optional()
+                .description("The name of the represented TOSCA node"),
             fieldWithPath("requiredBy").description("A list of nodes that require this resource"),
             fieldWithPath("links[]").ignored())));
   }
