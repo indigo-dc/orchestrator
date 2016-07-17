@@ -80,7 +80,7 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
   private String token;
   @Value("${onedata.space}")
   private String space;
-  @Value("${onedata.path}")
+  @Value("${onedata.path:''}")
   private String path;
   @Value("${onedata.provider}")
   private String provider;
@@ -107,7 +107,10 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
    * 
    * @return the {@link OneData} settings.
    */
-  protected OneData generateStubOneData() {
+  protected OneData generateStubOneData(DeploymentMessage deploymentMessage) {
+
+    String path = new StringBuilder().append(this.path).append(deploymentMessage.getDeploymentId())
+        .toString();
 
     LOG.info(String.format("Generating OneData settings with parameters: %s",
         Arrays.asList(token, space, path, provider)));
@@ -139,7 +142,8 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       // Generate INDIGOJob graph
       if (deploymentMessage.getChronosJobGraph() == null) {
         LOG.debug("Generating job graph for deployment <{}>", deployment.getId());
-        deploymentMessage.setChronosJobGraph(generateJobGraph(deployment, generateStubOneData()));
+        deploymentMessage.setChronosJobGraph(
+            generateJobGraph(deployment, generateStubOneData(deploymentMessage)));
       }
 
       // Create nodes iterator if not done yet
@@ -524,7 +528,8 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       if (deploymentMessage.getChronosJobGraph() == null) {
         LOG.debug("Generating job graph for deployment <{}>", deployment.getId());
         try {
-          deploymentMessage.setChronosJobGraph(generateJobGraph(deployment, generateStubOneData()));
+          deploymentMessage.setChronosJobGraph(
+              generateJobGraph(deployment, generateStubOneData(deploymentMessage)));
         } catch (Exception e2) {
           LOG.error("Parsing error for deployment <{}> on Chronos -> No resource to delete",
               deployment.getId(), e2);
