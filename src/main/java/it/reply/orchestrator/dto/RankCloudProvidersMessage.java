@@ -28,6 +28,9 @@ public class RankCloudProvidersMessage implements Serializable {
 
   private List<RankedCloudProvider> rankedCloudProviders = new ArrayList<>();
 
+  public RankCloudProvidersMessage() {
+  }
+
   public RankCloudProvidersMessage(String deploymentId) {
     this.deploymentId = deploymentId;
   }

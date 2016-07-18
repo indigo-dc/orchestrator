@@ -20,43 +20,66 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.github.springtestdbunit.annotation.DatabaseSetup;
-import com.github.springtestdbunit.annotation.DatabaseTearDown;
-
-import it.reply.orchestrator.config.WebAppConfigurationAware;
+import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
+import it.reply.orchestrator.exception.GlobalControllerExceptionHandler;
+import it.reply.orchestrator.exception.http.ConflictException;
+import it.reply.orchestrator.exception.http.NotFoundException;
+import it.reply.orchestrator.resource.DeploymentResourceAssembler;
+import it.reply.orchestrator.service.DeploymentService;
 import it.reply.orchestrator.util.TestUtil;
-import it.reply.orchestrator.utils.CommonUtils;
+import it.reply.utils.json.JsonUtility;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
+import org.mockito.Spy;
+import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.HateoasPageableHandlerMethodArgumentResolver;
+import org.springframework.data.web.PagedResourcesAssemblerArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.JUnitRestDocumentation;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.WebApplicationContext;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Resource;
+import jersey.repackaged.com.google.common.collect.Maps;
 
-@DatabaseTearDown("/data/database-empty.xml")
-public class DeploymentControllerTest extends WebAppConfigurationAware {
-
-  @Autowired
-  private WebApplicationContext wac;
+@RunWith(MockitoJUnitRunner.class)
+public class DeploymentControllerTest {
 
   private MockMvc mockMvc;
 
-  @Resource
-  private Environment env;
+  @InjectMocks
+  private DeploymentController deploymentController = new DeploymentController();
+
+  @Mock
+  private DeploymentService deploymentService;
+
+  @Spy
+  private HateoasPageableHandlerMethodArgumentResolver pageableArgumentResolver;
+
+  @Spy
+  private DeploymentResourceAssembler deploymentResourceAssembler;
+
+  @Spy
+  private PagedResourcesAssemblerArgumentResolver pagedResourcesAssemblerArgumentResolver =
+      new PagedResourcesAssemblerArgumentResolver(pageableArgumentResolver, null);
+
+  @Spy
+  private GlobalControllerExceptionHandler globalControllerExceptionHandler;
 
   @Rule
   public JUnitRestDocumentation restDocumentation =
@@ -68,7 +91,10 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
-    mockMvc = MockMvcBuilders.webAppContextSetup(wac)
+    mockMvc = MockMvcBuilders.standaloneSetup(deploymentController)
+        .setControllerAdvice(globalControllerExceptionHandler)
+        .setCustomArgumentResolvers(pageableArgumentResolver,
+            pagedResourcesAssemblerArgumentResolver)
         .apply(documentationConfiguration(this.restDocumentation)).dispatchOptions(true).build();
   }
 
@@ -78,8 +104,17 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
   }
 
   @Test
-  @DatabaseSetup("/data/database-init.xml")
+  public void getInfo() throws Exception {
+    mockMvc.perform(get("/info").accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
+  }
+
+  @Test
   public void getDeployments() throws Exception {
+
+    List<Deployment> deployments = ControllerTestUtils.createDeployments(5);
+    Pageable pageable = ControllerTestUtils.createDefaultPageable();
+    Mockito.when(deploymentService.getDeployments(pageable))
+        .thenReturn(new PageImpl<Deployment>(deployments));
 
     mockMvc.perform(get("/deployments").accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -102,8 +137,12 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
   }
 
   @Test
-  @DatabaseSetup("/data/database-init-pagination.xml")
   public void getPagedDeployments() throws Exception {
+
+    List<Deployment> deployments = ControllerTestUtils.createDeployments(5);
+    Pageable pageable = new PageRequest(1, 2);
+    Mockito.when(deploymentService.getDeployments(pageable))
+        .thenReturn(new PageImpl<Deployment>(deployments, pageable, deployments.size()));
 
     mockMvc.perform(get("/deployments?page=1&size=2").accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -120,8 +159,12 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
   }
 
   @Test
-  @DatabaseSetup("/data/database-init.xml")
   public void deploymentsPagination() throws Exception {
+
+    List<Deployment> deployments = ControllerTestUtils.createDeployments(5);
+    Pageable pageable = ControllerTestUtils.createDefaultPageable();
+    Mockito.when(deploymentService.getDeployments(pageable))
+        .thenReturn(new PageImpl<Deployment>(deployments));
 
     mockMvc.perform(get("/deployments")).andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -141,27 +184,32 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
   }
 
   @Test
-  @DatabaseSetup("/data/database-init.xml")
   public void deleteAlldeploymentsNotAllowed() throws Exception {
 
     mockMvc.perform(delete("/deployments")).andExpect(status().isMethodNotAllowed());
   }
 
   @Test
-  @DatabaseSetup("/data/database-init.xml")
   public void getDeploymentSuccessfully() throws Exception {
 
-    mockMvc.perform(get("/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd"))
-        .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.uuid", is("mmd34483-d937-4578-bfdb-ebe196bf82dd")));
+    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    Deployment deployment = ControllerTestUtils.createDeployment(deploymentId);
+    Mockito.when(deploymentService.getDeployment(deploymentId)).thenReturn(deployment);
+
+    mockMvc.perform(get("/deployments/" + deploymentId)).andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.uuid", is(deploymentId)));
   }
 
   @Test
-  @DatabaseSetup("/data/database-init.xml")
   public void deploymentHypermedia() throws Exception {
 
-    mockMvc.perform(get("/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd"))
-        .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON))
+    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    Deployment deployment = ControllerTestUtils.createDeployment(deploymentId);
+    Mockito.when(deploymentService.getDeployment(deploymentId)).thenReturn(deployment);
+
+    mockMvc.perform(get("/deployments/" + deploymentId)).andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andDo(document("deployment-hypermedia", preprocessResponse(prettyPrint()),
             links(atomLinks(), linkWithRel("self").description("Self-referencing hyperlink"),
                 linkWithRel("template").description("Template reference hyperlink"),
@@ -179,12 +227,20 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
   }
 
   @Test
-  @DatabaseSetup("/data/database-init.xml")
   public void getDeploymentWithOutputSuccessfully() throws Exception {
 
-    mockMvc.perform(get("/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd"))
-        .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.outputs", Matchers.hasEntry("server_ip", "10.0.0.1")))
+    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    Deployment deployment = ControllerTestUtils.createDeployment(deploymentId);
+    Map<String, String> outputs = Maps.newHashMap();
+    String key = "server_ip";
+    String value = "10.0.0.1";
+    outputs.put(key, JsonUtility.serializeJson(value));
+    deployment.setOutputs(outputs);
+    Mockito.when(deploymentService.getDeployment(deploymentId)).thenReturn(deployment);
+
+    mockMvc.perform(get("/deployments/" + deploymentId)).andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(jsonPath("$.outputs", Matchers.hasEntry(key, value)))
 
         .andDo(document("deployment", preprocessResponse(prettyPrint()),
 
@@ -205,18 +261,22 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
   }
 
   @Test
-  @DatabaseSetup("/data/database-init.xml")
   public void getDeploymentNotFound() throws Exception {
 
-    mockMvc.perform(get("/deployments/deploymentId")).andExpect(status().isNotFound())
+    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    Mockito.when(deploymentService.getDeployment(deploymentId))
+        .thenThrow(new NotFoundException("Message"));
+
+    mockMvc.perform(get("/deployments/" + deploymentId)).andExpect(status().isNotFound())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.code", is(404)))
-        .andDo(document("deployment-not-found", preprocessResponse(prettyPrint()), responseFields(
-            fieldWithPath("code").description("The HTTP status code"),
-            fieldWithPath("title").description("The HTTP status name"),
-            fieldWithPath("message").description("A displayable message describing the error"))));
-    // andExpect(jsonPath("$.title", is("Not Found")))
-    // .andExpect(jsonPath("$.message", is("The deployment <not-found> doesn't exist")));
+        .andDo(document("deployment-not-found", preprocessResponse(prettyPrint()),
+            responseFields(fieldWithPath("code").description("The HTTP status code"),
+                fieldWithPath("title").description("The HTTP status name"),
+                fieldWithPath("message")
+                    .description("A displayable message describing the error"))))
+        .andExpect(jsonPath("$.title", is("Not Found")))
+        .andExpect(jsonPath("$.message", is("Message")));
   }
 
   @Test
@@ -225,8 +285,7 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("cpus", 1);
     request.setParameters(parameters);
-    request.setTemplate(
-        CommonUtils.getFileContentAsString("./src/test/resources/tosca/compute_tosca.yaml"));
+    request.setTemplate("template");
     request.setCallback("http://localhost:8080/callback");
     mockMvc
         .perform(post("/deployments").contentType(MediaType.TEXT_PLAIN)
@@ -236,16 +295,18 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
   }
 
   @Test
-  @Transactional
   public void createDeploymentSuccessfully() throws Exception {
 
     DeploymentRequest request = new DeploymentRequest();
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("cpus", 1);
     request.setParameters(parameters);
-    request.setTemplate(
-        CommonUtils.getFileContentAsString("./src/test/resources/tosca/compute_tosca.yaml"));
+    request.setTemplate("template");
     request.setCallback("http://localhost:8080/callback");
+
+    Mockito.when(deploymentService.createDeployment(request))
+        .thenReturn(ControllerTestUtils.createDeployment());
+
     mockMvc.perform(post("/deployments").contentType(MediaType.APPLICATION_JSON)
         .content(TestUtil.convertObjectToJsonBytes(request)))
 
@@ -261,6 +322,8 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
                 fieldWithPath("uuid").description("The unique identifier of a resource"),
                 fieldWithPath("creationTime").description(
                     "Creation date-time (http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14)"),
+                fieldWithPath("updateTime").description(
+                    "Update date-time (http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14)"),
                 fieldWithPath("status").description(
                     "The status of the deployment. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html)"),
                 fieldWithPath("task").description(
@@ -271,33 +334,36 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
   }
 
   @Test
-  @Transactional
-  @DatabaseSetup("/data/database-init.xml")
   public void updateDeploymentNotExists() throws Exception {
     DeploymentRequest request = new DeploymentRequest();
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("cpus", 1);
     request.setParameters(parameters);
-    request.setTemplate(
-        CommonUtils.getFileContentAsString("./src/test/resources/tosca/galaxy_tosca.yaml"));
+    request.setTemplate("template");
     request.setCallback("http://localhost:8080/callback");
+
+    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    Mockito.doThrow(new NotFoundException("Message")).when(deploymentService)
+        .updateDeployment(deploymentId, request);
+
     mockMvc
-        .perform(put("/deployments/not-found").contentType(MediaType.APPLICATION_JSON)
+        .perform(put("/deployments/" + deploymentId).contentType(MediaType.APPLICATION_JSON)
             .content(TestUtil.convertObjectToJsonBytes(request)))
         .andExpect(jsonPath("$.code", is(404))).andExpect(jsonPath("$.title", is("Not Found")))
-        .andExpect(jsonPath("$.message", is("The deployment <not-found> doesn't exist")));
+        .andExpect(jsonPath("$.message", is("Message")));
   }
 
   @Test
-  @Transactional
-  @DatabaseSetup("/data/database-init.xml")
   public void updateDeploymentDeleteInProgress() throws Exception {
     DeploymentRequest request = new DeploymentRequest();
-    request.setTemplate(
-        CommonUtils.getFileContentAsString("./src/test/resources/tosca/galaxy_tosca.yaml"));
+    request.setTemplate("template");
+
+    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    Mockito.doThrow(new ConflictException("Cannot update a deployment in DELETE_IN_PROGRESS state"))
+        .when(deploymentService).updateDeployment(deploymentId, request);
+
     mockMvc
-        .perform(put("/deployments/mmd34483-d937-4578-bfdb-ebe196bf82de")
-            .contentType(MediaType.APPLICATION_JSON)
+        .perform(put("/deployments/" + deploymentId).contentType(MediaType.APPLICATION_JSON)
             .content(TestUtil.convertObjectToJsonBytes(request)))
         .andExpect(jsonPath("$.code", is(409))).andExpect(jsonPath("$.title", is("Conflict")))
         .andExpect(
@@ -305,19 +371,19 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
   }
 
   @Test
-  @Transactional
-  @DatabaseSetup("/data/database-init.xml")
   public void updateDeploymentSuccessfully() throws Exception {
 
     DeploymentRequest request = new DeploymentRequest();
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("cpus", 1);
     request.setParameters(parameters);
-    request.setTemplate(
-        CommonUtils.getFileContentAsString("./src/test/resources/tosca/galaxy_tosca.yaml"));
+    request.setTemplate("template");
     request.setCallback("http://localhost:8080/callback");
-    mockMvc.perform(put("/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd")
-        .contentType(MediaType.APPLICATION_JSON)
+
+    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    Mockito.doNothing().when(deploymentService).updateDeployment(deploymentId, request);
+
+    mockMvc.perform(put("/deployments/" + deploymentId).contentType(MediaType.APPLICATION_JSON)
         .content(TestUtil.convertObjectToJsonBytes(request)))
 
         .andDo(document("update-deployment", preprocessRequest(prettyPrint()),
@@ -332,12 +398,14 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
   }
 
   @Test
-  @Transactional
   public void createDeploymentWithoutCallbackSuccessfully() throws Exception {
 
     DeploymentRequest request = new DeploymentRequest();
-    request.setTemplate(
-        CommonUtils.getFileContentAsString("./src/test/resources/tosca/galaxy_tosca.yaml"));
+    request.setTemplate("template");
+
+    Mockito.when(deploymentService.createDeployment(request))
+        .thenReturn(ControllerTestUtils.createDeployment());
+
     mockMvc
         .perform(post("/deployments").contentType(MediaType.APPLICATION_JSON)
             .content(TestUtil.convertObjectToJsonBytes(request)))
@@ -347,13 +415,11 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
   }
 
   @Test
-  @Transactional
   public void createDeploymentWithCallbackUnsuccessfully() throws Exception {
     DeploymentRequest request = new DeploymentRequest();
     String callback = "httptest.com";
     request.setCallback(callback);
-    request.setTemplate(
-        CommonUtils.getFileContentAsString("./src/test/resources/tosca/galaxy_tosca.yaml"));
+    request.setTemplate("template");
     mockMvc
         .perform(post("/deployments").contentType(MediaType.APPLICATION_JSON)
             .content(TestUtil.convertObjectToJsonBytes(request)))
@@ -368,27 +434,35 @@ public class DeploymentControllerTest extends WebAppConfigurationAware {
   }
 
   @Test
-  @DatabaseSetup("/data/database-init.xml")
   public void deleteDeployment() throws Exception {
 
-    mockMvc.perform(delete("/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd"))
-        .andExpect(status().isNoContent()).andDo(document("delete-deployment",
-            preprocessRequest(prettyPrint()), preprocessResponse(prettyPrint())));
+    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    Mockito.doNothing().when(deploymentService).deleteDeployment(deploymentId);
+
+    mockMvc.perform(delete("/deployments/" + deploymentId)).andExpect(status().isNoContent())
+        .andDo(document("delete-deployment", preprocessRequest(prettyPrint()),
+            preprocessResponse(prettyPrint())));
 
   }
 
   @Test
-  @DatabaseSetup("/data/database-init.xml")
   public void deleteDeploymentWithConflict() throws Exception {
 
-    mockMvc.perform(delete("/deployments/mmd34483-d937-4578-bfdb-ebe196bf82de"))
-        .andExpect(status().isConflict());
+    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    Mockito.doThrow(new ConflictException("Cannot delete a deployment in DELETE_IN_PROGRESS state"))
+        .when(deploymentService).deleteDeployment(deploymentId);
+
+    mockMvc.perform(delete("/deployments/" + deploymentId)).andExpect(status().isConflict());
   }
 
   @Test
   public void deleteDeploymentNotFound() throws Exception {
 
-    mockMvc.perform(delete("/deployments/not-found"))
+    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    Mockito.doThrow(new NotFoundException("The deployment <not-found> doesn't exist"))
+        .when(deploymentService).deleteDeployment(deploymentId);
+
+    mockMvc.perform(delete("/deployments/" + deploymentId))
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.code", is(404))).andExpect(jsonPath("$.title", is("Not Found")))
         .andExpect(jsonPath("$.message", is("The deployment <not-found> doesn't exist")));

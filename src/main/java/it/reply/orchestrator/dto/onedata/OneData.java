@@ -15,6 +15,18 @@ public class OneData implements Serializable {
   private String path;
   private List<String> providers;
 
+  /**
+   * Construct OneData settings with providers as CSV.
+   * 
+   * @param token
+   *          .
+   * @param space
+   *          .
+   * @param path
+   *          .
+   * @param providers
+   *          .
+   */
   public OneData(String token, String space, String path, String providers) {
     super();
     this.token = token;
@@ -23,6 +35,18 @@ public class OneData implements Serializable {
     this.providers = (providers != null ? Arrays.asList(providers.split(",")) : null);
   }
 
+  /**
+   * Construct OneData settings with providers as list.
+   * 
+   * @param token
+   *          .
+   * @param space
+   *          .
+   * @param path
+   *          .
+   * @param providers
+   *          .
+   */
   public OneData(String token, String space, String path, List<String> providers) {
     super();
     this.token = token;
@@ -48,6 +72,7 @@ public class OneData implements Serializable {
   }
 
   /**
+   * Generate the provider list as CSV.
    * 
    * @return the provider list as CSV
    */

@@ -13,10 +13,11 @@ import java.io.IOException;
 import java.util.Properties;
 
 @Configuration
-@ComponentScan(basePackages = { "alien4cloud", "org.elasticsearch.mapping" }, excludeFilters = {
-    @ComponentScan.Filter(type = FilterType.REGEX, pattern = "alien4cloud.security.*"),
-    @ComponentScan.Filter(type = FilterType.REGEX, pattern = "alien4cloud.audit.*"),
-    @ComponentScan.Filter(type = FilterType.REGEX, pattern = "alien4cloud.ldap.*") })
+@ComponentScan(basePackages = { "alien4cloud", "org.elasticsearch.mapping" },
+    excludeFilters = {
+        @ComponentScan.Filter(type = FilterType.REGEX, pattern = "alien4cloud.security.*"),
+        @ComponentScan.Filter(type = FilterType.REGEX, pattern = "alien4cloud.audit.*"),
+        @ComponentScan.Filter(type = FilterType.REGEX, pattern = "alien4cloud.ldap.*") })
 public class Alien4CloudConfig {
 
   @Bean

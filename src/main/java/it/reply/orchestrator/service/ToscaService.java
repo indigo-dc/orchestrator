@@ -12,7 +12,9 @@ import alien4cloud.tosca.parser.ParsingResult;
 
 import com.sun.istack.NotNull;
 
+import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.onedata.OneData;
+import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.service.ToscaException;
 
 import java.io.IOException;
@@ -32,17 +34,72 @@ public interface ToscaService {
    * <b>WARNING: Some nodes or properties might be missing!! Use at your own risk!</b>
    * 
    * @param archiveRoot
-   * @return
+   *          the {@link ArchiveRoot} from which serialize the TOSCA template
+   * @return the serialized TOSCA template
    * @throws IOException
+   *           if there is an error serializing the template
    */
   @Nonnull
   public String getTemplateFromTopology(@Nonnull ArchiveRoot archiveRoot) throws IOException;
 
+  /**
+   * Customize the template with INDIGO requirements, for example it adds the deploymentId.
+   * 
+   * @param toscaTemplate
+   *          the TOSCA template
+   * @param deploymentId
+   *          the deploymentId
+   * @return the customized template
+   * 
+   * @throws IOException
+   *           if there is an IO error
+   * @throws ToscaException
+   *           if the template is not valid
+   */
   @Nonnull
   public String customizeTemplate(@Nonnull String toscaTemplate, @NotNull String deploymentId)
-      throws IOException, ToscaException, ParsingException;
+      throws IOException, ToscaException;
 
-  public void addDeploymentId(ArchiveRoot parsingResult, String deploymentId);
+  /**
+   * Adds the parameters needed for 'tosca.nodes.indigo.ElasticCluster' nodes (deployment_id,
+   * orchestrator_url).
+   * 
+   * @param parsingResult
+   *          .
+   * @param deploymentId
+   *          .
+   */
+  public void addElasticClusterParameters(ArchiveRoot parsingResult, String deploymentId);
+
+  /**
+   * Replace images data in 'tosca.capabilities.indigo.OperatingSystem' capabilities in the TOSCA
+   * template with the provider-specific identifier.
+   * 
+   * @param deploymentProvider
+   *          the deployment provider.
+   * @param parsingResult
+   *          the in-memory TOSCA template.
+   * @param cloudProvider
+   *          the chosen cloud provider data.
+   */
+  public void contextualizeImages(DeploymentProvider deploymentProvider, ArchiveRoot parsingResult,
+      CloudProvider cloudProvider);
+
+  /**
+   * Find matches for images data in 'tosca.capabilities.indigo.OperatingSystem' capabilities in the
+   * TOSCA template with the provider-specific identifier.
+   * 
+   * @param deploymentProvider
+   *          the deployment provider.
+   * @param parsingResult
+   *          the in-memory TOSCA template.
+   * @param cloudProvider
+   *          the chosen cloud provider data.
+   * @param replace
+   *          whether to actually replace the image IDs or just do a dry-run.
+   */
+  public void contextualizeImages(DeploymentProvider deploymentProvider, ArchiveRoot parsingResult,
+      CloudProvider cloudProvider, boolean replace);
 
   /**
    * Verifies that all the template's required inputs are present in the user's input list.
@@ -172,7 +229,7 @@ public interface ToscaService {
 
   public String updateTemplate(String template) throws IOException;
 
-  public String updateCount(ArchiveRoot archiveRoot, int count) throws IOException;
+  // public String updateCount(ArchiveRoot archiveRoot, int count) throws IOException;
 
   /**
    * Extracts OneData requirements (i.e. space, favorite providers, etc) from the TOSCA template.

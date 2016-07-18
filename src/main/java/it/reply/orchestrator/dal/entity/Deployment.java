@@ -1,8 +1,6 @@
 package it.reply.orchestrator.dal.entity;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-
+import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
@@ -54,6 +52,9 @@ public class Deployment extends AbstractResourceEntity {
 
   @Column(name = "template", columnDefinition = "LONGTEXT")
   private String template;
+
+  @Column(name = "cloudProviderEndpoint", columnDefinition = "TEXT")
+  private String cloudProviderEndpoint;
 
   /**
    * The user's inputs to the template.
@@ -150,10 +151,6 @@ public class Deployment extends AbstractResourceEntity {
 
   /**
    * The user's inputs to the template.
-   *
-   * @throws IOException
-   * @throws JsonMappingException
-   * @throws JsonParseException
    */
   public synchronized Map<String, Object> getParameters() {
 
@@ -181,9 +178,6 @@ public class Deployment extends AbstractResourceEntity {
   /**
    * The user's inputs to the template.
    *
-   * @throws IOException
-   * @throws JsonMappingException
-   * @throws JsonParseException
    */
   public synchronized void setParameters(Map<String, Object> parameters) {
     this.parameters = new HashMap<>();
@@ -200,6 +194,38 @@ public class Deployment extends AbstractResourceEntity {
       this.parameters.put(parameter.getKey(), paramString);
     }
     this.unserializedParameters = null;
+  }
+
+  /**
+   * 
+   * @return .
+   */
+  public synchronized CloudProviderEndpoint getCloudProviderEndpoint() {
+
+    CloudProviderEndpoint cpe = null;
+
+    if (cloudProviderEndpoint != null) {
+      try {
+        cpe = JsonUtility.deserializeJson(cloudProviderEndpoint, CloudProviderEndpoint.class);
+      } catch (IOException ex) {
+        throw new RuntimeException("Failed to deserialize CloudProviderEndpoint in JSON", ex);
+      }
+    }
+    return cpe;
+  }
+
+  /**
+   * .
+   *
+   */
+  public synchronized void setCloudProviderEndpoint(CloudProviderEndpoint cpe) {
+    if (cpe != null) {
+      try {
+        cloudProviderEndpoint = JsonUtility.serializeJson(cpe);
+      } catch (IOException ex) {
+        throw new RuntimeException("Failed to serialize CloudProviderEndpoint in JSON", ex);
+      }
+    }
   }
 
   public Map<String, String> getOutputs() {

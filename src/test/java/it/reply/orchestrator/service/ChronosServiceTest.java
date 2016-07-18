@@ -2,17 +2,17 @@ package it.reply.orchestrator.service;
 
 import static org.junit.Assert.assertEquals;
 
+import com.google.common.collect.ImmutableMap;
+
 import alien4cloud.model.components.ScalarPropertyValue;
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
-
-import com.google.common.collect.ImmutableMap;
 
 import es.upv.i3m.grycap.file.NoNullOrEmptyFile;
 import es.upv.i3m.grycap.file.Utf8File;
 import es.upv.i3m.grycap.im.exceptions.FileException;
 
-import it.reply.orchestrator.config.WebAppConfigurationAware;
+import it.reply.orchestrator.config.specific.WebAppConfigurationAware;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl;
 

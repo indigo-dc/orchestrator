@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class GetSLAM extends BaseRankCloudProvidersCommand {
+public class GetSlam extends BaseRankCloudProvidersCommand {
 
   @Autowired
   private SlamService slamService;

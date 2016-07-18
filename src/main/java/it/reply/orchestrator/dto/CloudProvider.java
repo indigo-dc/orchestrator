@@ -1,11 +1,14 @@
 package it.reply.orchestrator.dto;
 
+import it.reply.orchestrator.dto.cmdb.Image;
 import it.reply.orchestrator.dto.cmdb.Provider;
 import it.reply.orchestrator.dto.cmdb.Service;
 import it.reply.orchestrator.dto.cmdb.Type;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -24,6 +27,10 @@ public class CloudProvider implements Serializable {
 
   private Provider cmdbProviderData;
   private Map<String, Service> cmdbProviderServices = new HashMap<>();
+  private List<Image> cmdbProviderImages = new ArrayList<>();
+
+  public CloudProvider() {
+  }
 
   public CloudProvider(String id) {
     this.id = id;
@@ -61,9 +68,28 @@ public class CloudProvider implements Serializable {
     this.cmdbProviderServices = cmdbProviderServices;
   }
 
+  public List<Image> getCmdbProviderImages() {
+    return cmdbProviderImages;
+  }
+
+  public void setCmdbProviderImages(List<Image> cmdbProviderImages) {
+    this.cmdbProviderImages = cmdbProviderImages;
+  }
+
+  /**
+   * Look for a Service in the current Provider of the given Type.
+   * 
+   * @param type
+   *          the type.
+   * @return the Service if found, <tt>null</tt> otherwise.
+   */
   public Service getCmbdProviderServiceByType(Type type) {
-    // FIXME implement getCmbdProviderServiceByType
-    throw new UnsupportedOperationException("NOT IMPLEMENTED");
+    for (Service service : cmdbProviderServices.values()) {
+      if (service.getData().getType().equals(type)) {
+        return service;
+      }
+    }
+    return null;
   }
 
 }

@@ -65,6 +65,11 @@ public class DeploymentController {
     return "INDIGO-Orchestrator";
   }
 
+  /**
+   * Get the orchestrator status info.
+   * 
+   * @return the orchestrator status info.
+   */
   @ResponseStatus(HttpStatus.OK)
   @RequestMapping(value = "/info", method = RequestMethod.GET)
   public DebugInformations getInfo() {

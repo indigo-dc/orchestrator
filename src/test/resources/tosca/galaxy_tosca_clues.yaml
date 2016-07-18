@@ -7,7 +7,38 @@ description: >
   TOSCA test for launching a Virtual Elastic Cluster. It will launch
   a single front-end that will be in change of managing the elasticity
   using the specified LRMS (torque, sge, slurm and condor) workload.
+
 topology_template:
+  inputs:
+    wn_num:
+      type: integer
+      description: Maximum number of WNs in the elastic cluster
+      default: 5
+      required: yes
+ 
+    fe_cpus:
+      type: integer
+      description: Numer of CPUs for the front-end node
+      default: 1
+      required: yes
+    
+    fe_mem:
+      type: scalar-unit.size
+      description: Amount of Memory for the front-end node
+      default: 1 GB
+      required: yes
+      
+    wn_cpus:
+      type: integer
+      description: Numer of CPUs for the WNs
+      default: 1
+      required: yes
+    
+    wn_mem:
+      type: scalar-unit.size
+      description: Amount of Memory for the WNs
+      default: 1 GB
+      required: yes
 
   node_templates:
 
@@ -15,61 +46,83 @@ topology_template:
       type: tosca.nodes.indigo.ElasticCluster
       properties:
         deployment_id: orchestrator_deployment_id
+        orchestrator_url: http://localhost:8080
       requirements:
-        - lrms: torque_front_end
+        - lrms: lrms_front_end
         - wn: wn_node
 
-    torque_front_end:
-      type: tosca.nodes.indigo.LRMS.FrontEnd.Torque
-      properties:
-        wn_ips: { get_attribute: [ torque_wn, private_address ] }
+    galaxy_portal:
+      type: tosca.nodes.indigo.GalaxyPortal
       requirements:
-        - host: torque_server
+        - lrms: lrms_front_end
 
-    torque_server:
+    lrms_front_end:
+      type: tosca.nodes.indigo.LRMS.FrontEnd.Slurm
+      properties:
+        wn_ips: { get_attribute: [ lrms_wn, private_address ] }
+      requirements:
+        - host: lrms_server
+
+    lrms_server:
       type: tosca.nodes.indigo.Compute
       capabilities:
         endpoint:
           properties:
+            dns_name: slurmserver
             network_name: PUBLIC
+            ports:
+              http_port:
+                protocol: tcp
+                source: 8080
         host:
           properties:
-            num_cpus: 1
-            mem_size: 1 GB
+            num_cpus: { get_input: fe_cpus }
+            mem_size: { get_input: fe_mem }
         os:
           properties:
+            # host Operating System image properties
             type: linux 
+            distribution: scientific 
+            version: 6.6
 
     wn_node:
-      type: tosca.nodes.indigo.LRMS.WorkerNode.Torque
+      type: tosca.nodes.indigo.LRMS.WorkerNode.Slurm
       properties:
-        front_end_ip: { get_attribute: [ torque_server, private_address, 0 ] }
+        front_end_ip: { get_attribute: [ lrms_server, private_address, 0 ] }
       capabilities:
         wn:
           properties:
-            max_instances: 5
+            max_instances: { get_input: wn_num }
             min_instances: 0
       requirements:
-        - host: torque_wn
-            
-    torque_wn:
+        - host: lrms_wn
+
+    galaxy_wn:
+      type: tosca.nodes.indigo.GalaxyWN
+      requirements:
+        - host: lrms_wn
+
+    lrms_wn:
       type: tosca.nodes.indigo.Compute
       capabilities:
         scalable:
           properties:
-            count: 0
+            count: 2
         host:
           properties:
-            num_cpus: 1
-            mem_size: 1 GB
+            num_cpus: { get_input: wn_cpus }
+            mem_size: { get_input: wn_mem }
         os:
           properties:
+            # host Operating System image properties
             type: linux 
-            #distribution: ubuntu 
-            #version: 14.04
+            distribution: ubuntu
+            version: 14.04
 
   outputs:
+    galaxy_url:
+      value: { concat: [ 'http://', get_attribute: [ lrms_server, public_address, 0 ], ':8080' ] }
     cluster_ip:
-      value: { get_attribute: [ torque_server, public_address, 0 ] }
+      value: { get_attribute: [ lrms_server, public_address, 0 ] }
     cluster_creds:
-      value: { get_attribute: [ torque_server, endpoint, credential, 0 ] }
+      value: { get_attribute: [ lrms_server, endpoint, credential, 0 ] }

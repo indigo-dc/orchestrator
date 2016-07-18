@@ -2,9 +2,11 @@ package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
+import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
+import it.reply.orchestrator.service.CloudProviderEndpointServiceImpl;
 import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.orchestrator.service.deployment.providers.DeploymentStatusHelper;
 import it.reply.workflowmanager.spring.orchestrator.bpm.ejbcommands.BaseCommand;
@@ -33,6 +35,9 @@ public class UpdateDeployment extends BaseCommand {
   @Autowired
   private DeploymentStatusHelper deploymentStatusHelper;
 
+  @Autowired
+  private CloudProviderEndpointServiceImpl cloudProviderEndpointServiceImpl;
+
   @Override
   public ExecutionResults customExecute(CommandContext ctx) throws Exception {
 
@@ -53,26 +58,31 @@ public class UpdateDeployment extends BaseCommand {
             WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE));
       }
 
-      // TODO: Move elsewhere
-      // Choose Cloud Provider
-      LOG.debug("Choosing Cloud Provider based on: {}",
-          rankCloudProvidersMessage.getRankedCloudProviders());
-
-      // TODO Check ranker errors (i.e. providers with ranked = false)
-      RankedCloudProvider chosenCp = null;
-      for (RankedCloudProvider rcp : rankCloudProvidersMessage.getRankedCloudProviders()) {
-        if (chosenCp == null || rcp.getRank() < chosenCp.getRank()) {
-          chosenCp = rcp;
-        }
-      }
-      LOG.debug("Selected Cloud Provider is: {}", chosenCp);
-
-      // Update Deployment
       Deployment deployment =
           deploymentRepository.findOne(rankCloudProvidersMessage.getDeploymentId());
+
+      // Choose Cloud Provider
+      RankedCloudProvider chosenCp = cloudProviderEndpointServiceImpl
+          .chooseCloudProvider(deployment, rankCloudProvidersMessage);
+
+      // Set the chosen CP in deploymentMessage
+      deploymentMessage.setChosenCloudProvider(
+          rankCloudProvidersMessage.getCloudProviders().get(chosenCp.getName()));
+
+      // Update Deployment
       deployment.setCloudProviderName(chosenCp.getName());
 
       // FIXME Set/update all required selected CP data
+
+      // FIXME Generate
+      CloudProviderEndpoint chosenCloudProviderEndpoint = cloudProviderEndpointServiceImpl
+          .getCloudProviderEndpoint(deployment, rankCloudProvidersMessage, chosenCp);
+      deploymentMessage.setChosenCloudProviderEndpoint(chosenCloudProviderEndpoint);
+      LOG.debug("Generated Cloud Provider Endpoint is: {}", chosenCloudProviderEndpoint);
+
+      // FIXME Use another method to hold CP Endpoint (i.e. CMDB service ID reference?)
+      // Save CPE in Deployment for future use
+      deployment.setCloudProviderEndpoint(chosenCloudProviderEndpoint);
 
       exResults.getData().putAll(resultOccurred(true).getData());
       exResults.setData(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);

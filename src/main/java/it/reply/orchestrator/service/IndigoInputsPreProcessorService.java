@@ -138,10 +138,17 @@ public class IndigoInputsPreProcessorService {
           // If not null, replace the input value. Otherwise, use default value.
           if (inputValue == null) {
             inputValue = templateInput.getDefault();
+
+            // No given input or default value available -> error
+            if (inputValue == null) {
+              throw new IllegalArgumentException(
+                  String.format("No given input or default value available"));
+            }
           }
 
           LOG.debug(
-              "TOSCA input function replacement: object <{}>, property <{}>, input name <{}>, input value <{}>",
+              "TOSCA input function replacement: "
+                  + "object <{}>, property <{}>, input name <{}>, input value <{}>",
               objectName, propertyName, inputName, inputValue);
 
           // Replace property value (was Function, now Scalar)
@@ -178,8 +185,8 @@ public class IndigoInputsPreProcessorService {
         String msg = String.format(
             "Function <%s> detected for property <%s> while only <get_input> should be authorized.",
             function.getFunction(), propertyName);
-        LOG.error(msg);
-        throw new ToscaException(msg);
+        LOG.warn(msg);
+        // throw new ToscaException(msg);
       }
     } else {
       // Complex or List properties might contain other function as their values
@@ -192,7 +199,7 @@ public class IndigoInputsPreProcessorService {
             myMap.put("<list-item-" + i + ">", list.get(i));
           }
         } else {
-           myMap = ((ComplexPropertyValue) propertyValue).getValue();
+          myMap = ((ComplexPropertyValue) propertyValue).getValue();
         }
         // Look for function in the value
         for (Map.Entry<String, Object> complexEntry : myMap.entrySet()) {

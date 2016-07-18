@@ -47,6 +47,12 @@ public class Resource extends AbstractResourceEntity {
     super();
   }
 
+  /**
+   * Creates a new Resource object.
+   * 
+   * @param toscaNodeName
+   *          the TOSCA node name of the resource
+   */
   public Resource(String toscaNodeName) {
     super();
     this.toscaNodeName = toscaNodeName;

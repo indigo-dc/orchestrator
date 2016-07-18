@@ -32,8 +32,8 @@ public class CallbackServiceImpl implements CallbackService {
   public boolean doCallback(Deployment deployment) {
     if (deployment.getCallback() != null) {
       DeploymentResource deploymentResource = deploymentResourceAssembler.toResource(deployment);
-      ResponseEntity<?> response = restTemplate.postForEntity(deployment.getCallback(),
-          deploymentResource, Object.class);
+      ResponseEntity<?> response =
+          restTemplate.postForEntity(deployment.getCallback(), deploymentResource, Object.class);
       return response.getStatusCode().is2xxSuccessful();
     }
     return false;

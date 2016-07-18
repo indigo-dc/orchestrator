@@ -1,5 +1,8 @@
 package it.reply.orchestrator.service.deployment.providers;
 
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
+
 import alien4cloud.model.components.ComplexPropertyValue;
 import alien4cloud.model.components.DeploymentArtifact;
 import alien4cloud.model.components.ListPropertyValue;
@@ -10,9 +13,6 @@ import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.normative.SizeType;
 import alien4cloud.tosca.parser.ParsingException;
-
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 
 import it.infn.ba.indigo.chronos.client.Chronos;
 import it.infn.ba.indigo.chronos.client.ChronosClient;
@@ -82,7 +82,7 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
   private String token;
   @Value("${onedata.space}")
   private String space;
-  @Value("${onedata.path}")
+  @Value("${onedata.path:''}")
   private String path;
   @Value("${onedata.provider}")
   private String provider;
@@ -109,7 +109,10 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
    * 
    * @return the {@link OneData} settings.
    */
-  protected OneData generateStubOneData() {
+  protected OneData generateStubOneData(DeploymentMessage deploymentMessage) {
+
+    String path = new StringBuilder().append(this.path).append(deploymentMessage.getDeploymentId())
+        .toString();
 
     LOG.info(String.format("Generating OneData settings with parameters: %s",
         Arrays.asList(token, space, path, provider)));
@@ -142,9 +145,10 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       if (deploymentMessage.getChronosJobGraph() == null) {
         LOG.debug("Generating job graph for deployment <{}>", deployment.getId());
         // FIXME: Just for testing (remove once OneData parameters generation is completed!)
-        deploymentMessage.setOneDataParameters(ImmutableMap.of("service", generateStubOneData()));
-        LOG.warn(
-            "GENERATING STUB ONE DATA FOR SERVICE (remove once OneData parameters generation is completed!)");
+        deploymentMessage.setOneDataParameters(
+            ImmutableMap.of("service", generateStubOneData(deploymentMessage)));
+        LOG.warn("GENERATING STUB ONE DATA FOR SERVICE"
+            + " (remove once OneData parameters generation is completed!)");
         deploymentMessage.setChronosJobGraph(
             generateJobGraph(deployment, deploymentMessage.getOneDataParameters()));
       }
@@ -195,9 +199,13 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
   /**
    * 
    * @param deployment
-   * @param topoOrder
+   *          the deployment from which create the jobs
+   * @param jobgraph
+   *          the graph of the jobs
    * @param templateTopologicalOrderIterator
+   *          the topological order iterator of the jobs
    * @param client
+   *          the Chronos client to use
    * @return <tt>true</tt> if there are more nodes to create, <tt>false</tt> otherwise.
    */
   protected boolean createJobsOnChronosIteratively(Deployment deployment,
@@ -355,9 +363,13 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
   /**
    * 
    * @param deployment
+   *          the deployment from which create the jobs
    * @param jobgraph
+   *          the graph of the jobs
    * @param templateTopologicalOrderIterator
+   *          the topological order iterator of the jobs
    * @param client
+   *          the Chronos client to use
    * @return <tt>true</tt> if the currently checked node is ready, <tt>false</tt> if still in
    *         progress.
    * @throws DeploymentException
@@ -426,7 +438,9 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
   /**
    * 
    * @param client
+   *          the Chronos client to use
    * @param name
+   *          the name of the Chronos job
    * @return the {@link Job} or <tt>null</tt> if no such job exist.
    * @throws RuntimeException
    *           if an error occurred retrieving job status.
@@ -505,8 +519,8 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
    * Deletes all the deployment jobs from Chronos. <br/>
    * Also logs possible errors and updates the deployment status.
    * 
-   * @param deployment
-   *          the deployment.
+   * @param deploymentMessage
+   *          the deployment message.
    * @return <tt>true</tt> if all jobs have been deleted, <tt>false</tt> otherwise.
    */
   @Override
@@ -520,8 +534,16 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       // Generate INDIGOJob graph
       if (deploymentMessage.getChronosJobGraph() == null) {
         LOG.debug("Generating job graph for deployment <{}>", deployment.getId());
-        deploymentMessage.setChronosJobGraph(
-            generateJobGraph(deployment, deploymentMessage.getOneDataParameters()));
+        try {
+          deploymentMessage.setChronosJobGraph(
+              generateJobGraph(deployment, deploymentMessage.getOneDataParameters()));
+        } catch (Exception e2) {
+          LOG.error("Parsing error for deployment <{}> on Chronos -> No resource to delete",
+              deployment.getId(), e2);
+          // No resource to delete -> delete completed
+          deploymentMessage.setDeleteComplete(true);
+          return true;
+        }
       }
 
       // Create nodes iterator if not done yet
@@ -563,8 +585,9 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
     } catch (RuntimeException exception) { // Chronos job launch error
       // TODO use a custom exception ?
       updateOnError(deployment.getId(), exception.getMessage());
-      LOG.error("Failed to delete jobs for deployment <{}> on Chronos", exception);
-      // The job chain creation failed: Just return false...
+      LOG.error("Failed to delete jobs for deployment <{}> on Chronos", deployment.getId(),
+          exception);
+      // The job chain deletion failed: Just return false...
       return false;
     } catch (Exception ex) {
       LOG.error("Failed to clean Chronos deployment <{}>", ex);
@@ -651,6 +674,14 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
     private Collection<IndigoJob> children = new ArrayList<>();
     private Collection<IndigoJob> parents = new ArrayList<>();
 
+    /**
+     * Generates a new IndigoJob representation.
+     * 
+     * @param toscaNodeName
+     *          the name of the TOSCA node associated to the job
+     * @param chronosJob
+     *          the {@link Job Chronos job} associated to the job
+     */
     public IndigoJob(String toscaNodeName, Job chronosJob) {
       super();
       this.toscaNodeName = toscaNodeName;
@@ -770,7 +801,7 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
    * 
    * @param template
    *          the string TOSCA template.
-   * @param od
+   * @param odParameters
    *          the OneData settings.
    */
   public String replaceHardCodedParams(String template, Map<String, OneData> odParameters) {
@@ -894,7 +925,8 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       // <image> artifact type check
       if (!image.getArtifactType().equals(supportedType)) {
         throw new IllegalArgumentException(String.format(
-            "Unsupported artifact type for <image> artifact in node <%s> of type <%s>. Given <%s>, supported <%s>",
+            "Unsupported artifact type for <image> artifact in node <%s> of type <%s>. "
+                + "Given <%s>, supported <%s>",
             nodeName, nodeTemplate.getType(),
             nodeTemplate.getArtifacts().get("image").getArtifactType(), supportedType));
       }
@@ -934,6 +966,10 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       Collection<Parameters> parameters = new ArrayList<Parameters>();
       parameters.add(param);
       container.setParameters(parameters);
+
+      // FIXME ForcePullImage must be parametrizable by tosca template
+      container.setForcePullImage(true);
+      ////////////////////////////////////////////////////////////////
 
       container
           .setImage((String) ((PropertyValue<?>) nodeTemplate.getArtifacts().get("image").getFile())
