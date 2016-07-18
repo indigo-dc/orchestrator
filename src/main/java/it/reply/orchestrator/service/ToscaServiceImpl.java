@@ -706,6 +706,14 @@ public class ToscaServiceImpl implements ToscaService {
        */
       Map<String, OneData> result = new HashMap<>();
       if (inputs.get("input_onedata_space") != null) {
+        // FIXME: Remove temporary check for limited functionalities
+        if (inputs.get("input_onedata_providers") == null
+            || ((String) inputs.get("input_onedata_providers")).isEmpty()) {
+          throw new IllegalArgumentException(
+              String.format("TEMPORARY: As for the current implementation,"
+                  + " 'input_onedata_providers' cannot be empty"));
+        }
+
         result.put("input", new OneData(null, (String) inputs.get("input_onedata_space"), null,
             (String) inputs.get("input_onedata_providers")));
         LOG.debug("Extracted OneData requirement for node <{}>: <{}>", "input",
@@ -713,6 +721,14 @@ public class ToscaServiceImpl implements ToscaService {
       }
 
       if (inputs.get("output_onedata_space") != null) {
+        // FIXME: Remove temporary check for limited functionalities
+        if (inputs.get("output_onedata_providers") == null
+            || ((String) inputs.get("output_onedata_providers")).isEmpty()) {
+          throw new IllegalArgumentException(
+              String.format("TEMPORARY: As for the current implementation,"
+                  + " 'output_onedata_providers' cannot be empty"));
+        }
+
         result.put("output", new OneData(null, (String) inputs.get("output_onedata_space"), null,
             (String) inputs.get("output_onedata_providers")));
         LOG.debug("Extracted OneData requirement for node <{}>: <{}>", "output",

@@ -1,6 +1,5 @@
 package it.reply.orchestrator.service.deployment.providers;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 import alien4cloud.model.components.ComplexPropertyValue;
@@ -50,7 +49,6 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -78,15 +76,6 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
   @Value("${chronos.password}")
   private String password;
 
-  @Value("${onedata.token}")
-  private String token;
-  @Value("${onedata.space}")
-  private String space;
-  @Value("${onedata.path:''}")
-  private String path;
-  @Value("${onedata.provider}")
-  private String provider;
-
   @Value("${orchestrator.chronos.jobChunkSize}")
   private int jobChunkSize;
 
@@ -102,22 +91,6 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
     Chronos client = ChronosClient.getInstanceWithBasicAuth(endpoint, username, password);
 
     return client;
-  }
-
-  /**
-   * Temporary method to generate default OneData settings.
-   * 
-   * @return the {@link OneData} settings.
-   */
-  protected OneData generateStubOneData(DeploymentMessage deploymentMessage) {
-
-    String path = new StringBuilder().append(this.path).append(deploymentMessage.getDeploymentId())
-        .toString();
-
-    LOG.info(String.format("Generating OneData settings with parameters: %s",
-        Arrays.asList(token, space, path, provider)));
-
-    return new OneData(token, space, path, provider);
   }
 
   public Collection<Job> getJobs(Chronos client) {
@@ -144,11 +117,6 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       // Generate INDIGOJob graph
       if (deploymentMessage.getChronosJobGraph() == null) {
         LOG.debug("Generating job graph for deployment <{}>", deployment.getId());
-        // FIXME: Just for testing (remove once OneData parameters generation is completed!)
-        deploymentMessage.setOneDataParameters(
-            ImmutableMap.of("service", generateStubOneData(deploymentMessage)));
-        LOG.warn("GENERATING STUB ONE DATA FOR SERVICE"
-            + " (remove once OneData parameters generation is completed!)");
         deploymentMessage.setChronosJobGraph(
             generateJobGraph(deployment, deploymentMessage.getOneDataParameters()));
       }
