@@ -4,10 +4,12 @@ import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
+import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl.IndigoJob;
 
 import java.io.Serializable;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -41,6 +43,15 @@ public class DeploymentMessage implements Serializable {
   private CloudProviderEndpoint chosenCloudProviderEndpoint;
 
   private String oauth2Token;
+
+  /**
+   * The OneData information the user gave and to be used to select the best provider.
+   */
+  private Map<String, OneData> oneDataRequirements = new HashMap<>();
+  /**
+   * The OneData information generated after the best provider choice.
+   */
+  private Map<String, OneData> oneDataParameters = new HashMap<>();
 
   /**
    * TEMPORARY Chronos Job Graph (to avoid regenerating the template representation each time).
@@ -142,6 +153,22 @@ public class DeploymentMessage implements Serializable {
 
   public void setOauth2Token(String oauth2Token) {
     this.oauth2Token = oauth2Token;
+  }
+
+  public Map<String, OneData> getOneDataRequirements() {
+    return oneDataRequirements;
+  }
+
+  public void setOneDataRequirements(Map<String, OneData> oneDataRequirements) {
+    this.oneDataRequirements = oneDataRequirements;
+  }
+
+  public Map<String, OneData> getOneDataParameters() {
+    return oneDataParameters;
+  }
+
+  public void setOneDataParameters(Map<String, OneData> oneDataParameters) {
+    this.oneDataParameters = oneDataParameters;
   }
 
   @Override

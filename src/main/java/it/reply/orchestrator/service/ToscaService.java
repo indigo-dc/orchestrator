@@ -13,6 +13,7 @@ import alien4cloud.tosca.parser.ParsingResult;
 import com.sun.istack.NotNull;
 
 import it.reply.orchestrator.dto.CloudProvider;
+import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.service.ToscaException;
 
@@ -229,4 +230,18 @@ public interface ToscaService {
   public String updateTemplate(String template) throws IOException;
 
   // public String updateCount(ArchiveRoot archiveRoot, int count) throws IOException;
+
+  /**
+   * Extracts OneData requirements (i.e. space, favorite providers, etc) from the TOSCA template.
+   * 
+   * @param archiveRoot
+   *          an {@link ArchiveRoot} representing the template.
+   * @param inputs
+   *          the user's input list.
+   * @return a Map of {@link OneData} requirement, index by node name.<br/>
+   *         <b>WARNING:</b> (TEMPORARY) currently OneData nodes are not supported; thus the name
+   *         used are hard-coded and are either 'input', 'output' or 'service'.
+   */
+  public Map<String, OneData> extractOneDataRequirements(ArchiveRoot archiveRoot,
+      Map<String, Object> inputs);
 }

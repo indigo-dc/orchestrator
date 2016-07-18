@@ -13,6 +13,7 @@ import it.reply.orchestrator.dal.entity.WorkflowReference;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
+import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
@@ -81,6 +82,7 @@ public class DeploymentServiceImpl implements DeploymentService {
     Map<String, NodeTemplate> nodes;
     Deployment deployment;
     boolean isChronosDeployment = false;
+    Map<String, OneData> odRequirements = new HashMap<>();
 
     try {
       // Parse once, validate structure and user's inputs, replace user's input
@@ -104,6 +106,12 @@ public class DeploymentServiceImpl implements DeploymentService {
       deployment.setDeploymentProvider(
           (isChronosDeployment ? DeploymentProvider.CHRONOS : DeploymentProvider.IM));
 
+      if (isChronosDeployment) {
+        // Extract OneData requirements from template
+        odRequirements =
+            toscaService.extractOneDataRequirements(parsingResult, request.getParameters());
+      }
+
       deployment = deploymentRepository.save(deployment);
 
       // Create internal resources representation (to store in DB)
@@ -126,6 +134,7 @@ public class DeploymentServiceImpl implements DeploymentService {
 
     // Build deployment message
     DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment);
+    deploymentMessage.setOneDataRequirements(odRequirements);
     params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
 
     ProcessInstance pi = null;

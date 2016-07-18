@@ -24,8 +24,8 @@ public class ApplicationConfig {
    * 
    */
   @Bean
-  public static PropertySourcesPlaceholderConfigurer propertyPlaceholderConfigurer(
-      ResourceLoader resourceLoader) throws IOException {
+  public static PropertySourcesPlaceholderConfigurer
+      propertyPlaceholderConfigurer(ResourceLoader resourceLoader) throws IOException {
 
     PropertySourcesPlaceholderConfigurer propertyPlaceholderConfigurer =
         new PropertySourcesPlaceholderConfigurer();

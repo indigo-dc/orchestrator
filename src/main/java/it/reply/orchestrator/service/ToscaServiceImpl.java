@@ -29,6 +29,7 @@ import es.upv.i3m.grycap.im.auth.credentials.ServiceProvider;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.Image;
 import it.reply.orchestrator.dto.cmdb.Type;
+import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.exception.service.ToscaException;
@@ -692,4 +693,55 @@ public class ToscaServiceImpl implements ToscaService {
   // return getTemplateFromTopology(archiveRoot);
   // }
 
+  @Override
+  public Map<String, OneData> extractOneDataRequirements(ArchiveRoot archiveRoot,
+      Map<String, Object> inputs) {
+    try {
+
+      // FIXME: Remove hard-coded input extraction and search on OneData nodes instead
+
+      /*
+       * By now, OneData requirements are in user's input fields: input_onedata_space,
+       * output_onedata_space, [input_onedata_providers, output_onedata_providers]
+       */
+      Map<String, OneData> result = new HashMap<>();
+      if (inputs.get("input_onedata_space") != null) {
+        // FIXME: Remove temporary check for limited functionalities
+        if (inputs.get("input_onedata_providers") == null
+            || ((String) inputs.get("input_onedata_providers")).isEmpty()) {
+          throw new IllegalArgumentException(
+              String.format("TEMPORARY: As for the current implementation,"
+                  + " 'input_onedata_providers' cannot be empty"));
+        }
+
+        result.put("input", new OneData(null, (String) inputs.get("input_onedata_space"), null,
+            (String) inputs.get("input_onedata_providers")));
+        LOG.debug("Extracted OneData requirement for node <{}>: <{}>", "input",
+            result.get("input"));
+      }
+
+      if (inputs.get("output_onedata_space") != null) {
+        // FIXME: Remove temporary check for limited functionalities
+        if (inputs.get("output_onedata_providers") == null
+            || ((String) inputs.get("output_onedata_providers")).isEmpty()) {
+          throw new IllegalArgumentException(
+              String.format("TEMPORARY: As for the current implementation,"
+                  + " 'output_onedata_providers' cannot be empty"));
+        }
+
+        result.put("output", new OneData(null, (String) inputs.get("output_onedata_space"), null,
+            (String) inputs.get("output_onedata_providers")));
+        LOG.debug("Extracted OneData requirement for node <{}>: <{}>", "output",
+            result.get("output"));
+      }
+
+      if (result.size() == 0) {
+        LOG.debug("No OneData requirements to extract");
+      }
+
+      return result;
+    } catch (Exception ex) {
+      throw new RuntimeException("Failed to extract OneData requirements: " + ex.getMessage(), ex);
+    }
+  }
 }

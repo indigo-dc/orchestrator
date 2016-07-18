@@ -26,6 +26,7 @@ import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage.TemplateTopologicalOrderIterator;
+import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Task;
@@ -48,7 +49,6 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -76,15 +76,6 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
   @Value("${chronos.password}")
   private String password;
 
-  @Value("${onedata.token}")
-  private String token;
-  @Value("${onedata.space}")
-  private String space;
-  @Value("${onedata.path:''}")
-  private String path;
-  @Value("${onedata.provider}")
-  private String provider;
-
   @Value("${orchestrator.chronos.jobChunkSize}")
   private int jobChunkSize;
 
@@ -100,22 +91,6 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
     Chronos client = ChronosClient.getInstanceWithBasicAuth(endpoint, username, password);
 
     return client;
-  }
-
-  /**
-   * Temporary method to generate default OneData settings.
-   * 
-   * @return the {@link OneData} settings.
-   */
-  protected OneData generateStubOneData(DeploymentMessage deploymentMessage) {
-
-    String path = new StringBuilder().append(this.path).append(deploymentMessage.getDeploymentId())
-        .toString();
-
-    LOG.info(String.format("Generating OneData settings with parameters: %s",
-        Arrays.asList(token, space, path, provider)));
-
-    return new OneData(token, space, path, provider);
   }
 
   public Collection<Job> getJobs(Chronos client) {
@@ -143,7 +118,7 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       if (deploymentMessage.getChronosJobGraph() == null) {
         LOG.debug("Generating job graph for deployment <{}>", deployment.getId());
         deploymentMessage.setChronosJobGraph(
-            generateJobGraph(deployment, generateStubOneData(deploymentMessage)));
+            generateJobGraph(deployment, deploymentMessage.getOneDataParameters()));
       }
 
       // Create nodes iterator if not done yet
@@ -529,7 +504,7 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
         LOG.debug("Generating job graph for deployment <{}>", deployment.getId());
         try {
           deploymentMessage.setChronosJobGraph(
-              generateJobGraph(deployment, generateStubOneData(deploymentMessage)));
+              generateJobGraph(deployment, deploymentMessage.getOneDataParameters()));
         } catch (Exception e2) {
           LOG.error("Parsing error for deployment <{}> on Chronos -> No resource to delete",
               deployment.getId(), e2);
@@ -537,7 +512,6 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
           deploymentMessage.setDeleteComplete(true);
           return true;
         }
-
       }
 
       // Create nodes iterator if not done yet
@@ -713,7 +687,8 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
    *          the input deployment.
    * @return the job graph.
    */
-  protected Map<String, IndigoJob> generateJobGraph(Deployment deployment, OneData odParams) {
+  protected Map<String, IndigoJob> generateJobGraph(Deployment deployment,
+      Map<String, OneData> odParameters) {
     String deploymentId = deployment.getId();
     Map<String, IndigoJob> jobs = new HashMap<String, ChronosServiceImpl.IndigoJob>();
 
@@ -726,7 +701,7 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
        * receiving the template because we still miss OneData settings that are obtained during the
        * WF after the site choice, which in turns depends on the template nodes and properties...)
        */
-      customizedTemplate = replaceHardCodedParams(customizedTemplate, odParams);
+      customizedTemplate = replaceHardCodedParams(customizedTemplate, odParameters);
 
       // Re-parse template (TODO: serialize the template in-memory representation?)
       ArchiveRoot ar = toscaService.prepareTemplate(customizedTemplate, deployment.getParameters());
@@ -794,63 +769,41 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
    * 
    * @param template
    *          the string TOSCA template.
-   * @param od
+   * @param odParameters
    *          the OneData settings.
    */
-  protected String replaceHardCodedParams(String template, OneData od) {
+  public String replaceHardCodedParams(String template, Map<String, OneData> odParameters) {
 
-    // Replace OneData properties
-    template = template.replace("TOKEN_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getToken());
-    template = template.replace("DATA_SPACE_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getSpace());
-    template = template.replace("PATH_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getPath());
-    template =
-        template.replace("ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getProvider());
+    LOG.debug("Replacing OneData parameters");
+
+    if (odParameters.containsKey("input")) {
+      OneData od = odParameters.get("input");
+      // Replace OneData properties
+      template = template.replace("INPUT_ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR",
+          od.getProvidersAsList());
+      LOG.debug("Replaced {} OneData parameters with: {}", "input", od);
+    }
+
+    if (odParameters.containsKey("output")) {
+      OneData od = odParameters.get("output");
+      // Replace OneData properties
+      template = template.replace("OUTPUT_ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR",
+          od.getProvidersAsList());
+      LOG.debug("Replaced {} OneData parameters with: {}", "output", od);
+    }
+
+    if (odParameters.containsKey("service")) {
+      OneData od = odParameters.get("service");
+      // Replace OneData properties
+      template = template.replace("TOKEN_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getToken());
+      template = template.replace("DATA_SPACE_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getSpace());
+      template = template.replace("PATH_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getPath());
+      template = template.replace("ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR",
+          od.getProvidersAsList());
+      LOG.debug("Replaced {} OneData parameters with: {}", "service", od);
+    }
 
     return template;
-  }
-
-  public static class OneData {
-    private String token;
-    private String space;
-    private String path;
-    private String provider;
-
-    /**
-     * Generates a new OneData representation.
-     * 
-     * @param token
-     *          the token
-     * @param space
-     *          the space
-     * @param path
-     *          the path
-     * @param provider
-     *          the provider
-     */
-    public OneData(String token, String space, String path, String provider) {
-      super();
-      this.token = token;
-      this.space = space;
-      this.path = path;
-      this.provider = provider;
-    }
-
-    public String getToken() {
-      return token;
-    }
-
-    public String getSpace() {
-      return space;
-    }
-
-    public String getPath() {
-      return path;
-    }
-
-    public String getProvider() {
-      return provider;
-    }
-
   }
 
   protected void putStringProperty(NodeTemplate nodeTemplate, String name, String value) {
