@@ -6,10 +6,12 @@ import alien4cloud.tosca.parser.ParsingException;
 
 import es.upv.i3m.grycap.im.InfrastructureManager;
 import es.upv.i3m.grycap.im.States;
-import es.upv.i3m.grycap.im.auth.AuthorizationHeader;
-import es.upv.i3m.grycap.im.auth.credential.Credential;
-import es.upv.i3m.grycap.im.auth.credential.im.ImCredential.ImTokenCredential;
-import es.upv.i3m.grycap.im.auth.credential.opennebula.OpenNebulaTokenCredential;
+import es.upv.i3m.grycap.im.auth.credentials.AuthorizationHeader;
+import es.upv.i3m.grycap.im.auth.credentials.Credentials;
+import es.upv.i3m.grycap.im.auth.credentials.providers.ImCredentials;
+import es.upv.i3m.grycap.im.auth.credentials.providers.OpenNebulaCredentials;
+import es.upv.i3m.grycap.im.auth.credentials.providers.OpenStackCredentials;
+import es.upv.i3m.grycap.im.auth.credentials.providers.OpenstackAuthVersion;
 import es.upv.i3m.grycap.im.exceptions.ImClientErrorException;
 import es.upv.i3m.grycap.im.exceptions.ImClientException;
 import es.upv.i3m.grycap.im.pojo.InfOutputValues;
@@ -92,6 +94,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   private static final Pattern UUID_PATTERN = Pattern.compile(".*\\/([^\"\\/]+)\\/?\"?");
   private static final Pattern VM_ID_PATTERN = Pattern.compile("(\\w+)$");
+  private static final Pattern OS_ENDPOINT_PATTERN =
+      Pattern.compile("(https?:\\/\\/[^\\/]*)\\/?([^\\/]*)");
 
   @Autowired
   private ToscaService toscaService;
@@ -102,31 +106,56 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   @Autowired
   private ResourceRepository resourceRepository;
 
-  private InfrastructureManager getClient(DeploymentMessage dm) {
+  protected InfrastructureManager getClient(DeploymentMessage dm) {
     IaaSType iaasType = dm.getChosenCloudProviderEndpoint().getIaasType();
     String authString = null;
     try {
       LOG.debug("Load {} credentials with: {}", iaasType, dm.getChosenCloudProviderEndpoint());
       switch (iaasType) {
         case OPENSTACK:
-          try (InputStream is = ctx.getResource(openstackAuthFilePath).getInputStream()) {
-            authString = IOUtils.toString(is);
-          }
-          if (oauth2TokenService.isSecurityEnabled()) {
-            authString =
-                authString.replaceAll("InfrastructureManager; username = .+; password = .+",
-                    "InfrastructureManager; token = " + dm.getOauth2Token());
+          // FIXME remove hardcoded string
+          if (dm.getChosenCloudProviderEndpoint().getCpEndpoint().contains("recas.ba.infn")
+              || !oauth2TokenService.isSecurityEnabled()) {
+            try (InputStream is = ctx.getResource(openstackAuthFilePath).getInputStream()) {
+              authString = IOUtils.toString(is);
+            }
+            if (oauth2TokenService.isSecurityEnabled()) {
+              authString =
+                  authString.replaceAll("InfrastructureManager; username = .+; password = .+",
+                      "InfrastructureManager; token = " + dm.getOauth2Token());
+            }
+            authString = authString.replaceAll("\n", "\\\\n");
+          } else {
+            String endpoint = dm.getChosenCloudProviderEndpoint().getCpEndpoint();
+            OpenstackAuthVersion authVersion = OpenstackAuthVersion.PASSWORD_2_0;
+            Matcher matcher = OS_ENDPOINT_PATTERN.matcher(endpoint);
+            if (!matcher.matches()) {
+              throw new DeploymentException("Wrong OS endpoint format: " + endpoint);
+            } else {
+              endpoint = matcher.group(1);
+              if (matcher.groupCount() > 1 && matcher.group(2).equals("v3")) {
+                authVersion = OpenstackAuthVersion.PASSWORD_3_X;
+              }
+            }
+            AuthorizationHeader ah = new AuthorizationHeader();
+            Credentials cred = ImCredentials.buildCredentials().withToken(dm.getOauth2Token());
+            ah.addCredential(cred);
+            cred = OpenStackCredentials.buildCredentials().withTenant("oidc")
+                .withUsername("indigo-dc").withPassword(dm.getOauth2Token()).withHost(endpoint)
+                .withAuthVersion(authVersion);
+            ah.addCredential(cred);
+            InfrastructureManager im = new InfrastructureManager(imUrl, ah);
+            return im;
           }
           break;
         case OPENNEBULA:
           if (oauth2TokenService.isSecurityEnabled()) {
             AuthorizationHeader ah = new AuthorizationHeader();
-            Credential<?> cred =
-                ImTokenCredential.getBuilder().withToken(dm.getOauth2Token()).build();
+            Credentials cred = ImCredentials.buildCredentials().withToken(dm.getOauth2Token());
             ah.addCredential(cred);
-            cred = OpenNebulaTokenCredential.getBuilder().withId("onedock")
+            cred = OpenNebulaCredentials.buildCredentials()
                 .withHost(dm.getChosenCloudProviderEndpoint().getCpEndpoint())
-                .withToken(dm.getOauth2Token()).build();
+                .withToken(dm.getOauth2Token());
             ah.addCredential(cred);
             InfrastructureManager im = new InfrastructureManager(imUrl, ah);
             return im;
@@ -143,6 +172,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
             try (InputStream in = ctx.getResource(onedockAuthFilePath).getInputStream()) {
               authString = IOUtils.toString(in, StandardCharsets.UTF_8.toString());
             }
+            authString = authString.replaceAll("\n", "\\\\n");
             // replace the proxy as string
             authString = authString.replace("{proxy}", proxy);
           }
@@ -173,7 +203,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       ArchiveRoot ar =
           toscaService.prepareTemplate(deployment.getTemplate(), deployment.getParameters());
       toscaService.addElasticClusterParameters(ar, deploymentUuid);
-      toscaService.contextualizeImages(ar, deploymentMessage.getChosenCloudProvider());
+      toscaService.contextualizeImages(DeploymentProvider.IM, ar,
+          deploymentMessage.getChosenCloudProvider());
       String imCustomizedTemplate = toscaService.getTemplateFromTopology(ar);
 
       // Generate IM Client
@@ -327,7 +358,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       // Get TOSCA in-memory repr. of new template
       newAr = toscaService.prepareTemplate(template, deployment.getParameters());
       toscaService.addElasticClusterParameters(newAr, deployment.getId());
-      toscaService.contextualizeImages(newAr, deploymentMessage.getChosenCloudProvider());
+      toscaService.contextualizeImages(DeploymentProvider.IM, newAr,
+          deploymentMessage.getChosenCloudProvider());
     } catch (ParsingException | IOException | ToscaException ex) {
       throw new OrchestratorException(ex);
     }

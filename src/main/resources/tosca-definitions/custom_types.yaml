@@ -345,7 +345,7 @@ node_types:
             galaxy_tool_panel_section_id: { get_property: [ SELF, tool_panel_section_id ] }
 
   tosca.nodes.indigo.ElasticCluster:
-    derived_from: tosca.nodes.Root
+    derived_from: tosca.nodes.SoftwareComponent
     properties:
       secret_token:
         type: string
@@ -591,7 +591,7 @@ node_types:
     interfaces:
       Standard:
         configure:
-          implementation: mesos/mesos_master_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/mesos_master_install.yml
           inputs:
             consul_server_ips: { get_attribute: [ HOST, public_address ] }
             zookeeper_host_list_ips: { get_attribute: [ HOST, public_address ] }
@@ -638,7 +638,7 @@ node_types:
     interfaces:
       Standard:
         create:
-          implementation: mesos/mesos_slave_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/mesos_slave_install.yml
           inputs:
             mesos_master_ips: { get_property: [ SELF, master_ips ] }
             consul_server_ips: { get_property: [ SELF, master_ips ] }
@@ -657,13 +657,22 @@ node_types:
         type: list
         entry_schema:
           type: string
+    artifacts:
+      docker_agent_role:
+        file: indigo-dc.docker
+        type: tosca.artifacts.AnsibleGalaxy.role
+      consul_agent_role:
+        file: indigo-dc.consul
+        type: tosca.artifacts.AnsibleGalaxy.role    
+      haproxy_agent_role:
+        file: indigo-dc.haproxy-consul
+        type: tosca.artifacts.AnsibleGalaxy.role          
     interfaces:
       Standard:
         create:
-          implementation: mesos/mesos_lb_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/mesos_lb_install.yml
           inputs:
             consul_server_ips: { get_property: [ SELF, master_ips ] }
-            lb_master_ip: { get_attribute: [ HOST, public_address ] }
     requirements:
       host:
         type: tosca.capabilities.Container
@@ -763,3 +772,14 @@ node_types:
         default: powerfit
         constraints:
           - equal: powerfit
+
+  tosca.nodes.indigo.Ambertools:
+    derived_from: tosca.nodes.SoftwareComponent
+    artifacts:
+      galaxy_role:
+        file: indigo-dc.ambertools
+        type: tosca.artifacts.AnsibleGalaxy.role
+    interfaces:
+      Standard:
+        configure:
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/ambertools/ambertools_install.yml

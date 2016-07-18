@@ -16,8 +16,8 @@ public class GetSlam extends BaseRankCloudProvidersCommand {
   private SlamService slamService;
 
   @Override
-  protected RankCloudProvidersMessage customExecute(
-      RankCloudProvidersMessage rankCloudProvidersMessage) {
+  protected RankCloudProvidersMessage
+      customExecute(RankCloudProvidersMessage rankCloudProvidersMessage) {
     rankCloudProvidersMessage.setSlamPreferences(slamService.getCustomerPreferences());
 
     // Get VO (customer) preferences and SLAs (infer available Cloud Providers from it)

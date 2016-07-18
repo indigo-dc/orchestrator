@@ -1,6 +1,7 @@
 package it.reply.orchestrator.service;
 
 import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
@@ -104,12 +105,24 @@ public class CloudProviderEndpointServiceImpl {
 
   protected IaaSType getProviderIaaSType(RankCloudProvidersMessage rankCloudProvidersMessage,
       String providerName) {
-    String serviceType = rankCloudProvidersMessage.getCloudProviders().get(providerName)
-        .getCmbdProviderServiceByType(Type.COMPUTE).getData().getServiceType();
+    return getProviderIaaSType(rankCloudProvidersMessage.getCloudProviders().get(providerName));
+  }
+
+  /**
+   * Get the {@link IaaSType} from the {@link CloudProvider}.
+   * 
+   * @param cloudProvider
+   *          the cloudProvider
+   * @return the IaaSTYpe
+   */
+  public static IaaSType getProviderIaaSType(CloudProvider cloudProvider) {
+    String serviceType =
+        cloudProvider.getCmbdProviderServiceByType(Type.COMPUTE).getData().getServiceType();
     if (serviceType.contains("openstack")) {
       return IaaSType.OPENSTACK;
     }
 
     return IaaSType.OPENNEBULA;
   }
+
 }

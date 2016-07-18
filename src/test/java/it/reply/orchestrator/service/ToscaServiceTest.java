@@ -19,6 +19,7 @@ import es.upv.i3m.grycap.file.Utf8File;
 import es.upv.i3m.grycap.im.exceptions.FileException;
 
 import it.reply.orchestrator.config.specific.WebAppConfigurationAware;
+import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.exception.service.ToscaException;
 
 import org.junit.Rule;
@@ -44,6 +45,8 @@ public class ToscaServiceTest extends WebAppConfigurationAware {
 
   public static final String TEMPLATES_BASE_DIR = "./src/test/resources/tosca/";
   public static final String TEMPLATES_INPUT_BASE_DIR = TEMPLATES_BASE_DIR + "inputs/";
+  public static final String TEMPLATES_ONEDATA_BASE_DIR =
+      TEMPLATES_BASE_DIR + "onedata_requirements/";
 
   private String deploymentId = "deployment_id";
 
@@ -62,7 +65,6 @@ public class ToscaServiceTest extends WebAppConfigurationAware {
     String customizedTemplate = toscaService.customizeTemplate(template, deploymentId);
     Map<String, NodeTemplate> nodes = toscaService.getArchiveRootFromTemplate(customizedTemplate)
         .getResult().getTopology().getNodeTemplates();
-
     for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
       if (entry.getValue().getType().equals("tosca.nodes.indigo.ElasticCluster")) {
         String templateDeploymentId =
@@ -163,14 +165,14 @@ public class ToscaServiceTest extends WebAppConfigurationAware {
   }
 
   @Test
-  public void checkUserInputRequiredInputNotInList() throws Exception {
+  public void checkUserInputRequiredNoDefaultValueNotGiven() throws Exception {
     checkUserInputGeneric("tosca_inputs_required_not_given.yaml", "required and is not present");
   }
 
   @Test
-  public void checkUserInputNotRequiredWithoutDefaultValue() throws Exception {
-    checkUserInputGeneric("tosca_inputs_not_required_without_default.yaml",
-        "neither required nor has a default value");
+  public void checkUserInputNotRequiredNoDefaultValueNotGiven() throws Exception {
+    checkUserInputGeneric("tosca_inputs_not_required_no_default_not_given.yaml",
+        "No given input or default value available");
   }
 
   @Test
@@ -185,6 +187,34 @@ public class ToscaServiceTest extends WebAppConfigurationAware {
     String template = getFileContentAsString(TEMPLATES_INPUT_BASE_DIR + templateName);
     Map<String, Object> inputs = new HashMap<String, Object>();
     toscaService.prepareTemplate(template, inputs);
+  }
+
+  @Test
+  public void checkOneDataHardCodedRequirementsExtractionInUserDefinedTemplate() throws Exception {
+    String template = getFileContentAsString(
+        TEMPLATES_ONEDATA_BASE_DIR + "tosca_onedata_requirements_hardcoded_userdefined.yaml");
+    Map<String, Object> inputs = new HashMap<String, Object>();
+    inputs.put("input_onedata_providers", "input_provider_1,input_provider_2");
+    inputs.put("input_onedata_space", "input_onedata_space");
+    inputs.put("output_onedata_providers", "output_provider_1,output_provider_2");
+    inputs.put("output_onedata_space", "output_onedata_space");
+    ArchiveRoot ar = toscaService.prepareTemplate(template, inputs);
+    Map<String, OneData> odr = toscaService.extractOneDataRequirements(ar, inputs);
+    assertEquals(true, odr.containsKey("input"));
+    assertEquals(inputs.get("input_onedata_providers"), odr.get("input").getProvidersAsList());
+    assertEquals(true, odr.containsKey("output"));
+    assertEquals(inputs.get("output_onedata_providers"), odr.get("output").getProvidersAsList());
+  }
+
+  @Test
+  public void checkOneDataHardCodedRequirementsExtractionInServiceTemplate() throws Exception {
+    String template = getFileContentAsString(
+        TEMPLATES_ONEDATA_BASE_DIR + "tosca_onedata_requirements_hardcoded_service.yaml");
+
+    Map<String, Object> inputs = new HashMap<String, Object>();
+    ArchiveRoot ar = toscaService.prepareTemplate(template, inputs);
+    Map<String, OneData> odr = toscaService.extractOneDataRequirements(ar, inputs);
+    assertEquals(0, odr.size());
   }
 
   private String getFileContentAsString(String fileUri) throws FileException {

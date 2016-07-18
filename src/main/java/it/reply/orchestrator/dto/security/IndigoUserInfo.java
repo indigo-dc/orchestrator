@@ -5,6 +5,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
+import org.apache.commons.lang3.builder.EqualsBuilder;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.mitre.openid.connect.model.DefaultUserInfo;
 import org.mitre.openid.connect.model.UserInfo;
 
@@ -114,43 +116,18 @@ public class IndigoUserInfo extends DefaultUserInfo {
 
   @Override
   public int hashCode() {
-    final int prime = 31;
-    int result = super.hashCode();
-    if (groups != null) {
-      for (Group g : groups) {
-        result = prime * result + ((g == null) ? 0 : g.hashCode());
-      }
-    }
-    result = prime * result + ((organizationName == null) ? 0 : organizationName.hashCode());
-    return result;
+    return new HashCodeBuilder().appendSuper(super.hashCode()).append(this.getGroups())
+        .append(this.getOrganizationName()).build();
   }
 
   @Override
   public boolean equals(Object obj) {
-    if (!(obj instanceof IndigoUserInfo)) {
+    if (obj == null || !(obj instanceof IndigoUserInfo)) {
       return false;
     }
-    if (!super.equals(obj)) {
-      return false;
-    }
-
     IndigoUserInfo other = (IndigoUserInfo) obj;
-    if (groups == null) {
-      if (other.groups != null) {
-        return false;
-      }
-    } else {
-      if (!groups.equals(other.groups)) {
-        return false;
-      }
-    }
-    if (organizationName == null) {
-      if (other.organizationName != null) {
-        return false;
-      }
-    } else if (!organizationName.equals(other.organizationName)) {
-      return false;
-    }
-    return true;
+    return new EqualsBuilder().appendSuper(super.equals(other))
+        .append(this.getGroups(), other.getGroups())
+        .append(this.getOrganizationName(), other.getOrganizationName()).build();
   }
 }

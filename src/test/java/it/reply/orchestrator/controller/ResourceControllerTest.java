@@ -14,63 +14,86 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.github.springtestdbunit.annotation.DatabaseSetup;
-import com.github.springtestdbunit.annotation.DatabaseTearDown;
-
-import it.reply.orchestrator.config.specific.WebAppConfigurationAware;
+import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.entity.Resource;
+import it.reply.orchestrator.exception.GlobalControllerExceptionHandler;
+import it.reply.orchestrator.exception.http.NotFoundException;
+import it.reply.orchestrator.resource.BaseResourceAssembler;
+import it.reply.orchestrator.service.ResourceService;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
+import org.mockito.Spy;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.HateoasPageableHandlerMethodArgumentResolver;
+import org.springframework.data.web.PagedResourcesAssemblerArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.JUnitRestDocumentation;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.web.context.WebApplicationContext;
 
-import javax.annotation.Resource;
+import java.util.List;
 
-@DatabaseTearDown("/data/database-empty.xml")
-@DatabaseSetup("/data/database-resource-init.xml")
-public class ResourceControllerTest extends WebAppConfigurationAware {
-
-  @Autowired
-  private WebApplicationContext wac;
+public class ResourceControllerTest {
 
   private MockMvc mockMvc;
 
-  @Resource
-  private Environment env;
+  @InjectMocks
+  private ResourceController resourceController = new ResourceController();
+
+  @Mock
+  private ResourceService resourceService;
+
+  @Spy
+  private HateoasPageableHandlerMethodArgumentResolver pageableArgumentResolver;
+
+  @Spy
+  private BaseResourceAssembler baseResourceAssembler;
+
+  @Spy
+  private PagedResourcesAssemblerArgumentResolver pagedResourcesAssemblerArgumentResolver =
+      new PagedResourcesAssemblerArgumentResolver(pageableArgumentResolver, null);
+
+  @Spy
+  private GlobalControllerExceptionHandler globalControllerExceptionHandler;
+
   @Rule
   public JUnitRestDocumentation restDocumentation =
       new JUnitRestDocumentation("target/generated-snippets");
 
-  private final String deploymentId = "0748fbe9-6c1d-4298-b88f-06188734ab42";
-  private final String resourceId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
-
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
-    mockMvc = MockMvcBuilders.webAppContextSetup(wac)
+    mockMvc = MockMvcBuilders.standaloneSetup(resourceController)
+        .setControllerAdvice(globalControllerExceptionHandler)
+        .setCustomArgumentResolvers(pageableArgumentResolver,
+            pagedResourcesAssemblerArgumentResolver)
         .apply(documentationConfiguration(this.restDocumentation)).dispatchOptions(true).build();
   }
 
   @Test
-  @DatabaseSetup("/data/database-resource-init.xml")
   public void getResources() throws Exception {
+    Pageable pageable = ControllerTestUtils.createDefaultPageable();
+    Deployment deployment = ControllerTestUtils.createDeployment();
+    List<Resource> resources = ControllerTestUtils.createResources(deployment, 2);
+    Mockito.when(resourceService.getResources(deployment.getId(), pageable))
+        .thenReturn(new PageImpl<Resource>(resources));
 
     mockMvc
-        .perform(
-            get("/deployments/" + deploymentId + "/resources").accept(MediaType.APPLICATION_JSON))
+        .perform(get("/deployments/" + deployment.getId() + "/resources")
+            .accept(MediaType.APPLICATION_JSON))
         .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.content", org.hamcrest.Matchers.hasSize(2)))
         .andExpect(jsonPath("$.content", org.hamcrest.Matchers.hasSize(2)))
         .andExpect(jsonPath("$.page.totalElements", equalTo(2)))
-        .andExpect(jsonPath("$.links[0].rel", is("self"))).andExpect(
-            jsonPath("$.links[0].href", endsWith("/deployments/" + deploymentId + "/resources")))
+        .andExpect(jsonPath("$.links[0].rel", is("self"))).andExpect(jsonPath("$.links[0].href",
+            endsWith("/deployments/" + deployment.getId() + "/resources")))
 
         .andDo(document("resources", preprocessResponse(prettyPrint()),
             responseFields(fieldWithPath("links[]").ignored(),
@@ -81,6 +104,8 @@ public class ResourceControllerTest extends WebAppConfigurationAware {
                     "The status of the resource. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/NodeStates.html)"),
                 fieldWithPath("content[].toscaNodeType").optional()
                     .description("The type of the represented TOSCA node"),
+                fieldWithPath("content[].toscaNodeName").optional()
+                    .description("The name of the represented TOSCA node"),
                 fieldWithPath("content[].requiredBy")
                     .description("A list of nodes that require this resource"),
                 fieldWithPath("content[].links[]").ignored(), fieldWithPath("page").ignored())));
@@ -89,23 +114,32 @@ public class ResourceControllerTest extends WebAppConfigurationAware {
 
   @Test
   public void getResourcesNotFoundNotDeployment() throws Exception {
-    mockMvc.perform(get("/deployments/aaaaaaaa-bbbb-ccccc-dddd-eeeeeeeeeeee/resources"))
+    Pageable pageable = ControllerTestUtils.createDefaultPageable();
+    Deployment deployment = ControllerTestUtils.createDeployment();
+    Mockito.when(resourceService.getResources(deployment.getId(), pageable)).thenThrow(
+        new NotFoundException("The deployment <" + deployment.getId() + "> doesn't exist"));
+
+    mockMvc.perform(get("/deployments/" + deployment.getId() + "/resources"))
         .andExpect(status().isNotFound())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.code", is(404))).andExpect(jsonPath("$.title", is("Not Found")))
-        .andExpect(jsonPath("$.message",
-            is("The deployment <aaaaaaaa-bbbb-ccccc-dddd-eeeeeeeeeeee> doesn't exist")));
+        .andExpect(
+            jsonPath("$.message", is("The deployment <" + deployment.getId() + "> doesn't exist")));
   }
 
   @Test
-  @DatabaseSetup("/data/database-resource-init.xml")
   public void getResourceByIdAndDeploymentIdSuccesfully() throws Exception {
-    mockMvc.perform(get("/deployments/" + deploymentId + "/resources/" + resourceId))
+    Deployment deployment = ControllerTestUtils.createDeployment();
+    Resource resource = ControllerTestUtils.createResource(deployment);
+    Mockito.when(resourceService.getResource(resource.getId(), deployment.getId()))
+        .thenReturn(resource);
+
+    mockMvc.perform(get("/deployments/" + deployment.getId() + "/resources/" + resource.getId()))
         .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.uuid", equalTo(resourceId)))
+        .andExpect(jsonPath("$.uuid", equalTo(resource.getId())))
         .andExpect(jsonPath("$.links[1].rel", equalTo("self")))
         .andExpect(jsonPath("$.links[1].href",
-            endsWith("/deployments/" + deploymentId + "/resources/" + resourceId)))
+            endsWith("/deployments/" + deployment.getId() + "/resources/" + resource.getId())))
         .andDo(document("get-resource", preprocessResponse(prettyPrint()), responseFields(
             fieldWithPath("uuid").description("The unique identifier of a resource"),
             fieldWithPath("creationTime").description(
@@ -114,6 +148,8 @@ public class ResourceControllerTest extends WebAppConfigurationAware {
                 "The status of the resource. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/NodeStates.html)"),
             fieldWithPath("toscaNodeType").optional()
                 .description("The type of the represented TOSCA node"),
+            fieldWithPath("toscaNodeName").optional()
+                .description("The name of the represented TOSCA node"),
             fieldWithPath("requiredBy").description("A list of nodes that require this resource"),
             fieldWithPath("links[]").ignored())));
   }

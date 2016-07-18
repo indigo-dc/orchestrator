@@ -37,9 +37,7 @@ public class ResourceController {
    * Get all resources associated to a deployment.
    */
   @ResponseStatus(HttpStatus.OK)
-  @RequestMapping(
-      value = "/resources",
-      method = RequestMethod.GET,
+  @RequestMapping(value = "/resources", method = RequestMethod.GET,
       produces = MediaType.APPLICATION_JSON_VALUE)
   public PagedResources<BaseResource> getResources(
       @PathVariable("deploymentId") String deploymentId, @PageableDefault Pageable pageable,
@@ -59,9 +57,7 @@ public class ResourceController {
    * Get resource by id.
    */
   @ResponseStatus(HttpStatus.OK)
-  @RequestMapping(
-      value = "/resources/{resourceId}",
-      method = RequestMethod.GET,
+  @RequestMapping(value = "/resources/{resourceId}", method = RequestMethod.GET,
       produces = MediaType.APPLICATION_JSON_VALUE)
   public BaseResource getResource(@PathVariable("deploymentId") String deploymentId,
       @PathVariable("resourceId") String resourceId) {

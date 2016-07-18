@@ -1,0 +1,34 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+imports:
+  - indigo_custom_types: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/custom_types.yaml
+
+description: >
+  TOSCA examples for specifying a Chronos Job that runs an application using Onedata storage.
+
+topology_template:
+  inputs:
+    input_onedata_providers:
+      type: string
+      description: csv list of favorite Onedata providers to be used to mount the Input Onedata space. If not provided, data locality algo will be applied.
+      default: ''
+      required: no
+
+    output_onedata_providers:
+      type: string
+      description: csv list of favorite Onedata providers to be used to mount the Output Onedata space. If not provided, the same provider(s) used to mount the input space will be used.
+      default: ''
+      required: no
+
+  node_templates:
+    chronos_job:
+      type: tosca.nodes.indigo.Container.Application.Docker.Chronos
+      properties:
+        schedule: 'R0/2015-12-25T17:22:00Z/PT1M'
+        description: 'Execute Application'
+        command: 'env'
+        uris: []
+        retries: 3
+        environment_variables:
+          INPUT_ONEDATA_PROVIDERS: 'INPUT_ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR'
+          OUTPUT_ONEDATA_PROVIDERS: 'OUTPUT_ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR'

@@ -1,10 +1,13 @@
 package it.reply.orchestrator.service.commands;
 
+import com.google.common.collect.ImmutableMap;
+
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
+import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
 import it.reply.orchestrator.service.CloudProviderEndpointServiceImpl;
 import it.reply.orchestrator.service.WorkflowConstants;
@@ -16,7 +19,11 @@ import org.apache.logging.log4j.Logger;
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
+
+import java.util.Arrays;
 
 /**
  * Choose Cloud Provider and update Deployment/Message with the selected one data.
@@ -25,9 +32,19 @@ import org.springframework.stereotype.Component;
  *
  */
 @Component
+@PropertySource("${chronos.auth.file.path:classpath:chronos/chronos.properties}")
 public class UpdateDeployment extends BaseCommand {
 
   private static final Logger LOG = LogManager.getLogger(UpdateDeployment.class);
+
+  @Value("${onedata.token}")
+  private String token;
+  @Value("${onedata.space}")
+  private String space;
+  @Value("${onedata.path:''}")
+  private String path;
+  @Value("${onedata.provider}")
+  private String provider;
 
   @Autowired
   private DeploymentRepository deploymentRepository;
@@ -74,7 +91,7 @@ public class UpdateDeployment extends BaseCommand {
 
       // FIXME Set/update all required selected CP data
 
-      // FIXME Generate
+      // FIXME Generate CP Endpoint
       CloudProviderEndpoint chosenCloudProviderEndpoint = cloudProviderEndpointServiceImpl
           .getCloudProviderEndpoint(deployment, rankCloudProvidersMessage, chosenCp);
       deploymentMessage.setChosenCloudProviderEndpoint(chosenCloudProviderEndpoint);
@@ -83,6 +100,9 @@ public class UpdateDeployment extends BaseCommand {
       // FIXME Use another method to hold CP Endpoint (i.e. CMDB service ID reference?)
       // Save CPE in Deployment for future use
       deployment.setCloudProviderEndpoint(chosenCloudProviderEndpoint);
+
+      // FIXME Implement OneData scheduling properly and move in a dedicated command
+      generateOneDataParameters(deploymentMessage);
 
       exResults.getData().putAll(resultOccurred(true).getData());
       exResults.setData(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
@@ -96,6 +116,38 @@ public class UpdateDeployment extends BaseCommand {
     }
 
     return exResults;
+  }
+
+  protected void generateOneDataParameters(DeploymentMessage deploymentMessage) {
+    // Just copy requirements to parameters (in the future the Orchestrator will need to edit I/O
+    // providers, but not for now)
+    deploymentMessage.getOneDataParameters().putAll(deploymentMessage.getOneDataRequirements());
+
+    // No Requirements -> Service space
+    if (deploymentMessage.getOneDataRequirements().isEmpty()) {
+      deploymentMessage
+          .setOneDataParameters(ImmutableMap.of("service", generateStubOneData(deploymentMessage)));
+      LOG.warn("GENERATING STUB ONE DATA FOR SERVICE"
+          + " (remove once OneData parameters generation is completed!)");
+    } else {
+      LOG.debug("User specified I/O OneData requirements; service space will not be generated.");
+    }
+  }
+
+  /**
+   * Temporary method to generate default OneData settings.
+   * 
+   * @return the {@link OneData} settings.
+   */
+  protected OneData generateStubOneData(DeploymentMessage deploymentMessage) {
+
+    String path = new StringBuilder().append(this.path).append(deploymentMessage.getDeploymentId())
+        .toString();
+
+    LOG.info(String.format("Generating OneData settings with parameters: %s",
+        Arrays.asList(token, space, path, provider)));
+
+    return new OneData(token, space, path, provider);
   }
 
 }
