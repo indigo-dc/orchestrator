@@ -27,6 +27,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Cloud Provider choice (SLAM, CMDB, Monitoring, CPR integration)
 - Retrieve Provider's Service's Image list from CMDB
 - Jobs with Parameter Sweep (up to 10k jobs)
+- Enable 'force_pull_image' flag in Chronos jobs by default (#70)
+- Support Privileged mode for containers in Chronos jobs (#49)
+- **[Feature]** **[PARTIALLY IMPLEMENTED]** Support for the Data Location Scheduling (OneData) (#55)
 
 ### Changed:
 **NONE**
@@ -38,7 +41,9 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 **NONE**
 
 ### Fixed:
-**NONE**
+- Cannot delete Chonos job if the TOSCA template has some errors (#71)
+- TOSCA: required inputs with default value not handled correctly (#73)
+- Provider choice override for Chronos single provider (#77)
 
 ### Security:
 **NONE**
