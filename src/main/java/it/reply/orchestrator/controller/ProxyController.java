@@ -22,9 +22,10 @@ import java.io.FileOutputStream;
 @RestController
 @RequestMapping("/proxy")
 @PropertySource("classpath:im-config/im-java-api.properties")
+@Deprecated
 public class ProxyController {
 
-  @Value("${onedock.proxy.file.path}")
+  @Value("${occi.proxy.file.path}")
   private String proxy;
 
   @Autowired
