@@ -32,7 +32,7 @@ import java.util.Arrays;
  *
  */
 @Component
-@PropertySource("${chronos.auth.file.path:classpath:chronos/chronos.properties}")
+@PropertySource(value = {"classpath:application.properties", "${chronos.auth.file.path}"})
 public class UpdateDeployment extends BaseCommand {
 
   private static final Logger LOG = LogManager.getLogger(UpdateDeployment.class);

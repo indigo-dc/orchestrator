@@ -24,7 +24,7 @@ if [[ $IM_URL ]];
 	then sed -i "s/^\(url=\).*$/\1$(echo $IM_URL | sed -e 's/[\/&]/\\&/g')/" ${IM_PROP_FILE};
 fi;
 if [[ $PROXY_DIR ]];
-	then sed -i "s/^\(onedock\.proxy\.file\.path=\).*$/\1$(echo $PROXY_DIR | sed -e 's/[\/&]/\\&/g')/" ${IM_PROP_FILE};
+	then sed -i "s/^\(occi\.proxy\.file\.path=\).*$/\1$(echo $PROXY_DIR | sed -e 's/[\/&]/\\&/g')/" ${IM_PROP_FILE};
 fi;
 if [[ $OPENNEBULA_AUTH_FILE_PATH ]];
 	then sed -i "s/^\(opennebula\.auth\.file\.path=\).*$/\1$(echo $OPENNEBULA_AUTH_FILE_PATH | sed -e 's/[\/&]/\\&/g')/" ${IM_PROP_FILE};

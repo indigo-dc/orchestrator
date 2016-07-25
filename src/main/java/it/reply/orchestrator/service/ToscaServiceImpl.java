@@ -414,14 +414,13 @@ public class ToscaServiceImpl implements ToscaService {
             imageMetadata.getImageName());
         return imageWithName;
       } else {
+        // TODO remove this dirty hack
+        if (imageMetadata.getImageName().equalsIgnoreCase("linux-ubuntu-14.04-vmi")) {
+          return null;
+        }
         LOG.debug("Image not found with name <{}>, trying with other fields: <{}>",
             imageMetadata.getImageName(), imageMetadata);
       }
-    }
-
-    // TODO remove this dirty hack
-    if (imageMetadata.getImageName().equalsIgnoreCase("linux-ubuntu-14.04-vmi")) {
-      return null;
     }
 
     for (Image image : cloudProvider.getCmdbProviderImages()) {

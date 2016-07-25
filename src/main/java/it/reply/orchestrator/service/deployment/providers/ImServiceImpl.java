@@ -1,5 +1,7 @@
 package it.reply.orchestrator.service.deployment.providers;
 
+import com.google.common.base.Strings;
+
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingException;
@@ -77,7 +79,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   @Autowired
   private OAuth2TokenService oauth2TokenService;
 
-  @Value("${onedock.proxy.file.path}")
+  @Value("${occi.proxy.file.path}")
+  @Deprecated
   private String proxyPath;
 
   @Value("${url}")
@@ -89,8 +92,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   @Value("${openstack.auth.file.path}")
   private String openstackAuthFilePath;
 
-  @Value("${onedock.auth.file.path}")
-  private String onedockAuthFilePath;
+  @Value("${opennebula.auth.file.path}")
+  private String opennebulaAuthFilePath;
 
   private static final Pattern UUID_PATTERN = Pattern.compile(".*\\/([^\"\\/]+)\\/?\"?");
   private static final Pattern VM_ID_PATTERN = Pattern.compile("(\\w+)$");
@@ -160,21 +163,12 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
             InfrastructureManager im = new InfrastructureManager(imUrl, ah);
             return im;
           } else {
-            // Read the proxy file
-            String proxy;
-            try (InputStream in = ctx.getResource(proxyPath).getInputStream()) {
-              proxy = IOUtils.toString(in);
-              proxy = proxy.replace(System.lineSeparator(), "\\\\n");
-            } catch (Exception ex) {
-              throw new OrchestratorException("Cannot load proxy file", ex);
-            }
             // read onedock auth file
-            try (InputStream in = ctx.getResource(onedockAuthFilePath).getInputStream()) {
+            try (InputStream in = ctx.getResource(opennebulaAuthFilePath).getInputStream()) {
               authString = IOUtils.toString(in, StandardCharsets.UTF_8.toString());
             }
             authString = authString.replaceAll("\n", "\\\\n");
-            // replace the proxy as string
-            authString = authString.replace("{proxy}", proxy);
+            authString = substituteProxyString(authString);
           }
           break;
         // inputStream = ctx.getResource(opennebulaAuthFilePath).getInputStream();
@@ -188,6 +182,26 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     } catch (IOException | ImClientException ex) {
       throw new OrchestratorException("Cannot load IM auth file", ex);
     }
+  }
+
+  @Deprecated
+  private String substituteProxyString(String authString) {
+    final String proxyPlaceholder = "{proxy}";
+    if (!Strings.isNullOrEmpty(proxyPath)) {
+      // Read the proxy file
+      String proxy;
+      try (InputStream in = ctx.getResource(proxyPath).getInputStream()) {
+        proxy = IOUtils.toString(in);
+        proxy = proxy.replace(System.lineSeparator(), "\\\\n");
+        // replace the proxy as string
+        authString = authString.replace(proxyPlaceholder, proxy);
+      } catch (Exception ex) {
+        if (authString.contains(proxyPlaceholder)) {
+          throw new OrchestratorException("Cannot load proxy file", ex);
+        }
+      }
+    }
+    return authString;
   }
 
   @Override
@@ -472,14 +486,15 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       deployment.setTask(Task.DEPLOYER);
       deployment = deploymentRepository.save(deployment);
 
-      // Generate IM Client
-      InfrastructureManager im = getClient(deploymentMessage);
-
       if (deployment.getEndpoint() == null) {
         // updateOnSuccess(deploymentUuid);
         deploymentMessage.setDeleteComplete(true);
         return true;
       }
+
+      // Generate IM Client
+      InfrastructureManager im = getClient(deploymentMessage);
+
       im.destroyInfrastructure(deployment.getEndpoint());
       deploymentMessage.setDeleteComplete(true);
       return true;

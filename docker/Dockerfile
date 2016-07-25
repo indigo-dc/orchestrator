@@ -14,11 +14,11 @@ COPY /otherConfigs.xsl /otherConfigs.xsl
 COPY /datasourcesConfig.xsl /datasourcesConfig.xsl
 COPY /launch.sh /launch.sh
 
-RUN java -jar /usr/share/java/saxon.jar -o:$JBOSS_HOME/standalone/configuration/$JBOSS_CONF_FILE -s:$JBOSS_HOME/standalone/configuration/$JBOSS_CONF_FILE -xsl:/otherConfigs.xsl
-# ADD (and so COPY too) does not honor USER: files always owned by root
-# https://github.com/docker/docker/issues/6119
-RUN chmod 777 /datasourcesConfig.xsl
-RUN chmod 777 /launch.sh
+RUN java -jar /usr/share/java/saxon.jar -o:$JBOSS_HOME/standalone/configuration/$JBOSS_CONF_FILE -s:$JBOSS_HOME/standalone/configuration/$JBOSS_CONF_FILE -xsl:/otherConfigs.xsl \
+	# ADD (and so COPY too) does not honor USER: files always owned by root
+	# https://github.com/docker/docker/issues/6119
+	&& chmod 777 /datasourcesConfig.xsl \
+	&& chmod 777 /launch.sh
 USER jboss
 
 EXPOSE  3528 \
@@ -61,13 +61,9 @@ ENV ORCHESTRATOR_DB_ENDPOINT="databaseorchestrator:3306" \
 ENV IM_URL="" \
 	PROXY_DIR="" \
 	OPENNEBULA_AUTH_FILE_PATH="" \
-	OPENSTACK_AUTH_FILE_PATH="" \
-	ONEDOCK_AUTH_FILE_PATH=""
-
-ENV CHRONOS_AUTH_FILE_PATH=""
+	OPENSTACK_AUTH_FILE_PATH=""
 	
 ENV SECURITY_ENABLE="" \
-	OIDC_ISSUERS="" \
 	OIDC_CLIENT_ID="" \
 	OIDC_CLIENT_SECRET=""
 
