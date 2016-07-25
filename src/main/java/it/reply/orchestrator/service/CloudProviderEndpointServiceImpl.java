@@ -7,6 +7,7 @@ import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
+import it.reply.orchestrator.exception.service.DeploymentException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,10 +39,10 @@ public class CloudProviderEndpointServiceImpl {
     }
 
     if (chosenCp == null) {
-      String errorMsg = String.format("No Cloud Provider found for: {}",
-          rankCloudProvidersMessage.getRankedCloudProviders());
-      LOG.error(errorMsg);
-      throw new IllegalArgumentException(errorMsg);
+      String errorMsg = "No Cloud Provider suitable for deploy found";
+      LOG.error(String.format("{}\n ranked providers list: {}", errorMsg,
+          rankCloudProvidersMessage.getRankedCloudProviders()));
+      throw new DeploymentException(errorMsg);
     }
 
     LOG.debug("Selected Cloud Provider is: {}", chosenCp);

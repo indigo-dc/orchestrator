@@ -472,14 +472,15 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       deployment.setTask(Task.DEPLOYER);
       deployment = deploymentRepository.save(deployment);
 
-      // Generate IM Client
-      InfrastructureManager im = getClient(deploymentMessage);
-
       if (deployment.getEndpoint() == null) {
         // updateOnSuccess(deploymentUuid);
         deploymentMessage.setDeleteComplete(true);
         return true;
       }
+
+      // Generate IM Client
+      InfrastructureManager im = getClient(deploymentMessage);
+
       im.destroyInfrastructure(deployment.getEndpoint());
       deploymentMessage.setDeleteComplete(true);
       return true;
