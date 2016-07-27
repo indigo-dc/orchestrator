@@ -20,6 +20,7 @@ public class CloudProviderEndpoint implements Serializable {
 
   private String imEndpoint;
   private String cpEndpoint;
+  private String cpComputeServiceId;
   private IaaSType iaasType;
 
   public String getImEndpoint() {
@@ -38,6 +39,14 @@ public class CloudProviderEndpoint implements Serializable {
     this.cpEndpoint = cpEndpoint;
   }
 
+  public String getCpComputeServiceId() {
+    return cpComputeServiceId;
+  }
+
+  public void setCpComputeServiceId(String cpComputeServiceId) {
+    this.cpComputeServiceId = cpComputeServiceId;
+  }
+
   public IaaSType getIaasType() {
     return iaasType;
   }
@@ -49,7 +58,7 @@ public class CloudProviderEndpoint implements Serializable {
   @Override
   public String toString() {
     return "CloudProviderEndpoint [imEndpoint=" + imEndpoint + ", cpEndpoint=" + cpEndpoint
-        + ", iaasType=" + iaasType + "]";
+        + ", cpComputeServiceId=" + cpComputeServiceId + ", iaasType=" + iaasType + "]";
   }
 
 }

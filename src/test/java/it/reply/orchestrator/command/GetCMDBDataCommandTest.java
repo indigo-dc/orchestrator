@@ -8,7 +8,7 @@ import com.github.springtestdbunit.annotation.DatabaseTearDown;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.service.CmdbService;
 import it.reply.orchestrator.service.commands.BaseRankCloudProvidersCommand;
-import it.reply.orchestrator.service.commands.GetCmdbData;
+import it.reply.orchestrator.service.commands.GetCmdbDataDeploy;
 import it.reply.orchestrator.workflow.RankCloudProvidersWorkflowTest;
 import it.reply.utils.json.JsonUtility;
 
@@ -20,7 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class GetCMDBDataCommandTest extends BaseRankCloudProviderCommandTest {
 
   @Autowired
-  private GetCmdbData getCMDBDataCommand;
+  private GetCmdbDataDeploy getCMDBDataCommand;
 
   @Autowired
   private CmdbService cmdbService;
