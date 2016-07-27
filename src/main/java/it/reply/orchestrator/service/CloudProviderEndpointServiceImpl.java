@@ -71,6 +71,7 @@ public class CloudProviderEndpointServiceImpl {
         .getCloudProviders().get(chosenCp.getName()).getCmbdProviderServiceByType(Type.COMPUTE);
 
     cpe.setCpEndpoint(computeService.getData().getEndpoint());
+    cpe.setCpComputeServiceId(computeService.getId());
     cpe.setIaasType(iaasType);
     // FIXME Add IM EP, if available
 

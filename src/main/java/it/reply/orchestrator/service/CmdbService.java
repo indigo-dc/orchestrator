@@ -1,5 +1,6 @@
 package it.reply.orchestrator.service;
 
+import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CmdbImage;
 import it.reply.orchestrator.dto.cmdb.Provider;
 import it.reply.orchestrator.dto.cmdb.Service;
@@ -29,4 +30,6 @@ public interface CmdbService {
   public CmdbImage getImageById(String imageId);
 
   public String getUrl();
+
+  public CloudProvider fillCloudProviderInfo(CloudProvider cp);
 }

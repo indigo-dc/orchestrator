@@ -112,7 +112,7 @@
       <bpmn2:dataInputAssociation id="DataInputAssociation_14">
         <bpmn2:targetRef>DataInput_14</bpmn2:targetRef>
         <bpmn2:assignment id="Assignment_6">
-          <bpmn2:from xsi:type="bpmn2:tFormalExpression" id="FormalExpression_15">it.reply.orchestrator.service.commands.GetCmdbData</bpmn2:from>
+          <bpmn2:from xsi:type="bpmn2:tFormalExpression" id="FormalExpression_15">it.reply.orchestrator.service.commands.GetCmdbDataDeploy</bpmn2:from>
           <bpmn2:to xsi:type="bpmn2:tFormalExpression" id="FormalExpression_16">DataInput_2</bpmn2:to>
         </bpmn2:assignment>
       </bpmn2:dataInputAssociation>
@@ -319,7 +319,7 @@
       <bpmndi:BPMNShape id="BPMNShape_StartEvent_1" bpmnElement="StartEvent_1">
         <dc:Bounds height="36.0" width="36.0" x="400.0" y="58.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_1">
-          <dc:Bounds height="34.0" width="55.0" x="391.0" y="94.0"/>
+          <dc:Bounds height="15.0" width="71.0" x="383.0" y="94.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_EndEvent_1" bpmnElement="EndEvent_1">
@@ -361,7 +361,7 @@
       <bpmndi:BPMNShape id="BPMNShape_Task_7" bpmnElement="Task_7">
         <dc:Bounds height="50.0" width="110.0" x="1500.0" y="51.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_6">
-          <dc:Bounds height="34.0" width="101.0" x="1504.0" y="59.0"/>
+          <dc:Bounds height="15.0" width="106.0" x="1502.0" y="68.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_Task_8" bpmnElement="Task_8">
