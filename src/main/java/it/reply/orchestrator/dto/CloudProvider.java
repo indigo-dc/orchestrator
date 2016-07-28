@@ -1,8 +1,8 @@
 package it.reply.orchestrator.dto;
 
-import it.reply.orchestrator.dto.cmdb.Image;
+import it.reply.orchestrator.dto.cmdb.CloudService;
+import it.reply.orchestrator.dto.cmdb.ImageData;
 import it.reply.orchestrator.dto.cmdb.Provider;
-import it.reply.orchestrator.dto.cmdb.Service;
 import it.reply.orchestrator.dto.cmdb.Type;
 
 import java.io.Serializable;
@@ -26,8 +26,8 @@ public class CloudProvider implements Serializable {
   private String id;
 
   private Provider cmdbProviderData;
-  private Map<String, Service> cmdbProviderServices = new HashMap<>();
-  private List<Image> cmdbProviderImages = new ArrayList<>();
+  private Map<String, CloudService> cmdbProviderServices = new HashMap<>();
+  private List<ImageData> cmdbProviderImages = new ArrayList<>();
 
   public CloudProvider() {
   }
@@ -60,19 +60,19 @@ public class CloudProvider implements Serializable {
     this.cmdbProviderData = cmdbProviderData;
   }
 
-  public Map<String, Service> getCmdbProviderServices() {
+  public Map<String, CloudService> getCmdbProviderServices() {
     return cmdbProviderServices;
   }
 
-  public void setCmdbProviderServices(Map<String, Service> cmdbProviderServices) {
+  public void setCmdbProviderServices(Map<String, CloudService> cmdbProviderServices) {
     this.cmdbProviderServices = cmdbProviderServices;
   }
 
-  public List<Image> getCmdbProviderImages() {
+  public List<ImageData> getCmdbProviderImages() {
     return cmdbProviderImages;
   }
 
-  public void setCmdbProviderImages(List<Image> cmdbProviderImages) {
+  public void setCmdbProviderImages(List<ImageData> cmdbProviderImages) {
     this.cmdbProviderImages = cmdbProviderImages;
   }
 
@@ -83,8 +83,8 @@ public class CloudProvider implements Serializable {
    *          the type.
    * @return the Service if found, <tt>null</tt> otherwise.
    */
-  public Service getCmbdProviderServiceByType(Type type) {
-    for (Service service : cmdbProviderServices.values()) {
+  public CloudService getCmbdProviderServiceByType(Type type) {
+    for (CloudService service : cmdbProviderServices.values()) {
       if (service.getData().getType().equals(type)) {
         return service;
       }

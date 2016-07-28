@@ -27,7 +27,7 @@ import alien4cloud.utils.FileUtil;
 import es.upv.i3m.grycap.im.auth.credentials.ServiceProvider;
 
 import it.reply.orchestrator.dto.CloudProvider;
-import it.reply.orchestrator.dto.cmdb.Image;
+import it.reply.orchestrator.dto.cmdb.ImageData;
 import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.enums.DeploymentProvider;
@@ -325,7 +325,7 @@ public class ToscaServiceImpl implements ToscaService {
               }
 
               // We've got an OS capability -> Check the attributes to find best match for the image
-              Image imageMetadata = new Image();
+              ImageData imageMetadata = new ImageData();
               if (osCapability.getProperties().get("image") != null) {
                 imageMetadata.setImageName(
                     (String) getCapabilityPropertyValueByName(osCapability, "image").getValue());
@@ -349,7 +349,7 @@ public class ToscaServiceImpl implements ToscaService {
                     (String) getCapabilityPropertyValueByName(osCapability, "version").getValue());
               }
 
-              Image image = null;
+              ImageData image = null;
               if (deploymentProvider == DeploymentProvider.IM
                   && isImImageUri(imageMetadata.getImageName())) {
                 image = imageMetadata;
@@ -429,14 +429,14 @@ public class ToscaServiceImpl implements ToscaService {
     return imageId;
   }
 
-  protected Image getBestImageForCloudProvider(Image imageMetadata, CloudProvider cloudProvider) {
+  protected ImageData getBestImageForCloudProvider(ImageData imageMetadata, CloudProvider cloudProvider) {
 
     // Match image name first (for INDIGO specific use case, if the image cannot be found with the
     // specified name it means that a base image + Ansible configuration have to be used -> the
     // base image will be chosen with the other filters and image metadata - architecture, type,
     // distro, version)
     if (imageMetadata.getImageName() != null) {
-      Image imageWithName =
+      ImageData imageWithName =
           findImageWithNameOnCloudProvider(imageMetadata.getImageName(), cloudProvider);
 
       if (imageWithName != null) {
@@ -453,7 +453,7 @@ public class ToscaServiceImpl implements ToscaService {
       }
     }
 
-    for (Image image : cloudProvider.getCmdbProviderImages()) {
+    for (ImageData image : cloudProvider.getCmdbProviderImages()) {
       // Match or skip image based on each additional optional attribute
       if (imageMetadata.getType() != null) {
         if (!imageMetadata.getType().equalsIgnoreCase(image.getType())) {
@@ -486,9 +486,9 @@ public class ToscaServiceImpl implements ToscaService {
 
   }
 
-  protected Image findImageWithNameOnCloudProvider(String requiredImageName,
+  protected ImageData findImageWithNameOnCloudProvider(String requiredImageName,
       CloudProvider cloudProvider) {
-    for (Image image : cloudProvider.getCmdbProviderImages()) {
+    for (ImageData image : cloudProvider.getCmdbProviderImages()) {
       if (matchImageNameAndTag(requiredImageName, image.getImageName())) {
         return image;
       }

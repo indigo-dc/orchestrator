@@ -6,22 +6,22 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Generated;
-
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({ "id", "key", "value", "doc" })
-public class CmdbImageRow {
+public class CmdbRow<T> implements Serializable {
+
+  private static final long serialVersionUID = 559476054523810413L;
 
   @JsonProperty("id")
   private String id;
   @JsonProperty("key")
   private List<String> key = new ArrayList<String>();
   @JsonProperty("doc")
-  private CmdbImage image;
+  private T doc;
 
   @JsonProperty("id")
   public String getId() {
@@ -33,7 +33,7 @@ public class CmdbImageRow {
     this.id = id;
   }
 
-  public CmdbImageRow withId(String id) {
+  public CmdbRow<T> withId(String id) {
     this.id = id;
     return this;
   }
@@ -48,23 +48,23 @@ public class CmdbImageRow {
     this.key = key;
   }
 
-  public CmdbImageRow withKey(List<String> key) {
+  public CmdbRow<T> withKey(List<String> key) {
     this.key = key;
     return this;
   }
 
   @JsonProperty("doc")
-  public CmdbImage getImage() {
-    return image;
+  public T getDoc() {
+    return doc;
   }
 
   @JsonProperty("doc")
-  public void setImage(CmdbImage image) {
-    this.image = image;
+  public void setDoc(T doc) {
+    this.doc = doc;
   }
 
-  public CmdbImageRow withImage(CmdbImage image) {
-    this.image = image;
+  public CmdbRow<T> withDoc(T doc) {
+    this.doc = doc;
     return this;
   }
 

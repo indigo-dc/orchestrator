@@ -1,9 +1,10 @@
 package it.reply.orchestrator.service;
 
 import it.reply.orchestrator.dto.CloudProvider;
+import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.CmdbHasManyList;
-import it.reply.orchestrator.dto.cmdb.CmdbImage;
-import it.reply.orchestrator.dto.cmdb.CmdbImageRow;
+import it.reply.orchestrator.dto.cmdb.CmdbRow;
+import it.reply.orchestrator.dto.cmdb.Image;
 import it.reply.orchestrator.dto.cmdb.Provider;
 import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.exception.service.DeploymentException;
@@ -47,10 +48,10 @@ public class CmdbServiceImpl implements CmdbService {
   }
 
   @Override
-  public it.reply.orchestrator.dto.cmdb.Service getServiceById(String id) {
+  public CloudService getServiceById(String id) {
 
-    ResponseEntity<it.reply.orchestrator.dto.cmdb.Service> response = restTemplate.getForEntity(
-        url.concat(serviceIdUrlPath).concat(id), it.reply.orchestrator.dto.cmdb.Service.class);
+    ResponseEntity<CloudService> response =
+        restTemplate.getForEntity(url.concat(serviceIdUrlPath).concat(id), CloudService.class);
     if (response.getStatusCode().is2xxSuccessful()) {
       return response.getBody();
     }
@@ -70,9 +71,9 @@ public class CmdbServiceImpl implements CmdbService {
   }
 
   @Override
-  public CmdbImage getImageById(String imageId) {
-    ResponseEntity<CmdbImage> response =
-        restTemplate.getForEntity(url.concat("image/id").concat(imageId), CmdbImage.class);
+  public Image getImageById(String imageId) {
+    ResponseEntity<Image> response =
+        restTemplate.getForEntity(url.concat("image/id").concat(imageId), Image.class);
     if (response.getStatusCode().is2xxSuccessful()) {
       return response.getBody();
     }
@@ -81,14 +82,14 @@ public class CmdbServiceImpl implements CmdbService {
   }
 
   @Override
-  public List<CmdbImage> getImagesByService(String serviceId) {
-    ResponseEntity<CmdbHasManyList<CmdbImageRow>> response = restTemplate.exchange(
+  public List<Image> getImagesByService(String serviceId) {
+    ResponseEntity<CmdbHasManyList<CmdbRow<Image>>> response = restTemplate.exchange(
         url.concat(serviceIdUrlPath).concat(serviceId).concat("/has_many/images?include_docs=true"),
-        HttpMethod.GET, null, new ParameterizedTypeReference<CmdbHasManyList<CmdbImageRow>>() {
+        HttpMethod.GET, null, new ParameterizedTypeReference<CmdbHasManyList<CmdbRow<Image>>>() {
         });
 
     if (response.getStatusCode().is2xxSuccessful()) {
-      return response.getBody().getRows().stream().map(e -> e.getImage())
+      return response.getBody().getRows().stream().map(e -> e.getDoc())
           .collect(Collectors.toList());
     }
     throw new DeploymentException("Unable to find images for service <" + serviceId
@@ -103,8 +104,7 @@ public class CmdbServiceImpl implements CmdbService {
     cp.setName(cp.getCmdbProviderData().getId());
 
     // Get provider's services' data
-    for (Map.Entry<String, it.reply.orchestrator.dto.cmdb.Service> serviceEntry : cp
-        .getCmdbProviderServices().entrySet()) {
+    for (Map.Entry<String, CloudService> serviceEntry : cp.getCmdbProviderServices().entrySet()) {
       serviceEntry.setValue(getServiceById(serviceEntry.getKey()));
     }
 
@@ -113,8 +113,7 @@ public class CmdbServiceImpl implements CmdbService {
     // Get images for provider (requires to know the compute service)
     // FIXME: What if there are multiple compute service for a provider (remember that those are
     // SLAM given)?
-    it.reply.orchestrator.dto.cmdb.Service imageService =
-        cp.getCmbdProviderServiceByType(Type.COMPUTE);
+    CloudService imageService = cp.getCmbdProviderServiceByType(Type.COMPUTE);
     if (imageService != null) {
       LOG.debug("Retrieving image list for service <{}> of provider <{}>", imageService.getId(),
           cp.getId());

@@ -3,11 +3,11 @@ package it.reply.orchestrator.service;
 import static org.junit.Assert.assertEquals;
 
 import it.reply.orchestrator.config.specific.WebAppConfigurationAwareIT;
-import it.reply.orchestrator.dto.cmdb.CmdbImage;
-import it.reply.orchestrator.dto.cmdb.Data;
+import it.reply.orchestrator.dto.cmdb.CloudService;
+import it.reply.orchestrator.dto.cmdb.CloudServiceData;
+import it.reply.orchestrator.dto.cmdb.Image;
 import it.reply.orchestrator.dto.cmdb.Provider;
 import it.reply.orchestrator.dto.cmdb.ProviderData;
-import it.reply.orchestrator.dto.cmdb.Service;
 import it.reply.orchestrator.dto.cmdb.Type;
 
 import org.junit.Test;
@@ -32,13 +32,14 @@ public class CmdbServiceIT extends WebAppConfigurationAwareIT {
   @Test
   public void getServiceTest() throws Exception {
 
-    Service serviceRecas = service.getServiceById(recasId);
-    Data data = new Data().withServiceType("eu.egi.cloud.vm-management.openstack")
-        .withEndpoint("http://cloud.recas.ba.infn.it:5000/v2.0")
-        .withProviderId("provider-RECAS-BARI").withType(Type.COMPUTE);
+    CloudService serviceRecas = service.getServiceById(recasId);
+    CloudServiceData data =
+        new CloudServiceData().withServiceType("eu.egi.cloud.vm-management.openstack")
+            .withEndpoint("http://cloud.recas.ba.infn.it:5000/v2.0")
+            .withProviderId("provider-RECAS-BARI").withType(Type.COMPUTE);
 
-    Service service = new Service().withId(recasId).withRev("1-256d36283315ea9bb045e6d5038657b6")
-        .withType("service").withData(data);
+    CloudService service = new CloudService().withId(recasId)
+        .withRev("1-256d36283315ea9bb045e6d5038657b6").withType("service").withData(data);
 
     assertEquals(service, serviceRecas);
   }
@@ -60,7 +61,7 @@ public class CmdbServiceIT extends WebAppConfigurationAwareIT {
   @Test
   public void getImageForServiceTest() throws Exception {
 
-    List<CmdbImage> recasImages = service.getImagesByService(recasId);
+    List<Image> recasImages = service.getImagesByService(recasId);
 
     // ProviderData data =
     // new ProviderData().withId("476").withPrimaryKey("83757G0").withName("RECAS-BARI")

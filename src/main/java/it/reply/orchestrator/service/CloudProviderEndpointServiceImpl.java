@@ -5,6 +5,7 @@ import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
+import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
 import it.reply.orchestrator.exception.service.DeploymentException;
@@ -67,8 +68,8 @@ public class CloudProviderEndpointServiceImpl {
 
     CloudProviderEndpoint cpe = new CloudProviderEndpoint();
 
-    it.reply.orchestrator.dto.cmdb.Service computeService = rankCloudProvidersMessage
-        .getCloudProviders().get(chosenCp.getName()).getCmbdProviderServiceByType(Type.COMPUTE);
+    CloudService computeService = rankCloudProvidersMessage.getCloudProviders()
+        .get(chosenCp.getName()).getCmbdProviderServiceByType(Type.COMPUTE);
 
     cpe.setCpEndpoint(computeService.getData().getEndpoint());
     cpe.setCpComputeServiceId(computeService.getId());

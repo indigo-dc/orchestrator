@@ -14,12 +14,9 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.annotation.Generated;
-
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({ "_id", "_rev", "type", "data" })
-public class CmdbImage {
+public abstract class CmdbDataWrapper<U, T> {
 
   @JsonProperty("_id")
   private String id;
@@ -28,7 +25,7 @@ public class CmdbImage {
   @JsonProperty("type")
   private String type;
   @JsonProperty("data")
-  private Image data;
+  private T data;
   @JsonIgnore
   private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -42,9 +39,10 @@ public class CmdbImage {
     this.id = id;
   }
 
-  public CmdbImage withId(String id) {
+  @SuppressWarnings("unchecked")
+  public U withId(String id) {
     this.id = id;
-    return this;
+    return (U) this;
   }
 
   @JsonProperty("_rev")
@@ -57,9 +55,10 @@ public class CmdbImage {
     this.rev = rev;
   }
 
-  public CmdbImage withRev(String rev) {
+  @SuppressWarnings("unchecked")
+  public U withRev(String rev) {
     this.rev = rev;
-    return this;
+    return (U) this;
   }
 
   @JsonProperty("type")
@@ -72,24 +71,26 @@ public class CmdbImage {
     this.type = type;
   }
 
-  public CmdbImage withType(String type) {
+  @SuppressWarnings("unchecked")
+  public U withType(String type) {
     this.type = type;
-    return this;
+    return (U) this;
   }
 
   @JsonProperty("data")
-  public Image getData() {
+  public T getData() {
     return data;
   }
 
   @JsonProperty("data")
-  public void setData(Image data) {
+  public void setData(T data) {
     this.data = data;
   }
 
-  public CmdbImage withData(Image data) {
+  @SuppressWarnings("unchecked")
+  public U withData(T data) {
     this.data = data;
-    return this;
+    return (U) this;
   }
 
   @Override
@@ -107,9 +108,10 @@ public class CmdbImage {
     this.additionalProperties.put(name, value);
   }
 
-  public CmdbImage withAdditionalProperty(String name, Object value) {
+  @SuppressWarnings("unchecked")
+  public U withAdditionalProperty(String name, Object value) {
     this.additionalProperties.put(name, value);
-    return this;
+    return (U) this;
   }
 
   @Override
@@ -123,10 +125,11 @@ public class CmdbImage {
     if (other == this) {
       return true;
     }
-    if ((other instanceof CmdbImage) == false) {
+    if ((other instanceof CmdbDataWrapper<?, ?>) == false) {
       return false;
     }
-    CmdbImage rhs = ((CmdbImage) other);
+    CmdbDataWrapper<?, ?> rhs = ((CmdbDataWrapper<?, ?>) other);
+
     return new EqualsBuilder().append(id, rhs.id).append(rev, rhs.rev).append(type, rhs.type)
         .append(data, rhs.data).append(additionalProperties, rhs.additionalProperties).isEquals();
   }

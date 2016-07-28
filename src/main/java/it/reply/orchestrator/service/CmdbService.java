@@ -1,15 +1,15 @@
 package it.reply.orchestrator.service;
 
 import it.reply.orchestrator.dto.CloudProvider;
-import it.reply.orchestrator.dto.cmdb.CmdbImage;
+import it.reply.orchestrator.dto.cmdb.CloudService;
+import it.reply.orchestrator.dto.cmdb.Image;
 import it.reply.orchestrator.dto.cmdb.Provider;
-import it.reply.orchestrator.dto.cmdb.Service;
 
 import java.util.List;
 
 public interface CmdbService {
 
-  public Service getServiceById(String id);
+  public CloudService getServiceById(String id);
 
   public Provider getProviderById(String id);
 
@@ -25,9 +25,9 @@ public interface CmdbService {
   // */
   // public List<Image> getImagesByProvider(String providerId);
 
-  public List<CmdbImage> getImagesByService(String serviceId);
+  public List<Image> getImagesByService(String serviceId);
 
-  public CmdbImage getImageById(String imageId);
+  public Image getImageById(String imageId);
 
   public String getUrl();
 
