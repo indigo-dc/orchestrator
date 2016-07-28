@@ -73,7 +73,7 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
     while (it.hasNext()) {
       Map.Entry<String, CloudProvider> entry = it.next();
       try {
-        toscaService.contextualizeImages(null, ar, entry.getValue(), false);
+        toscaService.contextualizeImages(deployment.getDeploymentProvider(), ar, entry.getValue(), false);
       } catch (Exception ex) {
         // Failed to match all required images -> discard provider
         LOG.debug("Discarded provider {} because it doesn't match images requirements"
