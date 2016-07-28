@@ -32,4 +32,6 @@ public interface CmdbService {
   public String getUrl();
 
   public CloudProvider fillCloudProviderInfo(CloudProvider cp);
+
+  public List<CloudService> getServicesByProvider(String providerId);
 }

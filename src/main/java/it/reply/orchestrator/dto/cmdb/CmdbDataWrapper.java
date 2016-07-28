@@ -11,12 +11,15 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonPropertyOrder({ "_id", "_rev", "type", "data" })
-public abstract class CmdbDataWrapper<U, T> {
+public abstract class CmdbDataWrapper<U, T> implements Serializable {
+
+  private static final long serialVersionUID = -7442528095759086603L;
 
   @JsonProperty("_id")
   private String id;
@@ -128,7 +131,8 @@ public abstract class CmdbDataWrapper<U, T> {
     if ((other instanceof CmdbDataWrapper<?, ?>) == false) {
       return false;
     }
-    CmdbDataWrapper<?, ?> rhs = ((CmdbDataWrapper<?, ?>) other);
+    @SuppressWarnings("unchecked")
+    CmdbDataWrapper<U, T> rhs = ((CmdbDataWrapper<U, T>) other);
 
     return new EqualsBuilder().append(id, rhs.id).append(rev, rhs.rev).append(type, rhs.type)
         .append(data, rhs.data).append(additionalProperties, rhs.additionalProperties).isEquals();

@@ -22,6 +22,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -98,14 +99,43 @@ public class CmdbServiceImpl implements CmdbService {
   }
 
   @Override
+  public List<CloudService> getServicesByProvider(String providerId) {
+    ResponseEntity<CmdbHasManyList<CmdbRow<CloudService>>> response = restTemplate.exchange(
+        url.concat(providerIdUrlPath).concat(providerId)
+            .concat("/has_many/services?include_docs=true"),
+        HttpMethod.GET, null,
+        new ParameterizedTypeReference<CmdbHasManyList<CmdbRow<CloudService>>>() {
+        });
+
+    if (response.getStatusCode().is2xxSuccessful()) {
+      return response.getBody().getRows().stream().map(e -> e.getDoc())
+          .collect(Collectors.toList());
+    }
+    throw new DeploymentException("Unable to find services for provider <" + providerId
+        + "> in the CMDB." + response.getStatusCode().toString() + " "
+        + response.getStatusCode().getReasonPhrase());
+  }
+
+  @Override
   public CloudProvider fillCloudProviderInfo(CloudProvider cp) {
     // Get provider's data
     cp.setCmdbProviderData(getProviderById(cp.getId()));
     cp.setName(cp.getCmdbProviderData().getId());
 
+    Map<String, CloudService> allServices = getServicesByProvider(cp.getId()).stream()
+        .collect(Collectors.toMap(CloudService::getId, Function.identity()));
     // Get provider's services' data
     for (Map.Entry<String, CloudService> serviceEntry : cp.getCmdbProviderServices().entrySet()) {
-      serviceEntry.setValue(getServiceById(serviceEntry.getKey()));
+      if (allServices.containsKey(serviceEntry.getKey())) {
+        serviceEntry.setValue(allServices.get(serviceEntry.getKey()));
+      } else {
+        serviceEntry.setValue(getServiceById(serviceEntry.getKey()));
+      }
+    }
+    for (CloudService service : allServices.values()) {
+      if (service.isOneProviderService()) {
+        cp.getCmdbProviderServices().put(service.getId(), service);
+      }
     }
 
     // FIXME Get other data (i.e. OneData, Images mapping, etc)
