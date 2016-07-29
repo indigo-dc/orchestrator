@@ -14,6 +14,7 @@ public class OneData implements Serializable {
   private String token;
   private String space;
   private String path;
+  private String zone;
   private List<String> providers;
 
   /**
@@ -27,13 +28,20 @@ public class OneData implements Serializable {
    *          .
    * @param providers
    *          .
+   * @param zone
+   *          The zone
    */
-  public OneData(String token, String space, String path, String providers) {
+  public OneData(String token, String space, String path, String providers, String zone) {
     super();
     this.token = token;
     this.space = space;
     this.path = path;
+    this.zone = zone;
     this.providers = (providers != null ? Arrays.asList(providers.split(",")) : null);
+  }
+
+  public OneData(String token, String space, String path, String providers) {
+    this(token, space, path, providers, null);
   }
 
   /**
@@ -48,12 +56,17 @@ public class OneData implements Serializable {
    * @param providers
    *          .
    */
-  public OneData(String token, String space, String path, List<String> providers) {
+  public OneData(String token, String space, String path, List<String> providers, String zone) {
     super();
     this.token = token;
     this.space = space;
     this.path = path;
+    this.zone = zone;
     this.providers = providers;
+  }
+
+  public OneData(String token, String space, String path, List<String> providers) {
+    this(token, space, path, providers, null);
   }
 
   public String getToken() {
@@ -66,6 +79,10 @@ public class OneData implements Serializable {
 
   public String getPath() {
     return path;
+  }
+
+  public String getZone() {
+    return zone;
   }
 
   public List<String> getProviders() {
