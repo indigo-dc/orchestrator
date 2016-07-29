@@ -1,6 +1,7 @@
 package it.reply.orchestrator.dto.onedata;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.builder.ToStringBuilder;
 
 import java.io.Serializable;
 import java.util.Arrays;
@@ -82,8 +83,7 @@ public class OneData implements Serializable {
 
   @Override
   public String toString() {
-    return "OneData [token=" + token + ", space=" + space + ", path=" + path + ", providers="
-        + providers + "]";
+    return ToStringBuilder.reflectionToString(this);
   }
 
 }
