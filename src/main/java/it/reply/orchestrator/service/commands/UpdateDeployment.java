@@ -85,7 +85,7 @@ public class UpdateDeployment extends BaseCommand {
 
       // FIXME Generate CP Endpoint
       CloudProviderEndpoint chosenCloudProviderEndpoint = cloudProviderEndpointServiceImpl
-          .getCloudProviderEndpoint(deployment, rankCloudProvidersMessage, chosenCp);
+          .getCloudProviderEndpoint(deploymentMessage.getChosenCloudProvider());
       deploymentMessage.setChosenCloudProviderEndpoint(chosenCloudProviderEndpoint);
       LOG.debug("Generated Cloud Provider Endpoint is: {}", chosenCloudProviderEndpoint);
 

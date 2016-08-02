@@ -99,6 +99,11 @@ public class CloudServiceData implements Serializable {
     if (other == this) {
       return true;
     }
+
+    if (other == null) {
+      return false;
+    }
+
     if ((other instanceof CloudServiceData) == false) {
       return false;
     }

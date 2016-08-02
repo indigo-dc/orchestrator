@@ -27,6 +27,7 @@ import alien4cloud.utils.FileUtil;
 import es.upv.i3m.grycap.im.auth.credentials.ServiceProvider;
 
 import it.reply.orchestrator.dto.CloudProvider;
+import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.ImageData;
 import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.dto.onedata.OneData;
@@ -36,6 +37,7 @@ import it.reply.orchestrator.exception.service.ToscaException;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.elasticsearch.common.collect.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -50,13 +52,13 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -67,6 +69,8 @@ import java.util.zip.ZipOutputStream;
 import javax.annotation.Nonnull;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+
+import jersey.repackaged.com.google.common.collect.Maps;
 
 @Service
 public class ToscaServiceImpl implements ToscaService {
@@ -292,15 +296,18 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
-  public void contextualizeImages(DeploymentProvider deploymentProvider, ArchiveRoot parsingResult,
-      CloudProvider cloudProvider) {
-    contextualizeImages(deploymentProvider, parsingResult, cloudProvider, true);
+  public List<ImageData> contextualizeImages(DeploymentProvider deploymentProvider,
+      ArchiveRoot parsingResult, CloudProvider cloudProvider, String cloudServiceId) {
+    return contextualizeImages(deploymentProvider, parsingResult, cloudProvider, cloudServiceId,
+        true);
   }
 
   @Override
-  public void contextualizeImages(DeploymentProvider deploymentProvider, ArchiveRoot parsingResult,
-      CloudProvider cloudProvider, boolean replace) {
+  public List<ImageData> contextualizeImages(DeploymentProvider deploymentProvider,
+      ArchiveRoot parsingResult, CloudProvider cloudProvider, String cloudServiceId,
+      boolean replace) {
     try {
+      Map<Capability, ImageData> contextualizedImages = Maps.newHashMap();
       if (parsingResult.getTopology() != null) {
         Map<String, NodeTemplate> nodes = parsingResult.getTopology().getNodeTemplates();
         if (nodes != null) {
@@ -354,7 +361,10 @@ public class ToscaServiceImpl implements ToscaService {
                   && isImImageUri(imageMetadata.getImageName())) {
                 image = imageMetadata;
               } else {
-                image = getBestImageForCloudProvider(imageMetadata, cloudProvider);
+                List<ImageData> images = cloudProvider.getCmdbProviderImages().get(cloudServiceId);
+                if (images != null) {
+                  image = getBestImageForCloudProvider(imageMetadata, images);
+                }
               }
 
               // No image match found -> throw error
@@ -366,30 +376,35 @@ public class ToscaServiceImpl implements ToscaService {
                     "Failed to found a match in provider <%s> for image metadata <%s>",
                     cloudProvider.getId(), imageMetadata));
               }
-
               // Found a good image -> replace the image attribute with the provider-specific ID
               LOG.debug(String.format(
                   "Found image match in <%s> for image metadata <%s>, "
                       + "provider-specific image id <%s>",
                   cloudProvider.getId(), imageMetadata, image.getImageId()));
-              if (replace) {
-                String imageId = image.getImageId();
-                if (deploymentProvider == DeploymentProvider.IM) {
-                  if (isImImageUri(image.getImageName())) {
-                    imageId = image.getImageName();
-                  } else {
-                    imageId = generateImImageUri(cloudProvider, imageId);
-                  }
+              contextualizedImages.put(osCapability, image);
+            }
+          }
+          if (replace) {
+            for (Map.Entry<Capability, ImageData> contextualizedImage : contextualizedImages
+                .entrySet()) {
+              Capability osCapability = contextualizedImage.getKey();
+              ImageData image = contextualizedImage.getValue();
+              String imageId = image.getImageId();
+              if (deploymentProvider == DeploymentProvider.IM) {
+                if (isImImageUri(image.getImageName())) {
+                  imageId = image.getImageName();
+                } else {
+                  imageId = generateImImageUri(cloudProvider, image);
                 }
-                ScalarPropertyValue scalarPropertyValue = new ScalarPropertyValue(imageId);
-                scalarPropertyValue.setPrintable(true);
-                osCapability.getProperties().put("image", scalarPropertyValue);
               }
-
+              ScalarPropertyValue scalarPropertyValue = new ScalarPropertyValue(imageId);
+              scalarPropertyValue.setPrintable(true);
+              osCapability.getProperties().put("image", scalarPropertyValue);
             }
           }
         }
       }
+      return Lists.newArrayList(contextualizedImages.values());
     } catch (Exception ex) {
       throw new RuntimeException("Failed to contextualize images: " + ex.getMessage(), ex);
     }
@@ -406,30 +421,40 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Deprecated
-  private String generateImImageUri(CloudProvider cloudProvider, String imageId) {
+  private String generateImImageUri(CloudProvider cloudProvider, ImageData image) {
     try {
-      StringBuilder sb = new StringBuilder();
-      switch (CloudProviderEndpointServiceImpl.getProviderIaaSType(cloudProvider)) {
-        case OPENSTACK:
-          sb.append(ServiceProvider.OPENSTACK.getId());
-          break;
-        case OPENNEBULA:
-          sb.append(ServiceProvider.OPENNEBULA.getId());
-          break;
-        default:
-          throw new DeploymentException("Unknown IaaSType of cloud provider " + cloudProvider);
+      CloudService cs = null;
+      if (image.getService() != null
+          && cloudProvider.getCmdbProviderServices().get(image.getService()) != null) {
+        cs = cloudProvider.getCmdbProviderServices().get(image.getService());
+      } else {
+        if (cloudProvider.getCmbdProviderServicesByType(Type.COMPUTE).isEmpty()) {
+          throw new DeploymentException(
+              "No compute service available fo cloud provider " + cloudProvider.getId());
+        } else {
+          cs = cloudProvider.getCmbdProviderServicesByType(Type.COMPUTE).get(0);
+        }
       }
-      URL endpoint =
-          new URL(cloudProvider.getCmbdProviderServiceByType(Type.COMPUTE).getData().getEndpoint());
-      sb.append("://").append(endpoint.getHost()).append("/").append(imageId);
-      imageId = sb.toString();
-    } catch (MalformedURLException ex) {
+      StringBuilder sb = new StringBuilder();
+      if (cs.isOpenStackComputeProviderService()) {
+        sb.append(ServiceProvider.OPENSTACK.getId());
+      } else if (cs.isOpenNebulaComputeProviderService()) {
+        sb.append(ServiceProvider.OPENNEBULA.getId());
+      } else {
+        throw new DeploymentException("Unknown IaaSType of cloud provider " + cloudProvider);
+      }
+
+      URL endpoint = new URL(cs.getData().getEndpoint());
+      sb.append("://").append(endpoint.getHost()).append("/").append(image.getImageId());
+      return sb.toString();
+    } catch (Exception ex) {
       LOG.error("Cannot retrieve Compute service host for IM image id generation", ex);
+      return image.getImageId();
     }
-    return imageId;
   }
 
-  protected ImageData getBestImageForCloudProvider(ImageData imageMetadata, CloudProvider cloudProvider) {
+  protected ImageData getBestImageForCloudProvider(ImageData imageMetadata,
+      Collection<ImageData> images) {
 
     // Match image name first (for INDIGO specific use case, if the image cannot be found with the
     // specified name it means that a base image + Ansible configuration have to be used -> the
@@ -437,7 +462,7 @@ public class ToscaServiceImpl implements ToscaService {
     // distro, version)
     if (imageMetadata.getImageName() != null) {
       ImageData imageWithName =
-          findImageWithNameOnCloudProvider(imageMetadata.getImageName(), cloudProvider);
+          findImageWithNameOnCloudProvider(imageMetadata.getImageName(), images);
 
       if (imageWithName != null) {
         LOG.debug("Image <{}> found with name <{}>", imageWithName.getImageId(),
@@ -453,7 +478,7 @@ public class ToscaServiceImpl implements ToscaService {
       }
     }
 
-    for (ImageData image : cloudProvider.getCmdbProviderImages()) {
+    for (ImageData image : images) {
       // Match or skip image based on each additional optional attribute
       if (imageMetadata.getType() != null) {
         if (!imageMetadata.getType().equalsIgnoreCase(image.getType())) {
@@ -487,8 +512,8 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   protected ImageData findImageWithNameOnCloudProvider(String requiredImageName,
-      CloudProvider cloudProvider) {
-    for (ImageData image : cloudProvider.getCmdbProviderImages()) {
+      Collection<ImageData> images) {
+    for (ImageData image : images) {
       if (matchImageNameAndTag(requiredImageName, image.getImageName())) {
         return image;
       }

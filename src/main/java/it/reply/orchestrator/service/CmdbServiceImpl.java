@@ -133,7 +133,7 @@ public class CmdbServiceImpl implements CmdbService {
       }
     }
     for (CloudService service : allServices.values()) {
-      if (service.isOneProviderService()) {
+      if (service.isOneProviderStorageService()) {
         cp.getCmdbProviderServices().put(service.getId(), service);
       }
     }
@@ -143,14 +143,16 @@ public class CmdbServiceImpl implements CmdbService {
     // Get images for provider (requires to know the compute service)
     // FIXME: What if there are multiple compute service for a provider (remember that those are
     // SLAM given)?
-    CloudService imageService = cp.getCmbdProviderServiceByType(Type.COMPUTE);
-    if (imageService != null) {
-      LOG.debug("Retrieving image list for service <{}> of provider <{}>", imageService.getId(),
-          cp.getId());
-      cp.setCmdbProviderImages(getImagesByService(imageService.getId()).stream()
-          .map(e -> e.getData()).collect(Collectors.toList()));
-    } else {
-      LOG.debug("No image service to retrieve image list from for provider <{}>", cp.getId());
+    List<CloudService> imageServices = cp.getCmbdProviderServicesByType(Type.COMPUTE);
+    for (CloudService imageService : imageServices) {
+      if (imageService != null) {
+        LOG.debug("Retrieving image list for service <{}> of provider <{}>", imageService.getId(),
+            cp.getId());
+        cp.addCmdbCloudServiceImages(imageService.getId(), getImagesByService(imageService.getId())
+            .stream().map(e -> e.getData()).collect(Collectors.toList()));
+      } else {
+        LOG.debug("No image service to retrieve image list from for provider <{}>", cp.getId());
+      }
     }
 
     return cp;

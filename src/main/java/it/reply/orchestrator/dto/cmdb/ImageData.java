@@ -175,6 +175,9 @@ public class ImageData implements Serializable {
     if (other == this) {
       return true;
     }
+    if (other == null) {
+      return false;
+    }
     if ((other instanceof ImageData) == false) {
       return false;
     }

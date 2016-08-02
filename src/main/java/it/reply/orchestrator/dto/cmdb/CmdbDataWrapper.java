@@ -125,14 +125,20 @@ public abstract class CmdbDataWrapper<U, T> implements Serializable {
 
   @Override
   public boolean equals(Object other) {
+
     if (other == this) {
       return true;
     }
-    if ((other instanceof CmdbDataWrapper<?, ?>) == false) {
+
+    if (other == null) {
       return false;
     }
-    @SuppressWarnings("unchecked")
-    CmdbDataWrapper<U, T> rhs = ((CmdbDataWrapper<U, T>) other);
+
+    if ((other instanceof CmdbDataWrapper) == false) {
+      return false;
+    }
+
+    CmdbDataWrapper<?, ?> rhs = ((CmdbDataWrapper<?, ?>) other);
 
     return new EqualsBuilder().append(id, rhs.id).append(rev, rhs.rev).append(type, rhs.type)
         .append(data, rhs.data).append(additionalProperties, rhs.additionalProperties).isEquals();
