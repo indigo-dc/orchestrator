@@ -1,6 +1,7 @@
 package it.reply.orchestrator.service;
 
 import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
@@ -34,6 +35,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ToscaServiceTest extends WebAppConfigurationAware {
 
@@ -201,9 +203,12 @@ public class ToscaServiceTest extends WebAppConfigurationAware {
     ArchiveRoot ar = toscaService.prepareTemplate(template, inputs);
     Map<String, OneData> odr = toscaService.extractOneDataRequirements(ar, inputs);
     assertEquals(true, odr.containsKey("input"));
-    assertEquals(inputs.get("input_onedata_providers"), odr.get("input").getProvidersAsList());
+    assertArrayEquals(inputs.get("input_onedata_providers").toString().split(","), odr.get("input")
+        .getProviders().stream().map(info -> info.endpoint).collect(Collectors.toList()).toArray());
     assertEquals(true, odr.containsKey("output"));
-    assertEquals(inputs.get("output_onedata_providers"), odr.get("output").getProvidersAsList());
+    assertArrayEquals(inputs.get("output_onedata_providers").toString().split(","),
+        odr.get("output").getProviders().stream().map(info -> info.endpoint)
+            .collect(Collectors.toList()).toArray());
   }
 
   @Test

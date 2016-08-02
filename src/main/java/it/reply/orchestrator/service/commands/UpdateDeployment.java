@@ -15,6 +15,7 @@ import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.orchestrator.service.deployment.providers.DeploymentStatusHelper;
 import it.reply.workflowmanager.spring.orchestrator.bpm.ejbcommands.BaseCommand;
 
+import org.apache.commons.collections4.MapUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kie.api.executor.CommandContext;
@@ -23,6 +24,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Choose Cloud Provider and update Deployment/Message with the selected one data.
@@ -94,7 +98,7 @@ public class UpdateDeployment extends BaseCommand {
       deployment.setCloudProviderEndpoint(chosenCloudProviderEndpoint);
 
       // FIXME Implement OneData scheduling properly and move in a dedicated command
-      generateOneDataParameters(deploymentMessage);
+      generateOneDataParameters(rankCloudProvidersMessage, deploymentMessage);
 
       exResults.getData().putAll(resultOccurred(true).getData());
       exResults.setData(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
@@ -110,19 +114,42 @@ public class UpdateDeployment extends BaseCommand {
     return exResults;
   }
 
-  protected void generateOneDataParameters(DeploymentMessage deploymentMessage) {
+  protected void generateOneDataParameters(RankCloudProvidersMessage rankCloudProvidersMessage,
+      DeploymentMessage deploymentMessage) {
     // Just copy requirements to parameters (in the future the Orchestrator will need to edit I/O
     // providers, but not for now)
-    deploymentMessage.getOneDataParameters().putAll(deploymentMessage.getOneDataRequirements());
+    // deploymentMessage.getOneDataParameters().putAll(deploymentMessage.getOneDataRequirements());
 
     // No Requirements -> Service space
-    if (deploymentMessage.getOneDataRequirements().isEmpty()) {
+    if (MapUtils.isEmpty(deploymentMessage.getOneDataRequirements())) {
       deploymentMessage
           .setOneDataParameters(ImmutableMap.of("service", generateStubOneData(deploymentMessage)));
       LOG.warn("GENERATING STUB ONE DATA FOR SERVICE"
           + " (remove once OneData parameters generation is completed!)");
     } else {
       LOG.debug("User specified I/O OneData requirements; service space will not be generated.");
+      Map<String, OneData> oneDataRequirements = rankCloudProvidersMessage.getOneDataRequirements();
+      {
+        OneData oneDataInput = oneDataRequirements.get("input");
+        if (oneDataInput != null && oneDataInput.isSmartScheduling()) {
+          oneDataInput.setProviders(oneDataInput.getProviders().stream()
+              .filter(info -> Objects.equals(info.cloudProviderId,
+                  deploymentMessage.getChosenCloudProvider().getId()))
+              .collect(Collectors.toList()));
+          deploymentMessage.getOneDataParameters().put("input", oneDataInput);
+
+        }
+      }
+      {
+        OneData oneDataOutput = oneDataRequirements.get("output");
+        if (oneDataOutput != null && oneDataOutput.isSmartScheduling()) {
+          oneDataOutput.setProviders(oneDataOutput.getProviders().stream()
+              .filter(info -> Objects.equals(info.cloudProviderId,
+                  deploymentMessage.getChosenCloudProvider().getId()))
+              .collect(Collectors.toList()));
+          deploymentMessage.getOneDataParameters().put("output", oneDataOutput);
+        }
+      }
     }
   }
 

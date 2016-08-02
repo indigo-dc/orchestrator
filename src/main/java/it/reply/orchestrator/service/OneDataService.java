@@ -5,10 +5,7 @@ import it.reply.orchestrator.dto.onedata.ProviderDetails;
 import it.reply.orchestrator.dto.onedata.SpaceDetails;
 import it.reply.orchestrator.dto.onedata.UserSpaces;
 
-import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 public interface OneDataService {
 
@@ -45,6 +42,6 @@ public interface OneDataService {
   public ProviderDetails getProviderDetailsFromId(String oneDataToken, String oneSpaceId,
       String oneProviderId);
 
-  public Map<OneData, Set<String>> getProvidersId(Collection<OneData> oneDataParams);
+  public OneData populateProviderInfo(OneData oneDataParameter);
 
 }

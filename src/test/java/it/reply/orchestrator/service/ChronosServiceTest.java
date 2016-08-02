@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ChronosServiceTest extends WebAppConfigurationAware {
 
@@ -97,7 +98,9 @@ public class ChronosServiceTest extends WebAppConfigurationAware {
         ((ScalarPropertyValue) envVars.get("ONEDATA_SPACE")).getValue());
     assertEquals(serviceOd.getPath(),
         ((ScalarPropertyValue) envVars.get("ONEDATA_PATH")).getValue());
-    assertEquals(serviceOd.getProvidersAsList(),
+    assertEquals(serviceOd.getProviders().size(), 1);
+    assertEquals(serviceOd.getProviders().stream().map(info -> info.endpoint)
+        .collect(Collectors.toList()).get(0),
         ((ScalarPropertyValue) envVars.get("ONEDATA_PROVIDERS")).getValue());
   }
 

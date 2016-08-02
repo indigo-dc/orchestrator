@@ -3,12 +3,14 @@ package it.reply.orchestrator.service;
 import com.google.common.collect.Lists;
 
 import it.reply.orchestrator.dto.onedata.OneData;
+import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
 import it.reply.orchestrator.dto.onedata.ProviderDetails;
 import it.reply.orchestrator.dto.onedata.SpaceDetails;
 import it.reply.orchestrator.dto.onedata.UserSpaces;
 import it.reply.orchestrator.exception.service.DeploymentException;
 
-import org.elasticsearch.common.collect.Sets;
+import org.apache.commons.collections4.CollectionUtils;
+import org.elasticsearch.common.base.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
@@ -19,16 +21,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import javax.annotation.Nonnull;
 import javax.annotation.PostConstruct;
-
-import jersey.repackaged.com.google.common.collect.Maps;
 
 @Service
 @PropertySource(value = { "classpath:application.properties", "${onedata.conf.file.path}" })
@@ -60,21 +56,25 @@ public class OneDataServiceImpl implements OneDataService {
 
   @PostConstruct
   private void init() {
-    if (!defaultOneZoneEndpoint.endsWith("/")) {
-      defaultOneZoneEndpoint += "/";
-    }
+    defaultOneZoneEndpoint = addTrailingSlash(defaultOneZoneEndpoint);
+
     if (oneZoneBaseRestPath.startsWith("/")) {
       oneZoneBaseRestPath = oneZoneBaseRestPath.substring(1);
     }
-    if (!oneZoneBaseRestPath.endsWith("/")) {
-      oneZoneBaseRestPath += "/";
-    }
+    oneZoneBaseRestPath = addTrailingSlash(oneZoneBaseRestPath);
+
     if (oneProviderBaseRestPath.startsWith("/")) {
       oneProviderBaseRestPath = oneProviderBaseRestPath.substring(1);
     }
-    if (!oneProviderBaseRestPath.endsWith("/")) {
-      oneProviderBaseRestPath += "/";
+    oneProviderBaseRestPath = addTrailingSlash(oneProviderBaseRestPath);
+
+  }
+
+  private String addTrailingSlash(String endpoint) {
+    if (!endpoint.endsWith("/")) {
+      endpoint += "/";
     }
+    return endpoint;
   }
 
   @Override
@@ -102,7 +102,7 @@ public class OneDataServiceImpl implements OneDataService {
     if (oneZoneEndpoint == null) {
       oneZoneEndpoint = defaultOneZoneEndpoint;
     }
-    oneZoneEndpoint += oneZoneBaseRestPath + "user/spaces";
+    oneZoneEndpoint = addTrailingSlash(oneZoneEndpoint) + oneZoneBaseRestPath + "user/spaces";
 
     ResponseEntity<UserSpaces> response =
         getForEntity(restTemplate, oneZoneEndpoint, oneDataToken, UserSpaces.class);
@@ -124,7 +124,8 @@ public class OneDataServiceImpl implements OneDataService {
     if (oneZoneEndpoint == null) {
       oneZoneEndpoint = defaultOneZoneEndpoint;
     }
-    oneZoneEndpoint += oneZoneBaseRestPath + "user/spaces/" + oneSpaceId;
+    oneZoneEndpoint =
+        addTrailingSlash(oneZoneEndpoint) + oneZoneBaseRestPath + "user/spaces/" + oneSpaceId;
 
     ResponseEntity<SpaceDetails> response =
         getForEntity(restTemplate, oneZoneEndpoint, oneDataToken, SpaceDetails.class);
@@ -172,7 +173,7 @@ public class OneDataServiceImpl implements OneDataService {
     if (oneZoneEndpoint == null) {
       oneZoneEndpoint = defaultOneZoneEndpoint;
     }
-    oneZoneEndpoint = String.format("%s%sspaces/%s/providers/%s", oneZoneEndpoint,
+    oneZoneEndpoint = String.format("%s%sspaces/%s/providers/%s", addTrailingSlash(oneZoneEndpoint),
         oneZoneBaseRestPath, oneSpaceId, oneProviderId);
 
     ResponseEntity<ProviderDetails> response =
@@ -199,57 +200,76 @@ public class OneDataServiceImpl implements OneDataService {
     return restTemplate.exchange(endpoint, HttpMethod.GET, entity, entityClass);
   }
 
+  // private boolean sameUrl(String lhs, String rhs) {
+  // if (lhs == null && rhs == null) {
+  // return true;
+  // } else if (lhs != null && rhs != null) {
+  // URI lhsUri = URI.create(addTrailingSlash(lhs));
+  // URI rhsUri = URI.create(addTrailingSlash(rhs));
+  // if (!Objects.equal(lhsUri.getHost(), rhsUri.getHost())) {
+  // return false;
+  // } else if (!Objects.equal(lhsUri.getPath(), rhsUri.getPath())) {
+  // return false;
+  // } else {
+  // if (lhsUri.getScheme().equals("http") && rhsUri.getScheme().equals("http")) {
+  // if ((lhsUri.getPort() == -1 || lhsUri.getPort() == 80) && (rhsUri.getPort() == -1 ||
+  // rhsUri.getPort() == 80)) {
+  // return true;
+  // }
+  // } else if (lhsUri.getScheme().equals("https") && rhsUri.getScheme().equals("https")) {
+  // if ((lhsUri.getPort() == -1 || lhsUri.getPort() == 443) && (rhsUri.getPort() == -1 ||
+  // rhsUri.getPort() == 443)) {
+  // return true;
+  // }
+  // }
+  // return Objects.equal(lhsUri.getScheme(), rhsUri.getScheme()) && lhsUri.getPort() ==
+  // rhsUri.getPort();
+  // }
+  // } else {
+  // return false;
+  // }
+  // }
+
   @Override
-  public Map<OneData, Set<String>> getProvidersId(Collection<OneData> oneDataParams) {
-    Map<OneData, Set<String>> returnValue = Maps.newHashMap();
-    for (OneData param : oneDataParams) {
-      UserSpaces spaces = getUserSpacesId(param.getZone(), param.getToken());
-      SpaceDetails spaceDetails = null;
-      {
-        // find the right space
-        SpaceDetails tmpSpaceDetails =
-            getSpaceDetailsFromId(param.getToken(), spaces.getDefaultSpace());
-        if (!tmpSpaceDetails.getName().equals(param.getSpace())) {
-          for (String spaceId : spaces.getSpaces()) {
-            tmpSpaceDetails = getSpaceDetailsFromId(param.getToken(), spaceId);
-            if (tmpSpaceDetails.getName().equals(param.getSpace())) {
-              spaceDetails = tmpSpaceDetails;
-            }
-          }
-        } else {
-          spaceDetails = tmpSpaceDetails;
-        }
-      }
-      if (spaceDetails == null) {
-        throw new DeploymentException("No space with name " + param.getSpace()
-            + " associated with the token " + param.getToken());
-      }
-      Set<String> supportedProvidersId = spaceDetails.getProvidersSupports().keySet();
-      returnValue.put(param, Sets.newHashSet());
-      if (param.getProviders() != null) {
-        // filter based on the specified providers
-        Set<String> providerEndpoints = new HashSet<>(param.getProviders());
-        for (String supportedProviderId : supportedProvidersId) {
-          ProviderDetails providerDetails = getProviderDetailsFromId(param.getZone(),
-              param.getToken(), spaceDetails.getSpaceId(), supportedProviderId);
-          if (providerEndpoints.contains(providerDetails.getRedirectionPoint())) {
-            providerEndpoints.remove(providerDetails.getRedirectionPoint());
-            returnValue.get(param).add(supportedProviderId);
-          }
-          if (providerEndpoints.isEmpty()) {
-            break;
-          }
-        }
-        if (!providerEndpoints.isEmpty()) {
-          throw new DeploymentException(
-              "Some OneData Providers are not associated to the specified space: "
-                  + providerEndpoints.toArray());
-        }
-      } else {
-        returnValue.get(param).addAll(supportedProvidersId);
+  public OneData populateProviderInfo(OneData onedataParameter) {
+    boolean addAllProvidersinfo = false;
+    if (CollectionUtils.isEmpty(onedataParameter.getProviders())) {
+      addAllProvidersinfo = true;
+    } else {
+      // FIXME remove once all the logic has been implemented
+      return onedataParameter;
+    }
+
+    UserSpaces spaces = getUserSpacesId(onedataParameter.getZone(), onedataParameter.getToken());
+    List<String> providersId = Lists.newArrayList();
+    SpaceDetails spaceDetail = null;
+    for (String spaceId : spaces.getSpaces()) {
+      spaceDetail =
+          getSpaceDetailsFromId(onedataParameter.getZone(), onedataParameter.getToken(), spaceId);
+      if (Objects.equal(onedataParameter.getSpace(), spaceDetail.getCanonicalName())) {
+        providersId.addAll(spaceDetail.getProvidersSupports().keySet());
+        break;
       }
     }
-    return returnValue;
+    if (spaceDetail == null) {
+      throw new DeploymentException(String.format("Could not found space %s in onezone %s",
+          onedataParameter.getSpace(), onedataParameter.getZone() != null
+              ? onedataParameter.getZone() : defaultOneZoneEndpoint));
+    }
+
+    for (String providerId : providersId) {
+      ProviderDetails providerDetails = getProviderDetailsFromId(onedataParameter.getZone(),
+          onedataParameter.getToken(), spaceDetail.getSpaceId(), providerId);
+      if (addAllProvidersinfo) {
+        OneDataProviderInfo providerInfo = new OneDataProviderInfo();
+        providerInfo.id = providerId;
+        providerInfo.endpoint = providerDetails.getRedirectionPoint();
+        onedataParameter.getProviders().add(providerInfo);
+      } else {
+        // TODO implement the logic
+      }
+    }
+    return onedataParameter;
   }
 
 }

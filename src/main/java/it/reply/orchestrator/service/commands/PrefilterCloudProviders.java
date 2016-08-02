@@ -10,6 +10,8 @@ import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.Type;
+import it.reply.orchestrator.dto.onedata.OneData;
+import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
 import it.reply.orchestrator.dto.slam.Preference;
 import it.reply.orchestrator.dto.slam.PreferenceCustomer;
 import it.reply.orchestrator.dto.slam.Priority;
@@ -17,6 +19,7 @@ import it.reply.orchestrator.dto.slam.Sla;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.service.ToscaService;
 
+import org.apache.commons.collections4.MapUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +56,57 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
     ArchiveRoot ar = toscaService.parseTemplate(deployment.getTemplate());
     Set<CloudProvider> providersToDiscard = Sets.newHashSet();
     Set<CloudService> servicesToDiscard = Sets.newHashSet();
+
+    if (!MapUtils.isEmpty(rankCloudProvidersMessage.getOneDataRequirements())) {
+      OneData inputRequirement = rankCloudProvidersMessage.getOneDataRequirements().get("input");
+      if (inputRequirement != null && inputRequirement.isSmartScheduling()) {
+        for (CloudProvider cloudProvider : rankCloudProvidersMessage.getCloudProviders().values()) {
+          boolean hasOneProviderSupportingSpace = false;
+          for (CloudService cloudService : cloudProvider.getCmdbProviderServices().values()) {
+            if (!cloudService.isOneProviderStorageService()) {
+              continue;
+            } else {
+              for (OneDataProviderInfo providerInfo : inputRequirement.getProviders()) {
+                if (Objects.equals(providerInfo.id, cloudService.getData().getEndpoint())) {
+                  hasOneProviderSupportingSpace = true;
+                  providerInfo.cloudProviderId = cloudProvider.getId();
+                  providerInfo.cloudServiceId = cloudService.getId();
+                }
+              }
+            }
+          }
+          if (!hasOneProviderSupportingSpace) {
+            addProviderToDiscard(providersToDiscard, servicesToDiscard, cloudProvider);
+          }
+        }
+      }
+      OneData outputRequirement = rankCloudProvidersMessage.getOneDataRequirements().get("output");
+      if (outputRequirement != null && outputRequirement.isSmartScheduling()) {
+        for (CloudProvider cloudProvider : rankCloudProvidersMessage.getCloudProviders().values()) {
+          boolean hasOneProviderSupportingSpace = false;
+          for (CloudService cloudService : cloudProvider.getCmdbProviderServices().values()) {
+            if (!cloudService.isOneProviderStorageService()) {
+              continue;
+            } else {
+              for (OneDataProviderInfo providerInfo : outputRequirement.getProviders()) {
+                if (Objects.equals(providerInfo.id, cloudService.getData().getEndpoint())) {
+                  hasOneProviderSupportingSpace = true;
+                  providerInfo.cloudProviderId = cloudProvider.getId();
+                  providerInfo.cloudServiceId = cloudService.getId();
+                }
+              }
+            }
+          }
+          if (!hasOneProviderSupportingSpace) {
+            addProviderToDiscard(providersToDiscard, servicesToDiscard, cloudProvider);
+          }
+        }
+      }
+    }
+
+    discardProvidersAndServices(providersToDiscard, servicesToDiscard, rankCloudProvidersMessage);
+    providersToDiscard = Sets.newHashSet();
+    servicesToDiscard = Sets.newHashSet();
 
     // Filter provider for Chronos
     // FIXME: It's just a demo hack to for Chronos jobs default provider override!!

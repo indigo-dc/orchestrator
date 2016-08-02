@@ -759,34 +759,34 @@ public class ToscaServiceImpl implements ToscaService {
        * output_onedata_space, [input_onedata_providers, output_onedata_providers]
        */
       Map<String, OneData> result = new HashMap<>();
+      OneData oneDataInput = null;
       if (inputs.get("input_onedata_space") != null) {
-        // FIXME: Remove temporary check for limited functionalities
-        if (inputs.get("input_onedata_providers") == null
-            || ((String) inputs.get("input_onedata_providers")).isEmpty()) {
-          throw new IllegalArgumentException(
-              String.format("TEMPORARY: As for the current implementation,"
-                  + " 'input_onedata_providers' cannot be empty"));
+        oneDataInput = new OneData((String) inputs.get("input_onedata_token"),
+            (String) inputs.get("input_onedata_space"), (String) inputs.get("input_path"),
+            (String) inputs.get("input_onedata_providers"),
+            (String) inputs.get("input_onedata_zone"));
+        if (oneDataInput.getProviders().isEmpty()) {
+          oneDataInput.setSmartScheduling(true);
         }
-
-        result.put("input", new OneData(null, (String) inputs.get("input_onedata_space"), null,
-            (String) inputs.get("input_onedata_providers")));
-        LOG.debug("Extracted OneData requirement for node <{}>: <{}>", "input",
-            result.get("input"));
+        result.put("input", oneDataInput);
+        LOG.debug("Extracted OneData requirement for node <{}>: <{}>", "input", oneDataInput);
       }
 
       if (inputs.get("output_onedata_space") != null) {
-        // FIXME: Remove temporary check for limited functionalities
-        if (inputs.get("output_onedata_providers") == null
-            || ((String) inputs.get("output_onedata_providers")).isEmpty()) {
-          throw new IllegalArgumentException(
-              String.format("TEMPORARY: As for the current implementation,"
-                  + " 'output_onedata_providers' cannot be empty"));
+        OneData oneDataOutput = new OneData((String) inputs.get("output_onedata_token"),
+            (String) inputs.get("output_onedata_space"), (String) inputs.get("output_path"),
+            (String) inputs.get("output_onedata_providers"),
+            (String) inputs.get("output_onedata_zone"));
+        if (oneDataOutput.getProviders().isEmpty()) {
+          if (oneDataInput != null) {
+            oneDataOutput.setProviders(oneDataInput.getProviders());
+            oneDataOutput.setSmartScheduling(oneDataInput.isSmartScheduling());
+          } else {
+            oneDataOutput.setSmartScheduling(true);
+          }
         }
-
-        result.put("output", new OneData(null, (String) inputs.get("output_onedata_space"), null,
-            (String) inputs.get("output_onedata_providers")));
-        LOG.debug("Extracted OneData requirement for node <{}>: <{}>", "output",
-            result.get("output"));
+        result.put("output", oneDataOutput);
+        LOG.debug("Extracted OneData requirement for node <{}>: <{}>", "output", oneDataOutput);
       }
 
       if (result.size() == 0) {

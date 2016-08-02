@@ -34,6 +34,7 @@ import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.ToscaService;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jgrapht.alg.CycleDetector;
@@ -778,28 +779,37 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
 
     if (odParameters.containsKey("input")) {
       OneData od = odParameters.get("input");
+      if (CollectionUtils.isEmpty(od.getProviders())) {
+        throw new DeploymentException("No OneData Providers available for input");
+      }
       // Replace OneData properties
       template = template.replace("INPUT_ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR",
-          od.getProvidersAsList());
+          od.getProviders().get(0).endpoint);
       LOG.debug("Replaced {} OneData parameters with: {}", "input", od);
     }
 
     if (odParameters.containsKey("output")) {
       OneData od = odParameters.get("output");
+      if (CollectionUtils.isEmpty(od.getProviders())) {
+        throw new DeploymentException("No OneData Providers available for output");
+      }
       // Replace OneData properties
       template = template.replace("OUTPUT_ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR",
-          od.getProvidersAsList());
+          od.getProviders().get(0).endpoint);
       LOG.debug("Replaced {} OneData parameters with: {}", "output", od);
     }
 
     if (odParameters.containsKey("service")) {
       OneData od = odParameters.get("service");
+      if (CollectionUtils.isEmpty(od.getProviders())) {
+        throw new DeploymentException("No OneData Providers available for service space");
+      }
       // Replace OneData properties
       template = template.replace("TOKEN_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getToken());
       template = template.replace("DATA_SPACE_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getSpace());
       template = template.replace("PATH_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getPath());
       template = template.replace("ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR",
-          od.getProvidersAsList());
+          od.getProviders().get(0).endpoint);
       LOG.debug("Replaced {} OneData parameters with: {}", "service", od);
     }
 

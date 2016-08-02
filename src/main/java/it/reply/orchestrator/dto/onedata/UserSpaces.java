@@ -18,7 +18,7 @@ public class UserSpaces implements Serializable {
 
   @JsonProperty("spaces")
   private List<String> spaces = Lists.newArrayList();
-  @JsonProperty("spaces")
+  @JsonProperty("defaultSpace")
   private String defaultSpace;
 
   /**

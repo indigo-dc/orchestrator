@@ -613,7 +613,9 @@
         </tns:metaData>
         <tns:onEntry-script scriptFormat="http://www.java.com/java">
           <tns:script>System.out.println(&quot;[DEBUG] Entering it.reply.orchestrator.RankCloudProviders process&quot;);
-kcontext.setVariable(&quot;RankCloudProvidersMessage&quot;, new RankCloudProvidersMessage((String) kcontext.getVariable(&quot;DEPLOYMENT_ID&quot;)));
+RankCloudProvidersMessage rankMessage =  new RankCloudProvidersMessage((String) kcontext.getVariable(&quot;DEPLOYMENT_ID&quot;));
+rankMessage.setOneDataRequirements(((it.reply.orchestrator.dto.deployment.DeploymentMessage) kcontext.getVariable(&quot;DeploymentMessage&quot;)).getOneDataRequirements());
+kcontext.setVariable(&quot;RankCloudProvidersMessage&quot;, rankMessage);
 System.out.println(&quot;[DEBUG] Initializing RankCloudProvidersMessage: &quot; + kcontext.getVariable(&quot;RankCloudProvidersMessage&quot;));
 </tns:script>
         </tns:onEntry-script>
@@ -723,43 +725,43 @@ System.out.println(&quot;[DEBUG] RankCloudProvidersMessage: &quot;+kcontext.getV
       <bpmndi:BPMNShape id="BPMNShape_SubProcess_1" bpmnElement="SubProcess_1" isExpanded="true">
         <dc:Bounds height="190.0" width="405.0" x="330.0" y="742.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_1">
-          <dc:Bounds height="15.0" width="81.0" x="336.0" y="745.0"/>
+          <dc:Bounds height="17.0" width="96.0" x="336.0" y="745.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_subProcess_1" bpmnElement="subProcess_1" isExpanded="true">
         <dc:Bounds height="231.0" width="1221.0" x="980.0" y="0.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_2">
-          <dc:Bounds height="15.0" width="113.0" x="986.0" y="3.0"/>
+          <dc:Bounds height="17.0" width="138.0" x="986.0" y="3.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_subProcess_2" bpmnElement="subProcess_2" isExpanded="true">
         <dc:Bounds height="313.0" width="1362.0" x="974.0" y="320.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_3">
-          <dc:Bounds height="15.0" width="106.0" x="980.0" y="323.0"/>
+          <dc:Bounds height="17.0" width="125.0" x="980.0" y="323.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_StartEvent_1" bpmnElement="StartEvent_1">
         <dc:Bounds height="36.0" width="36.0" x="62.0" y="248.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_1">
-          <dc:Bounds height="15.0" width="71.0" x="45.0" y="284.0"/>
+          <dc:Bounds height="34.0" width="55.0" x="53.0" y="284.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_ScriptTask_1" bpmnElement="ScriptTask_1">
         <dc:Bounds height="50.0" width="110.0" x="160.0" y="241.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_2">
-          <dc:Bounds height="15.0" width="95.0" x="167.0" y="258.0"/>
+          <dc:Bounds height="34.0" width="80.0" x="175.0" y="249.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_EndEvent_1" bpmnElement="EndEvent_1">
         <dc:Bounds height="36.0" width="36.0" x="2145.0" y="63.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_3">
-          <dc:Bounds height="15.0" width="65.0" x="2131.0" y="99.0"/>
+          <dc:Bounds height="17.0" width="79.0" x="2124.0" y="99.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_Task_2" bpmnElement="Task_2">
         <dc:Bounds height="50.0" width="110.0" x="1100.0" y="56.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_5">
-          <dc:Bounds height="15.0" width="38.0" x="1136.0" y="73.0"/>
+          <dc:Bounds height="17.0" width="45.0" x="1132.0" y="72.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_Group_1" bpmnElement="Group_1">
@@ -769,79 +771,79 @@ System.out.println(&quot;[DEBUG] RankCloudProvidersMessage: &quot;+kcontext.getV
       <bpmndi:BPMNShape id="BPMNShape_Task_1" bpmnElement="Task_3">
         <dc:Bounds height="50.0" width="110.0" x="464.0" y="807.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_7">
-          <dc:Bounds height="15.0" width="30.0" x="504.0" y="824.0"/>
+          <dc:Bounds height="17.0" width="36.0" x="501.0" y="823.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_IntermediateThrowEvent_1" bpmnElement="IntermediateThrowEvent_1">
         <dc:Bounds height="36.0" width="36.0" x="1258.0" y="63.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_8">
-          <dc:Bounds height="15.0" width="73.0" x="1240.0" y="99.0"/>
+          <dc:Bounds height="34.0" width="49.0" x="1252.0" y="99.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_StartEvent_2" bpmnElement="StartEvent_2">
         <dc:Bounds height="36.0" width="36.0" x="362.0" y="814.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_9">
-          <dc:Bounds height="15.0" width="68.0" x="346.0" y="850.0"/>
+          <dc:Bounds height="34.0" width="80.0" x="340.0" y="850.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_EndEvent_2" bpmnElement="EndEvent_2">
         <dc:Bounds height="36.0" width="36.0" x="662.0" y="814.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_10">
-          <dc:Bounds height="15.0" width="65.0" x="648.0" y="850.0"/>
+          <dc:Bounds height="17.0" width="79.0" x="641.0" y="850.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_Task_3" bpmnElement="Task_1">
         <dc:Bounds height="50.0" width="110.0" x="1754.0" y="56.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_11">
-          <dc:Bounds height="15.0" width="21.0" x="1798.0" y="73.0"/>
+          <dc:Bounds height="17.0" width="24.0" x="1797.0" y="72.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_IntermediateCatchEvent_1" bpmnElement="IntermediateCatchEvent_1">
         <dc:Bounds height="36.0" width="36.0" x="1644.0" y="63.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_13">
-          <dc:Bounds height="30.0" width="78.0" x="1623.0" y="99.0"/>
+          <dc:Bounds height="51.0" width="84.0" x="1620.0" y="99.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_ExclusiveGateway_1" bpmnElement="ExclusiveGateway_1" isMarkerVisible="true">
         <dc:Bounds height="50.0" width="50.0" x="1950.0" y="56.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_14">
-          <dc:Bounds height="30.0" width="57.0" x="1947.0" y="106.0"/>
+          <dc:Bounds height="34.0" width="70.0" x="1940.0" y="106.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_IntermediateThrowEvent_2" bpmnElement="IntermediateThrowEvent_2">
         <dc:Bounds height="36.0" width="36.0" x="2060.0" y="63.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_15">
-          <dc:Bounds height="15.0" width="73.0" x="2042.0" y="99.0"/>
+          <dc:Bounds height="34.0" width="49.0" x="2054.0" y="99.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_InclusiveGateway_1" bpmnElement="InclusiveGateway_1" isMarkerVisible="true">
         <dc:Bounds height="50.0" width="50.0" x="1531.0" y="56.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_12">
-          <dc:Bounds height="30.0" width="57.0" x="1528.0" y="106.0"/>
+          <dc:Bounds height="34.0" width="69.0" x="1522.0" y="106.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_ExclusiveGateway_2" bpmnElement="ExclusiveGateway_2" isMarkerVisible="true">
         <dc:Bounds height="50.0" width="50.0" x="1376.0" y="56.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_16">
-          <dc:Bounds height="30.0" width="57.0" x="1373.0" y="106.0"/>
+          <dc:Bounds height="34.0" width="70.0" x="1366.0" y="106.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_EndEvent_3" bpmnElement="EndEvent_3">
         <dc:Bounds height="36.0" width="36.0" x="1383.0" y="160.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_17">
-          <dc:Bounds height="15.0" width="65.0" x="1369.0" y="196.0"/>
+          <dc:Bounds height="17.0" width="79.0" x="1362.0" y="196.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_ExclusiveGateway_3" bpmnElement="ExclusiveGateway_3" isMarkerVisible="true">
         <dc:Bounds height="50.0" width="50.0" x="730.0" y="242.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_6">
-          <dc:Bounds height="30.0" width="72.0" x="719.0" y="292.0"/>
+          <dc:Bounds height="34.0" width="82.0" x="714.0" y="292.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_StartEvent_3" bpmnElement="StartEvent_3">
         <dc:Bounds height="36.0" width="36.0" x="1008.0" y="63.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_18">
-          <dc:Bounds height="15.0" width="68.0" x="992.0" y="99.0"/>
+          <dc:Bounds height="34.0" width="80.0" x="986.0" y="99.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_InclusiveGateway_2" bpmnElement="InclusiveGateway_2" isMarkerVisible="true">
@@ -851,133 +853,133 @@ System.out.println(&quot;[DEBUG] RankCloudProvidersMessage: &quot;+kcontext.getV
       <bpmndi:BPMNShape id="BPMNShape_EndEvent_4" bpmnElement="EndEvent_4">
         <dc:Bounds height="36.0" width="36.0" x="2433.0" y="249.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_20">
-          <dc:Bounds height="15.0" width="65.0" x="2419.0" y="285.0"/>
+          <dc:Bounds height="17.0" width="79.0" x="2412.0" y="285.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_StartEvent_4" bpmnElement="StartEvent_4">
         <dc:Bounds height="36.0" width="36.0" x="994.0" y="445.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_21">
-          <dc:Bounds height="15.0" width="68.0" x="978.0" y="481.0"/>
+          <dc:Bounds height="34.0" width="80.0" x="972.0" y="481.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_Task_4" bpmnElement="Task_4">
         <dc:Bounds height="50.0" width="110.0" x="1100.0" y="438.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_22">
-          <dc:Bounds height="15.0" width="106.0" x="1102.0" y="455.0"/>
+          <dc:Bounds height="34.0" width="77.0" x="1116.0" y="446.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_EndEvent_5" bpmnElement="EndEvent_5">
         <dc:Bounds height="36.0" width="36.0" x="2280.0" y="438.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_23">
-          <dc:Bounds height="15.0" width="65.0" x="2266.0" y="474.0"/>
+          <dc:Bounds height="17.0" width="79.0" x="2259.0" y="474.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_ScriptTask_2" bpmnElement="ScriptTask_2">
         <dc:Bounds height="50.0" width="110.0" x="1050.0" y="147.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_24">
-          <dc:Bounds height="15.0" width="95.0" x="1057.0" y="164.0"/>
+          <dc:Bounds height="34.0" width="80.0" x="1065.0" y="155.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_ScriptTask_3" bpmnElement="ScriptTask_3">
         <dc:Bounds height="50.0" width="110.0" x="1010.0" y="566.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_25">
-          <dc:Bounds height="15.0" width="95.0" x="1017.0" y="583.0"/>
+          <dc:Bounds height="34.0" width="80.0" x="1025.0" y="574.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_IntermediateThrowEvent_3" bpmnElement="IntermediateThrowEvent_3">
         <dc:Bounds height="36.0" width="36.0" x="1258.0" y="438.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_26">
-          <dc:Bounds height="15.0" width="73.0" x="1240.0" y="474.0"/>
+          <dc:Bounds height="34.0" width="49.0" x="1252.0" y="474.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_ExclusiveGateway_6" bpmnElement="ExclusiveGateway_6" isMarkerVisible="true">
         <dc:Bounds height="50.0" width="50.0" x="1340.0" y="431.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_27">
-          <dc:Bounds height="15.0" width="37.0" x="1346.0" y="481.0"/>
+          <dc:Bounds height="17.0" width="45.0" x="1342.0" y="481.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_InclusiveGateway_4" bpmnElement="InclusiveGateway_4" isMarkerVisible="true">
         <dc:Bounds height="50.0" width="50.0" x="1530.0" y="431.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_28">
-          <dc:Bounds height="30.0" width="57.0" x="1527.0" y="481.0"/>
+          <dc:Bounds height="34.0" width="69.0" x="1521.0" y="481.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_IntermediateCatchEvent_3" bpmnElement="IntermediateCatchEvent_3">
         <dc:Bounds height="36.0" width="36.0" x="1619.0" y="438.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_29">
-          <dc:Bounds height="30.0" width="78.0" x="1598.0" y="474.0"/>
+          <dc:Bounds height="51.0" width="84.0" x="1595.0" y="474.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_Task_6" bpmnElement="Task_6">
         <dc:Bounds height="50.0" width="110.0" x="1790.0" y="431.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_30">
-          <dc:Bounds height="15.0" width="21.0" x="1834.0" y="448.0"/>
+          <dc:Bounds height="17.0" width="24.0" x="1833.0" y="447.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_ExclusiveGateway_7" bpmnElement="ExclusiveGateway_7" isMarkerVisible="true">
         <dc:Bounds height="50.0" width="50.0" x="1957.0" y="431.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_31">
-          <dc:Bounds height="15.0" width="37.0" x="1963.0" y="481.0"/>
+          <dc:Bounds height="17.0" width="45.0" x="1959.0" y="481.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_IntermediateThrowEvent_5" bpmnElement="IntermediateThrowEvent_5">
         <dc:Bounds height="36.0" width="36.0" x="2060.0" y="438.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_32">
-          <dc:Bounds height="15.0" width="73.0" x="2042.0" y="474.0"/>
+          <dc:Bounds height="34.0" width="49.0" x="2054.0" y="474.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_EndEvent_7" bpmnElement="EndEvent_7">
         <dc:Bounds height="36.0" width="36.0" x="1347.0" y="540.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_33">
-          <dc:Bounds height="15.0" width="65.0" x="1333.0" y="576.0"/>
+          <dc:Bounds height="17.0" width="79.0" x="1326.0" y="576.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_CallActivity_1" bpmnElement="CallActivity_1" isExpanded="true">
         <dc:Bounds height="50.0" width="110.0" x="330.0" y="241.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_36">
-          <dc:Bounds height="30.0" width="74.0" x="348.0" y="251.0"/>
+          <dc:Bounds height="34.0" width="88.0" x="341.0" y="249.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_Task_5" bpmnElement="Task_5">
         <dc:Bounds height="50.0" width="110.0" x="580.0" y="241.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_37">
-          <dc:Bounds height="45.0" width="98.0" x="586.0" y="243.0"/>
+          <dc:Bounds height="68.0" width="87.0" x="591.0" y="232.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_ExclusiveGateway_4" bpmnElement="ExclusiveGateway_4" isMarkerVisible="true">
         <dc:Bounds height="50.0" width="50.0" x="479.0" y="242.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_38">
-          <dc:Bounds height="15.0" width="44.0" x="482.0" y="292.0"/>
+          <dc:Bounds height="17.0" width="51.0" x="479.0" y="292.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_EndEvent_6" bpmnElement="EndEvent_6">
         <dc:Bounds height="36.0" width="36.0" x="485.0" y="450.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_39">
-          <dc:Bounds height="15.0" width="65.0" x="471.0" y="486.0"/>
+          <dc:Bounds height="17.0" width="79.0" x="464.0" y="486.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_ExclusiveGateway_5" bpmnElement="ExclusiveGateway_5" isMarkerVisible="true">
         <dc:Bounds height="50.0" width="50.0" x="1430.0" y="431.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_34">
-          <dc:Bounds height="30.0" width="73.0" x="1419.0" y="481.0"/>
+          <dc:Bounds height="51.0" width="67.0" x="1422.0" y="481.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_InclusiveGateway_3" bpmnElement="InclusiveGateway_3" isMarkerVisible="true">
         <dc:Bounds height="50.0" width="50.0" x="1045.0" y="438.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_35">
-          <dc:Bounds height="30.0" width="57.0" x="1042.0" y="488.0"/>
+          <dc:Bounds height="34.0" width="69.0" x="1036.0" y="488.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_ExclusiveGateway_8" bpmnElement="ExclusiveGateway_8" isMarkerVisible="true">
         <dc:Bounds height="50.0" width="50.0" x="1957.0" y="340.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_40">
-          <dc:Bounds height="30.0" width="51.0" x="1957.0" y="390.0"/>
+          <dc:Bounds height="34.0" width="60.0" x="1952.0" y="390.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_InclusiveGateway_5" bpmnElement="InclusiveGateway_5" isMarkerVisible="true">
         <dc:Bounds height="50.0" width="50.0" x="1696.0" y="431.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_41">
-          <dc:Bounds height="30.0" width="57.0" x="1693.0" y="481.0"/>
+          <dc:Bounds height="34.0" width="69.0" x="1687.0" y="481.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_1" bpmnElement="SequenceFlow_1" sourceElement="BPMNShape_StartEvent_1" targetElement="BPMNShape_ScriptTask_1">
@@ -1076,7 +1078,7 @@ System.out.println(&quot;[DEBUG] RankCloudProvidersMessage: &quot;+kcontext.getV
         <di:waypoint xsi:type="dc:Point" x="755.0" y="115.0"/>
         <di:waypoint xsi:type="dc:Point" x="980.0" y="115.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_26">
-          <dc:Bounds height="15.0" width="80.0" x="800.0" y="116.0"/>
+          <dc:Bounds height="34.0" width="63.0" x="773.0" y="116.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_12" bpmnElement="SequenceFlow_12" sourceElement="BPMNShape_StartEvent_3" targetElement="BPMNShape_ScriptTask_2">
@@ -1091,7 +1093,7 @@ System.out.println(&quot;[DEBUG] RankCloudProvidersMessage: &quot;+kcontext.getV
         <di:waypoint xsi:type="dc:Point" x="755.0" y="476.0"/>
         <di:waypoint xsi:type="dc:Point" x="974.0" y="476.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_28">
-          <dc:Bounds height="15.0" width="48.0" x="782.0" y="418.0"/>
+          <dc:Bounds height="17.0" width="56.0" x="746.0" y="477.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_18" bpmnElement="SequenceFlow_18" sourceElement="BPMNShape_subProcess_1" targetElement="BPMNShape_InclusiveGateway_2">
@@ -1200,7 +1202,7 @@ System.out.println(&quot;[DEBUG] RankCloudProvidersMessage: &quot;+kcontext.getV
         <di:waypoint xsi:type="dc:Point" x="504.0" y="371.0"/>
         <di:waypoint xsi:type="dc:Point" x="503.0" y="450.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_50">
-          <dc:Bounds height="45.0" width="79.0" x="465.0" y="372.0"/>
+          <dc:Bounds height="85.0" width="63.0" x="473.0" y="372.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_29" bpmnElement="SequenceFlow_29" sourceElement="BPMNShape_ExclusiveGateway_4" targetElement="BPMNShape_Task_5">
@@ -1222,7 +1224,7 @@ System.out.println(&quot;[DEBUG] RankCloudProvidersMessage: &quot;+kcontext.getV
         <di:waypoint xsi:type="dc:Point" x="1070.0" y="402.0"/>
         <di:waypoint xsi:type="dc:Point" x="1070.0" y="438.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_46">
-          <dc:Bounds height="15.0" width="68.0" x="1226.0" y="403.0"/>
+          <dc:Bounds height="34.0" width="42.0" x="1239.0" y="403.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_31" bpmnElement="SequenceFlow_31" sourceElement="BPMNShape_InclusiveGateway_3" targetElement="BPMNShape_Task_4">
@@ -1242,7 +1244,7 @@ System.out.println(&quot;[DEBUG] RankCloudProvidersMessage: &quot;+kcontext.getV
         <di:waypoint xsi:type="dc:Point" x="1721.0" y="365.0"/>
         <di:waypoint xsi:type="dc:Point" x="1721.0" y="431.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_53">
-          <dc:Bounds height="15.0" width="24.0" x="1795.0" y="366.0"/>
+          <dc:Bounds height="17.0" width="28.0" x="1793.0" y="366.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_34" bpmnElement="SequenceFlow_45" sourceElement="BPMNShape_Task_6" targetElement="BPMNShape_ExclusiveGateway_7">
