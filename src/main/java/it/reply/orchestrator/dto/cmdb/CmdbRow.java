@@ -4,24 +4,26 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Generated;
-
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({ "id", "key", "value", "doc" })
-public class CmdbImageRow {
+public class CmdbRow<T> implements Serializable {
+
+  private static final long serialVersionUID = 559476054523810413L;
 
   @JsonProperty("id")
   private String id;
   @JsonProperty("key")
   private List<String> key = new ArrayList<String>();
   @JsonProperty("doc")
-  private CmdbImage image;
+  private T doc;
 
   @JsonProperty("id")
   public String getId() {
@@ -33,7 +35,7 @@ public class CmdbImageRow {
     this.id = id;
   }
 
-  public CmdbImageRow withId(String id) {
+  public CmdbRow<T> withId(String id) {
     this.id = id;
     return this;
   }
@@ -48,28 +50,50 @@ public class CmdbImageRow {
     this.key = key;
   }
 
-  public CmdbImageRow withKey(List<String> key) {
+  public CmdbRow<T> withKey(List<String> key) {
     this.key = key;
     return this;
   }
 
   @JsonProperty("doc")
-  public CmdbImage getImage() {
-    return image;
+  public T getDoc() {
+    return doc;
   }
 
   @JsonProperty("doc")
-  public void setImage(CmdbImage image) {
-    this.image = image;
+  public void setDoc(T doc) {
+    this.doc = doc;
   }
 
-  public CmdbImageRow withImage(CmdbImage image) {
-    this.image = image;
+  public CmdbRow<T> withDoc(T doc) {
+    this.doc = doc;
     return this;
   }
 
   @Override
   public String toString() {
     return ToStringBuilder.reflectionToString(this);
+  }
+
+  @Override
+  public int hashCode() {
+    return new HashCodeBuilder().append(id).append(key).append(doc).toHashCode();
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (other == this) {
+      return true;
+    }
+    if (other == null) {
+      return false;
+    }
+    if ((other instanceof CmdbRow) == false) {
+      return false;
+    }
+
+    CmdbRow<?> rhs = ((CmdbRow<?>) other);
+    return new EqualsBuilder().append(id, rhs.id).append(key, rhs.key).append(doc, rhs.doc)
+        .isEquals();
   }
 }

@@ -10,7 +10,7 @@ import org.apache.commons.lang.builder.ToStringBuilder;
 import java.io.Serializable;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class Data implements Serializable {
+public class CloudServiceData implements Serializable {
 
   private static final long serialVersionUID = 6559999818418491070L;
 
@@ -33,7 +33,7 @@ public class Data implements Serializable {
     this.serviceType = serviceType;
   }
 
-  public Data withServiceType(String serviceType) {
+  public CloudServiceData withServiceType(String serviceType) {
     this.serviceType = serviceType;
     return this;
   }
@@ -48,7 +48,7 @@ public class Data implements Serializable {
     this.endpoint = endpoint;
   }
 
-  public Data withEndpoint(String endpoint) {
+  public CloudServiceData withEndpoint(String endpoint) {
     this.endpoint = endpoint;
     return this;
   }
@@ -63,7 +63,7 @@ public class Data implements Serializable {
     this.providerId = providerId;
   }
 
-  public Data withProviderId(String providerId) {
+  public CloudServiceData withProviderId(String providerId) {
     this.providerId = providerId;
     return this;
   }
@@ -78,7 +78,7 @@ public class Data implements Serializable {
     this.type = type;
   }
 
-  public Data withType(Type type) {
+  public CloudServiceData withType(Type type) {
     this.type = type;
     return this;
   }
@@ -99,10 +99,15 @@ public class Data implements Serializable {
     if (other == this) {
       return true;
     }
-    if ((other instanceof Data) == false) {
+
+    if (other == null) {
       return false;
     }
-    Data rhs = ((Data) other);
+
+    if ((other instanceof CloudServiceData) == false) {
+      return false;
+    }
+    CloudServiceData rhs = ((CloudServiceData) other);
     return new EqualsBuilder().append(serviceType, rhs.serviceType).append(endpoint, rhs.endpoint)
         .append(providerId, rhs.providerId).append(type, rhs.type).isEquals();
   }

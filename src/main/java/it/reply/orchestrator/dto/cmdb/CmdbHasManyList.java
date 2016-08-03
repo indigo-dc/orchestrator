@@ -11,17 +11,17 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Generated;
-
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({ "total_rows", "offset", "rows" })
-public class CmdbHasManyList<ROWT> {
+public class CmdbHasManyList<ROWT> implements Serializable {
+
+  private static final long serialVersionUID = -7214527741922419947L;
 
   @JsonProperty("total_rows")
   private Long totalRows;
@@ -108,11 +108,14 @@ public class CmdbHasManyList<ROWT> {
     if (other == this) {
       return true;
     }
-    if ((other instanceof CmdbHasManyList<?>) == false) {
+    if (other == null) {
       return false;
     }
-    @SuppressWarnings("unchecked")
-    CmdbHasManyList<ROWT> rhs = ((CmdbHasManyList<ROWT>) other);
+    if ((other instanceof CmdbHasManyList) == false) {
+      return false;
+    }
+
+    CmdbHasManyList<?> rhs = ((CmdbHasManyList<?>) other);
     return new EqualsBuilder().append(totalRows, rhs.totalRows).append(offset, rhs.offset)
         .append(rows, rhs.rows).append(additionalProperties, rhs.additionalProperties).isEquals();
   }

@@ -5,6 +5,7 @@ import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
+import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
 import it.reply.orchestrator.exception.service.DeploymentException;
@@ -52,23 +53,30 @@ public class CloudProviderEndpointServiceImpl {
   /**
    * .
    * 
-   * @param deployment
-   *          .
-   * @param rankCloudProvidersMessage
-   *          .
-   * @param chosenCp
+   * @param chosenCloudProvider
    *          .
    * @return .
    */
-  public CloudProviderEndpoint getCloudProviderEndpoint(Deployment deployment,
-      RankCloudProvidersMessage rankCloudProvidersMessage, RankedCloudProvider chosenCp) {
+  public CloudProviderEndpoint getCloudProviderEndpoint(CloudProvider chosenCloudProvider) {
 
-    IaaSType iaasType = getProviderIaaSType(rankCloudProvidersMessage, chosenCp.getName());
+    if (chosenCloudProvider.getCmbdProviderServicesByType(Type.COMPUTE).isEmpty()) {
+      throw new IllegalArgumentException(
+          "No compute Service Available for Cloud Provider : " + chosenCloudProvider);
+    }
+
+    CloudService computeService =
+        chosenCloudProvider.getCmbdProviderServicesByType(Type.COMPUTE).get(0);
+
+    IaaSType iaasType = null;
+    if (computeService.isOpenStackComputeProviderService()) {
+      iaasType = IaaSType.OPENSTACK;
+    } else if (computeService.isOpenNebulaComputeProviderService()) {
+      iaasType = IaaSType.OPENNEBULA;
+    } else {
+      throw new IllegalArgumentException("Unknown Cloud Provider type: " + computeService);
+    }
 
     CloudProviderEndpoint cpe = new CloudProviderEndpoint();
-
-    it.reply.orchestrator.dto.cmdb.Service computeService = rankCloudProvidersMessage
-        .getCloudProviders().get(chosenCp.getName()).getCmbdProviderServiceByType(Type.COMPUTE);
 
     cpe.setCpEndpoint(computeService.getData().getEndpoint());
     cpe.setCpComputeServiceId(computeService.getId());
@@ -105,26 +113,26 @@ public class CloudProviderEndpointServiceImpl {
   // }
   // }
 
-  protected IaaSType getProviderIaaSType(RankCloudProvidersMessage rankCloudProvidersMessage,
-      String providerName) {
-    return getProviderIaaSType(rankCloudProvidersMessage.getCloudProviders().get(providerName));
-  }
-
-  /**
-   * Get the {@link IaaSType} from the {@link CloudProvider}.
-   * 
-   * @param cloudProvider
-   *          the cloudProvider
-   * @return the IaaSTYpe
-   */
-  public static IaaSType getProviderIaaSType(CloudProvider cloudProvider) {
-    String serviceType =
-        cloudProvider.getCmbdProviderServiceByType(Type.COMPUTE).getData().getServiceType();
-    if (serviceType.contains("openstack")) {
-      return IaaSType.OPENSTACK;
-    }
-
-    return IaaSType.OPENNEBULA;
-  }
+  // protected IaaSType getProviderIaaSType(RankCloudProvidersMessage rankCloudProvidersMessage,
+  // String providerName) {
+  // return getProviderIaaSType(rankCloudProvidersMessage.getCloudProviders().get(providerName));
+  // }
+  //
+  // /**
+  // * Get the {@link IaaSType} from the {@link CloudProvider}.
+  // *
+  // * @param cloudProvider
+  // * the cloudProvider
+  // * @return the IaaSTYpe
+  // */
+  // public static IaaSType getProviderIaaSType(CloudProvider cloudProvider) {
+  // String serviceType =
+  // cloudProvider.getCmbdProviderServiceByType(Type.COMPUTE).getData().getServiceType();
+  // if (serviceType.contains("openstack")) {
+  // return IaaSType.OPENSTACK;
+  // }
+  //
+  // return IaaSType.OPENNEBULA;
+  // }
 
 }

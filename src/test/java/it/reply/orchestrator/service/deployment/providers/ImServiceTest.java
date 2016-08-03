@@ -22,6 +22,7 @@ import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
+import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
@@ -82,6 +83,9 @@ public class ImServiceTest {
     deployment.getResources().addAll(ControllerTestUtils.createResources(deployment, 2));
     deployment.getResources().stream().forEach(r -> r.setState(NodeStates.CREATING));
 
+    CloudProviderEndpoint chosenCloudProviderEndpoint = new CloudProviderEndpoint();
+    chosenCloudProviderEndpoint.setCpComputeServiceId(UUID.randomUUID().toString());
+    dm.setChosenCloudProviderEndpoint(chosenCloudProviderEndpoint);
     return dm;
   }
 
