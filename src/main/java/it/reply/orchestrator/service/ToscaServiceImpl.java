@@ -1,5 +1,6 @@
 package it.reply.orchestrator.service;
 
+import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
 
 import alien4cloud.component.repository.exception.CSARVersionAlreadyExistsException;
@@ -69,8 +70,6 @@ import java.util.zip.ZipOutputStream;
 import javax.annotation.Nonnull;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-
-import jersey.repackaged.com.google.common.collect.Maps;
 
 @Service
 public class ToscaServiceImpl implements ToscaService {
