@@ -278,6 +278,9 @@ public class ProviderData implements Serializable {
     if (other == this) {
       return true;
     }
+    if (other == null) {
+      return false;
+    }
     if ((other instanceof ProviderData) == false) {
       return false;
     }

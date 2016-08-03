@@ -108,11 +108,14 @@ public class CmdbHasManyList<ROWT> implements Serializable {
     if (other == this) {
       return true;
     }
-    if ((other instanceof CmdbHasManyList<?>) == false) {
+    if (other == null) {
       return false;
     }
-    @SuppressWarnings("unchecked")
-    CmdbHasManyList<ROWT> rhs = ((CmdbHasManyList<ROWT>) other);
+    if ((other instanceof CmdbHasManyList) == false) {
+      return false;
+    }
+
+    CmdbHasManyList<?> rhs = ((CmdbHasManyList<?>) other);
     return new EqualsBuilder().append(totalRows, rhs.totalRows).append(offset, rhs.offset)
         .append(rows, rhs.rows).append(additionalProperties, rhs.additionalProperties).isEquals();
   }

@@ -218,7 +218,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           toscaService.prepareTemplate(deployment.getTemplate(), deployment.getParameters());
       toscaService.addElasticClusterParameters(ar, deploymentUuid);
       toscaService.contextualizeImages(DeploymentProvider.IM, ar,
-          deploymentMessage.getChosenCloudProvider());
+          deploymentMessage.getChosenCloudProvider(),
+          deploymentMessage.getChosenCloudProviderEndpoint().getCpComputeServiceId());
       String imCustomizedTemplate = toscaService.getTemplateFromTopology(ar);
 
       // Generate IM Client
@@ -373,7 +374,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       newAr = toscaService.prepareTemplate(template, deployment.getParameters());
       toscaService.addElasticClusterParameters(newAr, deployment.getId());
       toscaService.contextualizeImages(DeploymentProvider.IM, newAr,
-          deploymentMessage.getChosenCloudProvider());
+          deploymentMessage.getChosenCloudProvider(),
+          deploymentMessage.getChosenCloudProviderEndpoint().getCpComputeServiceId());
     } catch (ParsingException | IOException | ToscaException ex) {
       throw new OrchestratorException(ex);
     }

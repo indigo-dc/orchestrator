@@ -1,6 +1,9 @@
 package it.reply.orchestrator.dto;
 
+import com.google.common.collect.Maps;
+
 import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.PaaSMetric;
+import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
 import it.reply.orchestrator.dto.slam.SlamPreferences;
 import it.reply.utils.json.JsonUtility;
@@ -27,6 +30,8 @@ public class RankCloudProvidersMessage implements Serializable {
   private Map<String, List<PaaSMetric>> cloudProvidersMonitoringData = new HashMap<>();
 
   private List<RankedCloudProvider> rankedCloudProviders = new ArrayList<>();
+
+  private Map<String, OneData> oneDataRequirements = Maps.newHashMap();
 
   public RankCloudProvidersMessage() {
   }
@@ -63,8 +68,8 @@ public class RankCloudProvidersMessage implements Serializable {
     return cloudProvidersMonitoringData;
   }
 
-  public void
-      setCloudProvidersMonitoringData(Map<String, List<PaaSMetric>> cloudProvidersMonitoringData) {
+  public void setCloudProvidersMonitoringData(
+      Map<String, List<PaaSMetric>> cloudProvidersMonitoringData) {
     this.cloudProvidersMonitoringData = cloudProvidersMonitoringData;
   }
 
@@ -74,6 +79,14 @@ public class RankCloudProvidersMessage implements Serializable {
 
   public void setRankedCloudProviders(List<RankedCloudProvider> rankedCloudProviders) {
     this.rankedCloudProviders = rankedCloudProviders;
+  }
+
+  public Map<String, OneData> getOneDataRequirements() {
+    return oneDataRequirements;
+  }
+
+  public void setOneDataRequirements(Map<String, OneData> oneDataRequirements) {
+    this.oneDataRequirements = oneDataRequirements;
   }
 
   @Override

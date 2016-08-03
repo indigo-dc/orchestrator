@@ -4,6 +4,8 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
 
 import java.io.Serializable;
@@ -71,5 +73,27 @@ public class CmdbRow<T> implements Serializable {
   @Override
   public String toString() {
     return ToStringBuilder.reflectionToString(this);
+  }
+
+  @Override
+  public int hashCode() {
+    return new HashCodeBuilder().append(id).append(key).append(doc).toHashCode();
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    if (other == this) {
+      return true;
+    }
+    if (other == null) {
+      return false;
+    }
+    if ((other instanceof CmdbRow) == false) {
+      return false;
+    }
+
+    CmdbRow<?> rhs = ((CmdbRow<?>) other);
+    return new EqualsBuilder().append(id, rhs.id).append(key, rhs.key).append(doc, rhs.doc)
+        .isEquals();
   }
 }

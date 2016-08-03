@@ -10,20 +10,23 @@ import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
 import it.reply.orchestrator.service.CloudProviderEndpointServiceImpl;
+import it.reply.orchestrator.service.OneDataService;
 import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.orchestrator.service.deployment.providers.DeploymentStatusHelper;
 import it.reply.workflowmanager.spring.orchestrator.bpm.ejbcommands.BaseCommand;
 
+import org.apache.commons.collections4.MapUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * Choose Cloud Provider and update Deployment/Message with the selected one data.
@@ -32,19 +35,12 @@ import java.util.Arrays;
  *
  */
 @Component
-@PropertySource(value = {"classpath:application.properties", "${chronos.auth.file.path}"})
 public class UpdateDeployment extends BaseCommand {
 
   private static final Logger LOG = LogManager.getLogger(UpdateDeployment.class);
 
-  @Value("${onedata.token}")
-  private String token;
-  @Value("${onedata.space}")
-  private String space;
-  @Value("${onedata.path:''}")
-  private String path;
-  @Value("${onedata.provider}")
-  private String provider;
+  @Autowired
+  private OneDataService oneDataService;
 
   @Autowired
   private DeploymentRepository deploymentRepository;
@@ -93,7 +89,7 @@ public class UpdateDeployment extends BaseCommand {
 
       // FIXME Generate CP Endpoint
       CloudProviderEndpoint chosenCloudProviderEndpoint = cloudProviderEndpointServiceImpl
-          .getCloudProviderEndpoint(deployment, rankCloudProvidersMessage, chosenCp);
+          .getCloudProviderEndpoint(deploymentMessage.getChosenCloudProvider());
       deploymentMessage.setChosenCloudProviderEndpoint(chosenCloudProviderEndpoint);
       LOG.debug("Generated Cloud Provider Endpoint is: {}", chosenCloudProviderEndpoint);
 
@@ -102,7 +98,7 @@ public class UpdateDeployment extends BaseCommand {
       deployment.setCloudProviderEndpoint(chosenCloudProviderEndpoint);
 
       // FIXME Implement OneData scheduling properly and move in a dedicated command
-      generateOneDataParameters(deploymentMessage);
+      generateOneDataParameters(rankCloudProvidersMessage, deploymentMessage);
 
       exResults.getData().putAll(resultOccurred(true).getData());
       exResults.setData(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
@@ -118,19 +114,42 @@ public class UpdateDeployment extends BaseCommand {
     return exResults;
   }
 
-  protected void generateOneDataParameters(DeploymentMessage deploymentMessage) {
+  protected void generateOneDataParameters(RankCloudProvidersMessage rankCloudProvidersMessage,
+      DeploymentMessage deploymentMessage) {
     // Just copy requirements to parameters (in the future the Orchestrator will need to edit I/O
     // providers, but not for now)
-    deploymentMessage.getOneDataParameters().putAll(deploymentMessage.getOneDataRequirements());
+    // deploymentMessage.getOneDataParameters().putAll(deploymentMessage.getOneDataRequirements());
 
     // No Requirements -> Service space
-    if (deploymentMessage.getOneDataRequirements().isEmpty()) {
+    if (MapUtils.isEmpty(deploymentMessage.getOneDataRequirements())) {
       deploymentMessage
           .setOneDataParameters(ImmutableMap.of("service", generateStubOneData(deploymentMessage)));
       LOG.warn("GENERATING STUB ONE DATA FOR SERVICE"
           + " (remove once OneData parameters generation is completed!)");
     } else {
       LOG.debug("User specified I/O OneData requirements; service space will not be generated.");
+      Map<String, OneData> oneDataRequirements = rankCloudProvidersMessage.getOneDataRequirements();
+      {
+        OneData oneDataInput = oneDataRequirements.get("input");
+        if (oneDataInput != null && oneDataInput.isSmartScheduling()) {
+          oneDataInput.setProviders(oneDataInput.getProviders().stream()
+              .filter(info -> Objects.equals(info.cloudProviderId,
+                  deploymentMessage.getChosenCloudProvider().getId()))
+              .collect(Collectors.toList()));
+          deploymentMessage.getOneDataParameters().put("input", oneDataInput);
+
+        }
+      }
+      {
+        OneData oneDataOutput = oneDataRequirements.get("output");
+        if (oneDataOutput != null && oneDataOutput.isSmartScheduling()) {
+          oneDataOutput.setProviders(oneDataOutput.getProviders().stream()
+              .filter(info -> Objects.equals(info.cloudProviderId,
+                  deploymentMessage.getChosenCloudProvider().getId()))
+              .collect(Collectors.toList()));
+          deploymentMessage.getOneDataParameters().put("output", oneDataOutput);
+        }
+      }
     }
   }
 
@@ -141,13 +160,17 @@ public class UpdateDeployment extends BaseCommand {
    */
   protected OneData generateStubOneData(DeploymentMessage deploymentMessage) {
 
-    String path = new StringBuilder().append(this.path).append(deploymentMessage.getDeploymentId())
-        .toString();
+    String path = new StringBuilder().append(oneDataService.getServiceSpacePath())
+        .append(deploymentMessage.getDeploymentId()).toString();
 
-    LOG.info(String.format("Generating OneData settings with parameters: %s",
-        Arrays.asList(token, space, path, provider)));
+    LOG.info(
+        String.format("Generating OneData settings with parameters: %s",
+            Arrays.asList(oneDataService.getServiceSpaceToken(),
+                oneDataService.getServiceSpaceName(), path,
+                oneDataService.getServiceSpaceProvider())));
 
-    return new OneData(token, space, path, provider);
+    return new OneData(oneDataService.getServiceSpaceToken(), oneDataService.getServiceSpaceName(),
+        path, oneDataService.getServiceSpaceProvider());
   }
 
 }
