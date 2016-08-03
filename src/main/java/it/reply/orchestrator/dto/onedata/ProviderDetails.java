@@ -31,107 +31,58 @@ public class ProviderDetails implements Serializable {
   @JsonProperty("longitude")
   private Double longitude;
 
-  /**
-   * @return the csr
-   */
   public String getCsr() {
     return csr;
   }
 
-  /**
-   * @param csr
-   *          the csr to set
-   */
   public void setCsr(String csr) {
     this.csr = csr;
   }
 
-  /**
-   * @return the providerId
-   */
   public String getProviderId() {
     return providerId;
   }
 
-  /**
-   * @return the clientName
-   */
   public String getClientName() {
     return clientName;
   }
 
-  /**
-   * @return the redirectionPoint
-   */
   public String getRedirectionPoint() {
     return redirectionPoint;
   }
 
-  /**
-   * @return the urls
-   */
   public List<String> getUrls() {
     return urls;
   }
 
-  /**
-   * @return the latitude
-   */
   public Double getLatitude() {
     return latitude;
   }
 
-  /**
-   * @return the longitude
-   */
   public Double getLongitude() {
     return longitude;
   }
 
-  /**
-   * @param providerId
-   *          the providerId to set
-   */
   public void setProviderId(String providerId) {
     this.providerId = providerId;
   }
 
-  /**
-   * @param clientName
-   *          the clientName to set
-   */
   public void setClientName(String clientName) {
     this.clientName = clientName;
   }
 
-  /**
-   * @param redirectionPoint
-   *          the redirectionPoint to set
-   */
   public void setRedirectionPoint(String redirectionPoint) {
     this.redirectionPoint = redirectionPoint;
   }
 
-  /**
-   * @param urls
-   *          the urls to set
-   */
   public void setUrls(List<String> urls) {
     this.urls = urls;
   }
 
-  /**
-   * @param latitude
-   *          the latitude to set
-   */
   public void setLatitude(Double latitude) {
     this.latitude = latitude;
   }
 
-  /**
-   * @param longitude
-   *          the longitude to set
-   */
   public void setLongitude(Double longitude) {
     this.longitude = longitude;
   }

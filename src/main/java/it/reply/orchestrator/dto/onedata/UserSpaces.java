@@ -21,32 +21,18 @@ public class UserSpaces implements Serializable {
   @JsonProperty("defaultSpace")
   private String defaultSpace;
 
-  /**
-   * @return the spaces
-   */
   public List<String> getSpaces() {
     return spaces;
   }
 
-  /**
-   * @return the defaultSpace
-   */
   public String getDefaultSpace() {
     return defaultSpace;
   }
 
-  /**
-   * @param spaces
-   *          the spaces to set
-   */
   public void setSpaces(List<String> spaces) {
     this.spaces = spaces;
   }
 
-  /**
-   * @param defaultSpace
-   *          the defaultSpace to set
-   */
   public void setDefaultSpace(String defaultSpace) {
     this.defaultSpace = defaultSpace;
   }

@@ -83,6 +83,14 @@ public class CloudProvider implements Serializable {
     this.cmdbProviderImages = cmdbProviderImages;
   }
 
+  /**
+   * Add the images of the cloud service.
+   * 
+   * @param cloudServiceId
+   *          the cloud service Id
+   * @param cmdbServiceImages
+   *          the images of the compute cloud service
+   */
   public void addCmdbCloudServiceImages(String cloudServiceId,
       Collection<ImageData> cmdbServiceImages) {
     List<ImageData> images = null;

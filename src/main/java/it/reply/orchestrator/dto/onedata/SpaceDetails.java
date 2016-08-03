@@ -26,62 +26,34 @@ public class SpaceDetails implements Serializable {
   @JsonProperty("providersSupports")
   private Map<String, Long> providersSupports = Maps.newHashMap();
 
-  /**
-   * @return the spaceId
-   */
   public String getSpaceId() {
     return spaceId;
   }
 
-  /**
-   * @return the name
-   */
   public String getName() {
     return name;
   }
 
-  /**
-   * @return the canonicalName
-   */
   public String getCanonicalName() {
     return canonicalName;
   }
 
-  /**
-   * @return the providersSupports
-   */
   public Map<String, Long> getProvidersSupports() {
     return providersSupports;
   }
 
-  /**
-   * @param spaceId
-   *          the spaceId to set
-   */
   public void setSpaceId(String spaceId) {
     this.spaceId = spaceId;
   }
 
-  /**
-   * @param name
-   *          the name to set
-   */
   public void setName(String name) {
     this.name = name;
   }
 
-  /**
-   * @param canonicalName
-   *          the canonicalName to set
-   */
   public void setCanonicalName(String canonicalName) {
     this.canonicalName = canonicalName;
   }
 
-  /**
-   * @param providersSupports
-   *          the providersSupports to set
-   */
   public void setProvidersSupports(Map<String, Long> providersSupports) {
     this.providersSupports = providersSupports;
   }

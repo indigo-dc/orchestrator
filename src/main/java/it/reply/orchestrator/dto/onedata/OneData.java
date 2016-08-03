@@ -125,17 +125,10 @@ public class OneData implements Serializable {
   // return providers != null ? StringUtils.join(providers, ",") : "";
   // }
 
-  /**
-   * @return the smartScheduling
-   */
   public boolean isSmartScheduling() {
     return smartScheduling;
   }
 
-  /**
-   * @param smartScheduling
-   *          the smartScheduling to set
-   */
   public void setSmartScheduling(boolean smartScheduling) {
     this.smartScheduling = smartScheduling;
   }
