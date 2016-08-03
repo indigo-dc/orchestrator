@@ -39,16 +39,24 @@ public class ChronosServiceTest extends WebAppConfigurationAware {
     Map<String, Object> inputs = new HashMap<String, Object>();
     inputs.put("input_onedata_providers", "input_provider_1,input_provider_2");
     inputs.put("input_onedata_space", "input_onedata_space");
-    inputs.put("output_onedata_providers", "output_provider_1,output_provider_2");
+    inputs.put("input_onedata_token", "input_token");
+    inputs.put("input_path", "input/path");
+    inputs.put("input_onedata_zone", "input_zone");
+    inputs.put("output_onedata_providers", "output_provider_3,output_provider_4");
     inputs.put("output_onedata_space", "output_onedata_space");
+    inputs.put("output_onedata_token", "output_token");
+    inputs.put("output_path", "output/path");
+    inputs.put("output_onedata_zone", "output_zone");
     ArchiveRoot ar = toscaService.prepareTemplate(template, inputs);
 
-    Map<String, OneData> odParameters =
-        ImmutableMap.of("service", new OneData("token", "space", "path", "provider"), "input",
-            new OneData("token_input", "space_input", "path_input",
-                "provider_input_1,provider_input_2"),
-            "output", new OneData("token_output", "space_output", "path_output",
-                "provider_output_1,provider2_output_2"));
+    Map<String, OneData> odRequirements = toscaService.extractOneDataRequirements(ar, inputs);
+
+    Map<String, OneData> odParameters = odRequirements;
+    // ImmutableMap.of("service", new OneData("token", "space", "path", "provider"), "input",
+    // new OneData("token_input", "space_input", "path_input",
+    // "provider_input_1,provider_input_2"),
+    // "output", new OneData("token_output", "space_output", "path_output",
+    // "provider_output_1,provider2_output_2"));
 
     String customizedTemplate = chronosServiceImpl.replaceHardCodedParams(template, odParameters);
 
@@ -61,9 +69,9 @@ public class ChronosServiceTest extends WebAppConfigurationAware {
     Map<String, Object> envVars = ((Map<String, Object>) toscaService
         .getNodePropertyValueByName(chronosJob, "environment_variables").getValue());
 
-    assertEquals("provider_input_1,provider_input_2",
+    assertEquals("input_provider_1",
         ((ScalarPropertyValue) envVars.get("INPUT_ONEDATA_PROVIDERS")).getValue());
-    assertEquals("provider_output_1,provider2_output_2",
+    assertEquals("output_provider_3",
         ((ScalarPropertyValue) envVars.get("OUTPUT_ONEDATA_PROVIDERS")).getValue());
   }
 
