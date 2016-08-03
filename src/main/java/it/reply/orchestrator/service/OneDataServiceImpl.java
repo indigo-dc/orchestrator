@@ -42,16 +42,16 @@ public class OneDataServiceImpl implements OneDataService {
   @Value("${oneprovider.base.rest.path}")
   private String oneProviderBaseRestPath;
 
-  @Value("$service.space.token")
+  @Value("${service.space.token}")
   private String serviceSpaceToken;
 
-  @Value("$service.space.name")
+  @Value("${service.space.name}")
   private String serviceSpaceName;
 
-  @Value("$service.space.provider")
+  @Value("${service.space.provider}")
   private String serviceSpaceProvider;
 
-  @Value("$service.space.path:''")
+  @Value("${service.space.path:''}")
   private String serviceSpacePath;
 
   @PostConstruct

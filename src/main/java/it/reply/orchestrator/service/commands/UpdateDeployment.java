@@ -131,22 +131,26 @@ public class UpdateDeployment extends BaseCommand {
       Map<String, OneData> oneDataRequirements = rankCloudProvidersMessage.getOneDataRequirements();
       {
         OneData oneDataInput = oneDataRequirements.get("input");
-        if (oneDataInput != null && oneDataInput.isSmartScheduling()) {
-          oneDataInput.setProviders(oneDataInput.getProviders().stream()
-              .filter(info -> Objects.equals(info.cloudProviderId,
-                  deploymentMessage.getChosenCloudProvider().getId()))
-              .collect(Collectors.toList()));
+        if (oneDataInput != null) {
+          if (oneDataInput.isSmartScheduling()) {
+            oneDataInput.setProviders(oneDataInput.getProviders().stream()
+                .filter(info -> Objects.equals(info.cloudProviderId,
+                    deploymentMessage.getChosenCloudProvider().getId()))
+                .collect(Collectors.toList()));
+          }
           deploymentMessage.getOneDataParameters().put("input", oneDataInput);
 
         }
       }
       {
         OneData oneDataOutput = oneDataRequirements.get("output");
-        if (oneDataOutput != null && oneDataOutput.isSmartScheduling()) {
-          oneDataOutput.setProviders(oneDataOutput.getProviders().stream()
-              .filter(info -> Objects.equals(info.cloudProviderId,
-                  deploymentMessage.getChosenCloudProvider().getId()))
-              .collect(Collectors.toList()));
+        if (oneDataOutput != null) {
+          if (oneDataOutput.isSmartScheduling()) {
+            oneDataOutput.setProviders(oneDataOutput.getProviders().stream()
+                .filter(info -> Objects.equals(info.cloudProviderId,
+                    deploymentMessage.getChosenCloudProvider().getId()))
+                .collect(Collectors.toList()));
+          }
           deploymentMessage.getOneDataParameters().put("output", oneDataOutput);
         }
       }
