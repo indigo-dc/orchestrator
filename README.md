@@ -1,63 +1,72 @@
+![INDIGO](https://pbs.twimg.com/media/Cldr8SHWYAA0JbY.png)
+
+INDIGO Orchestrator
+============================
+
+
 [![GitHub license](https://img.shields.io/github/license/indigo-dc/orchestrator.svg?maxAge=2592000&style=flat-square)](https://github.com/indigo-dc/orchestrator/blob/master/LICENSE)
 [![GitHub release](https://img.shields.io/github/release/indigo-dc/orchestrator.svg?maxAge=2592000&style=flat-square)](https://github.com/indigo-dc/orchestrator/releases/latest)
+
 [![Jenkins](https://img.shields.io/jenkins/s/https/ci.cloud.reply.eu/job/INDIGO/orchestrator-unittest-master.svg?maxAge=2592000&style=flat-square)](https://ci.cloud.reply.eu/job/INDIGO/job/orchestrator-unittest-master/)
 [![Jenkins tests](https://img.shields.io/jenkins/t/https/ci.cloud.reply.eu/job/INDIGO/orchestrator-unittest-master.svg?maxAge=2592000&style=flat-square)](https://ci.cloud.reply.eu/job/INDIGO/job/orchestrator-unittest-master/)
 [![Jenkins coverage](https://img.shields.io/jenkins/c/https/ci.cloud.reply.eu/job/INDIGO/orchestrator-coverage-master.svg?maxAge=2592000&style=flat-square)](https://ci.cloud.reply.eu/job/INDIGO/job/orchestrator-coverage-master/)
 
 
-INDIGO Orchestrator
-============================
-
-This is the Orchestrator of the PaaS layer, a core component of the INDIGO project. It receives high-level deployment requests and coordinates the deployment process over the IaaS platforms or Mesos.
+This is the Orchestrator of the PaaS layer, a core component of the INDIGO project. It receives high-level deployment requests and coordinates the deployment process over the CMFs and Mesos.
 
 You can find the REST APIs docs [orchestrator-rest-doc] (http://indigo-dc.github.io/orchestrator/restdocs/).
 
+### DEPENDENCIES TO OTHER SERVICES
 
-1. INSTALLATION
-===============
+The Orchestrator coordinates the deploy of the INDIGO applications. In order to do it, it needs the presence of the following INDIGO services:
 
-1.1 REQUISITES
---------------
+ 1. `SLAM`: [SLA Manager](https://github.com/indigo-dc/slam)
+ 2. `CMDB`: Configuration Manager DataBase
+ 3. `Zabbix Wrapper`: [REST wrapper for Zabbix](https://github.com/indigo-dc/Monitoring)
+ 4. `CPR` [Cloud Provider Ranker](https://github.com/indigo-dc/CloudProviderRanker)
 
-This project has been created with maven 3.3.3 and Java 1.8. Maven will take care of downloading the extra dependencies needed for the project but this project dependes on [im-java-api](https://github.com/indigo-dc/im-java-api) and [workflow-manager](https://github.com/ConceptReplyIT/workflow-manager) too.
-To run the Orchestrator you need [Docker](https://www.docker.com) and a MySQL Server instance (which may be local, remote, or in a docker container). See next section to have details.
 
-1.1.1 MySQL
------------
+
+
+
+# COMPILE
+
+## REQUISITES
+
+
+To build this project you will need the JDK 1.8 and maven 3.3. Thanks to maven all the dependencies will automatically downloaded.
+
+## COMPILE THE CODE
+
+
+Go to the same folder where the `pom.xml` file is and type:
+```
+mvn install
+```
+This command will download the dependencies, compile the code and create a war package, `orchestrator.war`, which will be put inside the `docker` folder.
+
+
+## COMPILE THE DOCKER IMAGE
+
+
+After the previous step, you can build the Docker image of the Orchestrator with the command:
+```
+docker build -t indigodatacloud/orchestrator docker/ 
+```
+
+
+
+# RUN
+
+## REQUISITES
+
+To run the Orchestrator you need [Docker](https://www.docker.com) and at least a MySQL Server instance (which may be local, remote, or in a docker container). 
 
 The MySQL server needs the following customized settings (use `my.cnf` file to edit those settings):
 - `max_allowed_packet = 256M`
 
-1.2 INSTALLING
---------------
+## RUN THE CONTAINER
 
-First you have to customize:
-- the IM endpoint in `/orchestrator/src/main/resources/im-config/im-java-api.properties`;
-- the authorization file in `/orchestrator/src/main/resources/im-config/auth.dat`.
-
-### Compile the code
-To compile the project you need to be in the same folder as the `pom.xml` file and type:
-```
-mvn clean install
-```
-This command compiles the code and creates a war package, `orchestrator.war`, which will be put inside the `docker` folder.
-If you want run only unit-test type:
-```
-mvn test
-```
-otherwise if you want run integration test type (or use surefire.skip=true property to skip unit tests)
-```
-mvn integration-test
-```
-### Build the Docker image
-
-You can build the docker image with the command
-```
-docker build -t indigodatacloud/orchestrator /path/to/the/docker/folder
-```
-
-1.3 RUNNING
---------------
 ### With MySQL dockerized on the same host
 The Orchestrator can be run in 3 steps:
 
@@ -93,16 +102,32 @@ sudo docker run --name orchestrator1 -h orchestrator1 -e ORCHESTRATOR_DB_ENDPOIN
 ```
 using as parameters (`DOMAIN_NAME`, `PORT`, `SCHEMA_NAME`, `DB_USER`, `DB_USER_PASSWORD`) the correct values.
 
-1.4 CONFIGURING
---------------
-Besides those used to link the Orchestrator to the database, there are other environment variables that can be set in order to configure the Orchestrator behaviour.
+## CONFIGURATION
+
+Besides those used to link the Orchestrator to the database, there are other environment variables that can be set in order to configure the Orchestrator behavior.
+
+### Configure other platform services dependencies
+ 1. `IM_URL`: the Infrastructure Manager REST endpoint (e.g. http://{host}:{port})
+ 2. `CMDB_ENDPOINT`: the CMDB REST endpoint (e.g. http://{host}:{port}/cmdb/)
+ 3. `SLAM_ENDPOINT`: the SLAM REST endpoint (e.g. http://{host}:{port}/slam/)
+ 4. `CPR_ENDPOINT`: the Cloud Provider Ranker endpoint (e.g. https://{host}:{port}/cpr/rank)
+ 5. `WRAPPER_URL`: the Zabbix Wrapper endpoint (e.g. http://{host}:{port}/monitoring/adapters/zabbix/zones/indigo/types/service/groups/Cloud_Providers/hosts/)
 
 ### Configure security
  1. `SECURITY_ENABLE`: if set to `true` enable AAI OAuth2 authentication and authorization
- 2. `OIDC_ISSUERS`: String containing a list of comma separated values of whitelisted AAI token issuers
- 3. `OIDC_CLIENT_ID`: The OAuth2 client ID
- 4. `OIDC_CLIENT_SECRET` The OAuth2 client secret
+ 2. `OIDC_ISSUERS`: string containing a list of comma separated values of white-listed AAI token issuers (e.g. http://{host}:{port})
+ 3. `OIDC_CLIENT_ID`: the OAuth2 client ID
+ 4. `OIDC_CLIENT_SECRET` the OAuth2 client secret
  
 ### Configure Chronos
- 1. `CHRONOS_AUTH_FILE_PATH`: the path to the property file containing credentials for Chronos and OneData service space for Chronos.
-You can also edit the file `chronos/chronos.properties` directly in the deployment folder.
+ 1. `CHRONOS_ENDPOINT`: the Chronos REST endpoint (e.g. http://{host}:{port})
+ 2. `CHRONOS_USERNAME`: the Chronos username
+ 3. `CHRONOS_PASSWORD`: the Chronos password
+ 4. `CHRONOS_PROVIDER`: the Chronos Cloud Provider
+ 
+### Configure OneData
+ 1. `ONEZONE_DEFAULT_URL`: the default OneZone endpoint (e.g. http://{host}:{port})
+ 2. `SERVICE_SPACE_TOKEN`: the OneData service space token
+ 3. `SERVICE_SPACE_NAME`: the OneData service space name
+ 4. `SERVICE_SPACE_PROVIDER`: the OneData service space provider (e.g. http://{host}:{port})
+  
