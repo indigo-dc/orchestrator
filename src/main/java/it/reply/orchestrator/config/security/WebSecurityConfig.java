@@ -176,7 +176,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
   @Override
   public void configure(WebSecurity webSecurity) throws Exception {
     if (securityEnabled) {
-      webSecurity.ignoring().regexMatchers("/?");
+      webSecurity.ignoring().regexMatchers("/?", "/info/?");
     } else {
       webSecurity.ignoring().anyRequest();
     }
