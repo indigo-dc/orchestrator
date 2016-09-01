@@ -2,24 +2,17 @@ FROM jboss/wildfly:9.0.2.Final
 
 MAINTAINER Alberto Brigandì <a.brigandi@reply.it>
 
-COPY /modules/ $JBOSS_HOME/modules/
-
 USER root
 RUN yum install -y libaio && yum clean all
-
-ENV JBOSS_CONF_FILE standalone-full-ha.xml
-ENV JBOSS_CONF_FILEPATH $JBOSS_HOME/standalone/configuration/$JBOSS_CONF_FILE
-
-COPY /otherConfigs.xsl /otherConfigs.xsl
-COPY /datasourcesConfig.xsl /datasourcesConfig.xsl
-COPY /launch.sh /launch.sh
-
-RUN java -jar /usr/share/java/saxon.jar -o:$JBOSS_HOME/standalone/configuration/$JBOSS_CONF_FILE -s:$JBOSS_HOME/standalone/configuration/$JBOSS_CONF_FILE -xsl:/otherConfigs.xsl \
-	# ADD (and so COPY too) does not honor USER: files always owned by root
-	# https://github.com/docker/docker/issues/6119
-	&& chmod 777 /datasourcesConfig.xsl \
-	&& chmod 777 /launch.sh
 USER jboss
+
+ENV MYSQL_CONNECTOR_VERSION=5.1.38 \
+	JBOSS_CONF_FILE=standalone-full-ha.xml
+COPY add_mysql_driver_module.sh otherConfigs.xsl datasourcesConfig.xsl launch.sh /
+
+RUN /add_mysql_driver_module.sh \
+	&& java -jar /usr/share/java/saxon.jar -o:$JBOSS_HOME/standalone/configuration/$JBOSS_CONF_FILE \
+		-s:$JBOSS_HOME/standalone/configuration/$JBOSS_CONF_FILE -xsl:/otherConfigs.xsl
 
 EXPOSE  3528 \
 		3529 \
@@ -39,11 +32,9 @@ EXPOSE  3528 \
 		55200 \
 		57600
 
-#RUN $JBOSS_HOME/bin/add-user.sh --silent=true admin admin123
-
 ENV WAR_NAME orchestrator
 
-COPY /$WAR_NAME.war $JBOSS_HOME/standalone/deployments/$WAR_NAME.war.zip
+COPY $WAR_NAME.war $JBOSS_HOME/standalone/deployments/$WAR_NAME.war.zip
 RUN unzip $JBOSS_HOME/standalone/deployments/$WAR_NAME.war.zip -d $JBOSS_HOME/standalone/deployments/$WAR_NAME.war \
 	&& touch $JBOSS_HOME/standalone/deployments/$WAR_NAME.war.dodeploy \
 	&& rm $JBOSS_HOME/standalone/deployments/$WAR_NAME.war.zip
@@ -56,14 +47,12 @@ ENV ORCHESTRATOR_DB_ENDPOINT="databaseorchestrator:3306" \
 	WORKFLOW_DB_ENDPOINT="databaseworkflow:3306" \
 	WORKFLOW_DB_NAME=workflow \
 	WORKFLOW_DB_USER=root \
-	WORKFLOW_DB_PWD=root	
-
-ENV IM_URL="" \
+	WORKFLOW_DB_PWD=root \
+	IM_URL="" \
 	PROXY_DIR="" \
 	OPENNEBULA_AUTH_FILE_PATH="" \
-	OPENSTACK_AUTH_FILE_PATH=""
-	
-ENV SECURITY_ENABLE="" \
+	OPENSTACK_AUTH_FILE_PATH="" \
+	SECURITY_ENABLE="" \
 	OIDC_CLIENT_ID="" \
 	OIDC_CLIENT_SECRET=""
 
