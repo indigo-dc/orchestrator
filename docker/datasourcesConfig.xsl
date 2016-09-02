@@ -24,6 +24,7 @@
 				</xa-datasource-property>
 				<xa-datasource-class>com.mysql.jdbc.jdbc2.optional.MysqlXADataSource</xa-datasource-class>
 				<driver>mysql</driver>
+				<transaction-isolation>TRANSACTION_READ_COMMITTED</transaction-isolation>
 				<xa-pool>
 					<min-pool-size>1</min-pool-size>
 					<max-pool-size>20</max-pool-size>
@@ -37,6 +38,11 @@
 						<xsl:value-of select="$orchestrator.DB.pwd" />
 					</password>
 				</security>
+				<validation>
+                	<background-validation>true</background-validation>
+                	<valid-connection-checker class-name="org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker" />
+                	<exception-sorter class-name="org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLExceptionSorter" />
+            	</validation>
 			</xa-datasource>
 			<xa-datasource jndi-name="java:jboss/datasources/WorkflowManager/JBPM-DS" pool-name="workflowDS" enabled="true" use-java-context="true" use-ccm="true">
 				<xa-datasource-property name="URL">
@@ -44,6 +50,7 @@
 				</xa-datasource-property>
 				<xa-datasource-class>com.mysql.jdbc.jdbc2.optional.MysqlXADataSource</xa-datasource-class>
 				<driver>mysql</driver>
+				<transaction-isolation>TRANSACTION_READ_COMMITTED</transaction-isolation>
 				<xa-pool>
 					<min-pool-size>1</min-pool-size>
 					<max-pool-size>20</max-pool-size>
@@ -57,6 +64,11 @@
 						<xsl:value-of select="$workflow.DB.pwd" />
 					</password>
 				</security>
+				<validation>
+                	<background-validation>true</background-validation>
+                	<valid-connection-checker class-name="org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLValidConnectionChecker" />
+                	<exception-sorter class-name="org.jboss.jca.adapters.jdbc.extensions.mysql.MySQLExceptionSorter" />
+            	</validation>
 			</xa-datasource>
 			<drivers>
                 <driver name="mysql" module="com.mysql">
