@@ -14,6 +14,14 @@
             	false
         </property>
     </xsl:variable>
+
+	<xsl:variable name="jbpmAnnoyingLogs">
+		<logger category="org.drools.core.xml.ExtensibleXmlParser" xmlns="urn:jboss:domain:logging:3.0">
+			<level name="FATAL" />
+		</logger>
+	</xsl:variable>
+   
+
 <!--	<xsl:variable name="newPubInterface">
 		<interface name="public"  xmlns="urn:jboss:domain:3.0">
             <any-ipv4-address />
@@ -40,7 +48,13 @@
 			<xsl:attribute name="deployment-timeout">300</xsl:attribute>
 		</xsl:copy>
     </xsl:template> -->
-
+    
+	<xsl:template match="//log:subsystem/log:root-logger">
+	    <xsl:copy-of copy-namespaces="no" select="$jbpmAnnoyingLogs"/>
+	    <xsl:copy>
+	        <xsl:apply-templates select="@*|node()"/>
+	    </xsl:copy>
+	</xsl:template>
 
 	<xsl:template match="//log:subsystem/log:console-handler[@name='CONSOLE']/log:level/@name">
 		<xsl:attribute name="name">DEBUG</xsl:attribute>
