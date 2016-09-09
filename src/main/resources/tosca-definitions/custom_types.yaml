@@ -234,7 +234,7 @@ node_types:
       zabbix_server:
         type: string
         required: no
-        default: 90.147.170.165
+        default: indigo-paas.cloud.ba.infn.it
       zabbix_server_port:
         type: integer
         required: no
@@ -288,7 +288,7 @@ node_types:
         relationship: tosca.relationships.HostedOn
     artifacts:
       galaxy_role:
-        file: indigo-dc.galaxy
+        file: indigo-dc.galaxycloud
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
@@ -360,7 +360,7 @@ node_types:
         type: string
         description: URL of the orchestrator
         required: false
-        default: http://orchestrator01.indigo.recas.ba.infn.it:8080
+        default: http://orchestrator01-indigo.cloud.ba.infn.it:8080/orchestrator
     artifacts:
       docker_agent_role:
         file: indigo-dc.clues
