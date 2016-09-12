@@ -1,4 +1,4 @@
 # Summary
 
 * [About Indigo Component](README.md)
-* [Index....](asciidoc/index.adoc)
+* [REST APIs Documentation](restdocs/index.adoc)

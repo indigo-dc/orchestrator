@@ -64,8 +64,7 @@ public class ResourceControllerTest {
   private GlobalControllerExceptionHandler globalControllerExceptionHandler;
 
   @Rule
-  public JUnitRestDocumentation restDocumentation =
-      new JUnitRestDocumentation("target/generated-snippets");
+  public JUnitRestDocumentation restDocumentation = ControllerTestUtils.getRestDocumentationRule();
 
   @Before
   public void setup() {

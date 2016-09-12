@@ -9,12 +9,17 @@ import it.reply.orchestrator.enums.Task;
 import org.elasticsearch.common.collect.Lists;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.restdocs.JUnitRestDocumentation;
 
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
 public class ControllerTestUtils {
+
+  public static JUnitRestDocumentation getRestDocumentationRule() {
+    return new JUnitRestDocumentation("restdocs/generated-snippets");
+  }
 
   public static Pageable createDefaultPageable() {
     return new PageRequest(0, 10);
