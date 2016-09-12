@@ -48,8 +48,7 @@ public class TemplateControllerTest {
   private GlobalControllerExceptionHandler globalControllerExceptionHandler;
 
   @Rule
-  public JUnitRestDocumentation restDocumentation =
-      new JUnitRestDocumentation("target/generated-snippets");
+  public JUnitRestDocumentation restDocumentation = ControllerTestUtils.getRestDocumentationRule();
 
   private final MediaType applicationJsonUtf8 = new MediaType(MediaType.APPLICATION_JSON.getType(),
       MediaType.APPLICATION_JSON.getSubtype(), Charset.forName("utf8"));
