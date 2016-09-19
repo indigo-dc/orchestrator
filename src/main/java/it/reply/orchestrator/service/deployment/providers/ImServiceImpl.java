@@ -216,7 +216,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
       ArchiveRoot ar =
           toscaService.prepareTemplate(deployment.getTemplate(), deployment.getParameters());
-      toscaService.addElasticClusterParameters(ar, deploymentUuid);
+      toscaService.addElasticClusterParameters(ar, deploymentUuid,
+          deploymentMessage.getOauth2Token());
       toscaService.contextualizeImages(DeploymentProvider.IM, ar,
           deploymentMessage.getChosenCloudProvider(),
           deploymentMessage.getChosenCloudProviderEndpoint().getCpComputeServiceId());
@@ -372,7 +373,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
       // Get TOSCA in-memory repr. of new template
       newAr = toscaService.prepareTemplate(template, deployment.getParameters());
-      toscaService.addElasticClusterParameters(newAr, deployment.getId());
+      toscaService.addElasticClusterParameters(newAr, deployment.getId(),
+          deploymentMessage.getOauth2Token());
       toscaService.contextualizeImages(DeploymentProvider.IM, newAr,
           deploymentMessage.getChosenCloudProvider(),
           deploymentMessage.getChosenCloudProviderEndpoint().getCpComputeServiceId());
