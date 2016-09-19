@@ -10,8 +10,6 @@ import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingException;
 import alien4cloud.tosca.parser.ParsingResult;
 
-import com.sun.istack.NotNull;
-
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.ImageData;
 import it.reply.orchestrator.dto.onedata.OneData;
@@ -43,23 +41,23 @@ public interface ToscaService {
   @Nonnull
   public String getTemplateFromTopology(@Nonnull ArchiveRoot archiveRoot) throws IOException;
 
-  /**
-   * Customize the template with INDIGO requirements, for example it adds the deploymentId.
-   * 
-   * @param toscaTemplate
-   *          the TOSCA template
-   * @param deploymentId
-   *          the deploymentId
-   * @return the customized template
-   * 
-   * @throws IOException
-   *           if there is an IO error
-   * @throws ToscaException
-   *           if the template is not valid
-   */
-  @Nonnull
-  public String customizeTemplate(@Nonnull String toscaTemplate, @NotNull String deploymentId)
-      throws IOException, ToscaException;
+  // /**
+  // * Customize the template with INDIGO requirements, for example it adds the deploymentId.
+  // *
+  // * @param toscaTemplate
+  // * the TOSCA template
+  // * @param deploymentId
+  // * the deploymentId
+  // * @return the customized template
+  // *
+  // * @throws IOException
+  // * if there is an IO error
+  // * @throws ToscaException
+  // * if the template is not valid
+  // */
+  // @Nonnull
+  // public String customizeTemplate(@Nonnull String toscaTemplate, @NotNull String deploymentId)
+  // throws IOException, ToscaException;
 
   /**
    * Adds the parameters needed for 'tosca.nodes.indigo.ElasticCluster' nodes (deployment_id,
@@ -69,8 +67,11 @@ public interface ToscaService {
    *          .
    * @param deploymentId
    *          .
+   * @param oauthToken
+   *          .
    */
-  public void addElasticClusterParameters(ArchiveRoot parsingResult, String deploymentId);
+  public void addElasticClusterParameters(ArchiveRoot parsingResult, String deploymentId,
+      String oauthToken);
 
   /**
    * Replace images data in 'tosca.capabilities.indigo.OperatingSystem' capabilities in the TOSCA

@@ -192,17 +192,17 @@ public class ToscaServiceImpl implements ToscaService {
     return template;
   }
 
-  @Override
-  public String customizeTemplate(@Nonnull String toscaTemplate, @Nonnull String deploymentId)
-      throws IOException, ToscaException {
-
-    ArchiveRoot ar = parseTemplate(toscaTemplate);
-
-    addElasticClusterParameters(ar, deploymentId);
-
-    return getTemplateFromTopology(ar);
-
-  }
+  // @Override
+  // public String customizeTemplate(@Nonnull String toscaTemplate, @Nonnull String deploymentId)
+  // throws IOException, ToscaException {
+  //
+  // ArchiveRoot ar = parseTemplate(toscaTemplate);
+  //
+  // addElasticClusterParameters(ar, deploymentId);
+  //
+  // return getTemplateFromTopology(ar);
+  //
+  // }
 
   @Override
   public void replaceInputFunctions(ArchiveRoot archiveRoot, Map<String, Object> inputs)
@@ -542,7 +542,8 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
-  public void addElasticClusterParameters(ArchiveRoot parsingResult, String deploymentId) {
+  public void addElasticClusterParameters(ArchiveRoot parsingResult, String deploymentId,
+      String oauthToken) {
     if (parsingResult.getTopology() != null) {
       Map<String, NodeTemplate> nodes = parsingResult.getTopology().getNodeTemplates();
       if (nodes != null) {
@@ -556,6 +557,12 @@ public class ToscaServiceImpl implements ToscaService {
             scalarPropertyValue = new ScalarPropertyValue(orchestratorUrl);
             scalarPropertyValue.setPrintable(true);
             entry.getValue().getProperties().put("orchestrator_url", scalarPropertyValue);
+            if (oauthToken != null) {
+              // Create new property with the iam_access_token and set as printable
+              scalarPropertyValue = new ScalarPropertyValue(oauthToken);
+              scalarPropertyValue.setPrintable(true);
+              entry.getValue().getProperties().put("iam_access_token", scalarPropertyValue);
+            }
           }
         }
       }
