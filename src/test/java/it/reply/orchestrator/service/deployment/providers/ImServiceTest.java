@@ -80,7 +80,7 @@ public class ImServiceTest {
     deployment.setStatus(Status.CREATE_IN_PROGRESS);
     dm.setDeployment(deployment);
     dm.setDeploymentId(deployment.getId());
-    deployment.getResources().addAll(ControllerTestUtils.createResources(deployment, 2));
+    deployment.getResources().addAll(ControllerTestUtils.createResources(deployment, 2, false));
     deployment.getResources().stream().forEach(r -> r.setState(NodeStates.CREATING));
 
     CloudProviderEndpoint chosenCloudProviderEndpoint = new CloudProviderEndpoint();

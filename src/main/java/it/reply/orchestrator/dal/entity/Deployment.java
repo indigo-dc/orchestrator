@@ -20,11 +20,14 @@ import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
+import javax.persistence.Index;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 import javax.persistence.Transient;
 
 @Entity
+@Table(indexes = { @Index(columnList = AbstractResourceEntity.CREATED_COLUMN_NAME) })
 public class Deployment extends AbstractResourceEntity {
 
   private static final long serialVersionUID = 3866893436735377053L;

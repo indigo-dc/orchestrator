@@ -1,6 +1,7 @@
 package it.reply.orchestrator.controller;
 
 import it.reply.domain.dsl.prisma.DebugInformations;
+import it.reply.orchestrator.dal.entity.AbstractResourceEntity;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.resource.DeploymentResource;
@@ -15,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.PagedResources;
@@ -101,7 +103,9 @@ public class DeploymentController {
   @ResponseStatus(HttpStatus.OK)
   @RequestMapping(value = "/deployments", method = RequestMethod.GET,
       produces = MediaType.APPLICATION_JSON_VALUE)
-  public PagedResources<DeploymentResource> getDeployments(@PageableDefault Pageable pageable,
+  public PagedResources<DeploymentResource> getDeployments(
+      @PageableDefault(sort = AbstractResourceEntity.CREATED_COLUMN_NAME,
+          direction = Direction.DESC) Pageable pageable,
       PagedResourcesAssembler<Deployment> pagedAssembler) {
 
     LOG.trace("Invoked method: getDeployments");

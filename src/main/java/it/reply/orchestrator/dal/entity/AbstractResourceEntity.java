@@ -1,7 +1,5 @@
 package it.reply.orchestrator.dal.entity;
 
-import it.reply.orchestrator.enums.Status;
-
 import org.hibernate.annotations.GenericGenerator;
 import org.springframework.hateoas.Identifiable;
 
@@ -9,8 +7,6 @@ import java.io.Serializable;
 import java.util.Date;
 
 import javax.persistence.Column;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
@@ -23,12 +19,16 @@ public abstract class AbstractResourceEntity implements Identifiable<String>, Se
 
   private static final long serialVersionUID = 3797345592958668261L;
 
+  public static final String ID_COLUMN_NAME = "uuid";
+  public static final String CREATED_COLUMN_NAME = "created";
+
   @Id
   @GeneratedValue(generator = "uuid")
   @GenericGenerator(name = "uuid", strategy = "uuid2")
-  @Column(name = "uuid", unique = true)
+  @Column(name = ID_COLUMN_NAME, unique = true)
   private String id;
 
+  @Column(name = CREATED_COLUMN_NAME)
   private Date created;
   private Date updated;
 

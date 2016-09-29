@@ -20,6 +20,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import it.reply.orchestrator.dal.entity.AbstractResourceEntity;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.exception.GlobalControllerExceptionHandler;
@@ -44,6 +45,8 @@ import org.mockito.runners.MockitoJUnitRunner;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.web.HateoasPageableHandlerMethodArgumentResolver;
 import org.springframework.data.web.PagedResourcesAssemblerArgumentResolver;
 import org.springframework.http.MediaType;
@@ -111,7 +114,7 @@ public class DeploymentControllerTest {
   @Test
   public void getDeployments() throws Exception {
 
-    List<Deployment> deployments = ControllerTestUtils.createDeployments(5);
+    List<Deployment> deployments = ControllerTestUtils.createDeployments(5, true);
     Pageable pageable = ControllerTestUtils.createDefaultPageable();
     Mockito.when(deploymentService.getDeployments(pageable))
         .thenReturn(new PageImpl<Deployment>(deployments));
@@ -139,8 +142,9 @@ public class DeploymentControllerTest {
   @Test
   public void getPagedDeployments() throws Exception {
 
-    List<Deployment> deployments = ControllerTestUtils.createDeployments(5);
-    Pageable pageable = new PageRequest(1, 2);
+    List<Deployment> deployments = ControllerTestUtils.createDeployments(5, true);
+    Pageable pageable =
+        new PageRequest(1, 2, new Sort(Direction.DESC, AbstractResourceEntity.CREATED_COLUMN_NAME));
     Mockito.when(deploymentService.getDeployments(pageable))
         .thenReturn(new PageImpl<Deployment>(deployments, pageable, deployments.size()));
 
@@ -161,7 +165,7 @@ public class DeploymentControllerTest {
   @Test
   public void deploymentsPagination() throws Exception {
 
-    List<Deployment> deployments = ControllerTestUtils.createDeployments(5);
+    List<Deployment> deployments = ControllerTestUtils.createDeployments(5, true);
     Pageable pageable = ControllerTestUtils.createDefaultPageable();
     Mockito.when(deploymentService.getDeployments(pageable))
         .thenReturn(new PageImpl<Deployment>(deployments));

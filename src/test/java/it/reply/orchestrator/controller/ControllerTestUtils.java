@@ -1,5 +1,6 @@
 package it.reply.orchestrator.controller;
 
+import it.reply.orchestrator.dal.entity.AbstractResourceEntity;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.enums.NodeStates;
@@ -9,15 +10,20 @@ import it.reply.orchestrator.enums.Task;
 import org.elasticsearch.common.collect.Lists;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 public class ControllerTestUtils {
 
   public static Pageable createDefaultPageable() {
-    return new PageRequest(0, 10);
+    return new PageRequest(0, 10,
+        new Sort(Direction.DESC, AbstractResourceEntity.CREATED_COLUMN_NAME));
   }
 
   public static Deployment createDeployment(String id) {
@@ -37,10 +43,19 @@ public class ControllerTestUtils {
     return createDeployment(UUID.randomUUID().toString());
   }
 
-  public static List<Deployment> createDeployments(int total) {
+  public static List<Deployment> createDeployments(int total, boolean sorted) {
     List<Deployment> deployments = Lists.newArrayList();
     for (int i = 0; i < total; ++i) {
       deployments.add(createDeployment());
+    }
+    if (sorted) {
+      deployments.stream().sorted(new Comparator<Deployment>() {
+
+        @Override
+        public int compare(Deployment o1, Deployment o2) {
+          return o1.getCreated().compareTo(o2.getCreated());
+        }
+      }).collect(Collectors.toList());
     }
     return deployments;
   }
@@ -57,11 +72,22 @@ public class ControllerTestUtils {
     return resource;
   }
 
-  public static List<Resource> createResources(Deployment deployment, int total) {
+  public static List<Resource> createResources(Deployment deployment, int total, boolean sorted) {
     List<Resource> resources = Lists.newArrayList();
     for (int i = 0; i < total; ++i) {
       resources.add(createResource(deployment));
     }
+
+    if (sorted) {
+      resources.stream().sorted(new Comparator<Resource>() {
+
+        @Override
+        public int compare(Resource o1, Resource o2) {
+          return o1.getCreated().compareTo(o2.getCreated());
+        }
+      }).collect(Collectors.toList());
+    }
+
     return resources;
   }
 
