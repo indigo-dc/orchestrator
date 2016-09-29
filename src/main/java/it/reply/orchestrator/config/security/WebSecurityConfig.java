@@ -186,7 +186,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
   public void configure(HttpSecurity http) throws Exception {
     if (securityEnabled) {
       http.csrf().disable();
-      http.authorizeRequests().anyRequest().fullyAuthenticated().and().sessionManagement()
+      http.authorizeRequests().anyRequest().fullyAuthenticated().anyRequest()
+          .access("#oauth2.hasScopeMatching('openid')").and().sessionManagement()
           .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
       ResourceServerSecurityConfigurer configurer = new ResourceServerSecurityConfigurer();
       configurer.setBuilder(http);
