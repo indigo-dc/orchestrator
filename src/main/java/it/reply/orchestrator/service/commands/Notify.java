@@ -17,8 +17,13 @@ public class Notify extends BaseCommand {
   @Override
   protected ExecutionResults customExecute(CommandContext ctx) throws Exception {
     String deploymentId = (String) getWorkItem(ctx).getParameter("DEPLOYMENT_ID");
-    boolean result = callbackService.doCallback(deploymentId);
-    return resultOccurred(result);
+    try {
+      boolean result = callbackService.doCallback(deploymentId);
+      return resultOccurred(result);
+    } catch (Exception ex) {
+      logger.error("Error tring to executing callback", ex);
+      return resultOccurred(false);
+    }
   }
 
 }

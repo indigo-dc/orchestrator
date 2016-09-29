@@ -20,6 +20,12 @@ public class DeploymentStatusHelperImpl implements DeploymentStatusHelper {
   @Autowired
   private DeploymentRepository deploymentRepository;
 
+  @Override
+  public void updateOnError(String deploymentUuid, String message, Throwable throwable) {
+    updateOnError(deploymentUuid, String.format("%s: %s", message, throwable.getMessage()));
+  }
+
+  @Override
   public void updateOnError(String deploymentUuid, Throwable throwable) {
     updateOnError(deploymentUuid, throwable.getMessage());
   }

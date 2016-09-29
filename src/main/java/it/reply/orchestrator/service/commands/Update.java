@@ -17,6 +17,11 @@ public class Update extends BaseDeployCommand {
   private DeploymentProviderService imService;
 
   @Override
+  protected String getErrorMessagePrefix() {
+    return "Error updating deployment through IM";
+  }
+
+  @Override
   protected ExecutionResults customExecute(CommandContext ctx,
       DeploymentMessage deploymentMessage) {
     String template = (String) getWorkItem(ctx).getParameter("TOSCA_TEMPLATE");

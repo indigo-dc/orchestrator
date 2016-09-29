@@ -96,4 +96,9 @@ public class PollDeploy extends BaseDeployCommand {
 
     return new ExternallyControlledPoller<DeploymentMessage, Status>(pollBehavior, 3);
   }
+
+  @Override
+  protected String getErrorMessagePrefix() {
+    return "Error deploying through IM";
+  }
 }

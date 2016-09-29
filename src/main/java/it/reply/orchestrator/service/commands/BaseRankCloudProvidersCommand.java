@@ -26,6 +26,8 @@ public abstract class BaseRankCloudProvidersCommand extends BaseCommand {
   @Autowired
   protected DeploymentStatusHelper deploymentStatusHelper;
 
+  protected abstract String getErrorMessagePrefix();
+
   /**
    * <b>This method SHOULD NOT be overridden! It cannot be final for INJECTION purpose!</b> <br/>
    * Use the {@link #customExecute(RankCloudProvidersMessage)} method to implement command logic.
@@ -53,13 +55,14 @@ public abstract class BaseRankCloudProvidersCommand extends BaseCommand {
 
       // Update deployment with error
       // TODO: what if this fails??
-      deploymentStatusHelper.updateOnError(rankCloudProvidersMessage.getDeploymentId(), ex);
+      deploymentStatusHelper.updateOnError(rankCloudProvidersMessage.getDeploymentId(),
+          getErrorMessagePrefix(), ex);
     }
 
     return exResults;
   }
 
-  protected abstract RankCloudProvidersMessage
-      customExecute(RankCloudProvidersMessage rankCloudProvidersMessage) throws Exception;
+  protected abstract RankCloudProvidersMessage customExecute(
+      RankCloudProvidersMessage rankCloudProvidersMessage) throws Exception;
 
 }

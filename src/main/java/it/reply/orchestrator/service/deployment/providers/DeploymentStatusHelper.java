@@ -2,6 +2,8 @@ package it.reply.orchestrator.service.deployment.providers;
 
 public interface DeploymentStatusHelper {
 
+  public void updateOnError(String deploymentUuid, String message, Throwable throwable);
+
   public void updateOnError(String deploymentUuid, Throwable throwable);
 
   /**

@@ -32,4 +32,8 @@ public class GetCmdbDataUpdate extends BaseDeployCommand {
     return resultOccurred(cp);
   }
 
+  @Override
+  protected String getErrorMessagePrefix() {
+    return "Error retrieving info from CMDB";
+  }
 }

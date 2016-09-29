@@ -31,6 +31,8 @@ public abstract class BaseDeployCommand extends BaseCommand {
   @Autowired
   protected DeploymentRepository deploymentRepository;
 
+  protected abstract String getErrorMessagePrefix();
+
   /**
    * <b>This method SHOULD NOT be overridden! It cannot be final for INJECTION purpose!</b> <br/>
    * Use the {@link #customExecute(RankCloudProvidersMessage)} method to implement command logic.
@@ -59,7 +61,8 @@ public abstract class BaseDeployCommand extends BaseCommand {
 
       // Update deployment with error
       // TODO: what if this fails??
-      deploymentStatusHelper.updateOnError(deploymentMessage.getDeploymentId(), ex);
+      deploymentStatusHelper.updateOnError(deploymentMessage.getDeploymentId(),
+          getErrorMessagePrefix(), ex);
     }
 
     // Save and then remove entities (again for jBPM JPA serialization issues)
