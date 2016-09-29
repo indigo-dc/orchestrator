@@ -16,7 +16,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 @Entity
-@Table(indexes = { @Index(columnList = "toscaNodeName"), @Index(columnList = "deployment_uuid") })
+@Table(indexes = { @Index(columnList = "toscaNodeName"), @Index(columnList = "deployment_uuid"),
+    @Index(columnList = AbstractResourceEntity.CREATED_COLUMN_NAME) })
 public class Resource extends AbstractResourceEntity {
 
   private static final long serialVersionUID = -4916577635363604624L;

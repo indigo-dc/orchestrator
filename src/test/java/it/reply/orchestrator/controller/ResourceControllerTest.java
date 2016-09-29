@@ -81,7 +81,7 @@ public class ResourceControllerTest {
   public void getResources() throws Exception {
     Pageable pageable = ControllerTestUtils.createDefaultPageable();
     Deployment deployment = ControllerTestUtils.createDeployment();
-    List<Resource> resources = ControllerTestUtils.createResources(deployment, 2);
+    List<Resource> resources = ControllerTestUtils.createResources(deployment, 2, true);
     Mockito.when(resourceService.getResources(deployment.getId(), pageable))
         .thenReturn(new PageImpl<Resource>(resources));
 

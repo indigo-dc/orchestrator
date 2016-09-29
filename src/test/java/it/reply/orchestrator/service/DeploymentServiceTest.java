@@ -70,7 +70,7 @@ public class DeploymentServiceTest {
 
   @Test
   public void getDeploymentsSuccessful() throws Exception {
-    List<Deployment> deployments = ControllerTestUtils.createDeployments(5);
+    List<Deployment> deployments = ControllerTestUtils.createDeployments(5, false);
 
     Mockito.when(deploymentRepository.findAll((Pageable) null))
         .thenReturn(new PageImpl<Deployment>(deployments));
@@ -84,7 +84,7 @@ public class DeploymentServiceTest {
   @Test
   public void getDeploymentsPagedSuccessful() throws Exception {
     Pageable pageable = new PageRequest(0, 10);
-    List<Deployment> deployments = ControllerTestUtils.createDeployments(10);
+    List<Deployment> deployments = ControllerTestUtils.createDeployments(10, false);
 
     Mockito.when(deploymentRepository.findAll(pageable))
         .thenReturn(new PageImpl<Deployment>(deployments));
