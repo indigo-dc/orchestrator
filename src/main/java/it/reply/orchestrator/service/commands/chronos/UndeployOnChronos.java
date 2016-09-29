@@ -18,6 +18,11 @@ public class UndeployOnChronos extends BaseDeployCommand {
   private DeploymentProviderService chronosService;
 
   @Override
+  protected String getErrorMessagePrefix() {
+    return "Error undeploying on chronos";
+  }
+
+  @Override
   protected ExecutionResults customExecute(CommandContext ctx,
       DeploymentMessage deploymentMessage) {
     boolean result = chronosService.doUndeploy(deploymentMessage);

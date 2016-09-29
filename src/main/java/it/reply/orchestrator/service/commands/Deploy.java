@@ -22,4 +22,9 @@ public class Deploy extends BaseDeployCommand {
     return resultOccurred(imService.doDeploy(deploymentMessage));
   }
 
+  @Override
+  protected String getErrorMessagePrefix() {
+    return "Error deploying through IM";
+  }
+
 }

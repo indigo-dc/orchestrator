@@ -33,4 +33,9 @@ public class GetCmdbDataDeploy extends BaseRankCloudProvidersCommand {
     return rankCloudProvidersMessage;
   }
 
+  @Override
+  protected String getErrorMessagePrefix() {
+    return "Error retrieving info from CMDB";
+  }
+
 }

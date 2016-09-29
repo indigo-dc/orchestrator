@@ -214,4 +214,9 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
       }
     }
   }
+
+  @Override
+  protected String getErrorMessagePrefix() {
+    return "Error filtering Cloud Providers";
+  }
 }

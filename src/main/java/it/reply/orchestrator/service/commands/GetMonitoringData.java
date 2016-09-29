@@ -16,8 +16,8 @@ public class GetMonitoringData extends BaseRankCloudProvidersCommand {
   private MonitoringService monitoringService;
 
   @Override
-  protected RankCloudProvidersMessage
-      customExecute(RankCloudProvidersMessage rankCloudProvidersMessage) {
+  protected RankCloudProvidersMessage customExecute(
+      RankCloudProvidersMessage rankCloudProvidersMessage) {
 
     // Get monitoring data for each Cloud Provider
     for (Map.Entry<String, CloudProvider> providerEntry : rankCloudProvidersMessage
@@ -31,4 +31,8 @@ public class GetMonitoringData extends BaseRankCloudProvidersCommand {
     return rankCloudProvidersMessage;
   }
 
+  @Override
+  protected String getErrorMessagePrefix() {
+    return "Error retrieving info from monitoring service";
+  }
 }

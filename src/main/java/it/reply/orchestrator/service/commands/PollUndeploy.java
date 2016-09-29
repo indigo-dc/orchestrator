@@ -23,6 +23,11 @@ public class PollUndeploy extends BaseDeployCommand {
   private DeploymentProviderService imService;
 
   @Override
+  protected String getErrorMessagePrefix() {
+    return "Error undeploying through IM";
+  }
+
+  @Override
   protected ExecutionResults customExecute(CommandContext ctx,
       DeploymentMessage deploymentMessage) {
 

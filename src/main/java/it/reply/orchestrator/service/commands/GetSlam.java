@@ -38,4 +38,8 @@ public class GetSlam extends BaseRankCloudProvidersCommand {
     return rankCloudProvidersMessage;
   }
 
+  @Override
+  protected String getErrorMessagePrefix() {
+    return "Error retrieving SLAs from SLAM";
+  }
 }

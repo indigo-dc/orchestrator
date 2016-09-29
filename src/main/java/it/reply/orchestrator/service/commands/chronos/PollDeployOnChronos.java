@@ -29,6 +29,11 @@ public class PollDeployOnChronos extends BaseDeployCommand {
   private DeploymentProviderService chronosService;
 
   @Override
+  protected String getErrorMessagePrefix() {
+    return "Error deploying on chronos";
+  }
+
+  @Override
   protected ExecutionResults customExecute(CommandContext ctx,
       DeploymentMessage deploymentMessage) {
     ExecutionResults exResults = new ExecutionResults();
