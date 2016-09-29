@@ -37,7 +37,7 @@ public class UserInfoIntrospectingTokenService extends IntrospectingTokenService
       OAuth2AccessToken token = super.readAccessToken(accessToken);
       if (authentication != null) {
         UserInfo userInfo = null;
-        if (!authentication.isClientOnly()) {
+        if (!authentication.isClientOnly() && token.getScope().contains("openid")) {
           userInfo = getUserInfo(authentication, token);
         }
         auth = new IndigoOAuth2Authentication(authentication, token, userInfo);
