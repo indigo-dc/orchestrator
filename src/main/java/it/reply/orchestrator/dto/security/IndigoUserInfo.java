@@ -18,7 +18,7 @@ public class IndigoUserInfo extends DefaultUserInfo {
 
   private static final String GROUPS_KEY = "groups";
   private static final String ORGANIZATION_NAME_KEY = "organisation_name";
-  private List<Group> groups;
+  private List<String> groups;
   private String organizationName;
 
   /**
@@ -51,11 +51,11 @@ public class IndigoUserInfo extends DefaultUserInfo {
     this.setSource(other.getSource());
   }
 
-  public List<Group> getGroups() {
+  public List<String> getGroups() {
     return groups;
   }
 
-  public void setGroups(List<Group> groups) {
+  public void setGroups(List<String> groups) {
     this.groups = groups;
   }
 
@@ -73,8 +73,8 @@ public class IndigoUserInfo extends DefaultUserInfo {
       JsonObject result = super.toJson();
       if (groups != null) {
         JsonArray groupsJson = new JsonArray();
-        for (Group g : groups) {
-          groupsJson.add(g.toJson());
+        for (String g : groups) {
+          groupsJson.add(g);
         }
         result.add(GROUPS_KEY, groupsJson);
       }
@@ -97,16 +97,14 @@ public class IndigoUserInfo extends DefaultUserInfo {
   public static UserInfo fromJson(JsonObject obj) {
     IndigoUserInfo result = new IndigoUserInfo(DefaultUserInfo.fromJson(obj));
     if (obj.has(GROUPS_KEY) && obj.get(GROUPS_KEY).isJsonArray()) {
-      List<Group> groups = Lists.newArrayList();
+      List<String> groups = Lists.newArrayList();
       JsonArray groupsJson = obj.getAsJsonArray(GROUPS_KEY);
       for (JsonElement groupJson : groupsJson) {
-        if (groupJson.isJsonObject()) {
-          groups.add(Group.fromJson(groupJson.getAsJsonObject()));
+        if (groupJson != null && groupJson.isJsonPrimitive()) {
+          groups.add(groupJson.getAsString());
         }
       }
-      if (!groups.isEmpty()) {
-        result.setGroups(groups);
-      }
+      result.setGroups(groups);
     }
     result.setOrganizationName(
         obj.has(ORGANIZATION_NAME_KEY) && obj.get(ORGANIZATION_NAME_KEY).isJsonPrimitive()
