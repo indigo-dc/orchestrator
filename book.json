@@ -1,4 +1,7 @@
 {
-	"root":"./gitbook"
-	"plugins" : ["advanced-emoji"]
+    "root": "./gitbook",
+    "plugins": [
+        "advanced-emoji"
+    ],
+    "pluginsConfig": {}
 }
