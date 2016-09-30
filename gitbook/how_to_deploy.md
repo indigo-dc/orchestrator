@@ -64,6 +64,8 @@ By default the REST APIs are not authenticated; if you want to enable the IAM in
  2. `OIDC_ISSUERS`: string containing a list of comma separated values of white-listed AAI token issuers (e.g. http://{host}:{port})
  3. `OIDC_CLIENT_ID`: the OAuth2 client ID
  4. `OIDC_CLIENT_SECRET` the OAuth2 client secret
+
+:warning: When configuring the Orchestrator as resource server on IAM, be sure that the `openid` connect scope is selected between the required scopes.
  
 ### Configure Chronos (optional)
 The orchestrator allows to deploy tasks on Chronos; to do that you need to configure the following parameters 
