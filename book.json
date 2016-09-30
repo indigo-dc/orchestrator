@@ -3,5 +3,9 @@
     "plugins": [
         "advanced-emoji"
     ],
-    "pluginsConfig": {}
+    "pluginsConfig": {
+        "advanced-emoji": {
+            "embedEmojis": false
+        }
+    }
 }
