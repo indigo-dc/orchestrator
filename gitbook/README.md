@@ -16,7 +16,7 @@ Here you can find the [REST APIs documentation](http://indigo-dc.github.io/orche
 
 The Orchestrator needs the presence of the following INDIGO services:
 
- 1. `SLAM`: [SLA Manager](https://github.com/indigo-dc/slam); allows to retrieve all the SLAs of the user
+ 1. `SLAM`: [SLA Manager](https://indigo-dc.gitbooks.io/slam/content); allows to retrieve all the SLAs of the user
  2. `CMDB`: Configuration Manager DataBase; contains all the cloud sites information, like the identity endpoint, the OCCI endpoint, etc...
- 3. `Zabbix Wrapper`: [REST wrapper for Zabbix](https://github.com/indigo-dc/Monitoring); allows to retrieve monitoring metrics to zabbix through a REST interface
- 4. `CPR` [Cloud Provider Ranker](https://github.com/indigo-dc/CloudProviderRanker); it receives all the information retrieved from the aforementioned services and provides the ordered list of the best sites 
+ 3. `Zabbix Wrapper`: [REST wrapper for Zabbix](https://indigo-dc.gitbooks.io/monitoring/content#1-zabbix-wrapper); allows to retrieve monitoring metrics to zabbix through a REST interface
+ 4. `CPR` [Cloud Provider Ranker](https://www.gitbook.com/book/indigo-dc/cloud-provider-ranker/content); it receives all the information retrieved from the aforementioned services and provides the ordered list of the best sites 

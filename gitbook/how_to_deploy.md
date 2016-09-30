@@ -58,19 +58,23 @@ Besides those used to link the Orchestrator to the database, there are other env
  5. `WRAPPER_URL`: the Zabbix Wrapper endpoint (e.g. http://{host}:{port}/monitoring/adapters/zabbix/zones/indigo/types/service/groups/Cloud_Providers/hosts/)
 
 ### Configure security (optional)
-By default the REST APIs are not authenticated; if you want to enable the IAM integration you must configure the following parameters:
+By default the REST APIs are not authenticated; if you want to enable the `IAM` integration you must configure the following parameters:
 
  1. `SECURITY_ENABLE`: if set to `true` enable AAI OAuth2 authentication and authorization
  2. `OIDC_ISSUERS`: string containing a list of comma separated values of white-listed AAI token issuers (e.g. http://{host}:{port})
  3. `OIDC_CLIENT_ID`: the OAuth2 client ID
  4. `OIDC_CLIENT_SECRET` the OAuth2 client secret
+
+Please make reference to the [IAM guide](https://indigo-dc.gitbooks.io/iam/content) to understand how to register the Orchestrator as resource server on `IAM` and retrieve these parameters.
+
+:warning: When registering the Orchestrator on `IAM`, make sure that the `openid` connect scope is selected.
  
 ### Configure Chronos (optional)
 The orchestrator allows to deploy tasks on Chronos; to do that you need to configure the following parameters 
  1. `CHRONOS_ENDPOINT`: the Chronos REST endpoint (e.g. http://{host}:{port})
  2. `CHRONOS_USERNAME`: the Chronos username
  3. `CHRONOS_PASSWORD`: the Chronos password
- 4. `CHRONOS_PROVIDER`: the Cloud Provider that hosts the Mesos cluster on which runs Chronos; it should be the same id that's returned from the CMDB service (e.g. ``provider-RECAS-BARI``)
+ 4. `CHRONOS_PROVIDER`: the Cloud Provider that hosts the Mesos cluster on which runs Chronos; it should be the same id that's returned from the CMDB service (e.g. `provider-RECAS-BARI`)
  
 ### Configure OneData (optional)
 The Orchestrator, when the Chronos parameters are set, allows to exploit a [OneData](https://onedata.org/) service space. This enables the users to execute tasks on Chronos that use temporary files hosted on a shared OneData space. To enable this functionality you need to configure the following parameters:
