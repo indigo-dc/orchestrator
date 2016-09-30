@@ -65,7 +65,9 @@ By default the REST APIs are not authenticated; if you want to enable the `IAM` 
  3. `OIDC_CLIENT_ID`: the OAuth2 client ID
  4. `OIDC_CLIENT_SECRET` the OAuth2 client secret
 
-:warning: When configuring the Orchestrator as resource server on `IAM`, be sure that the `openid` connect scope is enabled.
+Please make reference to the [IAM guide](https://indigo-dc.gitbooks.io/iam/content) to understand how to register the Orchestrator as resource server on `IAM` and retrieve these parameters.
+
+:warning: When registering the Orchestrator on `IAM`, make sure that the `openid` connect scope is selected.
  
 ### Configure Chronos (optional)
 The orchestrator allows to deploy tasks on Chronos; to do that you need to configure the following parameters 
