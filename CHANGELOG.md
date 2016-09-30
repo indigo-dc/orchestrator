@@ -12,8 +12,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - `#<number>` is a link to an issue, `!<number>` is a link to a merge request in the internal issue system.
 
 ---
-
-## [v1.0.0 (Unreleased)] - ERD: 2016-07-18
+## [v1.0.0] - 2016-08-03
 
 ### Added:
 - **[Feature]** Image ID substitution in TOSCA template (to support multiple CP) (#53)
@@ -29,10 +28,10 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - Jobs with Parameter Sweep (up to 10k jobs)
 - Enable 'force_pull_image' flag in Chronos jobs by default (#70)
 - Support Privileged mode for containers in Chronos jobs (#49)
-- **[Feature]** **[PARTIALLY IMPLEMENTED]** Support for the Data Location Scheduling (OneData) (#55)
+- **[Feature]** Support for the Data Location Scheduling (OneData) (#55)
 
 ### Changed:
-**NONE**
+- Removed OneDock-specific authentication
 
 ### Deprecated:
 **NONE**
@@ -41,9 +40,11 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 **NONE**
 
 ### Fixed:
-- Cannot delete Chonos job if the TOSCA template has some errors (#71)
+- Cannot delete Chronos job if the TOSCA template has some errors (#71)
 - TOSCA: required inputs with default value not handled correctly (#73)
 - Provider choice override for Chronos single provider (#77)
+- Image ID substitution is not done during deployment Update (#86)
+- Chronos properties are not handled properly (#84)
 
 ### Security:
 **NONE**
