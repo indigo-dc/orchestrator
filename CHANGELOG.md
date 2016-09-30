@@ -12,6 +12,31 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - `#<number>` is a link to an issue, `!<number>` is a link to a merge request in the internal issue system.
 
 ---
+## [v1.1.0] - 2016-09-30
+
+### Added:
+- Support `iam_access_token` property in `tosca.nodes.indigo.ElasticCluster` nodes (#109)
+
+### Changed:
+- Adapt user info data to the new IAM format (#104)
+- Make error reason message in REST response more clear (#119)
+- Make the requirement of `openid` scope in auth token explicitly mandatory (#81)
+- Sort in reverse-chronological order deployments and resources when retrieved from REST APIs (#101)
+
+### Deprecated:
+**NONE**
+
+### Removed:
+**NONE**
+
+### Fixed:
+- Support multiple SLAs for the same cloud provider (#110)
+
+### Security:
+**NONE**
+
+
+
 ## [v1.0.0] - 2016-08-03
 
 ### Added:
