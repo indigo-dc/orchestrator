@@ -1,7 +1,5 @@
 package it.reply.orchestrator.service.deployment.providers;
 
-import com.google.common.base.Strings;
-
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingException;
@@ -78,10 +76,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   @Autowired
   private OAuth2TokenService oauth2TokenService;
-
-  @Value("${occi.proxy.file.path}")
-  @Deprecated
-  private String proxyPath;
 
   @Value("${url}")
   private String imUrl;
@@ -168,7 +162,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
               authString = IOUtils.toString(in, StandardCharsets.UTF_8.toString());
             }
             authString = authString.replaceAll("\n", "\\\\n");
-            authString = substituteProxyString(authString);
           }
           break;
         // inputStream = ctx.getResource(opennebulaAuthFilePath).getInputStream();
@@ -182,26 +175,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     } catch (IOException | ImClientException ex) {
       throw new OrchestratorException("Cannot load IM auth file", ex);
     }
-  }
-
-  @Deprecated
-  private String substituteProxyString(String authString) {
-    final String proxyPlaceholder = "{proxy}";
-    if (!Strings.isNullOrEmpty(proxyPath)) {
-      // Read the proxy file
-      String proxy;
-      try (InputStream in = ctx.getResource(proxyPath).getInputStream()) {
-        proxy = IOUtils.toString(in);
-        proxy = proxy.replace(System.lineSeparator(), "\\\\n");
-        // replace the proxy as string
-        authString = authString.replace(proxyPlaceholder, proxy);
-      } catch (Exception ex) {
-        if (authString.contains(proxyPlaceholder)) {
-          throw new OrchestratorException("Cannot load proxy file", ex);
-        }
-      }
-    }
-    return authString;
   }
 
   @Override
