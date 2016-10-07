@@ -25,8 +25,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.JUnitRestDocumentation;
+import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -78,9 +80,12 @@ public class TemplateControllerTest {
     Mockito.when(templateService.getTemplate(deployment.getId()))
         .thenReturn(deployment.getTemplate());
 
-    MvcResult result = mockMvc.perform(get("/deployments/" + deployment.getId() + "/template"))
-        .andExpect(status().isOk()).andExpect(content().contentType(MediaType.TEXT_PLAIN))
-        .andDo(document("get-template")).andReturn();
+    MvcResult result =
+        mockMvc
+            .perform(get("/deployments/" + deployment.getId() + "/template").header(
+                HttpHeaders.AUTHORIZATION, OAuth2AccessToken.BEARER_TYPE + " <access token>"))
+            .andExpect(status().isOk()).andExpect(content().contentType(MediaType.TEXT_PLAIN))
+            .andDo(document("get-template")).andReturn();
 
     String content = result.getResponse().getContentAsString();
     assertEquals(content, template);
