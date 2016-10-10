@@ -41,7 +41,7 @@ public class CloudProviderEndpointServiceImpl {
 
     if (chosenCp == null) {
       String errorMsg = "No Cloud Provider suitable for deploy found";
-      LOG.error(String.format("{}\n ranked providers list: {}", errorMsg,
+      LOG.error(String.format("%s\n ranked providers list: %s", errorMsg,
           rankCloudProvidersMessage.getRankedCloudProviders()));
       throw new DeploymentException(errorMsg);
     }
