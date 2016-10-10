@@ -1,0 +1,3 @@
+
+compile:
+	./scripts/build.sh
