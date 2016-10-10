@@ -162,15 +162,15 @@ func show_help() {
 	fmt.Println("  # export ORCHENT_TOKEN=<my access token> " )
 	fmt.Println("  " )
 	fmt.Println("  # List deployments")
-	fmt.Println("    <base url> lsdep")
+	fmt.Println("    <base url> depls")
 	fmt.Println("  # Show a specific deployment")
-	fmt.Println("    <base url> showdep <dep uuid>")
+	fmt.Println("    <base url> depshow <dep uuid>")
 	fmt.Println("  # Delete a specific deployment")
-	fmt.Println("    <base url> deldep <dep uuid>")
+	fmt.Println("    <base url> depdel <dep uuid>")
 	fmt.Println("  # List resources of a deployment")
-	fmt.Println("    <base url> lsres <dep uuid>")
+	fmt.Println("    <base url> resls <dep uuid>")
 	fmt.Println("  # show a specific resource of a deployment")
-	fmt.Println("    <base url> lsres <dep uuid>")
+	fmt.Println("    <base url> resshow <dep uuid>")
 }
 
 
