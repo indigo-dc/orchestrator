@@ -49,7 +49,7 @@ type OrchentDeployment struct {
 	Status string `json:"status"`
 	Task string `json:"task"`
 	Callback string `json:"callback"`
-	// Outputs Json `json:"output"`
+	Output map[string]interface{} `json:"output"`
 	Links []OrchentLink `json:"links"`
 }
 
@@ -105,7 +105,7 @@ func (dep OrchentDeployment) String() (string) {
 		"  creation time: "+dep.CreationTime,
 		"  update time: "+dep.UpdateTime,
 		"  callback: "+dep.Callback,
-		"  output: NOT YET IMPLEMENTED",
+		"  output: "+fmt.Sprintf("%s",dep.Output),
 		"  links:"}
 	output := ""
 	for _, line := range lines {
@@ -191,14 +191,15 @@ func deployments_list(base *sling.Sling) {
 	orchentError := new(OrchentError2)
 	base = base.Get("./deployments")
 	_, err := base.Receive(deploymentList, orchentError)
-	// if err == nil {
-	// 	err = orchentError
-	// }
 	if err != nil {
 		fmt.Printf("error requesting list of providers:\n %s\n",err)
 		return
 	}
-	fmt.Printf("%s\n", deploymentList)
+	if orchentError.Title == "" && orchentError.Message == "" {
+		fmt.Printf("%s\n", deploymentList)
+	} else {
+		fmt.Printf("error requesting list of deployments:\n %s\n", orchentError)
+	}
 }
 
 func deployment_show(uuid string, base *sling.Sling) {
@@ -210,7 +211,11 @@ func deployment_show(uuid string, base *sling.Sling) {
 		fmt.Printf("error requesting provider %s:\n %s\n", uuid, err)
 		return
 	}
-	fmt.Printf("%s\n", deployment)
+	if orchentError.Title == "" && orchentError.Message == "" {
+		fmt.Printf("%s\n", deployment)
+	} else {
+		fmt.Printf("error requesting deployment %s:\n %s\n",uuid, orchentError)
+	}
 }
 
 func deployment_get_template(uuid string, baseUrl string) {
@@ -226,6 +231,7 @@ func deployment_get_template(uuid string, baseUrl string) {
 		fmt.Printf("error requesting template of %s:\n  %s\n", uuid, err)
 		return
 	}
+	// TODO: check return value
 	defer resp.Body.Close()
 	scanner := bufio.NewScanner(resp.Body)
 	scanner.Split(bufio.ScanBytes)
@@ -247,6 +253,7 @@ func deployment_delete(uuid string, baseUrl string) {
 		fmt.Printf("error deleting deployment %s:\n  %s\n", uuid, err)
 		return
 	}
+	// TODO: check return value
 	fmt.Printf("deployment deleted\n")
 }
 
@@ -255,14 +262,15 @@ func resources_list(depUuid string, base *sling.Sling) {
 	orchentError := new(OrchentError2)
 	base = base.Get("./deployments/"+depUuid+"/resources")
 	_, err := base.Receive(resourceList, orchentError)
-	// if err == nil {
-	// 	err = orchentError
-	// }
 	if err != nil {
 		fmt.Printf("error requesting list of resources for %s:\n %s\n", depUuid, err)
 		return
 	}
-	fmt.Printf("%s\n", resourceList)
+	if orchentError.Title == "" && orchentError.Message == "" {
+		fmt.Printf("%s\n", resourceList)
+	} else {
+		fmt.Printf("error requesting resource list for %s:\n %s\n", depUuid, orchentError)
+	}
 }
 
 func resource_show(depUuid string, resUuid string, base *sling.Sling) {
@@ -270,14 +278,15 @@ func resource_show(depUuid string, resUuid string, base *sling.Sling) {
 	orchentError := new(OrchentError2)
 	base = base.Get("./deployments/"+depUuid+"/resources/"+resUuid)
 	_, err := base.Receive(resource, orchentError)
-	// if err == nil {
-	// 	err = orchentError
-	// }
 	if err != nil {
 		fmt.Printf("error requesting resources %s for %s:\n %s\n", resUuid, depUuid, err)
 		return
 	}
-	fmt.Printf("%s\n", resource)
+	if orchentError.Title == "" && orchentError.Message == "" {
+		fmt.Printf("%s\n", resource)
+	} else {
+		fmt.Printf("error requesting resource %s for %s:\n %s\n", resUuid, depUuid, orchentError)
+	}
 }
 
 func list_services(host, token, issuer string) {
