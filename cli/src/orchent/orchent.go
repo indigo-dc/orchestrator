@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"crypto/tls"
 	"strings"
+	"encoding/json"
 	"github.com/dghubble/sling"
 	"gopkg.in/alecthomas/kingpin.v2"
 )
@@ -18,23 +19,31 @@ var (
 	app = kingpin.New("orchent", "The orchestrator client. Please store your access token in the 'ORCHENT_TOKEN' environment variable: 'export ORCHENT_TOKEN=<your access token>'").Version("0.0.1")
 	hostUrl = app.Flag("url", "the base url of the orchestrator rest interface").Short('u').Required().String()
 
-	lsdep = app.Command("depls", "list all deployments")
+	lsDep = app.Command("depls", "list all deployments")
 
-	showdep = app.Command("depshow", "show a specific deployment")
-	showDepUuid = showdep.Arg("uuid", "the uuid of the deployment to display").Required().String()
+	showDep = app.Command("depshow", "show a specific deployment")
+	showDepUuid = showDep.Arg("uuid", "the uuid of the deployment to display").Required().String()
 
-	deptemplate = app.Command("deptemplate", "show the template of the given deployment")
-	templateDepUuid = deptemplate.Arg("uuid", "the uuid of the deployment to get the template").Required().String()
+	createDep = app.Command("depcreate", "create a new deployment")
+	createDepCallback = createDep.Flag("callback", "the callback url").Default("").String()
+	createDepTemplate = createDep.Arg("template", "the tosca template file").Required().File()
+	createDepParameter = createDep.Arg("parameter", "the parameter to set (json object)").Required().String()
 
-	deldep = app.Command("depdel", "delete a given deployment")
-	delDepUuid = deldep.Arg("uuid", "the uuid of the deployment to delete").Required().String()
+	// updateDep = app.Command("depupdate", "update an existing deployment")
 
-	lsres = app.Command("resls", "list the resources of a given deployment")
-	lsResDepUuid = lsres.Arg("depployment uuid", "the uuid of the deployment").Required().String()
 
-	showres = app.Command("resshow", "show a specific resource of a given deployment")
-	showResDepUuid = showres.Arg("deployment uuid", "the uuid of the deployment").Required().String()
-	showResResUuid = showres.Arg("resource uuid", "the uuid of the resource to show").Required().String()
+	depTemplate = app.Command("deptemplate", "show the template of the given deployment")
+	templateDepUuid = depTemplate.Arg("uuid", "the uuid of the deployment to get the template").Required().String()
+
+	delDep = app.Command("depdel", "delete a given deployment")
+	delDepUuid = delDep.Arg("uuid", "the uuid of the deployment to delete").Required().String()
+
+	lsRes = app.Command("resls", "list the resources of a given deployment")
+	lsResDepUuid = lsRes.Arg("depployment uuid", "the uuid of the deployment").Required().String()
+
+	showRes = app.Command("resshow", "show a specific resource of a given deployment")
+	showResDepUuid = showRes.Arg("deployment uuid", "the uuid of the deployment").Required().String()
+	showResResUuid = showRes.Arg("resource uuid", "the uuid of the resource to show").Required().String()
 )
 
 type OrchentError struct {
@@ -113,6 +122,11 @@ type OrchentResourceList struct {
 	Page OrchentPage `json:"page"`
 }
 
+type OrchentCreateRequest struct {
+	Template string `json:"template"`
+	Parameters  map[string]interface{} `json:"parameters"`
+	Callback string `json:"callback"`
+}
 
 func (depList OrchentDeploymentList) String() (string) {
 	output := ""
@@ -231,6 +245,47 @@ func receive_and_print_deploymentlist(complete *sling.Sling) {
 			receive_and_print_deploymentlist(base_connection(nextPage.HRef))
 		}
 
+	}
+}
+
+func deployment_create(templateFile *os.File, parameter string, callback string, base *sling.Sling) {
+	var parameterMap map[string]interface{}
+	paramErr := json.Unmarshal([]byte(parameter), &parameterMap)
+	if paramErr != nil {
+		fmt.Printf("error parsing the parameter: %s\n", paramErr)
+		return
+	}
+
+
+	info, infoErr := templateFile.Stat()
+	if infoErr != nil {
+		fmt.Printf("error getting file size: %s\n", infoErr)
+		return
+	}
+	size := info.Size()
+	data := make([]byte, size)
+	count, readErr := templateFile.Read(data)
+	if readErr != nil || int64(count) < size {
+		fmt.Printf("error reading the file: %s\n  (read %d/%d)\n", readErr, count, size)
+		return
+	}
+	template := string(data[:count])
+	body := &OrchentCreateRequest {
+		Template: template,
+		Parameters: parameterMap,
+		Callback: callback,
+	}
+	deployment := new(OrchentDeployment)
+	orchentError := new(OrchentError)
+	_, err := base.Post("./deployments").BodyJSON(body).Receive(deployment, orchentError)
+	if err != nil {
+		fmt.Printf("error creating deployment:\n %s\n", err)
+		return
+	}
+	if is_error(orchentError) {
+		fmt.Printf("error creating deployment:\n %s\n", orchentError)
+	} else {
+		fmt.Printf("%s\n", deployment)
 	}
 }
 
@@ -378,30 +433,35 @@ func base_url(rawUrl string) (string) {
 
 func main() {
 	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
-	case lsdep.FullCommand():
+	case lsDep.FullCommand():
 		baseUrl := base_url(*hostUrl)
 		base := base_connection(baseUrl)
 		deployments_list(base)
 
-	case showdep.FullCommand():
+	case showDep.FullCommand():
 		baseUrl := base_url(*hostUrl)
 		base := base_connection(baseUrl)
 		deployment_show(*showDepUuid, base)
+	case createDep.FullCommand():
+		baseUrl := base_url(*hostUrl)
+		base := base_connection(baseUrl)
+		deployment_create(*createDepTemplate, *createDepParameter, *createDepCallback, base)
 
-	case deptemplate.FullCommand():
+
+	case depTemplate.FullCommand():
 		baseUrl := base_url(*hostUrl)
 		deployment_get_template(*templateDepUuid, baseUrl)
 
-	case deldep.FullCommand():
+	case delDep.FullCommand():
 		baseUrl := base_url(*hostUrl)
 		deployment_delete(*templateDepUuid, baseUrl)
 
-	case lsres.FullCommand():
+	case lsRes.FullCommand():
 		baseUrl := base_url(*hostUrl)
 		base := base_connection(baseUrl)
 		resources_list(*lsResDepUuid, base)
 
-	case showres.FullCommand():
+	case showRes.FullCommand():
 		baseUrl := base_url(*hostUrl)
 		base := base_connection(baseUrl)
 		resource_show(*showResDepUuid, *showResResUuid, base)
