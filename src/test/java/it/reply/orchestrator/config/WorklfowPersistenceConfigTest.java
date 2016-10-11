@@ -3,7 +3,6 @@ package it.reply.orchestrator.config;
 import it.reply.workflowmanager.spring.orchestrator.annotations.WorkflowPersistenceUnit;
 import it.reply.workflowmanager.utils.Constants;
 
-import org.h2.tools.Server;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
@@ -12,8 +11,6 @@ import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-
-import java.sql.SQLException;
 
 import javax.annotation.Resource;
 import javax.naming.NamingException;
@@ -34,10 +31,10 @@ public class WorklfowPersistenceConfigTest {
     return dataSource;
   }
 
-  @Bean(initMethod = "start", destroyMethod = "stop")
-  public Server h2WebServer() throws SQLException {
-    return Server.createWebServer("-web", "-webAllowOthers", "-webPort", "8082");
-  }
+  // @Bean(initMethod = "start", destroyMethod = "stop")
+  // public Server h2WebServer() throws SQLException {
+  // return Server.createWebServer("-web", "-webAllowOthers", "-webPort", "8082");
+  // }
 
   @Bean
   @WorkflowPersistenceUnit
