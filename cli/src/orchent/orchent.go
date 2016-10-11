@@ -13,26 +13,38 @@ import (
 
 type OrchentError struct {
 	Code int `json:"code"`
-	Title string `json:"title"`
-	Message string `json:"message"`
-}
-
-type OrchentError2 struct {
-	Title string `json:"error"`
-	Message string `json:"error_description"`
-}
-
-func (e OrchentError2) Error() string {
-	return fmt.Sprintf("Error '%s': %s", e.Title, e.Message)
+	Title1 string `json:"title"`
+	Title2 string `json:"error"`
+	Message1 string `json:"message"`
+	Message2 string `json:"error_description"`
 }
 
 func (e OrchentError) Error() string {
-	return fmt.Sprintf("Error [%d] '%s': %s", e.Code, e.Title, e.Message)
+	if e.Title1 != "" || e.Message1 != "" {
+		return fmt.Sprintf("Error '%s' [%d]: %s", e.Title1, e.Code, e.Message1)
+	} else if e.Title2 != "" || e.Message2 != "" {
+		return fmt.Sprintf("Error '%s': %s", e.Title2, e.Message2)
+	} else {
+		return ""
+	}
+}
+
+func is_error(e *OrchentError) bool {
+	return e.Error() != ""
 }
 
 type OrchentLink  struct {
 	Rel string `json:"rel"`
 	HRef string `json:"href"`
+}
+
+func get_link(key string, links []OrchentLink) (*OrchentLink) {
+	for _, link := range links {
+		if link.Rel == key {
+			return &link
+		}
+	}
+	return nil
 }
 
 type OrchentPage  struct {
@@ -75,18 +87,9 @@ type OrchentResourceList struct {
 	Page OrchentPage `json:"page"`
 }
 
-func (error OrchentError) String() (string) {
-	return fmt.Sprintf("%s [%d]: %s ", error.Title, error.Code, error.Message)
-}
-
-func (error OrchentError2) String() (string) {
-	return fmt.Sprintf("%s: %s ", error.Title, error.Message)
-}
-
 
 func (depList OrchentDeploymentList) String() (string) {
 	output := ""
-	output = output + fmt.Sprintln("list of deployments:")
 	output = output + fmt.Sprintf("  page: %s\n",depList.Page)
 	output = output + fmt.Sprintln("  links:")
 	for _, link := range depList.Links {
@@ -186,35 +189,50 @@ func client() (*http.Client) {
 	}
 }
 
+
+
 func deployments_list(base *sling.Sling) {
-	deploymentList := new(OrchentDeploymentList)
-	orchentError := new(OrchentError2)
 	base = base.Get("./deployments")
-	_, err := base.Receive(deploymentList, orchentError)
+	receive_and_print_deploymentlist(base)
+}
+
+func receive_and_print_deploymentlist(complete *sling.Sling) {
+	deploymentList := new(OrchentDeploymentList)
+	orchentError := new(OrchentError)
+	_, err := complete.Receive(deploymentList, orchentError)
 	if err != nil {
 		fmt.Printf("error requesting list of providers:\n %s\n",err)
 		return
 	}
-	if orchentError.Title == "" && orchentError.Message == "" {
-		fmt.Printf("%s\n", deploymentList)
-	} else {
+	if is_error(orchentError) {
 		fmt.Printf("error requesting list of deployments:\n %s\n", orchentError)
+	} else {
+		links := deploymentList.Links
+		curPage := get_link("self", links)
+		nextPage := get_link("next", links)
+		lastPage := get_link("last", links)
+		fmt.Printf("%s\n", deploymentList)
+		if (curPage != nil && nextPage != nil && lastPage != nil &&
+			curPage.HRef != lastPage.HRef) {
+			receive_and_print_deploymentlist(base_connection(nextPage.HRef))
+		}
+
 	}
 }
 
 func deployment_show(uuid string, base *sling.Sling) {
 	deployment := new(OrchentDeployment)
-	orchentError := new(OrchentError2)
+	orchentError := new(OrchentError)
 	base = base.Get("./deployments/"+uuid)
 	_, err := base.Receive(deployment, orchentError)
 	if err != nil {
 		fmt.Printf("error requesting provider %s:\n %s\n", uuid, err)
 		return
 	}
-	if orchentError.Title == "" && orchentError.Message == "" {
-		fmt.Printf("%s\n", deployment)
-	} else {
+	if is_error(orchentError) {
 		fmt.Printf("error requesting deployment %s:\n %s\n",uuid, orchentError)
+	} else {
+		fmt.Printf("%s\n", deployment)
 	}
 }
 
@@ -259,33 +277,33 @@ func deployment_delete(uuid string, baseUrl string) {
 
 func resources_list(depUuid string, base *sling.Sling) {
 	resourceList := new(OrchentResourceList)
-	orchentError := new(OrchentError2)
+	orchentError := new(OrchentError)
 	base = base.Get("./deployments/"+depUuid+"/resources")
 	_, err := base.Receive(resourceList, orchentError)
 	if err != nil {
 		fmt.Printf("error requesting list of resources for %s:\n %s\n", depUuid, err)
 		return
 	}
-	if orchentError.Title == "" && orchentError.Message == "" {
-		fmt.Printf("%s\n", resourceList)
-	} else {
+	if is_error(orchentError) {
 		fmt.Printf("error requesting resource list for %s:\n %s\n", depUuid, orchentError)
+	} else {
+		fmt.Printf("%s\n", resourceList)
 	}
 }
 
 func resource_show(depUuid string, resUuid string, base *sling.Sling) {
 	resource := new(OrchentResource)
-	orchentError := new(OrchentError2)
+	orchentError := new(OrchentError)
 	base = base.Get("./deployments/"+depUuid+"/resources/"+resUuid)
 	_, err := base.Receive(resource, orchentError)
 	if err != nil {
 		fmt.Printf("error requesting resources %s for %s:\n %s\n", resUuid, depUuid, err)
 		return
 	}
-	if orchentError.Title == "" && orchentError.Message == "" {
-		fmt.Printf("%s\n", resource)
-	} else {
+	if is_error(orchentError) {
 		fmt.Printf("error requesting resource %s for %s:\n %s\n", resUuid, depUuid, orchentError)
+	} else {
+		fmt.Printf("%s\n", resource)
 	}
 }
 
