@@ -9,6 +9,32 @@ import (
 	"crypto/tls"
 	"strings"
 	"github.com/dghubble/sling"
+	"gopkg.in/alecthomas/kingpin.v2"
+)
+
+
+var (
+
+	app = kingpin.New("orchent", "The orchestrator client. Please store your access token in the 'ORCHENT_TOKEN' environment variable: 'export ORCHENT_TOKEN=<your access token>'").Version("0.0.1")
+	hostUrl = app.Flag("url", "the base url of the orchestrator rest interface").Short('u').Required().String()
+
+	lsdep = app.Command("depls", "list all deployments")
+
+	showdep = app.Command("depshow", "show a specific deployment")
+	showDepUuid = showdep.Arg("uuid", "the uuid of the deployment to display").Required().String()
+
+	deptemplate = app.Command("deptemplate", "show the template of the given deployment")
+	templateDepUuid = deptemplate.Arg("uuid", "the uuid of the deployment to get the template").Required().String()
+
+	deldep = app.Command("depdel", "delete a given deployment")
+	delDepUuid = deldep.Arg("uuid", "the uuid of the deployment to delete").Required().String()
+
+	lsres = app.Command("resls", "list the resources of a given deployment")
+	lsResDepUuid = lsres.Arg("depployment uuid", "the uuid of the deployment").Required().String()
+
+	showres = app.Command("resshow", "show a specific resource of a given deployment")
+	showResDepUuid = showres.Arg("deployment uuid", "the uuid of the deployment").Required().String()
+	showResResUuid = showres.Arg("resource uuid", "the uuid of the resource to show").Required().String()
 )
 
 type OrchentError struct {
@@ -162,24 +188,6 @@ func (page OrchentPage) String() (string) {
 	return fmt.Sprintf("%d/%d [ #Elements: %d, size: %d ]", page.Number, page.TotalPages, page.TotalElements, page.Size)
 }
 
-
-func show_help() {
-	fmt.Println("Usage:")
-	fmt.Println("  # please export your access token in the environment variable " )
-	fmt.Println("  # called ORCHENT_TOKEN, so you do not need to type it everytime " )
-	fmt.Println("  # export ORCHENT_TOKEN=<my access token> " )
-	fmt.Println("  " )
-	fmt.Println("  # List deployments")
-	fmt.Println("    <base url> depls")
-	fmt.Println("  # Show a specific deployment")
-	fmt.Println("    <base url> depshow <dep uuid>")
-	fmt.Println("  # Delete a specific deployment")
-	fmt.Println("    <base url> depdel <dep uuid>")
-	fmt.Println("  # List resources of a deployment")
-	fmt.Println("    <base url> resls <dep uuid>")
-	fmt.Println("  # show a specific resource of a deployment")
-	fmt.Println("    <base url> resshow <dep uuid>")
-}
 
 
 func client() (*http.Client) {
@@ -369,50 +377,33 @@ func base_url(rawUrl string) (string) {
 }
 
 func main() {
-	args := os.Args[1:]
-	argsNum := len(args)
-	if argsNum < 2 {
-		show_help()
-		return
-	}
-	baseUrl := base_url(args[0])
-	base := base_connection(baseUrl)
-	cmd := args[1]
-
-	switch cmd {
-	case "depls":
+	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
+	case lsdep.FullCommand():
+		baseUrl := base_url(*hostUrl)
+		base := base_connection(baseUrl)
 		deployments_list(base)
-	case "depshow":
-		if argsNum == 3 {
-			deployment_show(args[2], base)
-		} else {
-			show_help()
-		}
-	case "deptemplate":
-		if argsNum == 3 {
-			deployment_get_template(args[2], baseUrl)
-		} else {
-			show_help()
-		}
-	case "depdel":
-		if argsNum == 3 {
-			deployment_delete(args[2], baseUrl)
-		} else {
-			show_help()
-		}
-	case "resls":
-		if argsNum == 3 {
-			resources_list(args[2], base)
-		} else {
-			show_help()
-		}
-	case "resshow":
-		if argsNum == 4 {
-			resource_show(args[2], args[3], base)
-		} else {
-			show_help()
-		}
-	default:
-		show_help()
+
+	case showdep.FullCommand():
+		baseUrl := base_url(*hostUrl)
+		base := base_connection(baseUrl)
+		deployment_show(*showDepUuid, base)
+
+	case deptemplate.FullCommand():
+		baseUrl := base_url(*hostUrl)
+		deployment_get_template(*templateDepUuid, baseUrl)
+
+	case deldep.FullCommand():
+		baseUrl := base_url(*hostUrl)
+		deployment_delete(*templateDepUuid, baseUrl)
+
+	case lsres.FullCommand():
+		baseUrl := base_url(*hostUrl)
+		base := base_connection(baseUrl)
+		resources_list(*lsResDepUuid, base)
+
+	case showres.FullCommand():
+		baseUrl := base_url(*hostUrl)
+		base := base_connection(baseUrl)
+		resource_show(*showResDepUuid, *showResResUuid, base)
 	}
 }
