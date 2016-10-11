@@ -50,7 +50,6 @@
 				</xa-datasource-property>
 				<xa-datasource-class>com.mysql.jdbc.jdbc2.optional.MysqlXADataSource</xa-datasource-class>
 				<driver>mysql</driver>
-				<transaction-isolation>TRANSACTION_READ_COMMITTED</transaction-isolation>
 				<xa-pool>
 					<min-pool-size>1</min-pool-size>
 					<max-pool-size>20</max-pool-size>
