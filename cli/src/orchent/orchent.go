@@ -121,7 +121,12 @@ func (dep OrchentDeployment) String() (string) {
 }
 
 func (resList OrchentResourceList) String() (string) {
-	output := fmt.Sprintln("list of resources:")
+	output := ""
+	output = output + fmt.Sprintf("  page: %s\n",resList.Page)
+	output = output + fmt.Sprintln("  links:")
+	for _, link := range resList.Links {
+		output = output + fmt.Sprintf("    %s\n",link)
+	}
 	for _, res := range resList.Resources {
 		output = output + fmt.Sprintln(res)
 	}
@@ -193,6 +198,7 @@ func client() (*http.Client) {
 
 func deployments_list(base *sling.Sling) {
 	base = base.Get("./deployments")
+	fmt.Println("retrieving deployment list:")
 	receive_and_print_deploymentlist(base)
 }
 
@@ -275,11 +281,17 @@ func deployment_delete(uuid string, baseUrl string) {
 	fmt.Printf("deployment deleted\n")
 }
 
+
 func resources_list(depUuid string, base *sling.Sling) {
+	base = base.Get("./deployments/"+depUuid+"/resources")
+	fmt.Println("retrieving resource list:")
+	receive_and_print_resourcelist(depUuid, base)
+}
+
+func receive_and_print_resourcelist(depUuid string, complete *sling.Sling) {
 	resourceList := new(OrchentResourceList)
 	orchentError := new(OrchentError)
-	base = base.Get("./deployments/"+depUuid+"/resources")
-	_, err := base.Receive(resourceList, orchentError)
+	_, err := complete.Receive(resourceList, orchentError)
 	if err != nil {
 		fmt.Printf("error requesting list of resources for %s:\n %s\n", depUuid, err)
 		return
@@ -287,7 +299,15 @@ func resources_list(depUuid string, base *sling.Sling) {
 	if is_error(orchentError) {
 		fmt.Printf("error requesting resource list for %s:\n %s\n", depUuid, orchentError)
 	} else {
+		links := resourceList.Links
+		curPage := get_link("self", links)
+		nextPage := get_link("next", links)
+		lastPage := get_link("last", links)
 		fmt.Printf("%s\n", resourceList)
+		if (curPage != nil && nextPage != nil && lastPage != nil &&
+			curPage.HRef != lastPage.HRef) {
+			receive_and_print_resourcelist(depUuid, base_connection(nextPage.HRef))
+		}
 	}
 }
 
