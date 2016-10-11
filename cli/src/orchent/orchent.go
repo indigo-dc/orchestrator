@@ -126,7 +126,7 @@ type OrchentResourceList struct {
 type OrchentCreateRequest struct {
 	Template   string                 `json:"template"`
 	Parameters map[string]interface{} `json:"parameters"`
-	Callback   string                 `json:"callback"`
+	Callback   string                 `json:"callback,omitempty"`
 }
 
 func (depList OrchentDeploymentList) String() string {
