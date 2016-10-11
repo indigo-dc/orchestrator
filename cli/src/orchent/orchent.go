@@ -27,7 +27,11 @@ var (
 	createDepTemplate  = createDep.Arg("template", "the tosca template file").Required().File()
 	createDepParameter = createDep.Arg("parameter", "the parameter to set (json object)").Required().String()
 
-	// updateDep = app.Command("depupdate", "update an existing deployment")
+	updateDep          = app.Command("depupdate", "update the given deployment")
+	updateDepCallback  = updateDep.Flag("callback", "the callback url").Default("").String()
+	updateDepUuid      = updateDep.Arg("uuid", "the uuid of the deployment to update").Required().String()
+	updateDepTemplate  = updateDep.Arg("template", "the tosca template file").Required().File()
+	updateDepParameter = updateDep.Arg("parameter", "the parameter to set (json object)").Required().String()
 
 	depTemplate     = app.Command("deptemplate", "show the template of the given deployment")
 	templateDepUuid = depTemplate.Arg("uuid", "the uuid of the deployment to get the template").Required().String()
@@ -241,7 +245,7 @@ func receive_and_print_deploymentlist(complete *sling.Sling) {
 	}
 }
 
-func deployment_create(templateFile *os.File, parameter string, callback string, base *sling.Sling) {
+func deployment_create_update(templateFile *os.File, parameter string, callback string, depUuid *string, base *sling.Sling) {
 	var parameterMap map[string]interface{}
 	paramErr := json.Unmarshal([]byte(parameter), &parameterMap)
 	if paramErr != nil {
@@ -269,7 +273,13 @@ func deployment_create(templateFile *os.File, parameter string, callback string,
 	}
 	deployment := new(OrchentDeployment)
 	orchentError := new(OrchentError)
-	_, err := base.Post("./deployments").BodyJSON(body).Receive(deployment, orchentError)
+
+	if depUuid == nil {
+		base = base.Post("./deployments")
+	} else {
+		base = base.Put("./deployments/" + *depUuid)
+	}
+	_, err := base.BodyJSON(body).Receive(deployment, orchentError)
 	if err != nil {
 		fmt.Printf("error creating deployment:\n %s\n", err)
 		return
@@ -431,11 +441,16 @@ func main() {
 		baseUrl := base_url(*hostUrl)
 		base := base_connection(baseUrl)
 		deployment_show(*showDepUuid, base)
+
 	case createDep.FullCommand():
 		baseUrl := base_url(*hostUrl)
 		base := base_connection(baseUrl)
-		deployment_create(*createDepTemplate, *createDepParameter, *createDepCallback, base)
+		deployment_create_update(*createDepTemplate, *createDepParameter, *createDepCallback, nil, base)
 
+	case updateDep.FullCommand():
+		baseUrl := base_url(*hostUrl)
+		base := base_connection(baseUrl)
+		deployment_create_update(*updateDepTemplate, *updateDepParameter, *updateDepCallback, updateDepUuid, base)
 	case depTemplate.FullCommand():
 		baseUrl := base_url(*hostUrl)
 		deployment_get_template(*templateDepUuid, baseUrl)
