@@ -41,6 +41,7 @@ import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.collect.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -76,6 +77,9 @@ public class ToscaServiceImpl implements ToscaService {
 
   private static final Logger LOG = LogManager.getLogger(ToscaServiceImpl.class);
 
+  @Autowired
+  private ApplicationContext ctx;
+
   @Resource
   private ArchiveParser parser;
 
@@ -88,12 +92,12 @@ public class ToscaServiceImpl implements ToscaService {
   @Value("${directories.alien}/${directories.csar_repository}")
   private String alienRepoDir;
 
-  @Value("${tosca.definitions.basepath}")
-  private String basePath;
   @Value("${tosca.definitions.normative}")
   private String normativeLocalName;
+
   @Value("${tosca.definitions.indigo}")
   private String indigoLocalName;
+
   @Value("${orchestrator.url}")
   private String orchestratorUrl;
 
@@ -109,9 +113,7 @@ public class ToscaServiceImpl implements ToscaService {
 
     setAutentication();
 
-    ClassLoader cl = this.getClass().getClassLoader();
-
-    try (InputStream is = cl.getResourceAsStream(basePath + "/" + normativeLocalName)) {
+    try (InputStream is = ctx.getResource(normativeLocalName).getInputStream()) {
       Path zipFile = File.createTempFile(normativeLocalName, ".zip").toPath();
       zip(is, zipFile);
       ParsingResult<Csar> result = archiveUploadService.upload(zipFile);
@@ -121,7 +123,7 @@ public class ToscaServiceImpl implements ToscaService {
       }
     }
 
-    try (InputStream is = cl.getResourceAsStream(basePath + "/" + indigoLocalName)) {
+    try (InputStream is = ctx.getResource(indigoLocalName).getInputStream()) {
       Path zipFile = File.createTempFile(indigoLocalName, ".zip").toPath();
       zip(is, zipFile);
       ParsingResult<Csar> result = archiveUploadService.upload(zipFile);
