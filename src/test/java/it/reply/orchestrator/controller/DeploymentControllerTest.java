@@ -143,7 +143,7 @@ public class DeploymentControllerTest {
                 fieldWithPath("content[].task").description(
                     "The current step of the deployment process. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Task.html)"),
                 fieldWithPath("content[].callback").description(
-                    "The endpoint used by the orchestrator to notify the progress of the deployment process. (http://endpoint:port)"),
+                    "The endpoint used by the orchestrator to notify the progress of the deployment process."),
                 fieldWithPath("content[].outputs").description("The outputs of the TOSCA document"),
                 fieldWithPath("content[].links[]").ignored(), fieldWithPath("page").ignored())));
   }
@@ -276,7 +276,7 @@ public class DeploymentControllerTest {
                 fieldWithPath("task").description(
                     "The current step of the deployment process. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Task.html)"),
                 fieldWithPath("callback").description(
-                    "The endpoint used by the orchestrator to notify the progress of the deployment process. (http://endpoint:port)"),
+                    "The endpoint used by the orchestrator to notify the progress of the deployment process."),
                 fieldWithPath("outputs").description("The outputs of the TOSCA document"),
                 fieldWithPath("links[]").ignored())));
   }
@@ -342,7 +342,7 @@ public class DeploymentControllerTest {
                     .description("A string containing a TOSCA YAML-formatted template"),
                 fieldWithPath("parameters").optional()
                     .description("The input parameters of the deployment(Map of String, Object)"),
-                fieldWithPath("callback").description("The deployment callback URL")),
+                fieldWithPath("callback").description("The deployment callback URL (optional)")),
             responseFields(fieldWithPath("links[]").ignored(),
                 fieldWithPath("uuid").description("The unique identifier of a resource"),
                 fieldWithPath("creationTime").description(
@@ -354,7 +354,9 @@ public class DeploymentControllerTest {
                 fieldWithPath("task").description(
                     "The current step of the deployment process. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Task.html)"),
                 fieldWithPath("outputs").description("The outputs of the TOSCA document"),
-                fieldWithPath("callback").ignored(), fieldWithPath("links[]").ignored())));
+                fieldWithPath("callback").description(
+                    "The endpoint used by the orchestrator to notify the progress of the deployment process."),
+                fieldWithPath("links[]").ignored())));
 
   }
 
@@ -419,7 +421,7 @@ public class DeploymentControllerTest {
                     .description("A string containing a TOSCA YAML-formatted template"),
                 fieldWithPath("parameters").optional()
                     .description("The input parameters of the deployment (Map of String, Object)"),
-                fieldWithPath("callback").description("The deployment callback URL"))));
+                fieldWithPath("callback").description("The deployment callback URL (optional)"))));
 
   }
 
