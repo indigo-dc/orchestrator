@@ -11,8 +11,13 @@ fi
 
 GOPATH=`cd "${PATH_TO_FOLDER}/.." && pwd -P`
 export "GOPATH=${GOPATH}"
-echo "fetiching sling ..."
+echo "fetiching:"
+echo -n "  kingpin ... "
+go get gopkg.in/alecthomas/kingpin.v2
+echo "done"
+echo -n "  sling ... "
 go get github.com/dghubble/sling
-echo "building orchent ..."
+echo "done"
+echo -n "building orchent ... "
 go build ${GOPATH}/src/orchent/orchent.go
 echo "done"
