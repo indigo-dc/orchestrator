@@ -55,6 +55,8 @@ ENV ORCHESTRATOR_DB_ENDPOINT="databaseorchestrator:3306" \
 	OIDC_CLIENT_ID="" \
 	OIDC_CLIENT_SECRET=""
 
-ENTRYPOINT sh /launch.sh
+ENTRYPOINT ["/launch.sh"]
+
+CMD ["/opt/jboss/wildfly/bin/standalone.sh"]
 
 

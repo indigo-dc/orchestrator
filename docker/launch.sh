@@ -85,5 +85,5 @@ if [ "${ENABLE_DEBUG}" = "true" ];
 fi
 
 CLUSTER_MESSAGING_PASSWORD="pwd"
-$JBOSS_HOME/bin/standalone.sh -c $JBOSS_CONF_FILE -Djboss.bind.address=$HOSTNAME -Djboss.bind.address.management=$HOSTNAME \
+exec "$@" -c $JBOSS_CONF_FILE -Djboss.bind.address=$HOSTNAME -Djboss.bind.address.management=$HOSTNAME \
 	-Djgroups.bind_addr=$HOSTNAME -Djboss.node.name=$HOSTNAME -Djboss.messaging.cluster.password=$CLUSTER_MESSAGING_PASSWORD $DEBUG_ARG
