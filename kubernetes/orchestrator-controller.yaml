@@ -37,8 +37,6 @@ spec:
             value: password
 #          - name: IM_URL
 #            value: "https://im:8800"
-          - name: PROXY_DIR
-            value: "file:/proxy/proxy.pem"
           - name: OPENNEBULA_AUTH_FILE_PATH
             value: "file:/secrets/opennebula-auth.dat"
           - name: OPENSTACK_AUTH_FILE_PATH
@@ -49,8 +47,6 @@ spec:
           - name: secrets
             mountPath: "/secrets"
             readOnly: true
-          - name: orchestrator-volume
-            mountPath: "/proxy"
         livenessProbe:
           httpGet:
             path: /orchestrator
@@ -64,7 +60,3 @@ spec:
         - name: secrets
           secret:
             secretName: "orchestrator-deploy-secrets"
-        - name: orchestrator-volume
-          persistentVolumeClaim:
-            claimName: orchestrator-pvc
-

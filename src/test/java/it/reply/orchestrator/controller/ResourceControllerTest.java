@@ -33,8 +33,10 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.HateoasPageableHandlerMethodArgumentResolver;
 import org.springframework.data.web.PagedResourcesAssemblerArgumentResolver;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.JUnitRestDocumentation;
+import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -87,7 +89,8 @@ public class ResourceControllerTest {
 
     mockMvc
         .perform(get("/deployments/" + deployment.getId() + "/resources")
-            .accept(MediaType.APPLICATION_JSON))
+            .accept(MediaType.APPLICATION_JSON).header(HttpHeaders.AUTHORIZATION,
+                OAuth2AccessToken.BEARER_TYPE + " <access token>"))
         .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.content", org.hamcrest.Matchers.hasSize(2)))
         .andExpect(jsonPath("$.content", org.hamcrest.Matchers.hasSize(2)))
@@ -134,7 +137,9 @@ public class ResourceControllerTest {
     Mockito.when(resourceService.getResource(resource.getId(), deployment.getId()))
         .thenReturn(resource);
 
-    mockMvc.perform(get("/deployments/" + deployment.getId() + "/resources/" + resource.getId()))
+    mockMvc
+        .perform(get("/deployments/" + deployment.getId() + "/resources/" + resource.getId())
+            .header(HttpHeaders.AUTHORIZATION, OAuth2AccessToken.BEARER_TYPE + " <access token>"))
         .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.uuid", equalTo(resource.getId())))
         .andExpect(jsonPath("$.links[1].rel", equalTo("self")))

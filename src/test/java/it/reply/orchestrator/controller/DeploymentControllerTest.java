@@ -1,6 +1,8 @@
 package it.reply.orchestrator.controller;
 
 import static org.hamcrest.Matchers.is;
+import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
+import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
 import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.atomLinks;
 import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.linkWithRel;
 import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.links;
@@ -49,8 +51,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.web.HateoasPageableHandlerMethodArgumentResolver;
 import org.springframework.data.web.PagedResourcesAssemblerArgumentResolver;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.JUnitRestDocumentation;
+import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -119,8 +123,13 @@ public class DeploymentControllerTest {
     Mockito.when(deploymentService.getDeployments(pageable))
         .thenReturn(new PageImpl<Deployment>(deployments));
 
-    mockMvc.perform(get("/deployments").accept(MediaType.APPLICATION_JSON))
+    mockMvc
+        .perform(get("/deployments").accept(MediaType.APPLICATION_JSON)
+            .header(HttpHeaders.AUTHORIZATION, OAuth2AccessToken.BEARER_TYPE + " <access token>"))
         .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andDo(document("authentication",
+            requestHeaders(
+                headerWithName(HttpHeaders.AUTHORIZATION).description("OAuth2 bearer token"))))
         .andDo(document("deployments", preprocessResponse(prettyPrint()),
 
             responseFields(fieldWithPath("links[]").ignored(),
@@ -134,7 +143,7 @@ public class DeploymentControllerTest {
                 fieldWithPath("content[].task").description(
                     "The current step of the deployment process. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Task.html)"),
                 fieldWithPath("content[].callback").description(
-                    "The endpoint used by the orchestrator to notify the progress of the deployment process. (http://endpoint:port)"),
+                    "The endpoint used by the orchestrator to notify the progress of the deployment process."),
                 fieldWithPath("content[].outputs").description("The outputs of the TOSCA document"),
                 fieldWithPath("content[].links[]").ignored(), fieldWithPath("page").ignored())));
   }
@@ -148,7 +157,9 @@ public class DeploymentControllerTest {
     Mockito.when(deploymentService.getDeployments(pageable))
         .thenReturn(new PageImpl<Deployment>(deployments, pageable, deployments.size()));
 
-    mockMvc.perform(get("/deployments?page=1&size=2").accept(MediaType.APPLICATION_JSON))
+    mockMvc
+        .perform(get("/deployments?page=1&size=2").accept(MediaType.APPLICATION_JSON)
+            .header(HttpHeaders.AUTHORIZATION, OAuth2AccessToken.BEARER_TYPE + " <access token>"))
         .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andDo(document("deployment-paged", preprocessResponse(prettyPrint()),
             links(atomLinks(), linkWithRel("first").description("Hyperlink to the first page"),
@@ -170,8 +181,10 @@ public class DeploymentControllerTest {
     Mockito.when(deploymentService.getDeployments(pageable))
         .thenReturn(new PageImpl<Deployment>(deployments));
 
-    mockMvc.perform(get("/deployments")).andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+    mockMvc
+        .perform(get("/deployments").header(HttpHeaders.AUTHORIZATION,
+            OAuth2AccessToken.BEARER_TYPE + " <access token>"))
+        .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andDo(document("deployment-pagination", preprocessResponse(prettyPrint()), responseFields(
             fieldWithPath("links[]").ignored(), fieldWithPath("content[].links[]").ignored(),
 
@@ -212,8 +225,10 @@ public class DeploymentControllerTest {
     Deployment deployment = ControllerTestUtils.createDeployment(deploymentId);
     Mockito.when(deploymentService.getDeployment(deploymentId)).thenReturn(deployment);
 
-    mockMvc.perform(get("/deployments/" + deploymentId)).andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+    mockMvc
+        .perform(get("/deployments/" + deploymentId).header(HttpHeaders.AUTHORIZATION,
+            OAuth2AccessToken.BEARER_TYPE + " <access token>"))
+        .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andDo(document("deployment-hypermedia", preprocessResponse(prettyPrint()),
             links(atomLinks(), linkWithRel("self").description("Self-referencing hyperlink"),
                 linkWithRel("template").description("Template reference hyperlink"),
@@ -242,8 +257,10 @@ public class DeploymentControllerTest {
     deployment.setOutputs(outputs);
     Mockito.when(deploymentService.getDeployment(deploymentId)).thenReturn(deployment);
 
-    mockMvc.perform(get("/deployments/" + deploymentId)).andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+    mockMvc
+        .perform(get("/deployments/" + deploymentId).header(HttpHeaders.AUTHORIZATION,
+            OAuth2AccessToken.BEARER_TYPE + " <access token>"))
+        .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.outputs", Matchers.hasEntry(key, value)))
 
         .andDo(document("deployment", preprocessResponse(prettyPrint()),
@@ -259,7 +276,7 @@ public class DeploymentControllerTest {
                 fieldWithPath("task").description(
                     "The current step of the deployment process. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Task.html)"),
                 fieldWithPath("callback").description(
-                    "The endpoint used by the orchestrator to notify the progress of the deployment process. (http://endpoint:port)"),
+                    "The endpoint used by the orchestrator to notify the progress of the deployment process."),
                 fieldWithPath("outputs").description("The outputs of the TOSCA document"),
                 fieldWithPath("links[]").ignored())));
   }
@@ -271,7 +288,10 @@ public class DeploymentControllerTest {
     Mockito.when(deploymentService.getDeployment(deploymentId))
         .thenThrow(new NotFoundException("Message"));
 
-    mockMvc.perform(get("/deployments/" + deploymentId)).andExpect(status().isNotFound())
+    mockMvc
+        .perform(get("/deployments/" + deploymentId).header(HttpHeaders.AUTHORIZATION,
+            OAuth2AccessToken.BEARER_TYPE + " <access token>"))
+        .andExpect(status().isNotFound())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.code", is(404)))
         .andDo(document("deployment-not-found", preprocessResponse(prettyPrint()),
@@ -312,7 +332,8 @@ public class DeploymentControllerTest {
         .thenReturn(ControllerTestUtils.createDeployment());
 
     mockMvc.perform(post("/deployments").contentType(MediaType.APPLICATION_JSON)
-        .content(TestUtil.convertObjectToJsonBytes(request)))
+        .content(TestUtil.convertObjectToJsonBytes(request))
+        .header(HttpHeaders.AUTHORIZATION, OAuth2AccessToken.BEARER_TYPE + " <access token>"))
 
         .andDo(document("create-deployment", preprocessRequest(prettyPrint()),
             preprocessResponse(prettyPrint()),
@@ -321,7 +342,7 @@ public class DeploymentControllerTest {
                     .description("A string containing a TOSCA YAML-formatted template"),
                 fieldWithPath("parameters").optional()
                     .description("The input parameters of the deployment(Map of String, Object)"),
-                fieldWithPath("callback").description("The deployment callback URL")),
+                fieldWithPath("callback").description("The deployment callback URL (optional)")),
             responseFields(fieldWithPath("links[]").ignored(),
                 fieldWithPath("uuid").description("The unique identifier of a resource"),
                 fieldWithPath("creationTime").description(
@@ -333,7 +354,9 @@ public class DeploymentControllerTest {
                 fieldWithPath("task").description(
                     "The current step of the deployment process. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Task.html)"),
                 fieldWithPath("outputs").description("The outputs of the TOSCA document"),
-                fieldWithPath("callback").ignored(), fieldWithPath("links[]").ignored())));
+                fieldWithPath("callback").description(
+                    "The endpoint used by the orchestrator to notify the progress of the deployment process."),
+                fieldWithPath("links[]").ignored())));
 
   }
 
@@ -388,7 +411,8 @@ public class DeploymentControllerTest {
     Mockito.doNothing().when(deploymentService).updateDeployment(deploymentId, request);
 
     mockMvc.perform(put("/deployments/" + deploymentId).contentType(MediaType.APPLICATION_JSON)
-        .content(TestUtil.convertObjectToJsonBytes(request)))
+        .content(TestUtil.convertObjectToJsonBytes(request))
+        .header(HttpHeaders.AUTHORIZATION, OAuth2AccessToken.BEARER_TYPE + " <access token>"))
 
         .andDo(document("update-deployment", preprocessRequest(prettyPrint()),
             preprocessResponse(prettyPrint()),
@@ -397,7 +421,7 @@ public class DeploymentControllerTest {
                     .description("A string containing a TOSCA YAML-formatted template"),
                 fieldWithPath("parameters").optional()
                     .description("The input parameters of the deployment (Map of String, Object)"),
-                fieldWithPath("callback").description("The deployment callback URL"))));
+                fieldWithPath("callback").description("The deployment callback URL (optional)"))));
 
   }
 
@@ -443,9 +467,11 @@ public class DeploymentControllerTest {
     String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
     Mockito.doNothing().when(deploymentService).deleteDeployment(deploymentId);
 
-    mockMvc.perform(delete("/deployments/" + deploymentId)).andExpect(status().isNoContent())
-        .andDo(document("delete-deployment", preprocessRequest(prettyPrint()),
-            preprocessResponse(prettyPrint())));
+    mockMvc
+        .perform(delete("/deployments/" + deploymentId).header(HttpHeaders.AUTHORIZATION,
+            OAuth2AccessToken.BEARER_TYPE + " <access token>"))
+        .andExpect(status().isNoContent()).andDo(document("delete-deployment",
+            preprocessRequest(prettyPrint()), preprocessResponse(prettyPrint())));
 
   }
 
