@@ -273,21 +273,27 @@ func deployment_create_update(templateFile *os.File, parameter string, callback 
 	}
 	deployment := new(OrchentDeployment)
 	orchentError := new(OrchentError)
-
+	action := ""
 	if depUuid == nil {
+		action = "creating"
 		base = base.Post("./deployments")
 	} else {
+		action = "updating"
 		base = base.Put("./deployments/" + *depUuid)
 	}
 	_, err := base.BodyJSON(body).Receive(deployment, orchentError)
 	if err != nil {
-		fmt.Printf("error creating deployment:\n %s\n", err)
+		fmt.Printf("error %s deployment:\n %s\n", action, err)
 		return
 	}
 	if is_error(orchentError) {
-		fmt.Printf("error creating deployment:\n %s\n", orchentError)
+		fmt.Printf("error %s deployment:\n %s\n", action, orchentError)
 	} else {
-		fmt.Printf("%s\n", deployment)
+		if depUuid == nil {
+			fmt.Printf("%s\n", deployment)
+		} else {
+			fmt.Println("update of deployment %s successfully triggered\n", depUuid)
+		}
 	}
 }
 
@@ -344,7 +350,7 @@ func deployment_delete(uuid string, base *sling.Sling) {
 	if is_error(orchentError) {
 		fmt.Printf("error deleting deployment %s:\n %s\n", uuid, orchentError)
 	} else {
-		fmt.Printf("deployment succesfully deleted\n")
+		fmt.Printf("deletion of deployment %s successfully triggered\n", uuid)
 	}
 }
 
