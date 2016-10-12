@@ -307,31 +307,36 @@ func deployment_show(uuid string, base *sling.Sling) {
 	}
 }
 
-func deployment_get_template(uuid string, baseUrl string) {
-	cl := client()
-	tokenValue, tokenSet := os.LookupEnv("ORCHENT_TOKEN")
-	req, _ := http.NewRequest("GET", baseUrl+"deployments/"+uuid+"/template", nil)
-	token := "Bearer " + tokenValue
-	if tokenSet {
-		req.Header.Add("Authorization", token)
+func deployment_get_template(uuid string, base *sling.Sling) {
+	orchentError := new(OrchentError)
+	req, err := base.Get("./deployments/" + uuid + "/template").Request()
+	if err != nil {
+		fmt.Printf("error requesting template of %s:\n  %s\n", uuid, err)
+		return
 	}
+	// unable to use sling here as the return is plain text and not json
+	cl := client()
 	resp, err := cl.Do(req)
 	if err != nil {
 		fmt.Printf("error requesting template of %s:\n  %s\n", uuid, err)
 		return
 	}
-	// TODO: check return value
 	defer resp.Body.Close()
-	scanner := bufio.NewScanner(resp.Body)
-	scanner.Split(bufio.ScanBytes)
-	for scanner.Scan() {
-		fmt.Print(scanner.Text())
+	if code := resp.StatusCode; 200 <= code && code <= 299 {
+		scanner := bufio.NewScanner(resp.Body)
+		scanner.Split(bufio.ScanBytes)
+		for scanner.Scan() {
+			fmt.Print(scanner.Text())
+		}
+	} else {
+		json.NewDecoder(resp.Body).Decode(orchentError)
+		fmt.Printf("error requesting template of %s:\n  %s\n", uuid, orchentError)
 	}
 }
 
 func deployment_delete(uuid string, base *sling.Sling) {
 	orchentError := new(OrchentError)
-	_, err := base.Delete("./deployments/" + uuid).Receive(nil, orchentError)
+	_, err := base.Delete("./deployments/"+uuid).Receive(nil, orchentError)
 	if err != nil {
 		fmt.Printf("error deleting deployment %s:\n  %s\n", uuid, err)
 		return
@@ -451,7 +456,8 @@ func main() {
 
 	case depTemplate.FullCommand():
 		baseUrl := base_url(*hostUrl)
-		deployment_get_template(*templateDepUuid, baseUrl)
+		base := base_connection(baseUrl)
+		deployment_get_template(*templateDepUuid, base)
 
 	case delDep.FullCommand():
 		baseUrl := base_url(*hostUrl)
