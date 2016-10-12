@@ -329,21 +329,18 @@ func deployment_get_template(uuid string, baseUrl string) {
 	}
 }
 
-func deployment_delete(uuid string, baseUrl string) {
-	cl := client()
-	tokenValue, tokenSet := os.LookupEnv("ORCHENT_TOKEN")
-	req, _ := http.NewRequest("DELETE", baseUrl+"deployments/"+uuid, nil)
-	token := "Bearer " + tokenValue
-	if tokenSet {
-		req.Header.Add("Authorization", token)
-	}
-	_, err := cl.Do(req)
+func deployment_delete(uuid string, base *sling.Sling) {
+	orchentError := new(OrchentError)
+	_, err := base.Delete("./deployments/" + uuid).Receive(nil, orchentError)
 	if err != nil {
 		fmt.Printf("error deleting deployment %s:\n  %s\n", uuid, err)
 		return
 	}
-	// TODO: check return value
-	fmt.Printf("deployment deleted\n")
+	if is_error(orchentError) {
+		fmt.Printf("error deleting deployment %s:\n %s\n", uuid, orchentError)
+	} else {
+		fmt.Printf("deployment succesfully deleted\n")
+	}
 }
 
 func resources_list(depUuid string, base *sling.Sling) {
@@ -451,13 +448,15 @@ func main() {
 		baseUrl := base_url(*hostUrl)
 		base := base_connection(baseUrl)
 		deployment_create_update(*updateDepTemplate, *updateDepParameter, *updateDepCallback, updateDepUuid, base)
+
 	case depTemplate.FullCommand():
 		baseUrl := base_url(*hostUrl)
 		deployment_get_template(*templateDepUuid, baseUrl)
 
 	case delDep.FullCommand():
 		baseUrl := base_url(*hostUrl)
-		deployment_delete(*templateDepUuid, baseUrl)
+		base := base_connection(baseUrl)
+		deployment_delete(*delDepUuid, base)
 
 	case lsRes.FullCommand():
 		baseUrl := base_url(*hostUrl)
