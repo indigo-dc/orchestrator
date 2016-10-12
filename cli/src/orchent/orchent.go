@@ -393,22 +393,6 @@ func resource_show(depUuid string, resUuid string, base *sling.Sling) {
 	}
 }
 
-func list_services(host, token, issuer string) {
-	fmt.Println("listing services")
-}
-
-func list_credentials(host, token, issuer string) {
-	fmt.Println("listing credentials")
-}
-
-func request(host, serviceId, token, issuer string) {
-	fmt.Println("requesting credential")
-}
-
-func revoke(host, credId, token, issuer string) {
-	fmt.Println("revoking credential")
-}
-
 func base_connection(urlBase string) *sling.Sling {
 	client := client()
 	tokenValue, tokenSet := os.LookupEnv("ORCHENT_TOKEN")
