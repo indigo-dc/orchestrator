@@ -29,3 +29,7 @@ The Orchestrator needs the presence of the following INDIGO services:
  2. `CMDB`: Configuration Manager DataBase; contains all the cloud sites information, like the identity endpoint, the OCCI endpoint, etc...
  3. `Zabbix Wrapper`: [REST wrapper for Zabbix](https://indigo-dc.gitbooks.io/monitoring/content#1-zabbix-wrapper); allows to retrieve monitoring metrics to zabbix through a REST interface
  4. `CPR` [Cloud Provider Ranker](https://www.gitbook.com/book/indigo-dc/cloud-provider-ranker/content); it receives all the information retrieved from the aforementioned services and provides the ordered list of the best sites
+
+### HOW TO
+* [Build](gitbook/how_to_build.md)
+* [Deploy](gitbook/how_to_deploy.md)
