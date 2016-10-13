@@ -46,8 +46,8 @@ replacing the parameters `DOMAIN_NAME`, `PORT`, `SCHEMA_NAME`, `DB_USER`, `DB_US
 ### Required ports and network reachability
 
 The Orchestrator Docker image exposes the `8080 TCP` port; please remeber to
- 1. Publish it
- 2. Allow inbound connections to the published port from all the IP addresses
+ 1. Publish the exposed port to one of the host
+ 2. Allow inbound connections to the published port of the host from all the IP addresses
 
 ## CONFIGURATION
 
