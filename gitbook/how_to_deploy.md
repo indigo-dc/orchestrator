@@ -2,7 +2,7 @@
 
 ## REQUISITES
 
-To run the Orchestrator you need [Docker](https://www.docker.com) and at least a MySQL Server instance (which may be local, remote, or in a docker container). 
+To run the Orchestrator you need Docker and at least a MySQL Server instance (which may be local, remote, or in a docker container). 
 
 You can either run the image built accordingly to the [previous chapter](how_to_build.md) or run the image already pushed on Docker Hub [indigodatacloud/orchestrator](https://hub.docker.com/r/indigodatacloud/orchestrator/).
 
@@ -63,8 +63,8 @@ By default the REST APIs are not authenticated; if you want to enable the `IAM` 
 |:--------:|:--------------------------------------------------------------------:|:---:|
 |`SECURITY_ENABLE`|Determines if the OAuth2 authentication and authorization is enabled|`true` or `false`|
 |`OIDC_ISSUERS`|`iss` value of the IAM to which the orchestrator has been registered|https://`host`:`port`/|
-|`OIDC_CLIENT_ID`|the OAuth2 client ID||
-|`OIDC_CLIENT_SECRET`|the OAuth2 client secret||
+|`OIDC_CLIENT_ID`|The OAuth2 client ID||
+|`OIDC_CLIENT_SECRET`|The OAuth2 client secret||
 
 Please make reference to the [IAM guide](https://indigo-dc.gitbooks.io/iam/content) to understand how to register the Orchestrator as protected resource server on `IAM` and retrieve the `iss` the `client id` and the `client secret`.
 
@@ -73,17 +73,19 @@ Please make reference to the [IAM guide](https://indigo-dc.gitbooks.io/iam/conte
 :warning::warning: Even if the authentication is optional and disabled by default, you are highly encuraged to enable it, otherwise you will not be able to create deployments neither in OpenStack nor in OpenNebula.
  
 ### Configure Chronos (optional)
-The orchestrator allows to deploy tasks on Chronos; to do that you need to configure the following parameters 
+The orchestrator allows to run jobs on Chronos; to do that you need to configure the following parameters 
 
 |Parameter name|Description|Format|
 |:--------:|:--------------------------------------------------------------------:|:---:|
-|`CHRONOS_ENDPOINT`|Tthe Chronos REST endpoint|http://`host`:`port`|
+|`CHRONOS_ENDPOINT`|The Chronos REST endpoint|http://`host`:`port`|
 |`CHRONOS_USERNAME`|The Chronos username||
 |`CHRONOS_PASSWORD`|The Chronos password||
 |`CHRONOS_PROVIDER`|The Cloud Provider that hosts the Mesos cluster on which it runs Chronos; it should be the same id that's returned from the CMDB service|`provider-RECAS-BARI`|
  
 ### Configure OneData (optional)
-The Orchestrator, when the Chronos parameters are set, allows to exploit a [OneData](https://onedata.org/) service space. This enables the users to execute tasks on Chronos that use temporary files hosted on a shared OneData space. To enable this functionality you need to configure the following parameters:
+The Orchestrator, when the Chronos parameters are set, allows to exploit a [OneData](https://onedata.org/) service space. This enables the users to execute tasks on Chronos that use temporary files hosted on a shared OneData space.
+
+To enable this functionality you need to configure the following parameters:
 
 |Parameter name|Description|Format|
 |:--------:|:--------------------------------------------------------------------:|:---:|
