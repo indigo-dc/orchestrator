@@ -25,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import it.reply.orchestrator.dal.entity.AbstractResourceEntity;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
+import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.exception.GlobalControllerExceptionHandler;
 import it.reply.orchestrator.exception.http.ConflictException;
 import it.reply.orchestrator.exception.http.NotFoundException;
@@ -118,7 +119,10 @@ public class DeploymentControllerTest {
   @Test
   public void getDeployments() throws Exception {
 
-    List<Deployment> deployments = ControllerTestUtils.createDeployments(5, true);
+    List<Deployment> deployments = ControllerTestUtils.createDeployments(2, true);
+    deployments.get(0).setStatus(Status.CREATE_FAILED);
+    deployments.get(0).setStatusReason("Some reason");
+    deployments.get(1).setStatus(Status.CREATE_COMPLETE);
     Pageable pageable = ControllerTestUtils.createDefaultPageable();
     Mockito.when(deploymentService.getDeployments(pageable))
         .thenReturn(new PageImpl<Deployment>(deployments));
@@ -140,6 +144,8 @@ public class DeploymentControllerTest {
                 fieldWithPath("content[].updateTime").description("Update date-time"),
                 fieldWithPath("content[].status").description(
                     "The status of the deployment. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html)"),
+                fieldWithPath("content[].statusReason").description(
+                    "Verbose explanation of reason that lead to the deployment status (Present only if the deploy is in some error status)"),
                 fieldWithPath("content[].task").description(
                     "The current step of the deployment process. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Task.html)"),
                 fieldWithPath("content[].callback").description(
@@ -255,6 +261,8 @@ public class DeploymentControllerTest {
     String value = "10.0.0.1";
     outputs.put(key, JsonUtility.serializeJson(value));
     deployment.setOutputs(outputs);
+    deployment.setStatus(Status.CREATE_FAILED);
+    deployment.setStatusReason("Some reason");
     Mockito.when(deploymentService.getDeployment(deploymentId)).thenReturn(deployment);
 
     mockMvc
@@ -273,6 +281,8 @@ public class DeploymentControllerTest {
                 fieldWithPath("updateTime").description("Update date-time"),
                 fieldWithPath("status").description(
                     "The status of the deployment. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html)"),
+                fieldWithPath("statusReason").description(
+                    "Verbose explanation of reason that lead to the deployment status (Present only if the deploy is in some error status)"),
                 fieldWithPath("task").description(
                     "The current step of the deployment process. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Task.html)"),
                 fieldWithPath("callback").description(
@@ -328,8 +338,10 @@ public class DeploymentControllerTest {
     request.setTemplate("template");
     request.setCallback("http://localhost:8080/callback");
 
-    Mockito.when(deploymentService.createDeployment(request))
-        .thenReturn(ControllerTestUtils.createDeployment());
+    Deployment deployment = ControllerTestUtils.createDeployment();
+    deployment.setCallback(request.getCallback());
+    deployment.setStatus(Status.CREATE_IN_PROGRESS);
+    Mockito.when(deploymentService.createDeployment(request)).thenReturn(deployment);
 
     mockMvc.perform(post("/deployments").contentType(MediaType.APPLICATION_JSON)
         .content(TestUtil.convertObjectToJsonBytes(request))

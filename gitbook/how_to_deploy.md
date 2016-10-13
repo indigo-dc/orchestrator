@@ -43,9 +43,11 @@ docker run --name orchestrator -e ORCHESTRATOR_DB_ENDPOINT=DOMAIN_NAME:PORT \
 
 replacing the parameters `DOMAIN_NAME`, `PORT`, `SCHEMA_NAME`, `DB_USER`, `DB_USER_PASSWORD` with the correct values.
 
-### Required ports
+### Required ports and network reachability
 
-The Orchestrator Docker image exposes the `8080 TCP` port; please remeber to publish it if you want to make your instance reachable from the outside.
+The Orchestrator Docker image exposes the `8080 TCP` port; please remeber to
+ 1. Publish the exposed port to one of the host
+ 2. Allow inbound connections to the published port of the host from all the IP addresses
 
 ## CONFIGURATION
 
@@ -61,7 +63,14 @@ This is the list of additional parameters that allows to configure the orchestra
 |`WRAPPER_URL`|The Zabbix Wrapper endpoint| http://`host`:`port`/monitoring/adapters/zabbix/<br />zones/indigo/types/service/groups/Cloud_Providers/hosts/|
 
 ### Configure security (optional)
-By default the REST APIs are not authenticated; if you want to enable the `IAM` integration you must configure the following parameters:
+By default the REST APIs are not authenticated; if you want to enable the IAM integration you must:
+
+ 1. Register the Orchestrator on IAM as **protected resource server** with
+   1. `HTTP Basic` as Token Endpoint Authentication Method
+   2. `openid` as scope
+ 2. Retrieve the _**client id**_ and the _**client secret**_
+ 3. Ask to the IAM mantainers which is the `iss` (issuer) of their tokens 
+ 2. Configure the following parameters:
 
 |Parameter name|Description|Format|
 |:--------:|:--------------------------------------------------------------------:|:---:|
@@ -70,11 +79,9 @@ By default the REST APIs are not authenticated; if you want to enable the `IAM` 
 |`OIDC_CLIENT_ID`|The OAuth2 client ID||
 |`OIDC_CLIENT_SECRET`|The OAuth2 client secret||
 
-Please make reference to the [IAM guide](https://indigo-dc.gitbooks.io/iam/content) to understand how to register the Orchestrator as protected resource server on `IAM` and retrieve the `iss` the `client id` and the `client secret`.
+Please make reference to the [IAM guide](https://indigo-dc.gitbooks.io/iam/content) for further information on how to register the Orchestrator as protected resource server.
 
-:warning: When registering the Orchestrator on `IAM`, make sure that the `openid` connect scope is selected.
-
-:warning::warning: Even if the authentication is optional and disabled by default, you are highly encuraged to enable it, otherwise you will not be able to create deployments neither on OpenStack nor on OpenNebula.
+:warning: Even if the authentication is optional and disabled by default, you are highly encuraged to enable it, otherwise you will not be able to create deployments neither on OpenStack nor on OpenNebula.
  
 ### Configure Chronos (optional)
 The orchestrator allows to run jobs on Chronos; to do that you need to configure the following parameters 
