@@ -261,7 +261,7 @@ node_types:
   tosca.nodes.indigo.GalaxyPortal:
     derived_from: tosca.nodes.WebServer
     properties:
-      admin:
+      admin_email:
         type: string
         description: email of the admin user
         default: admin@admin.com
@@ -281,6 +281,19 @@ node_types:
         description: path to install the galaxy tool
         default: /home/galaxy/galaxy
         required: false
+      version:
+        type: string
+        description: galaxy version to install
+        default: master
+        required: false
+      instance_description:
+        type: string
+        description: galaxy instance description
+        default: "INDIGO Galaxy test"
+      instance_key_pub:
+        type: string
+        description: galaxy instance ssh public key
+        default: your_ssh_public_key
     requirements:
       lrms:
         type: tosca.capabilities.indigo.LRMS
@@ -297,9 +310,12 @@ node_types:
           inputs:
             galaxy_install_path: { get_property: [ SELF, install_path ] }
             galaxy_user: { get_property: [ SELF, user ] }
-            galaxy_admin: { get_property: [ SELF, admin ] }
+            galaxy_admin: { get_property: [ SELF, admin_email ] }
             galaxy_admin_api_key: { get_property: [ SELF, admin_api_key ] }
             galaxy_lrms: { get_property: [ SELF, lrms, type ] }
+            galaxy_version: { get_property: [ SELF, version ] }
+            galaxy_instance_description: { get_property: [ SELF, instance_description ] }
+            galaxy_instance_key_pub:  { get_property: [ SELF, instance_key_pub ] }
 
   tosca.nodes.indigo.GalaxyWN:
     derived_from: tosca.nodes.SoftwareComponent
