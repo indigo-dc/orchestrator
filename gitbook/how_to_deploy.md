@@ -43,6 +43,10 @@ docker run --name orchestrator -e ORCHESTRATOR_DB_ENDPOINT=DOMAIN_NAME:PORT \
 
 replacing the parameters `DOMAIN_NAME`, `PORT`, `SCHEMA_NAME`, `DB_USER`, `DB_USER_PASSWORD` with the correct values.
 
+### Required ports
+
+The Orchestrator Docker image exposes the `8080 TCP` port; please remeber to publish it if you want to make your instance reachable from the outside.
+
 ## CONFIGURATION
 
 This is the list of additional parameters that allows to configure the orchestrator behaviour.
@@ -70,7 +74,7 @@ Please make reference to the [IAM guide](https://indigo-dc.gitbooks.io/iam/conte
 
 :warning: When registering the Orchestrator on `IAM`, make sure that the `openid` connect scope is selected.
 
-:warning::warning: Even if the authentication is optional and disabled by default, you are highly encuraged to enable it, otherwise you will not be able to create deployments neither in OpenStack nor in OpenNebula.
+:warning::warning: Even if the authentication is optional and disabled by default, you are highly encuraged to enable it, otherwise you will not be able to create deployments neither on OpenStack nor on OpenNebula.
  
 ### Configure Chronos (optional)
 The orchestrator allows to run jobs on Chronos; to do that you need to configure the following parameters 
