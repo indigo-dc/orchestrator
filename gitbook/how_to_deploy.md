@@ -35,7 +35,7 @@ The Orchestrator can be run in 3 steps:
 The Orchestrator can also be run using already deployed DBs; you just need to start it with the command
 
 ```bash
-docker run --name orchestrator1 -h orchestrator1 -e ORCHESTRATOR_DB_ENDPOINT=DOMAIN_NAME:PORT \
+docker run --name orchestrator -e ORCHESTRATOR_DB_ENDPOINT=DOMAIN_NAME:PORT \
 -e ORCHESTRATOR_DB_NAME=SCHEMA_NAME -e ORCHESTRATOR_DB_USER=DB_USER -e ORCHESTRATOR_DB_PWD=DB_USER_PASSWORD  \
 -e WORKFLOW_DB_ENDPOINT=DOMAIN_NAME:PORT -e WORKFLOW_DB_NAME=SCHEMA_NAME -e WORKFLOW_DB_USER=DB_USER \
 -e WORKFLOW_DB_PWD=DB_USER_PASSWORD -p 80:8080 -d indigodatacloud/orchestrator
