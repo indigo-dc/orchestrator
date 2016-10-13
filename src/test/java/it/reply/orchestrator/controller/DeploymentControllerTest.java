@@ -119,9 +119,10 @@ public class DeploymentControllerTest {
   @Test
   public void getDeployments() throws Exception {
 
-    List<Deployment> deployments = ControllerTestUtils.createDeployments(5, true);
+    List<Deployment> deployments = ControllerTestUtils.createDeployments(2, true);
     deployments.get(0).setStatus(Status.CREATE_FAILED);
     deployments.get(0).setStatusReason("Some reason");
+    deployments.get(1).setStatus(Status.CREATE_COMPLETE);
     Pageable pageable = ControllerTestUtils.createDefaultPageable();
     Mockito.when(deploymentService.getDeployments(pageable))
         .thenReturn(new PageImpl<Deployment>(deployments));
