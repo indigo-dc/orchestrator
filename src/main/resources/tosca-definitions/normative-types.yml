@@ -359,6 +359,14 @@ relationship_types:
   tosca.relationships.AttachesTo:
     derived_from: tosca.relationships.Root
     valid_target_types: [ tosca.capabilities.Attachment ]
+    properties:
+      location:
+        type: string
+        constraints:
+          - min_length: 1
+      device:
+        type: string
+        required: false
   tosca.relationships.RoutesTo:
     derived_from: tosca.relationships.ConnectsTo
     description: This type represents an intentional network routing between two Endpoints in different networks.
