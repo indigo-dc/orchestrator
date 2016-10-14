@@ -356,7 +356,7 @@ relationship_types:
         type: tosca.datatypes.Credential
         description: The security credential to use to present to the target endpoint to for either authentication or authorization purposes.
         required: false
-  tosca.relationships.AttachTo:
+  tosca.relationships.AttachesTo:
     derived_from: tosca.relationships.Root
     valid_target_types: [ tosca.capabilities.Attachment ]
   tosca.relationships.RoutesTo:
@@ -430,6 +430,11 @@ node_types:
         type: tosca.capabilities.Connectivity
         lower_bound: 0
         upper_bound: unbounded
+      local_storage:
+        type: tosca.capabilities.Attachment
+        #node: tosca.nodes.BlockStorage
+        #relationship: tosca.relationships.AttachesTo
+        #occurrences: [0, UNBOUNDED]
     capabilities:
       attach: tosca.capabilities.Attachment
       host:
@@ -581,6 +586,9 @@ node_types:
           Note: this property will be moved in next releases to the AttachTo relationship as it is specified by TOSCA spec.
         required: false
     requirements:
+      attachment:
+        type: tosca.capabilities.Attachment
+    capabilities:
       attachment:
         type: tosca.capabilities.Attachment
   tosca.nodes.Container.Runtime:
