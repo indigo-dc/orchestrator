@@ -21,10 +21,10 @@ import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 /**
  * Inputs pre-processor service manages pre-processing of inputs parameters in a Topology.
@@ -106,8 +106,8 @@ public class IndigoInputsPreProcessorService {
       for (Map.Entry<String, AbstractPropertyValue> propEntry : properties.entrySet()) {
         AbstractPropertyValue newValue;
         // Replace function value with the replaced value (if changed)
-        if ((newValue = processGetInput(templateInputs, inputs, propEntry.getValue(),
-            propEntry.getKey(), objectName)) != propEntry.getValue()) {
+        if (!Objects.equals((newValue = processGetInput(templateInputs, inputs,
+            propEntry.getValue(), propEntry.getKey(), objectName)), (propEntry.getValue()))) {
           propEntry.setValue(newValue);
         }
       }
@@ -188,34 +188,40 @@ public class IndigoInputsPreProcessorService {
         LOG.warn(msg);
         // throw new ToscaException(msg);
       }
-    } else {
+    } else if (propertyValue instanceof ComplexPropertyValue) {
       // Complex or List properties might contain other function as their values
-      if (propertyValue instanceof ComplexPropertyValue
-          || propertyValue instanceof ListPropertyValue) {
-        Map<String, Object> myMap = new HashMap<>();
-        if (propertyValue instanceof ListPropertyValue) {
-          List<Object> list = ((ListPropertyValue) propertyValue).getValue();
-          for (int i = 0; i < ((ListPropertyValue) propertyValue).getValue().size(); i++) {
-            myMap.put("<list-item-" + i + ">", list.get(i));
-          }
-        } else {
-          myMap = ((ComplexPropertyValue) propertyValue).getValue();
-        }
-        // Look for function in the value
-        for (Map.Entry<String, Object> complexEntry : myMap.entrySet()) {
-          // Only AbstractPropertyValue values can have functions in them
-          if (complexEntry.getValue() instanceof AbstractPropertyValue) {
-            AbstractPropertyValue newValue;
-            // Replace function value with the replaced value (if changed)
-            if ((newValue = processGetInput(templateInputs, inputs,
-                (AbstractPropertyValue) complexEntry.getValue(), complexEntry.getKey(),
-                propertyName)) != complexEntry.getValue()) {
-              complexEntry.setValue(newValue);
-            }
-          }
 
+      // Look for function in the value
+      for (Map.Entry<String, Object> complexEntry : ((ComplexPropertyValue) propertyValue)
+          .getValue().entrySet()) {
+        // Only AbstractPropertyValue values can have functions in them
+        if (complexEntry.getValue() instanceof AbstractPropertyValue) {
+          AbstractPropertyValue newValue;
+          // Replace function value with the replaced value (if changed)
+          if (!Objects.equals((newValue = processGetInput(templateInputs, inputs,
+              (AbstractPropertyValue) complexEntry.getValue(), complexEntry.getKey(),
+              propertyName)), (complexEntry.getValue()))) {
+            complexEntry.setValue(newValue);
+          }
         }
       }
+
+    } else if (propertyValue instanceof ListPropertyValue) {
+      List<Object> list = ((ListPropertyValue) propertyValue).getValue();
+      for (int i = 0; i < list.size(); i++) {
+        if (list.get(i) instanceof AbstractPropertyValue) {
+          AbstractPropertyValue complexValue = (AbstractPropertyValue) list.get(i);
+          AbstractPropertyValue newValue;
+          // Replace function value with the replaced value (if changed)
+          if (!Objects.equals((newValue =
+              processGetInput(templateInputs, inputs, (AbstractPropertyValue) complexValue,
+                  String.format("%s[%s]", propertyName, i), propertyName)),
+              complexValue)) {
+            list.set(i, newValue);
+          }
+        }
+      }
+
     }
     return propertyValue;
   }
