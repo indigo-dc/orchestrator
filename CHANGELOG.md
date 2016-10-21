@@ -12,6 +12,29 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - `#<number>` is a link to an issue, `!<number>` is a link to a merge request in the internal issue system.
 
 ---
+## [v1.2.0] - 2016-10-21
+
+### Added:
+- Support input substitution in listValue properties (#142)
+- Support TOSCA extended node requirements definition in topology templates (#139)
+
+### Changed:
+**NONE**
+
+### Deprecated:
+**NONE**
+
+### Removed:
+- Removed deprecated occi proxy authentication (#125)
+
+### Fixed:
+**NONE**
+
+### Security:
+**NONE**
+
+
+
 ## [v1.1.0] - 2016-09-30
 
 ### Added:
