@@ -262,7 +262,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
             // Do nothing
           }
           DeploymentException ex = new DeploymentException(errorMsg);
-          updateOnError(deployment.getId(), ex);
+          updateOnError(deployment.getId(), ex); // Set failure information in the deployment
           LOG.error(errorMsg);
           throw ex;
         default:
@@ -286,6 +286,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       } catch (Exception ex) {
         // Do nothing
       }
+      updateOnError(deployment.getId(), ex); // Set failure information in the deployment
       LOG.error(errorMsg);
       throw new DeploymentException(errorMsg);
     }
