@@ -286,9 +286,11 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       } catch (Exception ex) {
         // Do nothing
       }
+      //TODO: refactor this code and use a shared implementation for error handling and logging
+      DeploymentException ex = new DeploymentException(errorMsg);
       updateOnError(deployment.getId(), ex); // Set failure information in the deployment
       LOG.error(errorMsg);
-      throw new DeploymentException(errorMsg);
+      throw ex;
     }
   }
 
