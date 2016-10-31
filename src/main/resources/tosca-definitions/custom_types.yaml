@@ -238,7 +238,7 @@ node_types:
       zabbix_server_port:
         type: integer
         required: no
-        default: 32314
+        default: 10051
         constraints: 
           - in_range: [ 1, 65535 ]
       zabbix_server_metadata:
@@ -629,6 +629,40 @@ node_types:
         node: tosca.nodes.indigo.Compute
         relationship: tosca.relationships.HostedOn
 
+  tosca.nodes.indigo.MesosMasterCms:
+    derived_from: tosca.nodes.indigo.MesosMaster
+    properties:
+      mysquid_host:
+        type: string
+        required: yes
+      proxycache_host:
+        type: string
+        required: yes
+      iam_access_token:
+        type: string
+        description: INDIGO IAM access token
+        required: yes
+    artifacts:
+      cms_config_role:
+        file: indigo-dc.cms_config
+        type: tosca.artifacts.AnsibleGalaxy.role
+    interfaces:
+      Standard:
+        configure:
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/cms_mesos_master_install.yml
+          inputs:
+            consul_server_ips: { get_attribute: [ HOST, public_address ] }
+            zookeeper_host_list_ips: { get_attribute: [ HOST, public_address ] }
+            zookeeper_peers_ips: { get_attribute: [ HOST, public_address ] }
+            mesos_masters_list_ips: { get_attribute: [ HOST, public_address ] }
+            marathon_user: { get_property: [ SELF, marathon_username ] }
+            marathon_pass: { get_property: [ SELF, marathon_password ] }
+            chronos_user: { get_property: [ SELF, chronos_username ] }
+            chronos_pass: { get_property: [ SELF, chronos_password ] }
+            mysquid_ip: { get_property: [ SELF, mysquid_host ] }
+            proxycache_ip: { get_property: [ SELF, proxycache_host ] }
+            iam_token: { get_property: [ SELF, iam_access_token ] }
+
   tosca.nodes.indigo.MesosSlave:
     derived_from: tosca.nodes.SoftwareComponent
     properties:
@@ -670,6 +704,30 @@ node_types:
         type: tosca.capabilities.Container
         node: tosca.nodes.indigo.Compute
         relationship: tosca.relationships.HostedOn
+
+  tosca.nodes.indigo.MesosSlaveCms:
+    derived_from: tosca.nodes.indigo.MesosSlave
+    properties:
+      mysquid_host:
+        type: string
+        required: yes
+      proxycache_host:
+        type: string
+        required: yes
+    artifacts:
+      cms_config_role:
+        file: indigo-dc.cms_config
+        type: tosca.artifacts.AnsibleGalaxy.role
+    interfaces:
+      Standard:
+        create:
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/cms_mesos_slave_install.yml
+          inputs:
+            mesos_master_ips: { get_property: [ SELF, master_ips ] }
+            consul_server_ips: { get_property: [ SELF, master_ips ] }
+            mesos_masters_list_ips: { get_property: [ SELF, master_ips ] }
+            mysquid_ip: { get_property: [ SELF, mysquid_host ] }
+            proxycache_ip: { get_property: [ SELF, proxycache_host ] }
 
   tosca.nodes.indigo.MesosLoadBalancer:
     derived_from: tosca.nodes.SoftwareComponent
@@ -827,3 +885,53 @@ node_types:
       Standard:
         configure:
           implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/kepler/kepler_install.yml
+
+  tosca.nodes.indigo.OphidiaServer:
+    derived_from: tosca.nodes.SoftwareComponent
+    properties:
+      io_ips:
+        type: list
+        entry_schema:
+          type: string
+        description: List of IPs of the Ophidia IO nodes
+        required: false
+    artifacts:
+      ophidia_role:
+        file: indigo-dc.ophidia-cluster
+        type: tosca.artifacts.AnsibleGalaxy.role
+      slurm_role:
+        file: indigo-dc.slurm
+        type: tosca.artifacts.AnsibleGalaxy.role
+      nfs_role:
+        file: indigo-dc.nfs
+        type: tosca.artifacts.AnsibleGalaxy.role
+    interfaces:
+      Standard:
+        configure:
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/ophidia/ophidia_server_install.yml
+          inputs:
+            ophidia_io_ips: { get_property: [ SELF, io_ips ] }
+
+  tosca.nodes.indigo.OphidiaIO:
+    derived_from: tosca.nodes.SoftwareComponent
+    properties:
+      server_ip:
+        type: string
+        description: IP of the OphidiaServer node
+        required: true
+    artifacts:
+      ophidia_role:
+        file: indigo-dc.ophidia-cluster
+        type: tosca.artifacts.AnsibleGalaxy.role
+      slurm_role:
+        file: indigo-dc.slurm
+        type: tosca.artifacts.AnsibleGalaxy.role
+      nfs_role:
+        file: indigo-dc.nfs
+        type: tosca.artifacts.AnsibleGalaxy.role
+    interfaces:
+      Standard:
+        configure:
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/ophidia/ophidia_io_install.yml
+          inputs:
+            ophidia_server_ip: { get_property: [ SELF, server_ip ] }
