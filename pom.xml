@@ -469,33 +469,19 @@
 						<addOutputDirectoryToResources>true</addOutputDirectoryToResources>
 						<!-- Deploy to Maven repo -->
 						<attach>true</attach>
-
-						<!-- <timestampFormat>{0,date,yyyy-MM-dd_HH-mm-ss}</timestampFormat> -->
-						<!-- The ${buildNumber} exported Maven variable content -->
-						<!-- <format>{0}</format> -->
-						<!-- <items> -->
-						<!-- <item>timestamp</item> -->
-						<!-- </items> -->
-
-						<!-- This ensures that even if we are not connected to scm -->
-						<!-- <revisiononscmfailure> -->
-
-						<!-- Generate sequence build number based on: build number and timestamp -->
-						<!-- The ${buildNumber} exported Maven variable content -->
-						<!-- <format>{0,date,yyyyMMdd-HHmmss}</format> -->
-						<!-- <items> -->
-						<!-- <item>timestamp</item> -->
-						<!-- </items> -->
-						<!-- </revisiononscmfailure> -->
+						<timezone>GMT</timezone>
+						<providerImplementations>
+							<git>jgit</git>
+						</providerImplementations>
 					</configuration>
+					<dependencies>
+						<dependency>
+							<groupId>org.apache.maven.scm</groupId>
+							<artifactId>maven-scm-provider-jgit</artifactId>
+							<version>1.9.5</version>
+						</dependency>
+					</dependencies>
 					<executions>
-						<!-- <execution> -->
-						<!-- <id>get-scm-revision-initialize</id> -->
-						<!-- <phase>initialize</phase> -->
-						<!-- <goals> -->
-						<!-- <goal>create</goal> -->
-						<!-- </goals> -->
-						<!-- </execution> -->
 						<execution>
 							<id>get-scm-revision-validate</id>
 							<phase>validate</phase>
@@ -505,13 +491,6 @@
 								<goal>create-metadata</goal>
 							</goals>
 						</execution>
-						<!-- <execution> -->
-						<!-- <id>get-scm-revision-generate-resources</id> -->
-						<!-- <phase>generate-resources</phase> -->
-						<!-- <goals> -->
-						<!-- <goal>create-metadata</goal> -->
-						<!-- </goals> -->
-						<!-- </execution> -->
 					</executions>
 				</plugin>
 			</plugins>
