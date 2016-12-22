@@ -80,6 +80,16 @@ capability_types:
         constraints:
           - equal: local
 
+  tosca.capabilities.indigo.LRMS.Mesos:
+    derived_from: tosca.capabilities.indigo.LRMS
+    properties:
+      type:
+        type: string
+        required: true
+        default: mesos
+        constraints:
+          - equal: mesos
+
   tosca.capabilities.indigo.Container.Docker:
     derived_from: tosca.capabilities.Container.Docker
     properties:
@@ -556,6 +566,78 @@ node_types:
   tosca.nodes.indigo.Container.Application.Docker.Marathon:
     derived_from: tosca.nodes.indigo.Container.Application.Docker
 
+  tosca.nodes.indigo.LRMS.FrontEnd.Mesos:
+    derived_from: tosca.nodes.indigo.LRMS.FrontEnd
+    capabilities:
+      lrms:
+        type: tosca.capabilities.indigo.LRMS.Mesos
+    properties:
+      # Set the current data of the mesos server
+      # but it can also specified in the TOSCA document
+      consul_servers:
+        type: string
+        required: no
+        default: localhost
+      zookeeper_host_list:
+        type: string
+        required: no
+        default: localhost
+      zookeeper_peers:
+        type: string
+        required: no
+        default: localhost
+      mesos_masters_list:
+        type: string
+        required: no
+        default: localhost
+      marathon_username:
+        type: string
+        required: no
+        default: admin
+      marathon_password:
+        type: string
+        required: yes
+      chronos_username:
+        type: string
+        required: no
+        default: admin
+      chronos_password:
+        type: string
+        required: yes
+    artifacts:
+      docker_agent_role:
+        file: indigo-dc.docker
+        type: tosca.artifacts.AnsibleGalaxy.role
+      consul_agent_role:
+        file: indigo-dc.consul
+        type: tosca.artifacts.AnsibleGalaxy.role
+      zookeeper_agent_role:
+        file: indigo-dc.zookeeper
+        type: tosca.artifacts.AnsibleGalaxy.role
+      mesos_agent_role:
+        file: indigo-dc.mesos
+        type: tosca.artifacts.AnsibleGalaxy.role
+      marathon_agent_role:
+        file: indigo-dc.marathon
+        type: tosca.artifacts.AnsibleGalaxy.role
+      chronos_agent_role:
+        file: indigo-dc.chronos
+        type: tosca.artifacts.AnsibleGalaxy.role
+    interfaces:
+      Standard:
+        configure:
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/mesos_master_install.yml
+          inputs:
+            consul_server_ips: { get_attribute: [ HOST, public_address ] } 
+            zookeeper_host_list_ips: { get_attribute: [ HOST, public_address ] }
+            zookeeper_peers_ips: { get_attribute: [ HOST, public_address ] }
+            mesos_masters_list_ips: { get_attribute: [ HOST, public_address ] }
+            marathon_user: { get_property: [ SELF, marathon_username ] }
+            marathon_pass: { get_property: [ SELF, marathon_password ] }
+            chronos_user: { get_property: [ SELF, chronos_username ] }
+            chronos_pass: { get_property: [ SELF, chronos_password ] }
+
+
   tosca.nodes.indigo.MesosMaster:
     derived_from: tosca.nodes.SoftwareComponent
     properties:
@@ -663,6 +745,46 @@ node_types:
             proxycache_ip: { get_property: [ SELF, proxycache_host ] }
             iam_token: { get_property: [ SELF, iam_access_token ] }
 
+
+
+  tosca.nodes.indigo.LRMS.WorkerNode.Mesos:
+    derived_from: tosca.nodes.indigo.LRMS.WorkerNode
+    properties:
+      # Set the current data of the mesos server
+      # but it can also specified in the TOSCA document
+      master_ips:
+        required: yes
+        type: list
+        entry_schema:
+          type: string
+      consul_servers:
+        type: string
+        required: no
+        default: localhost
+      mesos_masters_list:
+        type: string
+        required: no
+        default: localhost
+    artifacts:
+      docker_agent_role:
+        file: indigo-dc.docker
+        type: tosca.artifacts.AnsibleGalaxy.role
+      consul_agent_role:
+        file: indigo-dc.consul
+        type: tosca.artifacts.AnsibleGalaxy.role
+      mesos_agent_role:
+        file: indigo-dc.mesos
+        type: tosca.artifacts.AnsibleGalaxy.role
+    interfaces:
+      Standard:
+        create:
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/mesos_slave_install.yml
+          inputs:
+            mesos_master_ips: { get_property: [ SELF, master_ips ] }
+            consul_server_ips: { get_property: [ SELF, master_ips ] }
+            mesos_masters_list_ips: { get_property: [ SELF, master_ips ] }
+
+
   tosca.nodes.indigo.MesosSlave:
     derived_from: tosca.nodes.SoftwareComponent
     properties:
@@ -729,6 +851,7 @@ node_types:
             mysquid_ip: { get_property: [ SELF, mysquid_host ] }
             proxycache_ip: { get_property: [ SELF, proxycache_host ] }
 
+
   tosca.nodes.indigo.MesosLoadBalancer:
     derived_from: tosca.nodes.SoftwareComponent
     properties:
@@ -757,7 +880,8 @@ node_types:
       host:
         type: tosca.capabilities.Container
         node: tosca.nodes.indigo.Compute
-        relationship: tosca.relationships.HostedOn
+        relationship: tosca.relationships.HostedOn          
+          
 
   tosca.nodes.indigo.OneDataStorage:
     derived_from: tosca.nodes.BlockStorage
@@ -935,3 +1059,53 @@ node_types:
           implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/ophidia/ophidia_io_install.yml
           inputs:
             ophidia_server_ip: { get_property: [ SELF, server_ip ] }
+
+  tosca.nodes.indigo.Batch.Job:
+    derived_from: tosca.nodes.Root
+    properties:
+      executable:
+        required: yes
+        type: string
+        description: Name of the executable file
+      arguments:
+        required: no
+        type: string
+        description: Arguments for the job executable
+      environment:
+        type: map
+        entry_schema:
+          type: string
+        description: A map of string representing environment settings
+
+# https://wiki.italiangrid.it/twiki/bin/view/CREAM/JdlGuide
+  tosca.nodes.indigo.Grid.Job:
+    derived_from: tosca.nodes.indigo.Batch.Job
+    properties:
+      ce_urls:
+        required: yes
+        type: list
+        entry_schema:
+          type: string
+        description: A list of CREAM CE identifiers to launch the job        
+      stdoutput:
+        required: no
+        description: Name of the file to get the standard output stream of the user application
+        type: string
+      stderror:
+        required: no
+        type: string
+        description: Name of the file to get the standard error stream of the user application
+      outputsandbox:
+        type: list
+        entry_schema:
+          type: string
+        description: A list of output sandbox files
+      inputsandbox:
+        type: list
+        entry_schema:
+          type: string
+        description: A list of input sandbox files (URL of files located in gridFTP servers)
+      virtualorganisation:
+        required: no
+        type: string
+        description: Specify the VO of the user
