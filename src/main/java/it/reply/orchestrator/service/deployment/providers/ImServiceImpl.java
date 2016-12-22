@@ -41,8 +41,8 @@ import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.utils.json.JsonUtility;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -69,7 +69,7 @@ import java.util.regex.Pattern;
 @PropertySource("classpath:im-config/im-java-api.properties")
 public class ImServiceImpl extends AbstractDeploymentProviderService {
 
-  private static final Logger LOG = LogManager.getLogger(ImServiceImpl.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ImServiceImpl.class);
 
   @Autowired
   private ApplicationContext ctx;
@@ -225,7 +225,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       return false;
 
     } catch (Exception ex) {
-      LOG.error(ex);
+      LOG.error("Error deploying", ex);
       updateOnError(deploymentUuid, ex);
       return false;
     }
@@ -286,7 +286,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       } catch (Exception ex) {
         // Do nothing
       }
-      //TODO: refactor this code and use a shared implementation for error handling and logging
+      // TODO: refactor this code and use a shared implementation for error handling and logging
       DeploymentException ex = new DeploymentException(errorMsg);
       updateOnError(deployment.getId(), ex); // Set failure information in the deployment
       LOG.error(errorMsg);
@@ -324,7 +324,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         updateOnError(deployment.getId(), exception);
 
       } catch (Exception ex) {
-        LOG.error(ex);
+        LOG.error("Error finalizing deployment", ex);
         updateOnError(deployment.getId(), ex);
       }
     } else {
@@ -492,7 +492,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       }
 
     } catch (Exception ex) {
-      LOG.error(ex);
+      LOG.error("Error undeploying", ex);
       updateOnError(deploymentUuid, ex);
       return false;
     }
@@ -522,7 +522,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
     } catch (ImClientException ex) {
       // TODO improve exception handling
-      LOG.error(ex);
+      LOG.error("Error checking for undeployment", ex);
       return false;
     }
   }

@@ -35,12 +35,12 @@ import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.ToscaService;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jgrapht.alg.CycleDetector;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.traverse.TopologicalOrderIterator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -62,7 +62,7 @@ import java.util.stream.Collectors;
 public class ChronosServiceImpl extends AbstractDeploymentProviderService
     implements DeploymentProviderService {
 
-  private static final Logger LOG = LogManager.getLogger(DeploymentController.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DeploymentController.class);
 
   @Autowired
   ToscaService toscaService;
@@ -446,7 +446,7 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
         // Update deployment status
         updateOnSuccess(deploymentMessage.getDeploymentId());
       } catch (Exception ex) {
-        LOG.error(ex);
+        LOG.error("Error finalizing deployment", ex);
         // Update deployment status
         updateOnError(deploymentMessage.getDeploymentId(), ex);
       }

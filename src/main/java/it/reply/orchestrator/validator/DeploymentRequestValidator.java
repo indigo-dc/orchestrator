@@ -1,8 +1,9 @@
 package it.reply.orchestrator.validator;
 
+import com.google.common.base.Strings;
+
 import it.reply.orchestrator.dto.request.DeploymentRequest;
 
-import org.apache.logging.log4j.util.Strings;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 
@@ -25,7 +26,7 @@ public class DeploymentRequestValidator implements Validator {
     DeploymentRequest deploymentRequest = (DeploymentRequest) target;
     String callbackUrl = deploymentRequest.getCallback();
     if (callbackUrl != null) {
-      if (Strings.isBlank(callbackUrl)) {
+      if (Strings.nullToEmpty(callbackUrl).trim().isEmpty()) {
         errors.rejectValue("callback", "callback.blank", "Callback URL is blank");
       } else {
         try {

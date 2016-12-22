@@ -10,13 +10,13 @@ import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
 import it.reply.orchestrator.exception.service.DeploymentException;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class CloudProviderEndpointServiceImpl {
-  private static final Logger LOG = LogManager.getLogger(CloudProviderEndpointServiceImpl.class);
+  private static final Logger LOG = LoggerFactory.getLogger(CloudProviderEndpointServiceImpl.class);
 
   /**
    * Choose a Cloud Provider.

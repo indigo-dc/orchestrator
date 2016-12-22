@@ -3,8 +3,6 @@ package it.reply.orchestrator.config.security;
 import it.reply.orchestrator.service.security.IndigoUserInfoFetcher;
 import it.reply.orchestrator.service.security.UserInfoIntrospectingTokenService;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.mitre.jwt.signer.service.impl.JWKSetCacheService;
 import org.mitre.oauth2.introspectingfilter.service.IntrospectionConfigurationService;
 import org.mitre.oauth2.introspectingfilter.service.impl.JWTParsingIntrospectionConfigurationService;
@@ -14,6 +12,8 @@ import org.mitre.openid.connect.client.service.ClientConfigurationService;
 import org.mitre.openid.connect.client.service.ServerConfigurationService;
 import org.mitre.openid.connect.client.service.impl.DynamicServerConfigurationService;
 import org.mitre.openid.connect.client.service.impl.StaticClientConfigurationService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -44,7 +44,7 @@ import java.util.Set;
 @PropertySource(value = { "classpath:security.properties" })
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
-  static final Logger LOG = LogManager.getLogger(WebSecurityConfig.class);
+  static final Logger LOG = LoggerFactory.getLogger(WebSecurityConfig.class);
 
   @Autowired
   private ApplicationContext applicationContext;

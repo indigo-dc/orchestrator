@@ -7,15 +7,16 @@ import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class DeploymentStatusHelperImpl implements DeploymentStatusHelper {
 
-  private static final Logger LOG = LogManager.getLogger(AbstractDeploymentProviderService.class);
+  private static final Logger LOG =
+      LoggerFactory.getLogger(AbstractDeploymentProviderService.class);
 
   @Autowired
   private DeploymentRepository deploymentRepository;

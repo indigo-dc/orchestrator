@@ -9,8 +9,8 @@ import it.reply.orchestrator.resource.DeploymentResourceAssembler;
 import it.reply.orchestrator.service.DeploymentService;
 import it.reply.orchestrator.validator.DeploymentRequestValidator;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
@@ -39,7 +39,7 @@ import javax.validation.Valid;
 @PropertySource("classpath:version.properties")
 public class DeploymentController {
 
-  private static final Logger LOG = LogManager.getLogger(DeploymentController.class);
+  private static final Logger LOG = LoggerFactory.getLogger(DeploymentController.class);
 
   @Value("${build.version}")
   private String projectVersion;

@@ -16,8 +16,8 @@ import alien4cloud.tosca.normative.ToscaFunctionConstants;
 
 import it.reply.orchestrator.exception.service.ToscaException;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -41,7 +41,7 @@ import java.util.Objects;
 @Service
 public class IndigoInputsPreProcessorService {
 
-  private static final Logger LOG = LogManager.getLogger(IndigoInputsPreProcessorService.class);
+  private static final Logger LOG = LoggerFactory.getLogger(IndigoInputsPreProcessorService.class);
 
   /**
    * Process the get inputs functions of a topology to inject actual input provided by the user.

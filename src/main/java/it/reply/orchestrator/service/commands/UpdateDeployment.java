@@ -16,10 +16,10 @@ import it.reply.orchestrator.service.deployment.providers.DeploymentStatusHelper
 import it.reply.workflowmanager.spring.orchestrator.bpm.ejbcommands.BaseCommand;
 
 import org.apache.commons.collections4.MapUtils;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 @Component
 public class UpdateDeployment extends BaseCommand {
 
-  private static final Logger LOG = LogManager.getLogger(UpdateDeployment.class);
+  private static final Logger LOG = LoggerFactory.getLogger(UpdateDeployment.class);
 
   @Autowired
   private OneDataService oneDataService;
@@ -55,10 +55,9 @@ public class UpdateDeployment extends BaseCommand {
   public ExecutionResults customExecute(CommandContext ctx) throws Exception {
 
     RankCloudProvidersMessage rankCloudProvidersMessage =
-        (RankCloudProvidersMessage) getWorkItem(ctx)
-            .getParameter(WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE);
-    DeploymentMessage deploymentMessage = (DeploymentMessage) getWorkItem(ctx)
-        .getParameter(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE);
+        getParameter(ctx, WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE);
+    DeploymentMessage deploymentMessage =
+        getParameter(ctx, WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE);
 
     ExecutionResults exResults = new ExecutionResults();
     try {
@@ -103,7 +102,7 @@ public class UpdateDeployment extends BaseCommand {
       exResults.getData().putAll(resultOccurred(true).getData());
       exResults.setData(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
     } catch (Exception ex) {
-      LOG.error(ex);
+      LOG.error("Error setting cloud selected providers", ex);
       exResults.getData().putAll(resultOccurred(false).getData());
 
       // Update deployment with error

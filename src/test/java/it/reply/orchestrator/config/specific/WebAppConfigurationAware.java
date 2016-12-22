@@ -11,12 +11,12 @@ import it.reply.orchestrator.config.WebMvcConfig;
 import it.reply.orchestrator.config.WorkflowConfigProducerBean;
 import it.reply.orchestrator.config.WorklfowPersistenceConfigTest;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -46,7 +46,7 @@ import javax.inject.Inject;
     TransactionalTestExecutionListener.class, DbUnitTestExecutionListener.class })
 public abstract class WebAppConfigurationAware {
 
-  private static final Logger LOG = LogManager.getLogger(WebAppConfigurationAware.class);
+  private static final Logger LOG = LoggerFactory.getLogger(WebAppConfigurationAware.class);
 
   @Inject
   protected WebApplicationContext wac;

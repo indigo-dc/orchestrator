@@ -3,8 +3,8 @@ package it.reply.orchestrator.config;
 import it.reply.workflowmanager.spring.orchestrator.annotations.WorkflowPersistenceUnit;
 import it.reply.workflowmanager.utils.Constants;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
@@ -34,7 +34,7 @@ import javax.transaction.UserTransaction;
 @PropertySource(value = { "classpath:application.properties" })
 public class PersistenceConfig {
 
-  private static final Logger LOG = LogManager.getLogger(PersistenceConfig.class);
+  private static final Logger LOG = LoggerFactory.getLogger(PersistenceConfig.class);
 
   private static final String ENTITY_MANAGER_PACKAGE_TO_SCAN = "entitymanager.packages.to.scan";
   private static final String HIBERNATE_HBM2DDL_AUTO = "hibernate.hbm2ddl.auto";

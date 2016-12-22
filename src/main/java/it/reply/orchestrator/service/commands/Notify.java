@@ -1,6 +1,7 @@
 package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.service.CallbackService;
+import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.workflowmanager.spring.orchestrator.bpm.ejbcommands.BaseCommand;
 
 import org.kie.api.executor.CommandContext;
@@ -16,7 +17,7 @@ public class Notify extends BaseCommand {
 
   @Override
   protected ExecutionResults customExecute(CommandContext ctx) throws Exception {
-    String deploymentId = (String) getWorkItem(ctx).getParameter("DEPLOYMENT_ID");
+    String deploymentId = getParameter(ctx, WorkflowConstants.WF_PARAM_DEPLOYMENT_ID);
     try {
       boolean result = callbackService.doCallback(deploymentId);
       return resultOccurred(result);

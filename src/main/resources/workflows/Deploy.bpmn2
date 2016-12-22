@@ -1,18 +1,22 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- origin at X=0.0 Y=0.0 -->
-<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:java="http://www.java.com/javaTypes" xmlns:tns="http://www.jboss.org/drools" xmlns="http://www.jboss.org/drools" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd" id="Definition" exporter="org.eclipse.bpmn2.modeler.core" exporterVersion="1.2.4.Final-v20160330-1625-B110" expressionLanguage="http://www.mvel.org/2.0" targetNamespace="http://www.jboss.org/drools" typeLanguage="http://www.java.com/javaTypes">
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:java="http://www.java.com/javaTypes" xmlns:tns="http://www.jboss.org/drools" xmlns="http://www.jboss.org/drools" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd" id="Definition" exporter="org.eclipse.bpmn2.modeler.core" exporterVersion="1.2.5.Final-v20160831-1132-B114" expressionLanguage="http://www.mvel.org/2.0" targetNamespace="http://www.jboss.org/drools" typeLanguage="http://www.java.com/javaTypes">
   <bpmn2:itemDefinition id="ItemDefinition_4" isCollection="false" structureRef="String"/>
   <bpmn2:itemDefinition id="ItemDefinition_133" isCollection="false" structureRef="Object"/>
   <bpmn2:itemDefinition id="ItemDefinition_477" isCollection="false" structureRef="Boolean"/>
   <bpmn2:itemDefinition id="ItemDefinition_2" isCollection="false" structureRef="it.reply.orchestrator.service.DeploymentService"/>
   <bpmn2:itemDefinition id="ItemDefinition_6" isCollection="false" structureRef="it.reply.orchestrator.dto.RankCloudProvidersMessage"/>
   <bpmn2:itemDefinition id="ItemDefinition_3" isCollection="false" structureRef="it.reply.orchestrator.dto.deployment.DeploymentMessage"/>
+  <bpmn2:itemDefinition id="ItemDefinition_5" isCollection="false" structureRef="org.slf4j.Logger"/>
+  <bpmn2:itemDefinition id="ItemDefinition_9" isCollection="false" structureRef="it.reply.orchestrator.service.WorkflowConstants"/>
   <bpmn2:signal id="Signal_1" name="NotifyCallback" structureRef="ItemDefinition_4"/>
   <bpmn2:process id="it.reply.orchestrator.Deploy" tns:packageName="it.reply.orchestrator" name="Deploy" isExecutable="true" processType="Private">
     <bpmn2:extensionElements>
       <tns:import name="it.reply.orchestrator.service.DeploymentService"/>
       <tns:import name="it.reply.orchestrator.dto.RankCloudProvidersMessage"/>
       <tns:import name="it.reply.orchestrator.dto.deployment.DeploymentMessage"/>
+      <tns:import name="org.slf4j.Logger"/>
+      <tns:import name="it.reply.orchestrator.service.WorkflowConstants"/>
     </bpmn2:extensionElements>
     <bpmn2:property id="DEPLOYMENT_ID" itemSubjectRef="ItemDefinition_4" name="DEPLOYMENT_ID"/>
     <bpmn2:property id="Result" itemSubjectRef="ItemDefinition_477" name="Result"/>
@@ -20,6 +24,7 @@
     <bpmn2:property id="DEPLOYMENT_TYPE" itemSubjectRef="ItemDefinition_4" name="DEPLOYMENT_TYPE"/>
     <bpmn2:property id="RankCloudProvidersMessage" itemSubjectRef="ItemDefinition_6" name="RankCloudProvidersMessage"/>
     <bpmn2:property id="DeploymentMessage" itemSubjectRef="ItemDefinition_3" name="DeploymentMessage"/>
+    <bpmn2:property id="logger" itemSubjectRef="ItemDefinition_5" name="logger"/>
     <bpmn2:startEvent id="StartEvent_1" name="StartProcess">
       <bpmn2:extensionElements>
         <tns:metaData name="elementname">
@@ -36,7 +41,7 @@
       </bpmn2:extensionElements>
       <bpmn2:incoming>SequenceFlow_1</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_2</bpmn2:outgoing>
-      <bpmn2:script>System.out.println(&quot;Init Async phase&quot;);</bpmn2:script>
+      <bpmn2:script>logger.debug(&quot;Init Async phase&quot;);</bpmn2:script>
     </bpmn2:scriptTask>
     <bpmn2:sequenceFlow id="SequenceFlow_1" tns:priority="1" sourceRef="StartEvent_1" targetRef="ScriptTask_1"/>
     <bpmn2:sequenceFlow id="SequenceFlow_2" tns:priority="1" sourceRef="ScriptTask_1" targetRef="CallActivity_1"/>
@@ -331,7 +336,7 @@
         </bpmn2:extensionElements>
         <bpmn2:incoming>SequenceFlow_12</bpmn2:incoming>
         <bpmn2:outgoing>SequenceFlow_23</bpmn2:outgoing>
-        <bpmn2:script>System.out.println(&quot;TOSCA-IM&quot;);</bpmn2:script>
+        <bpmn2:script>logger.debug(&quot;TOSCA-IM&quot;);</bpmn2:script>
       </bpmn2:scriptTask>
       <bpmn2:sequenceFlow id="SequenceFlow_23" tns:priority="1" sourceRef="ScriptTask_2" targetRef="Task_2"/>
     </bpmn2:subProcess>
@@ -410,7 +415,7 @@
         </bpmn2:extensionElements>
         <bpmn2:incoming>SequenceFlow_21</bpmn2:incoming>
         <bpmn2:outgoing>SequenceFlow_24</bpmn2:outgoing>
-        <bpmn2:script>System.out.println(&quot;CHRONOS&quot;);</bpmn2:script>
+        <bpmn2:script>logger.debug(&quot;CHRONOS&quot;);</bpmn2:script>
       </bpmn2:scriptTask>
       <bpmn2:sequenceFlow id="SequenceFlow_24" tns:priority="1" sourceRef="ScriptTask_3" targetRef="InclusiveGateway_3"/>
       <bpmn2:intermediateThrowEvent id="IntermediateThrowEvent_3" name="Notify Event 1">
@@ -612,16 +617,16 @@
           <tns:metaValue><![CDATA[Rank Cloud Providers]]></tns:metaValue>
         </tns:metaData>
         <tns:onEntry-script scriptFormat="http://www.java.com/java">
-          <tns:script>System.out.println(&quot;[DEBUG] Entering it.reply.orchestrator.RankCloudProviders process&quot;);
-RankCloudProvidersMessage rankMessage =  new RankCloudProvidersMessage((String) kcontext.getVariable(&quot;DEPLOYMENT_ID&quot;));
-rankMessage.setOneDataRequirements(((it.reply.orchestrator.dto.deployment.DeploymentMessage) kcontext.getVariable(&quot;DeploymentMessage&quot;)).getOneDataRequirements());
-kcontext.setVariable(&quot;RankCloudProvidersMessage&quot;, rankMessage);
-System.out.println(&quot;[DEBUG] Initializing RankCloudProvidersMessage: &quot; + kcontext.getVariable(&quot;RankCloudProvidersMessage&quot;));
+          <tns:script>logger.debug(&quot;Entering it.reply.orchestrator.RankCloudProviders process&quot;);
+RankCloudProvidersMessage =  new RankCloudProvidersMessage(DEPLOYMENT_ID);
+RankCloudProvidersMessage.setOneDataRequirements(DeploymentMessage.getOneDataRequirements());
+kcontext.setVariable(WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE, RankCloudProvidersMessage);
+logger.debug(&quot;Initializing RankCloudProvidersMessage: &quot; + RankCloudProvidersMessage);
 </tns:script>
         </tns:onEntry-script>
         <tns:onExit-script scriptFormat="http://www.java.com/java">
-          <tns:script>System.out.println(&quot;[DEBUG] Exiting it.reply.orchestrator.RankCloudProviders process&quot;);
-System.out.println(&quot;[DEBUG] RankCloudProvidersMessage: &quot;+kcontext.getVariable(&quot;RankCloudProvidersMessage&quot;));</tns:script>
+          <tns:script>logger.debug(&quot;Exiting it.reply.orchestrator.RankCloudProviders process&quot;);
+logger.debug(&quot;RankCloudProvidersMessage: {}&quot;, RankCloudProvidersMessage);</tns:script>
         </tns:onExit-script>
       </bpmn2:extensionElements>
       <bpmn2:incoming>SequenceFlow_2</bpmn2:incoming>
