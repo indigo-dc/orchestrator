@@ -15,10 +15,17 @@
         </property>
     </xsl:variable>
 
-	<xsl:variable name="jbpmAnnoyingLogs">
+	<xsl:variable name="customLoggers">
 		<logger category="org.drools.core.xml.ExtensibleXmlParser" xmlns="urn:jboss:domain:logging:3.0">
 			<level name="FATAL" />
 		</logger>
+		<logger category="it.reply" xmlns="urn:jboss:domain:logging:3.0">
+			<level name="DEBUG" />
+		</logger>
+	</xsl:variable>
+	
+	<xsl:variable name="deploymentLoggingConfig">
+		<use-deployment-logging-config value="false"/>
 	</xsl:variable>
    
 
@@ -50,7 +57,8 @@
     </xsl:template> -->
     
 	<xsl:template match="//log:subsystem/log:root-logger">
-	    <xsl:copy-of copy-namespaces="no" select="$jbpmAnnoyingLogs"/>
+	    <xsl:copy-of copy-namespaces="no" select="$customLoggers"/>
+	    <xsl:copy-of copy-namespaces="no" select="$deploymentLoggingConfig"/>
 	    <xsl:copy>
 	        <xsl:apply-templates select="@*|node()"/>
 	    </xsl:copy>
@@ -59,6 +67,13 @@
 	<xsl:template match="//log:subsystem/log:console-handler[@name='CONSOLE']/log:level/@name">
 		<xsl:attribute name="name">DEBUG</xsl:attribute>
 	</xsl:template>
+	
+<!-- 	 <xsl:template match="//log:subsystem/log:periodic-rotating-file-handler[@name='FILE']">
+		<xsl:copy>
+			<xsl:attribute name="enabled">false</xsl:attribute>
+			<xsl:apply-templates select="@*|node()"/>
+		</xsl:copy>
+    </xsl:template> -->
 
 	<xsl:template match="//jgs:subsystem/jgs:stacks/jgs:stack[@name='udp']/jgs:transport[@type='UDP']">
 		<xsl:copy>

@@ -7,8 +7,6 @@ import com.nimbusds.jwt.SignedJWT;
 
 import it.reply.orchestrator.dto.security.IndigoOAuth2Authentication;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.mitre.jwt.signer.service.JWTSigningAndValidationService;
 import org.mitre.jwt.signer.service.impl.JWKSetCacheService;
 import org.mitre.oauth2.introspectingfilter.IntrospectingTokenService;
@@ -17,6 +15,8 @@ import org.mitre.openid.connect.client.service.ServerConfigurationService;
 import org.mitre.openid.connect.config.ServerConfiguration;
 import org.mitre.openid.connect.model.PendingOIDCAuthenticationToken;
 import org.mitre.openid.connect.model.UserInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
@@ -28,7 +28,7 @@ import java.util.Date;
 
 public class UserInfoIntrospectingTokenService extends IntrospectingTokenService {
 
-  static final Logger LOG = LogManager.getLogger(UserInfoIntrospectingTokenService.class);
+  static final Logger LOG = LoggerFactory.getLogger(UserInfoIntrospectingTokenService.class);
 
   private ServerConfigurationService serverConfigurationService;
   private UserInfoFetcher userInfoFetcher;

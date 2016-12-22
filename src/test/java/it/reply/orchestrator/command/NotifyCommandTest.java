@@ -9,6 +9,7 @@ import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
 
 import it.reply.orchestrator.config.specific.WebAppConfigurationAware;
+import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.orchestrator.service.commands.Notify;
 import it.reply.workflowmanager.utils.Constants;
 
@@ -44,7 +45,8 @@ public class NotifyCommandTest extends WebAppConfigurationAware {
         .andRespond(withSuccess());
 
     CommandContext ctx = TestCommandHelper.buildCommandContext()
-        .withParam("DEPLOYMENT_ID", "mmd34483-d937-4578-bfdb-ebe196bf82dd").get();
+        .withParam(WorkflowConstants.WF_PARAM_DEPLOYMENT_ID, "mmd34483-d937-4578-bfdb-ebe196bf82dd")
+        .get();
     boolean result = (boolean) notifyCommand.execute(ctx).getData(Constants.RESULT);
 
     assertEquals(true, result);
@@ -56,7 +58,8 @@ public class NotifyCommandTest extends WebAppConfigurationAware {
   @DatabaseSetup("/data/database-init.xml")
   public void doexecuteWithoutUrl() throws Exception {
     CommandContext ctx = TestCommandHelper.buildCommandContext()
-        .withParam("DEPLOYMENT_ID", "mmd34483-d937-4578-bfdb-ebe196bf82de").get();
+        .withParam(WorkflowConstants.WF_PARAM_DEPLOYMENT_ID, "mmd34483-d937-4578-bfdb-ebe196bf82de")
+        .get();
     boolean result = (boolean) notifyCommand.execute(ctx).getData(Constants.RESULT);
     assertEquals(false, result);
 

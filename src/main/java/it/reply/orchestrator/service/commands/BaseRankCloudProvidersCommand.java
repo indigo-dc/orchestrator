@@ -5,10 +5,10 @@ import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.orchestrator.service.deployment.providers.DeploymentStatusHelper;
 import it.reply.workflowmanager.spring.orchestrator.bpm.ejbcommands.BaseCommand;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -21,7 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public abstract class BaseRankCloudProvidersCommand extends BaseCommand {
 
-  private static final Logger LOG = LogManager.getLogger(BaseRankCloudProvidersCommand.class);
+  private static final Logger LOG = LoggerFactory.getLogger(BaseRankCloudProvidersCommand.class);
 
   @Autowired
   protected DeploymentStatusHelper deploymentStatusHelper;
@@ -35,8 +35,7 @@ public abstract class BaseRankCloudProvidersCommand extends BaseCommand {
   @Override
   protected ExecutionResults customExecute(CommandContext ctx) throws Exception {
     RankCloudProvidersMessage rankCloudProvidersMessage =
-        (RankCloudProvidersMessage) getWorkItem(ctx)
-            .getParameter(WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE);
+        getParameter(ctx, WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE);
 
     ExecutionResults exResults = new ExecutionResults();
     try {
@@ -50,7 +49,7 @@ public abstract class BaseRankCloudProvidersCommand extends BaseCommand {
           rankCloudProvidersMessage);
       exResults.getData().putAll(resultOccurred(true).getData());
     } catch (Exception ex) {
-      LOG.error(ex);
+      LOG.error(String.format("Error executing %s", this.getClass().getSimpleName()), ex);
       exResults.getData().putAll(resultOccurred(false).getData());
 
       // Update deployment with error

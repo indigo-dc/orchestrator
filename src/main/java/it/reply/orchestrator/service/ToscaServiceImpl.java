@@ -36,9 +36,9 @@ import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.exception.service.ToscaException;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.elasticsearch.common.collect.Lists;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -75,7 +75,7 @@ import javax.annotation.Resource;
 @Service
 public class ToscaServiceImpl implements ToscaService {
 
-  private static final Logger LOG = LogManager.getLogger(ToscaServiceImpl.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ToscaServiceImpl.class);
 
   @Autowired
   private ApplicationContext ctx;
@@ -118,8 +118,8 @@ public class ToscaServiceImpl implements ToscaService {
       zip(is, zipFile);
       ParsingResult<Csar> result = archiveUploadService.upload(zipFile);
       if (!result.getContext().getParsingErrors().isEmpty()) {
-        LOG.warn("Error parsing definition {}:\n{}", () -> normativeLocalName,
-            () -> Arrays.toString(result.getContext().getParsingErrors().toArray()));
+        LOG.warn("Error parsing definition {}:\n{}", normativeLocalName,
+            Arrays.toString(result.getContext().getParsingErrors().toArray()));
       }
     }
 
@@ -128,8 +128,8 @@ public class ToscaServiceImpl implements ToscaService {
       zip(is, zipFile);
       ParsingResult<Csar> result = archiveUploadService.upload(zipFile);
       if (!result.getContext().getParsingErrors().isEmpty()) {
-        LOG.warn("Error parsing definition {}:\n{}", () -> indigoLocalName,
-            () -> Arrays.toString(result.getContext().getParsingErrors().toArray()));
+        LOG.warn("Error parsing definition {}:\n{}", indigoLocalName,
+            Arrays.toString(result.getContext().getParsingErrors().toArray()));
       }
     }
 

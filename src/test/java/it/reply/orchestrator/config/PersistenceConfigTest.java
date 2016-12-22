@@ -1,14 +1,9 @@
 package it.reply.orchestrator.config;
 
-import bitronix.tm.BitronixTransactionManager;
-import bitronix.tm.TransactionManagerServices;
-
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 
-import it.reply.orchestrator.controller.DeploymentController;
-
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -23,19 +18,20 @@ import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.jta.JtaTransactionManager;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.Properties;
 
 import javax.annotation.Resource;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 
+import bitronix.tm.BitronixTransactionManager;
+import bitronix.tm.TransactionManagerServices;
+
 @Configuration
 @DatabaseSetup("database-init.xml")
 public class PersistenceConfigTest {
 
-  private static final Logger LOG = LogManager.getLogger(PersistenceConfigTest.class);
+  private static final Logger LOG = LoggerFactory.getLogger(PersistenceConfigTest.class);
 
   private static final String ENTITY_MANAGER_PACKAGE_TO_SCAN = "entitymanager.packages.to.scan";
   private static final String HIBERNATE_HBM2DDL_AUTO = "hibernate.hbm2ddl.auto";

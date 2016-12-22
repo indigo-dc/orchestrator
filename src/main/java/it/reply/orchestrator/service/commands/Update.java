@@ -1,6 +1,7 @@
 package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
+import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
 
 import org.kie.api.executor.CommandContext;
@@ -24,7 +25,7 @@ public class Update extends BaseDeployCommand {
   @Override
   protected ExecutionResults customExecute(CommandContext ctx,
       DeploymentMessage deploymentMessage) {
-    String template = (String) getWorkItem(ctx).getParameter("TOSCA_TEMPLATE");
+    String template = getParameter(ctx, WorkflowConstants.WF_PARAM_TOSCA_TEMPLATE);
     boolean result = imService.doUpdate(deploymentMessage, template);
     return resultOccurred(result);
   }

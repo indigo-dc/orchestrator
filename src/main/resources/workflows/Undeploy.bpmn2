@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- origin at X=0.0 Y=0.0 -->
-<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:java="http://www.java.com/javaTypes" xmlns:tns="http://www.jboss.org/drools" xmlns="http://www.jboss.org/drools" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd" id="Definition" exporter="org.eclipse.bpmn2.modeler.core" exporterVersion="1.2.4.Final-v20160330-1625-B110" expressionLanguage="http://www.mvel.org/2.0" targetNamespace="http://www.jboss.org/drools" typeLanguage="http://www.java.com/javaTypes">
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:java="http://www.java.com/javaTypes" xmlns:tns="http://www.jboss.org/drools" xmlns="http://www.jboss.org/drools" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd" id="Definition" exporter="org.eclipse.bpmn2.modeler.core" exporterVersion="1.2.5.Final-v20160831-1132-B114" expressionLanguage="http://www.mvel.org/2.0" targetNamespace="http://www.jboss.org/drools" typeLanguage="http://www.java.com/javaTypes">
   <bpmn2:itemDefinition id="ItemDefinition_4" isCollection="false" structureRef="String"/>
   <bpmn2:itemDefinition id="ItemDefinition_109" isCollection="false" structureRef="Object"/>
   <bpmn2:itemDefinition id="ItemDefinition_23" isCollection="false" structureRef="Boolean"/>
@@ -8,17 +8,20 @@
   <bpmn2:itemDefinition id="ItemDefinition_334" isCollection="false" structureRef="Integer"/>
   <bpmn2:itemDefinition id="ItemDefinition_3" isCollection="false" structureRef="it.reply.orchestrator.dto.deployment.DeploymentMessage.TemplateTopologicalOrderIterator"/>
   <bpmn2:itemDefinition id="ItemDefinition_5" isCollection="false" structureRef="it.reply.orchestrator.dto.deployment.DeploymentMessage"/>
+  <bpmn2:itemDefinition id="ItemDefinition_2" isCollection="false" structureRef="org.slf4j.Logger"/>
   <bpmn2:signal id="NotifyCallbacky" name="NotifyCallbacky" structureRef="ItemDefinition_4"/>
   <bpmn2:process id="it.reply.orchestrator.Undeploy" tns:packageName="it.reply.orchestrator" name="Undeploy" isExecutable="true" processType="Private">
     <bpmn2:extensionElements>
       <tns:import name="it.reply.orchestrator.dto.deployment.DeploymentMessage"/>
       <tns:import name="it.reply.orchestrator.dto.deployment.DeploymentMessage.TemplateTopologicalOrderIterator"/>
+      <tns:import name="org.slf4j.Logger"/>
     </bpmn2:extensionElements>
     <bpmn2:property id="DEPLOYMENT_ID" itemSubjectRef="ItemDefinition_4" name="DEPLOYMENT_ID"/>
     <bpmn2:property id="Result" itemSubjectRef="ItemDefinition_23" name="Result"/>
     <bpmn2:property id="pollingStatus" itemSubjectRef="ItemDefinition_109" name="pollingStatus"/>
     <bpmn2:property id="DEPLOYMENT_TYPE" itemSubjectRef="ItemDefinition_109" name="DEPLOYMENT_TYPE"/>
     <bpmn2:property id="DeploymentMessage" itemSubjectRef="ItemDefinition_5" name="DeploymentMessage"/>
+    <bpmn2:property id="logger" itemSubjectRef="ItemDefinition_2" name="logger"/>
     <bpmn2:startEvent id="StartEvent_1" name="StartProcess">
       <bpmn2:extensionElements>
         <tns:metaData name="elementname">
@@ -35,7 +38,7 @@
       </bpmn2:extensionElements>
       <bpmn2:incoming>SequenceFlow_1</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_2</bpmn2:outgoing>
-      <bpmn2:script>System.out.println(&quot;Init Async fase&quot;);</bpmn2:script>
+      <bpmn2:script>logger.debug(&quot;Init Async phase&quot;);</bpmn2:script>
     </bpmn2:scriptTask>
     <bpmn2:sequenceFlow id="SequenceFlow_1" tns:priority="1" sourceRef="StartEvent_1" targetRef="ScriptTask_1"/>
     <bpmn2:endEvent id="EndEvent_1" name="End Event 1">
@@ -355,19 +358,19 @@ return Result &amp;&amp; !DeploymentMessage.isDeleteComplete();</bpmn2:condition
       <bpmndi:BPMNShape id="BPMNShape_SubProcess_2" bpmnElement="SubProcess_3" isExpanded="true">
         <dc:Bounds height="150.0" width="399.0" x="92.0" y="401.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_1">
-          <dc:Bounds height="15.0" width="81.0" x="98.0" y="404.0"/>
+          <dc:Bounds height="17.0" width="96.0" x="98.0" y="404.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_StartEvent_1" bpmnElement="StartEvent_1">
         <dc:Bounds height="36.0" width="36.0" x="110.0" y="49.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_1">
-          <dc:Bounds height="15.0" width="71.0" x="93.0" y="85.0"/>
+          <dc:Bounds height="34.0" width="55.0" x="101.0" y="85.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_ScriptTask_1" bpmnElement="ScriptTask_1">
         <dc:Bounds height="50.0" width="110.0" x="210.0" y="42.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_2">
-          <dc:Bounds height="15.0" width="71.0" x="229.0" y="59.0"/>
+          <dc:Bounds height="17.0" width="86.0" x="222.0" y="58.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_EndEvent_1" bpmnElement="EndEvent_1">
@@ -393,19 +396,19 @@ return Result &amp;&amp; !DeploymentMessage.isDeleteComplete();</bpmn2:condition
       <bpmndi:BPMNShape id="BPMNShape_EndEvent_2" bpmnElement="EndEvent_4">
         <dc:Bounds height="36.0" width="36.0" x="412.0" y="458.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_7">
-          <dc:Bounds height="15.0" width="65.0" x="398.0" y="494.0"/>
+          <dc:Bounds height="17.0" width="79.0" x="391.0" y="494.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_Task_1" bpmnElement="Task_4">
         <dc:Bounds height="50.0" width="110.0" x="214.0" y="451.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_8">
-          <dc:Bounds height="15.0" width="30.0" x="254.0" y="468.0"/>
+          <dc:Bounds height="17.0" width="36.0" x="251.0" y="467.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_StartEvent_2" bpmnElement="StartEvent_4">
         <dc:Bounds height="36.0" width="36.0" x="112.0" y="458.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_9">
-          <dc:Bounds height="15.0" width="68.0" x="96.0" y="494.0"/>
+          <dc:Bounds height="34.0" width="80.0" x="90.0" y="494.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_InclusiveGateway_1" bpmnElement="InclusiveGateway_1" isMarkerVisible="true">
@@ -423,7 +426,7 @@ return Result &amp;&amp; !DeploymentMessage.isDeleteComplete();</bpmn2:condition
       <bpmndi:BPMNShape id="BPMNShape_Task_3" bpmnElement="Task_1">
         <dc:Bounds height="50.0" width="110.0" x="1246.0" y="52.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_12">
-          <dc:Bounds height="15.0" width="73.0" x="1264.0" y="69.0"/>
+          <dc:Bounds height="17.0" width="84.0" x="1259.0" y="68.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_ExclusiveGateway_1" bpmnElement="ExclusiveGateway_1" isMarkerVisible="true">
@@ -447,31 +450,31 @@ return Result &amp;&amp; !DeploymentMessage.isDeleteComplete();</bpmn2:condition
       <bpmndi:BPMNShape id="BPMNShape_ExclusiveGateway_3" bpmnElement="ExclusiveGateway_3" isMarkerVisible="true">
         <dc:Bounds height="50.0" width="50.0" x="441.0" y="52.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_16">
-          <dc:Bounds height="30.0" width="69.0" x="432.0" y="102.0"/>
+          <dc:Bounds height="34.0" width="82.0" x="425.0" y="102.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_Task_4" bpmnElement="Task_3">
         <dc:Bounds height="50.0" width="110.0" x="700.0" y="303.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_17">
-          <dc:Bounds height="15.0" width="52.0" x="729.0" y="320.0"/>
+          <dc:Bounds height="17.0" width="60.0" x="725.0" y="319.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_EndEvent_4" bpmnElement="EndEvent_3">
         <dc:Bounds height="36.0" width="36.0" x="980.0" y="310.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_18">
-          <dc:Bounds height="15.0" width="65.0" x="966.0" y="346.0"/>
+          <dc:Bounds height="17.0" width="79.0" x="959.0" y="346.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_InclusiveGateway_2" bpmnElement="InclusiveGateway_2" isMarkerVisible="true">
         <dc:Bounds height="50.0" width="50.0" x="548.0" y="303.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_19">
-          <dc:Bounds height="30.0" width="57.0" x="545.0" y="353.0"/>
+          <dc:Bounds height="34.0" width="69.0" x="539.0" y="353.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNShape id="BPMNShape_ExclusiveGateway_4" bpmnElement="ExclusiveGateway_4" isMarkerVisible="true">
         <dc:Bounds height="50.0" width="50.0" x="861.0" y="303.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_20">
-          <dc:Bounds height="30.0" width="66.0" x="853.0" y="353.0"/>
+          <dc:Bounds height="34.0" width="79.0" x="847.0" y="353.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNShape>
       <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_1" bpmnElement="SequenceFlow_1" sourceElement="BPMNShape_StartEvent_1" targetElement="BPMNShape_ScriptTask_1">
@@ -556,7 +559,7 @@ return Result &amp;&amp; !DeploymentMessage.isDeleteComplete();</bpmn2:condition
         <di:waypoint xsi:type="dc:Point" x="590.0" y="77.0"/>
         <di:waypoint xsi:type="dc:Point" x="690.0" y="77.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_23">
-          <dc:Bounds height="15.0" width="12.0" x="586.0" y="78.0"/>
+          <dc:Bounds height="17.0" width="14.0" x="585.0" y="78.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_14" bpmnElement="SequenceFlow_14" sourceElement="BPMNShape_ExclusiveGateway_3" targetElement="BPMNShape_InclusiveGateway_2">
@@ -564,7 +567,7 @@ return Result &amp;&amp; !DeploymentMessage.isDeleteComplete();</bpmn2:condition
         <di:waypoint xsi:type="dc:Point" x="466.0" y="328.0"/>
         <di:waypoint xsi:type="dc:Point" x="548.0" y="328.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_24">
-          <dc:Bounds height="15.0" width="48.0" x="443.0" y="262.0"/>
+          <dc:Bounds height="17.0" width="56.0" x="439.0" y="257.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_15" bpmnElement="SequenceFlow_15" sourceElement="BPMNShape_Task_4" targetElement="BPMNShape_ExclusiveGateway_4">
@@ -591,7 +594,7 @@ return Result &amp;&amp; !DeploymentMessage.isDeleteComplete();</bpmn2:condition
         <di:waypoint xsi:type="dc:Point" x="573.0" y="274.0"/>
         <di:waypoint xsi:type="dc:Point" x="573.0" y="303.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_28">
-          <dc:Bounds height="15.0" width="21.0" x="720.0" y="275.0"/>
+          <dc:Bounds height="17.0" width="25.0" x="718.0" y="275.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
     </bpmndi:BPMNPlane>

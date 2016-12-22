@@ -7,10 +7,10 @@ import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.orchestrator.service.deployment.providers.DeploymentStatusHelper;
 import it.reply.workflowmanager.spring.orchestrator.bpm.ejbcommands.BaseCommand;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -23,7 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public abstract class BaseDeployCommand extends BaseCommand {
 
-  private static final Logger LOG = LogManager.getLogger(BaseDeployCommand.class);
+  private static final Logger LOG = LoggerFactory.getLogger(BaseDeployCommand.class);
 
   @Autowired
   protected DeploymentStatusHelper deploymentStatusHelper;
@@ -39,8 +39,8 @@ public abstract class BaseDeployCommand extends BaseCommand {
    */
   @Override
   protected ExecutionResults customExecute(CommandContext ctx) throws Exception {
-    DeploymentMessage deploymentMessage = (DeploymentMessage) getWorkItem(ctx)
-        .getParameter(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE);
+    DeploymentMessage deploymentMessage =
+        getParameter(ctx, WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE);
 
     ExecutionResults exResults = new ExecutionResults();
     try {
@@ -56,7 +56,7 @@ public abstract class BaseDeployCommand extends BaseCommand {
       exResults.getData().putAll(customExecute(ctx, deploymentMessage).getData());
       exResults.setData(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
     } catch (Exception ex) {
-      LOG.error(ex);
+      LOG.error(String.format("Error executing %s", this.getClass().getSimpleName()), ex);
       exResults.getData().putAll(resultOccurred(false).getData());
 
       // Update deployment with error

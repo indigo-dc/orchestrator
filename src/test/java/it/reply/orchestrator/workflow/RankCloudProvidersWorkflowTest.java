@@ -19,11 +19,11 @@ import it.reply.workflowmanager.exceptions.WorkflowException;
 import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager;
 import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager.RUNTIME_STRATEGY;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.jbpm.workflow.instance.WorkflowProcessInstance;
 import org.kie.api.runtime.process.ProcessInstance;
 import org.mockito.MockitoAnnotations;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
@@ -38,7 +38,7 @@ import java.util.Map;
 
 public class RankCloudProvidersWorkflowTest { // extends WebAppConfigurationAware {
 
-  static final Logger LOG = LogManager.getLogger(RankCloudProvidersWorkflowTest.class);
+  static final Logger LOG = LoggerFactory.getLogger(RankCloudProvidersWorkflowTest.class);
 
   // @Mock
   // private WorkItemHandlersProducer testWorkItemHandlersProducer;

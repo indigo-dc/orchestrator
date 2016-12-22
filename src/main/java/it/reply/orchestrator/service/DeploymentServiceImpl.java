@@ -31,6 +31,7 @@ import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager;
 import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager.RUNTIME_STRATEGY;
 
 import org.kie.api.runtime.process.ProcessInstance;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -126,7 +127,9 @@ public class DeploymentServiceImpl implements DeploymentService {
     }
 
     Map<String, Object> params = new HashMap<>();
-    params.put("DEPLOYMENT_ID", deployment.getId());
+    params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_ID, deployment.getId());
+    params.put(WorkflowConstants.WF_PARAM_LOGGER,
+        LoggerFactory.getLogger(WorkflowConfigProducerBean.DEPLOY.getProcessId()));
 
     // FIXME Put in deployment provider field
     params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_TYPE,
@@ -208,7 +211,9 @@ public class DeploymentServiceImpl implements DeploymentService {
         }
 
         Map<String, Object> params = new HashMap<>();
-        params.put("DEPLOYMENT_ID", deployment.getId());
+        params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_ID, deployment.getId());
+        params.put(WorkflowConstants.WF_PARAM_LOGGER,
+            LoggerFactory.getLogger(WorkflowConfigProducerBean.UNDEPLOY.getProcessId()));
 
         // FIXME: Temporary - just for test
         if (deployment.getDeploymentProvider() != null) {
@@ -277,8 +282,10 @@ public class DeploymentServiceImpl implements DeploymentService {
         deployment.getWorkflowReferences().size();
 
         Map<String, Object> params = new HashMap<>();
-        params.put("DEPLOYMENT_ID", deployment.getId());
-        params.put("TOSCA_TEMPLATE", request.getTemplate());
+        params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_ID, deployment.getId());
+        params.put(WorkflowConstants.WF_PARAM_TOSCA_TEMPLATE, request.getTemplate());
+        params.put(WorkflowConstants.WF_PARAM_LOGGER,
+            LoggerFactory.getLogger(WorkflowConfigProducerBean.UPDATE.getProcessId()));
 
         // Build deployment message
         DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment);
