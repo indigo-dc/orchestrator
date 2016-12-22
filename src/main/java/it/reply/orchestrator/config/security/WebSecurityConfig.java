@@ -5,6 +5,7 @@ import it.reply.orchestrator.service.security.UserInfoIntrospectingTokenService;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.mitre.jwt.signer.service.impl.JWKSetCacheService;
 import org.mitre.oauth2.introspectingfilter.service.IntrospectionConfigurationService;
 import org.mitre.oauth2.introspectingfilter.service.impl.JWTParsingIntrospectionConfigurationService;
 import org.mitre.oauth2.model.RegisteredClient;
@@ -131,6 +132,15 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
+    protected JWKSetCacheService validationServices() {
+      if (securityEnabled) {
+        return new JWKSetCacheService();
+      } else {
+        return null;
+      }
+    }
+
+    @Bean
     protected ResourceServerTokenServices introspectingTokenService() {
       if (securityEnabled) {
         UserInfoIntrospectingTokenService introspectingTokenService =
@@ -138,8 +148,12 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         introspectingTokenService
             .setIntrospectionConfigurationService(introspectionConfigurationService());
         introspectingTokenService.setCacheTokens(oidcCacheTokens);
+        // Disabled for now as there is no revocation
+        // introspectingTokenService.setDefaultExpireTime(60000);
+        // introspectingTokenService.setForceCacheExpireTime(true);
         introspectingTokenService.setServerConfigurationService(serverConfigurationService());
         introspectingTokenService.setUserInfoFetcher(userInfoFetcher());
+        introspectingTokenService.setValidationServices(validationServices());
         return introspectingTokenService;
       } else {
         return null;
