@@ -3,7 +3,6 @@ package it.reply.orchestrator.service.security;
 import com.google.common.base.Strings;
 
 import com.nimbusds.jwt.JWT;
-import com.nimbusds.jwt.JWTParser;
 import com.nimbusds.jwt.SignedJWT;
 
 import it.reply.orchestrator.dto.security.IndigoOAuth2Authentication;
@@ -22,7 +21,6 @@ import org.springframework.security.access.AuthorizationServiceException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
-import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 
 import java.text.ParseException;
@@ -40,8 +38,14 @@ public class UserInfoIntrospectingTokenService extends IntrospectingTokenService
   public OAuth2Authentication loadAuthentication(String accessToken)
       throws AuthenticationException {
     IndigoOAuth2Authentication auth = null;
+    SignedJWT jwtToken = null;
     try {
-      JWT jwtToken = JWTParser.parse(accessToken);
+      jwtToken = SignedJWT.parse(accessToken);
+    } catch (Exception ex) {
+      LOG.info("Invalid access token, access token <{}> is not a signed JWT", accessToken);
+      return null;
+    }
+    try {
       // check if expired or not signed
       preValidate(jwtToken);
       OAuth2Authentication authentication = super.loadAuthentication(accessToken);
@@ -53,8 +57,8 @@ public class UserInfoIntrospectingTokenService extends IntrospectingTokenService
         }
         auth = new IndigoOAuth2Authentication(authentication, token, userInfo);
       }
-    } catch (OAuth2Exception ex) {
-      LOG.info("Error validating access token, {}", ex.getMessage());
+    } catch (InvalidTokenException ex) {
+      LOG.info("Invalid access token, {}", ex.getMessage());
       return null;
     } catch (Exception ex) {
       // if there is an exception return a null authentication
@@ -65,26 +69,24 @@ public class UserInfoIntrospectingTokenService extends IntrospectingTokenService
     return auth;
   }
 
-  private void preValidate(JWT jwtToken) throws ParseException {
+  private void preValidate(SignedJWT jwtToken) throws ParseException {
     Date expirationTime = jwtToken.getJWTClaimsSet().getExpirationTime();
     if (expirationTime != null) {
       if (expirationTime.before(new Date())) {
         throw new InvalidTokenException("access token is expired");
       }
     }
-    if (jwtToken instanceof SignedJWT) {
-      String issuer = getIssuer(jwtToken);
-      ServerConfiguration serverConfiguration = getServerConfiguration(issuer);
-      JWTSigningAndValidationService validationService =
-          validationServices.getValidator(serverConfiguration.getJwksUri());
-      if (validationService != null) {
-        if (!validationService.validateSignature((SignedJWT) jwtToken)) {
-          throw new InvalidTokenException("access token has an invalid signature");
-        }
-      } else {
-        LOG.warn("Couldn't retrive validator for issuer {}, validation of access token skipped",
-            issuer);
+    String issuer = getIssuer(jwtToken);
+    ServerConfiguration serverConfiguration = getServerConfiguration(issuer);
+    JWTSigningAndValidationService validationService =
+        validationServices.getValidator(serverConfiguration.getJwksUri());
+    if (validationService != null) {
+      if (!validationService.validateSignature((SignedJWT) jwtToken)) {
+        throw new InvalidTokenException("access token has an invalid signature");
       }
+    } else {
+      LOG.warn("Couldn't retrive validator for issuer {}, validation of access token skipped",
+          issuer);
     }
   }
 
@@ -138,8 +140,8 @@ public class UserInfoIntrospectingTokenService extends IntrospectingTokenService
     return userInfo;
   }
 
-  private String getIssuer(JWT jwt) throws ParseException {
-    String issuer = jwt.getJWTClaimsSet().getIssuer();
+  private String getIssuer(JWT jwtToken) throws ParseException {
+    String issuer = jwtToken.getJWTClaimsSet().getIssuer();
     if (!Strings.isNullOrEmpty(issuer)) {
       return issuer;
     } else {
