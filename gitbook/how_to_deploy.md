@@ -60,7 +60,7 @@ This is the list of additional parameters that allows to configure the orchestra
 | `CMDB_ENDPOINT`|The CMDB REST endpoint|http://`host`:`port`/cmdb/|
 |`SLAM_ENDPOINT`|The SLAM REST endpoint|http://`host`:`port`/slam/|
 |`CPR_ENDPOINT`|The Cloud Provider Ranker endpoint|https://`host`:`port`/cpr/rank|
-|`WRAPPER_URL`|The Zabbix Wrapper endpoint| http://`host`:`port`/monitoring/adapters/zabbix/<br />zones/indigo/types/service/groups/Cloud_Providers/hosts/|
+|`WRAPPER_URL`|The Zabbix Wrapper endpoint| http://`host`:`port`/monitoring/adapters/zabbix/<br />zones/indigo/types/infrastructure/groups/Cloud_Providers/hosts/|
 
 ### Configure security (optional)
 By default the REST APIs are not authenticated; if you want to enable the IAM integration you must:
