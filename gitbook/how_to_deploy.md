@@ -69,13 +69,14 @@ By default the REST APIs are not authenticated; if you want to enable the IAM in
    1. `HTTP Basic` as Token Endpoint Authentication Method
    2. `openid` as scope
  2. Retrieve the _**client id**_ and the _**client secret**_
- 3. Ask to the IAM mantainers which is the `iss` (issuer) of their tokens 
+ 3. Retrieve the _**issuer**_ value of the IAM from its WebFinger endpoint: 
+ https://`iam-url`/.well-known/openid-configuration
  2. Configure the following parameters:
 
 |Parameter name|Description|Format|
 |:--------:|:--------------------------------------------------------------------:|:---:|
 |`SECURITY_ENABLE`|Determines if the OAuth2 authentication and authorization is enabled|`true` or `false`|
-|`OIDC_ISSUERS`|`iss` value of the IAM to which the orchestrator has been registered|https://`host`:`port`/|
+|`OIDC_ISSUERS`|`issuer` value of the IAM to which the orchestrator has been registered|https://`host`:`port`/|
 |`OIDC_CLIENT_ID`|The OAuth2 client ID||
 |`OIDC_CLIENT_SECRET`|The OAuth2 client secret||
 
