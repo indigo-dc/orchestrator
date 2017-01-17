@@ -1,6 +1,6 @@
 package it.reply.orchestrator.controller;
 
-import it.reply.domain.dsl.prisma.DebugInformations;
+import it.reply.domain.dsl.info.DebugInformation;
 import it.reply.orchestrator.dal.entity.AbstractResourceEntity;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
@@ -74,8 +74,8 @@ public class DeploymentController {
    */
   @ResponseStatus(HttpStatus.OK)
   @RequestMapping(value = "/info", method = RequestMethod.GET)
-  public DebugInformations getInfo() {
-    DebugInformations info = new DebugInformations();
+  public DebugInformation getInfo() {
+    DebugInformation info = new DebugInformation();
     info.setProjectVersion(projectVersion);
     info.setProjectRevision(projectRevision);
     info.setProjectTimestamp(projectTimestamp);
