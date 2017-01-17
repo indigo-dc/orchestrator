@@ -84,7 +84,9 @@ public class TemplateControllerTest {
         mockMvc
             .perform(get("/deployments/" + deployment.getId() + "/template").header(
                 HttpHeaders.AUTHORIZATION, OAuth2AccessToken.BEARER_TYPE + " <access token>"))
-            .andExpect(status().isOk()).andExpect(content().contentType(MediaType.TEXT_PLAIN))
+            .andExpect(status().isOk())
+            .andExpect(content().contentType(new MediaType(MediaType.TEXT_PLAIN.getType(),
+                MediaType.TEXT_PLAIN.getSubtype(), Charset.forName("ISO-8859-1"))))
             .andDo(document("get-template")).andReturn();
 
     String content = result.getResponse().getContentAsString();
