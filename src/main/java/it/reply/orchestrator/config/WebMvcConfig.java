@@ -18,6 +18,8 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 @ComponentScan(basePackages = { "it.reply.orchestrator", "it.reply.workflowmanager" })
 public class WebMvcConfig extends WebMvcConfigurationSupport {
 
+  public static final long MAX_UPLOAD_SIZE = 1024000;
+
   private static final String RESOURCES_LOCATION = "/resources/";
   private static final String RESOURCES_HANDLER = RESOURCES_LOCATION + "**";
 
@@ -53,7 +55,7 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
   @Bean(name = "multipartResolver")
   public CommonsMultipartResolver resolver() {
     CommonsMultipartResolver commonsMultipartResolver = new CommonsMultipartResolver();
-    commonsMultipartResolver.setMaxUploadSize(1024000);
+    commonsMultipartResolver.setMaxUploadSize(MAX_UPLOAD_SIZE);
     return new CommonsMultipartResolver();
   }
 }
