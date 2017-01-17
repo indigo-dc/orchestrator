@@ -47,8 +47,6 @@ public class ResourceController {
           direction = Direction.DESC) Pageable pageable,
       PagedResourcesAssembler<Resource> pagedAssembler) {
 
-    LOG.trace("Invoked method: getDeployments");
-
     Page<Resource> resources = resourceService.getResources(deploymentId, pageable);
 
     PagedResources<BaseResource> pagedResources =
@@ -66,7 +64,6 @@ public class ResourceController {
   public BaseResource getResource(@PathVariable("deploymentId") String deploymentId,
       @PathVariable("resourceId") String resourceId) {
 
-    LOG.trace("Invoked method: getResource with id: " + resourceId);
     Resource resource = resourceService.getResource(resourceId, deploymentId);
     return baseResourceAssembler.toResource(resource);
   }

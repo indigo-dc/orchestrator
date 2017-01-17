@@ -9,8 +9,6 @@ import it.reply.orchestrator.resource.DeploymentResourceAssembler;
 import it.reply.orchestrator.service.DeploymentService;
 import it.reply.orchestrator.validator.DeploymentRequestValidator;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
@@ -38,8 +36,6 @@ import javax.validation.Valid;
 @RestController
 @PropertySource("classpath:version.properties")
 public class DeploymentController {
-
-  private static final Logger LOG = LoggerFactory.getLogger(DeploymentController.class);
 
   @Value("${build.version}")
   private String projectVersion;
@@ -108,8 +104,6 @@ public class DeploymentController {
           direction = Direction.DESC) Pageable pageable,
       PagedResourcesAssembler<Deployment> pagedAssembler) {
 
-    LOG.trace("Invoked method: getDeployments");
-
     Page<Deployment> deployments = deploymentService.getDeployments(pageable);
 
     PagedResources<DeploymentResource> pagedDeploymentResources =
@@ -130,7 +124,6 @@ public class DeploymentController {
       produces = MediaType.APPLICATION_JSON_VALUE)
   public DeploymentResource createDeployment(@Valid @RequestBody DeploymentRequest request) {
 
-    LOG.trace("Invoked method: createDeployment with parameter " + request.toString());
     Deployment deployment = deploymentService.createDeployment(request);
     return deploymentResourceAssembler.toResource(deployment);
 
@@ -149,7 +142,6 @@ public class DeploymentController {
   public void updateDeployment(@PathVariable("deploymentId") String id,
       @Valid @RequestBody DeploymentRequest request) {
 
-    LOG.trace("Invoked method: putDeployment with id: " + id);
     deploymentService.updateDeployment(id, request);
   }
 
@@ -165,7 +157,6 @@ public class DeploymentController {
       produces = MediaType.APPLICATION_JSON_VALUE)
   public DeploymentResource getDeployment(@PathVariable("deploymentId") String id) {
 
-    LOG.trace("Invoked method: getDeployment with id: " + id);
     Deployment deployment = deploymentService.getDeployment(id);
     return deploymentResourceAssembler.toResource(deployment);
   }
@@ -181,7 +172,6 @@ public class DeploymentController {
       produces = MediaType.APPLICATION_JSON_VALUE)
   public void deleteDeployment(@PathVariable("deploymentId") String id) {
 
-    LOG.trace("Invoked method: getDeployment with id: " + id);
     deploymentService.deleteDeployment(id);
   }
 }
