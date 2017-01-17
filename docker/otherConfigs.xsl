@@ -25,7 +25,7 @@
 	</xsl:variable>
 	
 	<xsl:variable name="deploymentLoggingConfig">
-		<use-deployment-logging-config value="false"/>
+		<use-deployment-logging-config xmlns="urn:jboss:domain:logging:3.0" value="false"/>
 	</xsl:variable>
    
 
@@ -55,10 +55,16 @@
 			<xsl:attribute name="deployment-timeout">300</xsl:attribute>
 		</xsl:copy>
     </xsl:template> -->
-    
+    	<xsl:template match="//log:subsystem">
+	    <xsl:copy>
+	        <xsl:apply-templates select="@*"/>
+		<xsl:copy-of copy-namespaces="no" select="$deploymentLoggingConfig"/>
+		<xsl:apply-templates select="node()"/>    
+	    </xsl:copy>
+	</xsl:template>
+	
 	<xsl:template match="//log:subsystem/log:root-logger">
 	    <xsl:copy-of copy-namespaces="no" select="$customLoggers"/>
-	    <xsl:copy-of copy-namespaces="no" select="$deploymentLoggingConfig"/>
 	    <xsl:copy>
 	        <xsl:apply-templates select="@*|node()"/>
 	    </xsl:copy>
