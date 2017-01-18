@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 mkdir -p $JBOSS_HOME/modules/system/layers/base/com/mysql/main/
 cd $JBOSS_HOME/modules/system/layers/base/com/mysql/main
 

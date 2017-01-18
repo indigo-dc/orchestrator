@@ -2,11 +2,17 @@ package it.reply.orchestrator.config.filters;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
+import com.google.common.net.HttpHeaders;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import it.reply.utils.json.JsonUtility;
 
 import org.apache.commons.lang3.ArrayUtils;
+import org.slf4j.MDC;
 import org.springframework.http.server.ServletServerHttpRequest;
-import org.springframework.util.StringUtils;
-import org.springframework.web.filter.CommonsRequestLoggingFilter;
+import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.WebUtils;
 
@@ -15,6 +21,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.UUID;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -22,62 +29,291 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-public class CustomRequestLoggingFilter extends CommonsRequestLoggingFilter {
+public class CustomRequestLoggingFilter extends OncePerRequestFilter {
 
-  private String beforeMessagePrefix = DEFAULT_BEFORE_MESSAGE_PREFIX;
+  public static final String X_REQUEST_ID = "X-Request-ID";
+  public static final String REQUEST_ID_MDC_KEY = "request_id";
 
-  private String beforeMessageSuffix = DEFAULT_BEFORE_MESSAGE_SUFFIX;
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  public static class RequestWrapper extends AbstractWrapper {
 
-  private String afterMessagePrefix = DEFAULT_AFTER_MESSAGE_PREFIX;
+    private String type = "request";
 
-  private String afterMessageSuffix = DEFAULT_AFTER_MESSAGE_SUFFIX;
+    public RequestWrapper(HttpServletRequest request, int maxPayloadLength) {
+      super(request, maxPayloadLength);
+    }
 
-  private boolean includeHeaders = false;
+    @Override
+    public String getType() {
+      return type;
+    }
 
-  private boolean includeResponseStatus = false;
+  }
 
-  private boolean includeResponseTime = false;
+  @JsonInclude(JsonInclude.Include.NON_NULL)
+  public static class ResponseWrapper extends AbstractWrapper {
+
+    private String type = "response";
+
+    @JsonProperty("response_status")
+    private int responseStatus;
+    @JsonProperty("response_time")
+    private double responseTime;
+
+    /**
+     * Generate a ResponseWrapper.
+     * 
+     * @param request
+     *          the request
+     * @param response
+     *          the response
+     * @param maxPayloadLength
+     *          the max payload request to parse
+     * @param responseTime
+     *          the response time
+     */
+    public ResponseWrapper(HttpServletRequest request, HttpServletResponse response,
+        int maxPayloadLength, double responseTime) {
+      super(request, maxPayloadLength);
+      this.responseStatus = response.getStatus();
+      this.responseTime = responseTime;
+    }
+
+    @Override
+    public String getType() {
+      return type;
+    }
+
+    public int getResponseStatus() {
+      return responseStatus;
+    }
+
+    public double getResponseTime() {
+      return responseTime;
+    }
+
+    public void setResponseStatus(int responseStatus) {
+      this.responseStatus = responseStatus;
+    }
+
+    public void setResponseTime(double responseTime) {
+      this.responseTime = responseTime;
+    }
+
+  }
+
+  public abstract static class AbstractWrapper {
+    private Map<String, String> headers;
+    @JsonProperty("http_method")
+    private String httpMethod;
+    private String uri;
+    @JsonProperty("client_ip")
+    private String clientIp;
+    private String session;
+    private String user;
+    private String payload;
+
+    public Map<String, String> getHeaders() {
+      return headers;
+    }
+
+    public String getHttpMethod() {
+      return httpMethod;
+    }
+
+    public String getUri() {
+      return uri;
+    }
+
+    public String getClientIp() {
+      return clientIp;
+    }
+
+    public String getSession() {
+      return session;
+    }
+
+    public String getUser() {
+      return user;
+    }
+
+    public String getPayload() {
+      return payload;
+    }
+
+    public abstract String getType();
+
+    public void setHttpMethod(String httpMethod) {
+      this.httpMethod = httpMethod;
+    }
+
+    public void setUri(String uri) {
+      this.uri = uri;
+    }
+
+    /**
+     * Set the uri from a base uri and a query string.
+     * 
+     * @param uri
+     *          the base uri without query param
+     * @param queryString
+     *          the string containing the query param
+     */
+    public void setUri(String uri, String queryString) {
+      String parsedQueryString = safeTrimmedString(queryString);
+      if (parsedQueryString.isEmpty()) {
+        this.uri = uri;
+      } else {
+        this.uri = String.format("%s?%s", uri, parsedQueryString);
+      }
+    }
+
+    public void setClientIp(String clientIp) {
+      this.clientIp = clientIp;
+    }
+
+    /**
+     * Set the client ip from a {@link HttpServletRequest}.
+     * 
+     * @param request
+     *          the request
+     */
+    public void setClientIp(HttpServletRequest request) {
+      String clientIp = safeTrimmedString(getRemoteAddr(request));
+      if (!clientIp.isEmpty()) {
+        setClientIp(clientIp);
+      }
+    }
+
+    public void setSession(String session) {
+      this.session = session;
+    }
+
+    /**
+     * Set the session from a {@link HttpServletRequest}.
+     * 
+     * @param request
+     *          the request
+     */
+    public void setSession(HttpServletRequest request) {
+      HttpSession session = request.getSession(false);
+      if (session != null) {
+        setSession(session.getId());
+      }
+    }
+
+    public void setUser(String user) {
+      this.user = user;
+    }
+
+    /**
+     * Set the user from a {@link HttpServletRequest}.
+     * 
+     * @param request
+     *          the request
+     */
+    public void setUser(HttpServletRequest request) {
+      String user = safeTrimmedString(request.getRemoteUser());
+      if (!user.isEmpty()) {
+        setUser(user);
+      }
+    }
+
+    public void setHeaders(Map<String, String> headers) {
+      this.headers = headers;
+    }
+
+    /**
+     * Set the headers from a {@link HttpServletRequest}.
+     * 
+     * @param request
+     *          the request
+     */
+    public void setHeaders(HttpServletRequest request) {
+      Map<String, String> headers =
+          new ServletServerHttpRequest(request).getHeaders().toSingleValueMap();
+      setHeaders(headers);
+      // for (String headerKey : getHeadersToOmitt()) {
+      // if (headers.containsKey(headerKey)) {
+      // headers.put(headerKey, "<omitted>");
+      // }
+      // }
+    }
+
+    public void setPayload(String payload) {
+      this.payload = payload;
+    }
+
+    /**
+     * Set the payload from a {@link HttpServletRequest}.
+     * 
+     * @param request
+     *          the request
+     * @param maxPayloadLength
+     *          the max payload length to parse
+     */
+    public void setPayload(HttpServletRequest request, int maxPayloadLength) {
+      if (isIncludePayload(maxPayloadLength)) {
+        ContentCachingRequestWrapper wrapper =
+            WebUtils.getNativeRequest(request, ContentCachingRequestWrapper.class);
+        if (wrapper != null) {
+          byte[] buf = wrapper.getContentAsByteArray();
+          if (buf.length > 0) {
+            int length = Math.min(buf.length, maxPayloadLength);
+            String payload;
+            try {
+              payload = new String(buf, 0, length, wrapper.getCharacterEncoding());
+            } catch (UnsupportedEncodingException ex) {
+              payload = "[unknown]";
+            }
+            setPayload(payload);
+          }
+        }
+      }
+    }
+
+    /**
+     * Generate an AbstractWrapper.
+     * 
+     * @param request
+     *          the request
+     * @param maxPayloadLength
+     *          the max payload request to parse
+     */
+    public AbstractWrapper(HttpServletRequest request, int maxPayloadLength) {
+      setHttpMethod(request.getMethod());
+
+      setUri(request.getRequestURI(), request.getQueryString());
+      setClientIp(request);
+      setSession(request);
+      setUser(request);
+      setHeaders(request);
+      setPayload(request, maxPayloadLength);
+    }
+  }
+
+  private int maxPayloadLength = -1;
+
+  public int getMaxPayloadLength() {
+    return maxPayloadLength;
+  }
+
+  public void setMaxPayloadLength(int maxPayloadLength) {
+    this.maxPayloadLength = maxPayloadLength;
+  }
 
   private List<String> headersToOmitt = Lists.newArrayList();
 
-  /**
-   * Set whether the request headers should be included in the log message.
-   */
-  public void setIncludeHeaders(boolean includeHeaders) {
-    this.includeHeaders = includeHeaders;
-  }
-
-  /**
-   * Return whether the request headers should be included in the log message.
-   */
-  public boolean isIncludeHeaders() {
-    return this.includeHeaders;
-  }
-
-  /**
-   * Set whether the response status should be included in the log message.
-   */
-  public void setIncludeResponseStatus(boolean includeResponseStatus) {
-    this.includeResponseStatus = includeResponseStatus;
-  }
-
-  /**
-   * Return whether the response status should be included in the log message.
-   */
-  public boolean isIncludeResponseStatus() {
-    return this.includeResponseStatus;
-  }
-
-  public boolean isIncludeResponseTime() {
-    return includeResponseTime;
-  }
-
-  public void setIncludeResponseTime(boolean includeResponseTime) {
-    this.includeResponseTime = includeResponseTime;
-  }
-
   public List<String> getHeadersToOmitt() {
     return headersToOmitt;
+  }
+
+  public boolean isIncludePayload() {
+    return isIncludePayload(getMaxPayloadLength());
+  }
+
+  public static boolean isIncludePayload(int maxPayloadLength) {
+    return maxPayloadLength > 0;
   }
 
   public void setHeadersToOmitt(List<String> headersToOmitt) {
@@ -93,107 +329,76 @@ public class CustomRequestLoggingFilter extends CommonsRequestLoggingFilter {
     boolean isFirstRequest = !isAsyncDispatch(request);
     HttpServletRequest requestToUse = request;
 
-    if (isIncludePayload() && isFirstRequest
-        && !(request instanceof ContentCachingRequestWrapper)) {
-      requestToUse = new ContentCachingRequestWrapper(request);
-    }
+    String requestId = "";// safeTrimmedString(request.getHeader(X_REQUEST_ID));
 
-    boolean shouldLog = shouldLog(requestToUse);
-    if (shouldLog && isFirstRequest) {
-      beforeRequest(requestToUse, getBeforeMessage(requestToUse));
+    if (requestId.isEmpty()) {
+      requestId = "req" + UUID.randomUUID().toString();
     }
     try {
-      filterChain.doFilter(requestToUse, response);
+      MDC.put(REQUEST_ID_MDC_KEY, requestId);
+      response.addHeader(X_REQUEST_ID, requestId);
+
+      if (isIncludePayload() && isFirstRequest
+          && !(request instanceof ContentCachingRequestWrapper)) {
+        requestToUse = new ContentCachingRequestWrapper(request);
+      }
+
+      boolean shouldLog = shouldLog(requestToUse);
+      if (shouldLog && isFirstRequest) {
+        beforeRequest(requestToUse);
+      }
+      try {
+        filterChain.doFilter(requestToUse, response);
+      } finally {
+        if (shouldLog && !isAsyncStarted(requestToUse)) {
+          afterRequest(requestToUse, response, getElapsedMillisec(startTime));
+        }
+      }
     } finally {
-      if (shouldLog && !isAsyncStarted(requestToUse)) {
-        afterRequest(requestToUse, getAfterMessage(requestToUse, response, startTime));
-      }
+      MDC.remove(REQUEST_ID_MDC_KEY);
     }
   }
 
-  protected String createMessage(HttpServletRequest request, String prefix, String suffix) {
-    return this.buildMessage(request, null, -1, prefix, suffix).toString();
+  public static String safeTrimmedString(String input) {
+    return Strings.nullToEmpty(input).trim();
   }
 
-  protected String createMessage(HttpServletRequest request, HttpServletResponse response,
-      long startTime, String prefix, String suffix) {
-    return this.buildMessage(request, response, startTime, prefix, suffix).toString();
+  protected boolean shouldLog(HttpServletRequest request) {
+    return logger.isDebugEnabled();
   }
 
-  protected StringBuilder buildMessage(HttpServletRequest request, HttpServletResponse response,
-      long startTime, String prefix, String suffix) {
-    StringBuilder msg = new StringBuilder();
-    msg.append(prefix);
-    msg.append("httpMethod=").append(request.getMethod());
-    msg.append(";uri=").append(request.getRequestURI());
-
-    if (isIncludeQueryString()) {
-      String queryString = request.getQueryString();
-      if (queryString != null) {
-        msg.append('?').append(queryString);
-      }
+  /**
+   * Writes a log message before the request is processed.
+   */
+  protected void beforeRequest(HttpServletRequest request) {
+    try {
+      logger.debug(JsonUtility.serializeJson(new RequestWrapper(request, getMaxPayloadLength())));
+    } catch (IOException ex) {
+      logger.error("Error loggin request", ex);
     }
-
-    if (isIncludeClientInfo()) {
-      String client = getRemoteAddr(request);
-      if (StringUtils.hasLength(client)) {
-        msg.append(";client=").append(client);
-      }
-      HttpSession session = request.getSession(false);
-      if (session != null) {
-        msg.append(";session=").append(session.getId());
-      }
-      String user = request.getRemoteUser();
-      if (user != null) {
-        msg.append(";user=").append(user);
-      }
-    }
-
-    if (isIncludeHeaders()) {
-      Map<String, String> headers =
-          new ServletServerHttpRequest(request).getHeaders().toSingleValueMap();
-      for (String headerKey : getHeadersToOmitt()) {
-        if (headers.containsKey(headerKey)) {
-          headers.put(headerKey, "<omitted>");
-        }
-      }
-      msg.append(";headers=").append(headers);
-    }
-
-    if (isIncludePayload()) {
-      ContentCachingRequestWrapper wrapper =
-          WebUtils.getNativeRequest(request, ContentCachingRequestWrapper.class);
-      if (wrapper != null) {
-        byte[] buf = wrapper.getContentAsByteArray();
-        if (buf.length > 0) {
-          int length = Math.min(buf.length, getMaxPayloadLength());
-          String payload;
-          try {
-            payload = new String(buf, 0, length, wrapper.getCharacterEncoding());
-          } catch (UnsupportedEncodingException ex) {
-            payload = "[unknown]";
-          }
-          msg.append(";payload=").append(payload);
-        }
-      }
-    }
-    if (response != null) {
-      if (isIncludeResponseStatus()) {
-        msg.append(";responseStatus=").append(response.getStatus());
-      }
-      if (this.isIncludeResponseTime()) {
-        msg.append(";responseTime=").append((System.nanoTime() - startTime) / 1e6).append("ms");
-      }
-    }
-
-    msg.append(suffix);
-    return msg;
   }
 
-  private String getRemoteAddr(HttpServletRequest request) {
+  /**
+   * Writes a log message after the request is processed.
+   */
+  protected void afterRequest(HttpServletRequest request, HttpServletResponse response,
+      double responseTime) {
+    try {
+      logger.debug(JsonUtility.serializeJson(
+          new ResponseWrapper(request, response, getMaxPayloadLength(), responseTime)));
+    } catch (IOException ex) {
+      logger.error("Error loggin response", ex);
+    }
+  }
+
+  private double getElapsedMillisec(double startTimeNanoSec) {
+    return (System.nanoTime() - startTimeNanoSec) / 1e6;
+  }
+
+  private static String getRemoteAddr(HttpServletRequest request) {
     String remoteAddress = null;
     String[] forwardedAddress =
-        Strings.nullToEmpty(request.getHeader("X-Forwarded-For")).split(", ?");
+        Strings.nullToEmpty(request.getHeader(HttpHeaders.X_FORWARDED_FOR)).split(", ?");
     if (ArrayUtils.isEmpty(forwardedAddress)
         || Strings.nullToEmpty(forwardedAddress[0]).trim().isEmpty()) {
       remoteAddress = request.getRemoteAddr();
@@ -201,28 +406,6 @@ public class CustomRequestLoggingFilter extends CommonsRequestLoggingFilter {
       remoteAddress = forwardedAddress[0];
     }
     return remoteAddress;
-  }
-
-  /**
-   * Get the message to write to the log before the request.
-   * 
-   * @see #createMessage
-   */
-  private String getBeforeMessage(HttpServletRequest request) {
-    return createMessage(request, this.beforeMessagePrefix, this.beforeMessageSuffix);
-  }
-
-  /**
-   * Get the message to write to the log after the request.
-   * 
-   * @param startDate
-   * 
-   * @see #createMessage
-   */
-  private String getAfterMessage(HttpServletRequest request, HttpServletResponse response,
-      long startTime) {
-    return createMessage(request, response, startTime, this.afterMessagePrefix,
-        this.afterMessageSuffix);
   }
 
 }

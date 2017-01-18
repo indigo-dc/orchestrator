@@ -28,6 +28,27 @@
 		<use-deployment-logging-config xmlns="urn:jboss:domain:logging:3.0" value="false"/>
 	</xsl:variable>
    
+   <xsl:variable name="jsonFormatter">
+   			<formatter xmlns="urn:jboss:domain:logging:3.0" name="jsonFormatter">
+				<custom-formatter module="biz.paluch.logging" class="biz.paluch.logging.gelf.wildfly.WildFlyJsonFormatter">
+					<properties>
+						<property name="version" value="1.1" />
+						<property name="fields" value="Time,Severity,ThreadName,SourceClassName,SourceMethodName,SourceSimpleClassName,LoggerName,NDC" />
+						<property name="extractStackTrace" value="true" />
+						<property name="filterStackTrace" value="true" />
+<!-- 					<property name="includeLogMessageParameters" value="false" /> -->
+						<property name="mdcProfiling" value="false" />
+						<property name="timestampPattern" value="yyyy-MM-dd HH:mm:ss,SSSS" />
+						<property name="facility" value="orchestrator" />
+						<property name="mdcFields" value="request_id" />
+<!--					<property name="additionalFields" value="fieldName1=fieldValue1,fieldName2=fieldValue2" />
+						<property name="additionalFieldTypes" value="fieldName1=String,fieldName2=Double,fieldName3=Long" />
+						<property name="dynamicMdcFields" value="mdc.*,(mdc|MDC)fields" />
+						<property name="includeFullMdc" value="true" /> -->
+					</properties>
+				</custom-formatter>
+			</formatter>
+   </xsl:variable>
 
 <!--	<xsl:variable name="newPubInterface">
 		<interface name="public"  xmlns="urn:jboss:domain:3.0">
@@ -68,18 +89,23 @@
 	    <xsl:copy>
 	        <xsl:apply-templates select="@*|node()"/>
 	    </xsl:copy>
+	    <xsl:copy-of copy-namespaces="no" select="$jsonFormatter"/>
 	</xsl:template>
 
 	<xsl:template match="//log:subsystem/log:console-handler[@name='CONSOLE']/log:level/@name">
 		<xsl:attribute name="name">DEBUG</xsl:attribute>
 	</xsl:template>
 	
-<!-- 	 <xsl:template match="//log:subsystem/log:periodic-rotating-file-handler[@name='FILE']">
+	<xsl:template match="//log:subsystem/log:console-handler[@name='CONSOLE']/log:formatter/log:named-formatter/@name">
+		<xsl:attribute name="name">jsonFormatter</xsl:attribute>
+	</xsl:template>
+	
+	<xsl:template match="//log:subsystem/log:periodic-rotating-file-handler[@name='FILE']">
 		<xsl:copy>
 			<xsl:attribute name="enabled">false</xsl:attribute>
 			<xsl:apply-templates select="@*|node()"/>
 		</xsl:copy>
-    </xsl:template> -->
+    </xsl:template>
 
 	<xsl:template match="//jgs:subsystem/jgs:stacks/jgs:stack[@name='udp']/jgs:transport[@type='UDP']">
 		<xsl:copy>
