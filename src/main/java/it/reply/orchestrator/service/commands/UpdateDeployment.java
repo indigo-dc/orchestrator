@@ -56,15 +56,16 @@ public class UpdateDeployment extends BaseCommand {
 
     RankCloudProvidersMessage rankCloudProvidersMessage =
         getParameter(ctx, WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE);
+    if (rankCloudProvidersMessage == null) {
+      throw new IllegalArgumentException(String.format("WF parameter <%s> cannot be null",
+          WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE));
+    }
+
     DeploymentMessage deploymentMessage =
         getParameter(ctx, WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE);
 
     ExecutionResults exResults = new ExecutionResults();
     try {
-      if (rankCloudProvidersMessage == null) {
-        throw new IllegalArgumentException(String.format("WF parameter <%s> cannot be null",
-            WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE));
-      }
       if (deploymentMessage == null) {
         throw new IllegalArgumentException(String.format("WF parameter <%s> cannot be null",
             WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE));
