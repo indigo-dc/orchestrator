@@ -41,14 +41,12 @@ public abstract class BaseDeployCommand extends BaseCommand {
   protected ExecutionResults customExecute(CommandContext ctx) throws Exception {
     DeploymentMessage deploymentMessage =
         getParameter(ctx, WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE);
-
+    if (deploymentMessage == null) {
+      throw new IllegalArgumentException(String.format("WF parameter <%s> cannot be null",
+          WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE));
+    }
     ExecutionResults exResults = new ExecutionResults();
     try {
-      if (deploymentMessage == null) {
-        throw new IllegalArgumentException(String.format("WF parameter <%s> cannot be null",
-            WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE));
-      }
-
       // Load the DB Deployment from ID (this way we avoid jBPM JPA serialization issues)
       deploymentMessage
           .setDeployment(deploymentRepository.findOne(deploymentMessage.getDeploymentId()));

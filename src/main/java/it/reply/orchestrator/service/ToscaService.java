@@ -185,10 +185,8 @@ public interface ToscaService {
   public ArchiveRoot prepareTemplate(@Nonnull String toscaTemplate, Map<String, Object> inputs)
       throws IOException, ParsingException, ToscaException;
 
-  @Nonnull
   public Capability getNodeCapabilityByName(NodeTemplate node, String propertyName);
 
-  @Nonnull
   public AbstractPropertyValue getNodePropertyByName(NodeTemplate node, String propertyName);
 
   @Nonnull
