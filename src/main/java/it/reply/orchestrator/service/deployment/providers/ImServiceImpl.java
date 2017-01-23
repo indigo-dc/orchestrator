@@ -1,5 +1,7 @@
 package it.reply.orchestrator.service.deployment.providers;
 
+import com.google.common.base.Strings;
+
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingException;
@@ -249,21 +251,23 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           return true;
         case FAILED:
         case UNCONFIGURED:
-          String errorMsg = String.format(
-              "Fail to deploy deployment <%s>." + "\nIM id is: <%s>" + "\nIM response is: <%s>",
-              deployment.getId(), deployment.getEndpoint(),
-              infrastructureState.getFormattedInfrastructureStateString());
+          StringBuilder errorMsg = new StringBuilder().append("Fail to deploy deployment <")
+              .append(deployment.getId()).append(">\nIM id is: <").append(deployment.getEndpoint())
+              .append(">\nIM response is: <")
+              .append(infrastructureState.getFormattedInfrastructureStateString()).append(">");
           try {
             // Try to get the logs of the virtual infrastructure for debug
             // purpose.
             Property contMsg = im.getInfrastructureContMsg(deployment.getEndpoint());
-            errorMsg = errorMsg.concat("\nIM contMsg is: " + contMsg.getValue());
+            if (!Strings.isNullOrEmpty(contMsg.getValue())) {
+              errorMsg.append("\nIM contMsg is: ").append(contMsg.getValue());
+            }
           } catch (Exception ex) {
             // Do nothing
           }
-          DeploymentException ex = new DeploymentException(errorMsg);
+          DeploymentException ex = new DeploymentException(errorMsg.toString());
           updateOnError(deployment.getId(), ex); // Set failure information in the deployment
-          LOG.error(errorMsg);
+          LOG.error(errorMsg.toString());
           throw ex;
         default:
           return false;

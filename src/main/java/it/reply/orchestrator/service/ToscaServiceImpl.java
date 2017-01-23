@@ -284,16 +284,15 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   private void checkParsingErrors(List<ParsingError> errorList) throws ToscaException {
-    String errorMessage = "";
     if (!errorList.isEmpty()) {
+      StringBuilder errorMessage = new StringBuilder();
       for (ParsingError error : errorList) {
         if (!error.getErrorLevel().equals(ParsingErrorLevel.INFO)) {
-          errorMessage = errorMessage + error.toString() + "; ";
+          errorMessage.append(error.toString()).append("; ");
         }
       }
-      throw new ToscaException(errorMessage);
+      throw new ToscaException(errorMessage.toString());
     }
-
   }
 
   @Override
