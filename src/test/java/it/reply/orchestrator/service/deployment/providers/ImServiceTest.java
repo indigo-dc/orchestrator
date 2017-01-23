@@ -309,7 +309,7 @@ public class ImServiceTest {
       Assert
           .assertEquals(
               String.format(
-                  "Fail to deploy deployment <%s>." + "\nIM id is: <%s>" + "\nIM response is: <%s>",
+                  "Fail to deploy deployment <%s>" + "\nIM id is: <%s>" + "\nIM response is: <%s>",
                   dm.getDeployment().getId(), dm.getDeployment().getEndpoint(),
                   infrastructureState.getFormattedInfrastructureStateString()),
               ex.getMessage());
@@ -345,7 +345,7 @@ public class ImServiceTest {
       Assert
           .assertEquals(
               String.format(
-                  "Fail to deploy deployment <%s>." + "\nIM id is: <%s>" + "\nIM response is: <%s>",
+                  "Fail to deploy deployment <%s>" + "\nIM id is: <%s>" + "\nIM response is: <%s>",
                   dm.getDeployment().getId(), dm.getDeployment().getEndpoint(),
                   infrastructureState.getFormattedInfrastructureStateString()),
               ex.getMessage());
