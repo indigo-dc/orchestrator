@@ -612,7 +612,8 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       }
     } catch (Exception ex) {
       // Just log the error
-      String errorMsg = String.format("Failed to delete job <%s> on Chronos: %s", ex.getMessage());
+      String errorMsg =
+          String.format("Failed to delete job <%s> on Chronos: %s", currentJob, ex.getMessage());
       LOG.error(errorMsg);
 
       failed = true;
