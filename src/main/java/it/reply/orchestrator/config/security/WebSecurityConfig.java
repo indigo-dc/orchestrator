@@ -1,5 +1,8 @@
 package it.reply.orchestrator.config.security;
 
+import it.reply.orchestrator.config.properties.OidcProperties;
+import it.reply.orchestrator.config.properties.OidcProperties.IamProperties;
+import it.reply.orchestrator.config.properties.OidcProperties.OrchestratorProperties;
 import it.reply.orchestrator.service.security.IndigoUserInfoFetcher;
 import it.reply.orchestrator.service.security.UserInfoIntrospectingTokenService;
 
@@ -15,11 +18,10 @@ import org.mitre.openid.connect.client.service.impl.StaticClientConfigurationSer
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
@@ -35,12 +37,12 @@ import org.springframework.security.oauth2.provider.token.ResourceServerTokenSer
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 @Configuration
 // @EnableWebSecurity
 @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
-@PropertySource(value = { "classpath:security.properties" })
+@EnableConfigurationProperties(OidcProperties.class)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
   static final Logger LOG = LoggerFactory.getLogger(WebSecurityConfig.class);
@@ -48,36 +50,19 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
   @Autowired
   private ApplicationContext applicationContext;
 
-  @Value("${security.enabled}")
-  private boolean securityEnabled;
+  @Autowired
+  private OidcProperties oidcProperties;
 
   @Configuration
   public static class OidcConfig {
 
-    @Value("${security.enabled}")
-    private boolean securityEnabled;
-
-    @Value("${OIDC.issuers}")
-    private Set<String> oidcIssuers;
-
-    @Value("${OIDC.clientID}")
-    private String oidcClientId;
-
-    @Value("${OIDC.clientSecret}")
-    private String oidcClientSecret;
-
-    @Value("${OIDC.cacheTokens}")
-    private boolean oidcCacheTokens;
-
-    @Value("${OIDC.clientScopes}")
-    private Set<String> oidcClientScopes;
-
     @Bean
-    protected ServerConfigurationService serverConfigurationService() {
-      if (securityEnabled) {
+    protected ServerConfigurationService serverConfigurationService(OidcProperties oidcProperties) {
+      if (oidcProperties.isEnabled()) {
         DynamicServerConfigurationService serverConfigurationService =
             new DynamicServerConfigurationService();
-        serverConfigurationService.setWhitelist(oidcIssuers);
+        serverConfigurationService.setWhitelist(oidcProperties.getIamProperties().stream()
+            .map(IamProperties::getIssuer).collect(Collectors.toSet()));
         return serverConfigurationService;
       } else {
         return null;
@@ -85,15 +70,16 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    protected ClientConfigurationService clientConfigurationService() {
-      if (securityEnabled) {
-        RegisteredClient client = new RegisteredClient();
-        client.setClientId(oidcClientId);
-        client.setClientSecret(oidcClientSecret);
-        client.setScope(oidcClientScopes);
+    protected ClientConfigurationService clientConfigurationService(OidcProperties oidcProperties) {
+      if (oidcProperties.isEnabled()) {
         Map<String, RegisteredClient> clients = new HashMap<>();
-        for (String issuer : oidcIssuers) {
-          clients.put(issuer, client);
+        for (IamProperties configuration : oidcProperties.getIamProperties()) {
+          OrchestratorProperties orchestrator = configuration.getOrchestrator();
+          RegisteredClient client = new RegisteredClient();
+          client.setClientId(orchestrator.getClientId());
+          client.setClientSecret(orchestrator.getClientSecret());
+          client.setScope(orchestrator.getScopes().stream().collect(Collectors.toSet()));
+          clients.put(configuration.getIssuer(), client);
         }
 
         StaticClientConfigurationService clientConfigurationService =
@@ -107,8 +93,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    protected UserInfoFetcher userInfoFetcher() {
-      if (securityEnabled) {
+    protected UserInfoFetcher userInfoFetcher(OidcProperties oidcProperties) {
+      if (oidcProperties.isEnabled()) {
         return new IndigoUserInfoFetcher();
       } else {
         return null;
@@ -116,14 +102,15 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    protected IntrospectionConfigurationService introspectionConfigurationService() {
-      if (securityEnabled) {
+    protected IntrospectionConfigurationService introspectionConfigurationService(
+        OidcProperties oidcProperties) {
+      if (oidcProperties.isEnabled()) {
         JWTParsingIntrospectionConfigurationService introspectionConfigurationService =
             new JWTParsingIntrospectionConfigurationService();
         introspectionConfigurationService
-            .setServerConfigurationService(serverConfigurationService());
+            .setServerConfigurationService(serverConfigurationService(oidcProperties));
         introspectionConfigurationService
-            .setClientConfigurationService(clientConfigurationService());
+            .setClientConfigurationService(clientConfigurationService(oidcProperties));
         return introspectionConfigurationService;
       } else {
         return null;
@@ -131,8 +118,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    protected JWKSetCacheService validationServices() {
-      if (securityEnabled) {
+    protected JWKSetCacheService validationServices(OidcProperties oidcProperties) {
+      if (oidcProperties.isEnabled()) {
         return new JWKSetCacheService();
       } else {
         return null;
@@ -140,19 +127,20 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    protected ResourceServerTokenServices introspectingTokenService() {
-      if (securityEnabled) {
+    protected ResourceServerTokenServices introspectingTokenService(OidcProperties oidcProperties) {
+      if (oidcProperties.isEnabled()) {
         UserInfoIntrospectingTokenService introspectingTokenService =
             new UserInfoIntrospectingTokenService();
-        introspectingTokenService
-            .setIntrospectionConfigurationService(introspectionConfigurationService());
-        introspectingTokenService.setCacheTokens(oidcCacheTokens);
+        introspectingTokenService.setIntrospectionConfigurationService(
+            introspectionConfigurationService(oidcProperties));
+        introspectingTokenService.setCacheTokens(oidcProperties.isCacheTokens());
         // Disabled for now as there is no revocation
-        // introspectingTokenService.setDefaultExpireTime(60000);
+        // introspectingTokenService.setDefaultExpireTime(5* 60 * 1000); // 5 min
         // introspectingTokenService.setForceCacheExpireTime(true);
-        introspectingTokenService.setServerConfigurationService(serverConfigurationService());
-        introspectingTokenService.setUserInfoFetcher(userInfoFetcher());
-        introspectingTokenService.setValidationServices(validationServices());
+        introspectingTokenService
+            .setServerConfigurationService(serverConfigurationService(oidcProperties));
+        introspectingTokenService.setUserInfoFetcher(userInfoFetcher(oidcProperties));
+        introspectingTokenService.setValidationServices(validationServices(oidcProperties));
         return introspectingTokenService;
       } else {
         return null;
@@ -188,7 +176,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Override
   public void configure(WebSecurity webSecurity) throws Exception {
-    if (securityEnabled) {
+    if (oidcProperties.isEnabled()) {
       webSecurity.ignoring().regexMatchers("/", "/info");
     } else {
       webSecurity.ignoring().anyRequest();
@@ -197,7 +185,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Override
   public void configure(HttpSecurity http) throws Exception {
-    if (securityEnabled) {
+    if (oidcProperties.isEnabled()) {
       http.csrf().disable();
       http.authorizeRequests().anyRequest().fullyAuthenticated().anyRequest()
           .access("#oauth2.hasScopeMatching('openid')").and().sessionManagement()

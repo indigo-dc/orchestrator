@@ -7,6 +7,7 @@ import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingException;
 
 import it.reply.orchestrator.config.WorkflowConfigProducerBean;
+import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.entity.WorkflowReference;
@@ -60,6 +61,9 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   @Autowired
   private OAuth2TokenService oauth2TokenService;
+
+  @Autowired
+  private OidcProperties oidcProperties;
 
   @Override
   public Page<Deployment> getDeployments(Pageable pageable) {
@@ -156,7 +160,7 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   protected DeploymentMessage buildDeploymentMessage(Deployment deployment) {
     DeploymentMessage deploymentMessage = new DeploymentMessage();
-    if (oauth2TokenService.isSecurityEnabled()) {
+    if (oidcProperties.isEnabled()) {
       deploymentMessage.setOauth2Token(oauth2TokenService.getOAuth2Token());
     }
     deploymentMessage.setDeploymentId(deployment.getId());

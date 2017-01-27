@@ -1,0 +1,12 @@
+oidc:
+  enabled: false
+  cache-tokens: true
+  iam-properties:
+    - issuer: "https://iam-test.indigo-datacloud.eu/"
+      orchestrator:
+        client-id: <clientID>
+        client-secret: <clientSecret>
+        scopes: [openid, profile, email, address, phone]
+      clues:
+        client-id: <clientID>
+        client-secret: <clientSecret>
