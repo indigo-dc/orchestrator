@@ -25,6 +25,7 @@ import es.upv.i3m.grycap.im.pojo.ResponseError;
 import es.upv.i3m.grycap.im.pojo.VirtualMachineInfo;
 import es.upv.i3m.grycap.im.rest.client.BodyContentType;
 
+import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
@@ -39,7 +40,6 @@ import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.service.ToscaService;
-import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.utils.json.JsonUtility;
 
 import org.apache.commons.io.IOUtils;
@@ -76,9 +76,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   @Autowired
   private ApplicationContext ctx;
 
-  @Autowired
-  private OAuth2TokenService oauth2TokenService;
-
   @Value("${url}")
   private String imUrl;
 
@@ -104,6 +101,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   @Autowired
   private ResourceRepository resourceRepository;
 
+  @Autowired
+  private OidcProperties oidcProperties;
+
   protected InfrastructureManager getClient(DeploymentMessage dm) {
     IaaSType iaasType = dm.getChosenCloudProviderEndpoint().getIaasType();
     String authString = null;
@@ -113,11 +113,11 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         case OPENSTACK:
           // FIXME remove hardcoded string
           if (dm.getChosenCloudProviderEndpoint().getCpEndpoint().contains("recas.ba.infn")
-              || !oauth2TokenService.isSecurityEnabled()) {
+              || !oidcProperties.isEnabled()) {
             try (InputStream is = ctx.getResource(openstackAuthFilePath).getInputStream()) {
               authString = IOUtils.toString(is);
             }
-            if (oauth2TokenService.isSecurityEnabled()) {
+            if (oidcProperties.isEnabled()) {
               authString =
                   authString.replaceAll("InfrastructureManager; username = .+; password = .+",
                       "InfrastructureManager; token = " + dm.getOauth2Token());
@@ -147,7 +147,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           }
           break;
         case OPENNEBULA:
-          if (oauth2TokenService.isSecurityEnabled()) {
+          if (oidcProperties.isEnabled()) {
             AuthorizationHeader ah = new AuthorizationHeader();
             Credentials cred = ImCredentials.buildCredentials().withToken(dm.getOauth2Token());
             ah.addCredential(cred);

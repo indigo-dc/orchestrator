@@ -11,6 +11,7 @@ import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.model.topology.Topology;
 import alien4cloud.tosca.model.ArchiveRoot;
 
+import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
@@ -63,6 +64,9 @@ public class DeploymentServiceTest {
 
   @Mock
   private OAuth2TokenService oauth2TokenService;
+
+  @Mock
+  private OidcProperties oidcProperties;
 
   @Before
   public void setup() {
@@ -142,7 +146,7 @@ public class DeploymentServiceTest {
       return res;
     });
 
-    Mockito.when(oauth2TokenService.isSecurityEnabled()).thenReturn(true);
+    Mockito.when(oidcProperties.isEnabled()).thenReturn(true);
     Mockito.when(oauth2TokenService.getOAuth2Token()).thenReturn("token");
 
     Mockito.when(wfService.startProcess(Mockito.any(), Mockito.any(), Mockito.any()))

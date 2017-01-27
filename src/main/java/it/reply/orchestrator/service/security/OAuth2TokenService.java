@@ -1,23 +1,18 @@
 package it.reply.orchestrator.service.security;
 
+import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.dto.security.IndigoOAuth2Authentication;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 @Service
-@PropertySource(value = { "classpath:security.properties" })
 public class OAuth2TokenService {
 
-  @Value("${security.enabled}")
-  private boolean securityEnabled;
-
-  public boolean isSecurityEnabled() {
-    return securityEnabled;
-  }
+  @Autowired
+  private OidcProperties oidcProperties;
 
   /**
    * Get the current OAuth2 token.
@@ -28,7 +23,7 @@ public class OAuth2TokenService {
    *           HTTP session.
    */
   public String getOAuth2Token() {
-    if (!securityEnabled) {
+    if (!oidcProperties.isEnabled()) {
       throw new IllegalStateException("Security is not enabled");
     }
     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
