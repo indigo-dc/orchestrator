@@ -1,9 +1,10 @@
 package it.reply.orchestrator.command;
 
+import com.google.common.collect.Maps;
+
 import it.reply.workflowmanager.orchestrator.bpm.WIHs.EJBWorkItemHelper;
 
 import org.drools.core.process.instance.impl.WorkItemImpl;
-import org.elasticsearch.common.collect.Maps;
 import org.kie.api.executor.CommandContext;
 
 import java.util.Map;

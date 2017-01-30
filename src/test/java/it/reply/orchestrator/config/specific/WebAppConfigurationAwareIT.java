@@ -5,8 +5,6 @@ import it.reply.orchestrator.IntegrationTest;
 import org.junit.experimental.categories.Category;
 
 @Category(IntegrationTest.class)
-// @ContextHierarchy({ @ContextConfiguration(name = "workflowContext",
-// classes = { WebAppConfigurationAwareIT.Config.class }, inheritLocations = false) })
 public abstract class WebAppConfigurationAwareIT extends WebAppConfigurationAware {
 
   /**

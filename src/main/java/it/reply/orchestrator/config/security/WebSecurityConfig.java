@@ -26,7 +26,6 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
@@ -39,7 +38,7 @@ import java.util.Map;
 import java.util.Set;
 
 @Configuration
-@EnableWebSecurity
+// @EnableWebSecurity
 @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
 @PropertySource(value = { "classpath:security.properties" })
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
@@ -190,7 +189,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
   @Override
   public void configure(WebSecurity webSecurity) throws Exception {
     if (securityEnabled) {
-      webSecurity.ignoring().regexMatchers("/?", "/info/?");
+      webSecurity.ignoring().regexMatchers("/", "/info");
     } else {
       webSecurity.ignoring().anyRequest();
     }

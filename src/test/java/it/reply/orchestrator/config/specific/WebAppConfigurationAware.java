@@ -4,12 +4,9 @@ import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppC
 
 import com.github.springtestdbunit.DbUnitTestExecutionListener;
 
+import it.reply.orchestrator.annotation.SpringTestProfile;
 import it.reply.orchestrator.config.ApplicationConfigTest;
-import it.reply.orchestrator.config.PersistenceConfigTest;
-import it.reply.orchestrator.config.WebAppInitializer;
-import it.reply.orchestrator.config.WebMvcConfig;
 import it.reply.orchestrator.config.WorkflowConfigProducerBean;
-import it.reply.orchestrator.config.WorklfowPersistenceConfigTest;
 
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -20,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.ContextHierarchy;
 import org.springframework.test.context.TestExecutionListeners;
@@ -34,13 +32,10 @@ import org.springframework.web.context.WebApplicationContext;
 import javax.inject.Inject;
 
 @RunWith(SpringJUnit4ClassRunner.class)
+@ActiveProfiles(SpringTestProfile.PROFILE_QUALIFIER)
 @WebAppConfiguration
 @ContextHierarchy({
-    @ContextConfiguration(name = "baseContext",
-        classes = { ApplicationConfigTest.class, WebAppInitializer.class, WebMvcConfig.class,
-            PersistenceConfigTest.class, WorklfowPersistenceConfigTest.class }),
-    @ContextConfiguration(name = "workflowContext",
-        classes = { WebAppConfigurationAware.Config.class }) })
+    @ContextConfiguration(name = "baseContext", classes = ApplicationConfigTest.class) })
 @TestPropertySource(locations = { "classpath:application-test.properties" })
 @TestExecutionListeners({ DependencyInjectionTestExecutionListener.class,
     TransactionalTestExecutionListener.class, DbUnitTestExecutionListener.class })

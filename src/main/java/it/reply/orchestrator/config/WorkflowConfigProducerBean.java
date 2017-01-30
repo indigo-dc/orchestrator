@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 @Component
 public class WorkflowConfigProducerBean implements ConfigProducer {
 
-  public static final String BASE_PATH = "workflows";
+  public static final String BASE_PATH = "workflows/";
 
   public static final WorkflowResource DEPLOY;
   public static final WorkflowResource UNDEPLOY;
@@ -23,10 +23,10 @@ public class WorkflowConfigProducerBean implements ConfigProducer {
 
   static {
     try {
-      DEPLOY = new WorkflowResource(BASE_PATH + "/" + "Deploy.bpmn2");
-      UNDEPLOY = new WorkflowResource(BASE_PATH + "/" + "Undeploy.bpmn2");
-      UPDATE = new WorkflowResource(BASE_PATH + "/" + "Update.bpmn2");
-      RANK_CLOUD_PROVIDERS = new WorkflowResource(BASE_PATH + "/" + "RankCloudProviders.bpmn2");
+      DEPLOY = new WorkflowResource(BASE_PATH + "Deploy.bpmn2");
+      UNDEPLOY = new WorkflowResource(BASE_PATH + "Undeploy.bpmn2");
+      UPDATE = new WorkflowResource(BASE_PATH + "Update.bpmn2");
+      RANK_CLOUD_PROVIDERS = new WorkflowResource(BASE_PATH + "RankCloudProviders.bpmn2");
 
     } catch (IOException ex) {
       throw new ExceptionInInitializerError(ex);

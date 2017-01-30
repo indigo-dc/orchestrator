@@ -12,15 +12,16 @@ import it.reply.orchestrator.exception.http.NotFoundException;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.transaction.annotation.Transactional;
 
 @DatabaseTearDown("/data/database-empty.xml")
+@Transactional
 public class ResourceServiceTest extends WebAppConfigurationAware {
 
   @Autowired
   private ResourceService service;
 
-  @Test(
-      expected = NotFoundException.class)
+  @Test(expected = NotFoundException.class)
   public void getResourcesNotFoundDeployment() throws Exception {
     service.getResources("not-found", null);
   }
@@ -32,14 +33,12 @@ public class ResourceServiceTest extends WebAppConfigurationAware {
     assertEquals(2, resources.getTotalElements());
   }
 
-  @Test(
-      expected = NotFoundException.class)
+  @Test(expected = NotFoundException.class)
   public void getResourceNotFoundDeployment() throws Exception {
     service.getResource("mmd34483-d937-4578-bfdb-ebe196bf82dd", "not-found");
   }
 
-  @Test(
-      expected = NotFoundException.class)
+  @Test(expected = NotFoundException.class)
   public void getResourceNotFoundResource() throws Exception {
     service.getResource("not-found", "0748fbe9-6c1d-4298-b88f-06188734ab42");
   }
@@ -47,9 +46,8 @@ public class ResourceServiceTest extends WebAppConfigurationAware {
   @Test
   @DatabaseSetup("/data/database-resource-init.xml")
   public void getResource() throws Exception {
-    Resource resource =
-        service.getResource("mmd34483-d937-4578-bfdb-ebe196bf82dd",
-            "0748fbe9-6c1d-4298-b88f-06188734ab42");
+    Resource resource = service.getResource("mmd34483-d937-4578-bfdb-ebe196bf82dd",
+        "0748fbe9-6c1d-4298-b88f-06188734ab42");
     assertEquals("mmd34483-d937-4578-bfdb-ebe196bf82dd", resource.getId());
 
   }

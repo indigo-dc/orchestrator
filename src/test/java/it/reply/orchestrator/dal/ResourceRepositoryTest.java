@@ -2,7 +2,6 @@ package it.reply.orchestrator.dal;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.nullValue;
 
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
@@ -14,9 +13,11 @@ import it.reply.orchestrator.dal.repository.ResourceRepository;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.transaction.annotation.Transactional;
 
 @DatabaseTearDown("/data/database-empty.xml")
 @DatabaseSetup("/data/database-resource-init.xml")
+@Transactional
 public class ResourceRepositoryTest extends WebAppConfigurationAware {
 
   final String deploymentId = "0748fbe9-6c1d-4298-b88f-06188734ab42";
@@ -30,8 +31,8 @@ public class ResourceRepositoryTest extends WebAppConfigurationAware {
    */
   @Test
   public void resourcesNotFound() {
-    Page<Resource> resources = resourceRepository
-        .findByDeployment_id("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", null);
+    Page<Resource> resources =
+        resourceRepository.findByDeployment_id("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", null);
     assertThat(resources.getTotalElements(), equalTo(0L));
   }
 

@@ -3,6 +3,8 @@ package it.reply.orchestrator.service;
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.is;
 
+import com.google.common.collect.Maps;
+
 import alien4cloud.model.components.ScalarPropertyValue;
 import alien4cloud.model.topology.Capability;
 import alien4cloud.model.topology.NodeTemplate;
@@ -26,7 +28,6 @@ import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager;
 import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager.RUNTIME_STRATEGY;
 
-import org.elasticsearch.common.collect.Maps;
 import org.jbpm.ruleflow.instance.RuleFlowProcessInstance;
 import org.junit.Assert;
 import org.junit.Before;

@@ -10,7 +10,6 @@ import it.reply.orchestrator.dto.onedata.UserSpaces;
 import it.reply.orchestrator.exception.service.DeploymentException;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.elasticsearch.common.base.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
@@ -22,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Objects;
 
 import javax.annotation.Nonnull;
 import javax.annotation.PostConstruct;
@@ -246,7 +246,7 @@ public class OneDataServiceImpl implements OneDataService {
     for (String spaceId : spaces.getSpaces()) {
       spaceDetail =
           getSpaceDetailsFromId(onedataParameter.getZone(), onedataParameter.getToken(), spaceId);
-      if (Objects.equal(onedataParameter.getSpace(), spaceDetail.getCanonicalName())) {
+      if (Objects.equals(onedataParameter.getSpace(), spaceDetail.getCanonicalName())) {
         providersId.addAll(spaceDetail.getProvidersSupports().keySet());
         break;
       }
