@@ -2,17 +2,18 @@ package it.reply.orchestrator.config;
 
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 
+import it.reply.orchestrator.annotation.OrchestratorPersistenceUnit;
+import it.reply.orchestrator.annotation.SpringTestProfile;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.core.env.Environment;
-import org.springframework.instrument.classloading.InstrumentationLoadTimeWeaver;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabase;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
-import org.springframework.orm.hibernate4.HibernateExceptionTranslator;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -29,6 +30,7 @@ import bitronix.tm.TransactionManagerServices;
 
 @Configuration
 @DatabaseSetup("database-init.xml")
+@SpringTestProfile
 public class PersistenceConfigTest {
 
   private static final Logger LOG = LoggerFactory.getLogger(PersistenceConfigTest.class);
@@ -43,6 +45,8 @@ public class PersistenceConfigTest {
   private Environment env;
 
   @Bean(destroyMethod = "shutdown")
+  @Primary
+  @OrchestratorPersistenceUnit
   public DataSource dataSource() {
     EmbeddedDatabaseBuilder builder = new EmbeddedDatabaseBuilder();
     EmbeddedDatabase dataSource = builder.setType(EmbeddedDatabaseType.H2).build();
@@ -50,6 +54,7 @@ public class PersistenceConfigTest {
   }
 
   @Bean
+  @OrchestratorPersistenceUnit
   public LocalContainerEntityManagerFactoryBean entityManagerFactory() throws NamingException {
     LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
 
@@ -74,14 +79,7 @@ public class PersistenceConfigTest {
 
     factory.setJpaProperties(jpaProperties);
 
-    factory.afterPropertiesSet();
-    factory.setLoadTimeWeaver(new InstrumentationLoadTimeWeaver());
     return factory;
-  }
-
-  @Bean
-  public HibernateExceptionTranslator hibernateExceptionTranslator() {
-    return new HibernateExceptionTranslator();
   }
 
   @Bean
@@ -90,7 +88,6 @@ public class PersistenceConfigTest {
   }
 
   @Bean(destroyMethod = "shutdown")
-  @Primary
   public BitronixTransactionManager bitronixTransactionManager() {
     btmConfig();
     return TransactionManagerServices.getTransactionManager();

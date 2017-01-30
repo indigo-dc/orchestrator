@@ -27,7 +27,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.restdocs.JUnitRestDocumentation;
+import org.springframework.restdocs.RestDocumentation;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -50,8 +50,7 @@ public class TemplateControllerTest {
   private GlobalControllerExceptionHandler globalControllerExceptionHandler;
 
   @Rule
-  public JUnitRestDocumentation restDocumentation =
-      new JUnitRestDocumentation("target/generated-snippets");
+  public RestDocumentation restDocumentation = new RestDocumentation("target/generated-snippets");
 
   private final MediaType applicationJsonUtf8 = new MediaType(MediaType.APPLICATION_JSON.getType(),
       MediaType.APPLICATION_JSON.getSubtype(), Charset.forName("utf8"));

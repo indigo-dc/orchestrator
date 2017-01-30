@@ -1,12 +1,13 @@
 package it.reply.orchestrator.service.commands;
 
+import com.google.common.collect.Lists;
+
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.ranker.CloudProviderRankerRequest;
 import it.reply.orchestrator.dto.ranker.Monitoring;
 import it.reply.orchestrator.dto.slam.PreferenceCustomer;
 import it.reply.orchestrator.service.CloudProviderRankerService;
 
-import org.elasticsearch.common.collect.Lists;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

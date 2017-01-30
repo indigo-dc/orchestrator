@@ -1,6 +1,7 @@
 package it.reply.orchestrator.service.deployment.providers;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingException;
@@ -32,7 +33,6 @@ import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.service.ToscaServiceImpl;
 
-import org.elasticsearch.common.collect.Maps;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

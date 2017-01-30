@@ -138,7 +138,8 @@ public class DeploymentController {
    *          {@link DeploymentRequest}
    */
   @ResponseStatus(HttpStatus.ACCEPTED)
-  @RequestMapping(value = "/deployments/{deploymentId}", method = RequestMethod.PUT)
+  @RequestMapping(value = "/deployments/{deploymentId}", method = RequestMethod.PUT,
+      produces = MediaType.APPLICATION_JSON_VALUE)
   public void updateDeployment(@PathVariable("deploymentId") String id,
       @Valid @RequestBody DeploymentRequest request) {
 

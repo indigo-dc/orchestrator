@@ -1,5 +1,7 @@
 package it.reply.orchestrator.controller;
 
+import com.google.common.collect.Lists;
+
 import it.reply.orchestrator.dal.entity.AbstractResourceEntity;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
@@ -7,7 +9,6 @@ import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
 
-import org.elasticsearch.common.collect.Lists;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;

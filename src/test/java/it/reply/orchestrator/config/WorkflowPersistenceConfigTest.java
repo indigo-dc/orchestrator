@@ -1,5 +1,6 @@
 package it.reply.orchestrator.config;
 
+import it.reply.orchestrator.annotation.SpringTestProfile;
 import it.reply.workflowmanager.spring.orchestrator.annotations.WorkflowPersistenceUnit;
 import it.reply.workflowmanager.utils.Constants;
 
@@ -13,12 +14,12 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.annotation.Resource;
-import javax.naming.NamingException;
 import javax.sql.DataSource;
 
 @Configuration
 @EnableTransactionManagement(proxyTargetClass = true)
-public class WorklfowPersistenceConfigTest {
+@SpringTestProfile
+public class WorkflowPersistenceConfigTest {
 
   @Resource
   private Environment environment;
@@ -38,8 +39,7 @@ public class WorklfowPersistenceConfigTest {
 
   @Bean
   @WorkflowPersistenceUnit
-  public LocalContainerEntityManagerFactoryBean workflowEntityManagerFactory()
-      throws NamingException {
+  public LocalContainerEntityManagerFactoryBean workflowEntityManagerFactory() {
     LocalContainerEntityManagerFactoryBean factory = new LocalContainerEntityManagerFactoryBean();
     factory.setPersistenceUnitName(Constants.PERSISTENCE_UNIT_NAME);
     factory.setPersistenceXmlLocation("classpath:/META-INF/persistence-test.xml");

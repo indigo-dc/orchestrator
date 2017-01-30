@@ -35,7 +35,7 @@ import org.springframework.data.web.HateoasPageableHandlerMethodArgumentResolver
 import org.springframework.data.web.PagedResourcesAssemblerArgumentResolver;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.restdocs.JUnitRestDocumentation;
+import org.springframework.restdocs.RestDocumentation;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -66,8 +66,7 @@ public class ResourceControllerTest {
   private GlobalControllerExceptionHandler globalControllerExceptionHandler;
 
   @Rule
-  public JUnitRestDocumentation restDocumentation =
-      new JUnitRestDocumentation("target/generated-snippets");
+  public RestDocumentation restDocumentation = new RestDocumentation("target/generated-snippets");
 
   @Before
   public void setup() {

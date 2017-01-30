@@ -4,6 +4,7 @@ import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonPrimitive;
 
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -74,7 +75,7 @@ public class IndigoUserInfo extends DefaultUserInfo {
       if (groups != null) {
         JsonArray groupsJson = new JsonArray();
         for (String g : groups) {
-          groupsJson.add(g);
+          groupsJson.add(new JsonPrimitive(g));
         }
         result.add(GROUPS_KEY, groupsJson);
       }

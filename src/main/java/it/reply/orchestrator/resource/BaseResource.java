@@ -1,7 +1,6 @@
 package it.reply.orchestrator.resource;
 
 import it.reply.orchestrator.enums.NodeStates;
-import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.resource.common.AbstractResource;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;

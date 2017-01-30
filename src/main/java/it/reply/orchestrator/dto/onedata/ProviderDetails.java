@@ -1,12 +1,13 @@
 package it.reply.orchestrator.dto.onedata;
 
+import com.google.common.collect.Lists;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
-import org.elasticsearch.common.collect.Lists;
 
 import java.io.Serializable;
 import java.util.List;

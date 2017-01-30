@@ -91,7 +91,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   @Value("${opennebula.auth.file.path}")
   private String opennebulaAuthFilePath;
 
-  private static final Pattern UUID_PATTERN = Pattern.compile(".*\\/([^\"\\/]+)\\/?\"?");
   private static final Pattern VM_ID_PATTERN = Pattern.compile("(\\w+)$");
   private static final Pattern OS_ENDPOINT_PATTERN =
       Pattern.compile("(https?:\\/\\/[^\\/]*)\\/?([^\\/]*)");
