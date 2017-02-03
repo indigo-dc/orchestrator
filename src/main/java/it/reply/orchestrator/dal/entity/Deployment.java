@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nonnull;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -252,7 +251,7 @@ public class Deployment extends AbstractResourceEntity {
   }
 
   @Transient
-  public void addWorkflowReferences(@Nonnull WorkflowReference workflowReference) {
+  public void addWorkflowReferences(WorkflowReference workflowReference) {
     workflowReference.setDeployment(this);
     this.workflowReferences.add(workflowReference);
   }

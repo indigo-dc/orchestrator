@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.commons.lang.builder.ToStringBuilder;
+import org.hibernate.validator.constraints.NotEmpty;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -18,29 +19,42 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Generated;
+import javax.validation.constraints.NotNull;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
 @JsonPropertyOrder({ "customer", "provider", "start_date", "end_date", "services", "id" })
 public class Sla implements Serializable {
 
   private static final long serialVersionUID = 6559999818418491070L;
 
   @JsonProperty("customer")
+  @NotNull
   private String customer;
+
   @JsonProperty("provider")
-  private String provider;
+  @NotNull
+  private String cloudProviderId;
+
   @JsonProperty("start_date")
+  @NotNull
   private String startDate;
+
+  @NotNull
   @JsonProperty("end_date")
   private String endDate;
+
   @JsonProperty("services")
-  private List<Service> services = new ArrayList<Service>();
+  @NotNull
+  @NotEmpty
+  private List<Service> services = new ArrayList<>();
+
   @JsonProperty("id")
+  @NotNull
   private String id;
+
   @JsonIgnore
-  private Map<String, Object> additionalProperties = new HashMap<String, Object>();
+  @NotNull
+  private transient Map<String, Object> additionalProperties = new HashMap<>();
 
   @JsonProperty("customer")
   public String getCustomer() {
@@ -58,17 +72,17 @@ public class Sla implements Serializable {
   }
 
   @JsonProperty("provider")
-  public String getProvider() {
-    return provider;
+  public String getCloudProviderId() {
+    return cloudProviderId;
   }
 
   @JsonProperty("provider")
-  public void setProvider(String provider) {
-    this.provider = provider;
+  public void setCloudProviderId(String cloudProviderId) {
+    this.cloudProviderId = cloudProviderId;
   }
 
-  public Sla withProvider(String provider) {
-    this.provider = provider;
+  public Sla withCloudProviderId(String cloudProviderId) {
+    this.cloudProviderId = cloudProviderId;
     return this;
   }
 
@@ -105,6 +119,11 @@ public class Sla implements Serializable {
   @JsonProperty("services")
   public List<Service> getServices() {
     return services;
+  }
+
+  @Deprecated
+  public Service getService() {
+    return services.get(0);
   }
 
   @JsonProperty("services")
@@ -154,8 +173,8 @@ public class Sla implements Serializable {
 
   @Override
   public int hashCode() {
-    return new HashCodeBuilder().append(customer).append(provider).append(startDate).append(endDate)
-        .append(services).append(id).append(additionalProperties).toHashCode();
+    return new HashCodeBuilder().append(customer).append(cloudProviderId).append(startDate)
+        .append(endDate).append(services).append(id).append(additionalProperties).toHashCode();
   }
 
   @Override
@@ -163,13 +182,13 @@ public class Sla implements Serializable {
     if (other == this) {
       return true;
     }
-    if ((other instanceof Sla) == false) {
+    if (!(other instanceof Sla)) {
       return false;
     }
-    Sla rhs = ((Sla) other);
-    return new EqualsBuilder().append(customer, rhs.customer).append(provider, rhs.provider)
-        .append(startDate, rhs.startDate).append(endDate, rhs.endDate)
-        .append(services, rhs.services).append(id, rhs.id)
+    Sla rhs = (Sla) other;
+    return new EqualsBuilder().append(customer, rhs.customer)
+        .append(cloudProviderId, rhs.cloudProviderId).append(startDate, rhs.startDate)
+        .append(endDate, rhs.endDate).append(services, rhs.services).append(id, rhs.id)
         .append(additionalProperties, rhs.additionalProperties).isEquals();
   }
 

@@ -7,12 +7,17 @@ import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.Type;
+import it.reply.orchestrator.dto.deployment.AwsSlaPlacementPolicy;
+import it.reply.orchestrator.dto.deployment.PlacementPolicy;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
+import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class CloudProviderEndpointServiceImpl {
@@ -57,7 +62,8 @@ public class CloudProviderEndpointServiceImpl {
    *          .
    * @return .
    */
-  public CloudProviderEndpoint getCloudProviderEndpoint(CloudProvider chosenCloudProvider) {
+  public CloudProviderEndpoint getCloudProviderEndpoint(CloudProvider chosenCloudProvider,
+      List<PlacementPolicy> placementPolicies) {
 
     if (chosenCloudProvider.getCmbdProviderServicesByType(Type.COMPUTE).isEmpty()) {
       throw new IllegalArgumentException(
@@ -67,16 +73,26 @@ public class CloudProviderEndpointServiceImpl {
     CloudService computeService =
         chosenCloudProvider.getCmbdProviderServicesByType(Type.COMPUTE).get(0);
 
-    IaaSType iaasType = null;
+    CloudProviderEndpoint cpe = new CloudProviderEndpoint();
+    IaaSType iaasType;
     if (computeService.isOpenStackComputeProviderService()) {
       iaasType = IaaSType.OPENSTACK;
     } else if (computeService.isOpenNebulaComputeProviderService()) {
       iaasType = IaaSType.OPENNEBULA;
+    } else if (computeService.isOcciComputeProviderService()) {
+      iaasType = IaaSType.OCCI;
+    } else if (computeService.isAwsComputeProviderService()) {
+      iaasType = IaaSType.AWS;
+      // TODO support multiple policies
+      // TODO do a match between sla and service id
+      AwsSlaPlacementPolicy placementPolicy = (AwsSlaPlacementPolicy) placementPolicies.stream()
+          .filter(p -> p instanceof AwsSlaPlacementPolicy).findFirst()
+          .orElseThrow(() -> new OrchestratorException("No AWS credentials provided"));
+      cpe.setUsername(placementPolicy.getAccessKey());
+      cpe.setPassword(placementPolicy.getSecretKey());
     } else {
       throw new IllegalArgumentException("Unknown Cloud Provider type: " + computeService);
     }
-
-    CloudProviderEndpoint cpe = new CloudProviderEndpoint();
 
     cpe.setCpEndpoint(computeService.getData().getEndpoint());
     cpe.setCpComputeServiceId(computeService.getId());

@@ -1,5 +1,8 @@
 package it.reply.orchestrator.dto.deployment;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dto.CloudProvider;
@@ -9,7 +12,6 @@ import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl.IndigoJob;
 
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -47,11 +49,16 @@ public class DeploymentMessage implements Serializable {
   /**
    * The OneData information the user gave and to be used to select the best provider.
    */
-  private Map<String, OneData> oneDataRequirements = new HashMap<>();
+  private Map<String, OneData> oneDataRequirements = Maps.newHashMap();
   /**
    * The OneData information generated after the best provider choice.
    */
-  private Map<String, OneData> oneDataParameters = new HashMap<>();
+  private Map<String, OneData> oneDataParameters = Maps.newHashMap();
+
+  /**
+   * The Placement policies provided in the template.
+   */
+  private List<PlacementPolicy> placementPolicies = Lists.newArrayList();
 
   /**
    * TEMPORARY Chronos Job Graph (to avoid regenerating the template representation each time).
@@ -169,6 +176,14 @@ public class DeploymentMessage implements Serializable {
 
   public void setOneDataParameters(Map<String, OneData> oneDataParameters) {
     this.oneDataParameters = oneDataParameters;
+  }
+
+  public List<PlacementPolicy> getPlacementPolicies() {
+    return placementPolicies;
+  }
+
+  public void setPlacementPolicies(List<PlacementPolicy> placementPolicies) {
+    this.placementPolicies = placementPolicies;
   }
 
   @Override
