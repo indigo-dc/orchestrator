@@ -12,6 +12,7 @@ import alien4cloud.tosca.parser.ParsingResult;
 
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.ImageData;
+import it.reply.orchestrator.dto.deployment.PlacementPolicy;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.service.ToscaException;
@@ -245,4 +246,13 @@ public interface ToscaService {
    */
   public Map<String, OneData> extractOneDataRequirements(ArchiveRoot archiveRoot,
       Map<String, Object> inputs);
+
+  /**
+   * Extracts the placement policies from the TOSCA template.
+   * 
+   * @param archiveRoot
+   *          an {@link ArchiveRoot} representing the template.
+   * @return the list of placementPolicies
+   */
+  public List<PlacementPolicy> extractPlacementPolicies(ArchiveRoot archiveRoot);
 }

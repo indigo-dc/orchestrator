@@ -557,6 +557,7 @@
           <tns:script>logger.debug(&quot;Entering it.reply.orchestrator.RankCloudProviders process&quot;);
 RankCloudProvidersMessage =  new RankCloudProvidersMessage(DEPLOYMENT_ID);
 RankCloudProvidersMessage.setOneDataRequirements(DeploymentMessage.getOneDataRequirements());
+RankCloudProvidersMessage.setPlacementPolicies(DeploymentMessage.getPlacementPolicies());
 kcontext.setVariable(WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE, RankCloudProvidersMessage);
 logger.debug(&quot;Initializing RankCloudProvidersMessage: &quot; + RankCloudProvidersMessage);
 </tns:script>

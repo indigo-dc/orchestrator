@@ -7,11 +7,13 @@ import com.google.common.io.ByteStreams;
 import alien4cloud.component.repository.exception.CSARVersionAlreadyExistsException;
 import alien4cloud.exception.InvalidArgumentException;
 import alien4cloud.model.components.AbstractPropertyValue;
+import alien4cloud.model.components.ComplexPropertyValue;
 import alien4cloud.model.components.Csar;
 import alien4cloud.model.components.ListPropertyValue;
 import alien4cloud.model.components.PropertyDefinition;
 import alien4cloud.model.components.PropertyValue;
 import alien4cloud.model.components.ScalarPropertyValue;
+import alien4cloud.model.topology.AbstractPolicy;
 import alien4cloud.model.topology.Capability;
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.model.topology.RelationshipTemplate;
@@ -32,11 +34,13 @@ import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.ImageData;
 import it.reply.orchestrator.dto.cmdb.Type;
+import it.reply.orchestrator.dto.deployment.PlacementPolicy;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.exception.service.ToscaException;
 
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -400,6 +404,18 @@ public class ToscaServiceImpl implements ToscaService {
               ScalarPropertyValue scalarPropertyValue = new ScalarPropertyValue(imageId);
               scalarPropertyValue.setPrintable(true);
               osCapability.getProperties().put("image", scalarPropertyValue);
+              if (StringUtils.isNotBlank(image.getUserName())) {
+                Map<String, Object> credential = Maps.newHashMap();
+                ComplexPropertyValue credentialProperty = new ComplexPropertyValue(credential);
+                credentialProperty.setPrintable(true);
+                osCapability.getProperties().put("credential", credentialProperty);
+                scalarPropertyValue = new ScalarPropertyValue(image.getUserName());
+                scalarPropertyValue.setPrintable(true);
+                credential.put("user", scalarPropertyValue);
+                scalarPropertyValue = new ScalarPropertyValue("\"\"");
+                scalarPropertyValue.setPrintable(true);
+                credential.put("token", scalarPropertyValue);
+              }
             }
           }
         }
@@ -412,18 +428,17 @@ public class ToscaServiceImpl implements ToscaService {
 
   @Deprecated
   private boolean isImImageUri(String imageName) {
-    if (imageName != null && (imageName.trim().matches(ServiceProvider.OPENSTACK.getId() + "://.+")
-        || imageName.trim().matches(ServiceProvider.OPENNEBULA.getId() + "://.+"))) {
-      return true;
-    } else {
-      return false;
-    }
+    // TODO use IM image constants
+    String regex = new StringBuilder().append("(").append(ServiceProvider.OPENSTACK.getId())
+        .append("|").append(ServiceProvider.OPENNEBULA.getId()).append("|")
+        .append(ServiceProvider.OCCI.getId()).append("|").append("aws").append(")://.+").toString();
+    return imageName != null && imageName.trim().matches(regex);
   }
 
   @Deprecated
   private String generateImImageUri(CloudProvider cloudProvider, ImageData image) {
     try {
-      CloudService cs = null;
+      CloudService cs;
       if (image.getService() != null
           && cloudProvider.getCmdbProviderServices().get(image.getService()) != null) {
         cs = cloudProvider.getCmdbProviderServices().get(image.getService());
@@ -435,17 +450,32 @@ public class ToscaServiceImpl implements ToscaService {
           cs = cloudProvider.getCmbdProviderServicesByType(Type.COMPUTE).get(0);
         }
       }
-      StringBuilder sb = new StringBuilder();
+      // TODO use IM image constants instead
+      ServiceProvider imServiceProvider;
+
       if (cs.isOpenStackComputeProviderService()) {
-        sb.append(ServiceProvider.OPENSTACK.getId());
+        imServiceProvider = ServiceProvider.OPENSTACK;
       } else if (cs.isOpenNebulaComputeProviderService()) {
-        sb.append(ServiceProvider.OPENNEBULA.getId());
+        imServiceProvider = ServiceProvider.OPENNEBULA;
+      } else if (cs.isOcciComputeProviderService()) {
+        imServiceProvider = ServiceProvider.OCCI;
+      } else if (cs.isAwsComputeProviderService()) {
+        imServiceProvider = ServiceProvider.EC2;
       } else {
         throw new DeploymentException("Unknown IaaSType of cloud provider " + cloudProvider);
       }
-
-      URL endpoint = new URL(cs.getData().getEndpoint());
-      sb.append("://").append(endpoint.getHost()).append("/").append(image.getImageId());
+      StringBuilder sb = new StringBuilder();
+      sb.append(imServiceProvider.getId()).append("://");
+      if (imServiceProvider != ServiceProvider.EC2) {
+        // NO endopoint info needed for EC2, already contained in auth info
+        URL endpoint = new URL(cs.getData().getEndpoint());
+        sb.append(endpoint.getHost()).append("/");
+      } else {
+        // TODO remove it and use a constant
+        sb = new StringBuilder();
+        sb.append("aws").append("://");
+      }
+      sb.append(image.getImageId());
       return sb.toString();
     } catch (Exception ex) {
       LOG.error("Cannot retrieve Compute service host for IM image id generation", ex);
@@ -804,5 +834,21 @@ public class ToscaServiceImpl implements ToscaService {
     } catch (Exception ex) {
       throw new RuntimeException("Failed to extract OneData requirements: " + ex.getMessage(), ex);
     }
+  }
+
+  @Override
+  public List<PlacementPolicy> extractPlacementPolicies(ArchiveRoot archiveRoot) {
+    List<PlacementPolicy> placementPolicies = Lists.newArrayList();
+    if (archiveRoot.getTopology() != null && archiveRoot.getTopology().getPolicies() != null) {
+      for (AbstractPolicy policy : archiveRoot.getTopology().getPolicies()) {
+        if (policy instanceof alien4cloud.model.topology.PlacementPolicy) {
+          placementPolicies.add(
+              PlacementPolicy.fromToscaType((alien4cloud.model.topology.PlacementPolicy) policy));
+        } else {
+          LOG.warn("Skipping unsupported Policy {}", policy);
+        }
+      }
+    }
+    return placementPolicies;
   }
 }

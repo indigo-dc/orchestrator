@@ -3,18 +3,23 @@ package it.reply.orchestrator.dto.request;
 import org.apache.commons.lang3.builder.EqualsBuilder;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 
 public class DeploymentRequest {
 
-  private String template = "";
+  @NotNull
+  private String template;
+
+  @NotNull
   private Map<String, Object> parameters = new HashMap<>();
 
+  @MonotonicNonNull
   private String callback;
 
   /**
@@ -22,7 +27,6 @@ public class DeploymentRequest {
    * 
    * @return The template
    */
-  @Nonnull
   public String getTemplate() {
     return template;
   }
@@ -32,7 +36,7 @@ public class DeploymentRequest {
    * @param template
    *          The TOSCA YAML-formatted template.
    */
-  public void setTemplate(@Nonnull String template) {
+  public void setTemplate(String template) {
     this.template = template;
   }
 
@@ -41,7 +45,6 @@ public class DeploymentRequest {
    * 
    * @return The parameters
    */
-  @Nonnull
   public Map<String, Object> getParameters() {
     return parameters;
   }
@@ -51,7 +54,7 @@ public class DeploymentRequest {
    * @param parameters
    *          The parameters.
    */
-  public void setParameters(@Nonnull Map<String, Object> parameters) {
+  public void setParameters(Map<String, Object> parameters) {
     this.parameters = parameters;
   }
 
@@ -71,12 +74,11 @@ public class DeploymentRequest {
    * @param callback
    *          the endpoint.
    */
-  public void setCallback(@Nullable String callback) {
+  public void setCallback(String callback) {
     this.callback = callback;
   }
 
   @Override
-  @Nonnull
   public String toString() {
     return ToStringBuilder.reflectionToString(this);
   }
@@ -87,7 +89,7 @@ public class DeploymentRequest {
   }
 
   @Override
-  public boolean equals(@Nullable Object other) {
+  public boolean equals(Object other) {
     if (other == null) {
       return false;
     }

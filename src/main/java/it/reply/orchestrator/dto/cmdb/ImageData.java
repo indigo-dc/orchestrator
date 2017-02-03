@@ -25,6 +25,8 @@ public class ImageData implements Serializable {
   private String imageId;
   @JsonProperty("image_name")
   private String imageName;
+  @JsonProperty("image_description")
+  private String imageDescription;
   @JsonProperty("architecture")
   private String architecture;
   @JsonProperty("type")
@@ -35,6 +37,8 @@ public class ImageData implements Serializable {
   private String version;
   @JsonProperty("service")
   private String service;
+  @JsonProperty("user_name")
+  private String userName;
   @JsonIgnore
   private Map<String, Object> additionalProperties = new HashMap<String, Object>();
 
@@ -140,6 +144,32 @@ public class ImageData implements Serializable {
 
   public ImageData withService(String service) {
     this.service = service;
+    return this;
+  }
+
+  public String getImageDescription() {
+    return imageDescription;
+  }
+
+  public String getUserName() {
+    return userName;
+  }
+
+  public void setImageDescription(String imageDescription) {
+    this.imageDescription = imageDescription;
+  }
+
+  public ImageData withImageDescription(String imageDescription) {
+    this.imageDescription = imageDescription;
+    return this;
+  }
+
+  public void setUserName(String userName) {
+    this.userName = userName;
+  }
+
+  public ImageData withUserName(String userName) {
+    this.userName = userName;
     return this;
   }
 

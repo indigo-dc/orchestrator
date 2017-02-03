@@ -1,5 +1,7 @@
 package it.reply.orchestrator.service;
 
+import com.google.common.collect.Lists;
+
 import alien4cloud.model.components.ScalarPropertyValue;
 import alien4cloud.model.topology.Capability;
 import alien4cloud.model.topology.NodeTemplate;
@@ -14,6 +16,7 @@ import it.reply.orchestrator.dal.entity.WorkflowReference;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
+import it.reply.orchestrator.dto.deployment.PlacementPolicy;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.enums.DeploymentProvider;
@@ -42,6 +45,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -88,6 +92,7 @@ public class DeploymentServiceImpl implements DeploymentService {
     Deployment deployment;
     boolean isChronosDeployment = false;
     Map<String, OneData> odRequirements = new HashMap<>();
+    List<PlacementPolicy> placementPolicies = Lists.newArrayList();
 
     try {
       // Parse once, validate structure and user's inputs, replace user's input
@@ -117,6 +122,8 @@ public class DeploymentServiceImpl implements DeploymentService {
             toscaService.extractOneDataRequirements(parsingResult, request.getParameters());
       }
 
+      placementPolicies = toscaService.extractPlacementPolicies(parsingResult);
+
       deployment = deploymentRepository.save(deployment);
 
       // Create internal resources representation (to store in DB)
@@ -142,6 +149,7 @@ public class DeploymentServiceImpl implements DeploymentService {
     // Build deployment message
     DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment);
     deploymentMessage.setOneDataRequirements(odRequirements);
+    deploymentMessage.setPlacementPolicies(placementPolicies);
     params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
 
     ProcessInstance pi = null;

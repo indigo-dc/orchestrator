@@ -22,6 +22,8 @@ public class CloudServiceData implements Serializable {
   private String providerId;
   @JsonProperty("type")
   private Type type;
+  @JsonProperty("is_public_service")
+  private boolean publicService;
 
   @JsonProperty("service_type")
   public String getServiceType() {
@@ -81,6 +83,16 @@ public class CloudServiceData implements Serializable {
   public CloudServiceData withType(Type type) {
     this.type = type;
     return this;
+  }
+
+  @JsonProperty("is_public_service")
+  public boolean isPublicService() {
+    return publicService;
+  }
+
+  @JsonProperty("is_public_service")
+  public void setPublicService(boolean publicService) {
+    this.publicService = publicService;
   }
 
   @Override

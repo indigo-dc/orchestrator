@@ -24,6 +24,10 @@ public class GetProvidersRank extends BaseRankCloudProvidersCommand {
   protected RankCloudProvidersMessage customExecute(
       RankCloudProvidersMessage rankCloudProvidersMessage) {
 
+    if (rankCloudProvidersMessage.getCloudProviders().isEmpty()) {
+      // nothing to rank
+      return rankCloudProvidersMessage;
+    }
     // Prepare Ranker's request
     List<Monitoring> monitoring =
         rankCloudProvidersMessage.getCloudProvidersMonitoringData().entrySet().stream()

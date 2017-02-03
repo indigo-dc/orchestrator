@@ -8,6 +8,7 @@ import alien4cloud.model.components.FunctionPropertyValue;
 import alien4cloud.model.components.ListPropertyValue;
 import alien4cloud.model.components.PropertyDefinition;
 import alien4cloud.model.components.ScalarPropertyValue;
+import alien4cloud.model.topology.AbstractPolicy;
 import alien4cloud.model.topology.Capability;
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.model.topology.RelationshipTemplate;
@@ -59,6 +60,12 @@ public class IndigoInputsPreProcessorService {
     Map<String, NodeTemplate> nodes = archiveRoot.getTopology().getNodeTemplates();
     Map<String, PropertyDefinition> templateInputs = archiveRoot.getTopology().getInputs();
 
+    // Process policies
+    if (archiveRoot.getTopology().getPolicies() != null) {
+      for (AbstractPolicy policy : archiveRoot.getTopology().getPolicies()) {
+        processGetInput(templateInputs, inputs, policy.getProperties(), policy.getName());
+      }
+    }
     // Iterate on each property that is a FunctionPropertyValue
 
     // For each template's node

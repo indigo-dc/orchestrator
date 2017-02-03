@@ -10,6 +10,7 @@ import es.upv.i3m.grycap.im.InfrastructureManager;
 import es.upv.i3m.grycap.im.States;
 import es.upv.i3m.grycap.im.auth.credentials.AuthorizationHeader;
 import es.upv.i3m.grycap.im.auth.credentials.Credentials;
+import es.upv.i3m.grycap.im.auth.credentials.providers.AmazonEc2Credentials;
 import es.upv.i3m.grycap.im.auth.credentials.providers.ImCredentials;
 import es.upv.i3m.grycap.im.auth.credentials.providers.OpenNebulaCredentials;
 import es.upv.i3m.grycap.im.auth.credentials.providers.OpenStackCredentials;
@@ -167,6 +168,16 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           break;
         // inputStream = ctx.getResource(opennebulaAuthFilePath).getInputStream();
         // break;
+        case AWS:
+          AuthorizationHeader ah = new AuthorizationHeader();
+          Credentials cred = ImCredentials.buildCredentials().withToken(dm.getOauth2Token());
+          ah.addCredential(cred);
+          cred = AmazonEc2Credentials.buildCredentials()
+              .withUsername(dm.getChosenCloudProviderEndpoint().getUsername())
+              .withPassword(dm.getChosenCloudProviderEndpoint().getPassword());
+          ah.addCredential(cred);
+          InfrastructureManager im = new InfrastructureManager(imUrl, ah);
+          return im;
         default:
           throw new IllegalArgumentException(
               String.format("Unsupported provider type <%s>", iaasType));

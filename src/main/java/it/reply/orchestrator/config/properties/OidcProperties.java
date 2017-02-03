@@ -4,6 +4,8 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import org.apache.commons.lang3.builder.ToStringBuilder;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
@@ -14,7 +16,7 @@ import org.springframework.util.Assert;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 
 @ConfigurationProperties(prefix = "oidc", locations = "${security.conf.file.path}")
 public class OidcProperties implements SecurityPrerequisite, InitializingBean {
@@ -25,8 +27,10 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
 
   private boolean cacheTokens;
 
+  @NotNull
   private List<IamProperties> iamProperties = Lists.newArrayList();
 
+  @NotNull
   private Map<String, IamProperties> iamPropertiesMap = Maps.newHashMap();
 
   public List<IamProperties> getIamProperties() {
@@ -77,30 +81,27 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
       for (IamProperties iamConfiguration : iamProperties) {
         String issuer = iamConfiguration.getIssuer();
         Assert.hasText(issuer, "OIDC Issuer field must not be empty");
-        {
-          OrchestratorProperties orchestratorConfiguration = iamConfiguration.getOrchestrator();
-          Assert.notNull(orchestratorConfiguration,
-              "Orchestrator OAuth2 client for issuer " + issuer + " must be provided");
-          Assert.isNull(iamPropertiesMap.put(issuer, iamConfiguration),
-              "Duplicated configuration provided for OIDC issuer " + issuer);
-          Assert.hasText(orchestratorConfiguration.getClientId(),
-              "Orchestrator OAuth2 clientId for issuer " + issuer + " must be provided");
-          Assert.hasText(orchestratorConfiguration.getClientSecret(),
-              "Orchestrator OAuth2 clientSecret for issuer " + issuer + " must be provided");
-          if (orchestratorConfiguration.getScopes().isEmpty()) {
-            LOG.warn("No Orchestrator OAuth2 scopes provided for issuer {}", issuer);
-          }
+        OrchestratorProperties orchestratorConfiguration = iamConfiguration.getOrchestrator();
+        Assert.notNull(orchestratorConfiguration,
+            "Orchestrator OAuth2 client for issuer " + issuer + " must be provided");
+        Assert.isNull(iamPropertiesMap.put(issuer, iamConfiguration),
+            "Duplicated configuration provided for OIDC issuer " + issuer);
+        Assert.hasText(orchestratorConfiguration.getClientId(),
+            "Orchestrator OAuth2 clientId for issuer " + issuer + " must be provided");
+        Assert.hasText(orchestratorConfiguration.getClientSecret(),
+            "Orchestrator OAuth2 clientSecret for issuer " + issuer + " must be provided");
+        if (orchestratorConfiguration.getScopes().isEmpty()) {
+          LOG.warn("No Orchestrator OAuth2 scopes provided for issuer {}", issuer);
         }
-        {
-          OidcClientProperties cluesConfiguration = iamConfiguration.getClues();
-          if (cluesConfiguration != null) {
-            Assert.hasText(cluesConfiguration.getClientId(),
-                "CLUES OAuth2 clientId for issuer " + issuer + " must be provided");
-            Assert.hasText(cluesConfiguration.getClientSecret(),
-                "CLUES OAuth2 clientSecret for issuer " + issuer + " must be provided");
-          } else {
-            LOG.warn("No CLUES OAuth2 configuration provided for issuer {}", issuer);
-          }
+
+        OidcClientProperties cluesConfiguration = iamConfiguration.getClues();
+        if (cluesConfiguration != null) {
+          Assert.hasText(cluesConfiguration.getClientId(),
+              "CLUES OAuth2 clientId for issuer " + issuer + " must be provided");
+          Assert.hasText(cluesConfiguration.getClientSecret(),
+              "CLUES OAuth2 clientSecret for issuer " + issuer + " must be provided");
+        } else {
+          LOG.warn("No CLUES OAuth2 configuration provided for issuer {}", issuer);
         }
       }
       if (iamPropertiesMap.keySet().isEmpty()) {
@@ -115,10 +116,14 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
   }
 
   public static class IamProperties {
+
+    @NotNull
     private String issuer;
 
+    @NotNull
     private OrchestratorProperties orchestrator;
 
+    @MonotonicNonNull
     private OidcClientProperties clues;
 
     public String getIssuer() {
@@ -139,6 +144,7 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
       this.orchestrator = orchestrator;
     }
 
+    @Nullable
     public OidcClientProperties getClues() {
       return clues;
     }
@@ -155,7 +161,11 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
   }
 
   public static class OidcClientProperties {
+
+    @NotNull
     private String clientId;
+
+    @NotNull
     private String clientSecret;
 
     public String getClientId() {
@@ -184,6 +194,8 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
   }
 
   public static class OrchestratorProperties extends OidcClientProperties {
+
+    @NotNull
     private List<String> scopes = Lists.newArrayList();
 
     public List<String> getScopes() {
