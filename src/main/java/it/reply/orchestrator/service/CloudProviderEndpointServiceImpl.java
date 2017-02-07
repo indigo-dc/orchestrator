@@ -38,8 +38,8 @@ public class CloudProviderEndpointServiceImpl {
     // TODO Check ranker errors (i.e. providers with ranked = false)
     RankedCloudProvider chosenCp = null;
     for (RankedCloudProvider rcp : rankCloudProvidersMessage.getRankedCloudProviders()) {
-      // Choose the one with lowest rank AND that matches iaasType (TEMPORARY)
-      if (chosenCp == null || rcp.getRank() < chosenCp.getRank()) {
+      // Choose the one with highest rank AND that matches iaasType (TEMPORARY)
+      if (chosenCp == null || rcp.getRank() > chosenCp.getRank()) {
         chosenCp = rcp;
       }
     }
