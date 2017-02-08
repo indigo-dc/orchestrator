@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ResourceServiceImpl implements ResourceService {
@@ -20,6 +21,7 @@ public class ResourceServiceImpl implements ResourceService {
   private DeploymentRepository deploymentRepository;
 
   @Override
+  @Transactional(readOnly = true)
   public Page<Resource> getResources(String deploymentId, Pageable pageable) {
     if (deploymentRepository.exists(deploymentId)) {
       return resourceRepository.findByDeployment_id(deploymentId, pageable);
@@ -29,6 +31,7 @@ public class ResourceServiceImpl implements ResourceService {
   }
 
   @Override
+  @Transactional(readOnly = true)
   public Resource getResource(String uuid, String deploymentId) {
     Resource resource = resourceRepository.findByIdAndDeployment_id(uuid, deploymentId);
     if (resource != null) {

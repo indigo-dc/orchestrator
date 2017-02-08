@@ -6,6 +6,7 @@ import it.reply.orchestrator.exception.http.NotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class TemplateServiceImpl implements TemplateService {
@@ -14,6 +15,7 @@ public class TemplateServiceImpl implements TemplateService {
   private DeploymentRepository deploymentRepository;
 
   @Override
+  @Transactional(readOnly = true)
   public String getTemplate(String uuid) {
     Deployment deployment = deploymentRepository.findOne(uuid);
     if (deployment != null) {
