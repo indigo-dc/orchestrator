@@ -70,11 +70,13 @@ public class DeploymentServiceImpl implements DeploymentService {
   private OidcProperties oidcProperties;
 
   @Override
+  @Transactional(readOnly = true)
   public Page<Deployment> getDeployments(Pageable pageable) {
     return deploymentRepository.findAll(pageable);
   }
 
   @Override
+  @Transactional(readOnly = true)
   public Deployment getDeployment(String uuid) {
 
     Deployment deployment = deploymentRepository.findOne(uuid);
