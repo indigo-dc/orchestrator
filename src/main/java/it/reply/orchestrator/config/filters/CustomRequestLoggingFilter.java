@@ -332,7 +332,7 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
     String requestId = "";// safeTrimmedString(request.getHeader(X_REQUEST_ID));
 
     if (requestId.isEmpty()) {
-      requestId = "req" + UUID.randomUUID().toString();
+      requestId = "req-" + UUID.randomUUID().toString();
     }
     try {
       MDC.put(REQUEST_ID_MDC_KEY, requestId);
