@@ -228,6 +228,8 @@ node_types:
         type: list
         entry_schema:
           type: string
+      ctxt_log:
+        type: string
     capabilities:
       scalable:
         type: tosca.capabilities.indigo.Scalable
@@ -392,6 +394,28 @@ node_types:
         description: INDIGO IAM access token
         required: false
         default: iam_access_token
+      iam_clues_client_id:
+        type: string
+        description: INDIGO IAM client id to be used by CLUES
+        required: false
+        default: iam_clues_client_id
+      iam_clues_client_secret:
+        type: string
+        description: INDIGO IAM client secret to be used by CLUES
+        required: false
+        default: iam_clues_client_secret
+      marathon_credentials:
+        type: tosca.datatypes.Credential
+        description: Credentials to access the marathon endpoint from CLUES plugin
+        required: false
+      chronos_credentials:
+        type: tosca.datatypes.Credential
+        description: Credentials to access the chronos endpoint from CLUES plugin
+        required: false
+      mesos_credentials:
+        type: tosca.datatypes.Credential
+        description: Credentials to access the mesos endpoint from CLUES plugin
+        required: false
     artifacts:
       docker_agent_role:
         file: indigo-dc.clues
@@ -407,6 +431,11 @@ node_types:
             ec3_deployment_id: { get_property: [ SELF, deployment_id] }
             orchestrator_url: { get_property: [ SELF, orchestrator_url] }
             ec3_iam_access_token: { get_property: [ SELF, iam_access_token] }
+            ec3_iam_clues_client_id: { get_property: [ SELF, iam_clues_client_id] }
+            ec3_iam_clues_client_secret: { get_property: [ SELF, iam_clues_client_secret] }
+            clues_marathon_credentials: { get_property: [ SELF, marathon_credentials] }
+            clues_chronos_credentials: { get_property: [ SELF, chronos_credentials] }
+            clues_mesos_credentials: { get_property: [ SELF, mesos_credentials] }
     requirements:
       wn:
         type: tosca.capabilities.Scalable
@@ -628,7 +657,7 @@ node_types:
         configure:
           implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/mesos_master_install.yml
           inputs:
-            consul_server_ips: { get_attribute: [ HOST, public_address ] } 
+            consul_server_ips: { get_attribute: [ HOST, public_address ] }
             zookeeper_host_list_ips: { get_attribute: [ HOST, public_address ] }
             zookeeper_peers_ips: { get_attribute: [ HOST, public_address ] }
             mesos_masters_list_ips: { get_attribute: [ HOST, public_address ] }
@@ -636,7 +665,6 @@ node_types:
             marathon_pass: { get_property: [ SELF, marathon_password ] }
             chronos_user: { get_property: [ SELF, chronos_username ] }
             chronos_pass: { get_property: [ SELF, chronos_password ] }
-
 
   tosca.nodes.indigo.MesosMaster:
     derived_from: tosca.nodes.SoftwareComponent
@@ -744,7 +772,6 @@ node_types:
             mysquid_ip: { get_property: [ SELF, mysquid_host ] }
             proxycache_ip: { get_property: [ SELF, proxycache_host ] }
             iam_token: { get_property: [ SELF, iam_access_token ] }
-
 
 
   tosca.nodes.indigo.LRMS.WorkerNode.Mesos:
@@ -866,10 +893,10 @@ node_types:
         type: tosca.artifacts.AnsibleGalaxy.role
       consul_agent_role:
         file: indigo-dc.consul
-        type: tosca.artifacts.AnsibleGalaxy.role    
+        type: tosca.artifacts.AnsibleGalaxy.role
       haproxy_agent_role:
         file: indigo-dc.haproxy-consul
-        type: tosca.artifacts.AnsibleGalaxy.role          
+        type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         create:
@@ -880,8 +907,8 @@ node_types:
       host:
         type: tosca.capabilities.Container
         node: tosca.nodes.indigo.Compute
-        relationship: tosca.relationships.HostedOn          
-          
+        relationship: tosca.relationships.HostedOn
+
 
   tosca.nodes.indigo.OneDataStorage:
     derived_from: tosca.nodes.BlockStorage
@@ -1086,7 +1113,7 @@ node_types:
         type: list
         entry_schema:
           type: string
-        description: A list of CREAM CE identifiers to launch the job        
+        description: A list of CREAM CE identifiers to launch the job
       stdoutput:
         required: no
         description: Name of the file to get the standard output stream of the user application
