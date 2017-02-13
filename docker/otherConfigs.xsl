@@ -5,7 +5,8 @@
 				xmlns:log="urn:jboss:domain:logging:3.0"
 				xmlns:scn="urn:jboss:domain:deployment-scanner:2.0"
 				xmlns:jgs="urn:jboss:domain:jgroups:3.0"
-				xmlns:weld="urn:jboss:domain:weld:2.0">
+				xmlns:weld="urn:jboss:domain:weld:2.0"
+				xmlns:undertow="urn:jboss:domain:undertow:2.0">
 
     <xsl:output method="xml" indent="yes" />
 
@@ -118,6 +119,14 @@
 		<xsl:copy>
 			<xsl:apply-templates select="@*|node()"/>
 			<xsl:attribute name="require-bean-descriptor">true</xsl:attribute>
+		</xsl:copy>
+    </xsl:template>
+    
+   <xsl:template match="//undertow:subsystem/undertow:server[@name='default-server']/undertow:http-listener[@name='default']">
+		<xsl:copy>
+			<xsl:apply-templates select="@*"/>
+			<xsl:attribute name="proxy-address-forwarding">true</xsl:attribute>
+			<xsl:apply-templates select="node()"/>
 		</xsl:copy>
     </xsl:template>
     
