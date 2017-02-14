@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<additionalHeaders>
+    <JavaPackage_style>
+        <firstLine><![CDATA[EOL/*]]></firstLine>
+        <beforeEachLine><![CDATA[ * ]]></beforeEachLine>
+        <endLine><![CDATA[ */]]></endLine>
+        <skipLine><![CDATA[^package [a-z]+(\.[a-z][a-z0-9]*)*;$]]></skipLine>
+        <firstLineDetectionPattern><![CDATA[(EOL)*(\s|\t)*/\*.*$]]></firstLineDetectionPattern>
+        <lastLineDetectionPattern><![CDATA[.*\*/(\s|\t)*$]]></lastLineDetectionPattern>
+        <allowBlankLines>false</allowBlankLines>
+        <isMultiline>true</isMultiline>
+        <padLines>false</padLines>
+    </JavaPackage_style>
+</additionalHeaders>

@@ -7,15 +7,30 @@
 	<packaging>war</packaging>
 	<name>orchestrator</name>
 
+	<licenses>
+		<license>
+			<name>Apache License, Version 2.0</name>
+			<url>https://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
 	<scm>
-		<url>https://github.com/indigo-dc/orchestrator.git</url>
+		<url>https://github.com/indigo-dc/orchestrator</url>
 		<connection>scm:git:https://github.com/indigo-dc/orchestrator.git</connection>
 		<developerConnection>scm:git:https://github.com/indigo-dc/orchestrator.git</developerConnection>
 		<tag>HEAD</tag>
 	</scm>
 
+	<organization>
+		<name>Santer Reply S.p.A.</name>
+		<url>http://www.reply.com</url>
+	</organization>
+  
+  <inceptionYear>2015</inceptionYear>
+  
 	<properties>
-
+		<license-maven-plugin.version>3.0</license-maven-plugin.version>
 		<!-- Execute tests by defaults -->
 		<surefire.skip>false</surefire.skip>
 
@@ -546,6 +561,23 @@
 									</action>
 								</pluginExecution>
 
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>com.mycila</groupId>
+										<artifactId>
+											license-maven-plugin
+										</artifactId>
+										<versionRange>
+											[1.0,)
+										</versionRange>
+										<goals>
+											<goal>check</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore></ignore>
+									</action>
+								</pluginExecution>
 							</pluginExecutions>
 						</lifecycleMappingMetadata>
 					</configuration>
@@ -591,6 +623,43 @@
 							</goals>
 						</execution>
 					</executions>
+				</plugin>
+				<plugin>
+					<groupId>com.mycila</groupId>
+					<artifactId>license-maven-plugin</artifactId>
+					<version>${license-maven-plugin.version}</version>
+					<configuration>
+						<header>tools/maven-license-plugin/APACHE-2-header.tmpl</header>
+						<includes>
+							<include>docker/**</include>
+							<include>src/main/java/**</include>
+							<include>src/test/java/**</include>
+							<include>kubernetes/**</include>
+							<include>pom.xml</include>
+						</includes>
+						<excludes>
+                    		<exclude>**/*.war</exclude>
+                		</excludes>
+                		<useDefaultExcludes>true</useDefaultExcludes>
+                		<useDefaultMapping>true</useDefaultMapping>
+                		<strictCheck>true</strictCheck>
+                		<properties>
+                			<owner>${project.organization.name}</owner>
+                		</properties>
+						<headerDefinitions>
+							<headerDefinition>tools/maven-license-plugin/myc-javapkg.xml</headerDefinition>
+						</headerDefinitions>
+                		<mapping>
+                			<java>JavaPackage_style</java>
+                		</mapping>
+					</configuration>
+					<dependencies>
+						<dependency>
+							<groupId>com.mycila</groupId>
+							<artifactId>license-maven-plugin-git</artifactId>
+							<version>${license-maven-plugin.version}</version>
+						</dependency>
+					</dependencies>
 				</plugin>
 			</plugins>
 		</pluginManagement>
@@ -645,7 +714,19 @@
 					</execution>
 				</executions>
 			</plugin>
-
+			<plugin>
+				<groupId>com.mycila</groupId>
+				<artifactId>license-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>check-license-headers</id>
+						<phase>validate</phase>
+						<goals>
+							<goal>check</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 			<!-- Set properties containing the scm revision and other build metadata -->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
