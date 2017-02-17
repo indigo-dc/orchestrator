@@ -674,19 +674,19 @@ node_types:
       consul_servers:
         type: string
         required: no
-        default: localhost
+        default: "{ get_attribute: [ HOST, public_address ] }"
       zookeeper_host_list:
         type: string
         required: no
-        default: localhost
+        default: "{ get_attribute: [ HOST, public_address ] }"
       zookeeper_peers:
         type: string
         required: no
-        default: localhost
+        default: "{ get_attribute: [ HOST, public_address ] }"
       mesos_masters_list:
         type: string
         required: no
-        default: localhost
+        default: "{ get_attribute: [ HOST, public_address ] }"
       marathon_username:
         type: string
         required: no
@@ -725,10 +725,10 @@ node_types:
         configure:
           implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/mesos_master_install.yml
           inputs:
-            consul_server_ips: { get_attribute: [ HOST, public_address ] }
-            zookeeper_host_list_ips: { get_attribute: [ HOST, public_address ] }
-            zookeeper_peers_ips: { get_attribute: [ HOST, public_address ] }
-            mesos_masters_list_ips: { get_attribute: [ HOST, public_address ] }
+            consul_server_ips: { get_property: [ SELF, consul_servers ] }
+            zookeeper_host_list_ips: { get_property: [ SELF, zookeeper_host_list ] }
+            zookeeper_peers_ips: { get_property: [ SELF, zookeeper_peers ] }
+            mesos_masters_list_ips: { get_property: [ SELF, mesos_masters_list ] }
             marathon_user: { get_property: [ SELF, marathon_username ] }
             marathon_pass: { get_property: [ SELF, marathon_password ] }
             chronos_user: { get_property: [ SELF, chronos_username ] }
