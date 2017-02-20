@@ -49,12 +49,14 @@ EXPOSE  3528 \
 		55200 \
 		57600
 
-ENV WAR_NAME orchestrator
+ENV WAR_NAME orchestrator.war
 
-COPY $WAR_NAME.war $JBOSS_HOME/standalone/deployments/$WAR_NAME.war.zip
-RUN unzip $JBOSS_HOME/standalone/deployments/$WAR_NAME.war.zip -d $JBOSS_HOME/standalone/deployments/$WAR_NAME.war \
-	&& touch $JBOSS_HOME/standalone/deployments/$WAR_NAME.war.dodeploy \
-	&& rm $JBOSS_HOME/standalone/deployments/$WAR_NAME.war.zip
+ARG WAR_NAME_SRC=$WAR_NAME
+
+ADD $WAR_NAME_SRC $JBOSS_HOME/standalone/deployments/$WAR_NAME.zip
+RUN unzip $JBOSS_HOME/standalone/deployments/$WAR_NAME.zip -d $JBOSS_HOME/standalone/deployments/$WAR_NAME \
+	&& touch $JBOSS_HOME/standalone/deployments/$WAR_NAME.dodeploy \
+	&& rm $JBOSS_HOME/standalone/deployments/$WAR_NAME.zip
 
 ENV ORCHESTRATOR_DB_ENDPOINT="databaseorchestrator:3306" \
 	ORCHESTRATOR_DB_NAME=orchestrator \

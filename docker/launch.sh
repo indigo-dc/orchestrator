@@ -15,9 +15,6 @@
 # limitations under the License.
 #
 
-
-#IPADDR=$(ip a s | sed -ne '/127.0.0.1/!{s/^[ \t]*inet[ \t]*\([0-9.]\+\)\/.*$/\1/p}')
-
 java -jar /usr/share/java/saxon.jar -o:$JBOSS_HOME/standalone/configuration/$JBOSS_CONF_FILE -s:$JBOSS_HOME/standalone/configuration/$JBOSS_CONF_FILE -xsl:/datasourcesConfig.xsl \
 	orchestrator.DB.endpoint=$ORCHESTRATOR_DB_ENDPOINT \
 	orchestrator.DB.name=$ORCHESTRATOR_DB_NAME \
@@ -28,10 +25,10 @@ java -jar /usr/share/java/saxon.jar -o:$JBOSS_HOME/standalone/configuration/$JBO
 	workflow.DB.user=$WORKFLOW_DB_USER \
 	workflow.DB.pwd=$WORKFLOW_DB_PWD
 
-CHRONOS_PROP_FILE="$JBOSS_HOME/standalone/deployments/$WAR_NAME.war/WEB-INF/classes/chronos/chronos.properties"
-CMDB_PROP_FILE="$JBOSS_HOME/standalone/deployments/$WAR_NAME.war/WEB-INF/classes/cmdb/cmdb.properties"
-SLAM_PROP_FILE="$JBOSS_HOME/standalone/deployments/$WAR_NAME.war/WEB-INF/classes/slam/slam.properties"
-CPR_PROP_FILE="$JBOSS_HOME/standalone/deployments/$WAR_NAME.war/WEB-INF/classes/cloud-provider-ranker/cloud-provider-ranker.properties"
+CHRONOS_PROP_FILE="$JBOSS_HOME/standalone/deployments/$WAR_NAME/WEB-INF/classes/chronos/chronos.properties"
+CMDB_PROP_FILE="$JBOSS_HOME/standalone/deployments/$WAR_NAME/WEB-INF/classes/cmdb/cmdb.properties"
+SLAM_PROP_FILE="$JBOSS_HOME/standalone/deployments/$WAR_NAME/WEB-INF/classes/slam/slam.properties"
+CPR_PROP_FILE="$JBOSS_HOME/standalone/deployments/$WAR_NAME/WEB-INF/classes/cloud-provider-ranker/cloud-provider-ranker.properties"
 
 if [[ $CHRONOS_ENDPOINT ]];
 	then sed -i "s/^\(chronos\.endpoint=\).*$/\1$(echo $CHRONOS_ENDPOINT | sed -e 's/[\/&]/\\&/g')/" ${CHRONOS_PROP_FILE};
