@@ -42,6 +42,7 @@ import es.upv.i3m.grycap.im.pojo.ResponseError;
 import es.upv.i3m.grycap.im.pojo.VirtualMachineInfo;
 import es.upv.i3m.grycap.im.rest.client.BodyContentType;
 
+import it.reply.orchestrator.annotation.DeploymentProviderQualifier;
 import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
@@ -63,11 +64,9 @@ import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -80,12 +79,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Service
-@Qualifier("IM")
+@DeploymentProviderQualifier(DeploymentProvider.IM)
 @PropertySource("classpath:im-config/im-java-api.properties")
 public class ImServiceImpl extends AbstractDeploymentProviderService {
 
@@ -213,16 +214,15 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     try {
       // Update status of the deployment
       deployment.setTask(Task.DEPLOYER);
-      deployment.setDeploymentProvider(DeploymentProvider.IM);
       deployment = deploymentRepository.save(deployment);
 
       ArchiveRoot ar =
           toscaService.prepareTemplate(deployment.getTemplate(), deployment.getParameters());
       toscaService.addElasticClusterParameters(ar, deploymentUuid,
           deploymentMessage.getOauth2Token());
-      toscaService.contextualizeImages(DeploymentProvider.IM, ar,
-          deploymentMessage.getChosenCloudProvider(),
-          deploymentMessage.getChosenCloudProviderEndpoint().getCpComputeServiceId());
+      toscaService.contextualizeAndReplaceImages(ar, deploymentMessage.getChosenCloudProvider(),
+          deploymentMessage.getChosenCloudProviderEndpoint().getCpComputeServiceId(),
+          DeploymentProvider.IM);
       String imCustomizedTemplate = toscaService.getTemplateFromTopology(ar);
 
       // Generate IM Client
@@ -382,15 +382,19 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       newAr = toscaService.prepareTemplate(template, deployment.getParameters());
       toscaService.addElasticClusterParameters(newAr, deployment.getId(),
           deploymentMessage.getOauth2Token());
-      toscaService.contextualizeImages(DeploymentProvider.IM, newAr,
-          deploymentMessage.getChosenCloudProvider(),
-          deploymentMessage.getChosenCloudProviderEndpoint().getCpComputeServiceId());
+      toscaService.contextualizeAndReplaceImages(newAr, deploymentMessage.getChosenCloudProvider(),
+          deploymentMessage.getChosenCloudProviderEndpoint().getCpComputeServiceId(),
+          DeploymentProvider.IM);
     } catch (ParsingException | IOException | ToscaException | ParseException ex) {
       throw new OrchestratorException(ex);
     }
     // find Count nodes into new and old template
-    Map<String, NodeTemplate> oldNodes = toscaService.getCountNodes(oldAr);
-    Map<String, NodeTemplate> newNodes = toscaService.getCountNodes(newAr);
+    Map<String, NodeTemplate> oldNodes = toscaService.getScalableNodes(oldAr)
+        .stream()
+        .collect(Collectors.toMap(node -> node.getName(), node -> node));
+    Map<String, NodeTemplate> newNodes = toscaService.getScalableNodes(newAr)
+        .stream()
+        .collect(Collectors.toMap(node -> node.getName(), node -> node));
 
     try {
       // Create the new template with the nodes to be added
@@ -403,8 +407,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       // Find difference between the old template and the new
       for (Map.Entry<String, NodeTemplate> entry : oldNodes.entrySet()) {
         if (newNodes.containsKey(entry.getKey())) {
-          int oldCount = toscaService.getCount(entry.getValue());
-          int newCount = toscaService.getCount(newNodes.get(entry.getKey()));
+          int oldCount = toscaService.getCount(entry.getValue()).orElse(-1);
+          int newCount = toscaService.getCount(newNodes.get(entry.getKey())).orElse(-1);
           List<String> removalList = toscaService.getRemovalList(newNodes.get(entry.getKey()));
           if (newCount > oldCount && removalList.size() == 0) {
             Resource resource;
@@ -441,7 +445,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       // Find if there is a new TOSCA node
       for (Map.Entry<String, NodeTemplate> entry : newNodes.entrySet()) {
         if (!oldNodes.containsKey(entry.getKey())) {
-          int count = toscaService.getCount(newNodes.get(entry.getKey()));
+          int count = toscaService.getCount(newNodes.get(entry.getKey())).orElse(-1);
           Resource resource;
           for (int i = 0; i < count; i++) {
             resource = new Resource();
@@ -604,13 +608,13 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     // for each URL get the information about the VM
     Map<String, VirtualMachineInfo> vmMap = new HashMap<String, VirtualMachineInfo>();
     for (InfrastructureUri vmUri : vmUrls.getUris()) {
-      String vmId = extractVmId(vmUri);
+      String vmId = extractVmId(vmUri).orElse("");
       VirtualMachineInfo vmInfo = im.getVmInfo(infrastructureId, vmId);
       vmMap.put(vmId, vmInfo);
     }
 
     // Find the Resource from the DB and bind it with the corresponding VM
-    Page<Resource> resources = resourceRepository.findByDeployment_id(deployment.getId(), null);
+    List<Resource> resources = resourceRepository.findByDeployment_id(deployment.getId());
 
     // Remove from vmMap all the resources already binded
     for (Resource r : resources) {
@@ -637,12 +641,12 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     }
   }
 
-  private String extractVmId(InfrastructureUri vmUri) {
+  private Optional<String> extractVmId(InfrastructureUri vmUri) {
     Matcher matcher = VM_ID_PATTERN.matcher(vmUri.getUri());
     if (matcher.find()) {
-      return matcher.group(0);
+      return Optional.of(matcher.group(0));
     }
-    return "";
+    return Optional.empty();
   }
 
   private ResponseError getImResponseError(ImClientErrorException exception) {

@@ -17,10 +17,11 @@ package it.reply.orchestrator.service;
  */
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 
-import alien4cloud.model.components.ScalarPropertyValue;
-import alien4cloud.model.topology.Capability;
 import alien4cloud.model.topology.NodeTemplate;
+import alien4cloud.model.topology.RelationshipTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingException;
 
@@ -36,6 +37,7 @@ import it.reply.orchestrator.dto.deployment.PlacementPolicy;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.enums.DeploymentProvider;
+import it.reply.orchestrator.enums.DeploymentType;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
@@ -43,14 +45,16 @@ import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.http.BadRequestException;
 import it.reply.orchestrator.exception.http.ConflictException;
 import it.reply.orchestrator.exception.http.NotFoundException;
-import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.workflowmanager.exceptions.WorkflowException;
 import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager;
 import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager.RUNTIME_STRATEGY;
 
+import org.jgrapht.graph.DirectedMultigraph;
+import org.jgrapht.traverse.TopologicalOrderIterator;
 import org.kie.api.runtime.process.ProcessInstance;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -63,9 +67,13 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Service
 public class DeploymentServiceImpl implements DeploymentService {
+
+  private static final Logger LOG = LoggerFactory.getLogger(DeploymentServiceImpl.class);
 
   @Autowired
   private DeploymentRepository deploymentRepository;
@@ -108,9 +116,9 @@ public class DeploymentServiceImpl implements DeploymentService {
   public Deployment createDeployment(DeploymentRequest request) {
     Map<String, NodeTemplate> nodes;
     Deployment deployment;
-    boolean isChronosDeployment = false;
-    Map<String, OneData> odRequirements = new HashMap<>();
+    Map<String, OneData> odRequirements = Maps.newHashMap();
     List<PlacementPolicy> placementPolicies = Lists.newArrayList();
+    DeploymentType deploymentType;
 
     try {
       // Parse once, validate structure and user's inputs, replace user's input
@@ -130,11 +138,9 @@ public class DeploymentServiceImpl implements DeploymentService {
       }
 
       // FIXME: Define function to decide DeploymentProvider (Temporary - just for prototyping)
-      isChronosDeployment = isChronosDeployment(nodes);
-      deployment.setDeploymentProvider(
-          (isChronosDeployment ? DeploymentProvider.CHRONOS : DeploymentProvider.IM));
+      deploymentType = inferDeploymentType(nodes);
 
-      if (isChronosDeployment) {
+      if (deploymentType == DeploymentType.CHRONOS) {
         // Extract OneData requirements from template
         odRequirements =
             toscaService.extractOneDataRequirements(parsingResult, request.getParameters());
@@ -160,14 +166,11 @@ public class DeploymentServiceImpl implements DeploymentService {
     params.put(WorkflowConstants.WF_PARAM_LOGGER,
         LoggerFactory.getLogger(WorkflowConfigProducerBean.DEPLOY.getProcessId()));
 
-    // FIXME Put in deployment provider field
-    params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_TYPE,
-        (isChronosDeployment ? DEPLOYMENT_TYPE_CHRONOS : DEPLOYMENT_TYPE_TOSCA));
-
     // Build deployment message
     DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment);
     deploymentMessage.setOneDataRequirements(odRequirements);
     deploymentMessage.setPlacementPolicies(placementPolicies);
+    deploymentMessage.setDeploymentType(deploymentType);
     params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
 
     ProcessInstance pi = null;
@@ -190,30 +193,34 @@ public class DeploymentServiceImpl implements DeploymentService {
       deploymentMessage.setOauth2Token(oauth2TokenService.getOAuth2Token());
     }
     deploymentMessage.setDeploymentId(deployment.getId());
-    deploymentMessage.setDeploymentProvider(deployment.getDeploymentProvider());
     deploymentMessage.setChosenCloudProviderEndpoint(deployment.getCloudProviderEndpoint());
 
     return deploymentMessage;
 
   }
 
-  /**
-   * Temporary method to decide whether a given deployment has to be deployed using Chronos (<b>just
-   * for experiments</b>). <br/>
-   * Currently, if there is at least one node whose name contains 'Chronos', the deployment is done
-   * with Chronos.
-   * 
-   * @param nodes
-   *          the template nodes.
-   * @return <tt>true</tt> if Chronos, <tt>false</tt> otherwise.
-   */
-  private static boolean isChronosDeployment(Map<String, NodeTemplate> nodes) {
+  private static DeploymentType inferDeploymentType(Map<String, NodeTemplate> nodes) {
     for (Map.Entry<String, NodeTemplate> node : nodes.entrySet()) {
       if (node.getValue().getType().contains("Chronos")) {
-        return true;
+        return DeploymentType.CHRONOS;
+      } else if (node.getValue().getType().contains("Marathon")) {
+        return DeploymentType.MARATHON;
       }
     }
-    return false;
+    return DeploymentType.TOSCA;
+  }
+
+  private static DeploymentType inferDeploymentType(DeploymentProvider deploymentProvider) {
+    switch (deploymentProvider) {
+      case CHRONOS:
+        return DeploymentType.CHRONOS;
+      case MARATHON:
+        return DeploymentType.MARATHON;
+      case HEAT:
+      case IM:
+      default:
+        return DeploymentType.TOSCA;
+    }
   }
 
   @Override
@@ -245,23 +252,16 @@ public class DeploymentServiceImpl implements DeploymentService {
         params.put(WorkflowConstants.WF_PARAM_LOGGER,
             LoggerFactory.getLogger(WorkflowConfigProducerBean.UNDEPLOY.getProcessId()));
 
-        // FIXME: Temporary - just for test
-        if (deployment.getDeploymentProvider() != null) {
-          params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_TYPE,
-              deployment.getDeploymentProvider().name());
-        } else {
-          if (deployment.getEndpoint() != null) {
-            throw new DeploymentException(String.format(
-                "Error deleting deploy <%s>: Deployment provider is null but the endpoint is <%s>",
-                deployment.getId(), deployment.getEndpoint()));
-          } else {
-            deploymentRepository.delete(deployment);
-            return;
-          }
+        // No deployment IaaS reference -> nothing to delete
+        if (deployment.getEndpoint() == null) {
+          deploymentRepository.delete(deployment);
+          return;
         }
 
         // Build deployment message
         DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment);
+        DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
+        deploymentMessage.setDeploymentType(deploymentType);
         params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
 
         ProcessInstance pi = null;
@@ -321,6 +321,9 @@ public class DeploymentServiceImpl implements DeploymentService {
         DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment);
         params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
 
+        DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
+        deploymentMessage.setDeploymentType(deploymentType);
+        
         ProcessInstance pi = null;
         try {
           pi = wfService.startProcess(WorkflowConfigProducerBean.UPDATE.getProcessId(), params,
@@ -342,25 +345,47 @@ public class DeploymentServiceImpl implements DeploymentService {
   }
 
   private void createResources(Deployment deployment, Map<String, NodeTemplate> nodes) {
-    Resource resource;
-    for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
-      Capability scalable = toscaService.getNodeCapabilityByName(entry.getValue(), "scalable");
-      int count = 1;
-      if (scalable != null) {
-        ScalarPropertyValue scalarPropertyValue =
-            (ScalarPropertyValue) scalable.getProperties().get("count");
-        if (scalarPropertyValue != null) {
-          count = Integer.parseInt(scalarPropertyValue.getValue());
-        }
+
+    // calculate graph
+    DirectedMultigraph<NodeTemplate, RelationshipTemplate> graph =
+        toscaService.buildNodeGraph(nodes, true);
+
+    // calculate topology
+    TopologicalOrderIterator<NodeTemplate, RelationshipTemplate> nodeIterator =
+        new TopologicalOrderIterator<>(graph);
+
+    // Map with all the resources created for each node
+    Map<NodeTemplate, Set<Resource>> resourcesMap = Maps.newHashMap();
+
+    while (nodeIterator.hasNext()) {
+      NodeTemplate node = nodeIterator.next();
+      Set<RelationshipTemplate> relationships = graph.incomingEdgesOf(node);
+
+      // Get all the parents
+      List<NodeTemplate> parentNodes =
+          relationships.stream().map(graph::getEdgeSource).collect(Collectors.toList());
+
+      int nodeCount = toscaService.getCount(node).orElse(1);
+      Set<Resource> resources = Sets.newHashSet();
+      for (int i = 0; i < nodeCount; ++i) {
+
+        Resource tmpResource = new Resource();
+        tmpResource.setDeployment(deployment);
+        tmpResource.setState(NodeStates.INITIAL);
+        tmpResource.setToscaNodeName(node.getName());
+        tmpResource.setToscaNodeType(node.getType());
+
+        final Resource resource = resourceRepository.save(tmpResource);
+        resources.add(resource);
+
+        // bind parents resources with child resource
+        parentNodes.forEach(parentNode -> resourcesMap.get(parentNode).forEach(parentResource -> {
+          parentResource.getRequiredBy().add(resource.getId());
+          resource.getRequires().add(parentResource.getId());
+        }));
       }
-      for (int i = 0; i < count; i++) {
-        resource = new Resource();
-        resource.setDeployment(deployment);
-        resource.setState(NodeStates.CREATING);
-        resource.setToscaNodeName(entry.getKey());
-        resource.setToscaNodeType(entry.getValue().getType());
-        resourceRepository.save(resource);
-      }
+      // add all the resources created for this node
+      resourcesMap.put(node, resources);
     }
   }
 }

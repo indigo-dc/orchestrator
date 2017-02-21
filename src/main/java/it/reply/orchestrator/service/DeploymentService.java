@@ -23,9 +23,6 @@ import org.springframework.data.domain.Pageable;
 
 public interface DeploymentService {
 
-  public static final String DEPLOYMENT_TYPE_CHRONOS = "CHRONOS";
-  public static final String DEPLOYMENT_TYPE_TOSCA = "TOSCA";
-
   public Page<Deployment> getDeployments(Pageable pageable);
 
   public Deployment getDeployment(String id);

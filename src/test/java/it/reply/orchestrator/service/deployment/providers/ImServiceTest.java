@@ -70,6 +70,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 public class ImServiceTest {
@@ -112,6 +113,7 @@ public class ImServiceTest {
     DeploymentMessage dm = new DeploymentMessage();
     Deployment deployment = ControllerTestUtils.createDeployment();
     deployment.setStatus(Status.CREATE_IN_PROGRESS);
+    deployment.setDeploymentProvider(DeploymentProvider.IM);
     dm.setDeployment(deployment);
     dm.setDeploymentId(deployment.getId());
     deployment.getResources().addAll(ControllerTestUtils.createResources(deployment, 2, false));
@@ -677,9 +679,9 @@ public class ImServiceTest {
     NodeTemplate ntNew = new NodeTemplate();
     ntNew.setName("newNode");
     NodeTemplate ntNew2 = new NodeTemplate();
-    ntNew.setName("newNode2");
+    ntNew2.setName("newNode2");
     NodeTemplate ntNew3 = new NodeTemplate();
-    ntNew.setName("newNode3");
+    ntNew3.setName("newNode3");
     Map<String, NodeTemplate> newNodes = new HashMap<>();
     newNodes.put("oldNode", ntOld);
     newNodes.put("newNode", ntNew);
@@ -700,9 +702,10 @@ public class ImServiceTest {
         .getClient(Mockito.any(DeploymentMessage.class));
 
 
-    Mockito.doReturn(oldNodes).when(toscaService).getCountNodes(oldAr);
-    Mockito.doReturn(newNodes).when(toscaService).getCountNodes(newAr);
-    Mockito.doReturn(1).doReturn(4).when(toscaService).getCount(Mockito.any(NodeTemplate.class));
+    Mockito.doReturn(oldNodes.values()).when(toscaService).getScalableNodes(oldAr);
+    Mockito.doReturn(newNodes.values()).when(toscaService).getScalableNodes(newAr);
+    Mockito.doReturn(Optional.of(1)).doReturn(Optional.of(4))
+        .when(toscaService).getCount(Mockito.any(NodeTemplate.class));
     Mockito.doReturn(dm.getDeployment().getTemplate()).when(toscaService)
         .updateTemplate(Mockito.anyString());
 

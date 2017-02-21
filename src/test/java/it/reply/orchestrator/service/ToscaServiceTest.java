@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 
 import alien4cloud.model.components.AbstractPropertyValue;
+import alien4cloud.model.components.ComplexPropertyValue;
 import alien4cloud.model.components.ListPropertyValue;
 import alien4cloud.model.components.PropertyValue;
 import alien4cloud.model.components.ScalarPropertyValue;
@@ -36,6 +37,7 @@ import es.upv.i3m.grycap.im.exceptions.FileException;
 import it.reply.orchestrator.config.specific.WebAppConfigurationAware;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.exception.service.ToscaException;
+import it.reply.orchestrator.utils.CommonUtils;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -137,10 +139,14 @@ public class ToscaServiceTest extends WebAppConfigurationAware {
     Map<String, NodeTemplate> nodes = ar.getTopology().getNodeTemplates();
     NodeTemplate chronosJob = nodes.get("chronos_job");
     // Node's properties
-    assertEquals(inputs.get("command"),
-        toscaService.getNodePropertyValueByName(chronosJob, "command").getValue());
+    assertEquals(
+        inputs
+            .get(
+                "command"),
+        CommonUtils.<ScalarPropertyValue> optionalCast(
+            toscaService.getNodePropertyByName(chronosJob, "command")).get().getValue());
     // Validate list replacement (little bit hard-coded... should be improved)
-    AbstractPropertyValue uris = toscaService.getNodePropertyValueByName(chronosJob, "uris");
+    AbstractPropertyValue uris = toscaService.getNodePropertyByName(chronosJob, "uris").get();
     assertThat(uris, instanceOf(ListPropertyValue.class));
     AbstractPropertyValue urisOne =
         (AbstractPropertyValue) ((ListPropertyValue) uris).getValue().get(0);
@@ -152,11 +158,11 @@ public class ToscaServiceTest extends WebAppConfigurationAware {
         ((ScalarPropertyValue) urisTwo).getValue()));
 
     // Recursive node's properties
-    @SuppressWarnings("unchecked")
-    AbstractPropertyValue outputFileNames =
-        (AbstractPropertyValue) (((Map<String, Object>) toscaService
-            .getNodePropertyValueByName(chronosJob, "environment_variables").getValue())
-                .get("OUTPUT_FILENAMES"));
+    AbstractPropertyValue outputFileNames = (AbstractPropertyValue) CommonUtils
+        .<ComplexPropertyValue> optionalCast(
+            toscaService.getNodePropertyByName(chronosJob, "environment_variables"))
+        .get().getValue().get("OUTPUT_FILENAMES");
+
     assertThat(outputFileNames, instanceOf(ScalarPropertyValue.class));
     assertEquals(inputs.get("output_filenames").toString(),
         ((ScalarPropertyValue) outputFileNames).getValue());
@@ -172,9 +178,15 @@ public class ToscaServiceTest extends WebAppConfigurationAware {
     NodeTemplate dockerNode = dockerRelationships.values().iterator().next();
     Capability dockerCapability = dockerNode.getCapabilities().get("host");
     assertEquals(inputs.get("cpus").toString(),
-        toscaService.getCapabilityPropertyValueByName(dockerCapability, "num_cpus").getValue());
+        CommonUtils
+            .<ScalarPropertyValue> optionalCast(
+                toscaService.getCapabilityPropertyByName(dockerCapability, "num_cpus"))
+            .get().getValue());
     assertEquals(inputs.get("mem").toString(),
-        toscaService.getCapabilityPropertyValueByName(dockerCapability, "mem_size").getValue());
+        CommonUtils
+            .<ScalarPropertyValue> optionalCast(
+                toscaService.getCapabilityPropertyByName(dockerCapability, "mem_size"))
+            .get().getValue());
 
     // FIXME: Also test relationships' properties
   }

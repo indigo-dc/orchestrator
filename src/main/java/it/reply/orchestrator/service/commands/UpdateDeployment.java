@@ -25,6 +25,7 @@ import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
+import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.service.CloudProviderEndpointServiceImpl;
 import it.reply.orchestrator.service.OneDataService;
 import it.reply.orchestrator.service.WorkflowConstants;
@@ -113,6 +114,11 @@ public class UpdateDeployment extends BaseCommand {
       // FIXME Use another method to hold CP Endpoint (i.e. CMDB service ID reference?)
       // Save CPE in Deployment for future use
       deployment.setCloudProviderEndpoint(chosenCloudProviderEndpoint);
+
+      DeploymentProvider deploymentProvider =
+          cloudProviderEndpointServiceImpl.getDeploymentProvider(
+              deploymentMessage.getDeploymentType(), deploymentMessage.getChosenCloudProvider());
+      deployment.setDeploymentProvider(deploymentProvider);
 
       // FIXME Implement OneData scheduling properly and move in a dedicated command
       generateOneDataParameters(rankCloudProvidersMessage, deploymentMessage);

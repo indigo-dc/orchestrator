@@ -16,16 +16,54 @@ package it.reply.orchestrator.utils;
  * limitations under the License.
  */
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class EnumUtils {
 
   private static final Logger LOG = LoggerFactory.getLogger(EnumUtils.class);
+
+  /**
+   * Retrieve a enum value from its class and a user defined predicate.
+   * 
+   * @param enumClass
+   *          the class of the enum
+   * @param predicate
+   *          the the predicate
+   * @return the optional enum value
+   */
+  public static <T extends Enum<T>> Optional<T> fromPredicate(Class<T> enumClass,
+      Predicate<? super T> predicate) {
+    Objects.requireNonNull(enumClass);
+    Objects.requireNonNull(predicate);
+    return Arrays.stream(enumClass.getEnumConstants()).filter(predicate).findFirst();
+  }
+
+  /**
+   * Collect all the enums represented by a class in a List of objects returned by a mapper
+   * function.
+   * 
+   * @param enumClass
+   *          enums the class
+   * @param mapper
+   *          the mapper fuction
+   * @return the list
+   */
+  public static <T extends Enum<T>, R> List<R> toList(Class<T> enumClass,
+      Function<? super T, R> mapper) {
+    Objects.requireNonNull(enumClass);
+    Objects.requireNonNull(mapper);
+    return Arrays.stream(enumClass.getEnumConstants()).map(mapper).collect(Collectors.toList());
+  }
 
   /**
    * <p>
@@ -43,16 +81,10 @@ public class EnumUtils {
    *          the enum name
    * @return the enum value, can be null
    */
-  @Nullable
-  public static <T extends Enum<T> & Named> T fromName(Class<T> enumClass, String name) {
+  public static <T extends Enum<T> & Named> Optional<T> fromName(Class<T> enumClass, String name) {
     Objects.requireNonNull(enumClass);
     Objects.requireNonNull(name);
-    for (T enumItem : org.apache.commons.lang3.EnumUtils.getEnumList(enumClass)) {
-      if (name.equals(enumItem.getName())) {
-        return enumItem;
-      }
-    }
-    return null;
+    return fromPredicate(enumClass, input -> name.equals(input.getName()));
   }
 
   /**
@@ -76,14 +108,8 @@ public class EnumUtils {
    * @return the enum value, cannot be null
    */
   public static <T extends Enum<T> & Named> T fromNameOrThrow(Class<T> enumClass, String name) {
-    @Nullable
-    T foundEnum = fromName(enumClass, name);
-    if (foundEnum != null) {
-      return foundEnum;
-    } else {
-      throw new NoSuchElementException(
-          "No enum found with name [" + name + "] in class [" + enumClass + "]");
-    }
+    return fromName(enumClass, name).orElseThrow(() -> new NoSuchElementException(
+        "No enum found with name [" + name + "] in class [" + enumClass + "]"));
   }
 
   /**
@@ -111,15 +137,13 @@ public class EnumUtils {
   public static <T extends Enum<T> & Named> T fromNameOrDefault(Class<T> enumClass, String name,
       T defaultValue) {
     Objects.requireNonNull(defaultValue);
-    @Nullable
-    T foundEnum = fromName(enumClass, name);
-    if (foundEnum != null) {
-      return foundEnum;
-    } else {
+
+    return fromName(enumClass, name).orElseGet(() -> {
       LOG.warn("No enum found with name [{}] in class [{}], using value [{}] as default", name,
           enumClass, defaultValue);
       return defaultValue;
-    }
+    });
+
   }
 
 }

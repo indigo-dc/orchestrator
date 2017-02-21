@@ -39,6 +39,7 @@ import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
+import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;
 import it.reply.workflowmanager.utils.Constants;
 
 public class UpdateTest {
@@ -47,8 +48,10 @@ public class UpdateTest {
   Update update = new Update();
 
   @Mock
-  private DeploymentProviderService imService;
+  private DeploymentProviderService deploymentProviderService;
 
+  @Mock
+  private DeploymentProviderServiceRegistry deploymentProviderServiceRegistry;
 
   @Before
   public void setup() {
@@ -63,7 +66,9 @@ public class UpdateTest {
     WorkItemImpl workItem = new WorkItemImpl();
     workItem.setParameter(WorkflowConstants.WF_PARAM_TOSCA_TEMPLATE, "template");
     commandContext.setData(Constants.WORKITEM, workItem);
-    Mockito.when(imService.doUpdate(dm, "template")).thenReturn(true);
+    Mockito.when(deploymentProviderServiceRegistry
+        .getDeploymentProviderService(dm.getDeployment())).thenReturn(deploymentProviderService);
+    Mockito.when(deploymentProviderService.doUpdate(dm, "template")).thenReturn(true);
 
     ExecutionResults expectedResult = new ExecutionResults();
     expectedResult.setData(Constants.RESULT_STATUS, "OK");
@@ -75,7 +80,7 @@ public class UpdateTest {
         customExecute.getData(Constants.RESULT_STATUS));
     Assert.assertEquals(expectedResult.getData(Constants.OK_RESULT),
         customExecute.getData(Constants.OK_RESULT));
-    Assert.assertEquals(update.getErrorMessagePrefix(), "Error updating deployment through IM");
+    Assert.assertEquals(update.getErrorMessagePrefix(), "Error updating deployment");
   }
 
   private DeploymentMessage generateDeployDm() {

@@ -17,12 +17,17 @@ package it.reply.orchestrator.service;
  */
 
 import alien4cloud.model.components.AbstractPropertyValue;
+import alien4cloud.model.components.ComplexPropertyValue;
+import alien4cloud.model.components.DeploymentArtifact;
+import alien4cloud.model.components.ListPropertyValue;
 import alien4cloud.model.components.PropertyDefinition;
-import alien4cloud.model.components.PropertyValue;
+import alien4cloud.model.components.ScalarPropertyValue;
 import alien4cloud.model.topology.Capability;
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.model.topology.RelationshipTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
+import alien4cloud.tosca.normative.IPropertyType;
+import alien4cloud.tosca.normative.InvalidPropertyValueException;
 import alien4cloud.tosca.parser.ParsingException;
 import alien4cloud.tosca.parser.ParsingResult;
 
@@ -33,10 +38,15 @@ import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.service.ToscaException;
 
+import org.jgrapht.graph.DirectedMultigraph;
+
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 
 public interface ToscaService {
 
@@ -84,7 +94,7 @@ public interface ToscaService {
    * @param oauthToken
    *          .
    * @throws ParseException
-   *          .
+   *           .
    */
   public void addElasticClusterParameters(ArchiveRoot parsingResult, String deploymentId,
       String oauthToken) throws ParseException;
@@ -100,25 +110,22 @@ public interface ToscaService {
    * @param cloudProvider
    *          the chosen cloud provider data.
    */
-  public List<ImageData> contextualizeImages(DeploymentProvider deploymentProvider,
-      ArchiveRoot parsingResult, CloudProvider cloudProvider, String cloudServiceId);
+  public Map<Capability, ImageData> contextualizeAndReplaceImages(ArchiveRoot parsingResult,
+      CloudProvider cloudProvider, String cloudServiceId, DeploymentProvider deploymentProvider);
 
   /**
    * Find matches for images data in 'tosca.capabilities.indigo.OperatingSystem' capabilities in the
    * TOSCA template with the provider-specific identifier.
    * 
-   * @param deploymentProvider
-   *          the deployment provider.
    * @param parsingResult
    *          the in-memory TOSCA template.
    * @param cloudProvider
    *          the chosen cloud provider data.
-   * @param replace
-   *          whether to actually replace the image IDs or just do a dry-run.
+   * @param cloudServiceId
+   *          the cloud service of the cloud provider to search for.
    */
-  public List<ImageData> contextualizeImages(DeploymentProvider deploymentProvider,
-      ArchiveRoot parsingResult, CloudProvider cloudProvider, String cloudServiceId,
-      boolean replace);
+  public Map<Capability, ImageData> contextualizeImages(ArchiveRoot parsingResult,
+      CloudProvider cloudProvider, String cloudServiceId);
 
   /**
    * Verifies that all the template's required inputs are present in the user's input list.
@@ -197,13 +204,23 @@ public interface ToscaService {
   public ArchiveRoot prepareTemplate(String toscaTemplate, Map<String, Object> inputs)
       throws IOException, ParsingException, ToscaException;
 
-  public Capability getNodeCapabilityByName(NodeTemplate node, String propertyName);
+  public Optional<Capability> getNodeCapabilityByName(NodeTemplate node, String propertyName);
 
-  public AbstractPropertyValue getNodePropertyByName(NodeTemplate node, String propertyName);
+  public Optional<DeploymentArtifact> getNodeArtifactByName(NodeTemplate node, String artifactName);
 
-  public PropertyValue<?> getNodePropertyValueByName(NodeTemplate node, String propertyName);
+  public Optional<AbstractPropertyValue> getNodePropertyByName(NodeTemplate node,
+      String propertyName);
 
-  public PropertyValue<?> getCapabilityPropertyValueByName(Capability capability,
+  /**
+   * Find a property with a given name in a capability.
+   * 
+   * @param capability
+   *          the capability
+   * @param propertyName
+   *          the name of the property
+   * @return the {@link AbstractPropertyValue} containing the property value
+   */
+  public Optional<AbstractPropertyValue> getCapabilityPropertyByName(Capability capability,
       String propertyName);
 
   public List<RelationshipTemplate> getRelationshipTemplatesByCapabilityName(
@@ -225,9 +242,9 @@ public interface ToscaService {
   public Map<String, NodeTemplate> getAssociatedNodesByCapability(Map<String, NodeTemplate> nodes,
       NodeTemplate nodeTemplate, String capabilityName);
 
-  public Map<String, NodeTemplate> getCountNodes(ArchiveRoot archiveRoot);
+  public Collection<NodeTemplate> getScalableNodes(ArchiveRoot archiveRoot);
 
-  public int getCount(NodeTemplate nodeTemplate);
+  public Optional<Integer> getCount(NodeTemplate nodeTemplate);
 
   /**
    * Get the list of resources to be removed.
@@ -264,4 +281,22 @@ public interface ToscaService {
    * @return the list of placementPolicies
    */
   public List<PlacementPolicy> extractPlacementPolicies(ArchiveRoot archiveRoot);
+
+  public DirectedMultigraph<NodeTemplate, RelationshipTemplate> buildNodeGraph(
+      Map<String, NodeTemplate> nodes, boolean checkForCycles);
+
+  public <T extends AbstractPropertyValue> Optional<T> getTypedNodePropertyByName(NodeTemplate node,
+      String propertyName);
+
+  public <T extends AbstractPropertyValue> Optional<T> getTypedCapabilityPropertyByName(
+      Capability capability, String propertyName);
+
+  public <T extends IPropertyType<V>, V> V parseScalarPropertyValue(ScalarPropertyValue value,
+      Class<T> clazz) throws InvalidPropertyValueException;
+
+  public <V> List<V> parseListPropertyValue(ListPropertyValue value, Function<Object, V> mapper);
+
+  public <V> Map<String, V> parseComplexPropertyValue(ComplexPropertyValue value,
+      Function<Object, V> mapper);
+
 }

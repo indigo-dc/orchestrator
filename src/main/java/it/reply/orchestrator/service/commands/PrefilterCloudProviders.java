@@ -36,7 +36,7 @@ import it.reply.orchestrator.dto.slam.Preference;
 import it.reply.orchestrator.dto.slam.PreferenceCustomer;
 import it.reply.orchestrator.dto.slam.Priority;
 import it.reply.orchestrator.dto.slam.Sla;
-import it.reply.orchestrator.enums.DeploymentProvider;
+import it.reply.orchestrator.enums.DeploymentType;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.service.ToscaService;
 
@@ -104,7 +104,8 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
 
     // Filter provider for Chronos
     // FIXME: It's just a demo hack to for Chronos jobs default provider override!!
-    if (deployment.getDeploymentProvider().equals(DeploymentProvider.CHRONOS)) {
+    if (rankCloudProvidersMessage.getDeploymentType() == DeploymentType.CHRONOS
+        || rankCloudProvidersMessage.getDeploymentType() == DeploymentType.MARATHON) {
       for (CloudProvider cloudProvider : rankCloudProvidersMessage.getCloudProviders().values()) {
         if (!cloudProvider.getName().equalsIgnoreCase(chronosCloudProviderName)) {
           LOG.debug(
@@ -122,8 +123,7 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
     for (CloudProvider cloudProvider : rankCloudProvidersMessage.getCloudProviders().values()) {
       for (CloudService cloudService : cloudProvider.getCmbdProviderServicesByType(Type.COMPUTE)) {
         try {
-          toscaService.contextualizeImages(deployment.getDeploymentProvider(), ar, cloudProvider,
-              cloudService.getId(), false);
+          toscaService.contextualizeImages(ar, cloudProvider, cloudService.getId());
         } catch (Exception ex) {
           // Failed to match all required images -> discard provider
           LOG.debug(
@@ -152,10 +152,11 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
     }
     final SlaPlacementPolicy slaPlacementPolicy = (SlaPlacementPolicy) placementPolicies.get(0);
 
-    Sla selectedSla =
-        slas.stream().filter(sla -> Objects.equals(sla.getId(), slaPlacementPolicy.getSlaId()))
-            .findFirst().orElseThrow(() -> new OrchestratorException(
-                String.format("No SLA with id %s available", slaPlacementPolicy.getSlaId())));
+    Sla selectedSla = slas.stream()
+        .filter(sla -> Objects.equals(sla.getId(), slaPlacementPolicy.getSlaId()))
+        .findFirst()
+        .orElseThrow(() -> new OrchestratorException(
+            String.format("No SLA with id %s available", slaPlacementPolicy.getSlaId())));
 
     for (CloudProvider cloudProvider : cloudProviders) {
       for (CloudService cloudService : cloudProvider.getCmbdProviderServicesByType(Type.COMPUTE)) {

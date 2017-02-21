@@ -121,8 +121,8 @@ public class PrefilterCloudProvidersTest {
     Mockito.when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
     Mockito
         .when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
-            Mockito.anyObject(), Mockito.anyString(), Mockito.anyBoolean()))
-        .thenReturn(new ArrayList<ImageData>());
+            Mockito.anyObject()))
+        .thenReturn(new HashMap<>());
     Assert.assertEquals(rankCloudProvidersMessage,
         prefilterCloudProviders.customExecute(rankCloudProvidersMessage));
 
@@ -153,8 +153,8 @@ public class PrefilterCloudProvidersTest {
     Mockito.when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
     Mockito
         .when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
-            Mockito.anyObject(), Mockito.anyString(), Mockito.anyBoolean()))
-        .thenReturn(new ArrayList<ImageData>());
+            Mockito.anyObject()))
+        .thenReturn(new HashMap<>());
     Assert.assertEquals(rankCloudProvidersMessage,
         prefilterCloudProviders.customExecute(rankCloudProvidersMessage));
 
@@ -184,8 +184,8 @@ public class PrefilterCloudProvidersTest {
     Mockito.when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
     Mockito
         .when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
-            Mockito.anyObject(), Mockito.anyString(), Mockito.anyBoolean()))
-        .thenReturn(new ArrayList<ImageData>());
+            Mockito.anyObject()))
+        .thenReturn(new HashMap<>());
     Assert.assertEquals(rankCloudProvidersMessage,
         prefilterCloudProviders.customExecute(rankCloudProvidersMessage));
 
@@ -213,8 +213,8 @@ public class PrefilterCloudProvidersTest {
     Mockito.when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
     Mockito
         .when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
-            Mockito.anyObject(), Mockito.anyString(), Mockito.anyBoolean()))
-        .thenReturn(new ArrayList<ImageData>());
+            Mockito.anyObject()))
+        .thenReturn(new HashMap<>());
     Assert.assertEquals(rankCloudProvidersMessage,
         prefilterCloudProviders.customExecute(rankCloudProvidersMessage));
 
@@ -240,8 +240,7 @@ public class PrefilterCloudProvidersTest {
         .thenReturn(generateDeployDm.getDeployment());
 
     Mockito.doThrow(new IllegalArgumentException()).when(toscaService).contextualizeImages(
-        Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject(), Mockito.anyString(),
-        Mockito.anyBoolean());
+        Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject());
 
     Assert.assertEquals(rankCloudProvidersMessage,
         prefilterCloudProviders.customExecute(rankCloudProvidersMessage));

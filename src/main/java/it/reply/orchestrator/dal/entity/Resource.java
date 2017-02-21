@@ -15,9 +15,11 @@ package it.reply.orchestrator.dal.entity;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import com.google.common.collect.Lists;
+
 import it.reply.orchestrator.enums.NodeStates;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.Column;
@@ -53,7 +55,11 @@ public class Resource extends AbstractResourceEntity {
 
   @ElementCollection
   @Column(name = "requiredBy")
-  List<String> requiredBy = new ArrayList<String>();
+  private List<String> requiredBy = Lists.newArrayList();
+
+  @ElementCollection
+  @Column(name = "requires")
+  private List<String> requires = Lists.newArrayList();
 
   @ManyToOne
   @JoinColumn(name = "deployment_uuid")
@@ -113,6 +119,14 @@ public class Resource extends AbstractResourceEntity {
 
   public void setRequiredBy(List<String> requiredBy) {
     this.requiredBy = requiredBy;
+  }
+
+  public List<String> getRequires() {
+    return requires;
+  }
+
+  public void setRequires(List<String> requires) {
+    this.requires = requires;
   }
 
   public Deployment getDeployment() {

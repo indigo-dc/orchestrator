@@ -37,6 +37,7 @@ import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
+import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;
 import it.reply.workflowmanager.utils.Constants;
 
 public class UndeployTest {
@@ -45,8 +46,10 @@ public class UndeployTest {
   Undeploy undeploy = new Undeploy();
 
   @Mock
-  private DeploymentProviderService imService;
+  private DeploymentProviderService deploymentProviderService;
 
+  @Mock
+  private DeploymentProviderServiceRegistry deploymentProviderServiceRegistry;
 
   @Before
   public void setup() {
@@ -63,8 +66,11 @@ public class UndeployTest {
     WorkItemImpl workItem = new WorkItemImpl();
     workItem.setParameter(WorkflowConstants.WF_PARAM_TOSCA_TEMPLATE, "template");
     commandContext.setData(Constants.WORKITEM, workItem);
-    Mockito.when(imService.doUndeploy(dm)).thenReturn(true);
-    Mockito.doNothing().when(imService).finalizeUndeploy(Mockito.anyObject(), Mockito.anyBoolean());
+    Mockito.when(deploymentProviderServiceRegistry
+        .getDeploymentProviderService(dm.getDeployment())).thenReturn(deploymentProviderService);
+    Mockito.when(deploymentProviderService.doUndeploy(dm)).thenReturn(true);
+    Mockito.doNothing().when(deploymentProviderService)
+      .finalizeUndeploy(Mockito.anyObject(), Mockito.anyBoolean());
 
     ExecutionResults expectedResult = new ExecutionResults();
     expectedResult.setData(Constants.RESULT_STATUS, "OK");
@@ -76,7 +82,7 @@ public class UndeployTest {
         customExecute.getData(Constants.RESULT_STATUS));
     Assert.assertEquals(expectedResult.getData(Constants.OK_RESULT),
         customExecute.getData(Constants.OK_RESULT));
-    Assert.assertEquals(undeploy.getErrorMessagePrefix(), "Error undeploying through IM");
+    Assert.assertEquals(undeploy.getErrorMessagePrefix(), "Error undeploying");
   }
 
   private DeploymentMessage generateDeployDm() {
