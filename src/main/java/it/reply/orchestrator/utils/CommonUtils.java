@@ -19,10 +19,49 @@ import es.upv.i3m.grycap.file.NoNullOrEmptyFile;
 import es.upv.i3m.grycap.file.Utf8File;
 import es.upv.i3m.grycap.im.exceptions.FileException;
 
-import java.nio.file.Paths;
+import lombok.experimental.UtilityClass;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+import java.nio.file.Paths;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+
+@UtilityClass
 public class CommonUtils {
+
   public static String getFileContentAsString(String fileUri) throws FileException {
     return new NoNullOrEmptyFile(new Utf8File(Paths.get(fileUri))).read();
   }
+
+  public static <K, V> Optional<V> getFromOptionalMap(@Nullable Map<K, V> optionalMap, K key) {
+    return Optional.ofNullable(optionalMap).map(map -> map.get(key));
+  }
+
+  public static <K, V> Optional<V> removeFromOptionalMap(@Nullable Map<K, V> optionalMap, K key) {
+    return Optional.ofNullable(optionalMap).map(map -> map.remove(key));
+  }
+
+  /**
+   * Cast, if present, the object wrapped inside an {@link Optional}.
+   * 
+   * @param optionalObject
+   *          the wrapped object
+   * @return the casted object wrapped in a Optional
+   */
+  @SuppressWarnings("unchecked") // no escape from Java erasure
+  public static <S> Optional<S> optionalCast(@Nullable Object optionalObject) {
+    Optional<?> optional = optionalObject instanceof Optional ? (Optional<?>) optionalObject
+        : Optional.ofNullable(optionalObject);
+    return optional.map(object -> (S) object);
+  }
+
+  public static <E> Stream<E> iteratorToStream(Iterator<E> iterator) {
+    Iterable<E> iterable = () -> iterator;
+    return StreamSupport.stream(iterable.spliterator(), false);
+  }
+
 }

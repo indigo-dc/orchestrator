@@ -17,6 +17,7 @@ package it.reply.orchestrator.service.deployment.providers;
  */
 
 import com.google.common.collect.Lists;
+import com.google.common.primitives.Ints;
 
 import alien4cloud.model.components.ComplexPropertyValue;
 import alien4cloud.model.components.DeploymentArtifact;
@@ -26,7 +27,9 @@ import alien4cloud.model.components.ScalarPropertyValue;
 import alien4cloud.model.topology.Capability;
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
+import alien4cloud.tosca.normative.IntegerType;
 import alien4cloud.tosca.normative.SizeType;
+import alien4cloud.tosca.normative.StringType;
 import alien4cloud.tosca.parser.ParsingException;
 
 import it.infn.ba.indigo.chronos.client.Chronos;
@@ -36,6 +39,7 @@ import it.infn.ba.indigo.chronos.client.model.v1.EnvironmentVariable;
 import it.infn.ba.indigo.chronos.client.model.v1.Job;
 import it.infn.ba.indigo.chronos.client.model.v1.Parameters;
 import it.infn.ba.indigo.chronos.client.utils.ChronosException;
+import it.reply.orchestrator.annotation.DeploymentProviderQualifier;
 import it.reply.orchestrator.controller.DeploymentController;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
@@ -49,6 +53,7 @@ import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.ToscaService;
+import it.reply.orchestrator.utils.CommonUtils;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.jgrapht.alg.CycleDetector;
@@ -58,7 +63,6 @@ import org.jgrapht.traverse.TopologicalOrderIterator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.stereotype.Service;
@@ -70,10 +74,12 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
-@Qualifier("CHRONOS")
+@DeploymentProviderQualifier(DeploymentProvider.CHRONOS)
 @PropertySource(value = { "classpath:application.properties", "${chronos.auth.file.path}" })
 public class ChronosServiceImpl extends AbstractDeploymentProviderService
     implements DeploymentProviderService {
@@ -103,8 +109,7 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
    * @return the Chronos client.
    */
   public Chronos getChronosClient() {
-    LOG.info(String.format("Generating Chronos client with parameters: URL=%s, username=%s",
-        endpoint, username));
+    LOG.info("Generating Chronos client with parameters: URL={}, username={}", endpoint, username);
     Chronos client = ChronosClient.getInstanceWithBasicAuth(endpoint, username, password);
 
     return client;
@@ -123,7 +128,7 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       // Update status of the deployment - if not already done (remember the Iterative mode)
       if (deployment.getTask() != Task.DEPLOYER) {
         deployment.setTask(Task.DEPLOYER);
-        deployment.setDeploymentProvider(DeploymentProvider.CHRONOS);
+        deployment.setEndpoint("<NO_ENDPOINT>");
         deployment = getDeploymentRepository().save(deployment);
       }
 
@@ -145,7 +150,8 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
 
         deploymentMessage.setTemplateTopologicalOrderIterator(
             new TemplateTopologicalOrderIterator(topoOrder.stream()
-                .map(e -> new Resource(e.getToscaNodeName())).collect(Collectors.toList())));
+                .map(e -> new Resource(e.getToscaNodeName()))
+                .collect(Collectors.toList())));
       }
 
       // Create Jobs in the required order on Chronos (but 1 at each invocation)
@@ -539,7 +545,8 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
 
         deploymentMessage.setTemplateTopologicalOrderIterator(
             new TemplateTopologicalOrderIterator(topoOrder.stream()
-                .map(e -> new Resource(e.getToscaNodeName())).collect(Collectors.toList())));
+                .map(e -> new Resource(e.getToscaNodeName()))
+                .collect(Collectors.toList())));
       }
 
       TemplateTopologicalOrderIterator templateTopologicalOrderIterator =
@@ -734,8 +741,9 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
     // - for now)
 
     // Populate resources (nodes) hashmap to speed up job creation (id-name mapping is needed)
-    Map<String, Resource> resources = deployment.getResources().stream()
-        .collect(Collectors.toMap(e -> e.getToscaNodeName(), e -> e));
+    Map<String, Resource> resources = deployment.getResources()
+        .stream()
+        .collect(Collectors.toMap(Resource::getToscaNodeName, Function.identity()));
 
     // Only create Indigo Jobs
     for (Map.Entry<String, NodeTemplate> node : nodes.entrySet()) {
@@ -795,14 +803,16 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
 
     LOG.debug("Replacing OneData parameters");
 
+    String customizedTemplate = template;
     if (odParameters.containsKey("input")) {
       OneData od = odParameters.get("input");
       if (CollectionUtils.isEmpty(od.getProviders())) {
         throw new DeploymentException("No OneData Providers available for input");
       }
       // Replace OneData properties
-      template = template.replace("INPUT_ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR",
-          od.getProviders().get(0).endpoint);
+      customizedTemplate =
+          customizedTemplate.replace("INPUT_ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR",
+              od.getProviders().get(0).endpoint);
       LOG.debug("Replaced {} OneData parameters with: {}", "input", od);
     }
 
@@ -812,8 +822,9 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
         throw new DeploymentException("No OneData Providers available for output");
       }
       // Replace OneData properties
-      template = template.replace("OUTPUT_ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR",
-          od.getProviders().get(0).endpoint);
+      customizedTemplate =
+          customizedTemplate.replace("OUTPUT_ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR",
+              od.getProviders().get(0).endpoint);
       LOG.debug("Replaced {} OneData parameters with: {}", "output", od);
     }
 
@@ -823,15 +834,16 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
         throw new DeploymentException("No OneData Providers available for service space");
       }
       // Replace OneData properties
-      template = template.replace("TOKEN_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getToken());
-      template = template.replace("DATA_SPACE_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getSpace());
-      template = template.replace("PATH_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getPath());
-      template = template.replace("ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR",
-          od.getProviders().get(0).endpoint);
+      customizedTemplate = customizedTemplate
+          .replace("TOKEN_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getToken())
+          .replace("DATA_SPACE_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getSpace())
+          .replace("PATH_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getPath())
+          .replace("ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR",
+              od.getProviders().get(0).endpoint);
       LOG.debug("Replaced {} OneData parameters with: {}", "service", od);
     }
 
-    return template;
+    return customizedTemplate;
   }
 
   protected void putStringProperty(NodeTemplate nodeTemplate, String name, String value) {
@@ -875,29 +887,40 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       chronosJob.setName(resourceJob.getId());
 
       // TODO Validation
-      chronosJob.setRetries(Integer.parseInt(
-          (String) toscaService.getNodePropertyValueByName(nodeTemplate, "retries").getValue()));
+      Optional<ScalarPropertyValue> retriesProperty =
+          toscaService.getTypedNodePropertyByName(nodeTemplate, "retries");
+      if (retriesProperty.isPresent()) {
+        chronosJob.setRetries(Ints.saturatedCast(
+            toscaService.parseScalarPropertyValue(retriesProperty.get(), IntegerType.class)));
+      }
 
-      chronosJob.setCommand(
-          (String) toscaService.getNodePropertyValueByName(nodeTemplate, "command").getValue());
+      Optional<ScalarPropertyValue> cmdProperty =
+          toscaService.getTypedNodePropertyByName(nodeTemplate, "command");
+      if (cmdProperty.isPresent()) {
+        chronosJob
+            .setCommand(toscaService.parseScalarPropertyValue(cmdProperty.get(), StringType.class));
+      }
 
       // TODO Enable epsilon setting in TOSCA tplt ?
       chronosJob.setEpsilon("PT10S");
 
-      ListPropertyValue inputUris =
-          (ListPropertyValue) toscaService.getNodePropertyValueByName(nodeTemplate, "uris");
-      if (inputUris != null && !inputUris.getValue().isEmpty()) {
+      Optional<ListPropertyValue> inputUris =
+          CommonUtils.optionalCast(toscaService.getNodePropertyByName(nodeTemplate, "uris"));
+      if (inputUris.isPresent()) {
         // Convert List<Object> to List<String>
-        chronosJob.setUris(inputUris.getValue().stream()
-            .map(e -> ((PropertyValue<?>) e).getValue().toString()).collect(Collectors.toList()));
+        chronosJob.setUris(inputUris.get()
+            .getValue()
+            .stream()
+            .map(e -> ((PropertyValue<?>) e).getValue().toString())
+            .collect(Collectors.toList()));
 
       }
 
       List<EnvironmentVariable> envs = new ArrayList<>();
-      ComplexPropertyValue inputEnvVars = ((ComplexPropertyValue) toscaService
-          .getNodePropertyValueByName(nodeTemplate, "environment_variables"));
-      if (inputEnvVars != null) {
-        for (Map.Entry<String, Object> var : inputEnvVars.getValue().entrySet()) {
+      Optional<ComplexPropertyValue> inputEnvVars = CommonUtils
+          .optionalCast(toscaService.getNodePropertyByName(nodeTemplate, "environment_variables"));
+      if (inputEnvVars.isPresent()) {
+        for (Map.Entry<String, Object> var : inputEnvVars.get().getValue().entrySet()) {
           EnvironmentVariable envVar = new EnvironmentVariable();
           envVar.setName(var.getKey());
           envVar.setValue(((PropertyValue<?>) var.getValue()).getValue().toString());
@@ -907,8 +930,6 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       }
 
       // Docker image
-      // TODO Remove hard-coded?
-      String supportedType = "tosca.artifacts.Deployment.Image.Container.Docker";
       DeploymentArtifact image;
       // <image> artifact available
       if (nodeTemplate.getArtifacts() == null
@@ -918,13 +939,15 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
                 nodeTemplate.getType()));
       }
 
+      // TODO Remove hard-coded?
+      List<String> supportedTypes =
+          Lists.newArrayList("tosca.artifacts.Deployment.Image.Container.Docker");
       // <image> artifact type check
-      if (!image.getArtifactType().equals(supportedType)) {
+      if (!supportedTypes.contains(image.getArtifactType())) {
         throw new IllegalArgumentException(String.format(
             "Unsupported artifact type for <image> artifact in node <%s> of type <%s>. "
                 + "Given <%s>, supported <%s>",
-            nodeName, nodeTemplate.getType(),
-            nodeTemplate.getArtifacts().get("image").getArtifactType(), supportedType));
+            nodeName, nodeTemplate.getType(), image.getArtifactType(), supportedTypes));
       }
 
       // Requirements
@@ -942,13 +965,19 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
          */
         NodeTemplate dockerNode = dockerRelationships.values().iterator().next();
         Capability dockerCapability = dockerNode.getCapabilities().get(dockerCapabilityName);
-        dockerNumCpus = Double.parseDouble((String) toscaService
-            .getCapabilityPropertyValueByName(dockerCapability, "num_cpus").getValue());
+        dockerNumCpus = Double.parseDouble(CommonUtils
+            .<ScalarPropertyValue>optionalCast(
+                toscaService.getCapabilityPropertyByName(dockerCapability, "num_cpus"))
+            .get()
+            .getValue());
 
         // Converting Memory Size (as TOSCA scalar-unit.size)
         SizeType tmp = new SizeType();
-        String memSizeRaw = (String) toscaService
-            .getCapabilityPropertyValueByName(dockerCapability, "mem_size").getValue();
+        String memSizeRaw = CommonUtils
+            .<ScalarPropertyValue>optionalCast(
+                toscaService.getCapabilityPropertyByName(dockerCapability, "mem_size"))
+            .get()
+            .getValue();
         dockerMemSize = tmp.parse(memSizeRaw).convert("MB"); // Chronos wants MB
       }
 
@@ -967,9 +996,13 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       container.setForcePullImage(true);
       ////////////////////////////////////////////////////////////////
 
-      container
-          .setImage((String) ((PropertyValue<?>) nodeTemplate.getArtifacts().get("image").getFile())
-              .getValue());
+      String imageName =
+          CommonUtils.<ScalarPropertyValue>optionalCast(image.getFile())
+              .orElseThrow(() -> new IllegalArgumentException(String.format(
+                  "<file> field for <image> artifact in node <%s> must be provided", nodeName)))
+              .getValue();
+      container.setImage(imageName);
+
       if (dockerNumCpus != null) {
         chronosJob.setCpus(dockerNumCpus);
       }

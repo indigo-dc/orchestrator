@@ -15,31 +15,37 @@ package it.reply.orchestrator.service.commands;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
+import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;
 
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 @Component
 public class Deploy extends BaseDeployCommand {
 
   @Autowired
-  @Qualifier("IM")
-  private DeploymentProviderService imService;
+  private DeploymentProviderServiceRegistry deploymentProviderServiceRegistry;
 
   @Override
   protected ExecutionResults customExecute(CommandContext ctx,
       DeploymentMessage deploymentMessage) {
-    return resultOccurred(imService.doDeploy(deploymentMessage));
+    Deployment deployment = deploymentMessage.getDeployment();
+
+    DeploymentProviderService deploymentProviderService =
+        deploymentProviderServiceRegistry.getDeploymentProviderService(deployment);
+
+    return resultOccurred(deploymentProviderService.doDeploy(deploymentMessage));
   }
 
   @Override
   protected String getErrorMessagePrefix() {
-    return "Error deploying through IM";
+    return "Error deploying";
   }
 
 }

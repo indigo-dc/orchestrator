@@ -33,6 +33,8 @@ public interface ResourceRepository extends PagingAndSortingRepository<Resource,
 
   public Page<Resource> findByDeployment_id(String deploymentId, Pageable pageable);
 
+  public List<Resource> findByDeployment_id(String deploymentId);
+
   public Resource findByIdAndDeployment_id(String uuid, String deploymentId);
 
   public List<Resource> findByToscaNodeNameAndDeployment_id(String toscaNodeName,

@@ -24,7 +24,7 @@ import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.onedata.OneData;
-import it.reply.orchestrator.enums.DeploymentProvider;
+import it.reply.orchestrator.enums.DeploymentType;
 import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl.IndigoJob;
 
 import java.io.Serializable;
@@ -48,7 +48,7 @@ public class DeploymentMessage implements Serializable {
 
   private String deploymentId;
 
-  private DeploymentProvider deploymentProvider;
+  private DeploymentType deploymentType;
 
   private TemplateTopologicalOrderIterator templateTopologicalOrderIterator;
 
@@ -97,12 +97,12 @@ public class DeploymentMessage implements Serializable {
     this.deploymentId = deploymentId;
   }
 
-  public DeploymentProvider getDeploymentProvider() {
-    return deploymentProvider;
+  public DeploymentType getDeploymentType() {
+    return deploymentType;
   }
 
-  public void setDeploymentProvider(DeploymentProvider deploymentProvider) {
-    this.deploymentProvider = deploymentProvider;
+  public void setDeploymentType(DeploymentType deploymentType) {
+    this.deploymentType = deploymentType;
   }
 
   public TemplateTopologicalOrderIterator getTemplateTopologicalOrderIterator() {
@@ -204,10 +204,9 @@ public class DeploymentMessage implements Serializable {
 
   @Override
   public String toString() {
-    return "DeploymentMessage [deploymentId=" + deploymentId + ", deploymentProvider="
-        + deploymentProvider + ", templateTopologicalOrderIterator="
-        + templateTopologicalOrderIterator + ", createComplete=" + createComplete
-        + ", pollComplete=" + pollComplete + "]";
+    return "DeploymentMessage [deploymentId=" + deploymentId + ", deploymentType=" + deploymentType
+        + ", templateTopologicalOrderIterator=" + templateTopologicalOrderIterator
+        + ", createComplete=" + createComplete + ", pollComplete=" + pollComplete + "]";
   }
 
   /**

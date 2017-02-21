@@ -99,17 +99,18 @@ public class UpdateDeploymentTest {
 
     RankedCloudProvider chosenCp = new RankedCloudProvider();
     chosenCp.setName("name");
+    dm.setChosenCloudProvider(cp);
+    
     Mockito.when(cloudProviderEndpointServiceImpl.chooseCloudProvider(Mockito.any(Deployment.class),
         Mockito.any(RankCloudProvidersMessage.class))).thenReturn(chosenCp);
     Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
     Mockito.doNothing().when(deploymentStatusHelper).updateOnError(Mockito.anyString(),
         Mockito.any(Exception.class));
 
-    CloudProviderEndpoint chosenCloudProviderEndpoint = new CloudProviderEndpoint();
     Mockito
         .when(cloudProviderEndpointServiceImpl.getCloudProviderEndpoint(cp,
             rankCloudProvidersMessage.getPlacementPolicies()))
-        .thenReturn(chosenCloudProviderEndpoint);
+        .thenReturn(dm.getChosenCloudProviderEndpoint());
     workItem.setParameter(WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE,
         rankCloudProvidersMessage);
     workItem.setParameter(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, dm);
@@ -121,12 +122,13 @@ public class UpdateDeploymentTest {
     expectedResult.setData(Constants.OK_RESULT, true);
     expectedResult.setData(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, dm);
 
+    Mockito.when(oneDataService.getServiceSpacePath()).thenReturn("servicepath/");
+    
+    updateDeployment.generateOneDataParameters(rankCloudProvidersMessage, dm);
     Assert.assertEquals(expectedResult.toString(),
         updateDeployment.customExecute(commandContext).toString());
 
     // MOCK generateOneDataParameters with input data smart scheduling
-
-    Mockito.when(oneDataService.getServiceSpacePath()).thenReturn("servicepath/");
 
     Map<String, OneData> oneDataRequirements = new HashMap<>();
     OneData onedata = new OneData("token", "space", "path", "providers");
@@ -188,7 +190,7 @@ public class UpdateDeploymentTest {
     dm.setDeployment(deployment);
     dm.setDeploymentId(deployment.getId());
     deployment.getResources().addAll(ControllerTestUtils.createResources(deployment, 2, false));
-    deployment.getResources().stream().forEach(r -> r.setState(NodeStates.CREATING));
+    deployment.getResources().stream().forEach(r -> r.setState(NodeStates.INITIAL));
 
     CloudProviderEndpoint chosenCloudProviderEndpoint = new CloudProviderEndpoint();
     chosenCloudProviderEndpoint.setCpComputeServiceId(UUID.randomUUID().toString());

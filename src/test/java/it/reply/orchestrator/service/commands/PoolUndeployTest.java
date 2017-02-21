@@ -36,6 +36,7 @@ import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
+import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;
 import it.reply.utils.misc.polling.ExternallyControlledPoller;
 import it.reply.utils.misc.polling.PollingException;
 import it.reply.workflowmanager.utils.Constants;
@@ -46,7 +47,10 @@ public class PoolUndeployTest {
   PollUndeploy pollUndeploy = new PollUndeploy();
 
   @Mock
-  private DeploymentProviderService imService;
+  private DeploymentProviderService deploymentProviderService;
+
+  @Mock
+  private DeploymentProviderServiceRegistry deploymentProviderServiceRegistry;
 
   @Mock
   private ExternallyControlledPoller<DeploymentMessage, Boolean> pollingStatus;
@@ -99,7 +103,10 @@ public class PoolUndeployTest {
     expectedResult.setData(WF_PARAM_POLLING_STATUS, pollingStatus);
 
     Mockito.when(pollingStatus.doPollEvent(Mockito.any(DeploymentMessage.class))).thenReturn(true);
-    Mockito.doNothing().when(imService).finalizeUndeploy(Mockito.anyObject(), Mockito.anyBoolean());
+    Mockito.when(deploymentProviderServiceRegistry
+        .getDeploymentProviderService(dm.getDeployment())).thenReturn(deploymentProviderService);
+    Mockito.doNothing().when(deploymentProviderService)
+        .finalizeUndeploy(Mockito.anyObject(), Mockito.anyBoolean());
     ExecutionResults customExecute = pollUndeploy.customExecute(commandContext, dm);
 
     Assert.assertEquals(expectedResult.getData(Constants.RESULT_STATUS),
@@ -113,6 +120,8 @@ public class PoolUndeployTest {
 
     Mockito.when(pollingStatus.doPollEvent(Mockito.any(DeploymentMessage.class)))
         .thenThrow(new PollingException());
+    Mockito.when(deploymentProviderServiceRegistry
+        .getDeploymentProviderService(dm.getDeployment())).thenReturn(deploymentProviderService);
     customExecute = pollUndeploy.customExecute(commandContext, dm);
 
     Assert.assertEquals(expectedResult.getData(Constants.RESULT_STATUS),

@@ -30,6 +30,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.client.RestTemplate;
 
 import it.reply.orchestrator.controller.ControllerTestUtils;
@@ -40,6 +41,7 @@ import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
+import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;
 import it.reply.orchestrator.service.deployment.providers.ImServiceImpl;
 import it.reply.utils.misc.polling.AbstractPollingBehaviour;
 import it.reply.utils.misc.polling.ExternallyControlledPoller;
@@ -63,8 +65,11 @@ public class PollDeployTest {
   private ExternallyControlledPoller<DeploymentMessage, Status> statusPoller;
 
   @Mock
-  private DeploymentProviderService imService;
+  private DeploymentProviderService deploymentProviderService;
 
+  @Mock
+  private DeploymentProviderServiceRegistry deploymentProviderServiceRegistry;
+  
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
@@ -130,7 +135,10 @@ public class PollDeployTest {
     expectedResult.setData(WF_PARAM_POLLING_STATUS, statusPoller);
 
     Mockito.when(statusPoller.getPollStatus()).thenReturn(PollingStatus.ENDED);
-    Mockito.doNothing().when(imService).finalizeDeploy(Mockito.anyObject(), Mockito.anyBoolean());
+    Mockito.when(deploymentProviderServiceRegistry
+        .getDeploymentProviderService(dm.getDeployment())).thenReturn(deploymentProviderService);
+    Mockito.doNothing().when(deploymentProviderService)
+        .finalizeDeploy(Mockito.anyObject(), Mockito.anyBoolean());
     ExecutionResults customExecute = pollDeploy.customExecute(commandContext, dm);
 
     Assert.assertEquals(expectedResult.getData(Constants.RESULT_STATUS),

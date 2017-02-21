@@ -16,6 +16,7 @@ package it.reply.orchestrator.service.commands;
  * limitations under the License.
  */
 
+import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
@@ -28,6 +29,8 @@ import org.kie.api.executor.ExecutionResults;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import java.util.Optional;
 
 /**
  * Base behavior for all Deploy WF tasks. <br/>
@@ -76,7 +79,7 @@ public abstract class BaseDeployCommand extends BaseCommand {
       // Update deployment with error
       // TODO: what if this fails??
       deploymentStatusHelper.updateOnError(deploymentMessage.getDeploymentId(),
-          getErrorMessagePrefix(), ex);
+          generateErrorMessagePrefix(deploymentMessage), ex);
     }
 
     // Save and then remove entities (again for jBPM JPA serialization issues)
@@ -89,5 +92,13 @@ public abstract class BaseDeployCommand extends BaseCommand {
 
   protected abstract ExecutionResults customExecute(CommandContext ctx,
       DeploymentMessage deploymentMessage);
+
+  private String generateErrorMessagePrefix(DeploymentMessage deploymentMessage) {
+    String deploymentProviderMessagePrefix = Optional.ofNullable(deploymentMessage.getDeployment())
+        .map(Deployment::getDeploymentProvider)
+        .map(deploymentProvider -> " with deployment provider " + deploymentProvider.toString())
+        .orElse("");
+    return String.format("%s%s", getErrorMessagePrefix(), deploymentProviderMessagePrefix);
+  }
 
 }

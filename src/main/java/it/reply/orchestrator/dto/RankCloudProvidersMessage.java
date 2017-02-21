@@ -20,10 +20,12 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.PaaSMetric;
+import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.deployment.PlacementPolicy;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
 import it.reply.orchestrator.dto.slam.SlamPreferences;
+import it.reply.orchestrator.enums.DeploymentType;
 import it.reply.utils.json.JsonUtility;
 
 import java.io.Serializable;
@@ -54,11 +56,26 @@ public class RankCloudProvidersMessage implements Serializable {
    */
   private List<PlacementPolicy> placementPolicies = Lists.newArrayList();
 
+  private DeploymentType deploymentType;
+
   public RankCloudProvidersMessage() {
   }
 
   public RankCloudProvidersMessage(String deploymentId) {
     this.deploymentId = deploymentId;
+  }
+
+  /**
+   * Create a RankCloudProvidersMessage from a {@link DeploymentMessage}.
+   * 
+   * @param deploymentMessage
+   *          the DeploymentMessage
+   */
+  public RankCloudProvidersMessage(DeploymentMessage deploymentMessage) {
+    this.deploymentId = deploymentMessage.getDeploymentId();
+    this.oneDataRequirements = deploymentMessage.getOneDataRequirements();
+    this.placementPolicies = deploymentMessage.getPlacementPolicies();
+    this.deploymentType = deploymentMessage.getDeploymentType();
   }
 
   public String getDeploymentId() {
@@ -116,6 +133,14 @@ public class RankCloudProvidersMessage implements Serializable {
 
   public void setPlacementPolicies(List<PlacementPolicy> placementPolicies) {
     this.placementPolicies = placementPolicies;
+  }
+
+  public DeploymentType getDeploymentType() {
+    return deploymentType;
+  }
+
+  public void setDeploymentType(DeploymentType deploymentType) {
+    this.deploymentType = deploymentType;
   }
 
   @Override

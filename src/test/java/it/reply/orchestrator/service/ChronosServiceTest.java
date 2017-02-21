@@ -19,6 +19,7 @@ import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableMap;
 
+import alien4cloud.model.components.ComplexPropertyValue;
 import alien4cloud.model.components.ScalarPropertyValue;
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.model.topology.Topology;
@@ -45,6 +46,7 @@ import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl;
 import it.reply.orchestrator.service.deployment.providers.DeploymentStatusHelper;
 import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl.IndigoJob;
 import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl.JobState;
+import it.reply.orchestrator.utils.CommonUtils;
 
 import org.hibernate.collection.internal.PersistentMap;
 import org.junit.Assert;
@@ -134,9 +136,11 @@ public class ChronosServiceTest extends WebAppConfigurationAware {
 
     Map<String, NodeTemplate> nodes = ar.getTopology().getNodeTemplates();
     NodeTemplate chronosJob = nodes.get("chronos_job");
-    @SuppressWarnings("unchecked")
-    Map<String, Object> envVars = ((Map<String, Object>) toscaService
-        .getNodePropertyValueByName(chronosJob, "environment_variables").getValue());
+    Map<String, Object> envVars = CommonUtils
+        .<ComplexPropertyValue>optionalCast(
+            toscaService.getNodePropertyByName(chronosJob, "environment_variables"))
+        .get()
+        .getValue();
 
     assertEquals("input_provider_1",
         ((ScalarPropertyValue) envVars.get("INPUT_ONEDATA_PROVIDERS")).getValue());
@@ -166,9 +170,11 @@ public class ChronosServiceTest extends WebAppConfigurationAware {
 
     Map<String, NodeTemplate> nodes = ar.getTopology().getNodeTemplates();
     NodeTemplate chronosJob = nodes.get("chronos_job");
-    @SuppressWarnings("unchecked")
-    Map<String, Object> envVars = ((Map<String, Object>) toscaService
-        .getNodePropertyValueByName(chronosJob, "environment_variables").getValue());
+    Map<String, Object> envVars = CommonUtils
+        .<ComplexPropertyValue>optionalCast(
+            toscaService.getNodePropertyByName(chronosJob, "environment_variables"))
+        .get()
+        .getValue();
 
     assertEquals(serviceOd.getToken(),
         ((ScalarPropertyValue) envVars.get("ONEDATA_SERVICE_TOKEN")).getValue());

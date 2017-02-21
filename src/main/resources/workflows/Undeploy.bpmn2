@@ -19,7 +19,6 @@
     <bpmn2:property id="DEPLOYMENT_ID" itemSubjectRef="ItemDefinition_4" name="DEPLOYMENT_ID"/>
     <bpmn2:property id="Result" itemSubjectRef="ItemDefinition_23" name="Result"/>
     <bpmn2:property id="pollingStatus" itemSubjectRef="ItemDefinition_109" name="pollingStatus"/>
-    <bpmn2:property id="DEPLOYMENT_TYPE" itemSubjectRef="ItemDefinition_109" name="DEPLOYMENT_TYPE"/>
     <bpmn2:property id="DeploymentMessage" itemSubjectRef="ItemDefinition_5" name="DeploymentMessage"/>
     <bpmn2:property id="logger" itemSubjectRef="ItemDefinition_2" name="logger"/>
     <bpmn2:startEvent id="StartEvent_1" name="StartProcess">
@@ -211,12 +210,12 @@
       <bpmn2:incoming>SequenceFlow_13</bpmn2:incoming>
     </bpmn2:endEvent>
     <bpmn2:sequenceFlow id="SequenceFlow_13" tns:priority="1" sourceRef="ExclusiveGateway_2" targetRef="EndEvent_2"/>
-    <bpmn2:exclusiveGateway id="ExclusiveGateway_3" name="Deployment provider?" gatewayDirection="Diverging" default="SequenceFlow_4">
+    <bpmn2:exclusiveGateway id="ExclusiveGateway_3" name="Deployment type?" gatewayDirection="Diverging" default="SequenceFlow_4">
       <bpmn2:incoming>SequenceFlow_2</bpmn2:incoming>
       <bpmn2:outgoing>SequenceFlow_4</bpmn2:outgoing>
       <bpmn2:outgoing>SequenceFlow_14</bpmn2:outgoing>
     </bpmn2:exclusiveGateway>
-    <bpmn2:sequenceFlow id="SequenceFlow_4" tns:priority="1" name="IM" sourceRef="ExclusiveGateway_3" targetRef="Task_2"/>
+    <bpmn2:sequenceFlow id="SequenceFlow_4" tns:priority="1" name="TOSCA" sourceRef="ExclusiveGateway_3" targetRef="Task_2"/>
     <bpmn2:task id="Task_3" tns:taskName="asyncEJB" tns:displayName="AsyncEJB" tns:icon="icons/asyncEJB.png" name="Undeploy">
       <bpmn2:extensionElements>
         <tns:metaData name="elementname">
@@ -242,7 +241,7 @@
       <bpmn2:dataInputAssociation id="DataInputAssociation_9">
         <bpmn2:targetRef>DataInput_9</bpmn2:targetRef>
         <bpmn2:assignment id="Assignment_3">
-          <bpmn2:from xsi:type="bpmn2:tFormalExpression" id="FormalExpression_11">it.reply.orchestrator.service.commands.chronos.UndeployOnChronos</bpmn2:from>
+          <bpmn2:from xsi:type="bpmn2:tFormalExpression" id="FormalExpression_11">it.reply.orchestrator.service.commands.Undeploy</bpmn2:from>
           <bpmn2:to xsi:type="bpmn2:tFormalExpression" id="FormalExpression_12">DataInput_2</bpmn2:to>
         </bpmn2:assignment>
       </bpmn2:dataInputAssociation>
@@ -260,7 +259,7 @@
       </bpmn2:dataOutputAssociation>
     </bpmn2:task>
     <bpmn2:sequenceFlow id="SequenceFlow_14" tns:priority="1" name="Chronos" sourceRef="ExclusiveGateway_3" targetRef="InclusiveGateway_2">
-      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression" id="FormalExpression_13">return  DEPLOYMENT_TYPE.equals(&quot;CHRONOS&quot;);</bpmn2:conditionExpression>
+      <bpmn2:conditionExpression xsi:type="bpmn2:tFormalExpression" id="FormalExpression_13" language="http://www.java.com/java">return DeploymentMessage.getDeploymentType() == DeploymentType.CHRONOS;</bpmn2:conditionExpression>
     </bpmn2:sequenceFlow>
     <bpmn2:endEvent id="EndEvent_3" name="End Event 1">
       <bpmn2:extensionElements>
@@ -544,7 +543,7 @@ return Result &amp;&amp; !DeploymentMessage.isDeleteComplete();</bpmn2:condition
         <di:waypoint xsi:type="dc:Point" x="590.0" y="77.0"/>
         <di:waypoint xsi:type="dc:Point" x="690.0" y="77.0"/>
         <bpmndi:BPMNLabel id="BPMNLabel_23">
-          <dc:Bounds height="17.0" width="14.0" x="585.0" y="78.0"/>
+          <dc:Bounds height="17.0" width="51.0" x="566.0" y="78.0"/>
         </bpmndi:BPMNLabel>
       </bpmndi:BPMNEdge>
       <bpmndi:BPMNEdge id="BPMNEdge_SequenceFlow_14" bpmnElement="SequenceFlow_14" sourceElement="BPMNShape_ExclusiveGateway_3" targetElement="BPMNShape_InclusiveGateway_2">
