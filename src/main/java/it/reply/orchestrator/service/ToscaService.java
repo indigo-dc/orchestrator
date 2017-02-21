@@ -38,12 +38,9 @@ import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 
-import javax.annotation.Nonnull;
-
 public interface ToscaService {
 
-  @Nonnull
-  public ParsingResult<ArchiveRoot> getArchiveRootFromTemplate(@Nonnull String toscaTemplate)
+  public ParsingResult<ArchiveRoot> getArchiveRootFromTemplate(String toscaTemplate)
       throws IOException, ParsingException;
 
   /**
@@ -56,8 +53,7 @@ public interface ToscaService {
    * @throws IOException
    *           if there is an error serializing the template
    */
-  @Nonnull
-  public String getTemplateFromTopology(@Nonnull ArchiveRoot archiveRoot) throws IOException;
+  public String getTemplateFromTopology(ArchiveRoot archiveRoot) throws IOException;
 
   // /**
   // * Customize the template with INDIGO requirements, for example it adds the deploymentId.
@@ -149,8 +145,7 @@ public interface ToscaService {
    * @throws ToscaException
    *           if the input replacement fails TODO.
    */
-  @Nonnull
-  public void replaceInputFunctions(@Nonnull ArchiveRoot archiveRoot, Map<String, Object> inputs)
+  public void replaceInputFunctions(ArchiveRoot archiveRoot, Map<String, Object> inputs)
       throws ToscaException;
 
   /**
@@ -167,8 +162,7 @@ public interface ToscaService {
    * @throws ToscaException
    *           if validation errors occur.
    */
-  @Nonnull
-  public ArchiveRoot parseTemplate(@Nonnull String toscaTemplate)
+  public ArchiveRoot parseTemplate(String toscaTemplate)
       throws IOException, ParsingException, ToscaException;
 
   /**
@@ -184,9 +178,8 @@ public interface ToscaService {
    * @throws ToscaException
    *           if validation errors occur.
    */
-  @Nonnull
-  public ArchiveRoot parseAndValidateTemplate(@Nonnull String toscaTemplate,
-      Map<String, Object> inputs) throws IOException, ParsingException, ToscaException;
+  public ArchiveRoot parseAndValidateTemplate(String toscaTemplate, Map<String, Object> inputs)
+      throws IOException, ParsingException, ToscaException;
 
   /**
    * As for {@link #parseAndValidateTemplate(String)} but also replaces the user's inputs.
@@ -201,18 +194,15 @@ public interface ToscaService {
    * @throws ToscaException
    *           if validation errors occur.
    */
-  @Nonnull
-  public ArchiveRoot prepareTemplate(@Nonnull String toscaTemplate, Map<String, Object> inputs)
+  public ArchiveRoot prepareTemplate(String toscaTemplate, Map<String, Object> inputs)
       throws IOException, ParsingException, ToscaException;
 
   public Capability getNodeCapabilityByName(NodeTemplate node, String propertyName);
 
   public AbstractPropertyValue getNodePropertyByName(NodeTemplate node, String propertyName);
 
-  @Nonnull
   public PropertyValue<?> getNodePropertyValueByName(NodeTemplate node, String propertyName);
 
-  @Nonnull
   public PropertyValue<?> getCapabilityPropertyValueByName(Capability capability,
       String propertyName);
 

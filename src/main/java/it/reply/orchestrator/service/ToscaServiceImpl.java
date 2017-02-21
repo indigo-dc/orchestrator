@@ -92,7 +92,6 @@ import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import javax.annotation.Nonnull;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
@@ -166,8 +165,7 @@ public class ToscaServiceImpl implements ToscaService {
    * Utility to zip an inputStream.
    * 
    */
-  public static void zip(@Nonnull InputStream fileStream, @Nonnull Path outputPath)
-      throws IOException {
+  public static void zip(InputStream fileStream, Path outputPath) throws IOException {
     FileUtil.touch(outputPath);
     try (ZipOutputStream zipOutputStream =
         new ZipOutputStream(new BufferedOutputStream(Files.newOutputStream(outputPath)))) {
@@ -179,8 +177,7 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
-  @Nonnull
-  public ParsingResult<ArchiveRoot> getArchiveRootFromTemplate(@Nonnull String toscaTemplate)
+  public ParsingResult<ArchiveRoot> getArchiveRootFromTemplate(String toscaTemplate)
       throws IOException, ParsingException {
     Path zipPath = Files.createTempFile("csar", ".zip");
     try (InputStream is = new ByteArrayInputStream(toscaTemplate.getBytes());) {
@@ -197,8 +194,7 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
-  @Nonnull
-  public String getTemplateFromTopology(@Nonnull ArchiveRoot archiveRoot) throws IOException {
+  public String getTemplateFromTopology(ArchiveRoot archiveRoot) throws IOException {
     Map<String, Object> velocityCtx = new HashMap<>();
     velocityCtx.put("tosca_definitions_version",
         archiveRoot.getArchive().getToscaDefinitionsVersion());
@@ -282,8 +278,7 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
-  public ArchiveRoot parseTemplate(@Nonnull String toscaTemplate)
-      throws IOException, ToscaException {
+  public ArchiveRoot parseTemplate(String toscaTemplate) throws IOException, ToscaException {
 
     ParsingResult<ArchiveRoot> result = null;
     try {
