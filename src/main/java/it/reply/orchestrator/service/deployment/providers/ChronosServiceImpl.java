@@ -414,9 +414,10 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
   private void updateResource(Deployment deployment, IndigoJob job, NodeStates state) {
 
     // Find the Resource from DB
-    Resource resource = resourceRepository
-        .findByToscaNodeNameAndDeployment_id(job.getToscaNodeName(), deployment.getId());
-    resource.setState(state);
+    for (Resource resource : resourceRepository
+        .findByToscaNodeNameAndDeployment_id(job.getToscaNodeName(), deployment.getId())) {
+      resource.setState(state);
+    }
     // resourceRepository.save(resource);
   }
 

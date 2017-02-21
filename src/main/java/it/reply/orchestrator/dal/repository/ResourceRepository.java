@@ -25,6 +25,8 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Repository
 @Transactional(propagation = Propagation.MANDATORY)
 public interface ResourceRepository extends PagingAndSortingRepository<Resource, String> {
@@ -33,5 +35,6 @@ public interface ResourceRepository extends PagingAndSortingRepository<Resource,
 
   public Resource findByIdAndDeployment_id(String uuid, String deploymentId);
 
-  public Resource findByToscaNodeNameAndDeployment_id(String toscaNodeName, String deploymentId);
+  public List<Resource> findByToscaNodeNameAndDeployment_id(String toscaNodeName,
+      String deploymentId);
 }
