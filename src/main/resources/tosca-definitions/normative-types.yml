@@ -40,6 +40,25 @@ data_types:
         type: string
         description: The optional user (name or ID) used for non-token based credentials.
         required: false
+  tosca.datatypes.network.PortSpec:
+    derived_from: tosca.datatypes.Root
+    properties:
+      protocol:
+        type: string
+        required: true
+        default: tcp
+        constraints:
+          - valid_values: [ udp, tcp, igmp ]
+      target:
+        type: integer
+        required: false
+        constraints: 
+          - in_range: [ 1, 65535 ]
+      source:
+        type: integer
+        required: false
+        constraints: 
+          - in_range: [ 1, 65535 ]
 artifact_types:
   tosca.artifacts.Root:
     description: The TOSCA Artifact Type all other TOSCA Artifact Types derive from
@@ -284,17 +303,23 @@ capability_types:
       publish_ports:
         type: list
         entry_schema:
-          type: integer
+          type: tosca.datatypes.network.PortSpec
         required: false
       expose_ports:
         type: list
         entry_schema:
-          type: integer
+          type: tosca.datatypes.network.PortSpec
         required: false
       volumes:
         type: list
         entry_schema:
           type: string
+        required: false
+      host_id:
+        type: string
+        required: false
+      volume_id:
+        type: string
         required: false
 
 relationship_types:
