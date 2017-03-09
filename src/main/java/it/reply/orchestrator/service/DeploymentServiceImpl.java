@@ -286,9 +286,10 @@ public class DeploymentServiceImpl implements DeploymentService {
     Deployment deployment = deploymentRepository.findOne(id);
     if (deployment != null) {
 
-      if (deployment.getDeploymentProvider() == DeploymentProvider.CHRONOS) {
-        // Chronos deployments cannot be updated
-        throw new BadRequestException("Chronos deployments cannot be updated.");
+      if (deployment.getDeploymentProvider() == DeploymentProvider.CHRONOS
+          || deployment.getDeploymentProvider() == DeploymentProvider.MARATHON) {
+        throw new BadRequestException(String.format("%s deployments cannot be updated.",
+            deployment.getDeploymentProvider().toString()));
       }
 
       if (deployment.getStatus() == Status.CREATE_COMPLETE

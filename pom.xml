@@ -73,6 +73,7 @@
 		<workflow-manager.version>0.0.4-SNAPSHOT</workflow-manager.version>
 		<alien4cloud.version>1.1.0-INDIGO2-SNAPSHOT</alien4cloud.version>
 		<chronos-client.version>0.0.1-BETA.2</chronos-client.version>
+		<marathon-client.version>0.3.1-SNAPSHOT</marathon-client.version>
 	</properties>
 
 	<distributionManagement>
@@ -354,6 +355,12 @@
 			<version>${chronos-client.version}</version>
 		</dependency>
 
+		<dependency>
+			<groupId>com.mesosphere</groupId>
+			<artifactId>marathon-client</artifactId>
+			<version>${marathon-client.version}</version>
+		</dependency>
+	
 		<!-- Graph library -->
 		<dependency>
 			<groupId>org.jgrapht</groupId>
@@ -445,6 +452,12 @@
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<version>3.6.2</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
