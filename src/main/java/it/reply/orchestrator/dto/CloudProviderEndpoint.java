@@ -18,6 +18,9 @@ package it.reply.orchestrator.dto;
 
 import java.io.Serializable;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 /**
  * This class holds information to connect (and authenticate) to a CloudProvider.
  * 
@@ -96,4 +99,14 @@ public class CloudProviderEndpoint implements Serializable {
         + ", cpComputeServiceId=" + cpComputeServiceId + ", iaasType=" + iaasType + "]";
   }
 
+  @Override
+  public int hashCode() {
+    return HashCodeBuilder.reflectionHashCode(this);
+  }
+
+  @Override
+  public boolean equals(Object other) {
+    return EqualsBuilder.reflectionEquals(this, other);
+  }
+  
 }
