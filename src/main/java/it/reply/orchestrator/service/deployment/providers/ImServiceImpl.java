@@ -73,6 +73,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -384,7 +385,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       toscaService.contextualizeImages(DeploymentProvider.IM, newAr,
           deploymentMessage.getChosenCloudProvider(),
           deploymentMessage.getChosenCloudProviderEndpoint().getCpComputeServiceId());
-    } catch (ParsingException | IOException | ToscaException ex) {
+    } catch (ParsingException | IOException | ToscaException | ParseException ex) {
       throw new OrchestratorException(ex);
     }
     // find Count nodes into new and old template

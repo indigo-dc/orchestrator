@@ -34,6 +34,7 @@ import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.service.ToscaException;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
 
@@ -86,9 +87,11 @@ public interface ToscaService {
    *          .
    * @param oauthToken
    *          .
+   * @throws ParseException
+   *          .
    */
   public void addElasticClusterParameters(ArchiveRoot parsingResult, String deploymentId,
-      String oauthToken);
+      String oauthToken) throws ParseException;
 
   /**
    * Replace images data in 'tosca.capabilities.indigo.OperatingSystem' capabilities in the TOSCA

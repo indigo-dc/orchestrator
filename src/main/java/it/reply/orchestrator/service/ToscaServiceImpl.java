@@ -46,6 +46,7 @@ import alien4cloud.utils.FileUtil;
 
 import es.upv.i3m.grycap.im.auth.credentials.ServiceProvider;
 
+import it.reply.orchestrator.config.properties.OidcProperties.OidcClientProperties;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.ImageData;
@@ -55,6 +56,7 @@ import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.exception.service.ToscaException;
+import it.reply.orchestrator.service.security.OAuth2TokenService;
 
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -78,6 +80,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -85,6 +88,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -108,6 +112,9 @@ public class ToscaServiceImpl implements ToscaService {
 
   @Autowired
   private IndigoInputsPreProcessorService indigoInputsPreProcessorService;
+
+  @Autowired
+  private OAuth2TokenService oauth2tokenService;
 
   @Value("${directories.alien}/${directories.csar_repository}")
   private String alienRepoDir;
@@ -590,7 +597,7 @@ public class ToscaServiceImpl implements ToscaService {
 
   @Override
   public void addElasticClusterParameters(ArchiveRoot parsingResult, String deploymentId,
-      String oauthToken) {
+      String oauthToken) throws ParseException {
     if (parsingResult.getTopology() != null) {
       Map<String, NodeTemplate> nodes = parsingResult.getTopology().getNodeTemplates();
       if (nodes != null) {
@@ -609,6 +616,17 @@ public class ToscaServiceImpl implements ToscaService {
               scalarPropertyValue = new ScalarPropertyValue(oauthToken);
               scalarPropertyValue.setPrintable(true);
               entry.getValue().getProperties().put("iam_access_token", scalarPropertyValue);
+              Optional<OidcClientProperties> cluesInfo =
+                  oauth2tokenService.getCluesInfo(oauthToken);
+              if (cluesInfo.isPresent()) {
+                scalarPropertyValue = new ScalarPropertyValue(cluesInfo.get().getClientId());
+                scalarPropertyValue.setPrintable(true);
+                entry.getValue().getProperties().put("iam_clues_client_id", scalarPropertyValue);
+                scalarPropertyValue = new ScalarPropertyValue(cluesInfo.get().getClientSecret());
+                scalarPropertyValue.setPrintable(true);
+                entry.getValue().getProperties().put("iam_clues_client_secret",
+                    scalarPropertyValue);
+              }
             }
           }
         }
