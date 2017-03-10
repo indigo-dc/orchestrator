@@ -16,13 +16,19 @@ package it.reply.orchestrator.service.security;
  * limitations under the License.
  */
 
+import com.nimbusds.jwt.JWTParser;
+
 import it.reply.orchestrator.config.properties.OidcProperties;
+import it.reply.orchestrator.config.properties.OidcProperties.OidcClientProperties;
 import it.reply.orchestrator.dto.security.IndigoOAuth2Authentication;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+
+import java.text.ParseException;
+import java.util.Optional;
 
 @Service
 public class OAuth2TokenService {
@@ -49,4 +55,23 @@ public class OAuth2TokenService {
     IndigoOAuth2Authentication indigoAuth = (IndigoOAuth2Authentication) auth;
     return indigoAuth.getToken().getValue();
   }
+
+  /**
+   * Retrieve the CLUES IAM information from the OAuth2 access token.
+   * 
+   * @param accessToken
+   *          the accessToken
+   * @return the CLUES IAM information
+   * @throws ParseException
+   *           if the access token is not a valid JWT
+   */
+  public Optional<OidcClientProperties> getCluesInfo(String accessToken) throws ParseException {
+    if (!oidcProperties.isEnabled()) {
+      throw new IllegalStateException("Security is not enabled");
+    }
+    String iss = JWTParser.parse(accessToken).getJWTClaimsSet().getIssuer();
+    return Optional.ofNullable(oidcProperties.getIamConfiguration(iss))
+        .map(configuration -> configuration.getClues());
+  }
+
 }
