@@ -3,22 +3,22 @@ package it.reply.orchestrator.service.deployment.providers;
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
+import alien4cloud.model.topology.NodeTemplate;
+import alien4cloud.model.topology.Topology;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingException;
 
@@ -33,13 +33,15 @@ import es.upv.i3m.grycap.im.pojo.InfrastructureUris;
 import es.upv.i3m.grycap.im.pojo.ResponseError;
 import es.upv.i3m.grycap.im.pojo.VirtualMachineInfo;
 import es.upv.i3m.grycap.im.rest.client.BodyContentType;
-
+import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
+import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
+import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
@@ -49,6 +51,7 @@ import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.service.ToscaServiceImpl;
 
+import org.apache.commons.lang.builder.EqualsBuilder;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,9 +60,14 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.test.util.ReflectionTestUtils;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -84,6 +92,15 @@ public class ImServiceTest {
 
   @Mock
   private InfrastructureManager infrastructureManager;
+
+  @Mock
+  private ApplicationContext ctx;
+
+  @Mock
+  org.springframework.core.io.Resource resource;
+
+  @Mock
+  private OidcProperties oidcProperties;
 
   @Before
   public void setup() throws ParsingException {
@@ -280,6 +297,23 @@ public class ImServiceTest {
     Assert.assertTrue(returnValue);
   }
 
+  // [WIP]
+  // @Test
+  public void testIsDeployedFail() throws ImClientException {
+    DeploymentMessage dm = generateIsDeployedDm();
+
+    InfrastructureState infrastructureState = generateInfrastructureState(States.CONFIGURED, 2);
+
+    // Mockito.doReturn(infrastructureManager).when(imService).getClient(Mockito.any(DeploymentMessage.class));
+    Mockito.when(imService.getClient(Mockito.any(DeploymentMessage.class)))
+        .thenThrow(new ImClientException());
+    // Mockito.when(infrastructureManager.getInfrastructureState(dm.getDeployment().getEndpoint()))
+    // .thenReturn(infrastructureState);
+
+    boolean returnValue = imService.isDeployed(dm);
+
+  }
+
   @Test
   public void testIsNotYetDeployed() throws ImClientException {
     DeploymentMessage dm = generateIsDeployedDm();
@@ -431,4 +465,251 @@ public class ImServiceTest {
     Assert.assertEquals(dm.getDeployment().getResources().get(1).getState(), NodeStates.STARTED);
     Assert.assertFalse(dm.isPollComplete());
   }
+
+  @Test
+  public void testUpdateOnError() {
+    DeploymentMessage dm = generateDeployDm();
+    String id = UUID.randomUUID().toString();
+
+    Deployment deployment = dm.getDeployment();
+    Mockito.when(deploymentRepository.findOne(id)).thenReturn(dm.getDeployment());
+
+    deployment.setStatus(Status.DELETE_IN_PROGRESS);
+    imService.updateOnError(id);
+    Assert.assertEquals(Status.DELETE_FAILED, deployment.getStatus());
+
+    deployment.setStatus(Status.UPDATE_IN_PROGRESS);
+    imService.updateOnError(id);
+    Assert.assertEquals(Status.UPDATE_FAILED, deployment.getStatus());
+
+    deployment.setStatus(Status.UNKNOWN);
+    imService.updateOnError(id);
+    Assert.assertEquals(Status.UNKNOWN, deployment.getStatus());
+  }
+
+  @Test
+  public void testGetClient() throws Exception {
+    DeploymentMessage dm = generateDeployDm();
+    CloudProviderEndpoint cloudProviderEndpoint = new CloudProviderEndpoint();
+    cloudProviderEndpoint.setIaasType(IaaSType.OPENSTACK);
+    cloudProviderEndpoint.setCpEndpoint("recas.ba.infn");
+    dm.setChosenCloudProviderEndpoint(cloudProviderEndpoint);
+
+    ReflectionTestUtils.setField(imService, "openstackAuthFilePath", "authfilepath");
+    ReflectionTestUtils.setField(imService, "imUrl", "imurl");
+
+    Mockito.when(ctx.getResource("authfilepath")).thenReturn(resource);
+    Mockito.when(resource.getInputStream())
+        .thenReturn(new ByteArrayInputStream("authfilepath".getBytes()));
+    Mockito.when(oidcProperties.isEnabled()).thenReturn(true);
+
+    InfrastructureManager result = new InfrastructureManager("imurl", "authfilepath");
+    InfrastructureManager client = imService.getClient(dm);
+    // TO-DO: Assert equals both result and client
+
+    cloudProviderEndpoint.setCpEndpoint("https://www.openstack.org/");
+    dm.setChosenCloudProviderEndpoint(cloudProviderEndpoint);
+    dm.setOauth2Token("J1qK1c18UUGJFAzz9xnH56584l4");
+    imService.getClient(dm);
+    // TO-DO: Assert equals both result and client
+
+
+    // OPENENBULA
+    cloudProviderEndpoint.setIaasType(IaaSType.OPENNEBULA);
+    dm.setChosenCloudProviderEndpoint(cloudProviderEndpoint);
+    dm.setOauth2Token("J1qK1c18UUGJFAzz9xnH56584l4");
+    imService.getClient(dm);
+    // TO-DO: Assert equals both result and client
+
+    // AWS
+    cloudProviderEndpoint.setIaasType(IaaSType.AWS);
+    cloudProviderEndpoint.setUsername("username");
+    cloudProviderEndpoint.setPassword("password");
+    dm.setChosenCloudProviderEndpoint(cloudProviderEndpoint);
+    dm.setOauth2Token("J1qK1c18UUGJFAzz9xnH56584l4");
+    imService.getClient(dm);
+    // TO-DO: Assert equals both result and client
+  }
+
+  @Test(expected = DeploymentException.class)
+  public void testGetClientFailDeployment() throws Exception {
+    DeploymentMessage dm = generateDeployDm();
+    CloudProviderEndpoint cloudProviderEndpoint = new CloudProviderEndpoint();
+    cloudProviderEndpoint.setIaasType(IaaSType.OPENSTACK);
+    cloudProviderEndpoint.setCpEndpoint("lorem.ipsum");
+    dm.setChosenCloudProviderEndpoint(cloudProviderEndpoint);
+
+    Mockito.when(ctx.getResource("authfilepath")).thenReturn(resource);
+    Mockito.when(resource.getInputStream())
+        .thenReturn(new ByteArrayInputStream("authfilepath".getBytes()));
+    Mockito.when(oidcProperties.isEnabled()).thenReturn(true);
+
+    imService.getClient(dm);
+  }
+
+  @Test
+  public void testDoUndeploySuccess() throws ImClientException {
+    DeploymentMessage dm = generateDeployDm();
+    Mockito.when(deploymentRepository.save(dm.getDeployment())).thenReturn(dm.getDeployment());
+    Assert.assertTrue(imService.doUndeploy(dm));
+
+    dm.getDeployment().setEndpoint("endpoint");
+    Mockito.when(deploymentRepository.save(dm.getDeployment())).thenReturn(dm.getDeployment());
+    Mockito.doReturn(infrastructureManager).when(imService)
+        .getClient(Mockito.any(DeploymentMessage.class));
+    Assert.assertTrue(imService.doUndeploy(dm));
+
+    Mockito.doThrow(new ImClientErrorException(new ResponseError(null, 404)))
+        .when(infrastructureManager).destroyInfrastructure(Mockito.any(String.class));
+    Assert.assertTrue(imService.doUndeploy(dm));
+
+
+  }
+
+  @Test
+  public void testDoUndeployFail() throws Exception {
+    DeploymentMessage dm = generateDeployDm();
+    dm.getDeployment().setEndpoint("endpoint");
+    Mockito.when(deploymentRepository.save(dm.getDeployment())).thenReturn(dm.getDeployment());
+    Mockito.doReturn(infrastructureManager).when(imService)
+        .getClient(Mockito.any(DeploymentMessage.class));
+    ResponseError responseError = new ResponseError(null, 405);
+    Mockito.doThrow(new ImClientErrorException(responseError)).when(infrastructureManager)
+        .destroyInfrastructure(Mockito.any(String.class));
+    Mockito.doNothing().when(imService).updateOnError(Mockito.anyString(), Mockito.anyString());
+    Assert.assertFalse(imService.doUndeploy(dm));
+
+    Mockito.doThrow(new NullPointerException()).when(infrastructureManager)
+        .destroyInfrastructure(Mockito.any(String.class));
+    Assert.assertFalse(imService.doUndeploy(dm));
+
+  }
+
+  @Test
+  public void testIsUndeployedSuccess() throws Exception {
+    DeploymentMessage dm = generateDeployDm();
+
+    String infrastructureId = UUID.randomUUID().toString();
+    InfrastructureUri infrastructureUri =
+        new InfrastructureUri("http://localhost:8080/infrastructures/" + infrastructureId);
+    ArchiveRoot ar = new ArchiveRoot();
+
+    Mockito.when(deploymentRepository.save(dm.getDeployment())).thenReturn(dm.getDeployment());
+    Mockito.when(deploymentRepository.findOne(dm.getDeployment().getId()))
+        .thenReturn(dm.getDeployment());
+    Mockito.doReturn(ar).when(toscaService).prepareTemplate(dm.getDeployment().getTemplate(),
+        dm.getDeployment().getParameters());
+    Mockito.when(infrastructureManager.createInfrastructure(Mockito.anyString(),
+        Mockito.eq(BodyContentType.TOSCA))).thenReturn(infrastructureUri);
+    Mockito.doReturn(infrastructureManager).when(imService)
+        .getClient(Mockito.any(DeploymentMessage.class));
+
+    Assert.assertTrue(imService.isUndeployed(dm));
+
+
+    Mockito.doThrow(new ImClientErrorException(new ResponseError(null, 404)))
+        .when(infrastructureManager).getInfrastructureState(Mockito.any(String.class));
+    Assert.assertTrue(imService.isUndeployed(dm));
+
+  }
+
+  @Test
+  public void testIsUndeployedFail() throws Exception {
+    DeploymentMessage dm = generateDeployDm();
+    dm.getDeployment().setEndpoint("www.endpoint.com");
+    String infrastructureId = UUID.randomUUID().toString();
+    InfrastructureUri infrastructureUri =
+        new InfrastructureUri("http://localhost:8080/infrastructures/" + infrastructureId);
+    ArchiveRoot ar = new ArchiveRoot();
+
+    Mockito.when(deploymentRepository.save(dm.getDeployment())).thenReturn(dm.getDeployment());
+    Mockito.when(deploymentRepository.findOne(dm.getDeployment().getId()))
+        .thenReturn(dm.getDeployment());
+    Mockito.doReturn(ar).when(toscaService).prepareTemplate(dm.getDeployment().getTemplate(),
+        dm.getDeployment().getParameters());
+    Mockito.when(infrastructureManager.createInfrastructure(Mockito.anyString(),
+        Mockito.eq(BodyContentType.TOSCA))).thenReturn(infrastructureUri);
+    Mockito.doReturn(infrastructureManager).when(imService)
+        .getClient(Mockito.any(DeploymentMessage.class));
+
+    Mockito.doThrow(new ImClientErrorException(new ResponseError(null, 500)))
+        .when(infrastructureManager).getInfrastructureState(Mockito.any(String.class));
+    Assert.assertFalse(imService.isUndeployed(dm));
+
+    dm.getDeployment().setEndpoint("www.endpoint.com");
+    Assert.assertFalse(imService.isUndeployed(dm));
+  }
+
+  @Test
+  public void testFinalizeUndeploy() {
+    DeploymentMessage dm = generateDeployDm();
+    Mockito.doNothing().when(imService).updateOnSuccess(Mockito.anyString());
+    imService.finalizeUndeploy(dm, true);
+    Mockito.doNothing().when(imService).updateOnError(Mockito.anyString());
+    imService.finalizeUndeploy(dm, false);
+  }
+
+
+  @Test
+  public void testDoUpdateSuccesful()
+      throws ToscaException, ParsingException, IOException, ImClientException {
+    DeploymentMessage dm = generateDeployDm();
+
+    String infrastructureId = UUID.randomUUID().toString();
+    InfrastructureUri infrastructureUri =
+        new InfrastructureUri("http://localhost:8080/infrastructures/" + infrastructureId);
+
+    ArchiveRoot oldAr = new ArchiveRoot();
+    Topology topology = new Topology();
+    oldAr.setTopology(topology);
+
+    ArchiveRoot newAr = new ArchiveRoot();
+    newAr.setTopology(topology);
+
+    // old node
+    NodeTemplate ntOld = new NodeTemplate();
+    ntOld.setName("oldNode");
+    Map<String, NodeTemplate> oldNodes = new HashMap<>();
+    oldNodes.put("oldNode", ntOld);
+
+    // new node
+    NodeTemplate ntNew = new NodeTemplate();
+    ntNew.setName("newNode");
+    NodeTemplate ntNew2 = new NodeTemplate();
+    ntNew.setName("newNode2");
+    NodeTemplate ntNew3 = new NodeTemplate();
+    ntNew.setName("newNode3");
+    Map<String, NodeTemplate> newNodes = new HashMap<>();
+    newNodes.put("oldNode", ntOld);
+    newNodes.put("newNode", ntNew);
+    newNodes.put("newNode2", ntNew2);
+    newNodes.put("newNode3", ntNew3);
+
+
+    Mockito.when(deploymentRepository.save(dm.getDeployment())).thenReturn(dm.getDeployment());
+    Mockito.when(deploymentRepository.findOne(dm.getDeployment().getId()))
+        .thenReturn(dm.getDeployment());
+    Mockito.doReturn(oldAr).when(toscaService).prepareTemplate(dm.getDeployment().getTemplate(),
+        dm.getDeployment().getParameters());
+    Mockito.doReturn(newAr).when(toscaService).prepareTemplate("newTemplate",
+        dm.getDeployment().getParameters());
+    Mockito.when(infrastructureManager.createInfrastructure(Mockito.anyString(),
+        Mockito.eq(BodyContentType.TOSCA))).thenReturn(infrastructureUri);
+    Mockito.doReturn(infrastructureManager).when(imService)
+        .getClient(Mockito.any(DeploymentMessage.class));
+
+
+    Mockito.doReturn(oldNodes).when(toscaService).getCountNodes(oldAr);
+    Mockito.doReturn(newNodes).when(toscaService).getCountNodes(newAr);
+    Mockito.doReturn(1).doReturn(4).when(toscaService).getCount(Mockito.any(NodeTemplate.class));
+    Mockito.doReturn(dm.getDeployment().getTemplate()).when(toscaService)
+        .updateTemplate(Mockito.anyString());
+
+    boolean returnValue = imService.doUpdate(dm, "newTemplate");
+
+    Assert.assertTrue(returnValue);
+
+  }
+
+
 }
