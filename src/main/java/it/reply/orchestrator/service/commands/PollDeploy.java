@@ -18,6 +18,7 @@ package it.reply.orchestrator.service.commands;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.exception.service.DeploymentException;
+import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;
 import it.reply.utils.misc.polling.AbstractPollingBehaviour;
@@ -35,8 +36,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class PollDeploy extends BaseDeployCommand {
 
-  public static final String WF_PARAM_POLLING_STATUS = "statusPoller";
-
   @Autowired
   private DeploymentProviderServiceRegistry deploymentProviderServiceRegistry;
 
@@ -46,11 +45,11 @@ public class PollDeploy extends BaseDeployCommand {
 
     ExecutionResults exResults = new ExecutionResults();
     ExternallyControlledPoller<DeploymentMessage, Status> statusPoller =
-        getParameter(ctx, WF_PARAM_POLLING_STATUS);
+        getParameter(ctx, WorkflowConstants.WF_PARAM_POLLING_STATUS);
     if (statusPoller == null) {
       statusPoller = getPoller();
     }
-    exResults.setData(WF_PARAM_POLLING_STATUS, statusPoller);
+    exResults.setData(WorkflowConstants.WF_PARAM_POLLING_STATUS, statusPoller);
 
     DeploymentProviderService deploymentProviderService = deploymentProviderServiceRegistry
         .getDeploymentProviderService(deploymentMessage.getDeployment());

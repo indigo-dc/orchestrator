@@ -16,6 +16,7 @@ package it.reply.orchestrator.service.commands;
  * limitations under the License.
  */
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
+import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;
 import it.reply.utils.misc.polling.AbstractPollingBehaviour;
@@ -46,11 +47,11 @@ public class PollUndeploy extends BaseDeployCommand {
 
     ExecutionResults exResults = new ExecutionResults();
     ExternallyControlledPoller<DeploymentMessage, Boolean> pollingStatus =
-        getParameter(ctx, "pollingStatus");
+        getParameter(ctx, WorkflowConstants.WF_PARAM_POLLING_STATUS);
     if (pollingStatus == null) {
       pollingStatus = getPoller();
     }
-    exResults.setData("pollingStatus", pollingStatus);
+    exResults.setData(WorkflowConstants.WF_PARAM_POLLING_STATUS, pollingStatus);
 
     DeploymentProviderService deploymentProviderService = deploymentProviderServiceRegistry
         .getDeploymentProviderService(deploymentMessage.getDeployment());
