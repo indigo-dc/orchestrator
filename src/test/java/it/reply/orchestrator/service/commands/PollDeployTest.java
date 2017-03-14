@@ -40,6 +40,7 @@ import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.exception.service.DeploymentException;
+import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;
 import it.reply.orchestrator.service.deployment.providers.ImServiceImpl;
@@ -52,8 +53,6 @@ import it.reply.workflowmanager.spring.orchestrator.bpm.OrchestratorContextBean;
 import it.reply.workflowmanager.utils.Constants;
 
 public class PollDeployTest {
-
-  public static final String WF_PARAM_POLLING_STATUS = "statusPoller";
 
   @InjectMocks
   private PollDeploy pollDeploy = new PollDeploy();
@@ -83,39 +82,39 @@ public class PollDeployTest {
     DeploymentMessage dm = generateDeployDm();
 
     WorkItemImpl workItem = new WorkItemImpl();
-    workItem.setParameter(WF_PARAM_POLLING_STATUS, null);
+    workItem.setParameter(WorkflowConstants.WF_PARAM_POLLING_STATUS, null);
 
     commandContext.setData(Constants.WORKITEM, workItem);
 
     ExecutionResults expectedResult = new ExecutionResults();
     expectedResult.setData(Constants.RESULT_STATUS, "OK");
     expectedResult.setData(Constants.OK_RESULT, false);
-    expectedResult.setData(WF_PARAM_POLLING_STATUS, null);
+    expectedResult.setData(WorkflowConstants.WF_PARAM_POLLING_STATUS, null);
     ExecutionResults customExecute = pollDeploy.customExecute(commandContext, dm);
 
     Assert.assertEquals(expectedResult.getData(Constants.RESULT_STATUS),
         customExecute.getData(Constants.RESULT_STATUS));
     Assert.assertEquals(expectedResult.getData(Constants.OK_RESULT),
         customExecute.getData(Constants.OK_RESULT));
-    Assert.assertNotEquals(null, customExecute.getData(WF_PARAM_POLLING_STATUS));
+    Assert.assertNotEquals(null, customExecute.getData(WorkflowConstants.WF_PARAM_POLLING_STATUS));
 
     // WF_PARAM_POLLING_STATUS not null
     workItem = new WorkItemImpl();
-    workItem.setParameter(WF_PARAM_POLLING_STATUS, getPoolBehavior());
+    workItem.setParameter(WorkflowConstants.WF_PARAM_POLLING_STATUS, getPoolBehavior());
 
     commandContext.setData(Constants.WORKITEM, workItem);
 
     expectedResult = new ExecutionResults();
     expectedResult.setData(Constants.RESULT_STATUS, "OK");
     expectedResult.setData(Constants.OK_RESULT, false);
-    expectedResult.setData(WF_PARAM_POLLING_STATUS, getPoolBehavior());
+    expectedResult.setData(WorkflowConstants.WF_PARAM_POLLING_STATUS, getPoolBehavior());
     customExecute = pollDeploy.customExecute(commandContext, dm);
 
     Assert.assertEquals(expectedResult.getData(Constants.RESULT_STATUS),
         customExecute.getData(Constants.RESULT_STATUS));
     Assert.assertEquals(expectedResult.getData(Constants.OK_RESULT),
         customExecute.getData(Constants.OK_RESULT));
-    Assert.assertNotEquals(null, customExecute.getData(WF_PARAM_POLLING_STATUS));
+    Assert.assertNotEquals(null, customExecute.getData(WorkflowConstants.WF_PARAM_POLLING_STATUS));
 
   }
 
@@ -125,14 +124,14 @@ public class PollDeployTest {
     DeploymentMessage dm = generateDeployDm();
 
     WorkItemImpl workItem = new WorkItemImpl();
-    workItem.setParameter(WF_PARAM_POLLING_STATUS, statusPoller);
+    workItem.setParameter(WorkflowConstants.WF_PARAM_POLLING_STATUS, statusPoller);
 
     commandContext.setData(Constants.WORKITEM, workItem);
 
     ExecutionResults expectedResult = new ExecutionResults();
     expectedResult.setData(Constants.RESULT_STATUS, "OK");
     expectedResult.setData(Constants.OK_RESULT, true);
-    expectedResult.setData(WF_PARAM_POLLING_STATUS, statusPoller);
+    expectedResult.setData(WorkflowConstants.WF_PARAM_POLLING_STATUS, statusPoller);
 
     Mockito.when(statusPoller.getPollStatus()).thenReturn(PollingStatus.ENDED);
     Mockito.when(deploymentProviderServiceRegistry
@@ -145,7 +144,7 @@ public class PollDeployTest {
         customExecute.getData(Constants.RESULT_STATUS));
     Assert.assertEquals(expectedResult.getData(Constants.OK_RESULT),
         customExecute.getData(Constants.OK_RESULT));
-    Assert.assertEquals(statusPoller, customExecute.getData(WF_PARAM_POLLING_STATUS));
+    Assert.assertEquals(statusPoller, customExecute.getData(WorkflowConstants.WF_PARAM_POLLING_STATUS));
 
     // generate polling exception
 
@@ -156,7 +155,7 @@ public class PollDeployTest {
         customExecute.getData(Constants.RESULT_STATUS));
     Assert.assertEquals(expectedResult.getData(Constants.OK_RESULT),
         customExecute.getData(Constants.OK_RESULT));
-    Assert.assertEquals(statusPoller, customExecute.getData(WF_PARAM_POLLING_STATUS));
+    Assert.assertEquals(statusPoller, customExecute.getData(WorkflowConstants.WF_PARAM_POLLING_STATUS));
   }
 
   private DeploymentMessage generateDeployDm() {
