@@ -36,6 +36,7 @@ import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.PagedResources;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.WebDataBinder;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -138,6 +139,7 @@ public class DeploymentController {
   @ResponseStatus(HttpStatus.CREATED)
   @RequestMapping(value = "/deployments", method = RequestMethod.POST,
       produces = MediaType.APPLICATION_JSON_VALUE)
+  @PreAuthorize("#oauth2.hasScope('offline_access')")
   public DeploymentResource createDeployment(@Valid @RequestBody DeploymentRequest request) {
 
     Deployment deployment = deploymentService.createDeployment(request);
@@ -156,6 +158,7 @@ public class DeploymentController {
   @ResponseStatus(HttpStatus.ACCEPTED)
   @RequestMapping(value = "/deployments/{deploymentId}", method = RequestMethod.PUT,
       produces = MediaType.APPLICATION_JSON_VALUE)
+  @PreAuthorize("#oauth2.hasScope('offline_access')")
   public void updateDeployment(@PathVariable("deploymentId") String id,
       @Valid @RequestBody DeploymentRequest request) {
 
@@ -187,6 +190,7 @@ public class DeploymentController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @RequestMapping(value = "/deployments/{deploymentId}", method = RequestMethod.DELETE,
       produces = MediaType.APPLICATION_JSON_VALUE)
+  @PreAuthorize("#oauth2.hasScope('offline_access')")
   public void deleteDeployment(@PathVariable("deploymentId") String id) {
 
     deploymentService.deleteDeployment(id);

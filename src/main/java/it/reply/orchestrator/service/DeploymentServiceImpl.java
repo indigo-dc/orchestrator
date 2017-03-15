@@ -28,9 +28,14 @@ import alien4cloud.tosca.parser.ParsingException;
 import it.reply.orchestrator.config.WorkflowConfigProducerBean;
 import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.entity.OidcEntity;
+import it.reply.orchestrator.dal.entity.OidcEntityId;
+import it.reply.orchestrator.dal.entity.OidcRefreshToken;
+import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.entity.WorkflowReference;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
+import it.reply.orchestrator.dal.repository.OidcEntityRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.deployment.PlacementPolicy;
@@ -54,11 +59,11 @@ import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager.RUNTIME_
 import org.jgrapht.graph.DirectedMultigraph;
 import org.jgrapht.traverse.TopologicalOrderIterator;
 import org.kie.api.runtime.process.ProcessInstance;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.social.oauth2.AccessGrant;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -67,19 +72,21 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 public class DeploymentServiceImpl implements DeploymentService {
 
-  private static final Logger LOG = LoggerFactory.getLogger(DeploymentServiceImpl.class);
-
   @Autowired
   private DeploymentRepository deploymentRepository;
 
   @Autowired
   private ResourceRepository resourceRepository;
+
+  @Autowired
+  private OidcEntityRepository oidcEntityRepository;
 
   @Autowired
   private ToscaService toscaService;
@@ -108,6 +115,29 @@ public class DeploymentServiceImpl implements DeploymentService {
       return deployment;
     } else {
       throw new NotFoundException("The deployment <" + uuid + "> doesn't exist");
+    }
+  }
+
+  private Optional<OidcEntity> getOrGenerateRequester() {
+    if (oidcProperties.isEnabled()) {
+      OidcEntityId requesterId = oauth2TokenService.generateOidcEntityIdFromCurrentAuth();
+
+      OidcEntity requester = oidcEntityRepository.findByOidcEntityId(requesterId)
+          .orElseGet(oauth2TokenService::generateOidcEntityFromCurrentAuth);
+      // exchange token if a refresh token is not yet associated with the user
+      if (requester.getRefreshToken() == null) {
+        OidcTokenId currentTokenId = oauth2TokenService.generateTokenIdFromCurrentAuth();
+        AccessGrant grant = oauth2TokenService.exchangeAccessToken(currentTokenId,
+            oauth2TokenService.getOAuth2TokenFromCurrentAuth(), OAuth2TokenService.REQUIRED_SCOPES);
+
+        OidcRefreshToken token = OidcRefreshToken.fromAccessGrant(currentTokenId, grant);
+
+        requester.setRefreshToken(token);
+
+      }
+      return Optional.of(requester);
+    } else {
+      return Optional.empty();
     }
   }
 
@@ -155,10 +185,8 @@ public class DeploymentServiceImpl implements DeploymentService {
 
     } catch (IOException ex) {
       throw new OrchestratorException(ex.getMessage(), ex);
-    } catch (ParsingException ex) {
-      throw new BadRequestException("Template is invalid: " + ex.getMessage());
-    } catch (ToscaException ex) {
-      throw new BadRequestException("Template is invalid: " + ex.getMessage());
+    } catch (ParsingException | ToscaException ex) {
+      throw new BadRequestException("Template is invalid: " + ex.getMessage(), ex);
     }
 
     Map<String, Object> params = new HashMap<>();
@@ -166,8 +194,11 @@ public class DeploymentServiceImpl implements DeploymentService {
     params.put(WorkflowConstants.WF_PARAM_LOGGER,
         LoggerFactory.getLogger(WorkflowConfigProducerBean.DEPLOY.getProcessId()));
 
+    Optional<OidcEntity> requester = this.getOrGenerateRequester();
+    requester.ifPresent(deployment::setOwner);
+
     // Build deployment message
-    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment);
+    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, requester);
     deploymentMessage.setOneDataRequirements(odRequirements);
     deploymentMessage.setPlacementPolicies(placementPolicies);
     deploymentMessage.setDeploymentType(deploymentType);
@@ -187,11 +218,15 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   }
 
-  protected DeploymentMessage buildDeploymentMessage(Deployment deployment) {
+  protected DeploymentMessage buildDeploymentMessage(Deployment deployment,
+      Optional<OidcEntity> requester) {
     DeploymentMessage deploymentMessage = new DeploymentMessage();
-    if (oidcProperties.isEnabled()) {
-      deploymentMessage.setOauth2Token(oauth2TokenService.getOAuth2Token());
-    }
+    requester.ifPresent(req -> {
+      OidcTokenId tokenId = new OidcTokenId();
+      tokenId.setIssuer(req.getOidcEntityId().getIssuer());
+      tokenId.setJti(req.getRefreshToken().getOriginalTokenId());
+      deploymentMessage.setRequestedWithToken(tokenId);
+    });
     deploymentMessage.setDeploymentId(deployment.getId());
     deploymentMessage.setChosenCloudProviderEndpoint(deployment.getCloudProviderEndpoint());
 
@@ -258,8 +293,11 @@ public class DeploymentServiceImpl implements DeploymentService {
           return;
         }
 
+        Optional<OidcEntity> requester = this.getOrGenerateRequester();
+        requester.ifPresent(deployment::setOwner);
+
         // Build deployment message
-        DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment);
+        DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, requester);
         DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
         deploymentMessage.setDeploymentType(deploymentType);
         params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
@@ -318,13 +356,16 @@ public class DeploymentServiceImpl implements DeploymentService {
         params.put(WorkflowConstants.WF_PARAM_LOGGER,
             LoggerFactory.getLogger(WorkflowConfigProducerBean.UPDATE.getProcessId()));
 
+        Optional<OidcEntity> requester = this.getOrGenerateRequester();
+        requester.ifPresent(deployment::setOwner);
+
         // Build deployment message
-        DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment);
+        DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, requester);
         params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
 
         DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
         deploymentMessage.setDeploymentType(deploymentType);
-        
+
         ProcessInstance pi = null;
         try {
           pi = wfService.startProcess(WorkflowConfigProducerBean.UPDATE.getProcessId(), params,

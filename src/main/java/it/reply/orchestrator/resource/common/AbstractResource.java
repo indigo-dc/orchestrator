@@ -18,6 +18,9 @@ package it.reply.orchestrator.resource.common;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+
 import org.springframework.hateoas.ResourceSupport;
 
 import java.text.DateFormat;
@@ -26,26 +29,13 @@ import java.util.Date;
 import java.util.TimeZone;
 
 @JsonInclude(Include.NON_NULL)
+@Data
+@EqualsAndHashCode(callSuper = true)
 public class AbstractResource extends ResourceSupport {
 
   private String uuid;
   private String creationTime;
   private String updateTime;
-
-  public AbstractResource() {
-  }
-
-  public String getUuid() {
-    return uuid;
-  }
-
-  public void setUuid(String uuid) {
-    this.uuid = uuid;
-  }
-
-  public String getCreationTime() {
-    return creationTime;
-  }
 
   /**
    * Set the creation time converting from Date.
@@ -65,10 +55,6 @@ public class AbstractResource extends ResourceSupport {
     this.creationTime = creationTime;
   }
 
-  public String getUpdateTime() {
-    return updateTime;
-  }
-
   /**
    * Set the update time converting from Date.
    * 
@@ -81,6 +67,10 @@ public class AbstractResource extends ResourceSupport {
     }
 
     this.updateTime = convertDate(updateTime);
+  }
+
+  public void setUpdateTime(String updateTime) {
+    this.updateTime = updateTime;
   }
 
   private String convertDate(Date date) {
