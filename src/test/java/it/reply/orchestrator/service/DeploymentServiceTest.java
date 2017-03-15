@@ -165,9 +165,6 @@ public class DeploymentServiceTest {
       return res;
     });
 
-    Mockito.when(oidcProperties.isEnabled()).thenReturn(true);
-    Mockito.when(oauth2TokenService.getOAuth2Token()).thenReturn("token");
-
     Mockito.when(wfService.startProcess(Mockito.any(), Mockito.any(), Mockito.any()))
         .thenReturn(new RuleFlowProcessInstance());
 

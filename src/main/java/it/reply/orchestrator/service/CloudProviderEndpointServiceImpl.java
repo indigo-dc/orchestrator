@@ -91,12 +91,16 @@ public class CloudProviderEndpointServiceImpl {
     CloudService computeService =
         chosenCloudProvider.getCmbdProviderServicesByType(Type.COMPUTE).get(0);
 
+    String imEndpoint = null;
     CloudProviderEndpoint cpe = new CloudProviderEndpoint();
     IaaSType iaasType;
     if (computeService.isOpenStackComputeProviderService()) {
       iaasType = IaaSType.OPENSTACK;
     } else if (computeService.isOpenNebulaComputeProviderService()) {
       iaasType = IaaSType.OPENNEBULA;
+    } else if (computeService.isOpenNebulaToscaProviderService()) {
+      iaasType = IaaSType.OPENNEBULA;
+      imEndpoint = computeService.getData().getEndpoint();
     } else if (computeService.isOcciComputeProviderService()) {
       iaasType = IaaSType.OCCI;
     } else if (computeService.isAwsComputeProviderService()) {
@@ -115,7 +119,7 @@ public class CloudProviderEndpointServiceImpl {
     cpe.setCpEndpoint(computeService.getData().getEndpoint());
     cpe.setCpComputeServiceId(computeService.getId());
     cpe.setIaasType(iaasType);
-    // FIXME Add IM EP, if available
+    cpe.setImEndpoint(imEndpoint);
 
     return cpe;
   }

@@ -62,6 +62,7 @@ import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
 
 import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jgrapht.alg.CycleDetector;
 import org.jgrapht.graph.DirectedMultigraph;
 import org.slf4j.Logger;
@@ -605,7 +606,7 @@ public class ToscaServiceImpl implements ToscaService {
 
   @Override
   public void addElasticClusterParameters(ArchiveRoot archiveRoot, String deploymentId,
-      String oauthToken) throws ParseException {
+      @Nullable String oauthToken) throws ParseException {
     Collection<NodeTemplate> nodes = getNodesFromArchiveRoot(archiveRoot);
 
     for (NodeTemplate node : nodes) {
@@ -616,25 +617,24 @@ public class ToscaServiceImpl implements ToscaService {
         node.setProperties(properties);
 
         // Create new property with the deploymentId and set as printable
-        ScalarPropertyValue scalarPropertyValue = createScalarPropertyValue(deploymentId);
-        properties.put("deployment_id", scalarPropertyValue);
+        properties.put("deployment_id", createScalarPropertyValue(deploymentId));
 
         // Create new property with the orchestrator_url and set as printable
-        scalarPropertyValue = createScalarPropertyValue(orchestratorUrl);
-        properties.put("orchestrator_url", scalarPropertyValue);
+        properties.put("orchestrator_url", createScalarPropertyValue(orchestratorUrl));
 
         if (oauthToken != null) {
           // Create new property with the iam_access_token and set as printable
-          scalarPropertyValue = createScalarPropertyValue(oauthToken);
-          properties.put("iam_access_token", scalarPropertyValue);
-          Optional<OidcClientProperties> cluesInfo =
-              oauth2tokenService.getCluesInfo(oauthToken);
-          if (cluesInfo.isPresent()) {
-            scalarPropertyValue = createScalarPropertyValue(cluesInfo.get().getClientId());
-            properties.put("iam_clues_client_id", scalarPropertyValue);
-            scalarPropertyValue = createScalarPropertyValue(cluesInfo.get().getClientSecret());
-            properties.put("iam_clues_client_secret", scalarPropertyValue);
-          }
+          properties.put("iam_access_token", createScalarPropertyValue(oauthToken));
+
+          Optional<OidcClientProperties> cluesInfo = oauth2tokenService.getCluesInfo(oauthToken);
+          cluesInfo.ifPresent(info -> {
+            // Create new property with the iam_clues_client_id and set as printable
+            properties.put("iam_clues_client_id", createScalarPropertyValue(info.getClientId()));
+
+            // Create new property with the iam_clues_client_secret and set as printable
+            properties.put("iam_clues_client_secret",
+                createScalarPropertyValue(info.getClientSecret()));
+          });
         }
       }
     }

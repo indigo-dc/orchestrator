@@ -20,6 +20,10 @@ import com.google.common.collect.Lists;
 
 import it.reply.orchestrator.enums.NodeStates;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.util.List;
 
 import javax.persistence.Column;
@@ -35,6 +39,9 @@ import javax.persistence.Table;
 @Entity
 @Table(indexes = { @Index(columnList = "toscaNodeName"), @Index(columnList = "deployment_uuid"),
     @Index(columnList = AbstractResourceEntity.CREATED_COLUMN_NAME) })
+@Getter
+@Setter
+@NoArgsConstructor
 public class Resource extends AbstractResourceEntity {
 
   private static final long serialVersionUID = -4916577635363604624L;
@@ -65,10 +72,6 @@ public class Resource extends AbstractResourceEntity {
   @JoinColumn(name = "deployment_uuid")
   private Deployment deployment;
 
-  public Resource() {
-    super();
-  }
-
   /**
    * Creates a new Resource object.
    * 
@@ -80,61 +83,4 @@ public class Resource extends AbstractResourceEntity {
     this.toscaNodeName = toscaNodeName;
     state = NodeStates.INITIAL;
   }
-
-  public NodeStates getState() {
-    return state;
-  }
-
-  public void setState(NodeStates state) {
-    this.state = state;
-  }
-
-  public String getIaasId() {
-    return iaasId;
-  }
-
-  public void setIaasId(String iaasId) {
-    this.iaasId = iaasId;
-  }
-
-  public String getToscaNodeType() {
-    return toscaNodeType;
-  }
-
-  public void setToscaNodeType(String toscaNodeType) {
-    this.toscaNodeType = toscaNodeType;
-  }
-
-  public String getToscaNodeName() {
-    return toscaNodeName;
-  }
-
-  public void setToscaNodeName(String toscaNodeName) {
-    this.toscaNodeName = toscaNodeName;
-  }
-
-  public List<String> getRequiredBy() {
-    return requiredBy;
-  }
-
-  public void setRequiredBy(List<String> requiredBy) {
-    this.requiredBy = requiredBy;
-  }
-
-  public List<String> getRequires() {
-    return requires;
-  }
-
-  public void setRequires(List<String> requires) {
-    this.requires = requires;
-  }
-
-  public Deployment getDeployment() {
-    return deployment;
-  }
-
-  public void setDeployment(Deployment deployment) {
-    this.deployment = deployment;
-  }
-
 }
