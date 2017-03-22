@@ -106,6 +106,12 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   protected InfrastructureManager getClient(DeploymentMessage dm) {
     IaaSType iaasType = dm.getChosenCloudProviderEndpoint().getIaasType();
     String authString = null;
+    String imUrlToUse;
+    if (dm.getChosenCloudProviderEndpoint().getImEndpoint() != null) {
+      imUrlToUse = dm.getChosenCloudProviderEndpoint().getImEndpoint();
+    } else {
+      imUrlToUse = imUrl;
+    }
     try {
       LOG.debug("Load {} credentials with: {}", iaasType, dm.getChosenCloudProviderEndpoint());
       switch (iaasType) {
@@ -141,7 +147,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
                 .withUsername("indigo-dc").withPassword(dm.getOauth2Token()).withHost(endpoint)
                 .withAuthVersion(authVersion);
             ah.addCredential(cred);
-            InfrastructureManager im = new InfrastructureManager(imUrl, ah);
+            InfrastructureManager im = new InfrastructureManager(imUrlToUse, ah);
             return im;
           }
           break;
@@ -154,7 +160,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
                 .withHost(dm.getChosenCloudProviderEndpoint().getCpEndpoint())
                 .withToken(dm.getOauth2Token());
             ah.addCredential(cred);
-            InfrastructureManager im = new InfrastructureManager(imUrl, ah);
+            InfrastructureManager im = new InfrastructureManager(imUrlToUse, ah);
             return im;
           } else {
             // read onedock auth file
@@ -170,7 +176,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           throw new IllegalArgumentException(
               String.format("Unsupported provider type <%s>", iaasType));
       }
-      InfrastructureManager im = new InfrastructureManager(imUrl, authString);
+      InfrastructureManager im = new InfrastructureManager(imUrlToUse, authString);
       return im;
     } catch (IOException | ImClientException ex) {
       throw new OrchestratorException("Cannot load IM auth file", ex);

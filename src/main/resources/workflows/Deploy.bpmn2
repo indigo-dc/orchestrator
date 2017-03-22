@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!-- origin at X=0.0 Y=0.0 -->
-<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:java="http://www.java.com/javaTypes" xmlns:tns="http://www.jboss.org/drools" xmlns="http://www.jboss.org/drools" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd" id="Definition" exporter="org.eclipse.bpmn2.modeler.core" exporterVersion="1.2.4.Final-v20160330-1625-B110" expressionLanguage="http://www.mvel.org/2.0" targetNamespace="http://www.jboss.org/drools" typeLanguage="http://www.java.com/javaTypes">
+<bpmn2:definitions xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:bpmn2="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" xmlns:java="http://www.java.com/javaTypes" xmlns:tns="http://www.jboss.org/drools" xmlns="http://www.jboss.org/drools" xsi:schemaLocation="http://www.omg.org/spec/BPMN/20100524/MODEL BPMN20.xsd http://www.jboss.org/drools drools.xsd http://www.bpsim.org/schemas/1.0 bpsim.xsd" id="Definition" exporter="org.eclipse.bpmn2.modeler.core" exporterVersion="1.2.5.Final-v20160831-1132-B114" expressionLanguage="http://www.mvel.org/2.0" targetNamespace="http://www.jboss.org/drools" typeLanguage="http://www.java.com/javaTypes">
   <bpmn2:itemDefinition id="ItemDefinition_4" isCollection="false" structureRef="String"/>
   <bpmn2:itemDefinition id="ItemDefinition_133" isCollection="false" structureRef="Object"/>
   <bpmn2:itemDefinition id="ItemDefinition_477" isCollection="false" structureRef="Boolean"/>
@@ -615,6 +615,7 @@
           <tns:script>System.out.println(&quot;[DEBUG] Entering it.reply.orchestrator.RankCloudProviders process&quot;);
 RankCloudProvidersMessage rankMessage =  new RankCloudProvidersMessage((String) kcontext.getVariable(&quot;DEPLOYMENT_ID&quot;));
 rankMessage.setOneDataRequirements(((it.reply.orchestrator.dto.deployment.DeploymentMessage) kcontext.getVariable(&quot;DeploymentMessage&quot;)).getOneDataRequirements());
+rankMessage.setOauth2Token(((it.reply.orchestrator.dto.deployment.DeploymentMessage) kcontext.getVariable(&quot;DeploymentMessage&quot;)).getOauth2Token());
 kcontext.setVariable(&quot;RankCloudProvidersMessage&quot;, rankMessage);
 System.out.println(&quot;[DEBUG] Initializing RankCloudProvidersMessage: &quot; + kcontext.getVariable(&quot;RankCloudProvidersMessage&quot;));
 </tns:script>

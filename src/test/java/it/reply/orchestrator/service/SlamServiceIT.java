@@ -21,7 +21,7 @@ public class SlamServiceIT extends WebAppConfigurationAwareIT {
 
   @Test
   public void getPreferencesTest() throws Exception {
-    SlamPreferences pref = service.getCustomerPreferences();
+    SlamPreferences pref = service.getCustomerPreferences(null);
     assertEquals("4401ac5dc8cfbbb737b0a02575ee3b58", pref.getSla().get(0).getId());
   }
 
