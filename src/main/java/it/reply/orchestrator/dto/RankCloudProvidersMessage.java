@@ -20,6 +20,8 @@ public class RankCloudProvidersMessage implements Serializable {
 
   private String deploymentId;
 
+  private String oauth2Token;
+
   private SlamPreferences slamPreferences;
 
   /**
@@ -87,6 +89,14 @@ public class RankCloudProvidersMessage implements Serializable {
 
   public void setOneDataRequirements(Map<String, OneData> oneDataRequirements) {
     this.oneDataRequirements = oneDataRequirements;
+  }
+
+  public String getOauth2Token() {
+    return oauth2Token;
+  }
+
+  public void setOauth2Token(String oauth2Token) {
+    this.oauth2Token = oauth2Token;
   }
 
   @Override

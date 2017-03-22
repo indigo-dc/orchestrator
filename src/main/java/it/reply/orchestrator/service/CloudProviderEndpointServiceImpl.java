@@ -33,8 +33,8 @@ public class CloudProviderEndpointServiceImpl {
     // TODO Check ranker errors (i.e. providers with ranked = false)
     RankedCloudProvider chosenCp = null;
     for (RankedCloudProvider rcp : rankCloudProvidersMessage.getRankedCloudProviders()) {
-      // Choose the one with lowest rank AND that matches iaasType (TEMPORARY)
-      if (chosenCp == null || rcp.getRank() < chosenCp.getRank()) {
+      // Choose the one with highest rank AND that matches iaasType (TEMPORARY)
+      if (chosenCp == null || rcp.getRank() > chosenCp.getRank()) {
         chosenCp = rcp;
       }
     }
@@ -67,11 +67,15 @@ public class CloudProviderEndpointServiceImpl {
     CloudService computeService =
         chosenCloudProvider.getCmbdProviderServicesByType(Type.COMPUTE).get(0);
 
+    String imEndpoint = null;
     IaaSType iaasType = null;
     if (computeService.isOpenStackComputeProviderService()) {
       iaasType = IaaSType.OPENSTACK;
     } else if (computeService.isOpenNebulaComputeProviderService()) {
       iaasType = IaaSType.OPENNEBULA;
+    } else if (computeService.isOpenNebulaToscaProviderService()) {
+      iaasType = IaaSType.OPENNEBULA;
+      imEndpoint = computeService.getData().getEndpoint();
     } else {
       throw new IllegalArgumentException("Unknown Cloud Provider type: " + computeService);
     }
@@ -81,7 +85,7 @@ public class CloudProviderEndpointServiceImpl {
     cpe.setCpEndpoint(computeService.getData().getEndpoint());
     cpe.setCpComputeServiceId(computeService.getId());
     cpe.setIaasType(iaasType);
-    // FIXME Add IM EP, if available
+    cpe.setImEndpoint(imEndpoint);
 
     return cpe;
   }
