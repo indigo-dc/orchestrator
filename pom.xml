@@ -72,7 +72,7 @@
 		<checkstyle-plugin.version>2.17</checkstyle-plugin.version>
 		<workflow-manager.version>0.0.4-SNAPSHOT</workflow-manager.version>
 		<alien4cloud.version>1.1.0-INDIGO2-SNAPSHOT</alien4cloud.version>
-		<chronos-client.version>0.0.1-BETA.1</chronos-client.version>
+		<chronos-client.version>0.0.1-BETA.2</chronos-client.version>
 	</properties>
 
 	<distributionManagement>
