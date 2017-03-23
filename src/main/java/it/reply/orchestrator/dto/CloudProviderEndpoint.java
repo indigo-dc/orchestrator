@@ -16,10 +16,10 @@ package it.reply.orchestrator.dto;
  * limitations under the License.
  */
 
-import java.io.Serializable;
-
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
+
+import java.io.Serializable;
 
 /**
  * This class holds information to connect (and authenticate) to a CloudProvider.
