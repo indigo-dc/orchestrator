@@ -20,6 +20,7 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
 import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.PaaSMetric;
+import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.deployment.PlacementPolicy;
 import it.reply.orchestrator.dto.onedata.OneData;
@@ -27,6 +28,8 @@ import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
 import it.reply.orchestrator.dto.slam.SlamPreferences;
 import it.reply.orchestrator.enums.DeploymentType;
 import it.reply.utils.json.JsonUtility;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.Serializable;
 import java.util.List;
@@ -58,6 +61,9 @@ public class RankCloudProvidersMessage implements Serializable {
 
   private DeploymentType deploymentType;
 
+  @Nullable
+  private OidcTokenId requestedWithToken;
+
   public RankCloudProvidersMessage() {
   }
 
@@ -76,6 +82,7 @@ public class RankCloudProvidersMessage implements Serializable {
     this.oneDataRequirements = deploymentMessage.getOneDataRequirements();
     this.placementPolicies = deploymentMessage.getPlacementPolicies();
     this.deploymentType = deploymentMessage.getDeploymentType();
+    this.requestedWithToken = deploymentMessage.getRequestedWithToken();
   }
 
   public String getDeploymentId() {
@@ -141,6 +148,14 @@ public class RankCloudProvidersMessage implements Serializable {
 
   public void setDeploymentType(DeploymentType deploymentType) {
     this.deploymentType = deploymentType;
+  }
+
+  public OidcTokenId getRequestedWithToken() {
+    return requestedWithToken;
+  }
+
+  public void setRequestedWithToken(OidcTokenId requestedWithToken) {
+    this.requestedWithToken = requestedWithToken;
   }
 
   @Override
