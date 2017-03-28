@@ -21,22 +21,51 @@ import com.google.common.collect.ImmutableMap;
 
 import alien4cloud.model.components.ScalarPropertyValue;
 import alien4cloud.model.topology.NodeTemplate;
+import alien4cloud.model.topology.Topology;
 import alien4cloud.tosca.model.ArchiveRoot;
 
 import es.upv.i3m.grycap.file.NoNullOrEmptyFile;
 import es.upv.i3m.grycap.file.Utf8File;
 import es.upv.i3m.grycap.im.exceptions.FileException;
-
+import it.infn.ba.indigo.chronos.client.Chronos;
+import it.infn.ba.indigo.chronos.client.ChronosClient;
+import it.infn.ba.indigo.chronos.client.model.v1.Job;
 import it.reply.orchestrator.config.specific.WebAppConfigurationAware;
+import it.reply.orchestrator.controller.ControllerTestUtils;
+import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.entity.Resource;
+import it.reply.orchestrator.dto.CloudProviderEndpoint;
+import it.reply.orchestrator.dto.deployment.DeploymentMessage;
+import it.reply.orchestrator.dto.deployment.DeploymentMessage.TemplateTopologicalOrderIterator;
 import it.reply.orchestrator.dto.onedata.OneData;
+import it.reply.orchestrator.enums.NodeStates;
+import it.reply.orchestrator.enums.Status;
+import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl;
+import it.reply.orchestrator.service.deployment.providers.DeploymentStatusHelper;
+import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl.IndigoJob;
+import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl.JobState;
 
+import org.hibernate.collection.internal.PersistentMap;
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+
+import static org.mockito.Matchers.*;
+import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 public class ChronosServiceTest extends WebAppConfigurationAware {
@@ -46,6 +75,29 @@ public class ChronosServiceTest extends WebAppConfigurationAware {
 
   @Autowired
   private ToscaService toscaService;
+
+  @Autowired
+  @InjectMocks
+  private ChronosServiceImpl chronosServiceImplMock;
+
+  @Autowired
+  @Mock
+  private ToscaService toscaServiceMock;
+
+  @Mock
+  DeploymentStatusHelper deploymentStatusHelper;
+
+  String endpoint = "https://www.endpoint.it";
+  String username = "username";
+  String password = "password";
+
+  @Before
+  public void setup() {
+    MockitoAnnotations.initMocks(this);
+    ReflectionTestUtils.setField(chronosServiceImplMock, "endpoint", endpoint);
+    ReflectionTestUtils.setField(chronosServiceImplMock, "username", username);
+    ReflectionTestUtils.setField(chronosServiceImplMock, "password", "password");
+  }
 
   @Test
   public void checkOneDataHardCodedParamsSubstitutionInUserDefinedTemplate() throws Exception {
@@ -67,7 +119,8 @@ public class ChronosServiceTest extends WebAppConfigurationAware {
     Map<String, OneData> odRequirements = toscaService.extractOneDataRequirements(ar, inputs);
 
     Map<String, OneData> odParameters = odRequirements;
-    // ImmutableMap.of("service", new OneData("token", "space", "path", "provider"), "input",
+    // ImmutableMap.of("service", new OneData("token", "space", "path",
+    // "provider"), "input",
     // new OneData("token_input", "space_input", "path_input",
     // "provider_input_1,provider_input_2"),
     // "output", new OneData("token_output", "space_output", "path_output",
@@ -75,7 +128,8 @@ public class ChronosServiceTest extends WebAppConfigurationAware {
 
     String customizedTemplate = chronosServiceImpl.replaceHardCodedParams(template, odParameters);
 
-    // Re-parse template (TODO: serialize the template in-memory representation?)
+    // Re-parse template (TODO: serialize the template in-memory
+    // representation?)
     ar = toscaService.prepareTemplate(customizedTemplate, inputs);
 
     Map<String, NodeTemplate> nodes = ar.getTopology().getNodeTemplates();
@@ -106,7 +160,8 @@ public class ChronosServiceTest extends WebAppConfigurationAware {
 
     String customizedTemplate = chronosServiceImpl.replaceHardCodedParams(template, odParameters);
 
-    // Re-parse template (TODO: serialize the template in-memory representation?)
+    // Re-parse template (TODO: serialize the template in-memory
+    // representation?)
     ar = toscaService.prepareTemplate(customizedTemplate, inputs);
 
     Map<String, NodeTemplate> nodes = ar.getTopology().getNodeTemplates();
@@ -130,4 +185,148 @@ public class ChronosServiceTest extends WebAppConfigurationAware {
   private String getFileContentAsString(String fileUri) throws FileException {
     return new NoNullOrEmptyFile(new Utf8File(Paths.get(fileUri))).read();
   }
+
+  @Test
+  public void getLastState() {
+    Job job = new Job();
+    job.setSuccessCount(5);
+    JobState lastState = ChronosServiceImpl.getLastState(job);
+    assertEquals(JobState.SUCCESS, lastState);
+    job.setSuccessCount(0);
+    job.setErrorCount(1);
+    lastState = ChronosServiceImpl.getLastState(job);
+    assertEquals(JobState.FAILURE, lastState);
+    job.setSuccessCount(0);
+    job.setErrorCount(0);
+    lastState = ChronosServiceImpl.getLastState(job);
+    assertEquals(JobState.FRESH, lastState);
+  }
+
+  @Test
+  public void getChronosClientAndChronosJob() {
+
+
+    Chronos result = ChronosClient.getInstanceWithBasicAuth(endpoint, username, password);
+    assertEquals(result, chronosServiceImplMock.getChronosClient());
+
+    result = Mockito.mock(Chronos.class);
+    Mockito.when(result.getJobs()).thenReturn(new ArrayList<>());
+
+    assertEquals(new ArrayList<>(), chronosServiceImplMock.getJobs(result));
+  }
+
+  @Test
+  public void failDeploy() {
+    DeploymentMessage dm = generateDeployDm();
+    assertEquals(false, chronosServiceImplMock.doDeploy(dm));
+  }
+
+  @Test
+  public void doDeploy() throws Exception {
+    DeploymentMessage dm = generateDeployDm();
+    ArchiveRoot ar = new ArchiveRoot();
+    Topology topology = new Topology();
+    topology.setNodeTemplates(new HashMap<>());
+    ar.setTopology(topology);
+    Mockito.when(toscaServiceMock.prepareTemplate(any(String.class), any(PersistentMap.class)))
+        .thenReturn(ar);
+    Assert.assertTrue(chronosServiceImplMock.doDeploy(dm));
+  }
+
+  @Test
+  public void isDeployedNoMoreJob() {
+    DeploymentMessage dm = generateDeployDm();
+    TemplateTopologicalOrderIterator templateTopologicalOrderIterator =
+        new TemplateTopologicalOrderIterator(new ArrayList<>());
+    dm.setTemplateTopologicalOrderIterator(templateTopologicalOrderIterator);
+    Assert.assertTrue(chronosServiceImplMock.isDeployed(dm));
+  }
+
+  @Test(expected = RuntimeException.class)
+  public void isDeployedMoreJobFailGetJobStatu() {
+    DeploymentMessage dm = generateDeployDm();
+    Map<String, IndigoJob> jobGraph = new HashMap<>();
+    Job chronosJob = new Job();
+    chronosJob.setName("chronosJobName");
+    IndigoJob job = new IndigoJob("toscaNodeName", chronosJob);
+    jobGraph.put("toscaNodeName", job);
+    dm.setChronosJobGraph(jobGraph);
+    TemplateTopologicalOrderIterator templateTopologicalOrderIterator =
+        Mockito.mock(TemplateTopologicalOrderIterator.class);
+    dm.setTemplateTopologicalOrderIterator(templateTopologicalOrderIterator);
+    ReflectionTestUtils.setField(chronosServiceImplMock, "jobChunkSize", 1);
+
+    Resource currentNode = new Resource();
+    currentNode.setToscaNodeName("toscaNodeName");
+
+    Mockito.when(templateTopologicalOrderIterator.getCurrent()).thenReturn(currentNode);
+
+    // crash in getJobStatus because client.getJob exec async request. can i mock this?
+    chronosServiceImplMock.isDeployed(dm);
+  }
+
+  private DeploymentMessage generateDeployDm() {
+    DeploymentMessage dm = new DeploymentMessage();
+    Deployment deployment = ControllerTestUtils.createDeployment();
+    deployment.setStatus(Status.CREATE_IN_PROGRESS);
+    dm.setDeployment(deployment);
+    dm.setDeploymentId(deployment.getId());
+    deployment.getResources().addAll(ControllerTestUtils.createResources(deployment, 2, false));
+    deployment.getResources().stream().forEach(r -> r.setState(NodeStates.CREATING));
+
+    CloudProviderEndpoint chosenCloudProviderEndpoint = new CloudProviderEndpoint();
+    chosenCloudProviderEndpoint.setCpComputeServiceId(UUID.randomUUID().toString());
+    dm.setChosenCloudProviderEndpoint(chosenCloudProviderEndpoint);
+    return dm;
+
+
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void doUpdateNoSupport() {
+    chronosServiceImplMock.doUpdate(null, null);
+  }
+
+  @Test
+  public void isUndeploy() {
+    Assert.assertTrue(chronosServiceImplMock.isUndeployed(null));
+  }
+
+  @Test
+  public void finalizeUndeploy() {
+    DeploymentMessage dm = new DeploymentMessage();
+    Mockito.doNothing().when(deploymentStatusHelper).updateOnSuccess(any(String.class));
+    Mockito.doNothing().when(deploymentStatusHelper).updateOnError(any(String.class),
+        any(String.class));
+    chronosServiceImplMock.finalizeUndeploy(dm, true);
+    chronosServiceImplMock.finalizeUndeploy(dm, false);
+  }
+
+
+  @Test
+  public void doUndeploy() {
+    DeploymentMessage dm = generateDeployDm();
+    Map<String, IndigoJob> jobGraph = new HashMap<>();
+    Job chronosJob = new Job();
+    chronosJob.setName("chronosJobName");
+    IndigoJob job = new IndigoJob("toscaNodeName", chronosJob);
+    jobGraph.put("toscaNodeName", job);
+    dm.setChronosJobGraph(jobGraph);
+
+    Assert.assertFalse(chronosServiceImplMock.doUndeploy(dm));
+    dm = generateDeployDm();
+    Assert.assertTrue(chronosServiceImplMock.doUndeploy(dm));
+  }
+
+  @Test
+  public void finalizeDeploy() {
+    DeploymentMessage dm = generateDeployDm();
+    Mockito.doNothing().when(deploymentStatusHelper).updateOnSuccess(any(String.class));
+    Mockito.doNothing().when(deploymentStatusHelper).updateOnError(any(String.class),
+        any(String.class));
+    chronosServiceImplMock.finalizeDeploy(dm, true);
+    chronosServiceImplMock.finalizeDeploy(dm, true);
+
+  }
+
 }

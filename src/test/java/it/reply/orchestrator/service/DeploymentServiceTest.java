@@ -15,7 +15,6 @@ package it.reply.orchestrator.service;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 import static org.hamcrest.CoreMatchers.anyOf;
 import static org.hamcrest.CoreMatchers.is;
 
@@ -38,6 +37,8 @@ import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
+import it.reply.orchestrator.exception.OrchestratorException;
+import it.reply.orchestrator.exception.http.BadRequestException;
 import it.reply.orchestrator.exception.http.ConflictException;
 import it.reply.orchestrator.exception.http.NotFoundException;
 import it.reply.orchestrator.exception.service.DeploymentException;
@@ -58,8 +59,11 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class DeploymentServiceTest {
 
@@ -83,6 +87,7 @@ public class DeploymentServiceTest {
 
   @Mock
   private OidcProperties oidcProperties;
+
 
   @Before
   public void setup() {
@@ -403,6 +408,7 @@ public class DeploymentServiceTest {
 
   @Test
   public void deleteDeploymentSuccesfulNoReferences() throws Exception {
+
     Deployment deployment = ControllerTestUtils.createDeployment();
     deployment.setStatus(Status.CREATE_IN_PROGRESS);
     deployment.setDeploymentProvider(DeploymentProvider.IM);
@@ -420,4 +426,96 @@ public class DeploymentServiceTest {
         Mockito.any(RUNTIME_STRATEGY.class));
     Mockito.verify(deploymentRepository, Mockito.atLeast(1)).save(deployment);
   }
+
+  // test fail with chrono
+  // TO-DO
+
+  @Test(expected = BadRequestException.class)
+  public void updateDeploymentBadRequest() throws Exception {
+
+    String id = UUID.randomUUID().toString();
+    Deployment deployment = ControllerTestUtils.createDeployment(id);
+    deployment.setDeploymentProvider(DeploymentProvider.CHRONOS);
+    Mockito.when(deploymentRepository.findOne(id)).thenReturn(deployment);
+
+    deploymentService.updateDeployment(id, null);
+
+  }
+
+  @Test(expected = NotFoundException.class)
+  public void updateDeploymentNotFound() throws Exception {
+    String id = UUID.randomUUID().toString();
+    Mockito.when(deploymentRepository.findOne(id)).thenReturn(null);
+    deploymentService.updateDeployment(id, null);
+  }
+
+  @Test(expected = ConflictException.class)
+  public void updateDeploymentConflict() throws Exception {
+    String id = UUID.randomUUID().toString();
+    Deployment deployment = ControllerTestUtils.createDeployment(id);
+    deployment.setDeploymentProvider(DeploymentProvider.HEAT);
+    deployment.setStatus(Status.CREATE_FAILED);
+    Mockito.when(deploymentRepository.findOne(id)).thenReturn(deployment);
+
+    deploymentService.updateDeployment(id, null);
+  }
+
+  @Test(expected = OrchestratorException.class)
+  public void updateDeploymentOrchestratorException() throws Exception {
+
+    DeploymentRequest request = new DeploymentRequest();
+    request.setTemplate("template");
+
+    String id = UUID.randomUUID().toString();
+    Deployment deployment = ControllerTestUtils.createDeployment(id);
+    deployment.setDeploymentProvider(DeploymentProvider.HEAT);
+    deployment.setStatus(Status.CREATE_COMPLETE);
+    deployment.setParameters(new HashMap<String, Object>());
+    Mockito.when(deploymentRepository.findOne(id)).thenReturn(deployment);
+    Mockito.when(toscaService.prepareTemplate(request.getTemplate(), deployment.getParameters()))
+        .thenThrow(new IOException());
+
+    deploymentService.updateDeployment(id, request);
+  }
+
+
+  @Test
+  public void updateDeploymentSuccess() throws Exception {
+    String nodeName1 = "server1";
+    String nodeName2 = "server2";
+    String nodeType = "tosca.nodes.indigo.Compute";
+
+    DeploymentRequest deploymentRequest = new DeploymentRequest();
+
+    Map<String, Capability> capabilities = Maps.newHashMap();
+
+    NodeTemplate nt = new NodeTemplate();
+    nt.setCapabilities(capabilities);
+    nt.setType(nodeType);
+
+    Map<String, NodeTemplate> nts = Maps.newHashMap();
+    nts.put(nodeName1, nt);
+
+    nt = new NodeTemplate();
+    nt.setCapabilities(capabilities);
+    nt.setType(nodeType);
+    nts.put(nodeName2, nt);
+
+    // case create complete
+    Deployment deployment = basecreateDeploymentSuccessful(deploymentRequest, nts);
+    deployment.setStatus(Status.CREATE_COMPLETE);
+    Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
+    deploymentService.updateDeployment(deployment.getId(), deploymentRequest);
+
+    // case update complete
+    deployment.setStatus(Status.UPDATE_COMPLETE);
+    Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
+    deploymentService.updateDeployment(deployment.getId(), deploymentRequest);
+
+    // case update complete
+    deployment.setStatus(Status.UPDATE_FAILED);
+    Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
+    deploymentService.updateDeployment(deployment.getId(), deploymentRequest);
+  }
+
 }
