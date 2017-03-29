@@ -3,17 +3,15 @@ package it.reply.orchestrator.service.deployment.providers;
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
+ * Unless required by applicable law or agreed to in writing, software distributed under the License
+ * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
+ * or implied. See the License for the specific language governing permissions and limitations under
+ * the License.
  */
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -43,7 +41,6 @@ import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
-import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
@@ -51,12 +48,12 @@ import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
+import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.service.ToscaServiceImpl;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -71,8 +68,9 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -304,21 +302,54 @@ public class ImServiceTest {
     Assert.assertTrue(returnValue);
   }
 
-  // [WIP]
-  // @Test
+  @Test(expected = DeploymentException.class)
   public void testIsDeployedFail() throws ImClientException {
     DeploymentMessage dm = generateIsDeployedDm();
 
-    InfrastructureState infrastructureState = generateInfrastructureState(States.CONFIGURED, 2);
+    Mockito.when(deploymentRepository.findOne(dm.getDeploymentId())).thenReturn(dm.getDeployment());
 
-    // Mockito.doReturn(infrastructureManager).when(imService).getClient(Mockito.any(DeploymentMessage.class));
-    Mockito.when(imService.getClient(Mockito.any(DeploymentMessage.class)))
-        .thenThrow(new ImClientException());
-    // Mockito.when(infrastructureManager.getInfrastructureState(dm.getDeployment().getEndpoint()))
-    // .thenReturn(infrastructureState);
+    Mockito.doReturn(infrastructureManager).when(imService)
+        .getClient(Mockito.any(DeploymentMessage.class));
+    Mockito.doThrow(new ImClientException()).when(infrastructureManager)
+        .getInfrastructureState(Mockito.anyString());
 
-    boolean returnValue = imService.isDeployed(dm);
+    imService.isDeployed(dm);
+  }
 
+  @Test
+  public void testFinalizeDeployImClientError() throws ImClientException {
+    DeploymentMessage dm = generateIsDeployedDm();
+
+    Mockito.when(deploymentRepository.findOne(dm.getDeploymentId())).thenReturn(dm.getDeployment());
+
+    Mockito.doReturn(infrastructureManager).when(imService)
+        .getClient(Mockito.any(DeploymentMessage.class));
+    Mockito.doThrow(new ImClientErrorException(new ResponseError("Not Found", 404)))
+        .when(infrastructureManager).getInfrastructureOutputs(Mockito.anyString());
+
+    imService.finalizeDeploy(dm, true);
+  }
+
+  @Test
+  public void testFinalizeDeployGenericExceptionError() throws ImClientException {
+    DeploymentMessage dm = generateIsDeployedDm();
+
+    Mockito.when(deploymentRepository.findOne(dm.getDeploymentId())).thenReturn(dm.getDeployment());
+
+    Mockito.doReturn(infrastructureManager).when(imService)
+        .getClient(Mockito.any(DeploymentMessage.class));
+    Mockito.doThrow(new ImClientException()).when(infrastructureManager)
+        .getInfrastructureOutputs(Mockito.anyString());
+
+    imService.finalizeDeploy(dm, true);
+  }
+
+  @Test
+  public void testUpdateOnErrorDeleteStatus() {
+    DeploymentMessage dm = generateIsDeployedDm();
+    dm.getDeployment().setStatus(Status.DELETE_FAILED);
+    Mockito.when(deploymentRepository.findOne(dm.getDeploymentId())).thenReturn(dm.getDeployment());
+    imService.updateOnError(dm.getDeploymentId(), "message");
   }
 
   @Test
@@ -642,6 +673,18 @@ public class ImServiceTest {
 
     dm.getDeployment().setEndpoint("www.endpoint.com");
     Assert.assertFalse(imService.isUndeployed(dm));
+
+    ////////////
+    InfrastructureState infrastructureState = Mockito.mock(InfrastructureState.class);
+
+    Mockito.doReturn(infrastructureState).when(infrastructureManager)
+        .getInfrastructureState(Mockito.anyString());
+    Assert.assertFalse(imService.isUndeployed(dm));
+
+    //////////////
+    Mockito.doThrow(new ImClientException())
+        .when(infrastructureManager).getInfrastructureState(Mockito.any(String.class));
+    Assert.assertFalse(imService.isUndeployed(dm));
   }
 
   @Test
@@ -654,9 +697,24 @@ public class ImServiceTest {
   }
 
 
+  private void mockMethodForDoUpdate(DeploymentMessage dm, InfrastructureUri infrastructureUri,
+      ArchiveRoot oldAr, ArchiveRoot newAr) throws Exception {
+    Mockito.when(deploymentRepository.save(dm.getDeployment())).thenReturn(dm.getDeployment());
+    Mockito.when(deploymentRepository.findOne(dm.getDeployment().getId()))
+        .thenReturn(dm.getDeployment());
+    Mockito.doReturn(oldAr).when(toscaService).prepareTemplate(dm.getDeployment().getTemplate(),
+        dm.getDeployment().getParameters());
+    Mockito.doReturn(newAr).when(toscaService).prepareTemplate("newTemplate",
+        dm.getDeployment().getParameters());
+    Mockito.when(infrastructureManager.createInfrastructure(Mockito.anyString(),
+        Mockito.eq(BodyContentType.TOSCA))).thenReturn(infrastructureUri);
+    Mockito.doReturn(infrastructureManager).when(imService)
+        .getClient(Mockito.any(DeploymentMessage.class));
+
+  }
+
   @Test
-  public void testDoUpdateSuccesful()
-      throws ToscaException, ParsingException, IOException, ImClientException {
+  public void testDoUpdateSuccesful() throws Exception {
     DeploymentMessage dm = generateDeployDm();
 
     String infrastructureId = UUID.randomUUID().toString();
@@ -689,19 +747,7 @@ public class ImServiceTest {
     newNodes.put("newNode2", ntNew2);
     newNodes.put("newNode3", ntNew3);
 
-
-    Mockito.when(deploymentRepository.save(dm.getDeployment())).thenReturn(dm.getDeployment());
-    Mockito.when(deploymentRepository.findOne(dm.getDeployment().getId()))
-        .thenReturn(dm.getDeployment());
-    Mockito.doReturn(oldAr).when(toscaService).prepareTemplate(dm.getDeployment().getTemplate(),
-        dm.getDeployment().getParameters());
-    Mockito.doReturn(newAr).when(toscaService).prepareTemplate("newTemplate",
-        dm.getDeployment().getParameters());
-    Mockito.when(infrastructureManager.createInfrastructure(Mockito.anyString(),
-        Mockito.eq(BodyContentType.TOSCA))).thenReturn(infrastructureUri);
-    Mockito.doReturn(infrastructureManager).when(imService)
-        .getClient(Mockito.any(DeploymentMessage.class));
-
+    mockMethodForDoUpdate(dm, infrastructureUri, oldAr, newAr);
 
     Mockito.doReturn(oldNodes.values()).when(toscaService).getScalableNodes(oldAr);
     Mockito.doReturn(newNodes.values()).when(toscaService).getScalableNodes(newAr);
@@ -714,6 +760,221 @@ public class ImServiceTest {
 
     Assert.assertTrue(returnValue);
 
+    ///////////////////////////////////////////////////////////
+
+    oldAr = new ArchiveRoot();
+    topology = new Topology();
+    oldAr.setTopology(topology);
+
+    newAr = new ArchiveRoot();
+    newAr.setTopology(topology);
+
+    // old node
+    ntOld = new NodeTemplate();
+    ntOld.setName("oldNode");
+    oldNodes = new HashMap<>();
+    oldNodes.put("oldNode", ntOld);
+
+    // new node
+    ntNew = new NodeTemplate();
+    ntNew.setName("newNode");
+    newNodes = new HashMap<>();
+    newNodes.put("oldNode", ntOld);
+
+    mockMethodForDoUpdate(dm, infrastructureUri, oldAr, newAr);
+    List<String> removalList = new ArrayList<>();
+    String id = UUID.randomUUID().toString();
+    removalList.add(id);
+    Mockito.doReturn(removalList).when(toscaService).getRemovalList(Mockito.anyObject());
+    Resource resource2 = new Resource();
+    resource2.setIaasId(UUID.randomUUID().toString());
+    Mockito.when(resourceRepository.findOne(id)).thenReturn(resource2);
+
+    Mockito.doReturn(oldNodes).when(toscaService).getCountNodes(oldAr);
+    Mockito.doReturn(newNodes).when(toscaService).getCountNodes(newAr);
+    Mockito.doReturn(1).doReturn(0).when(toscaService).getCount(Mockito.any(NodeTemplate.class));
+    Mockito.doReturn(resource2).when(resourceRepository).save(resource2);
+    Mockito.doReturn(dm.getDeployment().getTemplate()).when(toscaService)
+        .updateTemplate(Mockito.anyString());
+
+    returnValue = imService.doUpdate(dm, "newTemplate");
+
+    Assert.assertTrue(returnValue);
+  }
+
+  @Test
+  public void testDoUpdateFail() throws Exception {
+    DeploymentMessage dm = generateDeployDm();
+
+    String infrastructureId = UUID.randomUUID().toString();
+    InfrastructureUri infrastructureUri =
+        new InfrastructureUri("http://localhost:8080/infrastructures/" + infrastructureId);
+
+    ArchiveRoot oldAr = new ArchiveRoot();
+    Topology topology = new Topology();
+    oldAr.setTopology(topology);
+
+    ArchiveRoot newAr = new ArchiveRoot();
+    newAr.setTopology(topology);
+
+    // old node
+    NodeTemplate ntOld = new NodeTemplate();
+    ntOld.setName("oldNode");
+    Map<String, NodeTemplate> oldNodes = new HashMap<>();
+    oldNodes.put("oldNode", ntOld);
+
+    // new node
+    NodeTemplate ntNew = new NodeTemplate();
+    ntNew.setName("newNode");
+    Map<String, NodeTemplate> newNodes = new HashMap<>();
+    newNodes.put("oldNode", ntOld);
+
+    mockMethodForDoUpdate(dm, infrastructureUri, oldAr, newAr);
+
+    List<String> removalList = new ArrayList<>();
+    String id = UUID.randomUUID().toString();
+    removalList.add(id);
+    Mockito.doReturn(removalList).when(toscaService).getRemovalList(Mockito.anyObject());
+    Resource resource2 = new Resource();
+    resource2.setIaasId(UUID.randomUUID().toString());
+    Mockito.when(resourceRepository.findOne(id)).thenReturn(resource2);
+
+    Mockito.doReturn(oldNodes).when(toscaService).getCountNodes(oldAr);
+    Mockito.doReturn(newNodes).when(toscaService).getCountNodes(newAr);
+    Mockito.doReturn(1).doReturn(1).when(toscaService).getCount(Mockito.any(NodeTemplate.class));
+    Mockito.doReturn(dm.getDeployment().getTemplate()).when(toscaService)
+        .updateTemplate(Mockito.anyString());
+    Mockito.doReturn(dm.getDeployment().getTemplate()).when(toscaService)
+        .updateTemplate(Mockito.anyString());
+    Mockito.doReturn(resource2).when(resourceRepository).save(resource2);
+
+    boolean returnValue = imService.doUpdate(dm, "newTemplate");
+
+    Assert.assertFalse(returnValue);
+
+  }
+
+  @Test(expected = OrchestratorException.class)
+  public void testDoUpdateOrchestratorException() throws Exception {
+    DeploymentMessage dm = generateDeployDm();
+
+    String infrastructureId = UUID.randomUUID().toString();
+    InfrastructureUri infrastructureUri =
+        new InfrastructureUri("http://localhost:8080/infrastructures/" + infrastructureId);
+
+    ArchiveRoot oldAr = new ArchiveRoot();
+    Topology topology = new Topology();
+    oldAr.setTopology(topology);
+
+    ArchiveRoot newAr = new ArchiveRoot();
+    newAr.setTopology(topology);
+
+
+    mockMethodForDoUpdate(dm, infrastructureUri, oldAr, newAr);
+
+    Mockito.doThrow(new ToscaException("string")).when(toscaService)
+        .prepareTemplate(Mockito.anyString(), Mockito.anyObject());
+
+    imService.doUpdate(dm, "newTemplate");
+
+  }
+
+  @Test
+  public void testDoUpdateDeploymentException() throws Exception {
+    DeploymentMessage dm = generateDeployDm();
+
+    String infrastructureId = UUID.randomUUID().toString();
+    InfrastructureUri infrastructureUri =
+        new InfrastructureUri("http://localhost:8080/infrastructures/" + infrastructureId);
+
+    ArchiveRoot oldAr = new ArchiveRoot();
+    Topology topology = new Topology();
+    oldAr.setTopology(topology);
+
+    ArchiveRoot newAr = new ArchiveRoot();
+    newAr.setTopology(topology);
+
+
+    mockMethodForDoUpdate(dm, infrastructureUri, oldAr, newAr);
+
+
+    // old node
+    NodeTemplate ntOld = new NodeTemplate();
+    ntOld.setName("oldNode");
+    Map<String, NodeTemplate> oldNodes = new HashMap<>();
+    oldNodes.put("oldNode", ntOld);
+
+    // new node
+    NodeTemplate ntNew = new NodeTemplate();
+    ntNew.setName("newNode");
+    NodeTemplate ntNew2 = new NodeTemplate();
+    ntNew.setName("newNode2");
+    NodeTemplate ntNew3 = new NodeTemplate();
+    ntNew.setName("newNode3");
+    Map<String, NodeTemplate> newNodes = new HashMap<>();
+    newNodes.put("oldNode", ntOld);
+    newNodes.put("newNode", ntNew);
+    newNodes.put("newNode2", ntNew2);
+    newNodes.put("newNode3", ntNew3);
+
+    Mockito.doReturn(oldNodes).when(toscaService).getCountNodes(oldAr);
+    Mockito.doReturn(newNodes).when(toscaService).getCountNodes(newAr);
+    Mockito.doReturn(1).doReturn(4).when(toscaService).getCount(Mockito.any(NodeTemplate.class));
+    Mockito.doReturn(dm.getDeployment().getTemplate()).when(toscaService)
+        .updateTemplate(Mockito.anyString());
+    Mockito.doReturn(dm.getDeployment().getTemplate()).when(toscaService)
+        .updateTemplate(Mockito.anyString());
+
+    InfrastructureManager im = Mockito.mock(InfrastructureManager.class);
+    Mockito.doReturn(im).when(imService).getClient(Mockito.anyObject());
+    Mockito.doThrow(new ImClientErrorException(new ResponseError("message", 404))).when(im)
+        .addResource(Mockito.anyString(), Mockito.anyString(), Mockito.anyObject());
+
+    boolean result = imService.doUpdate(dm, "newTemplate");
+
+    Assert.assertFalse(result);
+
+    ////////////////////////////////////////////
+    
+    oldAr = new ArchiveRoot(); topology = new Topology(); oldAr.setTopology(topology);
+    
+    newAr = new ArchiveRoot(); newAr.setTopology(topology);
+    
+    mockMethodForDoUpdate(dm,infrastructureUri,oldAr,newAr);
+    
+    
+    // old node ntOld = new NodeTemplate(); ntOld.setName("oldNode"); oldNodes = new HashMap<>();
+    oldNodes.put("oldNode", ntOld);
+    
+    // new node ntNew = new NodeTemplate(); ntNew.setName("newNode"); newNodes = new HashMap<>();
+    newNodes.put("oldNode", ntOld);
+    
+    List<String> removalList = new ArrayList<>(); String id = UUID.randomUUID().toString();
+    removalList.add(id);
+    Mockito.doReturn(removalList).when(toscaService).getRemovalList(Mockito.anyObject());
+    Resource resource2 = new Resource(); resource2.setIaasId(UUID.randomUUID().toString());
+    Mockito.when(resourceRepository.findOne(id)).thenReturn(resource2);
+    
+    Mockito.doReturn(oldNodes).when(toscaService).getCountNodes(oldAr);
+    Mockito.doReturn(newNodes).when(toscaService).getCountNodes(newAr);
+    Mockito.doReturn(1).doReturn(0).when(toscaService).getCount(Mockito.any(NodeTemplate.class));
+    Mockito.doReturn(dm.getDeployment().getTemplate()).when(toscaService)
+    .updateTemplate(Mockito.anyString());
+    Mockito.doReturn(dm.getDeployment().getTemplate()).when(toscaService)
+    .updateTemplate(Mockito.anyString());
+    Mockito.doReturn(resource2).when(resourceRepository).save(resource2);
+    
+
+    im = Mockito.mock(InfrastructureManager.class);
+    Mockito.doReturn(im).doReturn(im).when(imService).getClient(Mockito.anyObject());
+    
+    Mockito.doThrow(new ImClientErrorException(new ResponseError("message", 404))).when(im)
+    .removeResource(Mockito.anyString(), Mockito.anyList());
+
+    result = imService.doUpdate(dm, "newTemplate");
+    
+    Assert.assertFalse(result);
+     
   }
 
 
