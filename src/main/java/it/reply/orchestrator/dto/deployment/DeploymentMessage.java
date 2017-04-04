@@ -16,18 +16,24 @@ package it.reply.orchestrator.dto.deployment;
  * limitations under the License.
  */
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Maps;
-
 import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.onedata.OneData;
-import it.reply.orchestrator.enums.DeploymentProvider;
+import it.reply.orchestrator.enums.DeploymentType;
 import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl.IndigoJob;
 
+import lombok.Data;
+import lombok.ToString;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,6 +43,8 @@ import java.util.Map;
  * @author l.biava
  *
  */
+@Data
+@ToString(exclude = "deployment")
 public class DeploymentMessage implements Serializable {
 
   private static final long serialVersionUID = 8003907220093782923L;
@@ -46,9 +54,12 @@ public class DeploymentMessage implements Serializable {
    */
   private Deployment deployment;
 
+  @Nullable
+  private OidcTokenId requestedWithToken;
+
   private String deploymentId;
 
-  private DeploymentProvider deploymentProvider;
+  private DeploymentType deploymentType;
 
   private TemplateTopologicalOrderIterator templateTopologicalOrderIterator;
 
@@ -60,155 +71,27 @@ public class DeploymentMessage implements Serializable {
   private CloudProvider chosenCloudProvider;
   private CloudProviderEndpoint chosenCloudProviderEndpoint;
 
-  private String oauth2Token;
-
   /**
    * The OneData information the user gave and to be used to select the best provider.
    */
-  private Map<String, OneData> oneDataRequirements = Maps.newHashMap();
+  @NonNull
+  private Map<String, OneData> oneDataRequirements = new HashMap<>();
   /**
    * The OneData information generated after the best provider choice.
    */
-  private Map<String, OneData> oneDataParameters = Maps.newHashMap();
+  @NonNull
+  private Map<String, OneData> oneDataParameters = new HashMap<>();
 
   /**
    * The Placement policies provided in the template.
    */
-  private List<PlacementPolicy> placementPolicies = Lists.newArrayList();
+  @NonNull
+  private List<PlacementPolicy> placementPolicies = new ArrayList<>();
 
   /**
    * TEMPORARY Chronos Job Graph (to avoid regenerating the template representation each time).
    */
   private Map<String, IndigoJob> chronosJobGraph;
-
-  public Deployment getDeployment() {
-    return deployment;
-  }
-
-  public void setDeployment(Deployment deployment) {
-    this.deployment = deployment;
-  }
-
-  public String getDeploymentId() {
-    return deploymentId;
-  }
-
-  public void setDeploymentId(String deploymentId) {
-    this.deploymentId = deploymentId;
-  }
-
-  public DeploymentProvider getDeploymentProvider() {
-    return deploymentProvider;
-  }
-
-  public void setDeploymentProvider(DeploymentProvider deploymentProvider) {
-    this.deploymentProvider = deploymentProvider;
-  }
-
-  public TemplateTopologicalOrderIterator getTemplateTopologicalOrderIterator() {
-    return templateTopologicalOrderIterator;
-  }
-
-  public void setTemplateTopologicalOrderIterator(
-      TemplateTopologicalOrderIterator templateTopologicalOrderIterator) {
-    this.templateTopologicalOrderIterator = templateTopologicalOrderIterator;
-  }
-
-  public Map<String, IndigoJob> getChronosJobGraph() {
-    return chronosJobGraph;
-  }
-
-  public void setChronosJobGraph(Map<String, IndigoJob> chronosJobGraph) {
-    this.chronosJobGraph = chronosJobGraph;
-  }
-
-  public boolean isCreateComplete() {
-    return createComplete;
-  }
-
-  public void setCreateComplete(boolean createComplete) {
-    this.createComplete = createComplete;
-  }
-
-  public boolean isDeleteComplete() {
-    return deleteComplete;
-  }
-
-  public void setDeleteComplete(boolean deleteComplete) {
-    this.deleteComplete = deleteComplete;
-  }
-
-  public boolean isPollComplete() {
-    return pollComplete;
-  }
-
-  public void setPollComplete(boolean pollComplete) {
-    this.pollComplete = pollComplete;
-  }
-
-  public boolean isSkipPollInterval() {
-    return skipPollInterval;
-  }
-
-  public void setSkipPollInterval(boolean skipPollInterval) {
-    this.skipPollInterval = skipPollInterval;
-  }
-
-  public CloudProvider getChosenCloudProvider() {
-    return chosenCloudProvider;
-  }
-
-  public void setChosenCloudProvider(CloudProvider chosenCloudProvider) {
-    this.chosenCloudProvider = chosenCloudProvider;
-  }
-
-  public CloudProviderEndpoint getChosenCloudProviderEndpoint() {
-    return chosenCloudProviderEndpoint;
-  }
-
-  public void setChosenCloudProviderEndpoint(CloudProviderEndpoint chosenCloudProviderEndpoint) {
-    this.chosenCloudProviderEndpoint = chosenCloudProviderEndpoint;
-  }
-
-  public String getOauth2Token() {
-    return oauth2Token;
-  }
-
-  public void setOauth2Token(String oauth2Token) {
-    this.oauth2Token = oauth2Token;
-  }
-
-  public Map<String, OneData> getOneDataRequirements() {
-    return oneDataRequirements;
-  }
-
-  public void setOneDataRequirements(Map<String, OneData> oneDataRequirements) {
-    this.oneDataRequirements = oneDataRequirements;
-  }
-
-  public Map<String, OneData> getOneDataParameters() {
-    return oneDataParameters;
-  }
-
-  public void setOneDataParameters(Map<String, OneData> oneDataParameters) {
-    this.oneDataParameters = oneDataParameters;
-  }
-
-  public List<PlacementPolicy> getPlacementPolicies() {
-    return placementPolicies;
-  }
-
-  public void setPlacementPolicies(List<PlacementPolicy> placementPolicies) {
-    this.placementPolicies = placementPolicies;
-  }
-
-  @Override
-  public String toString() {
-    return "DeploymentMessage [deploymentId=" + deploymentId + ", deploymentProvider="
-        + deploymentProvider + ", templateTopologicalOrderIterator="
-        + templateTopologicalOrderIterator + ", createComplete=" + createComplete
-        + ", pollComplete=" + pollComplete + "]";
-  }
 
   /**
    * Class to contain template's nodes in topological order and to allow to iterate on the list.
@@ -216,6 +99,7 @@ public class DeploymentMessage implements Serializable {
    * @author l.biava
    *
    */
+  @Data
   public static class TemplateTopologicalOrderIterator implements Serializable {
 
     private static final long serialVersionUID = 1557615023166610397L;
@@ -229,14 +113,6 @@ public class DeploymentMessage implements Serializable {
 
     public TemplateTopologicalOrderIterator(List<Resource> topologicalOrder) {
       this.topologicalOrder = topologicalOrder;
-    }
-
-    public int getPosition() {
-      return position;
-    }
-
-    public List<Resource> getTopologicalOrder() {
-      return topologicalOrder;
     }
 
     public int getNodeSize() {
@@ -277,12 +153,6 @@ public class DeploymentMessage implements Serializable {
 
     public synchronized void reset() {
       position = 0;
-    }
-
-    @Override
-    public String toString() {
-      return "TemplateTopologicalOrderStatus [topologicalOrder=" + topologicalOrder + ", position="
-          + position + "]";
     }
 
   }

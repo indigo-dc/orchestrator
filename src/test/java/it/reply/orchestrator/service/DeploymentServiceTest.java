@@ -54,6 +54,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -76,7 +77,7 @@ public class DeploymentServiceTest {
   @Mock
   private ResourceRepository resourceRepository;
 
-  @Mock
+  @Spy
   private ToscaServiceImpl toscaService = new ToscaServiceImpl();
 
   @Mock
@@ -152,23 +153,17 @@ public class DeploymentServiceTest {
     parsingResult.setTopology(new Topology());
     parsingResult.getTopology().setNodeTemplates(nodeTemplates);
 
-    Mockito.when(toscaService.prepareTemplate(deploymentRequest.getTemplate(),
-        deploymentRequest.getParameters())).thenReturn(parsingResult);
+    Mockito.doReturn(parsingResult).when(toscaService).prepareTemplate(deploymentRequest.getTemplate(),
+        deploymentRequest.getParameters());
 
     Mockito.when(deploymentRepository.save(Mockito.any(Deployment.class)))
         .thenAnswer(y -> y.getArguments()[0]);
-
-    Mockito.when(toscaService.getNodeCapabilityByName(Mockito.any(), Mockito.any()))
-        .thenCallRealMethod();
 
     Mockito.when(resourceRepository.save(Mockito.any(Resource.class))).thenAnswer(y -> {
       Resource res = (Resource) y.getArguments()[0];
       res.getDeployment().getResources().add(res);
       return res;
     });
-
-    Mockito.when(oidcProperties.isEnabled()).thenReturn(true);
-    Mockito.when(oauth2TokenService.getOAuth2Token()).thenReturn("token");
 
     Mockito.when(wfService.startProcess(Mockito.any(), Mockito.any(), Mockito.any()))
         .thenReturn(new RuleFlowProcessInstance());
@@ -190,6 +185,7 @@ public class DeploymentServiceTest {
     NodeTemplate nt = new NodeTemplate();
     nt.setCapabilities(capabilities);
     nt.setType(nodeType);
+    nt.setName(nodeName1);
 
     Map<String, NodeTemplate> nts = Maps.newHashMap();
     nts.put(nodeName1, nt);
@@ -197,6 +193,7 @@ public class DeploymentServiceTest {
     nt = new NodeTemplate();
     nt.setCapabilities(capabilities);
     nt.setType(nodeType);
+    nt.setName(nodeName2);
     nts.put(nodeName2, nt);
 
     Deployment returneDeployment = basecreateDeploymentSuccessful(deploymentRequest, nts);
@@ -206,13 +203,13 @@ public class DeploymentServiceTest {
     Assert.assertThat(returneDeployment.getResources().get(0).getToscaNodeName(),
         anyOf(is(nodeName1), is(nodeName2)));
     Assert.assertEquals(returneDeployment.getResources().get(0).getToscaNodeType(), nodeType);
-    Assert.assertEquals(returneDeployment.getResources().get(0).getState(), NodeStates.CREATING);
+    Assert.assertEquals(returneDeployment.getResources().get(0).getState(), NodeStates.INITIAL);
     Mockito.verify(resourceRepository).save(returneDeployment.getResources().get(0));
 
     Assert.assertThat(returneDeployment.getResources().get(1).getToscaNodeName(),
         anyOf(is(nodeName1), is(nodeName2)));
     Assert.assertEquals(returneDeployment.getResources().get(1).getToscaNodeType(), nodeType);
-    Assert.assertEquals(returneDeployment.getResources().get(1).getState(), NodeStates.CREATING);
+    Assert.assertEquals(returneDeployment.getResources().get(1).getState(), NodeStates.INITIAL);
     Mockito.verify(resourceRepository).save(returneDeployment.getResources().get(1));
 
     Mockito.verify(deploymentRepository, Mockito.atLeast(1)).save(returneDeployment);
@@ -250,7 +247,9 @@ public class DeploymentServiceTest {
 
     Capability capability = new Capability();
     capability.setProperties(Maps.newHashMap());
-    capability.getProperties().put("count", new ScalarPropertyValue("2"));
+    ScalarPropertyValue countValue = new ScalarPropertyValue("2");
+    countValue.setPrintable(true);
+    capability.getProperties().put("count", countValue);
 
     Map<String, Capability> capabilities = Maps.newHashMap();
     capabilities.put("scalable", capability);
@@ -258,6 +257,7 @@ public class DeploymentServiceTest {
     NodeTemplate nt = new NodeTemplate();
     nt.setCapabilities(capabilities);
     nt.setType(nodeType);
+    nt.setName(nodeName);
 
     Map<String, NodeTemplate> nts = Maps.newHashMap();
     nts.put(nodeName, nt);
@@ -296,10 +296,12 @@ public class DeploymentServiceTest {
     Map<String, NodeTemplate> nts = Maps.newHashMap();
     NodeTemplate nt = new NodeTemplate();
     nt.setType(nodeType);
+    nt.setName(nodeName1);
     nts.put(nodeName1, nt);
 
     nt = new NodeTemplate();
     nt.setType(nodeType);
+    nt.setName(nodeName2);
     nts.put(nodeName2, nt);
 
     Deployment returneDeployment = basecreateDeploymentSuccessful(deploymentRequest, nts);
@@ -359,32 +361,11 @@ public class DeploymentServiceTest {
   }
 
   @Test
-  public void deleteDeploymentNoProviderError() throws Exception {
-    Deployment deployment = ControllerTestUtils.createDeployment();
-    deployment.setStatus(Status.CREATE_COMPLETE);
-    deployment.setDeploymentProvider(null);
-    deployment.setEndpoint("http://endpoint.com/uuid");
-
-    Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
-    Mockito.when(deploymentRepository.save(deployment)).thenReturn(deployment);
-
-    try {
-      deploymentService.deleteDeployment(deployment.getId());
-    } catch (DeploymentException e) {
-      Assert.assertEquals("Error deleting deploy <" + deployment.getId()
-          + ">: Deployment provider is null but the endpoint is <" + deployment.getEndpoint() + ">",
-          e.getMessage());
-    }
-
-    Mockito.verifyZeroInteractions(wfService);
-    Mockito.verify(deploymentRepository, Mockito.never()).delete(deployment);
-  }
-
-  @Test
   public void deleteDeploymentSuccesfulWithReferences() throws Exception {
     Deployment deployment = ControllerTestUtils.createDeployment();
     deployment.setStatus(Status.CREATE_IN_PROGRESS);
     deployment.setDeploymentProvider(DeploymentProvider.IM);
+    deployment.setEndpoint("endpoint");
     WorkflowReference wr1 = new WorkflowReference(0, RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
     deployment.getWorkflowReferences().add(wr1);
     WorkflowReference wr2 = new WorkflowReference(1, RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
@@ -421,7 +402,6 @@ public class DeploymentServiceTest {
 
     deploymentService.deleteDeployment(deployment.getId());
 
-    Mockito.verify(deploymentRepository, Mockito.never()).delete(deployment);
     Mockito.verify(wfService, Mockito.never()).abortProcess(Mockito.anyLong(),
         Mockito.any(RUNTIME_STRATEGY.class));
     Mockito.verify(deploymentRepository, Mockito.atLeast(1)).save(deployment);
@@ -472,8 +452,8 @@ public class DeploymentServiceTest {
     deployment.setStatus(Status.CREATE_COMPLETE);
     deployment.setParameters(new HashMap<String, Object>());
     Mockito.when(deploymentRepository.findOne(id)).thenReturn(deployment);
-    Mockito.when(toscaService.prepareTemplate(request.getTemplate(), deployment.getParameters()))
-        .thenThrow(new IOException());
+    Mockito.doThrow(new IOException()).when(toscaService)
+      .prepareTemplate(request.getTemplate(), deployment.getParameters());
 
     deploymentService.updateDeployment(id, request);
   }
@@ -504,6 +484,7 @@ public class DeploymentServiceTest {
     // case create complete
     Deployment deployment = basecreateDeploymentSuccessful(deploymentRequest, nts);
     deployment.setStatus(Status.CREATE_COMPLETE);
+    deployment.setDeploymentProvider(DeploymentProvider.IM);
     Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
     deploymentService.updateDeployment(deployment.getId(), deploymentRequest);
 

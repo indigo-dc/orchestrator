@@ -22,11 +22,11 @@ import it.reply.orchestrator.service.utils.MyLinkBuilder;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.net.URI;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.StampedLock;
 
@@ -67,6 +67,10 @@ public class DeploymentResourceAssembler
       resource.setCallback(entity.getCallback());
     }
 
+    Optional.ofNullable(entity.getOwner())
+        .map(owner -> owner.getOidcEntityId())
+        .ifPresent(owner -> resource.setCreatedBy(owner));
+
     // TODO Use ControllerLinkBuilder when
     // https://github.com/spring-projects/spring-hateoas/issues/408 will be resolved
     URI ctrlUri = null;
@@ -98,10 +102,16 @@ public class DeploymentResourceAssembler
 
     resource
         .add(MyLinkBuilder.getNewBuilder(ctrlUri).slash("deployments").slash(entity).withSelfRel());
-    resource.add(MyLinkBuilder.getNewBuilder(ctrlUri).slash("deployments").slash(entity)
-        .slash("resources").withRel("resources"));
-    resource.add(MyLinkBuilder.getNewBuilder(ctrlUri).slash("deployments").slash(entity)
-        .slash("template").withRel("template"));
+    resource.add(MyLinkBuilder.getNewBuilder(ctrlUri)
+        .slash("deployments")
+        .slash(entity)
+        .slash("resources")
+        .withRel("resources"));
+    resource.add(MyLinkBuilder.getNewBuilder(ctrlUri)
+        .slash("deployments")
+        .slash(entity)
+        .slash("template")
+        .withRel("template"));
     /////////////////////////////////////////////////////////////////////////////////
     return resource;
   }
@@ -109,13 +119,12 @@ public class DeploymentResourceAssembler
   // Dirty hack due to Spring Hateoas being unable to generate links outside of HTTP sessions
   // https://github.com/spring-projects/spring-hateoas/issues/408
   private boolean isInHttpRequest() {
-    RequestAttributes requestAttributes = RequestContextHolder.getRequestAttributes();
-    if (requestAttributes != null && requestAttributes instanceof ServletRequestAttributes) {
-      HttpServletRequest servletRequest =
-          ((ServletRequestAttributes) requestAttributes).getRequest();
-      return servletRequest != null;
-    }
-    return false;
+    Optional<HttpServletRequest> request =
+        Optional.ofNullable(RequestContextHolder.getRequestAttributes())
+            .filter(ServletRequestAttributes.class::isInstance)
+            .map(ServletRequestAttributes.class::cast)
+            .map(ServletRequestAttributes::getRequest);
+    return request.isPresent();
   }
 
 }

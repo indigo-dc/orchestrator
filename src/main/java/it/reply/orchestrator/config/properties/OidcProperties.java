@@ -61,6 +61,27 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
     return cacheTokens;
   }
 
+  /**
+   * Throw an {@link IllegalStateException} if the security is disabled.
+   */
+  public void throwIfSecurityDisabled() {
+    runIfSecurityDisabled(() -> {
+      throw new IllegalStateException("Security is not enabled");
+    });
+  }
+
+  /**
+   * Run the function if the security is disabled.
+   * 
+   * @param function
+   *          the function to run
+   */
+  public void runIfSecurityDisabled(Runnable function) {
+    if (!enabled) {
+      function.run();
+    }
+  }
+
   @Nullable
   public IamProperties getIamConfiguration(String issuer) {
     return iamPropertiesMap.get(issuer);
@@ -205,7 +226,8 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
     @Override
     public String toString() {
       return new ToStringBuilder(this).append("clientId", clientId)
-          .append("clientSecret", "<OMITTED>").toString();
+          .append("clientSecret", "<OMITTED>")
+          .toString();
     }
   }
 
@@ -232,7 +254,8 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
 
     @Override
     public String toString() {
-      return new ToStringBuilder(this).appendSuper(super.toString()).append("scopes", scopes)
+      return new ToStringBuilder(this).appendSuper(super.toString())
+          .append("scopes", scopes)
           .toString();
     }
   }

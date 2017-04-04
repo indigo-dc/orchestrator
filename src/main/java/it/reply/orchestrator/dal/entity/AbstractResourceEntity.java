@@ -1,5 +1,10 @@
 package it.reply.orchestrator.dal.entity;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -30,6 +35,10 @@ import javax.persistence.PreUpdate;
 import javax.persistence.Version;
 
 @MappedSuperclass
+@Getter
+@Setter
+@NoArgsConstructor
+@ToString
 public abstract class AbstractResourceEntity implements Identifiable<String>, Serializable {
 
   private static final long serialVersionUID = 3797345592958668261L;
@@ -50,43 +59,6 @@ public abstract class AbstractResourceEntity implements Identifiable<String>, Se
   @Version
   private Long version;
 
-  protected AbstractResourceEntity() {
-    this.id = null;
-  }
-
-  @Override
-  public String getId() {
-    return id;
-  }
-
-  public void setId(String id) {
-    this.id = id;
-  }
-
-  public void setCreated(Date created) {
-    this.created = created;
-  }
-
-  public void setUpdated(Date updated) {
-    this.updated = updated;
-  }
-
-  public Date getCreated() {
-    return created;
-  }
-
-  public Date getUpdated() {
-    return updated;
-  }
-
-  public Long getVersion() {
-    return version;
-  }
-
-  public void setVersion(Long version) {
-    this.version = version;
-  }
-
   @PrePersist
   protected void onCreate() {
     this.created = new Date();
@@ -96,11 +68,4 @@ public abstract class AbstractResourceEntity implements Identifiable<String>, Se
   protected void onUpdate() {
     this.updated = new Date();
   }
-
-  @Override
-  public String toString() {
-    return "AbstractResourceEntity [id=" + id + ", created=" + created + ", updated=" + updated
-        + "]";
-  }
-
 }

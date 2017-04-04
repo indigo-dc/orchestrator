@@ -1,5 +1,6 @@
 package it.reply.orchestrator.service;
 
+import it.reply.orchestrator.dal.entity.OidcTokenId;
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -19,7 +20,7 @@ import it.reply.orchestrator.dto.slam.SlamPreferences;
 
 public interface SlamService {
 
-  public SlamPreferences getCustomerPreferences();
+  public SlamPreferences getCustomerPreferences(OidcTokenId tokenId);
 
   public String getUrl();
 }

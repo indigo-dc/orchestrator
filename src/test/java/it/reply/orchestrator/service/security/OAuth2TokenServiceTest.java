@@ -44,13 +44,13 @@ public class OAuth2TokenServiceTest {
   @Test(expected = IllegalStateException.class)
   public void failGetOAuth2Token() {
     Mockito.when(oidcProperties.isEnabled()).thenReturn(false);
-    oAuth2TokenService.getOAuth2Token();
+    oAuth2TokenService.getOAuth2TokenFromCurrentAuth();
   }
 
   @Test(expected = IllegalStateException.class)
   public void failGetOAuth2TokenNull() {
     Mockito.when(oidcProperties.isEnabled()).thenReturn(true);
-    oAuth2TokenService.getOAuth2Token();
+    oAuth2TokenService.getOAuth2TokenFromCurrentAuth();
   }
 
 }

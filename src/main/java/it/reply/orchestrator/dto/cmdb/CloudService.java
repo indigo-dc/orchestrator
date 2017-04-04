@@ -37,6 +37,8 @@ public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData
   public static final String CDMI_STORAGE_SERVICE = STORAGE_SERVICE_PREFIX + ".cdmi";
   public static final String ONEPROVIDER_STORAGE_SERVICE = STORAGE_SERVICE_PREFIX + ".oneprovider";
 
+  public static final String OPENNEBULA_TOSCA_SERVICE = "eu.indigo-datacloud.im-tosca.opennebula";
+
   /**
    * Get if the the service is a OpenStack compute service.
    * 
@@ -109,6 +111,19 @@ public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData
    */
   public boolean isCdmiStorageProviderService() {
     if (getData() != null && CDMI_STORAGE_SERVICE.equals(getData().getServiceType())) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * Get if the the service is a OpenNebula TOSCA service.
+   * 
+   * @return true if the service is a OpenNebula TOSCA service
+   */
+  public boolean isOpenNebulaToscaProviderService() {
+    if (getData() != null && OPENNEBULA_TOSCA_SERVICE.equals(getData().getServiceType())) {
       return true;
     } else {
       return false;

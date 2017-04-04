@@ -73,6 +73,7 @@
 		<workflow-manager.version>0.0.4-SNAPSHOT</workflow-manager.version>
 		<alien4cloud.version>1.1.0-INDIGO2-SNAPSHOT</alien4cloud.version>
 		<chronos-client.version>0.0.1-BETA.2</chronos-client.version>
+		<marathon-client.version>0.3.1-SNAPSHOT</marathon-client.version>
 	</properties>
 
 	<distributionManagement>
@@ -109,6 +110,11 @@
 
 	<dependencyManagement>
 		<dependencies>
+			<dependency>
+				<groupId>com.google.guava</groupId>
+				<artifactId>guava</artifactId>
+				<version>21.0</version>
+			</dependency>
 			<!-- Alien4Cloud requires v1.7.0 -->
 			<dependency>
 				<groupId>org.elasticsearch</groupId>
@@ -229,11 +235,12 @@
 			<artifactId>spring-boot-configuration-processor</artifactId>
 			<optional>true</optional>
 		</dependency>
-<!-- 		<dependency>
+		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
+		    <version>1.16.14</version>
 			<optional>true</optional>
-		</dependency> -->
+		</dependency>
 		<!-- Fix for java.lang.NoSuchFieldError: REFLECTION -->
 		<dependency>
 			<groupId>com.sun.xml.bind</groupId>
@@ -348,11 +355,17 @@
 			<version>${chronos-client.version}</version>
 		</dependency>
 
+		<dependency>
+			<groupId>com.mesosphere</groupId>
+			<artifactId>marathon-client</artifactId>
+			<version>${marathon-client.version}</version>
+		</dependency>
+	
 		<!-- Graph library -->
 		<dependency>
 			<groupId>org.jgrapht</groupId>
 			<artifactId>jgrapht-core</artifactId>
-			<version>0.9.2</version>
+			<version>1.0.1</version>
 		</dependency>
 
 		<dependency>
@@ -441,6 +454,12 @@
 			<artifactId>h2</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.assertj</groupId>
+			<artifactId>assertj-core</artifactId>
+			<version>3.6.2</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 
 
@@ -480,9 +499,9 @@
 		<profile>
 			<id>not-eclipse</id>
 			<activation>
-				<property>
+<!-- 				<property>
 					<name>!m2e.version</name>
-				</property>
+				</property> -->
 			</activation>
 			<build>
 				<plugins>

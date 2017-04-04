@@ -34,9 +34,12 @@ import es.upv.i3m.grycap.im.pojo.InfrastructureUris;
 import es.upv.i3m.grycap.im.pojo.ResponseError;
 import es.upv.i3m.grycap.im.pojo.VirtualMachineInfo;
 import es.upv.i3m.grycap.im.rest.client.BodyContentType;
+
+import it.reply.orchestrator.config.properties.ImProperties;
 import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
@@ -51,6 +54,7 @@ import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.service.ToscaServiceImpl;
+import it.reply.orchestrator.service.security.OAuth2TokenService;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.junit.Assert;
@@ -70,6 +74,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 public class ImServiceTest {
@@ -94,15 +99,15 @@ public class ImServiceTest {
   @Mock
   private InfrastructureManager infrastructureManager;
 
-  @Mock
-  private ApplicationContext ctx;
-
-  @Mock
-  org.springframework.core.io.Resource resource;
-
+  @Spy
+  private ImProperties imProperties = new ImProperties("im.url");
+  
   @Mock
   private OidcProperties oidcProperties;
 
+  @Mock
+  private OAuth2TokenService oauth2TokenService;
+  
   @Before
   public void setup() throws ParsingException {
     MockitoAnnotations.initMocks(this);
@@ -112,6 +117,7 @@ public class ImServiceTest {
     DeploymentMessage dm = new DeploymentMessage();
     Deployment deployment = ControllerTestUtils.createDeployment();
     deployment.setStatus(Status.CREATE_IN_PROGRESS);
+    deployment.setDeploymentProvider(DeploymentProvider.IM);
     dm.setDeployment(deployment);
     dm.setDeploymentId(deployment.getId());
     deployment.getResources().addAll(ControllerTestUtils.createResources(deployment, 2, false));
@@ -494,23 +500,19 @@ public class ImServiceTest {
     CloudProviderEndpoint cloudProviderEndpoint = new CloudProviderEndpoint();
     cloudProviderEndpoint.setIaasType(IaaSType.OPENSTACK);
     cloudProviderEndpoint.setCpEndpoint("recas.ba.infn");
+    cloudProviderEndpoint.setCpComputeServiceId(UUID.randomUUID().toString());
     dm.setChosenCloudProviderEndpoint(cloudProviderEndpoint);
 
-    ReflectionTestUtils.setField(imService, "openstackAuthFilePath", "authfilepath");
-    ReflectionTestUtils.setField(imService, "imUrl", "imurl");
-
-    Mockito.when(ctx.getResource("authfilepath")).thenReturn(resource);
-    Mockito.when(resource.getInputStream())
-        .thenReturn(new ByteArrayInputStream("authfilepath".getBytes()));
     Mockito.when(oidcProperties.isEnabled()).thenReturn(true);
+    OidcTokenId id = new OidcTokenId();
+    dm.setRequestedWithToken(id);
+    Mockito.when(oauth2TokenService.getAccessToken(id, OAuth2TokenService.REQUIRED_SCOPES))
+    .thenReturn("J1qK1c18UUGJFAzz9xnH56584l4");
 
-    InfrastructureManager result = new InfrastructureManager("imurl", "authfilepath");
-    InfrastructureManager client = imService.getClient(dm);
     // TO-DO: Assert equals both result and client
 
     cloudProviderEndpoint.setCpEndpoint("https://www.openstack.org/");
     dm.setChosenCloudProviderEndpoint(cloudProviderEndpoint);
-    dm.setOauth2Token("J1qK1c18UUGJFAzz9xnH56584l4");
     imService.getClient(dm);
     // TO-DO: Assert equals both result and client
 
@@ -518,7 +520,6 @@ public class ImServiceTest {
     // OPENENBULA
     cloudProviderEndpoint.setIaasType(IaaSType.OPENNEBULA);
     dm.setChosenCloudProviderEndpoint(cloudProviderEndpoint);
-    dm.setOauth2Token("J1qK1c18UUGJFAzz9xnH56584l4");
     imService.getClient(dm);
     // TO-DO: Assert equals both result and client
 
@@ -527,7 +528,6 @@ public class ImServiceTest {
     cloudProviderEndpoint.setUsername("username");
     cloudProviderEndpoint.setPassword("password");
     dm.setChosenCloudProviderEndpoint(cloudProviderEndpoint);
-    dm.setOauth2Token("J1qK1c18UUGJFAzz9xnH56584l4");
     imService.getClient(dm);
     // TO-DO: Assert equals both result and client
   }
@@ -537,14 +537,17 @@ public class ImServiceTest {
     DeploymentMessage dm = generateDeployDm();
     CloudProviderEndpoint cloudProviderEndpoint = new CloudProviderEndpoint();
     cloudProviderEndpoint.setIaasType(IaaSType.OPENSTACK);
+    cloudProviderEndpoint.setCpComputeServiceId(UUID.randomUUID().toString());
     cloudProviderEndpoint.setCpEndpoint("lorem.ipsum");
     dm.setChosenCloudProviderEndpoint(cloudProviderEndpoint);
 
-    Mockito.when(ctx.getResource("authfilepath")).thenReturn(resource);
-    Mockito.when(resource.getInputStream())
-        .thenReturn(new ByteArrayInputStream("authfilepath".getBytes()));
-    Mockito.when(oidcProperties.isEnabled()).thenReturn(true);
 
+    Mockito.when(oidcProperties.isEnabled()).thenReturn(true);
+    OidcTokenId id = new OidcTokenId();
+    dm.setRequestedWithToken(id);
+    Mockito.when(oauth2TokenService.getAccessToken(id, OAuth2TokenService.REQUIRED_SCOPES))
+    .thenReturn("J1qK1c18UUGJFAzz9xnH56584l4");
+    
     imService.getClient(dm);
   }
 
@@ -677,9 +680,9 @@ public class ImServiceTest {
     NodeTemplate ntNew = new NodeTemplate();
     ntNew.setName("newNode");
     NodeTemplate ntNew2 = new NodeTemplate();
-    ntNew.setName("newNode2");
+    ntNew2.setName("newNode2");
     NodeTemplate ntNew3 = new NodeTemplate();
-    ntNew.setName("newNode3");
+    ntNew3.setName("newNode3");
     Map<String, NodeTemplate> newNodes = new HashMap<>();
     newNodes.put("oldNode", ntOld);
     newNodes.put("newNode", ntNew);
@@ -700,9 +703,10 @@ public class ImServiceTest {
         .getClient(Mockito.any(DeploymentMessage.class));
 
 
-    Mockito.doReturn(oldNodes).when(toscaService).getCountNodes(oldAr);
-    Mockito.doReturn(newNodes).when(toscaService).getCountNodes(newAr);
-    Mockito.doReturn(1).doReturn(4).when(toscaService).getCount(Mockito.any(NodeTemplate.class));
+    Mockito.doReturn(oldNodes.values()).when(toscaService).getScalableNodes(oldAr);
+    Mockito.doReturn(newNodes.values()).when(toscaService).getScalableNodes(newAr);
+    Mockito.doReturn(Optional.of(1)).doReturn(Optional.of(4))
+        .when(toscaService).getCount(Mockito.any(NodeTemplate.class));
     Mockito.doReturn(dm.getDeployment().getTemplate()).when(toscaService)
         .updateTemplate(Mockito.anyString());
 

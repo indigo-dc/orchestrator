@@ -18,8 +18,9 @@ package it.reply.orchestrator.service.commands;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.exception.service.DeploymentException;
+import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
-import it.reply.orchestrator.service.deployment.providers.ImServiceImpl;
+import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;
 import it.reply.utils.misc.polling.AbstractPollingBehaviour;
 import it.reply.utils.misc.polling.ExternallyControlledPoller;
 import it.reply.utils.misc.polling.ExternallyControlledPoller.PollingStatus;
@@ -30,17 +31,13 @@ import it.reply.workflowmanager.spring.orchestrator.bpm.OrchestratorContextBean;
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 @Component
 public class PollDeploy extends BaseDeployCommand {
 
-  public static final String WF_PARAM_POLLING_STATUS = "statusPoller";
-
   @Autowired
-  @Qualifier("IM")
-  private DeploymentProviderService imService;
+  private DeploymentProviderServiceRegistry deploymentProviderServiceRegistry;
 
   @Override
   protected ExecutionResults customExecute(CommandContext ctx,
@@ -48,17 +45,19 @@ public class PollDeploy extends BaseDeployCommand {
 
     ExecutionResults exResults = new ExecutionResults();
     ExternallyControlledPoller<DeploymentMessage, Status> statusPoller =
-        getParameter(ctx, WF_PARAM_POLLING_STATUS);
+        getParameter(ctx, WorkflowConstants.WF_PARAM_POLLING_STATUS);
     if (statusPoller == null) {
       statusPoller = getPoller();
     }
-    exResults.setData(WF_PARAM_POLLING_STATUS, statusPoller);
+    exResults.setData(WorkflowConstants.WF_PARAM_POLLING_STATUS, statusPoller);
 
+    DeploymentProviderService deploymentProviderService = deploymentProviderServiceRegistry
+        .getDeploymentProviderService(deploymentMessage.getDeployment());
     try {
       statusPoller.doPollEvent(deploymentMessage);
       if (statusPoller.getPollStatus() == PollingStatus.ENDED) {
         // Polling ended successfully -> Deployment completed -> Finalize (update template)
-        imService.finalizeDeploy(deploymentMessage, true);
+        deploymentProviderService.finalizeDeploy(deploymentMessage, true);
         return resultOccurred(true, exResults);
       } else {
         // Deployment is not ready yet
@@ -66,14 +65,14 @@ public class PollDeploy extends BaseDeployCommand {
       }
     } catch (PollingException ex) {
       // Polling unsuccessful -> Deploy failed -> Finalize (update template)
-      imService.finalizeDeploy(deploymentMessage, false);
+      deploymentProviderService.finalizeDeploy(deploymentMessage, false);
       return resultOccurred(true, exResults);
     }
   }
 
   private static ExternallyControlledPoller<DeploymentMessage, Status> getPoller() {
 
-    long timeoutTime = 30 * 60 * 1000;
+    long timeoutTime = 30 * 60 * 1000L;
 
     PollingBehaviour<DeploymentMessage, Status> pollBehavior =
         new AbstractPollingBehaviour<DeploymentMessage, Status>(timeoutTime) {
@@ -81,10 +80,13 @@ public class PollDeploy extends BaseDeployCommand {
           private static final long serialVersionUID = -5994059867039967783L;
 
           @Override
-          public Status doPolling(DeploymentMessage deploymentId) throws PollingException {
+          public Status doPolling(DeploymentMessage deploymentMessage) throws PollingException {
             try {
-              ImServiceImpl imService = OrchestratorContextBean.getBean(ImServiceImpl.class);
-              if (imService.isDeployed(deploymentId)) {
+              DeploymentProviderServiceRegistry registry =
+                  OrchestratorContextBean.getBean(DeploymentProviderServiceRegistry.class);
+              DeploymentProviderService deploymentProviderService =
+                  registry.getDeploymentProviderService(deploymentMessage.getDeployment());
+              if (deploymentProviderService.isDeployed(deploymentMessage)) {
                 return Status.CREATE_COMPLETE;
               } else {
                 return Status.CREATE_IN_PROGRESS;
@@ -109,11 +111,11 @@ public class PollDeploy extends BaseDeployCommand {
 
         };
 
-    return new ExternallyControlledPoller<DeploymentMessage, Status>(pollBehavior, 3);
+    return new ExternallyControlledPoller<>(pollBehavior, 3);
   }
 
   @Override
   protected String getErrorMessagePrefix() {
-    return "Error deploying through IM";
+    return "Error during deploy status check";
   }
 }

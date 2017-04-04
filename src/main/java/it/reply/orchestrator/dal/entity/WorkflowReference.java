@@ -18,6 +18,12 @@ package it.reply.orchestrator.dal.entity;
 import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager;
 import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager.RUNTIME_STRATEGY;
 
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
 import org.springframework.hateoas.Identifiable;
 
 import java.io.Serializable;
@@ -32,13 +38,26 @@ import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
 
 @Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@EqualsAndHashCode(of = { "processId" })
+@ToString(of = { "processId", "runtimeStrategy" })
 public class WorkflowReference implements Identifiable<Long>, Serializable {
 
   private static final long serialVersionUID = -610233480056664663L;
 
-  public WorkflowReference() {
-    super();
-  }
+  @Id
+  @Column(name = "process_id", unique = true, nullable = false)
+  private long processId;
+
+  @Enumerated(EnumType.STRING)
+  @Column(name = "runtime_strategy", length = 100, nullable = false)
+  private BusinessProcessManager.RUNTIME_STRATEGY runtimeStrategy;
+
+  @ManyToOne
+  @JoinColumn(name = "deployment_uuid")
+  private Deployment deployment;
 
   /**
    * Constructor with fields.
@@ -54,46 +73,10 @@ public class WorkflowReference implements Identifiable<Long>, Serializable {
     this.runtimeStrategy = runtimeStrategy;
   }
 
-  @Id
-  @Column(name = "process_id", unique = true, nullable = false)
-  private long processId;
-
-  @Enumerated(EnumType.STRING)
-  @Column(name = "runtime_strategy", length = 100, nullable = false)
-  private BusinessProcessManager.RUNTIME_STRATEGY runtimeStrategy;
-
-  @ManyToOne
-  @JoinColumn(name = "deployment_uuid")
-  private Deployment deployment;
-
-  public Deployment getDeployment() {
-    return deployment;
-  }
-
-  public void setDeployment(Deployment deployment) {
-    this.deployment = deployment;
-  }
-
   @Override
   @Transient
   public Long getId() {
-    return processId;
-  }
-
-  public Long getProcessId() {
-    return processId;
-  }
-
-  public void setProcessId(long processId) {
-    this.processId = processId;
-  }
-
-  public BusinessProcessManager.RUNTIME_STRATEGY getRuntimeStrategy() {
-    return runtimeStrategy;
-  }
-
-  public void setRuntimeStrategy(BusinessProcessManager.RUNTIME_STRATEGY runtimeStrategy) {
-    this.runtimeStrategy = runtimeStrategy;
+    return this.getProcessId();
   }
 
 }

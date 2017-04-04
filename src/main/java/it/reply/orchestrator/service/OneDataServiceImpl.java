@@ -39,7 +39,6 @@ import org.springframework.web.client.RestTemplate;
 import java.util.List;
 import java.util.Objects;
 
-import javax.annotation.Nonnull;
 import javax.annotation.PostConstruct;
 
 @Service
@@ -114,7 +113,7 @@ public class OneDataServiceImpl implements OneDataService {
   }
 
   @Override
-  public UserSpaces getUserSpacesId(String oneZoneEndpoint, @Nonnull String oneDataToken) {
+  public UserSpaces getUserSpacesId(String oneZoneEndpoint, String oneDataToken) {
     if (oneZoneEndpoint == null) {
       oneZoneEndpoint = defaultOneZoneEndpoint;
     }
@@ -135,8 +134,8 @@ public class OneDataServiceImpl implements OneDataService {
   }
 
   @Override
-  public SpaceDetails getSpaceDetailsFromId(String oneZoneEndpoint, @Nonnull String oneDataToken,
-      @Nonnull String oneSpaceId) {
+  public SpaceDetails getSpaceDetailsFromId(String oneZoneEndpoint, String oneDataToken,
+      String oneSpaceId) {
     if (oneZoneEndpoint == null) {
       oneZoneEndpoint = defaultOneZoneEndpoint;
     }
@@ -153,39 +152,37 @@ public class OneDataServiceImpl implements OneDataService {
   }
 
   @Override
-  public SpaceDetails getSpaceDetailsFromId(@Nonnull String oneDataToken,
-      @Nonnull String oneSpaceId) {
+  public SpaceDetails getSpaceDetailsFromId(String oneDataToken, String oneSpaceId) {
     return getSpaceDetailsFromId(null, oneDataToken, oneSpaceId);
   }
 
   @Override
-  public String getUserSpaceNameById(String oneZoneEndpoint, @Nonnull String oneDataToken,
-      @Nonnull String oneSpaceId) {
+  public String getUserSpaceNameById(String oneZoneEndpoint, String oneDataToken,
+      String oneSpaceId) {
     SpaceDetails details = getSpaceDetailsFromId(oneZoneEndpoint, oneDataToken, oneSpaceId);
     return details.getName();
   }
 
   @Override
-  public String getUserSpaceNameById(@Nonnull String onedataToken, @Nonnull String oneSpaceId) {
+  public String getUserSpaceNameById(String onedataToken, String oneSpaceId) {
     return getUserSpaceNameById(null, onedataToken, oneSpaceId);
   }
 
   @Override
-  public List<String> getProvidersIdBySpaceId(String oneZoneEndpoint, @Nonnull String oneDataToken,
-      @Nonnull String oneSpaceId) {
+  public List<String> getProvidersIdBySpaceId(String oneZoneEndpoint, String oneDataToken,
+      String oneSpaceId) {
     SpaceDetails details = getSpaceDetailsFromId(oneZoneEndpoint, oneDataToken, oneSpaceId);
     return Lists.newArrayList(details.getProvidersSupports().keySet());
   }
 
   @Override
-  public List<String> getProvidersIdBySpaceId(@Nonnull String oneDataToken,
-      @Nonnull String oneSpaceId) {
+  public List<String> getProvidersIdBySpaceId(String oneDataToken, String oneSpaceId) {
     return getProvidersIdBySpaceId(null, oneDataToken, oneSpaceId);
   }
 
   @Override
-  public ProviderDetails getProviderDetailsFromId(String oneZoneEndpoint,
-      @Nonnull String oneDataToken, @Nonnull String oneSpaceId, @Nonnull String oneProviderId) {
+  public ProviderDetails getProviderDetailsFromId(String oneZoneEndpoint, String oneDataToken,
+      String oneSpaceId, String oneProviderId) {
     if (oneZoneEndpoint == null) {
       oneZoneEndpoint = defaultOneZoneEndpoint;
     }
@@ -202,8 +199,8 @@ public class OneDataServiceImpl implements OneDataService {
   }
 
   @Override
-  public ProviderDetails getProviderDetailsFromId(@Nonnull String oneDataToken,
-      @Nonnull String oneSpaceId, @Nonnull String oneProviderId) {
+  public ProviderDetails getProviderDetailsFromId(String oneDataToken, String oneSpaceId,
+      String oneProviderId) {
     return getProviderDetailsFromId(null, oneDataToken, oneSpaceId, oneProviderId);
   }
 

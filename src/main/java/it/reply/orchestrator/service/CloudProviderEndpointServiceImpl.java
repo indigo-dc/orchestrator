@@ -26,6 +26,8 @@ import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.dto.deployment.AwsSlaPlacementPolicy;
 import it.reply.orchestrator.dto.deployment.PlacementPolicy;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
+import it.reply.orchestrator.enums.DeploymentProvider;
+import it.reply.orchestrator.enums.DeploymentType;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 
@@ -89,12 +91,16 @@ public class CloudProviderEndpointServiceImpl {
     CloudService computeService =
         chosenCloudProvider.getCmbdProviderServicesByType(Type.COMPUTE).get(0);
 
+    String imEndpoint = null;
     CloudProviderEndpoint cpe = new CloudProviderEndpoint();
     IaaSType iaasType;
     if (computeService.isOpenStackComputeProviderService()) {
       iaasType = IaaSType.OPENSTACK;
     } else if (computeService.isOpenNebulaComputeProviderService()) {
       iaasType = IaaSType.OPENNEBULA;
+    } else if (computeService.isOpenNebulaToscaProviderService()) {
+      iaasType = IaaSType.OPENNEBULA;
+      imEndpoint = computeService.getData().getEndpoint();
     } else if (computeService.isOcciComputeProviderService()) {
       iaasType = IaaSType.OCCI;
     } else if (computeService.isAwsComputeProviderService()) {
@@ -113,58 +119,32 @@ public class CloudProviderEndpointServiceImpl {
     cpe.setCpEndpoint(computeService.getData().getEndpoint());
     cpe.setCpComputeServiceId(computeService.getId());
     cpe.setIaasType(iaasType);
-    // FIXME Add IM EP, if available
+    cpe.setImEndpoint(imEndpoint);
 
     return cpe;
   }
 
-  // /**
-  // * TEMPORARY method to decide whether it is needed to coerce CP choice based on template content
-  // * (i.e. currently used to force Mesos cluster deployment on OpenStack).
-  // *
-  // * @param template
-  // * .
-  // * @return .
-  // */
-  // public IaaSType getIaaSTypeFromTosca(String template) {
-  //
-  // if (template.contains("tosca.nodes.indigo.MesosMaster")) {
-  // return IaaSType.OPENSTACK;
-  // } else {
-  // return IaaSType.OPENNEBULA;
-  // }
-  // }
-
-  // protected boolean isCompatible(IaaSType requiredType, IaaSType providerType) {
-  // if (requiredType == providerType) {
-  // return true;
-  // } else if (providerType == IaaSType.OPENNEBULA) {
-  // return true;
-  // } else {
-  // return false;
-  // }
-  // }
-
-  // protected IaaSType getProviderIaaSType(RankCloudProvidersMessage rankCloudProvidersMessage,
-  // String providerName) {
-  // return getProviderIaaSType(rankCloudProvidersMessage.getCloudProviders().get(providerName));
-  // }
-  //
-  // /**
-  // * Get the {@link IaaSType} from the {@link CloudProvider}.
-  // *
-  // * @param cloudProvider
-  // * the cloudProvider
-  // * @return the IaaSTYpe
-  // */
-  // public static IaaSType getProviderIaaSType(CloudProvider cloudProvider) {
-  // String serviceType =
-  // cloudProvider.getCmbdProviderServiceByType(Type.COMPUTE).getData().getServiceType();
-  // if (serviceType.contains("openstack")) {
-  // return IaaSType.OPENSTACK;
-  // }
-  //
-  // return IaaSType.OPENNEBULA;
-  // }
+  /**
+   * Infer the deployment provider from the deployment type and the cloud provider.
+   * 
+   * @param deploymentType
+   *          the deployment type
+   * @param cloudProvider
+   *          the cloud provider
+   * @return the deployment provider
+   */
+  public DeploymentProvider getDeploymentProvider(DeploymentType deploymentType,
+      CloudProvider cloudProvider) {
+    switch (deploymentType) {
+      case CHRONOS:
+        return DeploymentProvider.CHRONOS;
+      case MARATHON:
+        return DeploymentProvider.MARATHON;
+      case TOSCA:
+        return DeploymentProvider.IM;
+      default:
+        throw new DeploymentException("Unknown DeploymentType: " + deploymentType.toString());
+    }
+  }
 
 }

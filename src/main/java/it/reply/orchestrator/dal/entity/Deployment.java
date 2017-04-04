@@ -22,6 +22,10 @@ import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
 import it.reply.utils.json.JsonUtility;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,6 +40,8 @@ import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.Index;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -43,6 +49,9 @@ import javax.persistence.Transient;
 
 @Entity
 @Table(indexes = { @Index(columnList = AbstractResourceEntity.CREATED_COLUMN_NAME) })
+@Getter
+@Setter
+@NoArgsConstructor
 public class Deployment extends AbstractResourceEntity {
 
   private static final long serialVersionUID = 3866893436735377053L;
@@ -99,73 +108,10 @@ public class Deployment extends AbstractResourceEntity {
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "deployment", orphanRemoval = true)
   List<WorkflowReference> workflowReferences = new ArrayList<>();
 
-  public Deployment() {
-    super();
-  }
-
-  public String getCloudProviderName() {
-    return cloudProviderName;
-  }
-
-  public void setCloudProviderName(String cloudProviderName) {
-    this.cloudProviderName = cloudProviderName;
-  }
-
-  public Status getStatus() {
-    return status;
-  }
-
-  public void setStatus(Status status) {
-    this.status = status;
-  }
-
-  public String getStatusReason() {
-    return statusReason;
-  }
-
-  public void setStatusReason(String statusReason) {
-    this.statusReason = statusReason;
-  }
-
-  public Task getTask() {
-    return task;
-  }
-
-  public void setTask(Task task) {
-    this.task = task;
-  }
-
-  public DeploymentProvider getDeploymentProvider() {
-    return deploymentProvider;
-  }
-
-  public void setDeploymentProvider(DeploymentProvider deploymentProvider) {
-    this.deploymentProvider = deploymentProvider;
-  }
-
-  public String getEndpoint() {
-    return endpoint;
-  }
-
-  public void setEndpoint(String endpoint) {
-    this.endpoint = endpoint;
-  }
-
-  public String getCallback() {
-    return callback;
-  }
-
-  public void setCallback(String callback) {
-    this.callback = callback;
-  }
-
-  public String getTemplate() {
-    return template;
-  }
-
-  public void setTemplate(String template) {
-    this.template = template;
-  }
+  @ManyToOne(
+      cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
+  @JoinColumn(name = "OWNER_ID")
+  private OidcEntity owner;
 
   /**
    * The user's inputs to the template.
@@ -246,34 +192,10 @@ public class Deployment extends AbstractResourceEntity {
     }
   }
 
-  public Map<String, String> getOutputs() {
-    return outputs;
-  }
-
-  public void setOutputs(Map<String, String> outputs) {
-    this.outputs = outputs;
-  }
-
-  public List<Resource> getResources() {
-    return resources;
-  }
-
-  public List<WorkflowReference> getWorkflowReferences() {
-    return workflowReferences;
-  }
-
-  public void setWorkflowReferences(List<WorkflowReference> workflowReferences) {
-    this.workflowReferences = workflowReferences;
-  }
-
   @Transient
   public void addWorkflowReferences(WorkflowReference workflowReference) {
     workflowReference.setDeployment(this);
     this.workflowReferences.add(workflowReference);
-  }
-
-  public void setResources(List<Resource> resources) {
-    this.resources = resources;
   }
 
 }

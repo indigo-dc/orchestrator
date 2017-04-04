@@ -18,17 +18,19 @@ package it.reply.orchestrator.dto.onedata;
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
+import lombok.ToString;
 
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@ToString(exclude = "token")
 public class OneData implements Serializable {
 
   private static final long serialVersionUID = 8590316308119399053L;
 
+  @ToString
   public static class OneDataProviderInfo implements Serializable {
 
     private static final long serialVersionUID = -4904767929269221557L;
@@ -98,8 +100,10 @@ public class OneData implements Serializable {
   public OneData(String token, String space, String path, String providers, String zone) {
     this(token, space, path, Lists.newArrayList(), zone);
     if (!Strings.isNullOrEmpty(providers)) {
-      this.providers.addAll(Arrays.asList(providers.split(",")).stream()
-          .map(prov -> new OneDataProviderInfo(prov)).collect(Collectors.toList()));
+      this.providers.addAll(Arrays.asList(providers.split(","))
+          .stream()
+          .map(prov -> new OneDataProviderInfo(prov))
+          .collect(Collectors.toList()));
     }
   }
 
@@ -146,11 +150,6 @@ public class OneData implements Serializable {
 
   public void setSmartScheduling(boolean smartScheduling) {
     this.smartScheduling = smartScheduling;
-  }
-
-  @Override
-  public String toString() {
-    return ToStringBuilder.reflectionToString(this);
   }
 
 }
