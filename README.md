@@ -7,9 +7,9 @@ INDIGO PaaS Orchestrator
 [![GitHub license](https://img.shields.io/github/license/indigo-dc/orchestrator.svg?maxAge=2592000&style=flat-square)](https://github.com/indigo-dc/orchestrator/blob/master/LICENSE)
 [![GitHub release](https://img.shields.io/github/release/indigo-dc/orchestrator.svg?maxAge=2592000&style=flat-square)](https://github.com/indigo-dc/orchestrator/releases/latest)
 
-[![Jenkins](https://img.shields.io/jenkins/s/https/ci.cloud.reply.eu/job/INDIGO/orchestrator-unittest-master.svg?maxAge=2592000&style=flat-square)](https://ci.cloud.reply.eu/job/INDIGO/job/orchestrator-unittest-master/)
-[![Jenkins tests](https://img.shields.io/jenkins/t/https/ci.cloud.reply.eu/job/INDIGO/orchestrator-unittest-master.svg?maxAge=2592000&style=flat-square)](https://ci.cloud.reply.eu/job/INDIGO/job/orchestrator-unittest-master/)
-[![Jenkins coverage](https://img.shields.io/jenkins/c/https/ci.cloud.reply.eu/job/INDIGO/orchestrator-coverage-master.svg?maxAge=2592000&style=flat-square)](https://ci.cloud.reply.eu/job/INDIGO/job/orchestrator-coverage-master/)
+[![Jenkins](https://img.shields.io/jenkins/s/https/ci.cloud.reply.eu/jenkins/job/INDIGO/job/orchestrator-unittest-master.svg?maxAge=2592000&style=flat-square)](https://ci.cloud.reply.eu/jenkins/job/INDIGO/job/orchestrator-unittest-master/)
+[![Jenkins tests](https://img.shields.io/jenkins/t/https/ci.cloud.reply.eu/jenkins/job/INDIGO/job/orchestrator-unittest-master.svg?maxAge=2592000&style=flat-square)](https://ci.cloud.reply.eu/jenkins/job/INDIGO/job/orchestrator-unittest-master/)
+[![Jenkins coverage](https://img.shields.io/jenkins/c/https/ci.cloud.reply.eu/jenkins/job/INDIGO/job/orchestrator-coverage-master.svg?maxAge=2592000&style=flat-square)](https://ci.cloud.reply.eu/jenkins/job/INDIGO/job/orchestrator-coverage-master/)
 
 
 The INDIGO PaaS Orchestrator is a component of the PaaS layer that allows to instantiate resources on Cloud Management Frameworks (like [OpenStack](https://www.openstack.org/) and [Opennebula](http://opennebula.org/)) and [Mesos](http://mesos.apache.org/) clusters.
