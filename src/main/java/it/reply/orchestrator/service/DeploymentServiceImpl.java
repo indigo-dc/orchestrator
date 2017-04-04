@@ -294,7 +294,6 @@ public class DeploymentServiceImpl implements DeploymentService {
         }
 
         Optional<OidcEntity> requester = this.getOrGenerateRequester();
-        requester.ifPresent(deployment::setOwner);
 
         // Build deployment message
         DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, requester);
@@ -357,7 +356,6 @@ public class DeploymentServiceImpl implements DeploymentService {
             LoggerFactory.getLogger(WorkflowConfigProducerBean.UPDATE.getProcessId()));
 
         Optional<OidcEntity> requester = this.getOrGenerateRequester();
-        requester.ifPresent(deployment::setOwner);
 
         // Build deployment message
         DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, requester);
