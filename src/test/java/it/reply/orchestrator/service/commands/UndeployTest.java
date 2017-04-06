@@ -38,6 +38,7 @@ import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;
+import it.reply.orchestrator.util.TestUtil;
 import it.reply.workflowmanager.utils.Constants;
 
 public class UndeployTest {
@@ -58,7 +59,7 @@ public class UndeployTest {
 
   @Test
   public void testCustomExecute() throws Exception {
-    DeploymentMessage dm = generateDeployDm();
+    DeploymentMessage dm = TestUtil.generateDeployDm();
     dm.setDeleteComplete(true);
 
     CommandContext commandContext = new CommandContext();
@@ -85,18 +86,5 @@ public class UndeployTest {
     Assert.assertEquals(undeploy.getErrorMessagePrefix(), "Error undeploying");
   }
 
-  private DeploymentMessage generateDeployDm() {
-    DeploymentMessage dm = new DeploymentMessage();
-    Deployment deployment = ControllerTestUtils.createDeployment();
-    deployment.setStatus(Status.CREATE_IN_PROGRESS);
-    dm.setDeployment(deployment);
-    dm.setDeploymentId(deployment.getId());
-    deployment.getResources().addAll(ControllerTestUtils.createResources(deployment, 2, false));
-    deployment.getResources().stream().forEach(r -> r.setState(NodeStates.CREATING));
-
-    CloudProviderEndpoint chosenCloudProviderEndpoint = new CloudProviderEndpoint();
-    chosenCloudProviderEndpoint.setCpComputeServiceId(UUID.randomUUID().toString());
-    dm.setChosenCloudProviderEndpoint(chosenCloudProviderEndpoint);
-    return dm;
-  }
+ 
 }

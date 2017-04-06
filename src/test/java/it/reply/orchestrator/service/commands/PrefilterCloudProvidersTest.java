@@ -59,6 +59,7 @@ import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.service.ToscaService;
+import it.reply.orchestrator.util.TestUtil;
 
 public class PrefilterCloudProvidersTest {
 
@@ -78,7 +79,7 @@ public class PrefilterCloudProvidersTest {
 
   @Test
   public void testBasicCustomExecuteSuccess() throws Exception {
-    DeploymentMessage generateDeployDm = generateDeployDm();
+    DeploymentMessage generateDeployDm = TestUtil.generateDeployDm();
     generateDeployDm.getDeployment().setDeploymentProvider(DeploymentProvider.HEAT);
     RankCloudProvidersMessage rankCloudProvidersMessage = new RankCloudProvidersMessage();
     rankCloudProvidersMessage.setDeploymentId(generateDeployDm.getDeploymentId());
@@ -92,7 +93,7 @@ public class PrefilterCloudProvidersTest {
 
   @Test
   public void testCustomExecuteSuccess() throws Exception {
-    DeploymentMessage generateDeployDm = generateDeployDm();
+    DeploymentMessage generateDeployDm = TestUtil.generateDeployDm();
     String id = UUID.randomUUID().toString();
     RankCloudProvidersMessage rankCloudProvidersMessage =
         generateRankCloudProvidersMessage(generateDeployDm, DeploymentProvider.CHRONOS);
@@ -131,7 +132,7 @@ public class PrefilterCloudProvidersTest {
   @Test(expected = OrchestratorException.class)
   public void testCustomExecuteOrchestratorExceptionNoSinglePlacement() throws Exception {
     String id = UUID.randomUUID().toString();
-    DeploymentMessage generateDeployDm = generateDeployDm();
+    DeploymentMessage generateDeployDm = TestUtil.generateDeployDm();
     RankCloudProvidersMessage rankCloudProvidersMessage =
         generateRankCloudProvidersMessage(generateDeployDm, DeploymentProvider.CHRONOS);
 
@@ -163,7 +164,7 @@ public class PrefilterCloudProvidersTest {
   @Test(expected = OrchestratorException.class)
   public void testCustomExecuteOrchestratorExceptioNoSLAWithId() throws Exception {
     String id = UUID.randomUUID().toString();
-    DeploymentMessage generateDeployDm = generateDeployDm();
+    DeploymentMessage generateDeployDm = TestUtil.generateDeployDm();
     RankCloudProvidersMessage rankCloudProvidersMessage =
         generateRankCloudProvidersMessage(generateDeployDm, DeploymentProvider.CHRONOS);
 
@@ -194,7 +195,7 @@ public class PrefilterCloudProvidersTest {
   @Test(expected = OrchestratorException.class)
   public void testCustomExecuteOrchestratorExceptioNoSLAPlacement() throws Exception {
     String id = UUID.randomUUID().toString();
-    DeploymentMessage generateDeployDm = generateDeployDm();
+    DeploymentMessage generateDeployDm = TestUtil.generateDeployDm();
     RankCloudProvidersMessage rankCloudProvidersMessage =
         generateRankCloudProvidersMessage(generateDeployDm, DeploymentProvider.CHRONOS);
 
@@ -223,7 +224,7 @@ public class PrefilterCloudProvidersTest {
   @Test
   public void testCustomExecuteRemoveCloudService() throws Exception {
     String id = UUID.randomUUID().toString();
-    DeploymentMessage generateDeployDm = generateDeployDm();
+    DeploymentMessage generateDeployDm = TestUtil.generateDeployDm();
     RankCloudProvidersMessage rankCloudProvidersMessage =
         generateRankCloudProvidersMessage(generateDeployDm, DeploymentProvider.HEAT);
 
@@ -247,21 +248,6 @@ public class PrefilterCloudProvidersTest {
 
   }
 
-
-  private DeploymentMessage generateDeployDm() {
-    DeploymentMessage dm = new DeploymentMessage();
-    Deployment deployment = ControllerTestUtils.createDeployment();
-    deployment.setStatus(Status.CREATE_IN_PROGRESS);
-    dm.setDeployment(deployment);
-    dm.setDeploymentId(deployment.getId());
-    deployment.getResources().addAll(ControllerTestUtils.createResources(deployment, 2, false));
-    deployment.getResources().stream().forEach(r -> r.setState(NodeStates.CREATING));
-
-    CloudProviderEndpoint chosenCloudProviderEndpoint = new CloudProviderEndpoint();
-    chosenCloudProviderEndpoint.setCpComputeServiceId(UUID.randomUUID().toString());
-    dm.setChosenCloudProviderEndpoint(chosenCloudProviderEndpoint);
-    return dm;
-  }
 
 
   private RankCloudProvidersMessage generateRankCloudProvidersMessage(DeploymentMessage dm,
