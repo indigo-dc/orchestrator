@@ -44,6 +44,7 @@ import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;
 import it.reply.orchestrator.service.deployment.providers.ImServiceImpl;
+import it.reply.orchestrator.util.TestUtil;
 import it.reply.utils.misc.polling.AbstractPollingBehaviour;
 import it.reply.utils.misc.polling.ExternallyControlledPoller;
 import it.reply.utils.misc.polling.PollingBehaviour;
@@ -75,11 +76,10 @@ public class PollDeployTest {
   }
 
   @Test
-  public void testCustomExecuteFalse() {
+  public void testCustomExecuteFalsePollingStatusNull() {
 
-    // WF_PARAM_POLLING_STATUS null
     CommandContext commandContext = new CommandContext();
-    DeploymentMessage dm = generateDeployDm();
+    DeploymentMessage dm = TestUtil.generateDeployDm();
 
     WorkItemImpl workItem = new WorkItemImpl();
     workItem.setParameter(WorkflowConstants.WF_PARAM_POLLING_STATUS, null);
@@ -98,17 +98,25 @@ public class PollDeployTest {
         customExecute.getData(Constants.OK_RESULT));
     Assert.assertNotEquals(null, customExecute.getData(WorkflowConstants.WF_PARAM_POLLING_STATUS));
 
-    // WF_PARAM_POLLING_STATUS not null
-    workItem = new WorkItemImpl();
+  }
+  
+  @Test
+  public void testCustomExecuteFalsePollingStatusNotNull() {
+
+    CommandContext commandContext = new CommandContext();
+    DeploymentMessage dm = TestUtil.generateDeployDm();
+
+    WorkItemImpl workItem = new WorkItemImpl();
     workItem.setParameter(WorkflowConstants.WF_PARAM_POLLING_STATUS, getPoolBehavior());
 
     commandContext.setData(Constants.WORKITEM, workItem);
 
+    ExecutionResults expectedResult = new ExecutionResults();
     expectedResult = new ExecutionResults();
     expectedResult.setData(Constants.RESULT_STATUS, "OK");
     expectedResult.setData(Constants.OK_RESULT, false);
     expectedResult.setData(WorkflowConstants.WF_PARAM_POLLING_STATUS, getPoolBehavior());
-    customExecute = pollDeploy.customExecute(commandContext, dm);
+    ExecutionResults customExecute = pollDeploy.customExecute(commandContext, dm);
 
     Assert.assertEquals(expectedResult.getData(Constants.RESULT_STATUS),
         customExecute.getData(Constants.RESULT_STATUS));
@@ -121,7 +129,7 @@ public class PollDeployTest {
   @Test
   public void testCustomExecuteTrue() {
     CommandContext commandContext = new CommandContext();
-    DeploymentMessage dm = generateDeployDm();
+    DeploymentMessage dm = TestUtil.generateDeployDm();
 
     WorkItemImpl workItem = new WorkItemImpl();
     workItem.setParameter(WorkflowConstants.WF_PARAM_POLLING_STATUS, statusPoller);
@@ -145,9 +153,28 @@ public class PollDeployTest {
     Assert.assertEquals(expectedResult.getData(Constants.OK_RESULT),
         customExecute.getData(Constants.OK_RESULT));
     Assert.assertEquals(statusPoller, customExecute.getData(WorkflowConstants.WF_PARAM_POLLING_STATUS));
+  }
 
+  @Test
+  public void testCustomExecutePollingException() {
+    CommandContext commandContext = new CommandContext();
+    DeploymentMessage dm = TestUtil.generateDeployDm();
+
+    WorkItemImpl workItem = new WorkItemImpl();
+    workItem.setParameter(WorkflowConstants.WF_PARAM_POLLING_STATUS, statusPoller);
+
+    commandContext.setData(Constants.WORKITEM, workItem);
+
+    ExecutionResults expectedResult = new ExecutionResults();
+    expectedResult.setData(Constants.RESULT_STATUS, "OK");
+    expectedResult.setData(Constants.OK_RESULT, true);
+    expectedResult.setData(WorkflowConstants.WF_PARAM_POLLING_STATUS, statusPoller);
+    
     // generate polling exception
-
+    ExecutionResults customExecute = pollDeploy.customExecute(commandContext, dm);
+    Mockito.when(deploymentProviderServiceRegistry
+        .getDeploymentProviderService(dm.getDeployment())).thenReturn(deploymentProviderService);
+    Mockito.doNothing().when(deploymentProviderService).finalizeDeploy(dm, false);
     Mockito.when(statusPoller.doPollEvent(Mockito.anyObject())).thenThrow(new PollingException());
     customExecute = pollDeploy.customExecute(commandContext, dm);
 
@@ -156,21 +183,6 @@ public class PollDeployTest {
     Assert.assertEquals(expectedResult.getData(Constants.OK_RESULT),
         customExecute.getData(Constants.OK_RESULT));
     Assert.assertEquals(statusPoller, customExecute.getData(WorkflowConstants.WF_PARAM_POLLING_STATUS));
-  }
-
-  private DeploymentMessage generateDeployDm() {
-    DeploymentMessage dm = new DeploymentMessage();
-    Deployment deployment = ControllerTestUtils.createDeployment();
-    deployment.setStatus(Status.CREATE_IN_PROGRESS);
-    dm.setDeployment(deployment);
-    dm.setDeploymentId(deployment.getId());
-    deployment.getResources().addAll(ControllerTestUtils.createResources(deployment, 2, false));
-    deployment.getResources().stream().forEach(r -> r.setState(NodeStates.CREATING));
-
-    CloudProviderEndpoint chosenCloudProviderEndpoint = new CloudProviderEndpoint();
-    chosenCloudProviderEndpoint.setCpComputeServiceId(UUID.randomUUID().toString());
-    dm.setChosenCloudProviderEndpoint(chosenCloudProviderEndpoint);
-    return dm;
   }
 
   public ExternallyControlledPoller<DeploymentMessage, Status> getPoolBehavior() {
