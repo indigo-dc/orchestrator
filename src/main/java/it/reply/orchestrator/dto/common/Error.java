@@ -15,6 +15,8 @@ package it.reply.orchestrator.dto.common;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import org.springframework.http.HttpStatus;
+
 import java.io.Serializable;
 
 public class Error implements Serializable {
@@ -24,6 +26,24 @@ public class Error implements Serializable {
   private Integer code;
   private String title;
   private String message;
+
+  public Error() {
+    // default constructor
+  }
+
+  /**
+   * Generate an Error from an exception and a {@link HttpStatus}.
+   * 
+   * @param ex
+   *          the exception
+   * @param status
+   *          the HttpStatus
+   */
+  public Error(Exception ex, HttpStatus status) {
+    code = status.value();
+    title = status.getReasonPhrase();
+    message = ex.getMessage();
+  }
 
   public Integer getCode() {
     return code;
