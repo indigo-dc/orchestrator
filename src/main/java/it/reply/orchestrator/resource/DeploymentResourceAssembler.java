@@ -67,9 +67,9 @@ public class DeploymentResourceAssembler
       resource.setCallback(entity.getCallback());
     }
 
-    Optional.ofNullable(entity.getOwner())
-        .map(owner -> owner.getOidcEntityId())
-        .ifPresent(owner -> resource.setCreatedBy(owner));
+    // Optional.ofNullable(entity.getOwner())
+    // .map(owner -> owner.getOidcEntityId())
+    // .ifPresent(owner -> resource.setCreatedBy(owner));
 
     // TODO Use ControllerLinkBuilder when
     // https://github.com/spring-projects/spring-hateoas/issues/408 will be resolved
