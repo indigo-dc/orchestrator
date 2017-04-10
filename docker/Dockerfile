@@ -60,20 +60,11 @@ ENV ORCHESTRATOR_DB_ENDPOINT="databaseorchestrator:3306" \
 	ORCHESTRATOR_DB_NAME=orchestrator \
 	ORCHESTRATOR_DB_USER=root \
 	ORCHESTRATOR_DB_PWD=root \
-	ORCHESTRATOR_URL="" \
 	WORKFLOW_DB_ENDPOINT="databaseworkflow:3306" \
 	WORKFLOW_DB_NAME=workflow \
 	WORKFLOW_DB_USER=root \
-	WORKFLOW_DB_PWD=root \
-	IM_URL="" \
-	OPENNEBULA_AUTH_FILE_PATH="" \
-	OPENSTACK_AUTH_FILE_PATH="" \
-	SECURITY_ENABLE="" \
-	OIDC_CLIENT_ID="" \
-	OIDC_CLIENT_SECRET=""
+	WORKFLOW_DB_PWD=root
 
 ENTRYPOINT ["/launch.sh"]
 
 CMD ["/opt/jboss/wildfly/bin/standalone.sh"]
-
-

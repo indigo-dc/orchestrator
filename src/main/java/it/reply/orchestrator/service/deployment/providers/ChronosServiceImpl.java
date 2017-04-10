@@ -80,7 +80,7 @@ import java.util.stream.Collectors;
 
 @Service
 @DeploymentProviderQualifier(DeploymentProvider.CHRONOS)
-@PropertySource(value = { "classpath:application.properties", "${chronos.auth.file.path}" })
+@PropertySource(value = { "classpath:application.properties", "${conf-file-path.chronos}" })
 public class ChronosServiceImpl extends AbstractDeploymentProviderService
     implements DeploymentProviderService {
 

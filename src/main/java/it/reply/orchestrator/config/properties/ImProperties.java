@@ -36,7 +36,7 @@ import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
 @Data
-@ConfigurationProperties(prefix = "im", locations = "${im.conf.file.path}")
+@ConfigurationProperties(prefix = "im")
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
 public class ImProperties implements InitializingBean {

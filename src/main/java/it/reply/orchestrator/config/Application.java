@@ -16,16 +16,23 @@ package it.reply.orchestrator.config;
  * limitations under the License.
  */
 
+import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
-import org.springframework.core.io.ResourceLoader;
+import org.springframework.core.io.Resource;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
+import java.util.List;
+import java.util.Properties;
+import java.util.stream.Collectors;
 
 @SpringBootApplication(scanBasePackages = { "it.reply.orchestrator", "it.reply.workflowmanager" })
+@PropertySource(value = { "${conf-file-path.im}", "${conf-file-path.marathon}" })
 public class Application {
 
   public static void main(String[] args) {
@@ -41,13 +48,32 @@ public class Application {
    */
   @Bean
   public static PropertySourcesPlaceholderConfigurer propertyPlaceholderConfigurer(
-      ResourceLoader resourceLoader) throws IOException {
+      List<YamlPropertiesFactoryBean> factories) throws IOException {
 
     PropertySourcesPlaceholderConfigurer propertyPlaceholderConfigurer =
         new PropertySourcesPlaceholderConfigurer();
-    propertyPlaceholderConfigurer
-        .setProperties(Alien4CloudConfig.alienConfig(resourceLoader).getObject());
+    propertyPlaceholderConfigurer.setPropertiesArray(factories.stream()
+        .map(YamlPropertiesFactoryBean::getObject)
+        .collect(Collectors.toList())
+        .toArray(new Properties[0]));
     return propertyPlaceholderConfigurer;
+  }
+
+  /**
+   * Create a YamlPropertiesFactoryBean for OIDC configuration.
+   * 
+   * @param applicationContext
+   *          the application context
+   * @return the factory
+   */
+  @Bean
+  public YamlPropertiesFactoryBean oidcYamlFactoryBean(ApplicationContext applicationContext) {
+    String resolvedPath =
+        applicationContext.getEnvironment().resolvePlaceholders("${conf-file-path.oidc}");
+    Resource resource = applicationContext.getResource(resolvedPath);
+    YamlPropertiesFactoryBean factory = new YamlPropertiesFactoryBean();
+    factory.setResources(new Resource[] { resource });
+    return factory;
   }
 
   @Bean

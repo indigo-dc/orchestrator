@@ -29,7 +29,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @ToString(exclude = "password")
-@ConfigurationProperties(prefix = "marathon", locations = "${marathon.conf.file.path}")
+@ConfigurationProperties(prefix = "marathon")
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MarathonProperties {
 

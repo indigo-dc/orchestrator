@@ -42,7 +42,7 @@ import java.util.Objects;
 import javax.annotation.PostConstruct;
 
 @Service
-@PropertySource(value = { "classpath:application.properties", "${onedata.conf.file.path}" })
+@PropertySource(value = { "classpath:application.properties", "${conf-file-path.onedata}" })
 public class OneDataServiceImpl implements OneDataService {
 
   @Autowired

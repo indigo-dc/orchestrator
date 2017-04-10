@@ -52,7 +52,7 @@ import javax.inject.Inject;
 @WebAppConfiguration
 @ContextHierarchy({
     @ContextConfiguration(name = "baseContext", classes = ApplicationConfigTest.class) })
-@TestPropertySource(locations = { "classpath:application-test.properties" })
+@TestPropertySource(locations = { "classpath:application.properties", "classpath:application-test.properties" })
 @TestExecutionListeners({ DependencyInjectionTestExecutionListener.class,
     TransactionalTestExecutionListener.class, DbUnitTestExecutionListener.class })
 public abstract class WebAppConfigurationAware {

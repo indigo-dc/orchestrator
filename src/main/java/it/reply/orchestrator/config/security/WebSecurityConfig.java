@@ -57,7 +57,7 @@ import org.springframework.security.oauth2.provider.token.ResourceServerTokenSer
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Map.Entry;
 
 @Configuration
 @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
@@ -80,10 +80,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
       if (oidcProperties.isEnabled()) {
         DynamicServerConfigurationService serverConfigurationService =
             new DynamicServerConfigurationService();
-        serverConfigurationService.setWhitelist(oidcProperties.getIamProperties()
-            .stream()
-            .map(IamProperties::getIssuer)
-            .collect(Collectors.toSet()));
+        serverConfigurationService.setWhitelist(oidcProperties.getIamProperties().keySet());
         return serverConfigurationService;
       } else {
         return null;
@@ -94,13 +91,16 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected ClientConfigurationService clientConfigurationService(OidcProperties oidcProperties) {
       if (oidcProperties.isEnabled()) {
         Map<String, RegisteredClient> clients = new HashMap<>();
-        for (IamProperties configuration : oidcProperties.getIamProperties()) {
+        for (Entry<String, IamProperties> configurationEntry : oidcProperties.getIamProperties()
+            .entrySet()) {
+          IamProperties configuration = configurationEntry.getValue();
           OrchestratorProperties orchestrator = configuration.getOrchestrator();
           RegisteredClient client = new RegisteredClient();
           client.setClientId(orchestrator.getClientId());
           client.setClientSecret(orchestrator.getClientSecret());
           client.setScope(Sets.newHashSet(orchestrator.getScopes()));
-          clients.put(configuration.getIssuer(), client);
+          String issuer = configurationEntry.getKey();
+          clients.put(issuer, client);
         }
 
         StaticClientConfigurationService clientConfigurationService =
