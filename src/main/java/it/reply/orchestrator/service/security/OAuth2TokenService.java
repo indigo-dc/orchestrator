@@ -111,8 +111,7 @@ public class OAuth2TokenService {
   public Optional<OidcClientProperties> getCluesInfo(String accessToken) throws ParseException {
     handleSecurityDisabled();
     String iss = JWTParser.parse(accessToken).getJWTClaimsSet().getIssuer();
-    return Optional.ofNullable(oidcProperties.getIamConfiguration(iss))
-        .map(IamProperties::getClues);
+    return oidcProperties.getIamConfiguration(iss).flatMap(IamProperties::getClues);
   }
 
   /**

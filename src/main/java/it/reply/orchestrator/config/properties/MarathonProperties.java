@@ -24,13 +24,11 @@ import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.PropertySource;
 
 import javax.validation.constraints.NotNull;
 
 @Data
 @ToString(exclude = "password")
-@PropertySource(value = { "classpath:application.properties", "${marathon.conf.file.path}" })
 @ConfigurationProperties(prefix = "marathon")
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MarathonProperties {

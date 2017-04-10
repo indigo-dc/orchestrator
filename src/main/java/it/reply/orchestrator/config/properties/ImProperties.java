@@ -28,7 +28,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.PropertySource;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -37,7 +36,6 @@ import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
 @Data
-@PropertySource(value = { "classpath:application.properties", "${im.conf.file.path}" })
 @ConfigurationProperties(prefix = "im")
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
