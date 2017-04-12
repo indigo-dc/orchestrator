@@ -71,12 +71,11 @@ import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -150,30 +149,34 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   protected String getImAuthHeader(DeploymentMessage dm) {
     if (oidcProperties.isEnabled()) {
       String accessToken = getAccessToken(dm.getRequestedWithToken());
-      return ImCredentials.buildCredentials().withToken(accessToken).serialize();
+      String header = ImCredentials.buildCredentials().withToken(accessToken).serialize();
+      LOG.debug("IM authorization header built from access token");
+      return header;
     } else {
-      return imProperties.getImAuthHeader()
+      String header = imProperties.getImAuthHeader()
           .orElseThrow(() -> new OrchestratorException(
               "No Authentication info provided for for Infrastructure Manager "
                   + "and OAuth2 authentication is disabled"));
+      LOG.debug("IM authorization header retrieved from properties file");
+      return header;
     }
   }
 
   protected InfrastructureManager getClient(DeploymentMessage dm) {
     String imAuthHeader = getImAuthHeader(dm);
-
+    IaaSType iaasType = dm.getChosenCloudProviderEndpoint().getIaasType();
+    LOG.debug("Generating {} credentials with: {}", iaasType, dm.getChosenCloudProviderEndpoint());
     String computeServiceId = dm.getChosenCloudProviderEndpoint().getCpComputeServiceId();
     Optional<String> iaasHeaderInProperties = imProperties.getIaasHeader(computeServiceId);
     String iaasHeader;
     if (iaasHeaderInProperties.isPresent()) {
       iaasHeader = iaasHeaderInProperties.get();
+      LOG.debug("IaaS authorization header for IM retrieved from properties file");
     } else {
       oidcProperties.runIfSecurityDisabled(() -> {
         throw new OrchestratorException("No Authentication info provided for compute service "
             + computeServiceId + "  and OAuth2 authentication is disabled");
       });
-      IaaSType iaasType = dm.getChosenCloudProviderEndpoint().getIaasType();
-      LOG.debug("Load {} credentials with: {}", iaasType, dm.getChosenCloudProviderEndpoint());
       switch (iaasType) {
         case OPENSTACK:
           iaasHeader = getOpenStackAuthHeader(dm).serialize();
@@ -230,6 +233,11 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     Deployment deployment = deploymentMessage.getDeployment();
     String deploymentUuid = deployment.getId();
     try {
+      resourceRepository.findByDeployment_id(deployment.getId())
+          .stream()
+          .filter(resource -> resource.getState() == NodeStates.INITIAL)
+          .forEach(resource -> resource.setState(NodeStates.CREATING));
+
       // Update status of the deployment
       deployment.setTask(Task.DEPLOYER);
       deployment = deploymentRepository.save(deployment);
@@ -497,7 +505,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
               .addResource(deployment.getEndpoint(), templateToDeploy, BodyContentType.TOSCA));
         } catch (ImClientErrorException exception) {
           throw new DeploymentException(
-              "An error occur during the update: fail to add new resources.", exception);
+              String.format("An error occur during the update: fail to add new resources.%n%s",
+                  getImResponseError(exception).getFormattedErrorMessage()),
+              exception);
         }
       }
       // DELETE
@@ -509,13 +519,16 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           });
         } catch (ImClientErrorException exception) {
           throw new DeploymentException(
-              "An error occur during the update: fail to delete resources.", exception);
+              String.format("An error occur during the update: fail to delete resources.%n%s",
+                  getImResponseError(exception).getFormattedErrorMessage()),
+              exception);
         }
       }
       // FIXME: There's not check if the Template actually changed!
       deployment.setTemplate(toscaService.updateTemplate(template));
       return true;
     } catch (ImClientException | IOException | DeploymentException ex) {
+      LOG.error("Error updating", ex);
       updateOnError(deployment.getId(), ex);
       return false;
     }
@@ -636,12 +649,16 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         client -> client.getInfrastructureInfo(infrastructureId));
 
     // for each URL get the information about the VM
-    Map<String, VirtualMachineInfo> vmMap = new HashMap<String, VirtualMachineInfo>();
+    Map<String, VirtualMachineInfo> vmMap = new HashMap<>();
     for (InfrastructureUri vmUri : vmUrls.getUris()) {
-      String vmId = extractVmId(vmUri).orElse("");
+      String vmId = extractVmId(vmUri);
       VirtualMachineInfo vmInfo =
           executeWithClient(deploymentMessage, client -> client.getVmInfo(infrastructureId, vmId));
-      vmMap.put(vmId, vmInfo);
+      boolean added = vmMap.putIfAbsent(vmId, vmInfo) == null;
+      if (!added) {
+        throw new DeploymentException(
+            String.format("Duplicated vm id %s found (vm id uri %s)", vmId, vmUri.getUri()));
+      }
     }
 
     // Find the Resource from the DB and bind it with the corresponding VM
@@ -654,30 +671,45 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       }
     }
 
-    Set<String> insered = new HashSet<String>();
     for (Resource r : resources) {
-      if (r.getState() == NodeStates.CREATING || r.getState() == NodeStates.CONFIGURING
-          || r.getState() == NodeStates.ERROR) {
-        for (Map.Entry<String, VirtualMachineInfo> entry : vmMap.entrySet()) {
-          if (entry.getValue().toString().contains(r.getToscaNodeName())
-              && !insered.contains(entry.getKey())) {
-            r.setIaasId(entry.getKey());
-            insered.add(entry.getKey());
-            break;
+      switch (r.getState()) {
+        case CONFIGURING:
+        case CREATING:
+        case INITIAL:
+        case STARTING:
+        case ERROR:
+          Iterator<Entry<String, VirtualMachineInfo>> it = vmMap.entrySet().iterator();
+          while (it.hasNext()) {
+            Map.Entry<String, VirtualMachineInfo> entry = it.next();
+            if (entry.getValue().toString().contains(r.getToscaNodeName())) {
+              r.setIaasId(entry.getKey());
+              it.remove();
+              break;
+            }
           }
-        }
-      } else if (r.getState() == NodeStates.DELETING) {
-        deployment.getResources().remove(r);
+          break;
+        case DELETING:
+          deployment.getResources().remove(r);
+          break;
+        case CONFIGURED:
+        case CREATED:
+        case STARTED:
+        case STOPPING:
+        default:
+          break;
+
       }
     }
   }
 
-  private Optional<String> extractVmId(InfrastructureUri vmUri) {
+  private String extractVmId(InfrastructureUri vmUri) {
     Matcher matcher = VM_ID_PATTERN.matcher(vmUri.getUri());
-    if (matcher.find()) {
-      return Optional.of(matcher.group(0));
+    if (matcher.find() && !Strings.isNullOrEmpty(matcher.group(0))) {
+      return matcher.group(0);
+    } else {
+      throw new DeploymentException(
+          String.format("Unable to retrieve VM id from uri %s", vmUri.getUri()));
     }
-    return Optional.empty();
   }
 
   private ResponseError getImResponseError(ImClientErrorException exception) {
