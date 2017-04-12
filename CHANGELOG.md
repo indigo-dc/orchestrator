@@ -12,6 +12,53 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - `#<number>` is a link to an issue, `!<number>` is a link to a merge request in the internal issue system.
 
 ---
+## [v1.2.2] - 2016-03-27
+
+### Added:
+- SLAM REST endpoint authentication (#189)
+
+### Changed:
+**NONE**
+
+### Deprecated:
+**NONE**
+
+### Removed:
+**NONE**
+
+### Fixed:
+**NONE**
+
+### Security:
+**NONE**
+
+
+
+
+## [v1.2.1] - 2016-12-23
+
+### Added:
+- Check access token expiration date and signature (#157)
+
+### Changed:
+- Update default monitoring endpoint (#158)
+- Update custom INDIGO TOSCA types (#161) 
+- Improve DB connection handling during shutdown (#163)
+
+### Deprecated:
+**NONE**
+
+### Removed:
+**NONE**
+
+### Fixed:
+**NONE**
+
+### Security:
+**NONE**
+
+
+
 ## [v1.2.0] - 2016-10-21
 
 ### Added:
