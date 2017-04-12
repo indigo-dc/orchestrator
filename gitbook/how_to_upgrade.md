@@ -46,7 +46,15 @@ No action required.
 #### Upgrading to v1.3.0-FINAL
 In this release the IAM integration has undergone a major rework, thus some changes in the configuration needs to be done:
  * The `profile` and `offline_access` scopes need to be added (if not already present) in the IAM protected resource server configuration.  
- 
- :warning: The access tokens used to authenticate API requests to the Orchestrator will need to have this scopes granted. Please check the IAM configuration of the clients calling the Orchestrator and refer to their guide in order to understand how to configure them with this new scopes.
-
-
+  :warning: The access tokens used to authenticate API requests to the Orchestrator will need to have this scopes granted. Please check the IAM configuration of the clients calling the Orchestrator and refer to their guide in order to understand how to configure them with this new scopes.
+ * The `SECURITY_ENABLE` parameter has been renamed to `OIDC_ENABLED`
+ * The `OIDC_ISSUERS` , `OIDC_CLIENT_ID` and `OIDC_CLIENT_SECRET` have been deprecated and combined into `OIDC_IAM-PROPERTIES[{issuer}]_ORCHESTRATOR_CLIENT-ID` and `OIDC_IAM-PROPERTIES[{issuer}]_ORCHESTRATOR_CLIENT-SECRET`.
+  
+  If your configuration was:
+   * `OIDC_ISSUERS`: _**https://iam-test.indigo-datacloud.eu/**_
+   * `OIDC_CLIENT_ID`: _**client_id**_
+   * `OIDC_CLIENT_SECRET`: _**client_secret**_
+  
+  now it wolud be:
+   * `OIDC_IAM-PROPERTIES[https://iam-test.indigo-datacloud.eu/]_ORCHESTRATOR_CLIENT-ID`: _**client_id**_
+   * `OIDC_IAM-PROPERTIES[https://iam-test.indigo-datacloud.eu/]_ORCHESTRATOR_CLIENT-SECRET`: _**client_secret**_
