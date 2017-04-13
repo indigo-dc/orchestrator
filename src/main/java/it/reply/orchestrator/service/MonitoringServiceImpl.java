@@ -1,5 +1,3 @@
-package it.reply.orchestrator.service;
-
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -15,6 +13,9 @@ package it.reply.orchestrator.service;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.reply.orchestrator.service;
+
 import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.MonitoringWrappedResponsePaas;
 import it.reply.orchestrator.dto.monitoring.MonitoringResponse;
 import it.reply.orchestrator.exception.service.DeploymentException;

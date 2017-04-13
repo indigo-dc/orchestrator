@@ -1,7 +1,3 @@
-package it.reply.orchestrator.config.security;
-
-import com.google.common.collect.Sets;
-
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -17,6 +13,10 @@ import com.google.common.collect.Sets;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.reply.orchestrator.config.security;
+
+import com.google.common.collect.Sets;
 
 import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.config.properties.OidcProperties.IamProperties;

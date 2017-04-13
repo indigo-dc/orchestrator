@@ -1,5 +1,3 @@
-package it.reply.orchestrator.dto.slam;
-
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -15,6 +13,9 @@ package it.reply.orchestrator.dto.slam;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.reply.orchestrator.dto.slam;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 

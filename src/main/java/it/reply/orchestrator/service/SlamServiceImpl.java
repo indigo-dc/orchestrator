@@ -1,10 +1,3 @@
-package it.reply.orchestrator.service;
-
-import it.reply.orchestrator.config.properties.OidcProperties;
-import it.reply.orchestrator.dal.entity.OidcEntity;
-import it.reply.orchestrator.dal.entity.OidcRefreshToken;
-import it.reply.orchestrator.dal.entity.OidcTokenId;
-import it.reply.orchestrator.dal.repository.OidcTokenRepository;
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -20,6 +13,14 @@ import it.reply.orchestrator.dal.repository.OidcTokenRepository;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.reply.orchestrator.service;
+
+import it.reply.orchestrator.config.properties.OidcProperties;
+import it.reply.orchestrator.dal.entity.OidcEntity;
+import it.reply.orchestrator.dal.entity.OidcRefreshToken;
+import it.reply.orchestrator.dal.entity.OidcTokenId;
+import it.reply.orchestrator.dal.repository.OidcTokenRepository;
 import it.reply.orchestrator.dto.slam.SlamPreferences;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.security.OAuth2TokenService;

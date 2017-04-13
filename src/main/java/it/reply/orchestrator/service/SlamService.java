@@ -1,6 +1,3 @@
-package it.reply.orchestrator.service;
-
-import it.reply.orchestrator.dal.entity.OidcTokenId;
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -16,6 +13,10 @@ import it.reply.orchestrator.dal.entity.OidcTokenId;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.reply.orchestrator.service;
+
+import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dto.slam.SlamPreferences;
 
 public interface SlamService {
