@@ -1,5 +1,3 @@
-package it.reply.orchestrator.service.security;
-
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -16,6 +14,7 @@ package it.reply.orchestrator.service.security;
  * limitations under the License.
  */
 
+package it.reply.orchestrator.service.security;
 
 import org.junit.Assert;
 import org.junit.Before;

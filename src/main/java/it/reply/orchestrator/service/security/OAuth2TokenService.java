@@ -1,9 +1,3 @@
-package it.reply.orchestrator.service.security;
-
-import com.google.common.collect.ImmutableList;
-
-import com.nimbusds.jwt.JWTClaimsSet;
-
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -20,6 +14,11 @@ import com.nimbusds.jwt.JWTClaimsSet;
  * limitations under the License.
  */
 
+package it.reply.orchestrator.service.security;
+
+import com.google.common.collect.ImmutableList;
+
+import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.JWTParser;
 
 import it.reply.orchestrator.config.properties.OidcProperties;

@@ -1,5 +1,3 @@
-package it.reply.orchestrator.config.persistence;
-
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -15,6 +13,8 @@ package it.reply.orchestrator.config.persistence;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.reply.orchestrator.config.persistence;
 
 import it.reply.orchestrator.annotation.SpringDefaultProfile;
 

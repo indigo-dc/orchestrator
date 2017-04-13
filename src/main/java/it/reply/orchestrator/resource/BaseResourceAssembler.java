@@ -1,5 +1,3 @@
-package it.reply.orchestrator.resource;
-
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -15,6 +13,9 @@ package it.reply.orchestrator.resource;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.reply.orchestrator.resource;
+
 import it.reply.orchestrator.controller.DeploymentController;
 import it.reply.orchestrator.controller.ResourceController;
 import it.reply.orchestrator.dal.entity.Resource;
