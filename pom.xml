@@ -48,6 +48,7 @@
   
 	<properties>
 		<license-maven-plugin.version>3.0</license-maven-plugin.version>
+		<jacoco-maven-plugin.version>0.7.9</jacoco-maven-plugin.version>
 		<!-- Execute tests by defaults -->
 		<surefire.skip>false</surefire.skip>
 
@@ -492,6 +493,48 @@
 								</configuration>
 							</execution>
 						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+		<profile>
+			<id>test-with-jacoco</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.jacoco</groupId>
+						<artifactId>jacoco-maven-plugin</artifactId>
+						<version>${jacoco-maven-plugin.version}</version>
+						<executions>
+							<execution>
+								<id>default-prepare-agent</id>
+								<goals>
+									<goal>prepare-agent</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>default-report</id>
+								<phase>prepare-package</phase>
+								<goals>
+									<goal>report</goal>
+								</goals>
+							</execution>
+							<execution>
+								<id>default-check</id>
+								<goals>
+									<goal>check</goal>
+								</goals>
+							</execution>
+						</executions>
+						<configuration>
+							<excludes>
+								<!-- Prevent java.lang.RuntimeException: Method code too large! -->
+								<!-- We don't need to instrument this class anyway-->
+								<exclude>
+									org/drools/compiler/lang/DRL6Lexer
+								</exclude>
+							</excludes>
+						</configuration>
 					</plugin>
 				</plugins>
 			</build>
