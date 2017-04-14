@@ -157,7 +157,7 @@ public class UpdateDeployment extends BaseCommand {
         if (oneDataInput != null) {
           if (oneDataInput.isSmartScheduling()) {
             oneDataInput.setProviders(oneDataInput.getProviders().stream()
-                .filter(info -> Objects.equals(info.cloudProviderId,
+                .filter(info -> Objects.equals(info.getCloudProviderId(),
                     deploymentMessage.getChosenCloudProvider().getId()))
                 .collect(Collectors.toList()));
           }
@@ -170,7 +170,7 @@ public class UpdateDeployment extends BaseCommand {
         if (oneDataOutput != null) {
           if (oneDataOutput.isSmartScheduling()) {
             oneDataOutput.setProviders(oneDataOutput.getProviders().stream()
-                .filter(info -> Objects.equals(info.cloudProviderId,
+                .filter(info -> Objects.equals(info.getCloudProviderId(),
                     deploymentMessage.getChosenCloudProvider().getId()))
                 .collect(Collectors.toList()));
           }

@@ -352,8 +352,8 @@ public class OneDataServiceTest {
 
     // correct result with new provider details
     OneDataProviderInfo providerInfo = new OneDataProviderInfo();
-    providerInfo.id = providerDetails.getProviderId();
-    providerInfo.endpoint = providerDetails.getRedirectionPoint();
+    providerInfo.setId(providerDetails.getProviderId());
+    providerInfo.setEndpoint(providerDetails.getRedirectionPoint());
     oneData.getProviders().add(providerInfo);
 
     Assert.assertEquals(populateProviderInfo, oneData);

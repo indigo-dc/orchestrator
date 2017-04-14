@@ -184,7 +184,7 @@ public class ChronosServiceTest extends WebAppConfigurationAware {
     assertEquals(serviceOd.getPath(),
         ((ScalarPropertyValue) envVars.get("ONEDATA_PATH")).getValue());
     assertEquals(serviceOd.getProviders().size(), 1);
-    assertEquals(serviceOd.getProviders().stream().map(info -> info.endpoint)
+    assertEquals(serviceOd.getProviders().stream().map(info -> info.getEndpoint())
         .collect(Collectors.toList()).get(0),
         ((ScalarPropertyValue) envVars.get("ONEDATA_PROVIDERS")).getValue());
   }

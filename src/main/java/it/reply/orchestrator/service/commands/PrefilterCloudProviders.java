@@ -185,10 +185,10 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
             continue;
           } else {
             for (OneDataProviderInfo providerInfo : requirement.getProviders()) {
-              if (Objects.equals(providerInfo.id, cloudService.getData().getEndpoint())) {
+              if (Objects.equals(providerInfo.getId(), cloudService.getData().getEndpoint())) {
                 hasOneProviderSupportingSpace = true;
-                providerInfo.cloudProviderId = cloudProvider.getId();
-                providerInfo.cloudServiceId = cloudService.getId();
+                providerInfo.setCloudProviderId(cloudProvider.getId());
+                providerInfo.setCloudServiceId(cloudService.getId());
               }
             }
           }

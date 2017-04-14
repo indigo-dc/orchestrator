@@ -127,7 +127,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           .withUsername("indigo-dc")
           .withPassword(accessToken)
           .withHost(endpoint);
-      if (matcher.groupCount() > 1 && matcher.group(2).equals("v3")) {
+      if (matcher.groupCount() > 1 && "v3".equals(matcher.group(2))) {
         cred.withAuthVersion(OpenstackAuthVersion.PASSWORD_3_X);
       }
       return cred;
