@@ -39,7 +39,7 @@ public class Application {
     SpringApplication.run(applicationClass, args);
   }
 
-  public static Class<Application> applicationClass = Application.class;
+  public static final Class<Application> applicationClass = Application.class;
 
   /**
    * Resolves Alien4Cloud ${...} placeholders within bean definition property values and @Value
