@@ -43,6 +43,7 @@ import org.springframework.test.context.support.DependencyInjectionTestExecution
 import org.springframework.test.context.transaction.TransactionalTestExecutionListener;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
 import javax.inject.Inject;
@@ -55,6 +56,7 @@ import javax.inject.Inject;
 @TestPropertySource(locations = { "classpath:application.properties", "classpath:application-test.properties" })
 @TestExecutionListeners({ DependencyInjectionTestExecutionListener.class,
     TransactionalTestExecutionListener.class, DbUnitTestExecutionListener.class })
+@Transactional
 public abstract class WebAppConfigurationAware {
 
   private static final Logger LOG = LoggerFactory.getLogger(WebAppConfigurationAware.class);
