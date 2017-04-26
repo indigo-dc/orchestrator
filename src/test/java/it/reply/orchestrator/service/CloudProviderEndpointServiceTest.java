@@ -94,9 +94,8 @@ public class CloudProviderEndpointServiceTest {
   }
 
   @Test
-  public void getCloudProviderEndpoint() {
+  public void getCloudProviderEndpointOcci() {
 
-    // OCCI
     List<PlacementPolicy> placementPolicies = new ArrayList<>();
     List<CloudService> cmbdProviderServicesByType = new ArrayList<>();
 
@@ -114,7 +113,7 @@ public class CloudProviderEndpointServiceTest {
     Mockito.when(chosenCloudProvider.getCmbdProviderServicesByType(Type.COMPUTE))
         .thenReturn(cmbdProviderServicesByType);
 
-    // Result OCCI
+    
     CloudProviderEndpoint result = new CloudProviderEndpoint();
     result.setCpEndpoint(cloudService.getData().getEndpoint());
     result.setCpComputeServiceId(cloudService.getId());
@@ -122,39 +121,74 @@ public class CloudProviderEndpointServiceTest {
 
     Assert.assertEquals(cloudProviderEndpointServiceImpl
         .getCloudProviderEndpoint(chosenCloudProvider, placementPolicies), result);
+  }
+  
+  @Test
+  public void getCloudProviderEndpointOpenStack() {
 
-    // OPENSTACK
+    List<PlacementPolicy> placementPolicies = new ArrayList<>();
+    List<CloudService> cmbdProviderServicesByType = new ArrayList<>();
 
+    CloudProvider chosenCloudProvider = Mockito.mock(CloudProvider.class);
+
+    CloudServiceData cloudServiceDataOCC = new CloudServiceData();
+    CloudService cloudService = new CloudService();
+    
     cloudServiceDataOCC.setServiceType("eu.egi.cloud.vm-management.openstack");
     cloudService.setData(cloudServiceDataOCC);
     cmbdProviderServicesByType.clear();
     cmbdProviderServicesByType.add(cloudService);
     Mockito.when(chosenCloudProvider.getCmbdProviderServicesByType(Type.COMPUTE))
         .thenReturn(cmbdProviderServicesByType);
-
-    // result OPENSTACK
+    
+    CloudProviderEndpoint result = new CloudProviderEndpoint();
+    result.setCpEndpoint(cloudService.getData().getEndpoint());
+    result.setCpComputeServiceId(cloudService.getId());
     result.setIaasType(IaaSType.OPENSTACK);
 
     Assert.assertEquals(cloudProviderEndpointServiceImpl
         .getCloudProviderEndpoint(chosenCloudProvider, placementPolicies), result);
 
-    // OPENNEBULA
+  }
+  
+  @Test
+  public void getCloudProviderEndpointOpenNebula() {
 
+    List<PlacementPolicy> placementPolicies = new ArrayList<>();
+    List<CloudService> cmbdProviderServicesByType = new ArrayList<>();
+
+    CloudProvider chosenCloudProvider = Mockito.mock(CloudProvider.class);
+
+    CloudServiceData cloudServiceDataOCC = new CloudServiceData();
+    CloudService cloudService = new CloudService();
+    
     cloudServiceDataOCC.setServiceType("eu.egi.cloud.vm-management.opennebula");
     cloudService.setData(cloudServiceDataOCC);
     cmbdProviderServicesByType.clear();
     cmbdProviderServicesByType.add(cloudService);
     Mockito.when(chosenCloudProvider.getCmbdProviderServicesByType(Type.COMPUTE))
         .thenReturn(cmbdProviderServicesByType);
-
-    // result OPENEBULA
+    
+    CloudProviderEndpoint result = new CloudProviderEndpoint();
+    result.setCpEndpoint(cloudService.getData().getEndpoint());
+    result.setCpComputeServiceId(cloudService.getId());
     result.setIaasType(IaaSType.OPENNEBULA);
 
     Assert.assertEquals(cloudProviderEndpointServiceImpl
         .getCloudProviderEndpoint(chosenCloudProvider, placementPolicies), result);
+  }
+  
+  @Test
+  public void getCloudProviderEndpointAWS() {
 
-    // AWS Not covered because contains a lambda expression
+    List<PlacementPolicy> placementPolicies = new ArrayList<>();
+    List<CloudService> cmbdProviderServicesByType = new ArrayList<>();
 
+    CloudProvider chosenCloudProvider = Mockito.mock(CloudProvider.class);
+
+    CloudServiceData cloudServiceDataOCC = new CloudServiceData();
+    CloudService cloudService = new CloudService();
+    
     cloudServiceDataOCC.setServiceType("com.amazonaws.ec2");
     cloudService.setData(cloudServiceDataOCC);
     cmbdProviderServicesByType.clear();
@@ -165,6 +199,11 @@ public class CloudProviderEndpointServiceTest {
         new AwsSlaPlacementPolicy(new CredentialsAwareSlaPlacementPolicy(new ArrayList<>(),
             UUID.randomUUID().toString(), "username", "password"));
     placementPolicies.add(awsSlaPlacementPolicy);
+ 
+    
+    CloudProviderEndpoint result = new CloudProviderEndpoint();
+    result.setCpEndpoint(cloudService.getData().getEndpoint());
+    result.setCpComputeServiceId(cloudService.getId());
 
     result.setIaasType(IaaSType.AWS);
     result.setUsername(awsSlaPlacementPolicy.getAccessKey());

@@ -48,6 +48,7 @@ import it.reply.orchestrator.service.CloudProviderEndpointServiceImpl;
 import it.reply.orchestrator.service.OneDataService;
 import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.orchestrator.service.deployment.providers.DeploymentStatusHelper;
+import it.reply.orchestrator.util.TestUtil;
 import it.reply.workflowmanager.utils.Constants;
 
 public class UpdateDeploymentTest {
@@ -84,8 +85,8 @@ public class UpdateDeploymentTest {
 
   @Test
   public void testCustomExecuteSuccess() throws Exception {
-    DeploymentMessage dm = generateDeployDm();
-    Deployment deployment = generateDeployDm().getDeployment();
+    DeploymentMessage dm = TestUtil.generateDeployDm();
+    Deployment deployment = TestUtil.generateDeployDm().getDeployment();
     CommandContext commandContext = new CommandContext();
     WorkItemImpl workItem = new WorkItemImpl();
 
@@ -128,7 +129,28 @@ public class UpdateDeploymentTest {
     Assert.assertEquals(expectedResult.toString(),
         updateDeployment.customExecute(commandContext).toString());
 
-    // MOCK generateOneDataParameters with input data smart scheduling
+  }
+
+  @Test
+  public void testCustomExecuteSuccessWithInputData() throws Exception {
+    DeploymentMessage dm = TestUtil.generateDeployDm();
+    Deployment deployment = TestUtil.generateDeployDm().getDeployment();
+    CommandContext commandContext = new CommandContext();
+    WorkItemImpl workItem = new WorkItemImpl();
+
+    RankCloudProvidersMessage rankCloudProvidersMessage = new RankCloudProvidersMessage();
+    rankCloudProvidersMessage.setDeploymentId(deployment.getId());
+
+    CloudProvider cp = new CloudProvider();
+    Map<String, CloudProvider> map = new HashMap<>();
+    map.put("name", cp);
+    rankCloudProvidersMessage.setCloudProviders(map);
+
+    RankedCloudProvider chosenCp = new RankedCloudProvider();
+    chosenCp.setName("name");
+    dm.setChosenCloudProvider(cp);
+
+    commandContext.setData(Constants.WORKITEM, workItem);
 
     Map<String, OneData> oneDataRequirements = new HashMap<>();
     OneData onedata = new OneData("token", "space", "path", "providers");
@@ -137,65 +159,63 @@ public class UpdateDeploymentTest {
     dm.setOneDataRequirements(oneDataRequirements);
     rankCloudProvidersMessage.setOneDataRequirements(oneDataRequirements);
 
+    workItem.setParameter(WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE,
+        rankCloudProvidersMessage);
+    workItem.setParameter(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, dm);
+    
+    ExecutionResults expectedResult = new ExecutionResults();
 
     expectedResult = new ExecutionResults();
     expectedResult.setData(Constants.RESULT_STATUS, "OK");
     expectedResult.setData(Constants.OK_RESULT, false);
+    updateDeployment.generateOneDataParameters(rankCloudProvidersMessage, dm);
     Assert.assertEquals(expectedResult.toString(),
         updateDeployment.customExecute(commandContext).toString());
 
-    /// MOCK generateOneDataParameters with output data smart scheduling
+  }
 
-    oneDataRequirements.clear();
+  @Test
+  public void testCustomExecuteSuccessWithOutputData() throws Exception {
+    DeploymentMessage dm = TestUtil.generateDeployDm();
+    Deployment deployment = TestUtil.generateDeployDm().getDeployment();
+    CommandContext commandContext = new CommandContext();
+    WorkItemImpl workItem = new WorkItemImpl();
+
+    RankCloudProvidersMessage rankCloudProvidersMessage = new RankCloudProvidersMessage();
+    rankCloudProvidersMessage.setDeploymentId(deployment.getId());
+
+    CloudProvider cp = new CloudProvider();
+    Map<String, CloudProvider> map = new HashMap<>();
+    map.put("name", cp);
+    rankCloudProvidersMessage.setCloudProviders(map);
+
+    RankedCloudProvider chosenCp = new RankedCloudProvider();
+    chosenCp.setName("name");
+    dm.setChosenCloudProvider(cp);
+
+    commandContext.setData(Constants.WORKITEM, workItem);
+
+    Map<String, OneData> oneDataRequirements = new HashMap<>();
+    OneData onedata = new OneData("token", "space", "path", "providers");
     onedata.setSmartScheduling(true);
     oneDataRequirements.put("output", onedata);
     dm.setOneDataRequirements(oneDataRequirements);
     rankCloudProvidersMessage.setOneDataRequirements(oneDataRequirements);
 
-    Assert.assertEquals(expectedResult.toString(),
-        updateDeployment.customExecute(commandContext).toString());
-
-    /// MOCK generateOneDataParameters with input data NOT smart scheduling
-
-    oneDataRequirements.clear();
-    onedata.setSmartScheduling(false);
-    oneDataRequirements.put("input", onedata);
-    dm.setOneDataRequirements(oneDataRequirements);
-    rankCloudProvidersMessage.setOneDataRequirements(oneDataRequirements);
-
-    Assert.assertEquals(expectedResult.toString(),
-        updateDeployment.customExecute(commandContext).toString());
-
-    // MOCK generateOneDataParameters with empty data
-
-    oneDataRequirements.clear();
-    dm.setOneDataRequirements(oneDataRequirements);
-    rankCloudProvidersMessage.setOneDataRequirements(oneDataRequirements);
+    workItem.setParameter(WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE,
+        rankCloudProvidersMessage);
+    workItem.setParameter(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, dm);
+    
+    ExecutionResults expectedResult = new ExecutionResults();
 
     expectedResult = new ExecutionResults();
     expectedResult.setData(Constants.RESULT_STATUS, "OK");
-    expectedResult.setData(Constants.OK_RESULT, true);
-    expectedResult.setData(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, dm);
-
+    expectedResult.setData(Constants.OK_RESULT, false);
+    updateDeployment.generateOneDataParameters(rankCloudProvidersMessage, dm);
     Assert.assertEquals(expectedResult.toString(),
         updateDeployment.customExecute(commandContext).toString());
+
   }
 
-
-
-  private DeploymentMessage generateDeployDm() {
-    DeploymentMessage dm = new DeploymentMessage();
-    Deployment deployment = ControllerTestUtils.createDeployment();
-    deployment.setStatus(Status.CREATE_IN_PROGRESS);
-    dm.setDeployment(deployment);
-    dm.setDeploymentId(deployment.getId());
-    deployment.getResources().addAll(ControllerTestUtils.createResources(deployment, 2, false));
-    deployment.getResources().stream().forEach(r -> r.setState(NodeStates.INITIAL));
-
-    CloudProviderEndpoint chosenCloudProviderEndpoint = new CloudProviderEndpoint();
-    chosenCloudProviderEndpoint.setCpComputeServiceId(UUID.randomUUID().toString());
-    dm.setChosenCloudProviderEndpoint(chosenCloudProviderEndpoint);
-    return dm;
-  }
 
 }
