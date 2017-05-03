@@ -168,7 +168,7 @@ public class DeploymentServiceTest {
 
     Mockito.when(wfService.startProcess(Mockito.any(), Mockito.any(), Mockito.any()))
         .thenReturn(new RuleFlowProcessInstance());
-
+    
     return deploymentService.createDeployment(deploymentRequest);
   }
 
@@ -462,11 +462,56 @@ public class DeploymentServiceTest {
 
   @Test
   public void updateDeploymentSuccess() throws Exception {
+    DeploymentRequest deploymentRequest = new DeploymentRequest();
+    Map<String, NodeTemplate> nts = getNodeTemplates();
+    
+    // case create complete
+    Deployment deployment = basecreateDeploymentSuccessful(deploymentRequest, nts);
+    deployment.setDeploymentProvider(DeploymentProvider.IM);
+    
+    deployment.setStatus(Status.CREATE_COMPLETE);
+    Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
+    deploymentService.updateDeployment(deployment.getId(), deploymentRequest);
+
+  }
+  
+  
+
+  @Test
+  public void updateDeploymentSuccessStatusUpdateComplete() throws Exception {
+    DeploymentRequest deploymentRequest = new DeploymentRequest();
+    Map<String, NodeTemplate> nts = getNodeTemplates();
+    
+    Deployment deployment = basecreateDeploymentSuccessful(deploymentRequest, nts);
+    deployment.setDeploymentProvider(DeploymentProvider.IM);
+
+    // case update complete
+    deployment.setStatus(Status.UPDATE_COMPLETE);
+    Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
+    deploymentService.updateDeployment(deployment.getId(), deploymentRequest);
+
+  }
+  
+  @Test
+  public void updateDeploymentSuccessStatusUpdateFailed() throws Exception {
+    
+    DeploymentRequest deploymentRequest = new DeploymentRequest();
+    Map<String, NodeTemplate> nts = getNodeTemplates();
+
+    Deployment deployment = basecreateDeploymentSuccessful(deploymentRequest, nts);
+    deployment.setDeploymentProvider(DeploymentProvider.IM);
+
+    // case update complete
+    deployment.setStatus(Status.UPDATE_FAILED);
+    Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
+    deploymentService.updateDeployment(deployment.getId(), deploymentRequest);
+
+  }
+
+  private static Map<String, NodeTemplate> getNodeTemplates(){
     String nodeName1 = "server1";
     String nodeName2 = "server2";
     String nodeType = "tosca.nodes.indigo.Compute";
-
-    DeploymentRequest deploymentRequest = new DeploymentRequest();
 
     Map<String, Capability> capabilities = Maps.newHashMap();
 
@@ -481,23 +526,6 @@ public class DeploymentServiceTest {
     nt.setCapabilities(capabilities);
     nt.setType(nodeType);
     nts.put(nodeName2, nt);
-
-    // case create complete
-    Deployment deployment = basecreateDeploymentSuccessful(deploymentRequest, nts);
-    deployment.setStatus(Status.CREATE_COMPLETE);
-    deployment.setDeploymentProvider(DeploymentProvider.IM);
-    Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
-    deploymentService.updateDeployment(deployment.getId(), deploymentRequest);
-
-    // case update complete
-    deployment.setStatus(Status.UPDATE_COMPLETE);
-    Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
-    deploymentService.updateDeployment(deployment.getId(), deploymentRequest);
-
-    // case update complete
-    deployment.setStatus(Status.UPDATE_FAILED);
-    Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
-    deploymentService.updateDeployment(deployment.getId(), deploymentRequest);
+    return nts;
   }
-
 }
