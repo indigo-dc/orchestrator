@@ -16,47 +16,43 @@
 
 package it.reply.orchestrator.controller;
 
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import it.reply.orchestrator.config.specific.WebAppConfigurationAwareIT;
 
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.MockitoAnnotations;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.restdocs.RestDocumentation;
+import org.springframework.restdocs.JUnitRestDocumentation;
+import org.springframework.restdocs.mockmvc.MockMvcRestDocumentation;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
-@RunWith(MockitoJUnitRunner.class)
-public class MiscControllerTest {
+public class MiscControllerIT extends WebAppConfigurationAwareIT {
+
+  @Autowired
+  protected WebApplicationContext wac;
 
   private MockMvc mockMvc;
 
-  @InjectMocks
-  private MiscController miscController = new MiscController();
-
   @Rule
-  public RestDocumentation restDocumentation = new RestDocumentation("target/generated-snippets");
+  public JUnitRestDocumentation restDocumentation =
+      new JUnitRestDocumentation("target/generated-snippets");
 
-  /**
-   * Set up test context.
-   */
   @Before
-  public void setup() {
-    MockitoAnnotations.initMocks(this);
-    mockMvc = MockMvcBuilders.standaloneSetup(miscController)
-        .apply(documentationConfiguration(this.restDocumentation))
-        .dispatchOptions(true)
+  public void before() {
+    this.mockMvc = MockMvcBuilders
+        .webAppContextSetup(this.wac)
+        .apply(MockMvcRestDocumentation.documentationConfiguration(this.restDocumentation))
         .build();
   }
 
   @Test
-  public void getOrchestrator() throws Exception {
+  public void getRoot() throws Exception {
     mockMvc.perform(get("/").accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
   }
 

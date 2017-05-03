@@ -19,7 +19,6 @@ package it.reply.orchestrator.dal;
 import static org.assertj.core.api.Assertions.*;
 
 import com.github.springtestdbunit.annotation.DatabaseSetup;
-import com.github.springtestdbunit.annotation.DatabaseTearDown;
 
 import it.reply.orchestrator.config.specific.WebAppConfigurationAwareIT;
 import it.reply.orchestrator.dal.entity.Resource;
@@ -28,13 +27,10 @@ import it.reply.orchestrator.dal.repository.ResourceRepository;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
-@DatabaseTearDown("/data/database-empty.xml")
 @DatabaseSetup("/data/database-resource-init.xml")
-@Transactional
 public class ResourceRepositoryIT extends WebAppConfigurationAwareIT {
 
   final String deploymentId = "0748fbe9-6c1d-4298-b88f-06188734ab42";

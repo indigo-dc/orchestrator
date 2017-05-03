@@ -18,27 +18,23 @@ package it.reply.orchestrator.config;
 
 import it.reply.orchestrator.config.filters.CustomRequestLoggingFilter;
 
-import org.springframework.boot.builder.SpringApplicationBuilder;
-import org.springframework.boot.context.embedded.FilterRegistrationBean;
-import org.springframework.boot.context.web.SpringBootServletInitializer;
+import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
+import org.springframework.core.io.Resource;
+import org.springframework.web.client.RestTemplate;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Properties;
+import java.util.stream.Collectors;
 
 @Configuration
-public class WebAppInitializer extends SpringBootServletInitializer {
-  @Override
-  protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
-    return application.sources(Application.applicationClass);
-  }
-
-  /**
-   * Generate a WebAppInitializer.
-   */
-  public WebAppInitializer() {
-    super();
-    // The ErrorPageFilter get stuck on response when no body is returned
-    setRegisterErrorPageFilter(false);
-  }
+public class WebAppInitializer {
 
   /**
    * Register the CustomRequestLoggingFilter.
@@ -55,17 +51,51 @@ public class WebAppInitializer extends SpringBootServletInitializer {
     return registration;
   }
 
-  /**
-   * Create the CustomRequestLoggingFilter.
-   * 
-   * @return the CustomRequestLoggingFilter
-   */
   @Bean
   public CustomRequestLoggingFilter customRequestLoggingFilter() {
-    CustomRequestLoggingFilter loggingFilter = new CustomRequestLoggingFilter();
-    loggingFilter.setMaxPayloadLength(-1);// Ints.checkedCast(WebMvcConfig.MAX_UPLOAD_SIZE));
-    // loggingFilter.setHeadersToOmitt(Lists.newArrayList(HttpHeaders.AUTHORIZATION));
-    return loggingFilter;
+    return new CustomRequestLoggingFilter();
+  }
+
+  /**
+   * Resolves Alien4Cloud ${...} placeholders within bean definition property values and @Value
+   * annotations.
+   *
+   */
+  @Bean
+  public static PropertySourcesPlaceholderConfigurer propertyPlaceholderConfigurer(
+      List<YamlPropertiesFactoryBean> factories) throws IOException {
+
+    PropertySourcesPlaceholderConfigurer propertyPlaceholderConfigurer =
+        new PropertySourcesPlaceholderConfigurer();
+    propertyPlaceholderConfigurer.setPropertiesArray(factories
+        .stream()
+        .map(YamlPropertiesFactoryBean::getObject)
+        .collect(Collectors.toList())
+        .toArray(new Properties[0]));
+    return propertyPlaceholderConfigurer;
+  }
+
+  /**
+   * Create a YamlPropertiesFactoryBean for OIDC configuration.
+   * 
+   * @param applicationContext
+   *          the application context
+   * @return the factory
+   */
+  @Bean
+  public YamlPropertiesFactoryBean oidcYamlFactoryBean(ApplicationContext applicationContext) {
+    String resolvedPath = applicationContext
+        .getEnvironment()
+        .resolvePlaceholders("${conf-file-path.oidc}");
+    Resource resource = applicationContext.getResource(resolvedPath);
+    YamlPropertiesFactoryBean factory = new YamlPropertiesFactoryBean();
+    factory.setResources(resource);
+    return factory;
+  }
+
+  @Bean
+  public RestTemplate restTemplate(RestTemplateBuilder restTemplateBuilder) {
+    return restTemplateBuilder.build();
   }
 
 }

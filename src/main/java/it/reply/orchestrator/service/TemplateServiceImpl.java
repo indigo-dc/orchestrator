@@ -20,12 +20,11 @@ import it.reply.orchestrator.dal.entity.Deployment;
 
 import lombok.AllArgsConstructor;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-@AllArgsConstructor(onConstructor = @__({ @Autowired }))
+@AllArgsConstructor
 public class TemplateServiceImpl implements TemplateService {
 
   private DeploymentService deploymentservice;

@@ -50,3 +50,4 @@ target/
 
 # Builded war file
 /docker/*.war
+/docker/*.war.original

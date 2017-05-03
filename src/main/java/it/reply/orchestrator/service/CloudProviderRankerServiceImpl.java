@@ -23,7 +23,6 @@ import it.reply.orchestrator.exception.service.DeploymentException;
 
 import lombok.AllArgsConstructor;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.ParameterizedTypeReference;
@@ -37,7 +36,7 @@ import java.util.List;
 
 @Service
 @PropertySource("classpath:cloud-provider-ranker/cloud-provider-ranker.properties")
-@AllArgsConstructor(onConstructor = @__({ @Autowired }))
+@AllArgsConstructor
 @EnableConfigurationProperties(CprProperties.class)
 public class CloudProviderRankerServiceImpl implements CloudProviderRankerService {
 

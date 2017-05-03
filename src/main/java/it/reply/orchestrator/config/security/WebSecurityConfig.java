@@ -16,8 +16,6 @@
 
 package it.reply.orchestrator.config.security;
 
-import com.google.common.collect.Sets;
-
 import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.config.properties.OidcProperties.IamProperties;
 import it.reply.orchestrator.config.properties.OidcProperties.OrchestratorProperties;
@@ -35,16 +33,17 @@ import org.mitre.openid.connect.client.service.ServerConfigurationService;
 import org.mitre.openid.connect.client.service.impl.DynamicServerConfigurationService;
 import org.mitre.openid.connect.client.service.impl.StaticClientConfigurationService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
@@ -54,12 +53,14 @@ import org.springframework.security.oauth2.provider.error.OAuth2AuthenticationEn
 import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Map.Entry;
 
 @Configuration
 @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
 @EnableConfigurationProperties(OidcProperties.class)
+@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Autowired
@@ -87,14 +88,15 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     protected ClientConfigurationService clientConfigurationService(OidcProperties oidcProperties) {
       if (oidcProperties.isEnabled()) {
         Map<String, RegisteredClient> clients = new HashMap<>();
-        for (Entry<String, IamProperties> configurationEntry : oidcProperties.getIamProperties()
+        for (Entry<String, IamProperties> configurationEntry : oidcProperties
+            .getIamProperties()
             .entrySet()) {
           IamProperties configuration = configurationEntry.getValue();
           OrchestratorProperties orchestrator = configuration.getOrchestrator();
           RegisteredClient client = new RegisteredClient();
           client.setClientId(orchestrator.getClientId());
           client.setClientSecret(orchestrator.getClientSecret());
-          client.setScope(Sets.newHashSet(orchestrator.getScopes()));
+          client.setScope(new HashSet<>(orchestrator.getScopes()));
           String issuer = configurationEntry.getKey();
           clients.put(issuer, client);
         }
@@ -190,22 +192,25 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
   }
 
   @Override
-  public void configure(WebSecurity webSecurity) throws Exception {
-    webSecurity.ignoring().regexMatchers("/", "/info");
-  }
-
-  @Override
   public void configure(HttpSecurity http) throws Exception {
-    http.csrf().disable();
     http
-      .sessionManagement()
-      .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        .csrf()
+        .disable()
+        .sessionManagement()
+        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        .and()
+        .authorizeRequests()
+        .mvcMatchers("/")
+        .permitAll();
+
     if (oidcProperties.isEnabled()) {
-      http.authorizeRequests()
+      http
+          .authorizeRequests()
           .anyRequest()
           .fullyAuthenticated()
           .anyRequest()
           .access("#oauth2.hasScopeMatching('openid')");
+
       ResourceServerSecurityConfigurer configurer = new ResourceServerSecurityConfigurer();
       configurer.setBuilder(http);
       configurer.tokenServices(applicationContext.getBean(ResourceServerTokenServices.class));
@@ -223,7 +228,10 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
       configurer.configure(http);
     } else {
-      http.authorizeRequests().anyRequest().anonymous();
+      http
+          .authorizeRequests()
+          .anyRequest()
+          .permitAll();
     }
   }
 }

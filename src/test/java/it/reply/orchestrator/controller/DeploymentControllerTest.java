@@ -150,13 +150,13 @@ public class DeploymentControllerTest {
     deployments.get(1).setStatus(Status.CREATE_COMPLETE);
     Pageable pageable = ControllerTestUtils.createDefaultPageable();
     Mockito.when(deploymentService.getDeployments(pageable, ownerIdString))
-        .thenReturn(new PageImpl<Deployment>(deployments));
+        .thenReturn(new PageImpl<Deployment>(deployments, pageable, deployments.size()));
 
     mockMvc
         .perform(get("/deployments?createdBy=" + ownerIdString).accept(MediaType.APPLICATION_JSON)
             .header(HttpHeaders.AUTHORIZATION, OAuth2AccessToken.BEARER_TYPE + " <access token>"))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
         .andDo(document("authentication", requestHeaders(
             headerWithName(HttpHeaders.AUTHORIZATION).description("OAuth2 bearer token"))))
         .andDo(document("deployments", preprocessRequest(prettyPrint()), preprocessResponse(prettyPrint()),
@@ -196,7 +196,7 @@ public class DeploymentControllerTest {
         .perform(get("/deployments?page=1&size=2").accept(MediaType.APPLICATION_JSON)
             .header(HttpHeaders.AUTHORIZATION, OAuth2AccessToken.BEARER_TYPE + " <access token>"))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
         .andDo(document("deployment-paged", preprocessResponse(prettyPrint()),
             links(atomLinks(), linkWithRel("first").description("Hyperlink to the first page"),
                 linkWithRel("prev").description("Hyperlink to the previous page"),
@@ -215,13 +215,13 @@ public class DeploymentControllerTest {
     List<Deployment> deployments = ControllerTestUtils.createDeployments(5);
     Pageable pageable = ControllerTestUtils.createDefaultPageable();
     Mockito.when(deploymentService.getDeployments(pageable, null))
-        .thenReturn(new PageImpl<Deployment>(deployments));
+        .thenReturn(new PageImpl<Deployment>(deployments, pageable, deployments.size()));
 
     mockMvc
         .perform(get("/deployments").header(HttpHeaders.AUTHORIZATION,
             OAuth2AccessToken.BEARER_TYPE + " <access token>"))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
         .andDo(document("deployment-pagination", preprocessResponse(prettyPrint()), responseFields(
             fieldWithPath("links[]").ignored(), fieldWithPath("content[].links[]").ignored(),
 
@@ -252,7 +252,7 @@ public class DeploymentControllerTest {
 
     mockMvc.perform(get("/deployments/" + deploymentId))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.uuid", is(deploymentId)));
   }
 
@@ -267,7 +267,7 @@ public class DeploymentControllerTest {
         .perform(get("/deployments/" + deploymentId).header(HttpHeaders.AUTHORIZATION,
             OAuth2AccessToken.BEARER_TYPE + " <access token>"))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
         .andDo(document("deployment-hypermedia", preprocessResponse(prettyPrint()),
             links(atomLinks(), linkWithRel("self").description("Self-referencing hyperlink"),
                 linkWithRel("template").description("Template reference hyperlink"),
@@ -302,7 +302,7 @@ public class DeploymentControllerTest {
         .perform(get("/deployments/" + deploymentId).header(HttpHeaders.AUTHORIZATION,
             OAuth2AccessToken.BEARER_TYPE + " <access token>"))
         .andExpect(status().isOk())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.outputs", Matchers.hasEntry(key, value)))
 
         .andDo(document("deployment", preprocessResponse(prettyPrint()),
@@ -336,7 +336,7 @@ public class DeploymentControllerTest {
         .perform(get("/deployments/" + deploymentId).header(HttpHeaders.AUTHORIZATION,
             OAuth2AccessToken.BEARER_TYPE + " <access token>"))
         .andExpect(status().isNotFound())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.code", is(404)))
         .andDo(document("deployment-not-found", preprocessResponse(prettyPrint()), responseFields(
             fieldWithPath("code").description("The HTTP status code"),
@@ -487,7 +487,7 @@ public class DeploymentControllerTest {
         .perform(post("/deployments").contentType(MediaType.APPLICATION_JSON)
             .content(TestUtil.convertObjectToJsonBytes(request)))
         .andExpect(status().isCreated())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.links[0].rel", is("self")));
   }
 
@@ -545,7 +545,7 @@ public class DeploymentControllerTest {
         .deleteDeployment(deploymentId);
 
     mockMvc.perform(delete("/deployments/" + deploymentId))
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.code", is(404)))
         .andExpect(jsonPath("$.title", is("Not Found")))
         .andExpect(jsonPath("$.message", is("The deployment <not-found> doesn't exist")));

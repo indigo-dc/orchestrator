@@ -47,7 +47,7 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
   protected static final String PROPERTIES_PREFIX = "oidc";
 
   public static final String OIDC_ENABLED_CONDITION =
-      "@'" + PROPERTIES_PREFIX + ".CONFIGURATION_PROPERTIES'.enabled";
+      "@'" + PROPERTIES_PREFIX + "-it.reply.orchestrator.config.properties.OidcProperties'.enabled";
   public static final String OIDC_DISABLED_CONDITION = "!" + OIDC_ENABLED_CONDITION;
 
   private boolean enabled;

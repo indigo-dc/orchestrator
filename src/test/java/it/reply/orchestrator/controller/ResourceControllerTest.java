@@ -100,18 +100,18 @@ public class ResourceControllerTest {
     Deployment deployment = ControllerTestUtils.createDeployment();
     List<Resource> resources = ControllerTestUtils.createResources(deployment, 2, true);
     Mockito.when(resourceService.getResources(deployment.getId(), pageable))
-        .thenReturn(new PageImpl<Resource>(resources));
+        .thenReturn(new PageImpl<Resource>(resources, pageable, resources.size()));
 
     mockMvc
         .perform(get("/deployments/" + deployment.getId() + "/resources")
             .accept(MediaType.APPLICATION_JSON).header(HttpHeaders.AUTHORIZATION,
                 OAuth2AccessToken.BEARER_TYPE + " <access token>"))
-        .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.content", org.hamcrest.Matchers.hasSize(2)))
         .andExpect(jsonPath("$.content", org.hamcrest.Matchers.hasSize(2)))
         .andExpect(jsonPath("$.page.totalElements", equalTo(2)))
         .andExpect(jsonPath("$.links[0].rel", is("self"))).andExpect(jsonPath("$.links[0].href",
-            endsWith("/deployments/" + deployment.getId() + "/resources")))
+            endsWith("/deployments/" + deployment.getId() + "/resources?page=0&size=10&sort=created,desc")))
 
         .andDo(document("resources", preprocessResponse(prettyPrint()),
             responseFields(fieldWithPath("links[]").ignored(),
@@ -139,7 +139,7 @@ public class ResourceControllerTest {
 
     mockMvc.perform(get("/deployments/" + deployment.getId() + "/resources"))
         .andExpect(status().isNotFound())
-        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.code", is(404))).andExpect(jsonPath("$.title", is("Not Found")))
         .andExpect(
             jsonPath("$.message", is("The deployment <" + deployment.getId() + "> doesn't exist")));
@@ -155,7 +155,7 @@ public class ResourceControllerTest {
     mockMvc
         .perform(get("/deployments/" + deployment.getId() + "/resources/" + resource.getId())
             .header(HttpHeaders.AUTHORIZATION, OAuth2AccessToken.BEARER_TYPE + " <access token>"))
-        .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.uuid", equalTo(resource.getId())))
         .andExpect(jsonPath("$.links[1].rel", equalTo("self")))
         .andExpect(jsonPath("$.links[1].href",

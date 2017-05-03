@@ -16,9 +16,11 @@
 
 package it.reply.orchestrator.config;
 
+import it.reply.orchestrator.annotation.SpringDefaultProfile;
 import it.reply.workflowmanager.orchestrator.config.ConfigProducer;
 
 import org.kie.api.io.Resource;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -28,6 +30,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
+@SpringDefaultProfile
+@ComponentScan(basePackages = "it.reply.workflowmanager")
 public class WorkflowConfigProducerBean implements ConfigProducer {
 
   public static final String BASE_PATH = "workflows/";
