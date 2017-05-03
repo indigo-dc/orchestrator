@@ -25,12 +25,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 @Component
-@AllArgsConstructor(onConstructor = @__({ @Autowired }))
+@AllArgsConstructor
 @Slf4j
 public class Notify extends BaseCommand<Notify> {
 

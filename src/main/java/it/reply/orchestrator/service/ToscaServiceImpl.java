@@ -71,6 +71,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jgrapht.alg.CycleDetector;
 import org.jgrapht.graph.DirectedMultigraph;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -944,14 +945,7 @@ public class ToscaServiceImpl implements ToscaService {
   @Override
   public <T extends IPropertyType<V>, V> V parseScalarPropertyValue(ScalarPropertyValue value,
       Class<T> clazz) {
-    final T propertyParser;
-    try {
-      propertyParser = clazz.newInstance();
-    } catch (InstantiationException | IllegalAccessException ex) {
-      // shouldn't happen
-      throw new OrchestratorException(
-          String.format("Error instantiating parser %s for scalar value <%s>", clazz, value), ex);
-    }
+    T propertyParser = BeanUtils.instantiate(clazz);
     try {
       return propertyParser.parse(value.getValue());
     } catch (InvalidPropertyValueException ex) {

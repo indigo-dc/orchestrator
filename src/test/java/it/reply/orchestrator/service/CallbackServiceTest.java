@@ -58,13 +58,15 @@ public class CallbackServiceTest {
   private boolean doCallback(String url, HttpStatus status) {
     Deployment deployment = ControllerTestUtils.createDeployment();
     deployment.setCallback(url);
-    ResponseEntity<Object> response = new ResponseEntity<>(status);
-    DeploymentResource resource = deploymentResourceAssembler.toResource(deployment);
 
+    DeploymentResource resource = deploymentResourceAssembler.toResource(deployment);
     Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
     Mockito.when(deploymentResourceAssembler.toResource(deployment)).thenReturn(resource);
-    Mockito.when(restTemplate.postForEntity(deployment.getCallback(), resource, Object.class))
-        .thenReturn(response);
+    if (status != null) {
+      ResponseEntity<Object> response = new ResponseEntity<>(status);
+      Mockito.when(restTemplate.postForEntity(deployment.getCallback(), resource, Object.class))
+      .thenReturn(response);
+    }
 
     return callbackService.doCallback(deployment.getId());
   }

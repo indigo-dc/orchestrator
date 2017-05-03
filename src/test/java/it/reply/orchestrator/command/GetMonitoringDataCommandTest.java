@@ -18,9 +18,6 @@ package it.reply.orchestrator.command;
 
 import static org.junit.Assert.assertEquals;
 
-import com.github.springtestdbunit.annotation.DatabaseSetup;
-import com.github.springtestdbunit.annotation.DatabaseTearDown;
-
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.service.MonitoringService;
 import it.reply.orchestrator.service.commands.BaseRankCloudProvidersCommand;
@@ -32,7 +29,6 @@ import org.junit.Test;
 import org.kie.api.executor.ExecutionResults;
 import org.springframework.beans.factory.annotation.Autowired;
 
-@DatabaseTearDown("/data/database-empty.xml")
 public class GetMonitoringDataCommandTest extends BaseRankCloudProviderCommandTest {
 
   @Autowired
@@ -47,7 +43,6 @@ public class GetMonitoringDataCommandTest extends BaseRankCloudProviderCommandTe
   }
 
   @Test
-  @DatabaseSetup("/data/database-init.xml")
   public void doexecuteSuccesfully() throws Exception {
 
     RankCloudProvidersWorkflowTest.mockMonitoring(mockServer, monitoringService.getUrl());

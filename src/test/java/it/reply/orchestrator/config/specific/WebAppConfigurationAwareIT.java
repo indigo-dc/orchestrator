@@ -16,33 +16,18 @@
 
 package it.reply.orchestrator.config.specific;
 
+import com.github.springtestdbunit.DbUnitTestExecutionListener;
+
 import it.reply.orchestrator.IntegrationTest;
 
 import org.junit.experimental.categories.Category;
+import org.springframework.test.context.TestExecutionListeners;
+import org.springframework.test.context.TestExecutionListeners.MergeMode;
+import org.springframework.transaction.annotation.Transactional;
 
 @Category(IntegrationTest.class)
+@Transactional
+@TestExecutionListeners(listeners = { DbUnitTestExecutionListener.class },
+    mergeMode = MergeMode.MERGE_WITH_DEFAULTS)
 public abstract class WebAppConfigurationAwareIT extends WebAppConfigurationAware {
-
-  /**
-   * The override is not working - enable in the future.
-   */
-  // private static final Logger LOG = LogManager.getLogger(WebAppConfigurationAware.class);
-  //
-  // @Configuration
-  // static class Config {
-  // @Bean
-  // @Primary
-  // public WorkflowConfigProducerBean produceWorkflowConfigProducerBean() {
-  // return new WorkflowConfigProducerBean() {
-  //
-  // @Override
-  // public int getExecutorServiceThreadPoolSize() {
-  // // Enable jBPM Executor Service during Integration Tests
-  // LOG.warn("Enable jBPM Executor Service during Integration Tests");
-  // return 2;
-  // }
-  //
-  // };
-  // }
-  // }
 }

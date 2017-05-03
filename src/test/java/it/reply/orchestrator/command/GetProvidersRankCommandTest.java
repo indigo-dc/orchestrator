@@ -18,9 +18,6 @@ package it.reply.orchestrator.command;
 
 import static org.junit.Assert.assertEquals;
 
-import com.github.springtestdbunit.annotation.DatabaseSetup;
-import com.github.springtestdbunit.annotation.DatabaseTearDown;
-
 import it.reply.orchestrator.config.properties.CprProperties;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
@@ -38,7 +35,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 
-@DatabaseTearDown("/data/database-empty.xml")
 public class GetProvidersRankCommandTest extends BaseRankCloudProviderCommandTest {
 
   @Autowired
@@ -53,7 +49,6 @@ public class GetProvidersRankCommandTest extends BaseRankCloudProviderCommandTes
   }
 
   @Test
-  @DatabaseSetup("/data/database-init.xml")
   public void doexecuteSuccesfully() throws Exception {
     List<RankedCloudProvider> providers =
         CloudProviderRankerServiceTest.generateMockedRankedProviders();
