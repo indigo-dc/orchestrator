@@ -1,5 +1,3 @@
-package it.reply.orchestrator.service.deployment.providers;
-
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -15,6 +13,8 @@ package it.reply.orchestrator.service.deployment.providers;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.reply.orchestrator.service.deployment.providers;
 
 import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
@@ -80,7 +80,7 @@ import java.util.stream.Collectors;
 
 @Service
 @DeploymentProviderQualifier(DeploymentProvider.CHRONOS)
-@PropertySource(value = { "classpath:application.properties", "${chronos.auth.file.path}" })
+@PropertySource(value = { "classpath:application.properties", "${conf-file-path.chronos}" })
 public class ChronosServiceImpl extends AbstractDeploymentProviderService
     implements DeploymentProviderService {
 
@@ -812,7 +812,7 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       // Replace OneData properties
       customizedTemplate =
           customizedTemplate.replace("INPUT_ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR",
-              od.getProviders().get(0).endpoint);
+              od.getProviders().get(0).getEndpoint());
       LOG.debug("Replaced {} OneData parameters with: {}", "input", od);
     }
 
@@ -824,7 +824,7 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       // Replace OneData properties
       customizedTemplate =
           customizedTemplate.replace("OUTPUT_ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR",
-              od.getProviders().get(0).endpoint);
+              od.getProviders().get(0).getEndpoint());
       LOG.debug("Replaced {} OneData parameters with: {}", "output", od);
     }
 
@@ -839,7 +839,7 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
           .replace("DATA_SPACE_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getSpace())
           .replace("PATH_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getPath())
           .replace("ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR",
-              od.getProviders().get(0).endpoint);
+              od.getProviders().get(0).getEndpoint());
       LOG.debug("Replaced {} OneData parameters with: {}", "service", od);
     }
 
@@ -856,7 +856,7 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
   }
 
   protected boolean isChronosNode(NodeTemplate nodeTemplate) {
-    return nodeTemplate.getType().equals("tosca.nodes.indigo.Container.Application.Docker.Chronos");
+    return "tosca.nodes.indigo.Container.Application.Docker.Chronos".equals(nodeTemplate.getType());
   }
 
   protected List<String> getJobParents(NodeTemplate nodeTemplate, String nodeName,

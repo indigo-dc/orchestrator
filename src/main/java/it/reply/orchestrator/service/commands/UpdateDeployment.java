@@ -1,5 +1,3 @@
-package it.reply.orchestrator.service.commands;
-
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -15,6 +13,8 @@ package it.reply.orchestrator.service.commands;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.reply.orchestrator.service.commands;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -157,7 +157,7 @@ public class UpdateDeployment extends BaseCommand {
         if (oneDataInput != null) {
           if (oneDataInput.isSmartScheduling()) {
             oneDataInput.setProviders(oneDataInput.getProviders().stream()
-                .filter(info -> Objects.equals(info.cloudProviderId,
+                .filter(info -> Objects.equals(info.getCloudProviderId(),
                     deploymentMessage.getChosenCloudProvider().getId()))
                 .collect(Collectors.toList()));
           }
@@ -170,7 +170,7 @@ public class UpdateDeployment extends BaseCommand {
         if (oneDataOutput != null) {
           if (oneDataOutput.isSmartScheduling()) {
             oneDataOutput.setProviders(oneDataOutput.getProviders().stream()
-                .filter(info -> Objects.equals(info.cloudProviderId,
+                .filter(info -> Objects.equals(info.getCloudProviderId(),
                     deploymentMessage.getChosenCloudProvider().getId()))
                 .collect(Collectors.toList()));
           }

@@ -1,5 +1,3 @@
-package it.reply.orchestrator.service;
-
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -15,6 +13,9 @@ package it.reply.orchestrator.service;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.reply.orchestrator.service;
+
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -229,10 +230,10 @@ public class ToscaServiceTest extends WebAppConfigurationAware {
     Map<String, OneData> odr = toscaService.extractOneDataRequirements(ar, inputs);
     assertEquals(true, odr.containsKey("input"));
     assertArrayEquals(inputs.get("input_onedata_providers").toString().split(","), odr.get("input")
-        .getProviders().stream().map(info -> info.endpoint).collect(Collectors.toList()).toArray());
+        .getProviders().stream().map(info -> info.getEndpoint()).collect(Collectors.toList()).toArray());
     assertEquals(true, odr.containsKey("output"));
     assertArrayEquals(inputs.get("output_onedata_providers").toString().split(","),
-        odr.get("output").getProviders().stream().map(info -> info.endpoint)
+        odr.get("output").getProviders().stream().map(info -> info.getEndpoint())
             .collect(Collectors.toList()).toArray());
   }
 

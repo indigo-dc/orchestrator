@@ -1,5 +1,3 @@
-package it.reply.orchestrator.service;
-
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -15,6 +13,9 @@ package it.reply.orchestrator.service;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.reply.orchestrator.service;
+
 import static org.junit.Assert.assertEquals;
 
 import com.google.common.collect.ImmutableMap;
@@ -185,7 +186,7 @@ public class ChronosServiceTest extends WebAppConfigurationAware {
     assertEquals(serviceOd.getPath(),
         ((ScalarPropertyValue) envVars.get("ONEDATA_PATH")).getValue());
     assertEquals(serviceOd.getProviders().size(), 1);
-    assertEquals(serviceOd.getProviders().stream().map(info -> info.endpoint)
+    assertEquals(serviceOd.getProviders().stream().map(info -> info.getEndpoint())
         .collect(Collectors.toList()).get(0),
         ((ScalarPropertyValue) envVars.get("ONEDATA_PROVIDERS")).getValue());
   }

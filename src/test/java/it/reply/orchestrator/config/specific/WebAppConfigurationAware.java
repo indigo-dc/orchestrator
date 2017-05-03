@@ -1,5 +1,3 @@
-package it.reply.orchestrator.config.specific;
-
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -15,6 +13,8 @@ package it.reply.orchestrator.config.specific;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.reply.orchestrator.config.specific;
 
 import static org.springframework.test.web.servlet.setup.MockMvcBuilders.webAppContextSetup;
 
@@ -43,6 +43,7 @@ import org.springframework.test.context.support.DependencyInjectionTestExecution
 import org.springframework.test.context.transaction.TransactionalTestExecutionListener;
 import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
 import javax.inject.Inject;
@@ -52,9 +53,10 @@ import javax.inject.Inject;
 @WebAppConfiguration
 @ContextHierarchy({
     @ContextConfiguration(name = "baseContext", classes = ApplicationConfigTest.class) })
-@TestPropertySource(locations = { "classpath:application-test.properties" })
+@TestPropertySource(locations = { "classpath:application.properties", "classpath:application-test.properties" })
 @TestExecutionListeners({ DependencyInjectionTestExecutionListener.class,
     TransactionalTestExecutionListener.class, DbUnitTestExecutionListener.class })
+@Transactional
 public abstract class WebAppConfigurationAware {
 
   private static final Logger LOG = LoggerFactory.getLogger(WebAppConfigurationAware.class);

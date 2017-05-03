@@ -1,5 +1,3 @@
-package it.reply.orchestrator.resource;
-
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -15,6 +13,9 @@ package it.reply.orchestrator.resource;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.reply.orchestrator.resource;
+
 import it.reply.orchestrator.controller.DeploymentController;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.service.utils.MyLinkBuilder;
@@ -67,9 +68,9 @@ public class DeploymentResourceAssembler
       resource.setCallback(entity.getCallback());
     }
 
-    Optional.ofNullable(entity.getOwner())
-        .map(owner -> owner.getOidcEntityId())
-        .ifPresent(owner -> resource.setCreatedBy(owner));
+    // Optional.ofNullable(entity.getOwner())
+    // .map(owner -> owner.getOidcEntityId())
+    // .ifPresent(owner -> resource.setCreatedBy(owner));
 
     // TODO Use ControllerLinkBuilder when
     // https://github.com/spring-projects/spring-hateoas/issues/408 will be resolved

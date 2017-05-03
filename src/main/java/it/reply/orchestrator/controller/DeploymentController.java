@@ -1,5 +1,3 @@
-package it.reply.orchestrator.controller;
-
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -15,6 +13,8 @@ package it.reply.orchestrator.controller;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.reply.orchestrator.controller;
 
 import it.reply.domain.dsl.info.DebugInformation;
 import it.reply.orchestrator.dal.entity.AbstractResourceEntity;
@@ -53,6 +53,8 @@ import javax.validation.Valid;
 @RestController
 @PropertySource("classpath:version.properties")
 public class DeploymentController {
+
+  private static final String OIDC_DISABLED_CONDITION = "!#oauth2.isOAuth()";
 
   @Value("${build.version}")
   private String projectVersion;
@@ -139,7 +141,8 @@ public class DeploymentController {
   @ResponseStatus(HttpStatus.CREATED)
   @RequestMapping(value = "/deployments", method = RequestMethod.POST,
       produces = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize("#oauth2.hasScope('offline_access')")
+  @PreAuthorize(OIDC_DISABLED_CONDITION
+      + " || #oauth2.throwOnError(#oauth2.hasScope('offline_access'))")
   public DeploymentResource createDeployment(@Valid @RequestBody DeploymentRequest request) {
 
     Deployment deployment = deploymentService.createDeployment(request);
@@ -158,7 +161,8 @@ public class DeploymentController {
   @ResponseStatus(HttpStatus.ACCEPTED)
   @RequestMapping(value = "/deployments/{deploymentId}", method = RequestMethod.PUT,
       produces = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize("#oauth2.hasScope('offline_access')")
+  @PreAuthorize(OIDC_DISABLED_CONDITION
+      + " || #oauth2.throwOnError(#oauth2.hasScope('offline_access'))")
   public void updateDeployment(@PathVariable("deploymentId") String id,
       @Valid @RequestBody DeploymentRequest request) {
 
@@ -190,7 +194,8 @@ public class DeploymentController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @RequestMapping(value = "/deployments/{deploymentId}", method = RequestMethod.DELETE,
       produces = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize("#oauth2.hasScope('offline_access')")
+  @PreAuthorize(OIDC_DISABLED_CONDITION
+      + " || #oauth2.throwOnError(#oauth2.hasScope('offline_access'))")
   public void deleteDeployment(@PathVariable("deploymentId") String id) {
 
     deploymentService.deleteDeployment(id);

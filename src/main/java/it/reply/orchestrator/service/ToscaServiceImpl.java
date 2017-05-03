@@ -1,5 +1,3 @@
-package it.reply.orchestrator.service;
-
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -15,6 +13,8 @@ package it.reply.orchestrator.service;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.reply.orchestrator.service;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -337,7 +337,7 @@ public class ToscaServiceImpl implements ToscaService {
             NodeTemplate node = entry.getValue();
             // Only indigo.Compute nodes are relevant
             // FIXME: Check inheritance of tosca.nodes.indigo.Compute
-            if (node.getType().equals("tosca.nodes.indigo.Compute")) {
+            if ("tosca.nodes.indigo.Compute".equals(node.getType())) {
               Capability osCapability = null;
               if (node.getCapabilities() == null
                   || (osCapability = node.getCapabilities().get("os")) == null) {

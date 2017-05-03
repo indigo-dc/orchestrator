@@ -1,5 +1,3 @@
-package it.reply.orchestrator.dto.onedata;
-
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -15,9 +13,13 @@ package it.reply.orchestrator.dto.onedata;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.reply.orchestrator.dto.onedata;
+
 import com.google.common.base.Strings;
 import com.google.common.collect.Lists;
 
+import lombok.Data;
 import lombok.ToString;
 
 import java.io.Serializable;
@@ -30,18 +32,18 @@ public class OneData implements Serializable {
 
   private static final long serialVersionUID = 8590316308119399053L;
 
-  @ToString
+  @Data
   public static class OneDataProviderInfo implements Serializable {
 
     private static final long serialVersionUID = -4904767929269221557L;
 
-    public String id;
+    private String id;
 
-    public String endpoint;
+    private String endpoint;
 
-    public String cloudProviderId;
+    private String cloudProviderId;
 
-    public String cloudServiceId;
+    private String cloudServiceId;
 
     public OneDataProviderInfo() {
     }

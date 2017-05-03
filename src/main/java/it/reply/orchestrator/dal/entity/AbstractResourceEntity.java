@@ -1,10 +1,3 @@
-package it.reply.orchestrator.dal.entity;
-
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
-
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -20,6 +13,14 @@ import lombok.ToString;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.reply.orchestrator.dal.entity;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
 import org.hibernate.annotations.GenericGenerator;
 import org.springframework.hateoas.Identifiable;
 

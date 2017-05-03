@@ -1,5 +1,3 @@
-package it.reply.orchestrator.exception;
-
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -15,6 +13,9 @@ package it.reply.orchestrator.exception;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.reply.orchestrator.exception;
+
 import it.reply.orchestrator.dto.common.Error;
 import it.reply.orchestrator.exception.http.BadRequestException;
 import it.reply.orchestrator.exception.http.ConflictException;
@@ -24,24 +25,15 @@ import it.reply.orchestrator.exception.service.ToscaException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.web.HttpMediaTypeNotSupportedException;
-import org.springframework.web.HttpRequestMethodNotSupportedException;
-import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
+import org.springframework.security.oauth2.provider.error.AbstractOAuth2SecurityExceptionHandler;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-/**
- * Provide a centralized exception handling
- * 
- * @author m.bassi
- *
- */
+import java.util.Optional;
+
 @ControllerAdvice
 public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHandler {
 
@@ -53,12 +45,8 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
    * @return a {@code ResponseEntity} instance
    */
   @ExceptionHandler
-  @ResponseStatus(HttpStatus.NOT_FOUND)
-  @ResponseBody
-  public Error handleException(NotFoundException ex) {
-
-    return new Error().withCode(HttpStatus.NOT_FOUND.value())
-        .withTitle(HttpStatus.NOT_FOUND.getReasonPhrase()).withMessage(ex.getMessage());
+  public ResponseEntity<Object> handleException(NotFoundException ex, WebRequest request) {
+    return handleExceptionInternal(ex, HttpStatus.NOT_FOUND, request);
   }
 
   /**
@@ -69,12 +57,8 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
    * @return a {@code ResponseEntity} instance
    */
   @ExceptionHandler
-  @ResponseStatus(HttpStatus.CONFLICT)
-  @ResponseBody
-  public Error handleException(ConflictException ex) {
-
-    return new Error().withCode(HttpStatus.CONFLICT.value())
-        .withTitle(HttpStatus.CONFLICT.getReasonPhrase()).withMessage(ex.getMessage());
+  public ResponseEntity<Object> handleException(ConflictException ex, WebRequest request) {
+    return handleExceptionInternal(ex, HttpStatus.CONFLICT, request);
   }
 
   /**
@@ -85,12 +69,8 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
    * @return a {@code ResponseEntity} instance
    */
   @ExceptionHandler
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
-  @ResponseBody
-  public Error handleException(BadRequestException ex) {
-
-    return new Error().withCode(HttpStatus.BAD_REQUEST.value())
-        .withTitle(HttpStatus.BAD_REQUEST.getReasonPhrase()).withMessage(ex.getMessage());
+  public ResponseEntity<Object> handleException(BadRequestException ex, WebRequest request) {
+    return handleExceptionInternal(ex, HttpStatus.BAD_REQUEST, request);
   }
 
   /**
@@ -101,12 +81,23 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
    * @return a {@code ResponseEntity} instance
    */
   @ExceptionHandler
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
-  @ResponseBody
-  public Error handleException(ToscaException ex) {
+  public ResponseEntity<Object> handleException(ToscaException ex, WebRequest request) {
+    return handleExceptionInternal(ex, HttpStatus.BAD_REQUEST, request);
+  }
 
-    return new Error().withCode(HttpStatus.BAD_REQUEST.value())
-        .withTitle(HttpStatus.BAD_REQUEST.getReasonPhrase()).withMessage(ex.getMessage());
+  /**
+   * OAuth2Exception exception handler. This handler will just re-throw the exception and will let
+   * the {@link AbstractOAuth2SecurityExceptionHandler} to handle it.
+   * 
+   * @param ex
+   *          the exception
+   * @return a {@code ResponseEntity} instance
+   */
+  @ExceptionHandler
+  public ResponseEntity<Object> handleException(OAuth2Exception ex, WebRequest request) {
+    // NOTE: is not a requirement to re-thow the same exception,
+    // whichever unchecked exception would fulfill the scope
+    throw ex;
   }
 
   /**
@@ -117,94 +108,25 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
    * @return a {@code ResponseEntity} instance
    */
   @ExceptionHandler
-  @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-  @ResponseBody
-  Error handleException(Exception ex) {
-
-    return new Error().withCode(HttpStatus.INTERNAL_SERVER_ERROR.value())
-        .withTitle(HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase()).withMessage(ex.getMessage());
+  public ResponseEntity<Object> handleGenericException(Exception ex, WebRequest request) {
+    if (ex.getCause() instanceof OAuth2Exception) {
+      return this.handleException((OAuth2Exception) ex.getCause(), request);
+    } else {
+      return handleExceptionInternal(ex, HttpStatus.INTERNAL_SERVER_ERROR, request);
+    }
   }
 
   @Override
-  protected ResponseEntity<Object> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
+  protected ResponseEntity<Object> handleExceptionInternal(Exception ex, Object body,
       HttpHeaders headers, HttpStatus status, WebRequest request) {
-
-    return handleResponse(ex, headers, status);
+    final HttpHeaders headersToWrite = Optional.ofNullable(headers).orElseGet(HttpHeaders::new);
+    final Object bodyToWrite = Optional.ofNullable(body).orElse(new Error(ex, status));
+    return super.handleExceptionInternal(ex, bodyToWrite, headersToWrite, status, request);
   }
 
-  /**
-   * METHOD_NOT_ALLOWED exception handler.
-   * 
-   * @param ex
-   *          the exception
-   * @return a {@code ResponseEntity} instance
-   */
-  @Override
-  protected ResponseEntity<Object> handleHttpRequestMethodNotSupported(
-      HttpRequestMethodNotSupportedException ex, HttpHeaders headers, HttpStatus status,
+  protected ResponseEntity<Object> handleExceptionInternal(Exception ex, HttpStatus status,
       WebRequest request) {
-
-    return handleResponse(ex, headers, status);
+    return handleExceptionInternal(ex, null, null, status, request);
   }
 
-  /**
-   * UNSUPPORTED_MEDIA_TYPE exception handler.
-   * 
-   * @param ex
-   *          {@code HttpMediaTypeNotSupportedException}
-   * @return a {@code ResponseEntity} instance
-   */
-  @Override
-  protected ResponseEntity<Object> handleHttpMediaTypeNotSupported(
-      HttpMediaTypeNotSupportedException ex, HttpHeaders headers, HttpStatus status,
-      WebRequest request) {
-
-    return handleResponse(ex, headers, status);
-  }
-
-  /**
-   * Customize the response when there are not handler.
-   * 
-   * @param ex
-   *          the exception
-   * @param headers
-   *          {@code HttpHeaders} instance
-   * @param status
-   *          {@code HttpStatus} instance
-   * @param request
-   *          {@code WebRequest} instance
-   * @return a {@code ResponseEntity} instance
-   */
-  @Override
-  protected ResponseEntity<Object> handleNoHandlerFoundException(NoHandlerFoundException ex,
-      HttpHeaders headers, HttpStatus status, WebRequest request) {
-
-    return handleResponse(ex, headers, status);
-  }
-
-  @Override
-  protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
-      HttpHeaders headers, HttpStatus status, WebRequest request) {
-    return handleResponse(ex, headers, status);
-  }
-
-  /**
-   * Convert the exception into {@link Error} object.
-   * 
-   * @param ex
-   *          the exception to be handled
-   * @param headers
-   *          {@code HttpHeaders} instance
-   * @param status
-   *          {@code HttpStatus} instance
-   * @return the error response
-   */
-  private ResponseEntity<Object> handleResponse(Exception ex, HttpHeaders headers,
-      HttpStatus status) {
-    Error error = new Error().withCode(status.value()).withTitle(status.getReasonPhrase())
-        .withMessage(ex.getMessage());
-
-    return new ResponseEntity<Object>(error, headers, status);
-
-  }
 }

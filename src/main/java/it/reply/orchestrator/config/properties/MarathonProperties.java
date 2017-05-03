@@ -1,7 +1,3 @@
-package it.reply.orchestrator.config.properties;
-
-import lombok.AccessLevel;
-
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -18,6 +14,9 @@ import lombok.AccessLevel;
  * limitations under the License.
  */
 
+package it.reply.orchestrator.config.properties;
+
+import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -29,7 +28,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @ToString(exclude = "password")
-@ConfigurationProperties(prefix = "marathon", locations = "${marathon.conf.file.path}")
+@ConfigurationProperties(prefix = "marathon")
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class MarathonProperties {
 

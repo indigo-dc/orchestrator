@@ -1,5 +1,3 @@
-package it.reply.orchestrator.service;
-
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -15,6 +13,8 @@ package it.reply.orchestrator.service;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.reply.orchestrator.service;
 
 import com.google.common.collect.Lists;
 
@@ -42,7 +42,7 @@ import java.util.Objects;
 import javax.annotation.PostConstruct;
 
 @Service
-@PropertySource(value = { "classpath:application.properties", "${onedata.conf.file.path}" })
+@PropertySource(value = { "classpath:application.properties", "${conf-file-path.onedata}" })
 public class OneDataServiceImpl implements OneDataService {
 
   @Autowired
@@ -275,8 +275,8 @@ public class OneDataServiceImpl implements OneDataService {
           onedataParameter.getToken(), spaceDetail.getSpaceId(), providerId);
       if (addAllProvidersinfo) {
         OneDataProviderInfo providerInfo = new OneDataProviderInfo();
-        providerInfo.id = providerId;
-        providerInfo.endpoint = providerDetails.getRedirectionPoint();
+        providerInfo.setId(providerId);
+        providerInfo.setEndpoint(providerDetails.getRedirectionPoint());
         onedataParameter.getProviders().add(providerInfo);
       } else {
         // TODO implement the logic

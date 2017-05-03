@@ -1,5 +1,3 @@
-package it.reply.orchestrator.service.commands;
-
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -15,6 +13,8 @@ package it.reply.orchestrator.service.commands;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.reply.orchestrator.service.commands;
 
 import com.google.common.collect.Sets;
 
@@ -185,10 +185,10 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
             continue;
           } else {
             for (OneDataProviderInfo providerInfo : requirement.getProviders()) {
-              if (Objects.equals(providerInfo.id, cloudService.getData().getEndpoint())) {
+              if (Objects.equals(providerInfo.getId(), cloudService.getData().getEndpoint())) {
                 hasOneProviderSupportingSpace = true;
-                providerInfo.cloudProviderId = cloudProvider.getId();
-                providerInfo.cloudServiceId = cloudService.getId();
+                providerInfo.setCloudProviderId(cloudProvider.getId());
+                providerInfo.setCloudServiceId(cloudService.getId());
               }
             }
           }

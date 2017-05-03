@@ -1,5 +1,3 @@
-package it.reply.orchestrator.service;
-
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -15,6 +13,8 @@ package it.reply.orchestrator.service;
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
+package it.reply.orchestrator.service;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -352,8 +352,8 @@ public class OneDataServiceTest {
 
     // correct result with new provider details
     OneDataProviderInfo providerInfo = new OneDataProviderInfo();
-    providerInfo.id = providerDetails.getProviderId();
-    providerInfo.endpoint = providerDetails.getRedirectionPoint();
+    providerInfo.setId(providerDetails.getProviderId());
+    providerInfo.setEndpoint(providerDetails.getRedirectionPoint());
     oneData.getProviders().add(providerInfo);
 
     Assert.assertEquals(populateProviderInfo, oneData);

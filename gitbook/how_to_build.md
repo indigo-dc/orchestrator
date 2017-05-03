@@ -10,7 +10,7 @@ To build this project you will need the JDK 1.8 and maven 3.3. Thanks to maven a
 
 Go to the same folder where the `pom.xml` file is and type:
 ```
-mvn install
+mvn package
 ```
 This command will download the dependencies, compile the code and create a war package, `orchestrator.war`, which will be put inside the `docker` folder.
 

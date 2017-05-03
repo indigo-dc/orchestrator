@@ -1,5 +1,3 @@
-package it.reply.orchestrator.config;
-
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -16,6 +14,8 @@ package it.reply.orchestrator.config;
  * limitations under the License.
  */
 
+package it.reply.orchestrator.config;
+
 import alien4cloud.security.ResourceRoleService;
 import alien4cloud.utils.AlienYamlPropertiesFactoryBeanFactory;
 
@@ -26,7 +26,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.core.io.ResourceLoader;
 
-import java.io.IOException;
 
 @Configuration
 @ComponentScan(basePackages = { "alien4cloud", "org.elasticsearch.mapping" },
@@ -41,8 +40,7 @@ public class Alien4CloudConfig {
   }
 
   @Bean(name = { "alienconfig", "elasticsearchConfig" })
-  public static YamlPropertiesFactoryBean alienConfig(ResourceLoader resourceLoader)
-      throws IOException {
+  public YamlPropertiesFactoryBean alienConfig(ResourceLoader resourceLoader) {
     return AlienYamlPropertiesFactoryBeanFactory.get(resourceLoader);
   }
 

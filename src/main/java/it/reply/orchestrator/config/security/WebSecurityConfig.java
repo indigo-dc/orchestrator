@@ -1,9 +1,3 @@
-package it.reply.orchestrator.config.security;
-
-import com.google.common.collect.Sets;
-
-import it.reply.orchestrator.annotation.ConditionaOnSecurityActivationStatus;
-
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -20,9 +14,14 @@ import it.reply.orchestrator.annotation.ConditionaOnSecurityActivationStatus;
  * limitations under the License.
  */
 
+package it.reply.orchestrator.config.security;
+
+import com.google.common.collect.Sets;
+
 import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.config.properties.OidcProperties.IamProperties;
 import it.reply.orchestrator.config.properties.OidcProperties.OrchestratorProperties;
+import it.reply.orchestrator.exception.CustomOAuth2ExceptionRenderer;
 import it.reply.orchestrator.service.security.IndigoUserInfoFetcher;
 import it.reply.orchestrator.service.security.UserInfoIntrospectingTokenService;
 
@@ -51,13 +50,14 @@ import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.config.annotation.web.configurers.ResourceServerSecurityConfigurer;
+import org.springframework.security.oauth2.provider.error.OAuth2AccessDeniedHandler;
+import org.springframework.security.oauth2.provider.error.OAuth2AuthenticationEntryPoint;
 import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.stream.Collectors;
+import java.util.Map.Entry;
 
 @Configuration
 @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
@@ -76,85 +76,102 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
   public static class OidcConfig {
 
     @Bean
-    @ConditionaOnSecurityActivationStatus
     protected ServerConfigurationService serverConfigurationService(OidcProperties oidcProperties) {
-      DynamicServerConfigurationService serverConfigurationService =
-          new DynamicServerConfigurationService();
-      serverConfigurationService.setWhitelist(oidcProperties.getIamProperties()
-          .stream()
-          .map(IamProperties::getIssuer)
-          .collect(Collectors.toSet()));
-      return serverConfigurationService;
-    }
-
-    @Bean
-    @ConditionaOnSecurityActivationStatus
-    protected ClientConfigurationService clientConfigurationService(OidcProperties oidcProperties) {
-      Map<String, RegisteredClient> clients = new HashMap<>();
-      for (IamProperties configuration : oidcProperties.getIamProperties()) {
-        OrchestratorProperties orchestrator = configuration.getOrchestrator();
-        RegisteredClient client = new RegisteredClient();
-        client.setClientId(orchestrator.getClientId());
-        client.setClientSecret(orchestrator.getClientSecret());
-        client.setScope(Sets.newHashSet(orchestrator.getScopes()));
-        clients.put(configuration.getIssuer(), client);
+      if (oidcProperties.isEnabled()) {
+        DynamicServerConfigurationService serverConfigurationService =
+            new DynamicServerConfigurationService();
+        serverConfigurationService.setWhitelist(oidcProperties.getIamProperties().keySet());
+        return serverConfigurationService;
+      } else {
+        return null;
       }
-
-      StaticClientConfigurationService clientConfigurationService =
-          new StaticClientConfigurationService();
-      clientConfigurationService.setClients(clients);
-
-      return clientConfigurationService;
     }
 
     @Bean
-    @ConditionaOnSecurityActivationStatus
+    protected ClientConfigurationService clientConfigurationService(OidcProperties oidcProperties) {
+      if (oidcProperties.isEnabled()) {
+        Map<String, RegisteredClient> clients = new HashMap<>();
+        for (Entry<String, IamProperties> configurationEntry : oidcProperties.getIamProperties()
+            .entrySet()) {
+          IamProperties configuration = configurationEntry.getValue();
+          OrchestratorProperties orchestrator = configuration.getOrchestrator();
+          RegisteredClient client = new RegisteredClient();
+          client.setClientId(orchestrator.getClientId());
+          client.setClientSecret(orchestrator.getClientSecret());
+          client.setScope(Sets.newHashSet(orchestrator.getScopes()));
+          String issuer = configurationEntry.getKey();
+          clients.put(issuer, client);
+        }
+
+        StaticClientConfigurationService clientConfigurationService =
+            new StaticClientConfigurationService();
+        clientConfigurationService.setClients(clients);
+
+        return clientConfigurationService;
+      } else {
+        return null;
+      }
+    }
+
+    @Bean
     protected UserInfoFetcher userInfoFetcher(OidcProperties oidcProperties) {
-      return new IndigoUserInfoFetcher();
+      if (oidcProperties.isEnabled()) {
+        return new IndigoUserInfoFetcher();
+      } else {
+        return null;
+      }
     }
 
     @Bean
-    @ConditionaOnSecurityActivationStatus
     protected IntrospectionConfigurationService introspectionConfigurationService(
         OidcProperties oidcProperties) {
-      JWTParsingIntrospectionConfigurationService introspectionConfigurationService =
-          new JWTParsingIntrospectionConfigurationService();
-      introspectionConfigurationService
-          .setServerConfigurationService(serverConfigurationService(oidcProperties));
-      introspectionConfigurationService
-          .setClientConfigurationService(clientConfigurationService(oidcProperties));
-      return introspectionConfigurationService;
+      if (oidcProperties.isEnabled()) {
+        JWTParsingIntrospectionConfigurationService introspectionConfigurationService =
+            new JWTParsingIntrospectionConfigurationService();
+        introspectionConfigurationService
+            .setServerConfigurationService(serverConfigurationService(oidcProperties));
+        introspectionConfigurationService
+            .setClientConfigurationService(clientConfigurationService(oidcProperties));
+        return introspectionConfigurationService;
+      } else {
+        return null;
+      }
     }
 
     @Bean
-    @ConditionaOnSecurityActivationStatus
     protected JWKSetCacheService validationServices(OidcProperties oidcProperties) {
-      return new JWKSetCacheService();
+      if (oidcProperties.isEnabled()) {
+        return new JWKSetCacheService();
+      } else {
+        return null;
+      }
     }
 
     @Bean
-    @ConditionaOnSecurityActivationStatus
     protected ResourceServerTokenServices introspectingTokenService(OidcProperties oidcProperties) {
-      UserInfoIntrospectingTokenService introspectingTokenService =
-          new UserInfoIntrospectingTokenService(serverConfigurationService(oidcProperties),
-              userInfoFetcher(oidcProperties), validationServices(oidcProperties));
-      introspectingTokenService
-          .setIntrospectionConfigurationService(introspectionConfigurationService(oidcProperties));
-      introspectingTokenService.setCacheTokens(oidcProperties.isCacheTokens());
+      if (oidcProperties.isEnabled()) {
+        UserInfoIntrospectingTokenService introspectingTokenService =
+            new UserInfoIntrospectingTokenService(serverConfigurationService(oidcProperties),
+                userInfoFetcher(oidcProperties), validationServices(oidcProperties));
+        introspectingTokenService.setIntrospectionConfigurationService(
+            introspectionConfigurationService(oidcProperties));
+        introspectingTokenService.setCacheTokens(oidcProperties.isCacheTokens());
 
-      // Disabled for now as there is no revocation
-      // introspectingTokenService.setDefaultExpireTime(5* 60 * 1000); // 5 min
-      // introspectingTokenService.setForceCacheExpireTime(true);
+        // Disabled for now as there is no revocation
+        // introspectingTokenService.setDefaultExpireTime(5* 60 * 1000); // 5 min
+        // introspectingTokenService.setForceCacheExpireTime(true);
 
-      return introspectingTokenService;
+        return introspectingTokenService;
+      } else {
+        return null;
+      }
     }
   }
 
   private static final class NoOpAuthenticationProvider implements AuthenticationProvider {
 
     @Override
-    public Authentication authenticate(Authentication authentication)
-        throws AuthenticationException {
+    public Authentication authenticate(Authentication authentication) {
       throw new UnsupportedOperationException(
           "This AuthenticationProvider must not be used to authenticate");
     }
@@ -200,12 +217,19 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
       ResourceServerSecurityConfigurer configurer = new ResourceServerSecurityConfigurer();
       configurer.setBuilder(http);
       configurer.tokenServices(applicationContext.getBean(ResourceServerTokenServices.class));
-      configurer.configure(http);
 
-      // TODO Customize the authentication entry point in order to align the response body error
-      // coming from the security filter chain to the ones coming from the REST controllers
-      // see https://github.com/spring-projects/spring-security-oauth/issues/605
-      // configurer.authenticationEntryPoint(new CustomAuthenticationEntryPoint());
+      CustomOAuth2ExceptionRenderer exceptionRenderer = new CustomOAuth2ExceptionRenderer();
+
+      OAuth2AuthenticationEntryPoint authenticationEntryPoint =
+          new OAuth2AuthenticationEntryPoint();
+      authenticationEntryPoint.setExceptionRenderer(exceptionRenderer);
+      configurer.authenticationEntryPoint(authenticationEntryPoint);
+
+      OAuth2AccessDeniedHandler accessDeniedHandler = new OAuth2AccessDeniedHandler();
+      accessDeniedHandler.setExceptionRenderer(exceptionRenderer);
+      configurer.accessDeniedHandler(accessDeniedHandler);
+
+      configurer.configure(http);
     } else {
       super.configure(http);
     }

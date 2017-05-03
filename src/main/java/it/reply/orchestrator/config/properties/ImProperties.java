@@ -1,9 +1,3 @@
-package it.reply.orchestrator.config.properties;
-
-import com.google.common.base.Preconditions;
-
-import lombok.AccessLevel;
-
 /*
  * Copyright © 2015-2017 Santer Reply S.p.A.
  *
@@ -20,6 +14,11 @@ import lombok.AccessLevel;
  * limitations under the License.
  */
 
+package it.reply.orchestrator.config.properties;
+
+import com.google.common.base.Preconditions;
+
+import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +35,7 @@ import java.util.Optional;
 import javax.validation.constraints.NotNull;
 
 @Data
-@ConfigurationProperties(prefix = "im", locations = "${im.conf.file.path}")
+@ConfigurationProperties(prefix = "im")
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
 public class ImProperties implements InitializingBean {
