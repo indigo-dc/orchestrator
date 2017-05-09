@@ -24,6 +24,7 @@ import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.dto.deployment.AwsSlaPlacementPolicy;
+import it.reply.orchestrator.dto.deployment.CredentialsAwareSlaPlacementPolicy;
 import it.reply.orchestrator.dto.deployment.PlacementPolicy;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
 import it.reply.orchestrator.enums.DeploymentProvider;
@@ -93,6 +94,19 @@ public class CloudProviderEndpointServiceImpl {
 
     String imEndpoint = null;
     CloudProviderEndpoint cpe = new CloudProviderEndpoint();
+
+    ///////////////////////////////
+    // TODO Improve and move somewhere else
+    placementPolicies.stream()
+        .filter(p -> p instanceof CredentialsAwareSlaPlacementPolicy)
+        .map(policy -> CredentialsAwareSlaPlacementPolicy.class.cast(policy))
+        .findFirst()
+        .ifPresent(policy -> {
+          cpe.setUsername(policy.getUsername());
+          cpe.setPassword(policy.getPassword());
+        });
+    ///////////////////////////////
+
     IaaSType iaasType;
     if (computeService.isOpenStackComputeProviderService()) {
       iaasType = IaaSType.OPENSTACK;

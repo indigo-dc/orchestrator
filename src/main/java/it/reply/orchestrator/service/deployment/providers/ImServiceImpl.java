@@ -16,6 +16,7 @@
 
 package it.reply.orchestrator.service.deployment.providers;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 
 import alien4cloud.model.topology.NodeTemplate;
@@ -48,6 +49,7 @@ import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
+import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.enums.DeploymentProvider;
@@ -162,6 +164,40 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     }
   }
 
+  @Deprecated
+  private String handleOtcHeader(DeploymentMessage dm, String iaasHeader) {
+    final String iaasHeaderToReturn;
+    CloudProviderEndpoint cloudProviderEndpoint = dm.getChosenCloudProviderEndpoint();
+    if (cloudProviderEndpoint.getCpEndpoint() != null
+        && cloudProviderEndpoint.getCpEndpoint().contains("otc.t-systems.com")) {
+      String username = cloudProviderEndpoint.getUsername();
+      String password = cloudProviderEndpoint.getPassword();
+      Pattern pattern = Pattern.compile("\\s*(\\w+)\\s+(\\w+)\\s*");
+      Matcher matcher = pattern.matcher(username);
+      if (matcher.matches()) {
+        String otcUsername = Preconditions.checkNotNull(matcher.group(1),
+            "No vaild username provided for Open Telekom Cloud");
+        String otcDomain = Preconditions.checkNotNull(matcher.group(2),
+            "No vaild username provided for Open Telekom Cloud");
+        if (otcUsername.matches("[0-9]+")) {
+          // old style username, it must keep the domain too
+          otcUsername = username;
+        }
+        iaasHeaderToReturn =
+            iaasHeader.replaceFirst(Matcher.quoteReplacement("<USERNAME>"), otcUsername)
+                .replaceFirst(Matcher.quoteReplacement("<PASSWORD>"), password)
+                .replaceFirst(Matcher.quoteReplacement("<TENANT>"), otcDomain);
+        LOG.info("Placed OTC credentials in auth header");
+      } else {
+        throw new DeploymentException("No vaild credentials provided for Open Telekom Cloud");
+      }
+    } else {
+      // do nothing, no a OTC service
+      iaasHeaderToReturn = iaasHeader;
+    }
+    return iaasHeaderToReturn;
+  }
+
   protected InfrastructureManager getClient(DeploymentMessage dm) {
     String imAuthHeader = getImAuthHeader(dm);
     IaaSType iaasType = dm.getChosenCloudProviderEndpoint().getIaasType();
@@ -172,6 +208,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     if (iaasHeaderInProperties.isPresent()) {
       iaasHeader = iaasHeaderInProperties.get();
       LOG.debug("IaaS authorization header for IM retrieved from properties file");
+      iaasHeader = handleOtcHeader(dm, iaasHeader);
     } else {
       oidcProperties.runIfSecurityDisabled(() -> {
         throw new OrchestratorException("No Authentication info provided for compute service "
