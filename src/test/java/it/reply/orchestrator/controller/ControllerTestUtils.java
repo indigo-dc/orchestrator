@@ -96,13 +96,10 @@ public class ControllerTestUtils {
     }
 
     if (sorted) {
-      resources.stream().sorted(new Comparator<Resource>() {
-
-        @Override
-        public int compare(Resource o1, Resource o2) {
-          return o1.getCreated().compareTo(o2.getCreated());
-        }
-      }).collect(Collectors.toList());
+      resources.stream()
+          .sorted(
+              Comparator.comparing(Resource::getCreated, Comparator.nullsFirst(Date::compareTo)))
+          .collect(Collectors.toList());
     }
 
     return resources;

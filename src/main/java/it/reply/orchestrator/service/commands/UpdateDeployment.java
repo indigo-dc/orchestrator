@@ -30,6 +30,7 @@ import it.reply.orchestrator.service.CloudProviderEndpointServiceImpl;
 import it.reply.orchestrator.service.OneDataService;
 import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.orchestrator.service.deployment.providers.DeploymentStatusHelper;
+import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.workflowmanager.spring.orchestrator.bpm.ejbcommands.BaseCommand;
 
 import org.apache.commons.collections4.MapUtils;
@@ -145,8 +146,8 @@ public class UpdateDeployment extends BaseCommand {
 
     // No Requirements -> Service space
     if (MapUtils.isEmpty(deploymentMessage.getOneDataRequirements())) {
-      deploymentMessage
-          .setOneDataParameters(ImmutableMap.of("service", generateStubOneData(deploymentMessage)));
+      deploymentMessage.setOneDataParameters(CommonUtils
+          .checkNotNull(ImmutableMap.of("service", generateStubOneData(deploymentMessage))));
       LOG.warn("GENERATING STUB ONE DATA FOR SERVICE"
           + " (remove once OneData parameters generation is completed!)");
     } else {

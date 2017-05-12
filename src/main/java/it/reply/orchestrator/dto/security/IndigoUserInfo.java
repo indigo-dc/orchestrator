@@ -22,6 +22,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
+import it.reply.orchestrator.utils.CommonUtils;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -121,7 +123,7 @@ public class IndigoUserInfo extends DefaultUserInfo {
 
     // deserialize groups json array and set it
     objGroups.map(groupsJson -> deserializeGroups(groupsJson))
-        .ifPresent(groups -> result.setGroups(groups));
+        .ifPresent(groups -> result.setGroups(CommonUtils.checkNotNull(groups)));
 
     // get organization, deserialize it and set it (if present)
     Optional.ofNullable(obj.get(ORGANIZATION_NAME_KEY))
