@@ -22,6 +22,7 @@ import es.upv.i3m.grycap.im.exceptions.FileException;
 
 import lombok.experimental.UtilityClass;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.nio.file.Paths;
@@ -38,12 +39,28 @@ public class CommonUtils {
     return new NoNullOrEmptyFile(new Utf8File(Paths.get(fileUri))).read();
   }
 
+  /**
+   * Verify that a <code>@Nullable</code> reference is non null and cast it to a
+   * <code>@NonNull</code> one. If the reference is null a NPE is thrown
+   * 
+   * @param reference
+   *          the nullable reference
+   * @return the non null reference
+   */
+  @NonNull
+  public static <T> T checkNotNull(@Nullable T reference) {
+    if (reference == null) {
+      throw new NullPointerException();
+    }
+    return reference;
+  }
+
   public static <K, V> Optional<V> getFromOptionalMap(@Nullable Map<K, V> optionalMap, K key) {
-    return Optional.ofNullable(optionalMap).map(map -> map.get(key));
+    return Optional.ofNullable(optionalMap).map(map -> checkNotNull(map).get(key));
   }
 
   public static <K, V> Optional<V> removeFromOptionalMap(@Nullable Map<K, V> optionalMap, K key) {
-    return Optional.ofNullable(optionalMap).map(map -> map.remove(key));
+    return Optional.ofNullable(optionalMap).map(map -> checkNotNull(map).remove(key));
   }
 
   /**

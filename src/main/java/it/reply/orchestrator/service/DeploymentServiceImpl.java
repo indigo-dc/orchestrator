@@ -52,6 +52,7 @@ import it.reply.orchestrator.exception.http.ConflictException;
 import it.reply.orchestrator.exception.http.NotFoundException;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
+import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.workflowmanager.exceptions.WorkflowException;
 import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager;
 import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager.RUNTIME_STRATEGY;
@@ -199,8 +200,8 @@ public class DeploymentServiceImpl implements DeploymentService {
 
     // Build deployment message
     DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, requester);
-    deploymentMessage.setOneDataRequirements(odRequirements);
-    deploymentMessage.setPlacementPolicies(placementPolicies);
+    deploymentMessage.setOneDataRequirements(CommonUtils.checkNotNull(odRequirements));
+    deploymentMessage.setPlacementPolicies(CommonUtils.checkNotNull(placementPolicies));
     deploymentMessage.setDeploymentType(deploymentType);
     params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
 
