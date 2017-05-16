@@ -66,7 +66,7 @@
 		<slf4j.version>1.7.22</slf4j.version>
 		<im-java-api.version>0.4.7</im-java-api.version>
 		<monitoring.pillar.domain.version>1.8.1-FINAL</monitoring.pillar.domain.version>
-
+		<lombok.version>1.16.16</lombok.version>
 		<mockito.version>1.10.19</mockito.version>
 		<jsonpath.version>2.1.0</jsonpath.version>
 		<snippetsDirectory>${project.build.directory}\generated-snippets</snippetsDirectory>
@@ -239,7 +239,7 @@
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-		    <version>1.16.14</version>
+		    <version>${lombok.version}</version>
 			<optional>true</optional>
 		</dependency>
 		<!-- Fix for java.lang.NoSuchFieldError: REFLECTION -->
