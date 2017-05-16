@@ -122,16 +122,6 @@ public class DeploymentControllerTest {
   }
 
   @Test
-  public void getOrchestrator() throws Exception {
-    mockMvc.perform(get("/").accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
-  }
-
-  @Test
-  public void getInfo() throws Exception {
-    mockMvc.perform(get("/info").accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
-  }
-
-  @Test
   public void getDeployments() throws Exception {
 
     List<Deployment> deployments = ControllerTestUtils.createDeployments(2, true);
