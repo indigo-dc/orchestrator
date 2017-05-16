@@ -66,8 +66,6 @@ public class ToscaServiceTest extends WebAppConfigurationAware {
   public static final String TEMPLATES_ONEDATA_BASE_DIR =
       TEMPLATES_BASE_DIR + "onedata_requirements/";
 
-  private String deploymentId = "deployment_id";
-
   // @Test(expected = ToscaException.class)
   // public void customizeTemplateWithInvalidTemplate() throws Exception {
   //

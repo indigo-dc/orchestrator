@@ -20,8 +20,6 @@ import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.service.OneDataService;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -29,8 +27,6 @@ import java.util.Map;
 
 @Component
 public class GetOneDataData extends BaseRankCloudProvidersCommand {
-
-  private static final Logger LOG = LoggerFactory.getLogger(GetOneDataData.class);
 
   @Autowired
   private OneDataService oneDataService;

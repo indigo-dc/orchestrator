@@ -20,8 +20,6 @@ import it.reply.orchestrator.annotation.SpringDefaultProfile;
 import it.reply.workflowmanager.spring.orchestrator.annotations.WorkflowPersistenceUnit;
 import it.reply.workflowmanager.utils.Constants;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.datasource.lookup.JndiDataSourceLookup;
@@ -32,8 +30,6 @@ import javax.sql.DataSource;
 @Configuration
 @SpringDefaultProfile
 public class WorkflowPersistenceConfig {
-
-  private static final Logger LOG = LoggerFactory.getLogger(WorkflowPersistenceConfig.class);
 
   @Bean
   @WorkflowPersistenceUnit

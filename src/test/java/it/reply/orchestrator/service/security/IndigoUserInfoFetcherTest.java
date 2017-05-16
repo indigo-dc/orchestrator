@@ -19,7 +19,6 @@ package it.reply.orchestrator.service.security;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
-import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import com.google.gson.JsonObject;

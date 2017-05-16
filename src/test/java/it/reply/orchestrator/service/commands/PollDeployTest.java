@@ -16,10 +16,6 @@
 
 package it.reply.orchestrator.service.commands;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
-
 import org.drools.core.process.instance.impl.WorkItemImpl;
 import org.junit.Assert;
 import org.junit.Before;
@@ -30,14 +26,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.client.RestTemplate;
 
-import it.reply.orchestrator.controller.ControllerTestUtils;
-import it.reply.orchestrator.dal.entity.Deployment;
-import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
-import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.WorkflowConstants;
