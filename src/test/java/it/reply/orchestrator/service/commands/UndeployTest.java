@@ -16,8 +16,6 @@
 
 package it.reply.orchestrator.service.commands;
 
-import java.util.UUID;
-
 import org.drools.core.process.instance.impl.WorkItemImpl;
 import org.junit.Assert;
 import org.junit.Before;
@@ -29,12 +27,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-import it.reply.orchestrator.controller.ControllerTestUtils;
-import it.reply.orchestrator.dal.entity.Deployment;
-import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
-import it.reply.orchestrator.enums.NodeStates;
-import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;

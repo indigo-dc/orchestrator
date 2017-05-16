@@ -22,11 +22,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import it.reply.orchestrator.controller.ControllerTestUtils;
@@ -37,7 +35,6 @@ import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.CloudServiceData;
-import it.reply.orchestrator.dto.cmdb.CmdbDataWrapper;
 import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.dto.deployment.AwsSlaPlacementPolicy;
 import it.reply.orchestrator.dto.deployment.CredentialsAwareSlaPlacementPolicy;
@@ -45,7 +42,6 @@ import it.reply.orchestrator.dto.deployment.PlacementPolicy;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
-import it.reply.utils.json.JsonUtility;
 
 public class CloudProviderEndpointServiceTest {
 

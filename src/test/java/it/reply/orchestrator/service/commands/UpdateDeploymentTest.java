@@ -18,8 +18,6 @@ package it.reply.orchestrator.service.commands;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
-
 import org.drools.core.process.instance.impl.WorkItemImpl;
 import org.junit.Assert;
 import org.junit.Before;
@@ -33,17 +31,13 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
-import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dto.CloudProvider;
-import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
-import it.reply.orchestrator.enums.NodeStates;
-import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.service.CloudProviderEndpointServiceImpl;
 import it.reply.orchestrator.service.OneDataService;
 import it.reply.orchestrator.service.WorkflowConstants;

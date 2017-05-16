@@ -36,8 +36,6 @@ import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.EnumUtils;
 
-import lombok.extern.slf4j.Slf4j;
-
 import org.jgrapht.graph.DirectedMultigraph;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -46,7 +44,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-@Slf4j
 public abstract class AbstractMesosDeploymentService<T extends MesosTask<T>, S extends Object>
     extends AbstractDeploymentProviderService {
 

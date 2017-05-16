@@ -40,7 +40,6 @@ import es.upv.i3m.grycap.im.rest.client.BodyContentType;
 
 import it.reply.orchestrator.config.properties.ImProperties;
 import it.reply.orchestrator.config.properties.OidcProperties;
-import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.entity.Resource;
@@ -60,7 +59,6 @@ import it.reply.orchestrator.service.ToscaServiceImpl;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.util.TestUtil;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -69,11 +67,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.test.util.ReflectionTestUtils;
-
-import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;

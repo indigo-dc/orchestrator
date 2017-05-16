@@ -22,11 +22,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-
 import it.reply.orchestrator.config.properties.OidcProperties;
-import it.reply.orchestrator.dto.security.IndigoOAuth2Authentication;
 
 public class OAuth2TokenServiceTest {
 

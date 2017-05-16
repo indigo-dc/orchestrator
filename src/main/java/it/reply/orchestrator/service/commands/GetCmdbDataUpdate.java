@@ -23,15 +23,11 @@ import it.reply.orchestrator.service.CmdbService;
 
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class GetCmdbDataUpdate extends BaseDeployCommand {
-
-  private static final Logger LOG = LoggerFactory.getLogger(GetCmdbDataUpdate.class);
 
   @Autowired
   private CmdbService cmdbService;
