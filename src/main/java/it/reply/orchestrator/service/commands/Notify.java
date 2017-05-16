@@ -20,15 +20,17 @@ import it.reply.orchestrator.service.CallbackService;
 import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.workflowmanager.spring.orchestrator.bpm.ejbcommands.BaseCommand;
 
+import lombok.AllArgsConstructor;
+
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
+@AllArgsConstructor(onConstructor = @__({ @Autowired }))
 public class Notify extends BaseCommand {
 
-  @Autowired
   private CallbackService callbackService;
 
   @Override

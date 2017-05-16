@@ -21,21 +21,21 @@ import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.resource.DeploymentResource;
 import it.reply.orchestrator.resource.DeploymentResourceAssembler;
 
+import lombok.AllArgsConstructor;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 @Service
+@AllArgsConstructor(onConstructor = @__({ @Autowired }))
 public class CallbackServiceImpl implements CallbackService {
 
-  @Autowired
   private DeploymentRepository deploymentRepository;
 
-  @Autowired
   private DeploymentResourceAssembler deploymentResourceAssembler;
 
-  @Autowired
   private RestTemplate restTemplate;
 
   @Override
