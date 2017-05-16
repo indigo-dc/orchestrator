@@ -45,18 +45,22 @@ public class GetProvidersRank extends BaseRankCloudProvidersCommand {
       return rankCloudProvidersMessage;
     }
     // Prepare Ranker's request
-    List<Monitoring> monitoring =
-        rankCloudProvidersMessage.getCloudProvidersMonitoringData().entrySet().stream()
-            .map(e -> new Monitoring(e.getKey(), e.getValue())).collect(Collectors.toList());
+    List<Monitoring> monitoring = rankCloudProvidersMessage.getCloudProvidersMonitoringData()
+        .entrySet()
+        .stream()
+        .map(e -> Monitoring.builder().provider(e.getKey()).metrics(e.getValue()).build())
+        .collect(Collectors.toList());
 
     List<PreferenceCustomer> preferences = Lists.newArrayList();
     if (!rankCloudProvidersMessage.getSlamPreferences().getPreferences().isEmpty()) {
       preferences =
           rankCloudProvidersMessage.getSlamPreferences().getPreferences().get(0).getPreferences();
     }
-    CloudProviderRankerRequest cprr = new CloudProviderRankerRequest().withPreferences(preferences)
-        .withSla(rankCloudProvidersMessage.getSlamPreferences().getSla())
-        .withMonitoring(monitoring);
+    CloudProviderRankerRequest cprr = CloudProviderRankerRequest.builder()
+        .preferences(preferences)
+        .sla(rankCloudProvidersMessage.getSlamPreferences().getSla())
+        .monitoring(monitoring)
+        .build();
 
     // Get provider rank and save in message
     rankCloudProvidersMessage

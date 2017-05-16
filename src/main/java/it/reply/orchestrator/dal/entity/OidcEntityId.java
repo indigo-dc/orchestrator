@@ -19,6 +19,7 @@ package it.reply.orchestrator.dal.entity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -30,6 +31,7 @@ import javax.persistence.Embeddable;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 @Embeddable
 public class OidcEntityId extends OidcIssuerAwareId implements Serializable {
 

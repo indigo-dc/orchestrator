@@ -35,10 +35,12 @@ import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
 import it.reply.orchestrator.dto.slam.Preference;
 import it.reply.orchestrator.dto.slam.PreferenceCustomer;
 import it.reply.orchestrator.dto.slam.Priority;
+import it.reply.orchestrator.dto.slam.Service;
 import it.reply.orchestrator.dto.slam.Sla;
 import it.reply.orchestrator.enums.DeploymentType;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.service.ToscaService;
+import it.reply.orchestrator.utils.CommonUtils;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
@@ -160,15 +162,19 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
 
     for (CloudProvider cloudProvider : cloudProviders) {
       for (CloudService cloudService : cloudProvider.getCmbdProviderServicesByType(Type.COMPUTE)) {
-        if (!(Objects.equals(selectedSla.getService().getServiceId(), cloudService.getId()))) {
-          addServiceToDiscard(servicesToDiscard, cloudService);
-        } else {
+        boolean serviceSlaIsCloudService = selectedSla.getService()
+            .map(Service::getServiceId)
+            .map(serviceId -> CommonUtils.checkNotNull(serviceId).equals(cloudService.getId()))
+            .orElse(false);
+        if (serviceSlaIsCloudService) {
           // TODO change this
           if (cloudService.isAwsComputeProviderService()
               && slaPlacementPolicy instanceof CredentialsAwareSlaPlacementPolicy) {
             placementPolicies.set(0,
                 new AwsSlaPlacementPolicy((CredentialsAwareSlaPlacementPolicy) slaPlacementPolicy));
           }
+        } else {
+          addServiceToDiscard(servicesToDiscard, cloudService);
         }
       }
     }

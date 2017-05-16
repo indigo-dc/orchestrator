@@ -107,9 +107,9 @@ public class DeploymentMessage implements Serializable {
     /**
      * Template's nodes, topologically ordered.
      */
-    List<Resource> topologicalOrder;
+    private List<Resource> topologicalOrder;
 
-    int position = 0;
+    private int position = 0;
 
     public TemplateTopologicalOrderIterator(List<Resource> topologicalOrder) {
       this.topologicalOrder = topologicalOrder;

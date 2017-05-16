@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.mitre.openid.connect.model.UserInfo;
@@ -30,6 +31,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 public class IndigoOAuth2Authentication extends OAuth2Authentication {
 
   private static final long serialVersionUID = -1868480964470168415L;

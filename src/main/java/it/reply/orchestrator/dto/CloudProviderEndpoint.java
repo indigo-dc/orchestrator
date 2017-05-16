@@ -16,8 +16,8 @@
 
 package it.reply.orchestrator.dto;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
+import lombok.Data;
+import lombok.ToString;
 
 import java.io.Serializable;
 
@@ -27,14 +27,14 @@ import java.io.Serializable;
  * @author l.biava
  *
  */
+@Data
+@ToString(exclude = "password")
 public class CloudProviderEndpoint implements Serializable {
 
   private static final long serialVersionUID = -2585914648218602033L;
 
   public enum IaaSType {
-    // @formatter:off
     OPENSTACK, OPENNEBULA, OCCI, AWS
-    // @formatter:on
   }
 
   private String imEndpoint;
@@ -45,68 +45,4 @@ public class CloudProviderEndpoint implements Serializable {
   private String username;
   private String password;
 
-  public String getImEndpoint() {
-    return imEndpoint;
-  }
-
-  public void setImEndpoint(String imEndpoint) {
-    this.imEndpoint = imEndpoint;
-  }
-
-  public String getCpEndpoint() {
-    return cpEndpoint;
-  }
-
-  public void setCpEndpoint(String cpEndpoint) {
-    this.cpEndpoint = cpEndpoint;
-  }
-
-  public String getCpComputeServiceId() {
-    return cpComputeServiceId;
-  }
-
-  public void setCpComputeServiceId(String cpComputeServiceId) {
-    this.cpComputeServiceId = cpComputeServiceId;
-  }
-
-  public IaaSType getIaasType() {
-    return iaasType;
-  }
-
-  public void setIaasType(IaaSType iaasType) {
-    this.iaasType = iaasType;
-  }
-
-  public String getUsername() {
-    return username;
-  }
-
-  public void setUsername(String username) {
-    this.username = username;
-  }
-
-  public String getPassword() {
-    return password;
-  }
-
-  public void setPassword(String password) {
-    this.password = password;
-  }
-
-  @Override
-  public String toString() {
-    return "CloudProviderEndpoint [imEndpoint=" + imEndpoint + ", cpEndpoint=" + cpEndpoint
-        + ", cpComputeServiceId=" + cpComputeServiceId + ", iaasType=" + iaasType + "]";
-  }
-
-  @Override
-  public int hashCode() {
-    return HashCodeBuilder.reflectionHashCode(this);
-  }
-
-  @Override
-  public boolean equals(Object other) {
-    return EqualsBuilder.reflectionEquals(this, other);
-  }
-  
 }

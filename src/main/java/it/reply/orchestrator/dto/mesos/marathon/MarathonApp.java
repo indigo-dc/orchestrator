@@ -20,6 +20,7 @@ import it.reply.orchestrator.dto.mesos.MesosTask;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -28,6 +29,7 @@ import javax.annotation.Nonnull;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 public class MarathonApp extends MesosTask<MarathonApp> {
 
   public static final String TOSCA_NODE_NAME =

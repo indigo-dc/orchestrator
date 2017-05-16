@@ -18,134 +18,39 @@ package it.reply.orchestrator.dto.ranker;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonPropertyOrder;
 
 import it.reply.orchestrator.dto.slam.PreferenceCustomer;
 import it.reply.orchestrator.dto.slam.Sla;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.annotation.Generated;
-
 @JsonInclude(JsonInclude.Include.NON_NULL)
-@Generated("org.jsonschema2pojo")
-@JsonPropertyOrder({ "preferences", "sla", "monitoring" })
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class CloudProviderRankerRequest implements Serializable {
 
   private static final long serialVersionUID = 6559999818418491070L;
 
   @JsonProperty("preferences")
-  private List<PreferenceCustomer> preferences = new ArrayList<PreferenceCustomer>();
+  @Builder.Default
+  private List<PreferenceCustomer> preferences = new ArrayList<>();
+
   @JsonProperty("sla")
-  private List<Sla> sla = new ArrayList<Sla>();
+  @Builder.Default
+  private List<Sla> sla = new ArrayList<>();
+
   @JsonProperty("monitoring")
-  private List<Monitoring> monitoring = new ArrayList<Monitoring>();
-
-  /**
-   * Get the preferences for the customer.
-   * 
-   * @return The preferences
-   */
-  @JsonProperty("preferences")
-  public List<PreferenceCustomer> getPreferences() {
-    return preferences;
-  }
-
-  /**
-   * Set the preferences for the customer.
-   * 
-   * @param preferences
-   *          The preferences
-   */
-  @JsonProperty("preferences")
-  public void setPreferences(List<PreferenceCustomer> preferences) {
-    this.preferences = preferences;
-  }
-
-  public CloudProviderRankerRequest withPreferences(List<PreferenceCustomer> preferences) {
-    this.preferences = preferences;
-    return this;
-  }
-
-  /**
-   * Get the sla for the customer.
-   * 
-   * @return The sla
-   */
-  @JsonProperty("sla")
-  public List<Sla> getSla() {
-    return sla;
-  }
-
-  /**
-   * Set the sla for the customer.
-   * 
-   * @param sla
-   *          The sla
-   */
-  @JsonProperty("sla")
-  public void setSla(List<Sla> sla) {
-    this.sla = sla;
-  }
-
-  public CloudProviderRankerRequest withSla(List<Sla> sla) {
-    this.sla = sla;
-    return this;
-  }
-
-  /**
-   * Get the monitoring data for the customer.
-   * 
-   * @return The monitoring
-   */
-  @JsonProperty("monitoring")
-  public List<Monitoring> getMonitoring() {
-    return monitoring;
-  }
-
-  /**
-   * Set the monitoring data for the customer.
-   * 
-   * @param monitoring
-   *          The monitoring
-   */
-  @JsonProperty("monitoring")
-  public void setMonitoring(List<Monitoring> monitoring) {
-    this.monitoring = monitoring;
-  }
-
-  public CloudProviderRankerRequest withMonitoring(List<Monitoring> monitoring) {
-    this.monitoring = monitoring;
-    return this;
-  }
-
-  @Override
-  public String toString() {
-    return ToStringBuilder.reflectionToString(this);
-  }
-
-  @Override
-  public int hashCode() {
-    return new HashCodeBuilder().append(preferences).append(sla).append(monitoring).toHashCode();
-  }
-
-  @Override
-  public boolean equals(Object other) {
-    if (other == this) {
-      return true;
-    }
-    if ((other instanceof CloudProviderRankerRequest) == false) {
-      return false;
-    }
-    CloudProviderRankerRequest rhs = ((CloudProviderRankerRequest) other);
-    return new EqualsBuilder().append(preferences, rhs.preferences).append(sla, rhs.sla)
-        .append(monitoring, rhs.monitoring).isEquals();
-  }
+  @Builder.Default
+  private List<Monitoring> monitoring = new ArrayList<>();
 
 }

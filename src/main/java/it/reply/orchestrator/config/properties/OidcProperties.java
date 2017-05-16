@@ -154,6 +154,7 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
 
   @Data
   @EqualsAndHashCode(callSuper = true)
+  @ToString(callSuper = true)
   @Validated
   @NoArgsConstructor
   public static class OrchestratorProperties extends OidcClientProperties {

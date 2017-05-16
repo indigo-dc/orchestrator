@@ -16,16 +16,22 @@
 
 package it.reply.orchestrator.dto.common;
 
+import lombok.Data;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.http.HttpStatus;
 
 import java.io.Serializable;
 
+@Data
 public class Error implements Serializable {
 
   private static final long serialVersionUID = 6559999818418491070L;
 
   private Integer code;
   private String title;
+
+  @Nullable
   private String message;
 
   public Error() {
@@ -44,33 +50,6 @@ public class Error implements Serializable {
     code = status.value();
     title = status.getReasonPhrase();
     message = ex.getMessage();
-  }
-
-  public Integer getCode() {
-    return code;
-  }
-
-  public Error withCode(Integer code) {
-    this.code = code;
-    return this;
-  }
-
-  public String getTitle() {
-    return title;
-  }
-
-  public Error withTitle(String title) {
-    this.title = title;
-    return this;
-  }
-
-  public String getMessage() {
-    return message;
-  }
-
-  public Error withMessage(String message) {
-    this.message = message;
-    return this;
   }
 
 }

@@ -16,295 +16,63 @@
 
 package it.reply.orchestrator.dto.cmdb;
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import org.apache.commons.lang.builder.EqualsBuilder;
-import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang.builder.ToStringBuilder;
+import it.reply.orchestrator.dto.AdditionalPropertiesAwareDto;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.Serializable;
-import java.util.HashMap;
-import java.util.Map;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ProviderData implements Serializable {
+@Data
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
+public class ProviderData extends AdditionalPropertiesAwareDto implements Serializable {
 
   private static final long serialVersionUID = 6559999818418491070L;
 
   @JsonProperty("id")
+  @Nullable
   private String id;
+
   @JsonProperty("primary_key")
+  @Nullable
   private String primaryKey;
+
   @JsonProperty("name")
+  @Nullable
   private String name;
+
   @JsonProperty("country")
+  @Nullable
   private String country;
+
   @JsonProperty("country_code")
+  @Nullable
   private String countryCode;
+
   @JsonProperty("roc")
+  @Nullable
   private String roc;
+
   @JsonProperty("subgrid")
+  @Nullable
   private String subgrid;
+
   @JsonProperty("giis_url")
+  @Nullable
   private String giisUrl;
-  @JsonIgnore
-  private Map<String, Object> additionalProperties = new HashMap<String, Object>();
-
-  /**
-   * Get the id of the provider.
-   * 
-   * @return The id
-   */
-  @JsonProperty("id")
-  public String getId() {
-    return id;
-  }
-
-  /**
-   * Set the id of the provider.
-   * 
-   * @param id
-   *          The id
-   */
-  @JsonProperty("id")
-  public void setId(String id) {
-    this.id = id;
-  }
-
-  public ProviderData withId(String id) {
-    this.id = id;
-    return this;
-  }
-
-  /**
-   * Get the primary key of the provider.
-   * 
-   * @return The primaryKey
-   */
-  @JsonProperty("primary_key")
-  public String getPrimaryKey() {
-    return primaryKey;
-  }
-
-  /**
-   * Set the primary key of the provider.
-   * 
-   * @param primaryKey
-   *          The primary_key
-   */
-  @JsonProperty("primary_key")
-  public void setPrimaryKey(String primaryKey) {
-    this.primaryKey = primaryKey;
-  }
-
-  public ProviderData withPrimaryKey(String primaryKey) {
-    this.primaryKey = primaryKey;
-    return this;
-  }
-
-  /**
-   * Get the name of the provider.
-   * 
-   * @return The name
-   */
-  @JsonProperty("name")
-  public String getName() {
-    return name;
-  }
-
-  /**
-   * Set the name of the provider.
-   * 
-   * @param name
-   *          The name
-   */
-  @JsonProperty("name")
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public ProviderData withName(String name) {
-    this.name = name;
-    return this;
-  }
-
-  /**
-   * Get the country of the provider.
-   * 
-   * @return The country
-   */
-  @JsonProperty("country")
-  public String getCountry() {
-    return country;
-  }
-
-  /**
-   * Set the country of the provider.
-   * 
-   * @param country
-   *          The country
-   */
-  @JsonProperty("country")
-  public void setCountry(String country) {
-    this.country = country;
-  }
-
-  public ProviderData withCountry(String country) {
-    this.country = country;
-    return this;
-  }
-
-  /**
-   * Get the country code of the provider.
-   * 
-   * @return The countryCode
-   */
-  @JsonProperty("country_code")
-  public String getCountryCode() {
-    return countryCode;
-  }
-
-  /**
-   * Set the country code of the provider.
-   * 
-   * @param countryCode
-   *          The country_code
-   */
-  @JsonProperty("country_code")
-  public void setCountryCode(String countryCode) {
-    this.countryCode = countryCode;
-  }
-
-  public ProviderData withCountryCode(String countryCode) {
-    this.countryCode = countryCode;
-    return this;
-  }
-
-  /**
-   * Get the ROC of the provider.
-   * 
-   * @return The roc
-   */
-  @JsonProperty("roc")
-  public String getRoc() {
-    return roc;
-  }
-
-  /**
-   * Set the ROC of the provider.
-   * 
-   * @param roc
-   *          The roc
-   */
-  @JsonProperty("roc")
-  public void setRoc(String roc) {
-    this.roc = roc;
-  }
-
-  public ProviderData withRoc(String roc) {
-    this.roc = roc;
-    return this;
-  }
-
-  /**
-   * Get the subgrid of the provider.
-   * 
-   * @return The subgrid
-   */
-  @JsonProperty("subgrid")
-  public String getSubgrid() {
-    return subgrid;
-  }
-
-  /**
-   * Set the subgrid of the provider.
-   * 
-   * @param subgrid
-   *          The subgrid
-   */
-  @JsonProperty("subgrid")
-  public void setSubgrid(String subgrid) {
-    this.subgrid = subgrid;
-  }
-
-  public ProviderData withSubgrid(String subgrid) {
-    this.subgrid = subgrid;
-    return this;
-  }
-
-  /**
-   * Get the giisUrl of the provider.
-   * 
-   * @return The giisUrl
-   */
-  @JsonProperty("giis_url")
-  public String getGiisUrl() {
-    return giisUrl;
-  }
-
-  /**
-   * Set the giisUrl of the provider.
-   * 
-   * @param giisUrl
-   *          The giis_url
-   */
-  @JsonProperty("giis_url")
-  public void setGiisUrl(String giisUrl) {
-    this.giisUrl = giisUrl;
-  }
-
-  public ProviderData withGiisUrl(String giisUrl) {
-    this.giisUrl = giisUrl;
-    return this;
-  }
-
-  @Override
-  public String toString() {
-    return ToStringBuilder.reflectionToString(this);
-  }
-
-  @JsonAnyGetter
-  public Map<String, Object> getAdditionalProperties() {
-    return this.additionalProperties;
-  }
-
-  @JsonAnySetter
-  public void setAdditionalProperty(String name, Object value) {
-    this.additionalProperties.put(name, value);
-  }
-
-  public ProviderData withAdditionalProperty(String name, Object value) {
-    this.additionalProperties.put(name, value);
-    return this;
-  }
-
-  @Override
-  public int hashCode() {
-    return new HashCodeBuilder().append(id).append(primaryKey).append(name).append(country)
-        .append(countryCode).append(roc).append(subgrid).append(giisUrl)
-        .append(additionalProperties).toHashCode();
-  }
-
-  @Override
-  public boolean equals(Object other) {
-    if (other == this) {
-      return true;
-    }
-    if (other == null) {
-      return false;
-    }
-    if ((other instanceof ProviderData) == false) {
-      return false;
-    }
-    ProviderData rhs = ((ProviderData) other);
-    return new EqualsBuilder().append(id, rhs.id).append(primaryKey, rhs.primaryKey)
-        .append(name, rhs.name).append(country, rhs.country).append(countryCode, rhs.countryCode)
-        .append(roc, rhs.roc).append(subgrid, rhs.subgrid).append(giisUrl, rhs.giisUrl)
-        .append(additionalProperties, rhs.additionalProperties).isEquals();
-  }
-
 }

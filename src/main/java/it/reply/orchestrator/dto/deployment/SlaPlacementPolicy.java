@@ -21,18 +21,15 @@ import alien4cloud.model.components.ScalarPropertyValue;
 
 import org.springframework.util.Assert;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-/**
- * @author a.brigandi
- *
- */
 public class SlaPlacementPolicy implements PlacementPolicy {
 
   private static final long serialVersionUID = 2712997001319905444L;
 
-  private List<String> nodes;
+  private List<String> nodes = new ArrayList<>();
 
   private String slaId;
 
