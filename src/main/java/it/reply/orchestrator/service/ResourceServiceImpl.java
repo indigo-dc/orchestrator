@@ -17,9 +17,10 @@
 package it.reply.orchestrator.service;
 
 import it.reply.orchestrator.dal.entity.Resource;
-import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.exception.http.NotFoundException;
+
+import lombok.AllArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -28,34 +29,29 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@AllArgsConstructor(onConstructor = @__({ @Autowired }))
 public class ResourceServiceImpl implements ResourceService {
 
-  @Autowired
   private ResourceRepository resourceRepository;
 
-  @Autowired
-  private DeploymentRepository deploymentRepository;
+  private DeploymentService deploymentservice;
 
   @Override
   @Transactional(readOnly = true)
   public Page<Resource> getResources(String deploymentId, Pageable pageable) {
-    if (deploymentRepository.exists(deploymentId)) {
-      return resourceRepository.findByDeployment_id(deploymentId, pageable);
-    } else {
-      throw new NotFoundException("The deployment <" + deploymentId + "> doesn't exist");
-    }
+    // check if deploymentExists
+    deploymentservice.getDeployment(deploymentId);
+    return resourceRepository.findByDeployment_id(deploymentId, pageable);
   }
 
   @Override
   @Transactional(readOnly = true)
   public Resource getResource(String uuid, String deploymentId) {
-    Resource resource = resourceRepository.findByIdAndDeployment_id(uuid, deploymentId);
-    if (resource != null) {
-      return resource;
-    } else {
-      throw new NotFoundException(
-          "The resource <" + uuid + "> in deployment <" + deploymentId + "> doesn't exist");
-    }
+    // check if deploymentExists
+    deploymentservice.getDeployment(deploymentId);
+    return resourceRepository.findByIdAndDeployment_id(uuid, deploymentId)
+        .orElseThrow(() -> new NotFoundException(String
+            .format("The resource <%s> in deployment <%s> doesn't exist", uuid, deploymentId)));
   }
 
 }

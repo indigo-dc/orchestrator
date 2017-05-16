@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 @Transactional(propagation = Propagation.MANDATORY)
@@ -35,7 +36,7 @@ public interface ResourceRepository extends PagingAndSortingRepository<Resource,
 
   public List<Resource> findByDeployment_id(String deploymentId);
 
-  public Resource findByIdAndDeployment_id(String uuid, String deploymentId);
+  public Optional<Resource> findByIdAndDeployment_id(String uuid, String deploymentId);
 
   public List<Resource> findByToscaNodeNameAndDeployment_id(String toscaNodeName,
       String deploymentId);
