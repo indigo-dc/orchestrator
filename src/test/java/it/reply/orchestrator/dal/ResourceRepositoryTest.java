@@ -16,13 +16,12 @@
 
 package it.reply.orchestrator.dal;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
+import static org.assertj.core.api.Assertions.*;
 
 import com.github.springtestdbunit.annotation.DatabaseSetup;
 import com.github.springtestdbunit.annotation.DatabaseTearDown;
 
-import it.reply.orchestrator.config.specific.WebAppConfigurationAware;
+import it.reply.orchestrator.config.specific.WebAppConfigurationAwareIT;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 
@@ -31,10 +30,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 @DatabaseTearDown("/data/database-empty.xml")
 @DatabaseSetup("/data/database-resource-init.xml")
 @Transactional
-public class ResourceRepositoryTest extends WebAppConfigurationAware {
+public class ResourceRepositoryTest extends WebAppConfigurationAwareIT {
 
   final String deploymentId = "0748fbe9-6c1d-4298-b88f-06188734ab42";
   final String resourceId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
@@ -49,7 +50,7 @@ public class ResourceRepositoryTest extends WebAppConfigurationAware {
   public void resourcesNotFound() {
     Page<Resource> resources =
         resourceRepository.findByDeployment_id("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", null);
-    assertThat(resources.getTotalElements(), equalTo(0L));
+    assertThat(resources.getTotalElements()).isEqualTo(0);
   }
 
   /**
@@ -58,7 +59,7 @@ public class ResourceRepositoryTest extends WebAppConfigurationAware {
   @Test
   public void resourcesFound() {
     Page<Resource> resources = resourceRepository.findByDeployment_id(deploymentId, null);
-    assertThat(resources.getTotalElements(), equalTo(2L));
+    assertThat(resources.getTotalElements()).isEqualTo(2);
 
   }
 
@@ -67,9 +68,9 @@ public class ResourceRepositoryTest extends WebAppConfigurationAware {
    */
   @Test
   public void resourceFound() {
-    Resource resource = resourceRepository.findByIdAndDeployment_id(resourceId, deploymentId);
-    assertThat(resource.getId(), equalTo(resourceId));
-
+    Optional<Resource> resource = resourceRepository.findByIdAndDeployment_id(resourceId, deploymentId);
+    assertThat(resource).isNotEmpty();
+    assertThat(resource.get().getId()).isEqualTo(resourceId);
   }
 
   /**
@@ -77,9 +78,9 @@ public class ResourceRepositoryTest extends WebAppConfigurationAware {
    */
   @Test
   public void resourceNotFound() {
-    Resource resource = resourceRepository
+    Optional<Resource> resource = resourceRepository
         .findByIdAndDeployment_id("aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee", deploymentId);
-    assertThat(resource, equalTo(null));
+    assertThat(resource).isEmpty();
 
   }
 
@@ -88,9 +89,9 @@ public class ResourceRepositoryTest extends WebAppConfigurationAware {
    */
   @Test
   public void resourceNotFoundForExistingResourceButNotExistingDeployment() {
-    Resource resource = resourceRepository.findByIdAndDeployment_id(resourceId,
+    Optional<Resource> resource = resourceRepository.findByIdAndDeployment_id(resourceId,
         "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee");
-    assertThat(resource, equalTo(null));
+    assertThat(resource).isEmpty();
 
   }
 
