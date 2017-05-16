@@ -23,10 +23,12 @@ import lombok.Data;
 import lombok.ToString;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+@Data
 @ToString(exclude = "token")
 public class OneData implements Serializable {
 
@@ -57,7 +59,7 @@ public class OneData implements Serializable {
   private String space;
   private String path;
   private String zone;
-  private List<OneDataProviderInfo> providers = Lists.newArrayList();
+  private List<OneDataProviderInfo> providers = new ArrayList<>();
   private boolean smartScheduling;
 
   /**
@@ -111,47 +113,6 @@ public class OneData implements Serializable {
 
   public OneData(String token, String space, String path, String providers) {
     this(token, space, path, providers, null);
-  }
-
-  public String getToken() {
-    return token;
-  }
-
-  public String getSpace() {
-    return space;
-  }
-
-  public String getPath() {
-    return path;
-  }
-
-  public String getZone() {
-    return zone;
-  }
-
-  public List<OneDataProviderInfo> getProviders() {
-    return providers;
-  }
-
-  public void setProviders(List<OneDataProviderInfo> providers) {
-    this.providers = providers;
-  }
-
-  // /**
-  // * Generate the provider list as CSV.
-  // *
-  // * @return the provider list as CSV
-  // */
-  // public String getProvidersAsList() {
-  // return providers != null ? StringUtils.join(providers, ",") : "";
-  // }
-
-  public boolean isSmartScheduling() {
-    return smartScheduling;
-  }
-
-  public void setSmartScheduling(boolean smartScheduling) {
-    this.smartScheduling = smartScheduling;
   }
 
 }

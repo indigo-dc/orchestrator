@@ -16,6 +16,8 @@
 
 package it.reply.orchestrator.dto.cmdb;
 
+import com.google.common.base.Preconditions;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 
@@ -29,7 +31,7 @@ public enum Type implements Named {
   private final String name;
 
   Type(String name) {
-    this.name = name;
+    this.name = Preconditions.checkNotNull(name);
   }
 
   @JsonCreator

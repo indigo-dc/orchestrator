@@ -331,6 +331,8 @@ public class PrefilterCloudProvidersTest {
   private PlacementPolicy getPlacementePolicies() {
     return new PlacementPolicy() {
 
+      private static final long serialVersionUID = -3043392471995029378L;
+
       @Override
       public List<String> getNodes() {
         // TODO Auto-generated method stub

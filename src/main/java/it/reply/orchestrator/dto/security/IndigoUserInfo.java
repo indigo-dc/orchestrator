@@ -26,6 +26,7 @@ import it.reply.orchestrator.utils.CommonUtils;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -40,6 +41,7 @@ import javax.validation.constraints.NotNull;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 public class IndigoUserInfo extends DefaultUserInfo {
 
   private static final long serialVersionUID = -6165120150633146681L;

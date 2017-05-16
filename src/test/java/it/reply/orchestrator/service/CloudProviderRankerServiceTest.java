@@ -51,12 +51,17 @@ public class CloudProviderRankerServiceTest extends WebAppConfigurationAwareIT {
         RankCloudProvidersMessage.class);
 
     // Prepare Ranker's request
-    List<Monitoring> monitoring = rcpm.getCloudProvidersMonitoringData().entrySet().stream()
-        .map(e -> new Monitoring(e.getKey(), e.getValue())).collect(Collectors.toList());
+    List<Monitoring> monitoring = rcpm.getCloudProvidersMonitoringData()
+        .entrySet()
+        .stream()
+        .map(e -> Monitoring.builder().provider(e.getKey()).metrics(e.getValue()).build())
+        .collect(Collectors.toList());
 
-    CloudProviderRankerRequest cprr = new CloudProviderRankerRequest()
-        .withPreferences(rcpm.getSlamPreferences().getPreferences().get(0).getPreferences())
-        .withSla(rcpm.getSlamPreferences().getSla()).withMonitoring(monitoring);
+    CloudProviderRankerRequest cprr = CloudProviderRankerRequest.builder()
+        .preferences(rcpm.getSlamPreferences().getPreferences().get(0).getPreferences())
+        .sla(rcpm.getSlamPreferences().getSla())
+        .monitoring(monitoring)
+        .build();
 
     // WARNING: This is hard-coded and may change in the future!
     List<RankedCloudProvider> response =

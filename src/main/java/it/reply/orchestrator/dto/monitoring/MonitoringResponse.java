@@ -18,30 +18,27 @@ package it.reply.orchestrator.dto.monitoring;
 
 import it.reply.domain.dsl.prisma.restprotocol.Meta;
 import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.MonitoringWrappedResponsePaas;
+import it.reply.orchestrator.dto.AdditionalPropertiesAwareDto;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.Serializable;
 
-public class MonitoringResponse implements Serializable {
+@Data
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+public class MonitoringResponse extends AdditionalPropertiesAwareDto implements Serializable {
 
   private static final long serialVersionUID = 6559999818418491070L;
 
+  @Nullable
   private Meta meta;
+
+  @Nullable
   private MonitoringWrappedResponsePaas result;
-
-  public Meta getMeta() {
-    return meta;
-  }
-
-  public void setMeta(Meta meta) {
-    this.meta = meta;
-  }
-
-  public MonitoringWrappedResponsePaas getResult() {
-    return result;
-  }
-
-  public void setResult(MonitoringWrappedResponsePaas result) {
-    this.result = result;
-  }
 
 }

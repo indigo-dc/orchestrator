@@ -26,12 +26,14 @@ import it.reply.orchestrator.resource.common.CustomSerializer;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.util.List;
 import java.util.Map;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 public class DeploymentResource extends AbstractResource {
 
   private Status status;
