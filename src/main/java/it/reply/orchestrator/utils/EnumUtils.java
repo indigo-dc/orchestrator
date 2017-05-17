@@ -16,6 +16,7 @@
 
 package it.reply.orchestrator.utils;
 
+import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
@@ -28,6 +29,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Slf4j
+@UtilityClass
 public class EnumUtils {
 
   /**
