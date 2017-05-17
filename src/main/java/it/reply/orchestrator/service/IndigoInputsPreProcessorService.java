@@ -207,12 +207,6 @@ public class IndigoInputsPreProcessorService {
               "Failed to replace input function on object <%s>, property <%s>, parameters <%s>: %s",
               objectName, propertyName, function.getParameters(), ex.getMessage()), ex);
         }
-      } else {
-        String msg = String.format(
-            "Function <%s> detected for property <%s> while only <get_input> should be authorized.",
-            function.getFunction(), propertyName);
-        LOG.warn(msg);
-        // throw new ToscaException(msg);
       }
     } else if (propertyValue instanceof ComplexPropertyValue) {
       // Complex or List properties might contain other function as their values
