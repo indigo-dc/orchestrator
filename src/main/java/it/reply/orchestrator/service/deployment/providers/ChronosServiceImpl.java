@@ -40,7 +40,6 @@ import it.infn.ba.indigo.chronos.client.model.v1.Job;
 import it.infn.ba.indigo.chronos.client.model.v1.Parameters;
 import it.infn.ba.indigo.chronos.client.utils.ChronosException;
 import it.reply.orchestrator.annotation.DeploymentProviderQualifier;
-import it.reply.orchestrator.controller.DeploymentController;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
@@ -55,13 +54,13 @@ import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.utils.CommonUtils;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.jgrapht.alg.CycleDetector;
 import org.jgrapht.graph.DefaultDirectedGraph;
 import org.jgrapht.graph.DefaultEdge;
 import org.jgrapht.traverse.TopologicalOrderIterator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
@@ -81,10 +80,9 @@ import java.util.stream.Collectors;
 @Service
 @DeploymentProviderQualifier(DeploymentProvider.CHRONOS)
 @PropertySource(value = { "classpath:application.properties", "${conf-file-path.chronos}" })
+@Slf4j
 public class ChronosServiceImpl extends AbstractDeploymentProviderService
     implements DeploymentProviderService {
-
-  private static final Logger LOG = LoggerFactory.getLogger(DeploymentController.class);
 
   @Autowired
   ToscaService toscaService;

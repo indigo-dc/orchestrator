@@ -46,6 +46,8 @@ import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.EnumUtils;
 
+import lombok.extern.slf4j.Slf4j;
+
 import mesosphere.marathon.client.Marathon;
 import mesosphere.marathon.client.MarathonClient;
 import mesosphere.marathon.client.MarathonException;
@@ -63,8 +65,6 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jgrapht.graph.DirectedMultigraph;
 import org.jgrapht.traverse.TopologicalOrderIterator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.HttpStatus;
@@ -88,9 +88,8 @@ import java.util.stream.Collectors;
 @Service
 @DeploymentProviderQualifier(DeploymentProvider.MARATHON)
 @EnableConfigurationProperties(MarathonProperties.class)
+@Slf4j
 public class MarathonServiceImpl extends AbstractMesosDeploymentService<MarathonApp, App> {
-
-  private static final Logger LOG = LoggerFactory.getLogger(MarathonServiceImpl.class);
 
   private ToscaService toscaService;
 

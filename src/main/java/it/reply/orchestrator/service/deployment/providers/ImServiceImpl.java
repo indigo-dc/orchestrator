@@ -63,8 +63,8 @@ import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.utils.json.JsonUtility;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
@@ -85,9 +85,8 @@ import java.util.stream.Collectors;
 @Service
 @DeploymentProviderQualifier(DeploymentProvider.IM)
 @EnableConfigurationProperties(ImProperties.class)
+@Slf4j
 public class ImServiceImpl extends AbstractDeploymentProviderService {
-
-  private static final Logger LOG = LoggerFactory.getLogger(ImServiceImpl.class);
 
   private static final Pattern VM_ID_PATTERN = Pattern.compile("(\\w+)$");
   private static final Pattern OS_ENDPOINT_PATTERN =

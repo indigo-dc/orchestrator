@@ -24,10 +24,10 @@ import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.orchestrator.service.deployment.providers.DeploymentStatusHelper;
 import it.reply.workflowmanager.spring.orchestrator.bpm.ejbcommands.BaseCommand;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Optional;
@@ -40,9 +40,8 @@ import java.util.Optional;
  * @author l.biava
  *
  */
+@Slf4j
 public abstract class BaseDeployCommand extends BaseCommand {
-
-  private static final Logger LOG = LoggerFactory.getLogger(BaseDeployCommand.class);
 
   @Autowired
   protected DeploymentStatusHelper deploymentStatusHelper;

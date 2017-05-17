@@ -16,8 +16,7 @@
 
 package it.reply.orchestrator.utils;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 import java.util.List;
@@ -28,9 +27,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+@Slf4j
 public class EnumUtils {
-
-  private static final Logger LOG = LoggerFactory.getLogger(EnumUtils.class);
 
   /**
    * Retrieve a enum value from its class and a user defined predicate.
