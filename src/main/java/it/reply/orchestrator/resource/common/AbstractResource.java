@@ -16,6 +16,7 @@
 
 package it.reply.orchestrator.resource.common;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
@@ -24,10 +25,7 @@ import lombok.EqualsAndHashCode;
 
 import org.springframework.hateoas.ResourceSupport;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.TimeZone;
 
 @JsonInclude(Include.NON_NULL)
 @Data
@@ -35,49 +33,11 @@ import java.util.TimeZone;
 public class AbstractResource extends ResourceSupport {
 
   private String uuid;
-  private String creationTime;
-  private String updateTime;
 
-  /**
-   * Set the creation time converting from Date.
-   * 
-   * @param creationTime
-   *          {@code Date} of creation
-   */
-  public void setCreationTime(Date creationTime) {
-    if (creationTime == null) {
-      return;
-    }
+  @JsonFormat(timezone = "UTC", pattern = "yyyy-MM-dd'T'HH:mmZ")
+  private Date creationTime;
 
-    this.creationTime = convertDate(creationTime);
-  }
+  @JsonFormat(timezone = "UTC", pattern = "yyyy-MM-dd'T'HH:mmZ")
+  private Date updateTime;
 
-  public void setCreationTime(String creationTime) {
-    this.creationTime = creationTime;
-  }
-
-  /**
-   * Set the update time converting from Date.
-   * 
-   * @param updateTime
-   *          {@code Date} of update
-   */
-  public void setUpdateTime(Date updateTime) {
-    if (updateTime == null) {
-      return;
-    }
-
-    this.updateTime = convertDate(updateTime);
-  }
-
-  public void setUpdateTime(String updateTime) {
-    this.updateTime = updateTime;
-  }
-
-  private String convertDate(Date date) {
-    TimeZone tz = TimeZone.getTimeZone("UTC");
-    DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mmZ");
-    df.setTimeZone(tz);
-    return df.format(date);
-  }
 }
