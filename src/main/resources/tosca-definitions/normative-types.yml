@@ -424,6 +424,10 @@ node_types:
     capabilities:
       feature:
         type: tosca.capabilities.Node
+      dependency:
+        type: tosca.capabilities.Node
+        lower_bound: 0
+        upper_bound: UNBOUNDED
     requirements:
       - dependency: tosca.capabilities.Node
         relationship: tosca.relationships.DependsOn
