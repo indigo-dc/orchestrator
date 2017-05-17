@@ -61,12 +61,12 @@ import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jgrapht.alg.CycleDetector;
 import org.jgrapht.graph.DirectedMultigraph;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationContext;
@@ -107,9 +107,8 @@ import javax.annotation.Resource;
 import javax.validation.ValidationException;
 
 @Service
+@Slf4j
 public class ToscaServiceImpl implements ToscaService {
-
-  private static final Logger LOG = LoggerFactory.getLogger(ToscaServiceImpl.class);
 
   @Autowired
   private ApplicationContext ctx;

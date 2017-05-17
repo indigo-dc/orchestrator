@@ -34,8 +34,6 @@ import org.mitre.openid.connect.client.service.ClientConfigurationService;
 import org.mitre.openid.connect.client.service.ServerConfigurationService;
 import org.mitre.openid.connect.client.service.impl.DynamicServerConfigurationService;
 import org.mitre.openid.connect.client.service.impl.StaticClientConfigurationService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.ApplicationContext;
@@ -63,8 +61,6 @@ import java.util.Map.Entry;
 @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)
 @EnableConfigurationProperties(OidcProperties.class)
 public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
-
-  static final Logger LOG = LoggerFactory.getLogger(WebSecurityConfig.class);
 
   @Autowired
   private ApplicationContext applicationContext;

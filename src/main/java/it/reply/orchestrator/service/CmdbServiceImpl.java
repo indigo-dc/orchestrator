@@ -25,8 +25,8 @@ import it.reply.orchestrator.dto.cmdb.Provider;
 import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.exception.service.DeploymentException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.PropertySource;
@@ -42,10 +42,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 @PropertySource("classpath:cmdb/cmdb.properties")
 public class CmdbServiceImpl implements CmdbService {
-
-  private static final Logger LOG = LoggerFactory.getLogger(CmdbServiceImpl.class);
 
   @Autowired
   private RestTemplate restTemplate;

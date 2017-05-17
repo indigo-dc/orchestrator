@@ -42,10 +42,10 @@ import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.utils.CommonUtils;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -57,9 +57,8 @@ import java.util.Objects;
 import java.util.Set;
 
 @Component
+@Slf4j
 public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
-
-  private static final Logger LOG = LoggerFactory.getLogger(PrefilterCloudProviders.class);
 
   @Value("${chronos.cloudProviderName}")
   private String chronosCloudProviderName;

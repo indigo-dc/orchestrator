@@ -19,8 +19,8 @@ package it.reply.orchestrator.config.persistence;
 import it.reply.orchestrator.annotation.OrchestratorPersistenceUnit;
 import it.reply.orchestrator.annotation.SpringDefaultProfile;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -37,9 +37,8 @@ import javax.sql.DataSource;
 
 @Configuration
 @SpringDefaultProfile
+@Slf4j
 public class OrchestratorPersistenceConfig {
-
-  private static final Logger LOG = LoggerFactory.getLogger(OrchestratorPersistenceConfig.class);
 
   private static final String ENTITY_MANAGER_PACKAGE_TO_SCAN = "entitymanager.packages.to.scan";
   private static final String HIBERNATE_HBM2DDL_AUTO = "hibernate.hbm2ddl.auto";

@@ -32,15 +32,15 @@ import it.reply.orchestrator.enums.DeploymentType;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Service
+@Slf4j
 public class CloudProviderEndpointServiceImpl {
-  private static final Logger LOG = LoggerFactory.getLogger(CloudProviderEndpointServiceImpl.class);
 
   /**
    * Choose a Cloud Provider.
