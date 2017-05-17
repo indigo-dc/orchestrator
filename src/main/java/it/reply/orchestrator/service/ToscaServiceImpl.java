@@ -147,7 +147,8 @@ public class ToscaServiceImpl implements ToscaService {
       FileUtil.delete(Paths.get(alienRepoDir));
     }
 
-    setAutentication();
+    // set requiredAuth to upload TOSCA types
+    Optional<Authentication> oldAuth = setAutenticationForToscaImport();
 
     try (InputStream is = ctx.getResource(normativeLocalName).getInputStream()) {
       Path zipFile = File.createTempFile(normativeLocalName, ".zip").toPath();
@@ -168,6 +169,9 @@ public class ToscaServiceImpl implements ToscaService {
             Arrays.toString(result.getContext().getParsingErrors().toArray()));
       }
     }
+
+    // restore old auth if present
+    oldAuth.ifPresent(SecurityContextHolder.getContext()::setAuthentication);
 
   }
 
@@ -656,10 +660,14 @@ public class ToscaServiceImpl implements ToscaService {
 
   }
 
-  private static void setAutentication() {
-    Authentication auth = new PreAuthenticatedAuthenticationToken(Role.ADMIN.name().toLowerCase(),
-        "", AuthorityUtils.createAuthorityList(Role.ADMIN.name()));
-    SecurityContextHolder.getContext().setAuthentication(auth);
+  private static Optional<Authentication> setAutenticationForToscaImport() {
+    Authentication oldAuth = SecurityContextHolder.getContext().getAuthentication();
+
+    Authentication newAuth = new PreAuthenticatedAuthenticationToken(
+        Role.ADMIN.name().toLowerCase(), "", AuthorityUtils.createAuthorityList(Role.ADMIN.name()));
+
+    SecurityContextHolder.getContext().setAuthentication(newAuth);
+    return Optional.ofNullable(oldAuth);
   }
 
   @Override
