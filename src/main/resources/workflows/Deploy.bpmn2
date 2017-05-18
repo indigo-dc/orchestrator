@@ -8,7 +8,7 @@
   <bpmn2:itemDefinition id="ItemDefinition_6" isCollection="false" structureRef="it.reply.orchestrator.dto.RankCloudProvidersMessage"/>
   <bpmn2:itemDefinition id="ItemDefinition_3" isCollection="false" structureRef="it.reply.orchestrator.dto.deployment.DeploymentMessage"/>
   <bpmn2:itemDefinition id="ItemDefinition_5" isCollection="false" structureRef="org.slf4j.Logger"/>
-  <bpmn2:itemDefinition id="ItemDefinition_9" isCollection="false" structureRef="it.reply.orchestrator.service.WorkflowConstants"/>
+  <bpmn2:itemDefinition id="ItemDefinition_9" isCollection="false" structureRef="it.reply.orchestrator.utils.WorkflowConstants"/>
   <bpmn2:signal id="Signal_1" name="NotifyCallback" structureRef="ItemDefinition_4"/>
   <bpmn2:process id="it.reply.orchestrator.Deploy" tns:packageName="it.reply.orchestrator" name="Deploy" isExecutable="true" processType="Private">
     <bpmn2:extensionElements>
@@ -16,7 +16,7 @@
       <tns:import name="it.reply.orchestrator.dto.RankCloudProvidersMessage"/>
       <tns:import name="it.reply.orchestrator.dto.deployment.DeploymentMessage"/>
       <tns:import name="org.slf4j.Logger"/>
-      <tns:import name="it.reply.orchestrator.service.WorkflowConstants"/>
+      <tns:import name="it.reply.orchestrator.utils.WorkflowConstants"/>
       <tns:import name="it.reply.orchestrator.enums.DeploymentType"/>
     </bpmn2:extensionElements>
     <bpmn2:property id="DEPLOYMENT_ID" itemSubjectRef="ItemDefinition_4" name="DEPLOYMENT_ID"/>

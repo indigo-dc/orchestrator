@@ -40,9 +40,9 @@ import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
 import it.reply.orchestrator.service.CloudProviderEndpointServiceImpl;
 import it.reply.orchestrator.service.OneDataService;
-import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.orchestrator.service.deployment.providers.DeploymentStatusHelper;
 import it.reply.orchestrator.util.TestUtil;
+import it.reply.orchestrator.utils.WorkflowConstants;
 import it.reply.workflowmanager.utils.Constants;
 
 public class UpdateDeploymentTest {

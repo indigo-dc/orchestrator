@@ -52,6 +52,7 @@ import it.reply.orchestrator.exception.http.NotFoundException;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
+import it.reply.orchestrator.utils.WorkflowConstants;
 import it.reply.workflowmanager.exceptions.WorkflowException;
 import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager;
 import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager.RUNTIME_STRATEGY;

@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.service;
+package it.reply.orchestrator.utils;
 
+import lombok.experimental.UtilityClass;
+
+@UtilityClass
 public class WorkflowConstants {
   public static final String WF_PARAM_DEPLOYMENT_ID = "DEPLOYMENT_ID";
   public static final String WF_PARAM_DEPLOYMENT_MESSAGE = "DeploymentMessage";
