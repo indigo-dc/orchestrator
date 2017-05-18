@@ -18,68 +18,42 @@ package it.reply.orchestrator.resource;
 
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.resource.common.AbstractResource;
+import it.reply.orchestrator.utils.CommonUtils;
 
-import org.apache.commons.lang3.builder.ToStringBuilder;
+import lombok.AccessLevel;
+import lombok.Builder;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import lombok.ToString;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
+@Data
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class BaseResource extends AbstractResource {
 
   private NodeStates state;
   private String toscaNodeType;
   private String toscaNodeName;
-  private List<String> requiredBy = new ArrayList<String>();
 
-  public NodeStates getState() {
-    return state;
-  }
+  @NonNull
+  private List<String> requiredBy = new ArrayList<>();
 
-  public void setState(NodeStates state) {
+  @Builder
+  protected BaseResource(String uuid, Date creationTime, Date updateTime, NodeStates state,
+      String toscaNodeType, String toscaNodeName, List<String> requiredBy) {
+    super(uuid, creationTime, updateTime);
     this.state = state;
-  }
-
-  public String getToscaNodeType() {
-    return this.toscaNodeType;
-  }
-
-  public void setToscaNodeType(String toscaNodeType) {
     this.toscaNodeType = toscaNodeType;
-  }
-
-  public BaseResource withToscaNodeType(String toscaNodeType) {
-    this.toscaNodeType = toscaNodeType;
-    return this;
-  }
-
-  public String getToscaNodeName() {
-    return toscaNodeName;
-  }
-
-  public void setToscaNodeName(String toscaNodeName) {
     this.toscaNodeName = toscaNodeName;
+    this.requiredBy = CommonUtils.notNullOrDefaultValue(requiredBy, new ArrayList<>());
   }
 
-  public BaseResource withToscaNodeName(String toscaNodeName) {
-    this.toscaNodeName = toscaNodeName;
-    return this;
-  }
-
-  public List<String> getRequiredBy() {
-    return requiredBy;
-  }
-
-  public void setRequiredBy(List<String> requiredBy) {
-    this.requiredBy = requiredBy;
-  }
-
-  public BaseResource withRequiredBy(List<String> requiredBy) {
-    this.requiredBy = requiredBy;
-    return this;
-  }
-
-  @Override
-  public String toString() {
-    return ToStringBuilder.reflectionToString(this);
-  }
 }

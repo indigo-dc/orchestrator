@@ -20,6 +20,7 @@ import it.reply.orchestrator.controller.DeploymentController;
 import it.reply.orchestrator.controller.ResourceController;
 import it.reply.orchestrator.dal.entity.Resource;
 
+import org.springframework.hateoas.core.DummyInvocationUtils;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
 import org.springframework.stereotype.Component;
@@ -37,16 +38,23 @@ public class BaseResourceAssembler extends ResourceAssemblerSupport<Resource, Ba
   }
 
   private BaseResource getBaseResource(Resource entity) {
-    BaseResource resource = new BaseResource();
-    resource.setUuid(entity.getId());
-    resource.setCreationTime(entity.getCreated());
-    resource.setState(entity.getState());
-    resource.setToscaNodeType(entity.getToscaNodeType());
-    resource.setToscaNodeName(entity.getToscaNodeName());
-    resource.add(ControllerLinkBuilder.linkTo(DeploymentController.class).slash("deployments")
-        .slash(entity.getDeployment().getId()).withRel("deployment"));
-    resource.add(ControllerLinkBuilder.linkTo(DeploymentController.class).slash("deployments")
-        .slash(entity.getDeployment().getId()).slash("resources").slash(entity).withSelfRel());
+    BaseResource resource = BaseResource.builder()
+        .uuid(entity.getId())
+        .creationTime(entity.getCreated())
+        .state(entity.getState())
+        .toscaNodeType(entity.getToscaNodeType())
+        .toscaNodeName(entity.getToscaNodeName())
+        .build();
+    resource
+        .add(ControllerLinkBuilder.linkTo(DummyInvocationUtils.methodOn(DeploymentController.class)
+            .getDeployment(entity.getDeployment().getId())).withRel("deployment"));
+    resource
+        .add(
+            ControllerLinkBuilder
+                .linkTo(DummyInvocationUtils
+                    .methodOn(ResourceController.class, entity.getDeployment().getId())
+                    .getResource(entity.getDeployment().getId(), entity.getId()))
+                .withSelfRel());
     return resource;
   }
 }

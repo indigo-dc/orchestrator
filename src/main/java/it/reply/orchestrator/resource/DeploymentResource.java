@@ -22,30 +22,56 @@ import it.reply.orchestrator.dal.entity.OidcEntityId;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.resource.common.AbstractResource;
-import it.reply.orchestrator.resource.common.CustomSerializer;
+import it.reply.orchestrator.utils.CommonUtils;
+import it.reply.orchestrator.utils.RawJsonSerializer;
 
+import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-import java.util.List;
+import org.checkerframework.checker.nullness.qual.NonNull;
+
+import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class DeploymentResource extends AbstractResource {
 
   private Status status;
+
   private String statusReason;
 
-  @JsonSerialize(using = CustomSerializer.class)
-  private Map<String, String> outputs;
+  @JsonSerialize(contentUsing = RawJsonSerializer.class)
+  @NonNull
+  private Map<String, String> outputs = new HashMap<>();
+
   private Task task;
+
   private String callback;
-  private List<BaseResource> resources;
+
   private String cloudProviderName;
 
   private OidcEntityId createdBy;
+
+  @Builder
+  protected DeploymentResource(String uuid, Date creationTime, Date updateTime, Status status,
+      String statusReason, Map<String, String> outputs, Task task, String callback,
+      String cloudProviderName, OidcEntityId createdBy) {
+    super(uuid, creationTime, updateTime);
+    this.status = status;
+    this.statusReason = statusReason;
+    this.outputs = CommonUtils.notNullOrDefaultValue(outputs, new HashMap<>());
+    this.task = task;
+    this.callback = callback;
+    this.cloudProviderName = cloudProviderName;
+    this.createdBy = createdBy;
+  }
 
 }
