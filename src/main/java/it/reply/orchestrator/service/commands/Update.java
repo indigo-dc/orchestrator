@@ -17,9 +17,9 @@
 package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
-import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;
+import it.reply.orchestrator.utils.WorkflowConstants;
 
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;

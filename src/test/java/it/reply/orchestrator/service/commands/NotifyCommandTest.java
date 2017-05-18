@@ -20,7 +20,7 @@ import static org.junit.Assert.assertEquals;
 
 import it.reply.orchestrator.command.TestCommandHelper;
 import it.reply.orchestrator.service.CallbackService;
-import it.reply.orchestrator.service.WorkflowConstants;
+import it.reply.orchestrator.utils.WorkflowConstants;
 import it.reply.workflowmanager.utils.Constants;
 
 import org.junit.Before;

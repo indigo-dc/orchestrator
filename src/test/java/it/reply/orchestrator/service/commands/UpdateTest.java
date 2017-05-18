@@ -28,10 +28,10 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
-import it.reply.orchestrator.service.WorkflowConstants;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;
 import it.reply.orchestrator.util.TestUtil;
+import it.reply.orchestrator.utils.WorkflowConstants;
 import it.reply.workflowmanager.utils.Constants;
 
 public class UpdateTest {

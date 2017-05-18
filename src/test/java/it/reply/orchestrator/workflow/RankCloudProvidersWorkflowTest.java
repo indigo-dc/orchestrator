@@ -29,7 +29,7 @@ import it.reply.orchestrator.service.CloudProviderRankerService;
 import it.reply.orchestrator.service.CmdbService;
 import it.reply.orchestrator.service.MonitoringService;
 import it.reply.orchestrator.service.SlamService;
-import it.reply.orchestrator.service.WorkflowConstants;
+import it.reply.orchestrator.utils.WorkflowConstants;
 import it.reply.utils.json.JsonUtility;
 import it.reply.workflowmanager.exceptions.WorkflowException;
 import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager;
