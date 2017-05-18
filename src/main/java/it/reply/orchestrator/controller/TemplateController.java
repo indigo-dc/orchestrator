@@ -41,7 +41,7 @@ public class TemplateController {
    */
   @RequestMapping(value = "/deployments/{deploymentId}/template", method = RequestMethod.GET)
   @ResponseStatus(HttpStatus.OK)
-  public String getOrchestrator(@PathVariable("deploymentId") String uuid) {
+  public CharSequence getTemplate(@PathVariable("deploymentId") String uuid) {
     return templateService.getTemplate(uuid);
   }
 

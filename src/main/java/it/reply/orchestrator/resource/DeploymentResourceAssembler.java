@@ -17,29 +17,22 @@
 package it.reply.orchestrator.resource;
 
 import it.reply.orchestrator.controller.DeploymentController;
+import it.reply.orchestrator.controller.ResourceController;
+import it.reply.orchestrator.controller.TemplateController;
 import it.reply.orchestrator.dal.entity.Deployment;
-import it.reply.orchestrator.service.utils.MyLinkBuilder;
+import it.reply.orchestrator.dal.entity.OidcEntity;
+import it.reply.orchestrator.utils.CommonUtils;
 
+import org.springframework.hateoas.core.DummyInvocationUtils;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
 import org.springframework.stereotype.Component;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.net.URI;
 import java.util.Optional;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.StampedLock;
-
-import javax.servlet.http.HttpServletRequest;
 
 @Component
 public class DeploymentResourceAssembler
     extends ResourceAssemblerSupport<Deployment, DeploymentResource> {
-
-  private URI uri;
-
-  StampedLock lock = new StampedLock();
 
   public DeploymentResourceAssembler() {
     super(DeploymentController.class, DeploymentResource.class);
@@ -52,80 +45,39 @@ public class DeploymentResourceAssembler
 
   private DeploymentResource getDeploymentResource(Deployment entity) {
 
-    DeploymentResource resource = new DeploymentResource();
-    resource.setUuid(entity.getId());
-    resource.setCreationTime(entity.getCreated());
-    resource.setUpdateTime(entity.getUpdated());
-    resource.setStatus(entity.getStatus());
-    resource.setStatusReason(entity.getStatusReason());
-    resource.setCloudProviderName(entity.getCloudProviderName());
-
-    resource.setTask(entity.getTask());
-
-    resource.setOutputs(entity.getOutputs());
-
-    if (entity.getCallback() != null) {
-      resource.setCallback(entity.getCallback());
-    }
+    DeploymentResource resource = DeploymentResource.builder()
+        .uuid(entity.getId())
+        .creationTime(entity.getCreated())
+        .updateTime(entity.getUpdated())
+        .status(entity.getStatus())
+        .statusReason(entity.getStatusReason())
+        .cloudProviderName(entity.getCloudProviderName())
+        .task(entity.getTask())
+        .outputs(entity.getOutputs())
+        .callback(entity.getCallback())
+        .build();
 
     Optional.ofNullable(entity.getOwner())
-        .map(owner -> owner.getOidcEntityId())
-        .ifPresent(owner -> resource.setCreatedBy(owner));
+        .map(OidcEntity::getOidcEntityId)
+        .ifPresent(resource::setCreatedBy);
 
-    // TODO Use ControllerLinkBuilder when
-    // https://github.com/spring-projects/spring-hateoas/issues/408 will be resolved
-    URI ctrlUri = null;
-    if (isInHttpRequest()) {
-      ctrlUri = ControllerLinkBuilder.linkTo(DeploymentController.class).toUri();
-      if (uri == null) {
-        long writeStamp = lock.tryWriteLock();
-        if (writeStamp != 0) {
-          uri = ctrlUri;
-          lock.unlockWrite(writeStamp);
-        }
-      }
-    } else {
-      if (uri != null || lock.isWriteLocked()) {
-        try {
-          long readStamp = lock.tryReadLock(30, TimeUnit.SECONDS);
-          if (readStamp != 0) {
-            ctrlUri = uri;
-            lock.unlockRead(readStamp);
-          }
-        } catch (InterruptedException ex) {
-          // DO NOTHING
-        }
-      }
-    }
-    if (ctrlUri == null) {
-      ctrlUri = URI.create("");
+    // add hateoas links only if we are inside of a HTTP request otherwise, due to
+    // https://github.com/spring-projects/spring-hateoas/issues/408, we'd have an error
+    if (CommonUtils.isInHttpRequest()) {
+      resource.add(ControllerLinkBuilder.linkTo(
+          DummyInvocationUtils.methodOn(DeploymentController.class).getDeployment(entity.getId()))
+          .withSelfRel());
+      resource.add(ControllerLinkBuilder
+          .linkTo(DummyInvocationUtils.methodOn(ResourceController.class, entity.getId())
+              .getResources(entity.getId(), null, null))
+          .withRel("resources"));
+      resource.add(ControllerLinkBuilder
+          .linkTo(
+              DummyInvocationUtils.methodOn(TemplateController.class).getTemplate(entity.getId()))
+          .withRel("template"));
     }
 
-    resource
-        .add(MyLinkBuilder.getNewBuilder(ctrlUri).slash("deployments").slash(entity).withSelfRel());
-    resource.add(MyLinkBuilder.getNewBuilder(ctrlUri)
-        .slash("deployments")
-        .slash(entity)
-        .slash("resources")
-        .withRel("resources"));
-    resource.add(MyLinkBuilder.getNewBuilder(ctrlUri)
-        .slash("deployments")
-        .slash(entity)
-        .slash("template")
-        .withRel("template"));
-    /////////////////////////////////////////////////////////////////////////////////
     return resource;
-  }
-
-  // Dirty hack due to Spring Hateoas being unable to generate links outside of HTTP sessions
-  // https://github.com/spring-projects/spring-hateoas/issues/408
-  private boolean isInHttpRequest() {
-    Optional<HttpServletRequest> request =
-        Optional.ofNullable(RequestContextHolder.getRequestAttributes())
-            .filter(ServletRequestAttributes.class::isInstance)
-            .map(ServletRequestAttributes.class::cast)
-            .map(ServletRequestAttributes::getRequest);
-    return request.isPresent();
   }
 
 }
