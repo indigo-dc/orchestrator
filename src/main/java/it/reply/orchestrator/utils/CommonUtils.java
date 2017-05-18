@@ -24,6 +24,8 @@ import lombok.experimental.UtilityClass;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.nio.file.Paths;
 import java.util.Iterator;
@@ -40,8 +42,8 @@ public class CommonUtils {
   }
 
   /**
-   * Verify that a <code>@Nullable</code> reference is non null and cast it to a
-   * <code>@NonNull</code> one. If the reference is null a NPE is thrown
+   * Verify that a <code>@Nullable</code> reference is effectively non null and cast it to a
+   * <code>@NonNull</code> reference. If the reference is instead null, a NPE is thrown
    * 
    * @param reference
    *          the nullable reference
@@ -53,6 +55,26 @@ public class CommonUtils {
       throw new NullPointerException();
     }
     return reference;
+  }
+
+  /**
+   * Verify that a <code>@Nullable</code> reference is effectively non null and cast it to a
+   * <code>@NonNull</code> reference. If the reference is instead null, the <code>@NonNull</code>
+   * default value is returned
+   * 
+   * @param reference
+   *          the <code>@Nullable</code> reference
+   * @param defaultValue
+   *          the <code>@NonNull</code> default value
+   * @return the <code>@NonNull</code> reference
+   */
+  @NonNull
+  public static <T> T notNullOrDefaultValue(@Nullable T reference, @NonNull T defaultValue) {
+    if (reference == null) {
+      return checkNotNull(defaultValue);
+    } else {
+      return reference;
+    }
   }
 
   public static <K, V> Optional<V> getFromOptionalMap(@Nullable Map<K, V> optionalMap, K key) {
@@ -82,4 +104,16 @@ public class CommonUtils {
     return StreamSupport.stream(iterable.spliterator(), false);
   }
 
+  /**
+   * Check if there is a HTTP request associated to the current thread or not.
+   * 
+   * @return true if inside of a HTTP request, false otherwise
+   */
+  public static boolean isInHttpRequest() {
+    return Optional.ofNullable(RequestContextHolder.getRequestAttributes())
+        .filter(ServletRequestAttributes.class::isInstance)
+        .map(ServletRequestAttributes.class::cast)
+        .map(ServletRequestAttributes::getRequest)
+        .isPresent();
+  }
 }

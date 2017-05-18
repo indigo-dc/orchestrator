@@ -16,7 +16,6 @@
 
 package it.reply.orchestrator.service;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 
@@ -69,6 +68,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -147,8 +147,8 @@ public class DeploymentServiceImpl implements DeploymentService {
   public Deployment createDeployment(DeploymentRequest request) {
     Map<String, NodeTemplate> nodes;
     Deployment deployment;
-    Map<String, OneData> odRequirements = Maps.newHashMap();
-    List<PlacementPolicy> placementPolicies = Lists.newArrayList();
+    Map<String, OneData> odRequirements = new HashMap<>();
+    List<PlacementPolicy> placementPolicies = new ArrayList<>();
     DeploymentType deploymentType;
 
     try {
@@ -200,8 +200,10 @@ public class DeploymentServiceImpl implements DeploymentService {
 
     // Build deployment message
     DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, requester);
-    deploymentMessage.setOneDataRequirements(CommonUtils.checkNotNull(odRequirements));
-    deploymentMessage.setPlacementPolicies(CommonUtils.checkNotNull(placementPolicies));
+    deploymentMessage
+        .setOneDataRequirements(CommonUtils.notNullOrDefaultValue(odRequirements, new HashMap<>()));
+    deploymentMessage.setPlacementPolicies(
+        CommonUtils.notNullOrDefaultValue(placementPolicies, new ArrayList<>()));
     deploymentMessage.setDeploymentType(deploymentType);
     params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
 
@@ -271,7 +273,7 @@ public class DeploymentServiceImpl implements DeploymentService {
       } else {
         // Update deployment status
         deployment.setStatus(Status.DELETE_IN_PROGRESS);
-        deployment.setStatusReason("");
+        deployment.setStatusReason(null);
         deployment.setTask(Task.NONE);
         deployment = deploymentRepository.save(deployment);
 
@@ -342,6 +344,7 @@ public class DeploymentServiceImpl implements DeploymentService {
           throw new OrchestratorException(ex);
         }
         deployment.setStatus(Status.UPDATE_IN_PROGRESS);
+        deployment.setStatusReason(null);
         deployment.setTask(Task.NONE);
 
         deployment = deploymentRepository.save(deployment);
