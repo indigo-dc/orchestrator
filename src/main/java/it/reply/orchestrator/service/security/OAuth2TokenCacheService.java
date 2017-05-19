@@ -51,7 +51,7 @@ public class OAuth2TokenCacheService {
       .<OidcTokenId, AccessGrant>weigher((key, value) -> isGrantExpired(value) ? 1 : 0)
       .refreshAfterWrite(1, TimeUnit.MINUTES)
       .removalListener(
-          removalEvent -> LOG.debug("Access token {} evicted from cache.%nEviction cause {}",
+          removalEvent -> LOG.trace("Access token {} evicted from cache.%nEviction cause {}",
               removalEvent.getValue().getAccessToken(), removalEvent.getCause()))
       .build(new CacheLoader<OidcTokenId, AccessGrant>() {
 
@@ -79,19 +79,19 @@ public class OAuth2TokenCacheService {
    * 
    * @param grant
    *          the grant to check
-   * @param skew
-   *          the skew for the expiration evaluation
+   * @param leeway
+   *          the leeway for the expiration evaluation
    * @return true if expired, false otherwise
    */
-  public static boolean isGrantExpired(AccessGrant grant, long skew) {
+  public static boolean isGrantExpired(AccessGrant grant, long leeway) {
     Preconditions.checkNotNull(grant);
-    Preconditions.checkArgument(skew >= 0, "skew must be >= 0");
+    Preconditions.checkArgument(leeway >= 0, "skew must be >= 0");
 
     return Optional.ofNullable(grant.getExpireTime())
         .map(expireTime -> Instant.now()
             .isAfter(Instant.ofEpochMilli(expireTime)
                 // if expiring in ${skew} mins -> return true
-                .minus(Duration.ofMinutes(skew))))
+                .minus(Duration.ofMinutes(leeway))))
         // no expireTime -> return false
         .orElse(false);
   }

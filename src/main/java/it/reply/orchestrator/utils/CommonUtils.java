@@ -31,6 +31,7 @@ import java.nio.file.Paths;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Spliterator;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -99,9 +100,17 @@ public class CommonUtils {
     return optional.map(object -> (S) object);
   }
 
+  public static <E> Stream<E> spliteratorToStream(Spliterator<E> spliterator, boolean parallel) {
+    return StreamSupport.stream(spliterator, parallel);
+  }
+
+  public static <E> Stream<E> spliteratorToStream(Spliterator<E> spliterator) {
+    return spliteratorToStream(spliterator, false);
+  }
+
   public static <E> Stream<E> iteratorToStream(Iterator<E> iterator) {
     Iterable<E> iterable = () -> iterator;
-    return StreamSupport.stream(iterable.spliterator(), false);
+    return spliteratorToStream(iterable.spliterator(), false);
   }
 
   /**

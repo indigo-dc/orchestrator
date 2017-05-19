@@ -17,10 +17,10 @@
 package it.reply.orchestrator.service.security;
 
 import com.nimbusds.jwt.JWT;
-import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
 
 import it.reply.orchestrator.dto.security.IndigoOAuth2Authentication;
+import it.reply.orchestrator.utils.JwtUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,7 +39,6 @@ import org.springframework.security.oauth2.common.exceptions.InvalidTokenExcepti
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 
 import java.text.ParseException;
-import java.util.Date;
 import java.util.Optional;
 
 @Slf4j
@@ -102,12 +101,9 @@ public class UserInfoIntrospectingTokenService extends IntrospectingTokenService
   }
 
   private void preValidate(SignedJWT jwtToken) throws ParseException {
-    Optional.ofNullable(jwtToken.getJWTClaimsSet().getExpirationTime())
-        .ifPresent(expirationDate -> {
-          if (expirationDate.before(new Date())) {
-            throw new InvalidTokenException("access token is expired");
-          }
-        });
+    if (JwtUtils.isJtwTokenExpired(jwtToken)) {
+      throw new InvalidTokenException("access token is expired");
+    }
 
     String issuer = getIssuer(jwtToken);
     ServerConfiguration serverConfiguration = getServerConfiguration(issuer);
@@ -134,9 +130,9 @@ public class UserInfoIntrospectingTokenService extends IntrospectingTokenService
         .orElseThrow(() -> new AuthorizationServiceException("Error retrieving user info"));
   }
 
-  private String getIssuer(JWT jwtToken) throws ParseException {
-    return Optional.ofNullable(jwtToken.getJWTClaimsSet()).map(JWTClaimsSet::getIssuer).orElseThrow(
-        () -> new IllegalArgumentException("No issuer claim found in JWT"));
+  private String getIssuer(JWT jwtToken) {
+    return Optional.ofNullable(JwtUtils.getJwtClaimsSet(jwtToken).getIssuer())
+        .orElseThrow(() -> new IllegalArgumentException("No issuer claim found in JWT"));
   }
 
   /**

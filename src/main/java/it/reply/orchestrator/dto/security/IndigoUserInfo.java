@@ -16,9 +16,7 @@
 
 package it.reply.orchestrator.dto.security;
 
-import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
@@ -36,6 +34,7 @@ import org.mitre.openid.connect.model.UserInfo;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.validation.constraints.NotNull;
 
@@ -92,20 +91,18 @@ public class IndigoUserInfo extends DefaultUserInfo {
 
   @Override
   public JsonObject toJson() {
-    if (this.getSource() == null) {
+    return Optional.ofNullable(this.getSource()).orElseGet(() -> {
       JsonObject result = super.toJson();
       JsonArray groupsJson = new JsonArray();
-      for (String g : groups) {
-        groupsJson.add(new JsonPrimitive(g));
-      }
+      groups.forEach(g -> groupsJson.add(new JsonPrimitive(g)));
       result.add(GROUPS_KEY, groupsJson);
-      Optional.ofNullable(organizationName).ifPresent(
-          organizationName -> result.addProperty(ORGANIZATION_NAME_KEY, organizationName));
+
+      Optional.ofNullable(organizationName)
+          .ifPresent(name -> result.addProperty(ORGANIZATION_NAME_KEY, name));
 
       return result;
-    } else {
-      return this.getSource();
-    }
+    });
+
   }
 
   /**
@@ -119,12 +116,11 @@ public class IndigoUserInfo extends DefaultUserInfo {
     IndigoUserInfo result = new IndigoUserInfo(DefaultUserInfo.fromJson(obj));
 
     // get groups json array
-    Optional<JsonArray> objGroups = Optional.ofNullable(obj.get(GROUPS_KEY))
+    Optional.ofNullable(obj.get(GROUPS_KEY))
         .filter(groups -> groups.isJsonArray())
-        .map(groups -> groups.getAsJsonArray());
-
-    // deserialize groups json array and set it
-    objGroups.map(groupsJson -> deserializeGroups(groupsJson))
+        .map(groups -> groups.getAsJsonArray())
+        // deserialize groups json array and set it
+        .map(groupsJson -> deserializeGroups(groupsJson))
         .ifPresent(groups -> result.setGroups(CommonUtils.checkNotNull(groups)));
 
     // get organization, deserialize it and set it (if present)
@@ -136,12 +132,11 @@ public class IndigoUserInfo extends DefaultUserInfo {
   }
 
   private static List<String> deserializeGroups(JsonArray groupsJson) {
-    List<String> groups = Lists.newArrayList();
-    for (JsonElement groupJson : groupsJson) {
-      Optional.ofNullable(groupJson).filter(element -> element.isJsonPrimitive()).ifPresent(
-          element -> groups.add(element.getAsString()));
-    }
-    return groups;
+    return CommonUtils.spliteratorToStream(groupsJson.spliterator())
+        .filter(groupJson -> groupJson != null)
+        .filter(groupJson -> groupJson.isJsonPrimitive())
+        .map(groupJson -> groupJson.getAsString())
+        .collect(Collectors.toList());
   }
 
 }

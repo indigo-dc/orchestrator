@@ -19,7 +19,6 @@ package it.reply.orchestrator.service.security;
 import com.google.common.collect.ImmutableList;
 
 import com.nimbusds.jwt.JWTClaimsSet;
-import com.nimbusds.jwt.JWTParser;
 
 import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.config.properties.OidcProperties.IamProperties;
@@ -32,6 +31,7 @@ import it.reply.orchestrator.dal.repository.OidcTokenRepository;
 import it.reply.orchestrator.dto.security.IndigoOAuth2Authentication;
 import it.reply.orchestrator.dto.security.IndigoUserInfo;
 import it.reply.orchestrator.exception.OrchestratorException;
+import it.reply.orchestrator.utils.JwtUtils;
 
 import org.mitre.oauth2.model.RegisteredClient;
 import org.mitre.openid.connect.config.ServerConfiguration;
@@ -41,7 +41,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.social.oauth2.AccessGrant;
 import org.springframework.stereotype.Service;
 
-import java.text.ParseException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -104,12 +103,10 @@ public class OAuth2TokenService {
    * @param accessToken
    *          the accessToken
    * @return the CLUES IAM information
-   * @throws ParseException
-   *           if the access token is not a valid JWT
    */
-  public Optional<OidcClientProperties> getCluesInfo(String accessToken) throws ParseException {
+  public Optional<OidcClientProperties> getCluesInfo(String accessToken) {
     handleSecurityDisabled();
-    String iss = JWTParser.parse(accessToken).getJWTClaimsSet().getIssuer();
+    String iss = JwtUtils.getJwtClaimsSet(accessToken).getIssuer();
     return oidcProperties.getIamConfiguration(iss).flatMap(IamProperties::getClues);
   }
 
@@ -120,15 +117,11 @@ public class OAuth2TokenService {
    */
   public OidcTokenId generateTokenIdFromCurrentAuth() {
     handleSecurityDisabled();
-    try {
-      JWTClaimsSet claims = JWTParser.parse(getOAuth2TokenFromCurrentAuth()).getJWTClaimsSet();
-      OidcTokenId tokenId = new OidcTokenId();
-      tokenId.setIssuer(claims.getIssuer());
-      tokenId.setJti(claims.getJWTID());
-      return tokenId;
-    } catch (ParseException e) {
-      throw new OrchestratorException("Access token in current authentication is not a valid JWT");
-    }
+    JWTClaimsSet claims = JwtUtils.getJwtClaimsSet(getOAuth2TokenFromCurrentAuth());
+    OidcTokenId tokenId = new OidcTokenId();
+    tokenId.setIssuer(claims.getIssuer());
+    tokenId.setJti(claims.getJWTID());
+    return tokenId;
   }
 
   /**
@@ -136,9 +129,8 @@ public class OAuth2TokenService {
    * 
    * @return the OidcEntityId
    */
-  public static OidcEntityId generateOidcEntityIdFromToken(String accessToken)
-      throws ParseException {
-    JWTClaimsSet claims = JWTParser.parse(accessToken).getJWTClaimsSet();
+  public static OidcEntityId generateOidcEntityIdFromToken(String accessToken) {
+    JWTClaimsSet claims = JwtUtils.getJwtClaimsSet(accessToken);
     OidcEntityId id = new OidcEntityId();
     id.setIssuer(claims.getIssuer());
     id.setSubject(claims.getSubject());
@@ -152,11 +144,7 @@ public class OAuth2TokenService {
    */
   public OidcEntityId generateOidcEntityIdFromCurrentAuth() {
     handleSecurityDisabled();
-    try {
-      return generateOidcEntityIdFromToken(getOAuth2TokenFromCurrentAuth());
-    } catch (ParseException e) {
-      throw new OrchestratorException("Access token in current authentication is not a valid JWT");
-    }
+    return generateOidcEntityIdFromToken(getOAuth2TokenFromCurrentAuth());
   }
 
   /**

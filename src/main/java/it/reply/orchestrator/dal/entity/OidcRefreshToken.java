@@ -19,8 +19,8 @@ package it.reply.orchestrator.dal.entity;
 import com.google.common.collect.Lists;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.nimbusds.jwt.JWTParser;
 
+import it.reply.orchestrator.utils.JwtUtils;
 import it.reply.utils.json.JsonUtility;
 
 import lombok.Data;
@@ -73,16 +73,14 @@ public class OidcRefreshToken implements Identifiable<String>, Serializable {
     token.setOriginalTokenId(currentTokenId.getJti());
     token.setVaule(grant.getRefreshToken());
     token.setCreationDate(new Date());
-    Optional.ofNullable(grant.getScope()).map(scope -> scope.split(" +")).ifPresent(
-        scopes -> token.setScopes(Lists.newArrayList(scopes)));
 
-    try {
-      Optional.ofNullable(JWTParser.parse(grant.getRefreshToken()).getJWTClaimsSet())
-          .map(claims -> claims.getExpirationTime())
-          .ifPresent(date -> token.setExpirationDate(date));
-    } catch (Exception ex) {
-      LOG.warn("Error parsing refresh token; maybe not a JWT?");
-    }
+    Optional.ofNullable(grant.getScope())
+        .map(scopeAsString -> scopeAsString.split(" +"))
+        .map(scopes -> Lists.newArrayList(scopes))
+        .ifPresent(scopes -> token.setScopes(scopes));
+
+    JwtUtils.getExpirationTimeFromJwt(token.getVaule())
+        .ifPresent(expirationDate -> token.setExpirationDate(expirationDate));
 
     return token;
   }
@@ -107,6 +105,11 @@ public class OidcRefreshToken implements Identifiable<String>, Serializable {
 
   @Column(name = "SCOPES")
   private String scopes;
+
+  @OneToOne(
+      cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
+  @JoinColumn(name = "OIDC_ENTITY_ID", unique = true, nullable = true)
+  private OidcEntity entity;
 
   /**
    * Get the scopes of the refresh token.
@@ -138,10 +141,5 @@ public class OidcRefreshToken implements Identifiable<String>, Serializable {
       // swallow it
     }
   }
-
-  @OneToOne(
-      cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
-  @JoinColumn(name = "OIDC_ENTITY_ID", unique = true, nullable = true)
-  private OidcEntity entity;
 
 }
