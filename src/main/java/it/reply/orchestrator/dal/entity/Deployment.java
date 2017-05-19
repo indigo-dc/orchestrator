@@ -87,7 +87,7 @@ public class Deployment extends AbstractResourceEntity {
    * The user's inputs to the template.
    */
   @Transient
-  Map<String, Object> unserializedParameters = null;
+  private transient Map<String, Object> unserializedParameters;
 
   @ElementCollection(fetch = FetchType.EAGER)
   @MapKeyColumn(name = "name")
@@ -97,16 +97,16 @@ public class Deployment extends AbstractResourceEntity {
   @ElementCollection(fetch = FetchType.EAGER)
   @MapKeyColumn(name = "name")
   @Column(name = "value", columnDefinition = "TEXT")
-  Map<String, String> outputs = new HashMap<String, String>();
+  private Map<String, String> outputs = new HashMap<>();
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "deployment", orphanRemoval = true)
-  List<Resource> resources = new ArrayList<>();
+  private List<Resource> resources = new ArrayList<>();
 
   @Column(name = "cloudProviderName", length = 128)
-  String cloudProviderName;
+  private String cloudProviderName;
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "deployment", orphanRemoval = true)
-  List<WorkflowReference> workflowReferences = new ArrayList<>();
+  private List<WorkflowReference> workflowReferences = new ArrayList<>();
 
   @ManyToOne(
       cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
