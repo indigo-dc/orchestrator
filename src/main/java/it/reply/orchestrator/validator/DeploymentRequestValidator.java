@@ -29,7 +29,7 @@ public class DeploymentRequestValidator implements Validator {
 
   @Override
   public boolean supports(Class<?> clazz) {
-    return DeploymentRequest.class.equals(clazz);
+    return DeploymentRequest.class.isAssignableFrom(clazz);
   }
 
   @Override
