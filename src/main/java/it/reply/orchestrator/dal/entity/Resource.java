@@ -16,14 +16,13 @@
 
 package it.reply.orchestrator.dal.entity;
 
-import com.google.common.collect.Lists;
-
 import it.reply.orchestrator.enums.NodeStates;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.Column;
@@ -62,11 +61,11 @@ public class Resource extends AbstractResourceEntity {
 
   @ElementCollection
   @Column(name = "requiredBy")
-  private List<String> requiredBy = Lists.newArrayList();
+  private List<String> requiredBy = new ArrayList<>();
 
   @ElementCollection
   @Column(name = "requires")
-  private List<String> requires = Lists.newArrayList();
+  private List<String> requires = new ArrayList<>();
 
   @ManyToOne
   @JoinColumn(name = "deployment_uuid")

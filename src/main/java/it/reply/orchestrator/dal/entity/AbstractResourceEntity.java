@@ -55,6 +55,8 @@ public abstract class AbstractResourceEntity implements Identifiable<String>, Se
 
   @Column(name = CREATED_COLUMN_NAME)
   private Date created;
+
+  @Column(name = "updated")
   private Date updated;
 
   @Version
