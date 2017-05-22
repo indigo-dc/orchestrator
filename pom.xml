@@ -49,6 +49,7 @@
 	<properties>
 		<license-maven-plugin.version>3.0</license-maven-plugin.version>
 		<jacoco-maven-plugin.version>0.7.9</jacoco-maven-plugin.version>
+		<cobertura-maven-plugin.version>2.7</cobertura-maven-plugin.version>
 		<!-- Execute tests by defaults -->
 		<surefire.skip>false</surefire.skip>
 
@@ -740,6 +741,18 @@
 						</dependency>
 					</dependencies>
 				</plugin>
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>cobertura-maven-plugin</artifactId>
+					<version>${cobertura-maven-plugin.version}</version>
+					<configuration>
+						<instrumentation>
+							<ignoreMethodAnnotations>
+								<ignoreMethodAnnotation>lombok.Generated</ignoreMethodAnnotation>
+							</ignoreMethodAnnotations>
+						</instrumentation>
+					</configuration>
+				</plugin>
 			</plugins>
 		</pluginManagement>
 
@@ -905,7 +918,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>cobertura-maven-plugin</artifactId>
-				<version>2.6</version>
+				<version>${cobertura-maven-plugin.version}</version>
 				<configuration>
 					<formats>
 						<format>html</format>
