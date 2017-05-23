@@ -24,6 +24,8 @@ import it.reply.orchestrator.resource.DeploymentResourceAssembler;
 import it.reply.orchestrator.service.DeploymentService;
 import it.reply.orchestrator.validator.DeploymentRequestValidator;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -46,6 +48,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.validation.Valid;
 
 @RestController
+@Slf4j
 public class DeploymentController {
 
   private static final String OIDC_DISABLED_CONDITION = "!#oauth2.isOAuth()";
@@ -98,6 +101,7 @@ public class DeploymentController {
       + " || #oauth2.throwOnError(#oauth2.hasScope('offline_access'))")
   public DeploymentResource createDeployment(@Valid @RequestBody DeploymentRequest request) {
 
+    LOG.info("Creating deployment with template\n{}", request.getTemplate());
     Deployment deployment = deploymentService.createDeployment(request);
     return deploymentResourceAssembler.toResource(deployment);
 
@@ -119,6 +123,7 @@ public class DeploymentController {
   public void updateDeployment(@PathVariable("deploymentId") String id,
       @Valid @RequestBody DeploymentRequest request) {
 
+    LOG.info("Updating deployment {} with template\n{}", id, request.getTemplate());
     deploymentService.updateDeployment(id, request);
   }
 

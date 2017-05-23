@@ -22,6 +22,8 @@ import it.reply.orchestrator.exception.http.ConflictException;
 import it.reply.orchestrator.exception.http.NotFoundException;
 import it.reply.orchestrator.exception.service.ToscaException;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -35,6 +37,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import java.util.Optional;
 
 @ControllerAdvice
+@Slf4j
 public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHandler {
 
   /**
@@ -70,7 +73,7 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
    */
   @ExceptionHandler
   public ResponseEntity<Object> handleException(BadRequestException ex, WebRequest request) {
-    return handleExceptionInternal(ex, HttpStatus.BAD_REQUEST, request);
+    return logAndHandleExceptionInternal(ex, HttpStatus.BAD_REQUEST, request);
   }
 
   /**
@@ -82,7 +85,7 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
    */
   @ExceptionHandler
   public ResponseEntity<Object> handleException(ToscaException ex, WebRequest request) {
-    return handleExceptionInternal(ex, HttpStatus.BAD_REQUEST, request);
+    return logAndHandleExceptionInternal(ex, HttpStatus.BAD_REQUEST, request);
   }
 
   /**
@@ -112,7 +115,7 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
     if (ex.getCause() instanceof OAuth2Exception) {
       return this.handleException((OAuth2Exception) ex.getCause(), request);
     } else {
-      return handleExceptionInternal(ex, HttpStatus.INTERNAL_SERVER_ERROR, request);
+      return logAndHandleExceptionInternal(ex, HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
   }
 
@@ -127,6 +130,12 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
   protected ResponseEntity<Object> handleExceptionInternal(Exception ex, HttpStatus status,
       WebRequest request) {
     return handleExceptionInternal(ex, null, null, status, request);
+  }
+
+  protected ResponseEntity<Object> logAndHandleExceptionInternal(Exception ex, HttpStatus status,
+      WebRequest request) {
+    LOG.error("Error handling request {}", request, ex);
+    return handleExceptionInternal(ex, status, request);
   }
 
 }
