@@ -16,12 +16,15 @@
 
 package it.reply.orchestrator.service;
 
+import it.reply.orchestrator.config.properties.CprProperties;
 import it.reply.orchestrator.dto.ranker.CloudProviderRankerRequest;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
 import it.reply.orchestrator.exception.service.DeploymentException;
 
+import lombok.AllArgsConstructor;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
@@ -34,29 +37,24 @@ import java.util.List;
 
 @Service
 @PropertySource("classpath:cloud-provider-ranker/cloud-provider-ranker.properties")
+@AllArgsConstructor(onConstructor = @__({ @Autowired }))
+@EnableConfigurationProperties(CprProperties.class)
 public class CloudProviderRankerServiceImpl implements CloudProviderRankerService {
 
-  @Value("${cloud-provider-ranker.url}")
-  private String url;
+  private CprProperties cprProperties;
 
-  @Autowired
   private RestTemplate restTemplate;
 
   @Override
-  public String getUrl() {
-    return url;
-  }
+  public List<RankedCloudProvider> getProviderRanking(
+      CloudProviderRankerRequest cloudProviderRankerRequest) {
 
-  @Override
-  public List<RankedCloudProvider>
-      getProviderRanking(CloudProviderRankerRequest cloudProviderRankerRequest) {
+    HttpEntity<CloudProviderRankerRequest> entity = new HttpEntity<>(cloudProviderRankerRequest);
 
-    HttpEntity<CloudProviderRankerRequest> entity =
-        new HttpEntity<CloudProviderRankerRequest>(cloudProviderRankerRequest);
-
-    ResponseEntity<List<RankedCloudProvider>> response = restTemplate.exchange(url, HttpMethod.POST,
-        entity, new ParameterizedTypeReference<List<RankedCloudProvider>>() {
-        });
+    ResponseEntity<List<RankedCloudProvider>> response =
+        restTemplate.exchange(cprProperties.getUrl(), HttpMethod.POST, entity,
+            new ParameterizedTypeReference<List<RankedCloudProvider>>() {
+            });
     if (response.getStatusCode().is2xxSuccessful()) {
       return response.getBody();
     }
