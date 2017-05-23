@@ -191,25 +191,21 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
   @Override
   public void configure(WebSecurity webSecurity) throws Exception {
-    if (oidcProperties.isEnabled()) {
-      webSecurity.ignoring().regexMatchers("/", "/info");
-    } else {
-      webSecurity.ignoring().anyRequest();
-    }
+    webSecurity.ignoring().regexMatchers("/", "/info");
   }
 
   @Override
   public void configure(HttpSecurity http) throws Exception {
+    http.csrf().disable();
+    http
+      .sessionManagement()
+      .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
     if (oidcProperties.isEnabled()) {
-      http.csrf().disable();
       http.authorizeRequests()
           .anyRequest()
           .fullyAuthenticated()
           .anyRequest()
-          .access("#oauth2.hasScopeMatching('openid')")
-          .and()
-          .sessionManagement()
-          .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+          .access("#oauth2.hasScopeMatching('openid')");
       ResourceServerSecurityConfigurer configurer = new ResourceServerSecurityConfigurer();
       configurer.setBuilder(http);
       configurer.tokenServices(applicationContext.getBean(ResourceServerTokenServices.class));
@@ -227,7 +223,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
 
       configurer.configure(http);
     } else {
-      super.configure(http);
+      http.authorizeRequests().anyRequest().anonymous();
     }
   }
 }
