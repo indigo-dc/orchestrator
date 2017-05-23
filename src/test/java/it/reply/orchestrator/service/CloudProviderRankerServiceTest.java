@@ -17,60 +17,79 @@
 package it.reply.orchestrator.service;
 
 import static org.junit.Assert.assertEquals;
+import static org.mockito.Matchers.eq;
 
-import it.reply.orchestrator.config.specific.WebAppConfigurationAwareIT;
-import it.reply.orchestrator.dto.RankCloudProvidersMessage;
+import com.google.common.collect.Lists;
+
+import it.reply.orchestrator.config.properties.CprProperties;
 import it.reply.orchestrator.dto.ranker.CloudProviderRankerRequest;
-import it.reply.orchestrator.dto.ranker.Monitoring;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
-import it.reply.utils.json.JsonUtility;
+import it.reply.orchestrator.exception.service.DeploymentException;
+import it.reply.orchestrator.utils.CommonUtils;
 
+import org.junit.Before;
 import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 
-import java.util.Arrays;
+import java.net.URI;
 import java.util.List;
-import java.util.stream.Collectors;
 
-/**
- * This integration test makes real request to the CloudProviderRanker APIs.
- * 
- * @author l.biava
- *
- */
-public class CloudProviderRankerServiceTest extends WebAppConfigurationAwareIT {
+public class CloudProviderRankerServiceTest {
 
-  @Autowired
+  @Mock
+  private RestTemplate restTemplate;
+
+  private CprProperties cprProperties;
+
   private CloudProviderRankerService cloudProviderRankerService;
 
+  @Before
+  public void setUp() {
+    MockitoAnnotations.initMocks(this);
+    cprProperties = new CprProperties(CommonUtils.checkNotNull(URI.create("http://test.com")));
+    cloudProviderRankerService = new CloudProviderRankerServiceImpl(cprProperties, restTemplate);
+  }
+
+  private void mockTemplate(CloudProviderRankerRequest cprr,
+      ResponseEntity<List<RankedCloudProvider>> response) {
+    HttpEntity<CloudProviderRankerRequest> entity = new HttpEntity<>(cprr);
+    Mockito.when(restTemplate.exchange(eq(cprProperties.getUrl()), eq(HttpMethod.POST), eq(entity),
+        eq(new ParameterizedTypeReference<List<RankedCloudProvider>>() {
+        }))).thenReturn(response);
+  }
+
+  public static List<RankedCloudProvider> generateMockedRankedProviders() {
+    return Lists.newArrayList(new RankedCloudProvider("provider-RECAS-BARI", 2.0f, true, ""),
+        new RankedCloudProvider("provider-UPV-GRyCAP", 1.0f, false, "Some error reason"));
+  }
+
   @Test
-  public void rankProviders() throws Exception {
-
-    RankCloudProvidersMessage rcpm = JsonUtility.deserializeJson(
-        "{\"deploymentId\":\"mmd34483-d937-4578-bfdb-ebe196bf82dd\",\"slamPreferences\":{\"preferences\":[{\"customer\":\"indigo-dc\",\"preferences\":[{\"service_type\":\"compute\",\"priority\":[{\"sla_id\":\"4401ac5dc8cfbbb737b0a02575ee53f6\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e81d9b\",\"weight\":0.5},{\"sla_id\":\"4401ac5dc8cfbbb737b0a02575ee3b58\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"weight\":0.5}]}],\"id\":\"4401ac5dc8cfbbb737b0a02575ee0e55\"}],\"sla\":[{\"customer\":\"indigo-dc\",\"provider\":\"provider-UPV-GRyCAP\",\"start_date\":\"11.01.2016+15:50:00\",\"end_date\":\"11.02.2016+15:50:00\",\"services\":[{\"type\":\"compute\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"targets\":[{\"type\":\"public_ip\",\"unit\":\"none\",\"restrictions\":{\"total_guaranteed\":10}}]}],\"id\":\"4401ac5dc8cfbbb737b0a02575ee3b58\"},{\"customer\":\"indigo-dc\",\"provider\":\"provider-RECAS-BARI\",\"start_date\":\"11.01.2016+15:50:00\",\"end_date\":\"11.02.2016+15:50:00\",\"services\":[{\"type\":\"compute\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"targets\":[{\"type\":\"computing_time\",\"unit\":\"h\",\"restrictions\":{\"total_guaranteed\":200}}]}],\"id\":\"4401ac5dc8cfbbb737b0a02575ee53f6\"}]},\"cloudProviders\":{\"provider-RECAS-BARI\":{\"name\":\"provider-RECAS-BARI\",\"id\":\"provider-RECAS-BARI\",\"cmdbProviderData\":{\"_id\":\"provider-RECAS-BARI\",\"_rev\":\"1-c7dbe4d8be30aa4c0f14d3ad0411d962\",\"data\":{\"id\":\"476\",\"primary_key\":\"83757G0\",\"name\":\"RECAS-BARI\",\"country\":\"Italy\",\"country_code\":\"IT\",\"roc\":\"NGI_IT\",\"subgrid\":\"\",\"giis_url\":\"ldap://cloud-bdii.recas.ba.infn.it:2170/GLUE2DomainID=RECAS-BARI,o=glue\"},\"type\":\"provider\"},\"cmdbProviderServices\":{\"4401ac5dc8cfbbb737b0a02575e81d9b\":{\"_id\":\"4401ac5dc8cfbbb737b0a02575e81d9b\",\"_rev\":\"2-be00f87438604f04d353233daabc562c\",\"data\":{\"service_type\":\"eu.egi.cloud.vm-management.occi\",\"endpoint\":\"http://onedock.i3m.upv.es:11443\",\"provider_id\":\"provider-UPV-GRyCAP\",\"type\":\"compute\"},\"type\":\"service\"}}},\"provider-UPV-GRyCAP\":{\"name\":\"provider-UPV-GRyCAP\",\"id\":\"provider-UPV-GRyCAP\",\"cmdbProviderData\":{\"_id\":\"provider-UPV-GRyCAP\",\"_rev\":\"1-0a5ba48b2d6e0c26d36b0e3e81175352\",\"data\":{\"id\":\"458\",\"primary_key\":\"135G0\",\"name\":\"UPV-GRyCAP\",\"country\":\"Spain\",\"country_code\":\"ES\",\"roc\":\"NGI_IBERGRID\",\"subgrid\":\"\",\"giis_url\":\"ldap://ngiesbdii.i3m.upv.es:2170/mds-vo-name=UPV-GRyCAP,o=grid\"},\"type\":\"provider\"},\"cmdbProviderServices\":{\"4401ac5dc8cfbbb737b0a02575e81d9b\":{\"_id\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"_rev\":\"1-256d36283315ea9bb045e6d5038657b6\",\"data\":{\"service_type\":\"eu.egi.cloud.vm-management.openstack\",\"endpoint\":\"http://cloud.recas.ba.infn.it:5000/v2.0\",\"provider_id\":\"provider-RECAS-BARI\",\"type\":\"compute\"},\"type\":\"service\"}}}},\"cloudProvidersMonitoringData\":{\"provider-RECAS-BARI\":[{\"metricName\":\"OCCI Create VM availability\",\"metricKey\":\"Cloud_Providers.provider-RECAS-BARI..OCCI Create VM availability\",\"metricValue\":0.0,\"metricTime\":\"Instant null because no metrics were returned in the last 24hs\",\"metricUnit\":\"bit\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"OCCI CreateVM Response Time\",\"metricKey\":\"Cloud_Providers.provider-RECAS-BARI..OCCI CreateVM Response Time\",\"metricValue\":0.0,\"metricTime\":\"Instant null because no metrics were returned in the last 24hs\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"OCCI CreateVM Result\",\"metricKey\":\"Cloud_Providers.provider-RECAS-BARI..OCCI CreateVM Result\",\"metricValue\":0.0,\"metricTime\":\"Instant null because no metrics were returned in the last 24hs\",\"metricUnit\":\"bit\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"OCCI Delete VM Availability\",\"metricKey\":\"Cloud_Providers.provider-RECAS-BARI..OCCI Delete VM Availability\",\"metricValue\":0.0,\"metricTime\":\"Instant null because no metrics were returned in the last 24hs\",\"metricUnit\":\"bit\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"OCCI DeleteVM Response Time\",\"metricKey\":\"Cloud_Providers.provider-RECAS-BARI..OCCI DeleteVM Response Time\",\"metricValue\":0.0,\"metricTime\":\"Instant null because no metrics were returned in the last 24hs\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"OCCI DeleteVM Result\",\"metricKey\":\"Cloud_Providers.provider-RECAS-BARI..OCCI DeleteVM Result\",\"metricValue\":0.0,\"metricTime\":\"Instant null because no metrics were returned in the last 24hs\",\"metricUnit\":\"bit\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"General OCCI API Availability\",\"metricKey\":\"Cloud_Providers.provider-RECAS-BARI..General OCCI API Availability\",\"metricValue\":0.0,\"metricTime\":\"Instant null because no metrics were returned in the last 24hs\",\"metricUnit\":\"bit\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"General OCCI API Response Time\",\"metricKey\":\"Cloud_Providers.provider-RECAS-BARI..General OCCI API Response Time\",\"metricValue\":0.0,\"metricTime\":\"Instant null because no metrics were returned in the last 24hs\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"General OCCI API Result\",\"metricKey\":\"Cloud_Providers.provider-RECAS-BARI..General OCCI API Result\",\"metricValue\":0.0,\"metricTime\":\"Instant null because no metrics were returned in the last 24hs\",\"metricUnit\":\"bit\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"OCCI Inspect VM availability\",\"metricKey\":\"Cloud_Providers.provider-RECAS-BARI..OCCI Inspect VM availability\",\"metricValue\":0.0,\"metricTime\":\"Instant null because no metrics were returned in the last 24hs\",\"metricUnit\":\"bit\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"OCCI InspectVM Response Time\",\"metricKey\":\"Cloud_Providers.provider-RECAS-BARI..OCCI InspectVM Response Time\",\"metricValue\":0.0,\"metricTime\":\"Instant null because no metrics were returned in the last 24hs\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"OCCI InspectVM Result\",\"metricKey\":\"Cloud_Providers.provider-RECAS-BARI..OCCI InspectVM Result\",\"metricValue\":0.0,\"metricTime\":\"Instant null because no metrics were returned in the last 24hs\",\"metricUnit\":\"bit\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]}],\"provider-UPV-GRyCAP\":[{\"metricName\":\"OCCI Create VM availability\",\"metricKey\":\"Cloud_Providers.provider-UPV-GRyCAP..OCCI Create VM availability\",\"metricValue\":0.0,\"metricTime\":\"Instant null because no metrics were returned in the last 24hs\",\"metricUnit\":\"bit\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"OCCI CreateVM Response Time\",\"metricKey\":\"Cloud_Providers.provider-UPV-GRyCAP..OCCI CreateVM Response Time\",\"metricValue\":0.0,\"metricTime\":\"Instant null because no metrics were returned in the last 24hs\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"OCCI CreateVM Result\",\"metricKey\":\"Cloud_Providers.provider-UPV-GRyCAP..OCCI CreateVM Result\",\"metricValue\":0.0,\"metricTime\":\"Instant null because no metrics were returned in the last 24hs\",\"metricUnit\":\"bit\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"OCCI Delete VM Availability\",\"metricKey\":\"Cloud_Providers.provider-UPV-GRyCAP..OCCI Delete VM Availability\",\"metricValue\":0.0,\"metricTime\":\"Instant null because no metrics were returned in the last 24hs\",\"metricUnit\":\"bit\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"OCCI DeleteVM Response Time\",\"metricKey\":\"Cloud_Providers.provider-UPV-GRyCAP..OCCI DeleteVM Response Time\",\"metricValue\":0.0,\"metricTime\":\"Instant null because no metrics were returned in the last 24hs\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"OCCI DeleteVM Result\",\"metricKey\":\"Cloud_Providers.provider-UPV-GRyCAP..OCCI DeleteVM Result\",\"metricValue\":0.0,\"metricTime\":\"Instant null because no metrics were returned in the last 24hs\",\"metricUnit\":\"bit\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"General OCCI API Availability\",\"metricKey\":\"Cloud_Providers.provider-UPV-GRyCAP..General OCCI API Availability\",\"metricValue\":0.0,\"metricTime\":\"Instant null because no metrics were returned in the last 24hs\",\"metricUnit\":\"bit\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"General OCCI API Response Time\",\"metricKey\":\"Cloud_Providers.provider-UPV-GRyCAP..General OCCI API Response Time\",\"metricValue\":0.0,\"metricTime\":\"Instant null because no metrics were returned in the last 24hs\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"General OCCI API Result\",\"metricKey\":\"Cloud_Providers.provider-UPV-GRyCAP..General OCCI API Result\",\"metricValue\":0.0,\"metricTime\":\"Instant null because no metrics were returned in the last 24hs\",\"metricUnit\":\"bit\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"OCCI Inspect VM availability\",\"metricKey\":\"Cloud_Providers.provider-UPV-GRyCAP..OCCI Inspect VM availability\",\"metricValue\":0.0,\"metricTime\":\"Instant null because no metrics were returned in the last 24hs\",\"metricUnit\":\"bit\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"OCCI InspectVM Response Time\",\"metricKey\":\"Cloud_Providers.provider-UPV-GRyCAP..OCCI InspectVM Response Time\",\"metricValue\":0.0,\"metricTime\":\"Instant null because no metrics were returned in the last 24hs\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"OCCI InspectVM Result\",\"metricKey\":\"Cloud_Providers.provider-UPV-GRyCAP..OCCI InspectVM Result\",\"metricValue\":0.0,\"metricTime\":\"Instant null because no metrics were returned in the last 24hs\",\"metricUnit\":\"bit\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]}]},\"rankedCloudProviders\":[]}",
-        RankCloudProvidersMessage.class);
-
-    // Prepare Ranker's request
-    List<Monitoring> monitoring = rcpm.getCloudProvidersMonitoringData()
-        .entrySet()
-        .stream()
-        .map(e -> Monitoring.builder().provider(e.getKey()).metrics(e.getValue()).build())
-        .collect(Collectors.toList());
-
-    CloudProviderRankerRequest cprr = CloudProviderRankerRequest.builder()
-        .preferences(rcpm.getSlamPreferences().getPreferences().get(0).getPreferences())
-        .sla(rcpm.getSlamPreferences().getSla())
-        .monitoring(monitoring)
-        .build();
-
-    // WARNING: This is hard-coded and may change in the future!
-    List<RankedCloudProvider> response =
-        Arrays.asList(new RankedCloudProvider("provider-RECAS-BARI", 2.0f, true, ""),
-            new RankedCloudProvider("provider-UPV-GRyCAP", 1.0f, true, ""));
-
+  public void doRankRequestSuccessfully() {
+    CloudProviderRankerRequest cprr = CloudProviderRankerRequest.builder().build();
+    List<RankedCloudProvider> providers = generateMockedRankedProviders();
+    ResponseEntity<List<RankedCloudProvider>> response =
+        new ResponseEntity<List<RankedCloudProvider>>(providers, HttpStatus.OK);
+    mockTemplate(cprr, response);
     List<RankedCloudProvider> result = cloudProviderRankerService.getProviderRanking(cprr);
+    assertEquals(providers, result);
+  }
 
-    assertEquals(response, result);
+  @Test(expected = DeploymentException.class)
+  public void doRankRequestWithError() {
+    CloudProviderRankerRequest cprr = CloudProviderRankerRequest.builder().build();
+    List<RankedCloudProvider> providers = generateMockedRankedProviders();
+    ResponseEntity<List<RankedCloudProvider>> response =
+        new ResponseEntity<List<RankedCloudProvider>>(providers, HttpStatus.INTERNAL_SERVER_ERROR);
+    mockTemplate(cprr, response);
+    cloudProviderRankerService.getProviderRanking(cprr);
   }
 
 }

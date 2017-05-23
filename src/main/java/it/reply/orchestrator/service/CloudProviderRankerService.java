@@ -23,8 +23,7 @@ import java.util.List;
 
 public interface CloudProviderRankerService {
 
-  public List<RankedCloudProvider>
-      getProviderRanking(CloudProviderRankerRequest cloudProviderRankerRequest);
+  public List<RankedCloudProvider> getProviderRanking(
+      CloudProviderRankerRequest cloudProviderRankerRequest);
 
-  public String getUrl();
 }
