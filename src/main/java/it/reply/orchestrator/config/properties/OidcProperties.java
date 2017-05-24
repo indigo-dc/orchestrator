@@ -41,8 +41,14 @@ import javax.validation.constraints.NotNull;
 
 @Slf4j
 @Data
-@ConfigurationProperties(prefix = "oidc")
+@ConfigurationProperties(prefix = OidcProperties.PROPERTIES_PREFIX)
 public class OidcProperties implements SecurityPrerequisite, InitializingBean {
+
+  protected static final String PROPERTIES_PREFIX = "oidc";
+
+  public static final String OIDC_ENABLED_CONDITION =
+      "@'" + PROPERTIES_PREFIX + ".CONFIGURATION_PROPERTIES'.enabled";
+  public static final String OIDC_DISABLED_CONDITION = "!" + OIDC_ENABLED_CONDITION;
 
   private boolean enabled;
 

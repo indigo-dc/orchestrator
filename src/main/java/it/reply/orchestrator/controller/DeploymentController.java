@@ -16,6 +16,7 @@
 
 package it.reply.orchestrator.controller;
 
+import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.dal.entity.AbstractResourceEntity;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
@@ -51,11 +52,10 @@ import javax.validation.Valid;
 @Slf4j
 public class DeploymentController {
 
-  private static final String OIDC_DISABLED_CONDITION =
-      "!@'oidc.CONFIGURATION_PROPERTIES'.enabled || ";
-
-  private static final String OFFLINE_AND_PROFILE_REQUIRED_CONDITION = OIDC_DISABLED_CONDITION
-      + "#oauth2.throwOnError(#oauth2.hasScope('offline_access') && #oauth2.hasScope('profile'))";
+  private static final String OFFLINE_AND_PROFILE_REQUIRED_CONDITION =
+      OidcProperties.OIDC_DISABLED_CONDITION + " || "
+          + "#oauth2.throwOnError(#oauth2.hasScope('offline_access') && "
+          + "#oauth2.hasScope('profile'))";
 
   @Autowired
   private DeploymentService deploymentService;
