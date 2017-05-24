@@ -788,6 +788,7 @@
 							<consoleOutput>true</consoleOutput>
 							<failsOnError>true</failsOnError>
 							<failOnViolation>true</failOnViolation>
+							<violationSeverity>warning</violationSeverity>
 							<configLocation>google_checks.xml</configLocation>
 						</configuration>
 					</execution>
