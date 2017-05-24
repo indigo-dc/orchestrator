@@ -17,28 +17,25 @@
 package it.reply.orchestrator.service;
 
 import it.reply.orchestrator.dal.entity.Deployment;
-import it.reply.orchestrator.dal.repository.DeploymentRepository;
-import it.reply.orchestrator.exception.http.NotFoundException;
+
+import lombok.AllArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@AllArgsConstructor(onConstructor = @__({ @Autowired }))
 public class TemplateServiceImpl implements TemplateService {
 
-  @Autowired
-  private DeploymentRepository deploymentRepository;
+  private DeploymentService deploymentservice;
 
   @Override
   @Transactional(readOnly = true)
   public String getTemplate(String uuid) {
-    Deployment deployment = deploymentRepository.findOne(uuid);
-    if (deployment != null) {
-      return deployment.getTemplate();
-    } else {
-      throw new NotFoundException("The deployment <" + uuid + "> doesn't exist");
-    }
+    // check if deploymentExists
+    Deployment deployment = deploymentservice.getDeployment(uuid);
+    return deployment.getTemplate();
   }
 
 }
