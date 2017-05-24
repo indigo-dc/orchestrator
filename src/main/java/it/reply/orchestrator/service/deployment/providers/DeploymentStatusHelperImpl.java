@@ -111,7 +111,8 @@ public class DeploymentStatusHelperImpl implements DeploymentStatusHelper {
     }
   }
 
-  protected void updateResources(Deployment deployment, Status status) {
+  @Override
+  public void updateResources(Deployment deployment, Status status) {
 
     for (Resource resource : deployment.getResources()) {
       if (status.equals(Status.CREATE_COMPLETE) || status.equals(Status.UPDATE_COMPLETE)) {
