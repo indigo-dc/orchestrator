@@ -16,6 +16,9 @@
 
 package it.reply.orchestrator.service.deployment.providers;
 
+import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.enums.Status;
+
 public interface DeploymentStatusHelper {
 
   public void updateOnError(String deploymentUuid, String message, Throwable throwable);
@@ -36,4 +39,6 @@ public interface DeploymentStatusHelper {
    * Update the status of a deployment successfully.
    */
   public void updateOnSuccess(String deploymentUuid);
+
+  public void updateResources(Deployment deployment, Status status);
 }
