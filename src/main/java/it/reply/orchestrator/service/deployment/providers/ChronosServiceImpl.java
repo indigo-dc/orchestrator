@@ -954,8 +954,6 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       String dockerCapabilityName = "host";
       Map<String, NodeTemplate> dockerRelationships =
           toscaService.getAssociatedNodesByCapability(nodes, nodeTemplate, dockerCapabilityName);
-      Double dockerNumCpus = null;
-      Double dockerMemSize = null;
       if (!dockerRelationships.isEmpty()) {
         /*
          * WARNING: The TOSCA validation should already check the limits (currently Alien4Cloud does
@@ -963,20 +961,23 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
          */
         NodeTemplate dockerNode = dockerRelationships.values().iterator().next();
         Capability dockerCapability = dockerNode.getCapabilities().get(dockerCapabilityName);
-        dockerNumCpus = Double.parseDouble(CommonUtils
+        CommonUtils
             .<ScalarPropertyValue>optionalCast(
                 toscaService.getCapabilityPropertyByName(dockerCapability, "num_cpus"))
-            .get()
-            .getValue());
+            .map(ScalarPropertyValue::getValue)
+            .map(Double::parseDouble)
+            .ifPresent(chronosJob::setCpus);
 
         // Converting Memory Size (as TOSCA scalar-unit.size)
-        SizeType tmp = new SizeType();
-        String memSizeRaw = CommonUtils
+        Optional<String> memSizeRaw = CommonUtils
             .<ScalarPropertyValue>optionalCast(
                 toscaService.getCapabilityPropertyByName(dockerCapability, "mem_size"))
-            .get()
-            .getValue();
-        dockerMemSize = tmp.parse(memSizeRaw).convert("MB"); // Chronos wants MB
+            .map(ScalarPropertyValue::getValue);
+        if (memSizeRaw.isPresent()) {
+          // Chronos wants MB
+          double memSizeDouble = new SizeType().parse(memSizeRaw.get()).convert("MB");
+          chronosJob.setMem(memSizeDouble);
+        }
       }
 
       Container container = new Container();
@@ -1000,13 +1001,6 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
                   "<file> field for <image> artifact in node <%s> must be provided", nodeName)))
               .getValue();
       container.setImage(imageName);
-
-      if (dockerNumCpus != null) {
-        chronosJob.setCpus(dockerNumCpus);
-      }
-      if (dockerMemSize != null) {
-        chronosJob.setMem(dockerMemSize);
-      }
 
       chronosJob.setContainer(container);
 
