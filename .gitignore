@@ -45,5 +45,8 @@ target/
 # CheckStyle
 .checkstyle
 
+# Jenkins local Maven repository folder
+.repository/
+
 # Builded war file
 /docker/*.war
