@@ -110,6 +110,10 @@ import javax.validation.ValidationException;
 @Slf4j
 public class ToscaServiceImpl implements ToscaService {
 
+  public static final String REMOVAL_LIST_PROPERTY_NAME = "removal_list";
+
+  public static final String SCALABLE_CAPABILITY_NAME = "scalable";
+
   @Autowired
   private ApplicationContext ctx;
 
@@ -143,7 +147,7 @@ public class ToscaServiceImpl implements ToscaService {
    */
   @PostConstruct
   public void init() throws IOException, CSARVersionAlreadyExistsException, ParsingException {
-    if (Files.exists(Paths.get(alienRepoDir))) {
+    if (Paths.get(alienRepoDir).toFile().exists()) {
       FileUtil.delete(Paths.get(alienRepoDir));
     }
 
@@ -654,8 +658,8 @@ public class ToscaServiceImpl implements ToscaService {
     Collection<NodeTemplate> nodes = getNodesFromArchiveRoot(archiveRoot);
 
     for (NodeTemplate node : nodes) {
-      getNodeCapabilityByName(node, "scalable").ifPresent(
-          scalable -> CommonUtils.removeFromOptionalMap(scalable.getProperties(), "removal_list"));
+      getNodeCapabilityByName(node, SCALABLE_CAPABILITY_NAME).ifPresent(scalable -> CommonUtils
+          .removeFromOptionalMap(scalable.getProperties(), REMOVAL_LIST_PROPERTY_NAME));
     }
 
   }
@@ -739,7 +743,7 @@ public class ToscaServiceImpl implements ToscaService {
     Collection<NodeTemplate> allNodes = getNodesFromArchiveRoot(archiveRoot);
 
     for (NodeTemplate node : allNodes) {
-      getNodeCapabilityByName(node, "scalable")
+      getNodeCapabilityByName(node, SCALABLE_CAPABILITY_NAME)
           .flatMap(capability -> this
               .<ScalarPropertyValue>getTypedCapabilityPropertyByName(capability, "count"))
           // Check if this value is read from the template and is not a default value
@@ -754,7 +758,7 @@ public class ToscaServiceImpl implements ToscaService {
   public Optional<Integer> getCount(NodeTemplate nodeTemplate) {
 
     // FIXME we should look it up by capability type, not name
-    return getNodeCapabilityByName(nodeTemplate, "scalable")
+    return getNodeCapabilityByName(nodeTemplate, SCALABLE_CAPABILITY_NAME)
         .flatMap(capability -> this
             .<ScalarPropertyValue>getTypedCapabilityPropertyByName(capability, "count"))
         // Check if this value is read from the template and is not a default value
@@ -769,8 +773,8 @@ public class ToscaServiceImpl implements ToscaService {
   public List<String> getRemovalList(NodeTemplate nodeTemplate) {
 
     Optional<ListPropertyValue> listPropertyValue =
-        getNodeCapabilityByName(nodeTemplate, "scalable")
-            .flatMap(capability -> getTypedCapabilityPropertyByName(capability, "removal_list"));
+        getNodeCapabilityByName(nodeTemplate, SCALABLE_CAPABILITY_NAME).flatMap(
+            capability -> getTypedCapabilityPropertyByName(capability, REMOVAL_LIST_PROPERTY_NAME));
 
     List<Object> items =
         listPropertyValue.map(property -> property.getValue()).orElse(Collections.emptyList());
@@ -782,8 +786,8 @@ public class ToscaServiceImpl implements ToscaService {
       } else if (item instanceof String) {
         removalList.add((String) item);
       } else {
-        LOG.warn("Skipped unsupported value <{}> in {} of node {}", item, "removal_list",
-            nodeTemplate.getName());
+        LOG.warn("Skipped unsupported value <{}> in {} of node {}", item,
+            REMOVAL_LIST_PROPERTY_NAME, nodeTemplate.getName());
       }
     }
     return removalList;

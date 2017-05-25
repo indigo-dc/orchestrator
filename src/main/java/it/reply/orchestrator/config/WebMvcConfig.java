@@ -25,7 +25,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 @Configuration
 public class WebMvcConfig extends WebMvcConfigurerAdapter {
 
-  public static final long MAX_UPLOAD_SIZE = 1 * 1024 * 1024; // 1 MByte
+  public static final long MAX_UPLOAD_SIZE = 1 * 1024 * 1024L; // 1 MByte
 
   @Override
   public void configurePathMatch(PathMatchConfigurer configurer) {
