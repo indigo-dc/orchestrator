@@ -17,7 +17,6 @@
 package it.reply.orchestrator.config.filters;
 
 import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
 import com.google.common.net.HttpHeaders;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -25,7 +24,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import it.reply.utils.json.JsonUtility;
 
-import org.apache.commons.lang3.ArrayUtils;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.MDC;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -34,10 +41,14 @@ import org.springframework.web.util.WebUtils;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -45,12 +56,16 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
+@Slf4j
 public class CustomRequestLoggingFilter extends OncePerRequestFilter {
 
   public static final String X_REQUEST_ID = "X-Request-ID";
   public static final String REQUEST_ID_MDC_KEY = "request_id";
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @ToString(callSuper = true)
   public static class RequestWrapper extends AbstractWrapper {
 
     private String type = "request";
@@ -67,12 +82,16 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
   }
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
+  @Data
+  @EqualsAndHashCode(callSuper = true)
+  @ToString(callSuper = true)
   public static class ResponseWrapper extends AbstractWrapper {
 
     private String type = "response";
 
     @JsonProperty("response_status")
     private int responseStatus;
+
     @JsonProperty("response_time")
     private double responseTime;
 
@@ -100,72 +119,28 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
       return type;
     }
 
-    public int getResponseStatus() {
-      return responseStatus;
-    }
-
-    public double getResponseTime() {
-      return responseTime;
-    }
-
-    public void setResponseStatus(int responseStatus) {
-      this.responseStatus = responseStatus;
-    }
-
-    public void setResponseTime(double responseTime) {
-      this.responseTime = responseTime;
-    }
-
   }
 
+  @Data
   public abstract static class AbstractWrapper {
+
     private Map<String, String> headers;
+
     @JsonProperty("http_method")
     private String httpMethod;
+
     private String uri;
+
     @JsonProperty("client_ip")
     private String clientIp;
+
     private String session;
+
     private String user;
+
     private String payload;
 
-    public Map<String, String> getHeaders() {
-      return headers;
-    }
-
-    public String getHttpMethod() {
-      return httpMethod;
-    }
-
-    public String getUri() {
-      return uri;
-    }
-
-    public String getClientIp() {
-      return clientIp;
-    }
-
-    public String getSession() {
-      return session;
-    }
-
-    public String getUser() {
-      return user;
-    }
-
-    public String getPayload() {
-      return payload;
-    }
-
     public abstract String getType();
-
-    public void setHttpMethod(String httpMethod) {
-      this.httpMethod = httpMethod;
-    }
-
-    public void setUri(String uri) {
-      this.uri = uri;
-    }
 
     /**
      * Set the uri from a base uri and a query string.
@@ -175,17 +150,11 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
      * @param queryString
      *          the string containing the query param
      */
-    public void setUri(String uri, String queryString) {
-      String parsedQueryString = safeTrimmedString(queryString);
-      if (parsedQueryString.isEmpty()) {
-        this.uri = uri;
-      } else {
-        this.uri = String.format("%s?%s", uri, parsedQueryString);
-      }
-    }
-
-    public void setClientIp(String clientIp) {
-      this.clientIp = clientIp;
+    public void setUriFromRequest(String uri, String queryString) {
+      StringBuilder sb = new StringBuilder(uri);
+      safeTrimmedString(queryString)
+          .ifPresent(parsedQueryString -> sb.append("?").append(parsedQueryString));
+      setUri(sb.toString());
     }
 
     /**
@@ -194,15 +163,8 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
      * @param request
      *          the request
      */
-    public void setClientIp(HttpServletRequest request) {
-      String clientIp = safeTrimmedString(getRemoteAddr(request));
-      if (!clientIp.isEmpty()) {
-        setClientIp(clientIp);
-      }
-    }
-
-    public void setSession(String session) {
-      this.session = session;
+    public void setClientIpFromRequest(HttpServletRequest request) {
+      safeTrimmedString(getRemoteAddr(request)).ifPresent(this::setClientIp);
     }
 
     /**
@@ -211,15 +173,10 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
      * @param request
      *          the request
      */
-    public void setSession(HttpServletRequest request) {
-      HttpSession session = request.getSession(false);
-      if (session != null) {
-        setSession(session.getId());
-      }
-    }
-
-    public void setUser(String user) {
-      this.user = user;
+    public void setSessionFromRequest(HttpServletRequest request) {
+      Optional.ofNullable(request.getSession(false))
+          .map(HttpSession::getId)
+          .ifPresent(this::setSession);
     }
 
     /**
@@ -228,15 +185,8 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
      * @param request
      *          the request
      */
-    public void setUser(HttpServletRequest request) {
-      String user = safeTrimmedString(request.getRemoteUser());
-      if (!user.isEmpty()) {
-        setUser(user);
-      }
-    }
-
-    public void setHeaders(Map<String, String> headers) {
-      this.headers = headers;
+    public void setUserFromRequest(HttpServletRequest request) {
+      safeTrimmedString(request.getRemoteUser()).ifPresent(this::setUser);
     }
 
     /**
@@ -245,19 +195,13 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
      * @param request
      *          the request
      */
-    public void setHeaders(HttpServletRequest request) {
-      Map<String, String> headers =
-          new ServletServerHttpRequest(request).getHeaders().toSingleValueMap();
-      setHeaders(headers);
+    public void setHeadersFromRequest(HttpServletRequest request) {
+      setHeaders(new ServletServerHttpRequest(request).getHeaders().toSingleValueMap());
       // for (String headerKey : getHeadersToOmitt()) {
       // if (headers.containsKey(headerKey)) {
       // headers.put(headerKey, "<omitted>");
       // }
       // }
-    }
-
-    public void setPayload(String payload) {
-      this.payload = payload;
     }
 
     /**
@@ -268,23 +212,24 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
      * @param maxPayloadLength
      *          the max payload length to parse
      */
-    public void setPayload(HttpServletRequest request, int maxPayloadLength) {
+    public void setPayloadFromRequest(HttpServletRequest request, int maxPayloadLength) {
       if (isIncludePayload(maxPayloadLength)) {
-        ContentCachingRequestWrapper wrapper =
-            WebUtils.getNativeRequest(request, ContentCachingRequestWrapper.class);
-        if (wrapper != null) {
+        Optional<ContentCachingRequestWrapper> optionalWrapper = Optional
+            .ofNullable(WebUtils.getNativeRequest(request, ContentCachingRequestWrapper.class));
+        optionalWrapper.ifPresent(wrapper -> {
           byte[] buf = wrapper.getContentAsByteArray();
           if (buf.length > 0) {
             int length = Math.min(buf.length, maxPayloadLength);
-            String payload;
+            String extractedPayload;
             try {
-              payload = new String(buf, 0, length, wrapper.getCharacterEncoding());
+              extractedPayload = new String(buf, 0, length, wrapper.getCharacterEncoding());
             } catch (UnsupportedEncodingException ex) {
-              payload = "[unknown]";
+              extractedPayload = "[unknown]";
             }
-            setPayload(payload);
+            setPayload(extractedPayload);
           }
-        }
+        });
+
       }
     }
 
@@ -299,30 +244,23 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
     public AbstractWrapper(HttpServletRequest request, int maxPayloadLength) {
       setHttpMethod(request.getMethod());
 
-      setUri(request.getRequestURI(), request.getQueryString());
-      setClientIp(request);
-      setSession(request);
-      setUser(request);
-      setHeaders(request);
-      setPayload(request, maxPayloadLength);
+      setUriFromRequest(request.getRequestURI(), request.getQueryString());
+      setClientIpFromRequest(request);
+      setSessionFromRequest(request);
+      setUserFromRequest(request);
+      setHeadersFromRequest(request);
+      setPayloadFromRequest(request, maxPayloadLength);
     }
   }
 
+  @Getter
+  @Setter
   private int maxPayloadLength = -1;
 
-  public int getMaxPayloadLength() {
-    return maxPayloadLength;
-  }
-
-  public void setMaxPayloadLength(int maxPayloadLength) {
-    this.maxPayloadLength = maxPayloadLength;
-  }
-
-  private List<String> headersToOmitt = Lists.newArrayList();
-
-  public List<String> getHeadersToOmitt() {
-    return headersToOmitt;
-  }
+  @Getter
+  @Setter
+  @NonNull
+  private List<String> headersToOmitt = new ArrayList<>();
 
   public boolean isIncludePayload() {
     return isIncludePayload(getMaxPayloadLength());
@@ -332,24 +270,16 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
     return maxPayloadLength > 0;
   }
 
-  public void setHeadersToOmitt(List<String> headersToOmitt) {
-    Objects.requireNonNull(headersToOmitt, "headersToOmitt list must not be null");
-    this.headersToOmitt = headersToOmitt;
-  }
-
   @Override
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
       FilterChain filterChain) throws ServletException, IOException {
 
-    long startTime = System.nanoTime();
+    Instant startingInstant = Instant.now();
     boolean isFirstRequest = !isAsyncDispatch(request);
     HttpServletRequest requestToUse = request;
 
-    String requestId = "";// safeTrimmedString(request.getHeader(X_REQUEST_ID));
+    String requestId = "req-" + UUID.randomUUID().toString();
 
-    if (requestId.isEmpty()) {
-      requestId = "req-" + UUID.randomUUID().toString();
-    }
     try {
       MDC.put(REQUEST_ID_MDC_KEY, requestId);
       response.addHeader(X_REQUEST_ID, requestId);
@@ -367,7 +297,7 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
         filterChain.doFilter(requestToUse, response);
       } finally {
         if (shouldLog && !isAsyncStarted(requestToUse)) {
-          afterRequest(requestToUse, response, getElapsedMillisec(startTime));
+          afterRequest(requestToUse, response, getElapsedMillisec(startingInstant));
         }
       }
     } finally {
@@ -375,12 +305,12 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
     }
   }
 
-  public static String safeTrimmedString(String input) {
-    return Strings.nullToEmpty(input).trim();
+  public static Optional<String> safeTrimmedString(@Nullable String input) {
+    return Optional.ofNullable(input).map(String::trim).map(Strings::emptyToNull);
   }
 
-  protected boolean shouldLog(HttpServletRequest request) {
-    return logger.isDebugEnabled();
+  public boolean shouldLog(HttpServletRequest request) {
+    return LOG.isDebugEnabled();
   }
 
   /**
@@ -388,9 +318,10 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
    */
   protected void beforeRequest(HttpServletRequest request) {
     try {
-      logger.debug(JsonUtility.serializeJson(new RequestWrapper(request, getMaxPayloadLength())));
+      LOG.debug(JsonUtility.serializeJson(new RequestWrapper(request, getMaxPayloadLength())));
     } catch (IOException ex) {
-      logger.error("Error loggin request", ex);
+      // shouldn't happen
+      LOG.error("Error logging request {}", request, ex);
     }
   }
 
@@ -400,28 +331,28 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
   protected void afterRequest(HttpServletRequest request, HttpServletResponse response,
       double responseTime) {
     try {
-      logger.debug(JsonUtility.serializeJson(
+      LOG.debug(JsonUtility.serializeJson(
           new ResponseWrapper(request, response, getMaxPayloadLength(), responseTime)));
     } catch (IOException ex) {
-      logger.error("Error loggin response", ex);
+      // shouldn't happen
+      LOG.error("Error logging response {} for request ", response, request, ex);
     }
   }
 
-  private double getElapsedMillisec(double startTimeNanoSec) {
-    return (System.nanoTime() - startTimeNanoSec) / 1e6;
+  private double getElapsedMillisec(Instant startingInstant) {
+    return Duration.between(startingInstant, Instant.now()).toMillis();
   }
 
   private static String getRemoteAddr(HttpServletRequest request) {
-    String remoteAddress = null;
-    String[] forwardedAddress =
-        Strings.nullToEmpty(request.getHeader(HttpHeaders.X_FORWARDED_FOR)).split(", ?");
-    if (ArrayUtils.isEmpty(forwardedAddress)
-        || Strings.nullToEmpty(forwardedAddress[0]).trim().isEmpty()) {
-      remoteAddress = request.getRemoteAddr();
-    } else {
-      remoteAddress = forwardedAddress[0];
-    }
-    return remoteAddress;
+    return safeTrimmedString(request.getHeader(HttpHeaders.X_FORWARDED_FOR))
+        .map(header -> header.split(", ?"))
+        .map(Stream::of)
+        .orElse(Stream.empty())
+        .map(CustomRequestLoggingFilter::safeTrimmedString)
+        .filter(Optional::isPresent)
+        .map(Optional::get)
+        .findFirst()
+        .orElse(request.getRemoteAddr());
   }
 
 }
