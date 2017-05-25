@@ -74,7 +74,7 @@ public class PollUndeploy extends BaseDeployCommand {
 
   private static ExternallyControlledPoller<DeploymentMessage, Boolean> getPoller() {
 
-    long timeoutTime = 30 * 60 * 1000;
+    long timeoutTime = 30 * 60 * 1000L;
 
     PollingBehaviour<DeploymentMessage, Boolean> pollBehavior =
         new AbstractPollingBehaviour<DeploymentMessage, Boolean>(timeoutTime) {
