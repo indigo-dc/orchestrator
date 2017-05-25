@@ -433,12 +433,63 @@ node_types:
         description: name of the Galaxy flavor
         required: true
         default: galaxy-no-tools
+      refdata_repository_name:
+        type: string
+        description: Onedata space name, CernVM-FS repository name or subdirectory downaload name
+        default: 'elixir-italy.galaxy.refdata'
+        required: false
+      refdata_provider_type:
+        type: string
+        description: Select Reference data provider type (Onedata, CernVM-FS or download)
+        default: 'onedata'
+        required: false
+      refdata_provider:
+        type: string
+        description: Oneprovider for reference data
+        default: 'not_a_provider'
+        required: false
+      refdata_token:
+        type: string
+        description: Access token for reference data
+        default: 'not_a_token'
+        required: false
+      refdata_cvmfs_server_url:
+        type: string
+        description: CernVM-FS server, replica or stratum-zero
+        default: 'server_url'
+        required: false
+      refdata_cvmfs_repository_name:
+        type: string
+        description: Reference data CernVM-FS repository name
+        default: 'not_a_cvmfs_repository_name'
+        required: false
+      refdata_cvmfs_key_file:
+        type: string
+        description: CernVM-FS public key
+        default: 'not_a_key'
+        required: false
+      refdata_cvmfs_proxy_url:
+        type: string
+        description: CernVM-FS proxy url
+        default: 'DIRECT'
+        required: false
+      refdata_cvmfs_proxy_port:
+        type: integer 
+        description: CernVM-FS proxy port
+        default: 80
+        required: false
     requirements:
       host:
         type: tosca.capabilities.Container
         node: tosca.nodes.indigo.GalaxyPortal
         relationship: tosca.relationships.HostedOn
     artifacts:
+      oneclient_role:
+        file: indigo-dc.oneclient
+        type: tosca.artifacts.AnsibleGalaxy.role
+      cvmfs_role:
+        file: indigo-dc.cvmfs-client
+        type: tosca.artifacts.AnsibleGalaxy.role
       galaxy_role:
         file: indigo-dc.galaxycloud-refdata
         type: tosca.artifacts.AnsibleGalaxy.role
@@ -449,6 +500,15 @@ node_types:
           inputs:
             get_refdata: { get_property: [ SELF, reference_data ] }
             galaxy_flavor: { get_property: [ SELF, flavor ] }
+            refdata_repository_name: { get_property: [ SELF, refdata_repository_name ] }
+            refdata_provider_type: { get_property: [ SELF, refdata_provider_type ] }
+            refdata_provider: { get_property: [ SELF, refdata_provider ] }
+            refdata_token: { get_property: [ SELF, refdata_token ] }
+            refdata_cvmfs_server_url: { get_property: [ SELF, refdata_cvmfs_server_url ] }
+            refdata_cvmfs_repository_name: { get_property: [ SELF, refdata_cvmfs_repository_name ] }
+            refdata_cvmfs_key_file: { get_property: [ SELF, refdata_cvmfs_key_file ] }
+            refdata_cvmfs_proxy_url: { get_property: [ SELF, refdata_cvmfs_proxy_url ] }
+            refdata_cvmfs_proxy_port: { get_property: [ SELF, refdata_cvmfs_proxy_port ] }
 
   tosca.nodes.indigo.ElasticCluster:
     derived_from: tosca.nodes.SoftwareComponent
