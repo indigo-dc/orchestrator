@@ -274,9 +274,10 @@ public class OneDataServiceImpl implements OneDataService {
       ProviderDetails providerDetails = getProviderDetailsFromId(onedataParameter.getZone(),
           onedataParameter.getToken(), spaceDetail.getSpaceId(), providerId);
       if (addAllProvidersinfo) {
-        OneDataProviderInfo providerInfo = new OneDataProviderInfo();
-        providerInfo.setId(providerId);
-        providerInfo.setEndpoint(providerDetails.getRedirectionPoint());
+        OneDataProviderInfo providerInfo = OneDataProviderInfo.builder()
+            .id(providerId)
+            .endpoint(providerDetails.getRedirectionPoint())
+            .build();
         onedataParameter.getProviders().add(providerInfo);
       } else {
         // TODO implement the logic

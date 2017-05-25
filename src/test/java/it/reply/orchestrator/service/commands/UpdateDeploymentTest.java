@@ -147,7 +147,8 @@ public class UpdateDeploymentTest {
     commandContext.setData(Constants.WORKITEM, workItem);
 
     Map<String, OneData> oneDataRequirements = new HashMap<>();
-    OneData onedata = new OneData("token", "space", "path", "providers");
+    OneData onedata =
+        OneData.builder().token("token").space("space").path("path").providers("providers").build();
     onedata.setSmartScheduling(true);
     oneDataRequirements.put("input", onedata);
     dm.setOneDataRequirements(oneDataRequirements);
@@ -190,7 +191,8 @@ public class UpdateDeploymentTest {
     commandContext.setData(Constants.WORKITEM, workItem);
 
     Map<String, OneData> oneDataRequirements = new HashMap<>();
-    OneData onedata = new OneData("token", "space", "path", "providers");
+    OneData onedata =
+        OneData.builder().token("token").space("space").path("path").providers("providers").build();
     onedata.setSmartScheduling(true);
     oneDataRequirements.put("output", onedata);
     dm.setOneDataRequirements(oneDataRequirements);

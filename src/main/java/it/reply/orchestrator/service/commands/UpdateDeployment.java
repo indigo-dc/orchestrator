@@ -41,7 +41,6 @@ import org.kie.api.executor.ExecutionResults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -156,7 +155,8 @@ public class UpdateDeployment extends BaseCommand {
         OneData oneDataInput = oneDataRequirements.get("input");
         if (oneDataInput != null) {
           if (oneDataInput.isSmartScheduling()) {
-            oneDataInput.setProviders(oneDataInput.getProviders().stream()
+            oneDataInput.setProviders(oneDataInput.getProviders()
+                .stream()
                 .filter(info -> Objects.equals(info.getCloudProviderId(),
                     deploymentMessage.getChosenCloudProvider().getId()))
                 .collect(Collectors.toList()));
@@ -169,7 +169,8 @@ public class UpdateDeployment extends BaseCommand {
         OneData oneDataOutput = oneDataRequirements.get("output");
         if (oneDataOutput != null) {
           if (oneDataOutput.isSmartScheduling()) {
-            oneDataOutput.setProviders(oneDataOutput.getProviders().stream()
+            oneDataOutput.setProviders(oneDataOutput.getProviders()
+                .stream()
                 .filter(info -> Objects.equals(info.getCloudProviderId(),
                     deploymentMessage.getChosenCloudProvider().getId()))
                 .collect(Collectors.toList()));
@@ -188,16 +189,18 @@ public class UpdateDeployment extends BaseCommand {
   protected OneData generateStubOneData(DeploymentMessage deploymentMessage) {
 
     String path = new StringBuilder().append(oneDataService.getServiceSpacePath())
-        .append(deploymentMessage.getDeploymentId()).toString();
+        .append(deploymentMessage.getDeploymentId())
+        .toString();
 
-    LOG.info(
-        String.format("Generating OneData settings with parameters: %s",
-            Arrays.asList(oneDataService.getServiceSpaceToken(),
-                oneDataService.getServiceSpaceName(), path,
-                oneDataService.getServiceSpaceProvider())));
+    OneData stub = OneData.builder()
+        .token(oneDataService.getServiceSpaceToken())
+        .space(oneDataService.getServiceSpaceName())
+        .path(path)
+        .providers(oneDataService.getServiceSpaceProvider())
+        .build();
 
-    return new OneData(oneDataService.getServiceSpaceToken(), oneDataService.getServiceSpaceName(),
-        path, oneDataService.getServiceSpaceProvider());
+    LOG.info("Generated OneData settings {}", stub);
+    return stub;
   }
 
 }

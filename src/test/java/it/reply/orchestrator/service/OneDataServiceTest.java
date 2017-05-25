@@ -235,7 +235,7 @@ public class OneDataServiceTest {
     userSpace.getSpaces().add(spaceId);
 
     OneData oneData =
-        new OneData(onedataToken, "cname2", null, new ArrayList<>(), defaultOneZoneEndpoint);
+        OneData.builder().token(onedataToken).space("cname2").zone(defaultOneZoneEndpoint).build();
 
     HttpEntity<UserSpaces> userSpaceEntity = getEntity(onedataToken);
     ResponseEntity<UserSpaces> responseUserSpaceEntity =
@@ -272,7 +272,7 @@ public class OneDataServiceTest {
     userSpace.getSpaces().add(spaceId);
 
     OneData oneData =
-        new OneData(onedataToken, "cname2", null, new ArrayList<>(), defaultOneZoneEndpoint);
+        OneData.builder().token(onedataToken).space("cname2").zone(defaultOneZoneEndpoint).build();
 
     HttpEntity<UserSpaces> entity = getEntity(onedataToken);
     ResponseEntity<UserSpaces> responseEntity =
@@ -343,11 +343,11 @@ public class OneDataServiceTest {
 
     // onedata without new provider details
     OneData oneData =
-        new OneData(onedataToken, "cname2", null, new ArrayList<>(), defaultOneZoneEndpoint);
+        OneData.builder().token(onedataToken).space("cname2").zone(defaultOneZoneEndpoint).build();
     OneData populateProviderInfo = oneDataService.populateProviderInfo(oneData);
 
     // correct result with new provider details
-    OneDataProviderInfo providerInfo = new OneDataProviderInfo();
+    OneDataProviderInfo providerInfo = OneDataProviderInfo.builder().build();
     providerInfo.setId(providerDetails.getProviderId());
     providerInfo.setEndpoint(providerDetails.getRedirectionPoint());
     oneData.getProviders().add(providerInfo);

@@ -807,10 +807,13 @@ public class ToscaServiceImpl implements ToscaService {
       Map<String, OneData> result = new HashMap<>();
       OneData oneDataInput = null;
       if (inputs.get("input_onedata_space") != null) {
-        oneDataInput = new OneData((String) inputs.get("input_onedata_token"),
-            (String) inputs.get("input_onedata_space"), (String) inputs.get("input_path"),
-            (String) inputs.get("input_onedata_providers"),
-            (String) inputs.get("input_onedata_zone"));
+        oneDataInput = OneData.builder()
+            .token((String) inputs.get("input_onedata_token"))
+            .space((String) inputs.get("input_onedata_space"))
+            .path((String) inputs.get("input_path"))
+            .providers((String) inputs.get("input_onedata_providers"))
+            .zone((String) inputs.get("input_onedata_zone"))
+            .build();
         if (oneDataInput.getProviders().isEmpty()) {
           oneDataInput.setSmartScheduling(true);
         }
@@ -819,10 +822,13 @@ public class ToscaServiceImpl implements ToscaService {
       }
 
       if (inputs.get("output_onedata_space") != null) {
-        OneData oneDataOutput = new OneData((String) inputs.get("output_onedata_token"),
-            (String) inputs.get("output_onedata_space"), (String) inputs.get("output_path"),
-            (String) inputs.get("output_onedata_providers"),
-            (String) inputs.get("output_onedata_zone"));
+        OneData oneDataOutput = OneData.builder()
+            .token((String) inputs.get("output_onedata_token"))
+            .space((String) inputs.get("output_onedata_space"))
+            .path((String) inputs.get("output_path"))
+            .providers((String) inputs.get("output_onedata_providers"))
+            .zone((String) inputs.get("output_onedata_zone"))
+            .build();
         if (oneDataOutput.getProviders().isEmpty()) {
           if (oneDataInput != null) {
             oneDataOutput.setProviders(oneDataInput.getProviders());
