@@ -38,6 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import it.reply.orchestrator.config.filters.CustomRequestLoggingFilter;
 import it.reply.orchestrator.dal.entity.AbstractResourceEntity;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
@@ -105,6 +106,9 @@ public class DeploymentControllerTest {
   @Spy
   private GlobalControllerExceptionHandler globalControllerExceptionHandler;
 
+  @Spy
+  private CustomRequestLoggingFilter customRequestLoggingFilter = new CustomRequestLoggingFilter();
+
   @Rule
   public RestDocumentation restDocumentation = new RestDocumentation("target/generated-snippets");
 
@@ -113,12 +117,17 @@ public class DeploymentControllerTest {
    */
   @Before
   public void setup() {
+    customRequestLoggingFilter.setMaxPayloadLength(Integer.MAX_VALUE);
+    Mockito.when(customRequestLoggingFilter.shouldLog(Mockito.any())).thenReturn(true);
     MockitoAnnotations.initMocks(this);
     mockMvc = MockMvcBuilders.standaloneSetup(deploymentController)
+        .addFilters(customRequestLoggingFilter)
         .setControllerAdvice(globalControllerExceptionHandler)
         .setCustomArgumentResolvers(pageableArgumentResolver,
             pagedResourcesAssemblerArgumentResolver)
-        .apply(documentationConfiguration(this.restDocumentation)).dispatchOptions(true).build();
+        .apply(documentationConfiguration(this.restDocumentation))
+        .dispatchOptions(true)
+        .build();
   }
 
   @Test
@@ -135,10 +144,10 @@ public class DeploymentControllerTest {
     mockMvc
         .perform(get("/deployments").accept(MediaType.APPLICATION_JSON)
             .header(HttpHeaders.AUTHORIZATION, OAuth2AccessToken.BEARER_TYPE + " <access token>"))
-        .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andDo(document("authentication",
-            requestHeaders(
-                headerWithName(HttpHeaders.AUTHORIZATION).description("OAuth2 bearer token"))))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andDo(document("authentication", requestHeaders(
+            headerWithName(HttpHeaders.AUTHORIZATION).description("OAuth2 bearer token"))))
         .andDo(document("deployments", preprocessResponse(prettyPrint()),
 
             responseFields(fieldWithPath("links[]").ignored(),
@@ -171,7 +180,8 @@ public class DeploymentControllerTest {
     mockMvc
         .perform(get("/deployments?page=1&size=2").accept(MediaType.APPLICATION_JSON)
             .header(HttpHeaders.AUTHORIZATION, OAuth2AccessToken.BEARER_TYPE + " <access token>"))
-        .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andDo(document("deployment-paged", preprocessResponse(prettyPrint()),
             links(atomLinks(), linkWithRel("first").description("Hyperlink to the first page"),
                 linkWithRel("prev").description("Hyperlink to the previous page"),
@@ -195,7 +205,8 @@ public class DeploymentControllerTest {
     mockMvc
         .perform(get("/deployments").header(HttpHeaders.AUTHORIZATION,
             OAuth2AccessToken.BEARER_TYPE + " <access token>"))
-        .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andDo(document("deployment-pagination", preprocessResponse(prettyPrint()), responseFields(
             fieldWithPath("links[]").ignored(), fieldWithPath("content[].links[]").ignored(),
 
@@ -224,7 +235,8 @@ public class DeploymentControllerTest {
     Deployment deployment = ControllerTestUtils.createDeployment(deploymentId);
     Mockito.when(deploymentService.getDeployment(deploymentId)).thenReturn(deployment);
 
-    mockMvc.perform(get("/deployments/" + deploymentId)).andExpect(status().isOk())
+    mockMvc.perform(get("/deployments/" + deploymentId))
+        .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.uuid", is(deploymentId)));
   }
@@ -239,7 +251,8 @@ public class DeploymentControllerTest {
     mockMvc
         .perform(get("/deployments/" + deploymentId).header(HttpHeaders.AUTHORIZATION,
             OAuth2AccessToken.BEARER_TYPE + " <access token>"))
-        .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andDo(document("deployment-hypermedia", preprocessResponse(prettyPrint()),
             links(atomLinks(), linkWithRel("self").description("Self-referencing hyperlink"),
                 linkWithRel("template").description("Template reference hyperlink"),
@@ -273,7 +286,8 @@ public class DeploymentControllerTest {
     mockMvc
         .perform(get("/deployments/" + deploymentId).header(HttpHeaders.AUTHORIZATION,
             OAuth2AccessToken.BEARER_TYPE + " <access token>"))
-        .andExpect(status().isOk()).andExpect(content().contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk())
+        .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.outputs", Matchers.hasEntry(key, value)))
 
         .andDo(document("deployment", preprocessResponse(prettyPrint()),
@@ -309,11 +323,10 @@ public class DeploymentControllerTest {
         .andExpect(status().isNotFound())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.code", is(404)))
-        .andDo(document("deployment-not-found", preprocessResponse(prettyPrint()),
-            responseFields(fieldWithPath("code").description("The HTTP status code"),
-                fieldWithPath("title").description("The HTTP status name"),
-                fieldWithPath("message")
-                    .description("A displayable message describing the error"))))
+        .andDo(document("deployment-not-found", preprocessResponse(prettyPrint()), responseFields(
+            fieldWithPath("code").description("The HTTP status code"),
+            fieldWithPath("title").description("The HTTP status name"),
+            fieldWithPath("message").description("A displayable message describing the error"))))
         .andExpect(jsonPath("$.title", is("Not Found")))
         .andExpect(jsonPath("$.message", is("Message")));
   }
@@ -387,13 +400,15 @@ public class DeploymentControllerTest {
     request.setCallback("http://localhost:8080/callback");
 
     String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
-    Mockito.doThrow(new NotFoundException("Message")).when(deploymentService)
+    Mockito.doThrow(new NotFoundException("Message"))
+        .when(deploymentService)
         .updateDeployment(deploymentId, request);
 
     mockMvc
         .perform(put("/deployments/" + deploymentId).contentType(MediaType.APPLICATION_JSON)
             .content(TestUtil.convertObjectToJsonBytes(request)))
-        .andExpect(jsonPath("$.code", is(404))).andExpect(jsonPath("$.title", is("Not Found")))
+        .andExpect(jsonPath("$.code", is(404)))
+        .andExpect(jsonPath("$.title", is("Not Found")))
         .andExpect(jsonPath("$.message", is("Message")));
   }
 
@@ -404,12 +419,14 @@ public class DeploymentControllerTest {
 
     String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
     Mockito.doThrow(new ConflictException("Cannot update a deployment in DELETE_IN_PROGRESS state"))
-        .when(deploymentService).updateDeployment(deploymentId, request);
+        .when(deploymentService)
+        .updateDeployment(deploymentId, request);
 
     mockMvc
         .perform(put("/deployments/" + deploymentId).contentType(MediaType.APPLICATION_JSON)
             .content(TestUtil.convertObjectToJsonBytes(request)))
-        .andExpect(jsonPath("$.code", is(409))).andExpect(jsonPath("$.title", is("Conflict")))
+        .andExpect(jsonPath("$.code", is(409)))
+        .andExpect(jsonPath("$.title", is("Conflict")))
         .andExpect(
             jsonPath("$.message", is("Cannot update a deployment in DELETE_IN_PROGRESS state")));
   }
@@ -487,8 +504,9 @@ public class DeploymentControllerTest {
     mockMvc
         .perform(delete("/deployments/" + deploymentId).header(HttpHeaders.AUTHORIZATION,
             OAuth2AccessToken.BEARER_TYPE + " <access token>"))
-        .andExpect(status().isNoContent()).andDo(document("delete-deployment",
-            preprocessRequest(prettyPrint()), preprocessResponse(prettyPrint())));
+        .andExpect(status().isNoContent())
+        .andDo(document("delete-deployment", preprocessRequest(prettyPrint()),
+            preprocessResponse(prettyPrint())));
 
   }
 
@@ -497,7 +515,8 @@ public class DeploymentControllerTest {
 
     String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
     Mockito.doThrow(new ConflictException("Cannot delete a deployment in DELETE_IN_PROGRESS state"))
-        .when(deploymentService).deleteDeployment(deploymentId);
+        .when(deploymentService)
+        .deleteDeployment(deploymentId);
 
     mockMvc.perform(delete("/deployments/" + deploymentId)).andExpect(status().isConflict());
   }
@@ -507,11 +526,13 @@ public class DeploymentControllerTest {
 
     String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
     Mockito.doThrow(new NotFoundException("The deployment <not-found> doesn't exist"))
-        .when(deploymentService).deleteDeployment(deploymentId);
+        .when(deploymentService)
+        .deleteDeployment(deploymentId);
 
     mockMvc.perform(delete("/deployments/" + deploymentId))
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.code", is(404))).andExpect(jsonPath("$.title", is("Not Found")))
+        .andExpect(jsonPath("$.code", is(404)))
+        .andExpect(jsonPath("$.title", is("Not Found")))
         .andExpect(jsonPath("$.message", is("The deployment <not-found> doesn't exist")));
   }
 
