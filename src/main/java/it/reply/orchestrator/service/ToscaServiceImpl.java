@@ -39,6 +39,7 @@ import alien4cloud.tosca.ArchiveUploadService;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.normative.IPropertyType;
 import alien4cloud.tosca.normative.InvalidPropertyValueException;
+import alien4cloud.tosca.parser.ParsingContext;
 import alien4cloud.tosca.parser.ParsingError;
 import alien4cloud.tosca.parser.ParsingErrorLevel;
 import alien4cloud.tosca.parser.ParsingException;
@@ -287,41 +288,44 @@ public class ToscaServiceImpl implements ToscaService {
   @Override
   public ArchiveRoot parseTemplate(String toscaTemplate) throws IOException, ToscaException {
 
-    ParsingResult<ArchiveRoot> result = null;
     try {
-      result = getArchiveRootFromTemplate(toscaTemplate);
+      ParsingResult<ArchiveRoot> result = getArchiveRootFromTemplate(toscaTemplate);
+      Optional<ToscaException> exception = checkParsingErrors(
+          Optional.ofNullable(result.getContext()).map(ParsingContext::getParsingErrors));
+      if (exception.isPresent()) {
+        throw exception.get();
+      }
+      return result.getResult();
     } catch (ParsingException ex) {
-      checkParsingErrors(ex.getParsingErrors());
+      Optional<ToscaException> exception =
+          checkParsingErrors(Optional.ofNullable(ex.getParsingErrors()));
+      if (exception.isPresent()) {
+        throw exception.get();
+      } else {
+        throw new ToscaException("Failed to parse template, ex");
+      }
     }
-    checkParsingErrors(result.getContext().getParsingErrors());
-
-    return result.getResult();
-
   }
 
   @Override
   public String updateTemplate(String template) throws IOException {
-    ParsingResult<ArchiveRoot> result = null;
-    try {
-      result = getArchiveRootFromTemplate(template);
-    } catch (ParsingException ex) {
-      checkParsingErrors(ex.getParsingErrors());
-    }
-    checkParsingErrors(result.getContext().getParsingErrors());
-    removeRemovalList(result.getResult());
-    return getTemplateFromTopology(result.getResult());
+    ArchiveRoot parsedTempalte = parseTemplate(template);
+    removeRemovalList(parsedTempalte);
+    return getTemplateFromTopology(parsedTempalte);
   }
 
-  private void checkParsingErrors(List<ParsingError> errorList) throws ToscaException {
-    if (!errorList.isEmpty()) {
-      StringBuilder errorMessage = new StringBuilder();
-      for (ParsingError error : errorList) {
-        if (!error.getErrorLevel().equals(ParsingErrorLevel.INFO)) {
-          errorMessage.append(error.toString()).append("; ");
-        }
-      }
-      throw new ToscaException(errorMessage.toString());
-    }
+  private Optional<ToscaException> checkParsingErrors(Optional<List<ParsingError>> errorList) {
+    return filterNullAndInfoErrorFromParsingError(errorList)
+        .map(list -> list.stream().map(Object::toString).collect(Collectors.joining("; ")))
+        .map(ToscaException::new);
+  }
+
+  private Optional<List<ParsingError>> filterNullAndInfoErrorFromParsingError(
+      Optional<List<ParsingError>> listToFilter) {
+    return listToFilter.map(list -> list.stream()
+        .filter(Objects::nonNull)
+        .filter(error -> !ParsingErrorLevel.INFO.equals(error.getErrorLevel()))
+        .collect(Collectors.toList())).filter(list -> !list.isEmpty());
   }
 
   @Override
