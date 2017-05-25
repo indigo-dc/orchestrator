@@ -16,103 +16,94 @@
 
 package it.reply.orchestrator.dto.onedata;
 
-import com.google.common.base.Strings;
-import com.google.common.collect.Lists;
+import it.reply.orchestrator.utils.CommonUtils;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
+import lombok.experimental.Tolerate;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Data
 @ToString(exclude = "token")
+@Builder
 public class OneData implements Serializable {
 
   private static final long serialVersionUID = 8590316308119399053L;
 
   @Data
+  @Builder
+  @NoArgsConstructor(access = AccessLevel.PRIVATE)
+  @AllArgsConstructor(access = AccessLevel.PRIVATE)
   public static class OneDataProviderInfo implements Serializable {
 
     private static final long serialVersionUID = -4904767929269221557L;
 
+    @Nullable
     private String id;
 
+    @Nullable
     private String endpoint;
 
+    @Nullable
     private String cloudProviderId;
 
+    @Nullable
     private String cloudServiceId;
 
-    public OneDataProviderInfo() {
-    }
-
-    public OneDataProviderInfo(String endpoint) {
-      this.endpoint = endpoint;
-    }
   }
 
+  @Nullable
   private String token;
+
+  @Nullable
   private String space;
+
+  @Nullable
   private String path;
+
+  @Nullable
   private String zone;
+
+  @NonNull
+  @Builder.Default
   private List<OneDataProviderInfo> providers = new ArrayList<>();
+
   private boolean smartScheduling;
 
   /**
-   * Construct OneData settings with providers as list.
+   * Generate a List of {@link OneDataProviderInfo} from a csv of providers endpoint.
    * 
-   * @param token
-   *          .
-   * @param space
-   *          .
-   * @param path
-   *          .
    * @param providers
-   *          .
+   *          the csv of providers endpoint
+   * @return the List of {@link OneDataProviderInfo}
    */
-  public OneData(String token, String space, String path, List<OneDataProviderInfo> providers,
-      String zone) {
-    this.token = token;
-    this.space = space;
-    this.path = path;
-    this.zone = zone;
-    this.providers = providers;
+  public static List<OneDataProviderInfo> providersListFromString(@Nullable String providers) {
+    return Optional.ofNullable(providers)
+        .map(value -> CommonUtils.checkNotNull(value).split(","))
+        .map(Stream::of)
+        .orElse(Stream.empty())
+        .map(endpoint -> OneDataProviderInfo.builder().endpoint(endpoint).build())
+        .collect(Collectors.toList());
   }
 
-  public OneData(String token, String space, String path, List<OneDataProviderInfo> providers) {
-    this(token, space, path, providers, null);
-  }
+  public static class OneDataBuilder {
 
-  /**
-   * Construct OneData settings with providers as CSV.
-   * 
-   * @param token
-   *          .
-   * @param space
-   *          .
-   * @param path
-   *          .
-   * @param providers
-   *          .
-   * @param zone
-   *          The zone
-   */
-  public OneData(String token, String space, String path, String providers, String zone) {
-    this(token, space, path, Lists.newArrayList(), zone);
-    if (!Strings.isNullOrEmpty(providers)) {
-      this.providers.addAll(Arrays.asList(providers.split(","))
-          .stream()
-          .map(prov -> new OneDataProviderInfo(prov))
-          .collect(Collectors.toList()));
+    @Tolerate
+    public OneDataBuilder providers(@Nullable String providers) {
+      return providers(providersListFromString(providers));
     }
   }
-
-  public OneData(String token, String space, String path, String providers) {
-    this(token, space, path, providers, null);
-  }
-
 }

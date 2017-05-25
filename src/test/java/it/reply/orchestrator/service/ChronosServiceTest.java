@@ -151,12 +151,26 @@ public class ChronosServiceTest extends WebAppConfigurationAware {
 
     Map<String, Object> inputs = new HashMap<String, Object>();
     ArchiveRoot ar = toscaService.prepareTemplate(template, inputs);
-    OneData serviceOd = new OneData("token", "space", "path", "provider");
-    Map<String, OneData> odParameters = ImmutableMap.of("service", serviceOd, "input",
-        new OneData("token_input", "space_input", "path_input",
-            "provider_input_1,provider_input_2"),
-        "output", new OneData("token_output", "space_output", "path_output",
-            "provider_output_1,provider2_output_2"));
+    OneData serviceOd = OneData.builder()
+        .token("token")
+        .space("space")
+        .path("path")
+        .providers("provider")
+        .build();
+    OneData inputOd = OneData.builder()
+        .token("token_input")
+        .space("space_input")
+        .path("path_input")
+        .providers("provider_input_1,provider_input_2")
+        .build();
+    OneData outputOd = OneData.builder()
+        .token("token_output")
+        .space("space_output")
+        .path("path_output")
+        .providers("provider_output_1,provider2_output_2")
+        .build();
+    Map<String, OneData> odParameters =
+        ImmutableMap.of("service", serviceOd, "input", inputOd, "output", outputOd);
 
     String customizedTemplate = chronosServiceImpl.replaceHardCodedParams(template, odParameters);
 

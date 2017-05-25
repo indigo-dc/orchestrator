@@ -308,10 +308,20 @@ public class PrefilterCloudProvidersTest {
 
   private Map<String, OneData> getOneDataRequirements() {
     Map<String, OneData> oneDataRequirements = new HashMap<>();
-    OneData onedataInput = new OneData("token", "space", "path", "providers");
-    onedataInput.setSmartScheduling(true);
-    OneData onedataOutput = new OneData("token", "space", "path", "providers");
-    onedataOutput.setSmartScheduling(true);
+    OneData onedataInput = OneData.builder()
+        .token("token")
+        .space("space")
+        .path("path")
+        .providers("providers")
+        .smartScheduling(true)
+        .build();
+    OneData onedataOutput = OneData.builder()
+        .token("token")
+        .space("space")
+        .path("path")
+        .providers("providers")
+        .smartScheduling(true)
+        .build();
     oneDataRequirements.put("input", onedataInput);
     oneDataRequirements.put("output", onedataOutput);
     return oneDataRequirements;
