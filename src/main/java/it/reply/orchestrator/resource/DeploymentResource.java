@@ -16,14 +16,11 @@
 
 package it.reply.orchestrator.resource;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-
 import it.reply.orchestrator.dal.entity.OidcEntityId;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.resource.common.AbstractResource;
 import it.reply.orchestrator.utils.CommonUtils;
-import it.reply.orchestrator.utils.RawJsonSerializer;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -48,9 +45,8 @@ public class DeploymentResource extends AbstractResource {
 
   private String statusReason;
 
-  @JsonSerialize(contentUsing = RawJsonSerializer.class)
   @NonNull
-  private Map<String, String> outputs = new HashMap<>();
+  private Map<String, Object> outputs = new HashMap<>();
 
   private Task task;
 
@@ -62,7 +58,7 @@ public class DeploymentResource extends AbstractResource {
 
   @Builder
   protected DeploymentResource(String uuid, Date creationTime, Date updateTime, Status status,
-      String statusReason, Map<String, String> outputs, Task task, String callback,
+      String statusReason, Map<String, Object> outputs, Task task, String callback,
       String cloudProviderName, OidcEntityId createdBy) {
     super(uuid, creationTime, updateTime);
     this.status = status;

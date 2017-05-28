@@ -49,7 +49,6 @@ import it.reply.orchestrator.exception.http.NotFoundException;
 import it.reply.orchestrator.resource.DeploymentResourceAssembler;
 import it.reply.orchestrator.service.DeploymentService;
 import it.reply.orchestrator.util.TestUtil;
-import it.reply.utils.json.JsonUtility;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
@@ -274,10 +273,10 @@ public class DeploymentControllerTest {
 
     String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
     Deployment deployment = ControllerTestUtils.createDeployment(deploymentId);
-    Map<String, String> outputs = Maps.newHashMap();
+    Map<String, Object> outputs = Maps.newHashMap();
     String key = "server_ip";
     String value = "10.0.0.1";
-    outputs.put(key, JsonUtility.serializeJson(value));
+    outputs.put(key, value);
     deployment.setOutputs(outputs);
     deployment.setStatus(Status.CREATE_FAILED);
     deployment.setStatusReason("Some reason");

@@ -14,16 +14,23 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.utils;
+package it.reply.orchestrator.dal.util;
 
-import com.fasterxml.jackson.databind.ser.std.RawSerializer;
+import com.fasterxml.jackson.core.type.TypeReference;
 
-public class RawJsonSerializer extends RawSerializer<String> {
+import java.util.List;
 
-  private static final long serialVersionUID = 5312574363927688542L;
+import javax.persistence.AttributeConverter;
+import javax.persistence.Converter;
 
-  public RawJsonSerializer() {
-    super(String.class);
+@Converter
+public class ListStringToJsonConverter extends AbstractToJsonConverter<List<String>>
+    implements AttributeConverter<List<String>, String> {
+
+  private static final TypeReference<List<String>> REFERENCE = new TypeReference<List<String>>() {
+  };
+
+  public ListStringToJsonConverter() {
+    super(REFERENCE);
   }
-
 }

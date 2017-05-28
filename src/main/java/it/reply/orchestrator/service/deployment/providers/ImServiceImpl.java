@@ -61,7 +61,6 @@ import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
-import it.reply.utils.json.JsonUtility;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -403,15 +402,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         if (deployment.getOutputs().isEmpty()) {
           InfOutputValues outputValues = executeWithClient(deploymentMessage,
               client -> client.getInfrastructureOutputs(deployment.getEndpoint()));
-          Map<String, String> outputs = new HashMap<String, String>();
-          for (Entry<String, Object> entry : outputValues.getOutputs().entrySet()) {
-            if (entry.getValue() != null) {
-              outputs.put(entry.getKey(), JsonUtility.serializeJson(entry.getValue()));
-            } else {
-              outputs.put(entry.getKey(), "");
-            }
-          }
-          deployment.setOutputs(outputs);
+          deployment.setOutputs(outputValues.getOutputs());
         }
         bindResources(deploymentMessage);
 

@@ -16,17 +16,17 @@
 
 package it.reply.orchestrator.dal.entity;
 
+import it.reply.orchestrator.dal.util.CloudProviderEndpointToJsonConverter;
+import it.reply.orchestrator.dal.util.ObjectToJsonConverter;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
-import it.reply.utils.json.JsonUtility;
 
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,6 +34,7 @@ import java.util.Map;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
@@ -81,23 +82,20 @@ public class Deployment extends AbstractResourceEntity {
   private String template;
 
   @Column(name = "cloudProviderEndpoint", columnDefinition = "TEXT")
-  private String cloudProviderEndpoint;
+  @Convert(converter = CloudProviderEndpointToJsonConverter.class)
+  private CloudProviderEndpoint cloudProviderEndpoint;
 
-  /**
-   * The user's inputs to the template.
-   */
-  @Transient
-  private transient Map<String, Object> unserializedParameters;
-
-  @ElementCollection(fetch = FetchType.EAGER)
+  @ElementCollection(fetch = FetchType.EAGER, targetClass = String.class)
   @MapKeyColumn(name = "name")
   @Column(name = "value", columnDefinition = "TEXT")
-  private Map<String, String> parameters = new HashMap<>();
+  @Convert(attributeName = "value.", converter = ObjectToJsonConverter.class)
+  private Map<String, Object> parameters = new HashMap<>();
 
-  @ElementCollection(fetch = FetchType.EAGER)
+  @ElementCollection(fetch = FetchType.EAGER, targetClass = String.class)
   @MapKeyColumn(name = "name")
   @Column(name = "value", columnDefinition = "TEXT")
-  private Map<String, String> outputs = new HashMap<>();
+  @Convert(attributeName = "value.", converter = ObjectToJsonConverter.class)
+  private Map<String, Object> outputs = new HashMap<>();
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "deployment", orphanRemoval = true)
   private List<Resource> resources = new ArrayList<>();
@@ -112,85 +110,6 @@ public class Deployment extends AbstractResourceEntity {
       cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
   @JoinColumn(name = "OWNER_ID")
   private OidcEntity owner;
-
-  /**
-   * The user's inputs to the template.
-   */
-  public synchronized Map<String, Object> getParameters() {
-
-    if (unserializedParameters != null) {
-      return unserializedParameters;
-    }
-
-    unserializedParameters = new HashMap<>();
-    for (Map.Entry<String, String> serializedParam : parameters.entrySet()) {
-      Object paramObject = null;
-      if (serializedParam.getValue() != null) {
-        try {
-          paramObject = JsonUtility.deserializeJson(serializedParam.getValue(), Object.class);
-        } catch (IOException ex) {
-          throw new RuntimeException("Failed to deserialize parameters in JSON", ex);
-        }
-      }
-
-      unserializedParameters.put(serializedParam.getKey(), paramObject);
-    }
-
-    return unserializedParameters;
-  }
-
-  /**
-   * The user's inputs to the template.
-   *
-   */
-  public synchronized void setParameters(Map<String, Object> parameters) {
-    this.parameters = new HashMap<>();
-    for (Map.Entry<String, Object> parameter : parameters.entrySet()) {
-      String paramString = null;
-      if (parameter.getValue() != null) {
-        try {
-          paramString = JsonUtility.serializeJson(parameter.getValue());
-        } catch (IOException ex) {
-          throw new RuntimeException("Failed to serialize parameters in JSON", ex);
-        }
-      }
-
-      this.parameters.put(parameter.getKey(), paramString);
-    }
-    this.unserializedParameters = null;
-  }
-
-  /**
-   * 
-   * @return .
-   */
-  public synchronized CloudProviderEndpoint getCloudProviderEndpoint() {
-
-    CloudProviderEndpoint cpe = null;
-
-    if (cloudProviderEndpoint != null) {
-      try {
-        cpe = JsonUtility.deserializeJson(cloudProviderEndpoint, CloudProviderEndpoint.class);
-      } catch (IOException ex) {
-        throw new RuntimeException("Failed to deserialize CloudProviderEndpoint in JSON", ex);
-      }
-    }
-    return cpe;
-  }
-
-  /**
-   * .
-   *
-   */
-  public synchronized void setCloudProviderEndpoint(CloudProviderEndpoint cpe) {
-    if (cpe != null) {
-      try {
-        cloudProviderEndpoint = JsonUtility.serializeJson(cpe);
-      } catch (IOException ex) {
-        throw new RuntimeException("Failed to serialize CloudProviderEndpoint in JSON", ex);
-      }
-    }
-  }
 
   @Transient
   public void addWorkflowReferences(WorkflowReference workflowReference) {
