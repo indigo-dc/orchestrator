@@ -18,16 +18,15 @@ package it.reply.orchestrator.dal.entity;
 
 import com.google.common.collect.Lists;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-
+import it.reply.orchestrator.dal.util.ListStringToJsonConverter;
+import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.JwtUtils;
-import it.reply.utils.json.JsonUtility;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.annotations.GenericGenerator;
 import org.springframework.hateoas.Identifiable;
 import org.springframework.social.oauth2.AccessGrant;
@@ -40,6 +39,7 @@ import java.util.Optional;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
@@ -47,12 +47,12 @@ import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(of = { "vaule" })
 @Entity
-@Slf4j
 @Table(indexes = { @Index(name = "indexOriginalJtiAndEntity",
     columnList = "ORIGINAL_TOKEN_ID" + "," + "OIDC_ENTITY_ID") })
 public class OidcRefreshToken implements Identifiable<String>, Serializable {
@@ -75,9 +75,9 @@ public class OidcRefreshToken implements Identifiable<String>, Serializable {
     token.setCreationDate(new Date());
 
     Optional.ofNullable(grant.getScope())
-        .map(scopeAsString -> scopeAsString.split(" +"))
+        .map(scopeAsString -> scopeAsString.split("\\s+"))
         .map(scopes -> Lists.newArrayList(scopes))
-        .ifPresent(scopes -> token.setScopes(scopes));
+        .ifPresent(scopes -> token.setScopes(CommonUtils.checkNotNull(scopes)));
 
     JwtUtils.getExpirationTimeFromJwt(token.getVaule())
         .ifPresent(expirationDate -> token.setExpirationDate(expirationDate));
@@ -104,42 +104,14 @@ public class OidcRefreshToken implements Identifiable<String>, Serializable {
   private Date creationDate;
 
   @Column(name = "SCOPES")
-  private String scopes;
+  @Convert(converter = ListStringToJsonConverter.class)
+  @NotNull
+  @NonNull
+  private List<String> scopes = new ArrayList<>();
 
   @OneToOne(
       cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
   @JoinColumn(name = "OIDC_ENTITY_ID", unique = true, nullable = true)
   private OidcEntity entity;
-
-  /**
-   * Get the scopes of the refresh token.
-   * 
-   * @return the scopes
-   */
-  public List<String> getScopes() {
-    Optional<List<String>> deserializedScopes = Optional.empty();
-    try {
-      deserializedScopes = Optional
-          .ofNullable(JsonUtility.deserializeJson(scopes, new TypeReference<List<String>>() {
-          }));
-    } catch (Exception ex) {
-      // swallow it
-    }
-    return deserializedScopes.orElse(new ArrayList<>());
-  }
-
-  /**
-   * Set the scopes of the refresh token.
-   * 
-   * @param scopes
-   *          the scopes
-   */
-  public void setScopes(List<String> scopes) {
-    try {
-      this.scopes = JsonUtility.serializeJson(scopes);
-    } catch (Exception ex) {
-      // swallow it
-    }
-  }
 
 }
