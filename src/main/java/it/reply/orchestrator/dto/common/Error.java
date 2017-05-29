@@ -16,27 +16,30 @@
 
 package it.reply.orchestrator.dto.common;
 
+import it.reply.orchestrator.utils.CommonUtils;
+
+import lombok.Builder;
 import lombok.Data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.http.HttpStatus;
 
 import java.io.Serializable;
+import java.util.Optional;
 
 @Data
 public class Error implements Serializable {
 
   private static final long serialVersionUID = 6559999818418491070L;
 
+  @Nullable
   private Integer code;
+
+  @Nullable
   private String title;
 
   @Nullable
   private String message;
-
-  public Error() {
-    // default constructor
-  }
 
   /**
    * Generate an Error from an exception and a {@link HttpStatus}.
@@ -46,10 +49,15 @@ public class Error implements Serializable {
    * @param status
    *          the HttpStatus
    */
-  public Error(Exception ex, HttpStatus status) {
-    code = status.value();
-    title = status.getReasonPhrase();
-    message = ex.getMessage();
+  @Builder
+  private Error(@Nullable Exception exception, @Nullable String message,
+      @Nullable HttpStatus status) {
+    Optional.ofNullable(status).map(CommonUtils::checkNotNull).ifPresent(safeStatus -> {
+      code = safeStatus.value();
+      title = safeStatus.getReasonPhrase();
+    });
+    this.message = Optional.ofNullable(message)
+        .orElse(Optional.ofNullable(exception).map(Exception::getMessage).orElse(null));
   }
 
 }
