@@ -658,7 +658,9 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
     private static final long serialVersionUID = -1037947811308004122L;
 
     public enum JobDependencyType {
-      START, INTERMEDIATE, END
+      START,
+      INTERMEDIATE,
+      END
     }
 
     private Job chronosJob;
@@ -832,12 +834,12 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
         throw new DeploymentException("No OneData Providers available for service space");
       }
       // Replace OneData properties
-      customizedTemplate = customizedTemplate
-          .replace("TOKEN_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getToken())
-          .replace("DATA_SPACE_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getSpace())
-          .replace("PATH_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getPath())
-          .replace("ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR",
-              od.getProviders().get(0).getEndpoint());
+      customizedTemplate =
+          customizedTemplate.replace("TOKEN_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getToken())
+              .replace("DATA_SPACE_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getSpace())
+              .replace("PATH_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getPath())
+              .replace("ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR",
+                  od.getProviders().get(0).getEndpoint());
       LOG.debug("Replaced {} OneData parameters with: {}", "service", od);
     }
 
@@ -1012,7 +1014,9 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
   }
 
   public enum JobState {
-    FRESH, FAILURE, SUCCESS;
+    FRESH,
+    FAILURE,
+    SUCCESS;
   }
 
   /**

@@ -16,7 +16,10 @@
 
 package it.reply.orchestrator.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import java.io.Serializable;
@@ -28,13 +31,18 @@ import java.io.Serializable;
  *
  */
 @Data
-@ToString(exclude = "password")
-public class CloudProviderEndpoint implements Serializable {
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@EqualsAndHashCode(callSuper = false)
+@ToString(exclude = "password", callSuper = false)
+public class CloudProviderEndpoint extends AdditionalPropertiesAwareDto implements Serializable {
 
   private static final long serialVersionUID = -2585914648218602033L;
 
   public enum IaaSType {
-    OPENSTACK, OPENNEBULA, OCCI, AWS
+    OPENSTACK,
+    OPENNEBULA,
+    OCCI,
+    AWS
   }
 
   private String imEndpoint;

@@ -58,10 +58,12 @@ public class CloudProviderEndpointServiceTest {
 
     RankedCloudProvider rankedCloudProvider1 = new RankedCloudProvider();
     rankedCloudProvider1.setRank(100);
+    rankedCloudProvider1.setRanked(true);
     RankedCloudProvider rankedCloudProvider2 = new RankedCloudProvider();
     rankedCloudProvider2.setRank(400);
+    rankedCloudProvider2.setRanked(true);
     RankedCloudProvider rankedCloudProvider3 = new RankedCloudProvider();
-    rankedCloudProvider3.setRank(200);
+    rankedCloudProvider3.setRank(800);
 
     listRankedCloudProvider.add(rankedCloudProvider1);
     listRankedCloudProvider.add(rankedCloudProvider2);

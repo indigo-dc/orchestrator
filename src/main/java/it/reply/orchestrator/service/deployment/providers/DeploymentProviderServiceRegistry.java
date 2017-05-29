@@ -28,6 +28,7 @@ import org.springframework.util.Assert;
 
 import java.util.EnumMap;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 @Service
 public class DeploymentProviderServiceRegistry {
@@ -44,7 +45,7 @@ public class DeploymentProviderServiceRegistry {
    */
   @Autowired
   public DeploymentProviderServiceRegistry(DeploymentProviderService[] services) {
-    for (DeploymentProviderService service : services) {
+    Stream.of(services).forEach(service -> {
 
       DeploymentProviderQualifier annotation =
           service.getClass().getAnnotation(DeploymentProviderQualifier.class);
@@ -56,7 +57,7 @@ public class DeploymentProviderServiceRegistry {
       Assert.notNull(deploymentProvider);
 
       providers.put(deploymentProvider, service);
-    }
+    });
   }
 
   public DeploymentProviderService getDeploymentProviderService(Deployment deployment) {

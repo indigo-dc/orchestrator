@@ -40,12 +40,8 @@ public class GetSlam extends BaseRankCloudProvidersCommand {
     // Get VO (customer) preferences and SLAs (infer available Cloud Providers from it)
     for (Sla sla : rankCloudProvidersMessage.getSlamPreferences().getSla()) {
       // Create Cloud Provider, add to the list
-      CloudProvider cp =
-          rankCloudProvidersMessage.getCloudProviders().get(sla.getCloudProviderId());
-      if (cp == null) {
-        cp = new CloudProvider(sla.getCloudProviderId());
-        rankCloudProvidersMessage.getCloudProviders().put(sla.getCloudProviderId(), cp);
-      }
+      CloudProvider cp = rankCloudProvidersMessage.getCloudProviders().computeIfAbsent(
+          sla.getCloudProviderId(), cloudProviderId -> new CloudProvider(cloudProviderId));
 
       // Get provider's services
       for (Service service : sla.getServices()) {
