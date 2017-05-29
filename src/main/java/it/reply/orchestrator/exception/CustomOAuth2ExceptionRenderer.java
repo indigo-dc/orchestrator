@@ -25,6 +25,8 @@ import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
 import org.springframework.security.oauth2.provider.error.DefaultOAuth2ExceptionRenderer;
 import org.springframework.web.context.request.ServletWebRequest;
 
+import java.util.Optional;
+
 public class CustomOAuth2ExceptionRenderer extends DefaultOAuth2ExceptionRenderer {
 
   @Override
@@ -35,8 +37,20 @@ public class CustomOAuth2ExceptionRenderer extends DefaultOAuth2ExceptionRendere
       // write an Error as response body instead of a JSON serialized OAuth2Exception
       OAuth2Exception oauth2Exception = (OAuth2Exception) responseEntity.getBody();
       HttpStatus status = HttpStatus.valueOf(oauth2Exception.getHttpErrorCode());
-      responseEntityToWrite = new ResponseEntity<>(new Error(oauth2Exception, status),
-          responseEntity.getHeaders(), status);
+      // if there are additional information, use it
+      StringBuilder messageBuilder = new StringBuilder(oauth2Exception.getMessage());
+      Optional.ofNullable(oauth2Exception.getAdditionalInformation())
+          .ifPresent(info -> info.forEach((key, value) -> messageBuilder.append(", ")
+              .append(key)
+              .append("=\"")
+              .append(value)
+              .append("\"")));
+      Error error = Error.builder()
+          .exception(oauth2Exception)
+          .status(status)
+          .message(messageBuilder.toString())
+          .build();
+      responseEntityToWrite = new ResponseEntity<>(error, responseEntity.getHeaders(), status);
     } else {
       responseEntityToWrite = responseEntity;
     }

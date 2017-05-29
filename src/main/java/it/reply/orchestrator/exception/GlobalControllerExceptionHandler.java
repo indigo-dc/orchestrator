@@ -123,7 +123,8 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
   protected ResponseEntity<Object> handleExceptionInternal(Exception ex, Object body,
       HttpHeaders headers, HttpStatus status, WebRequest request) {
     final HttpHeaders headersToWrite = Optional.ofNullable(headers).orElseGet(HttpHeaders::new);
-    final Object bodyToWrite = Optional.ofNullable(body).orElse(new Error(ex, status));
+    final Object bodyToWrite =
+        Optional.ofNullable(body).orElse(Error.builder().exception(ex).status(status).build());
     return super.handleExceptionInternal(ex, bodyToWrite, headersToWrite, status, request);
   }
 
