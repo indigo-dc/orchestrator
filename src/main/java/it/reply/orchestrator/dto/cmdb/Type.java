@@ -26,7 +26,9 @@ import it.reply.orchestrator.utils.Named;
 
 public enum Type implements Named {
 
-  COMPUTE("compute"), STORAGE("storage"), UNKNOWN("unknown");
+  COMPUTE("compute"),
+  STORAGE("storage"),
+  UNKNOWN("unknown");
 
   private final String name;
 

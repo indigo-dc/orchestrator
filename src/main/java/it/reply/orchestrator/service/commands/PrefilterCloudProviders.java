@@ -16,8 +16,7 @@
 
 package it.reply.orchestrator.service.commands;
 
-import com.google.common.collect.Sets;
-
+import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 
 import it.reply.orchestrator.dal.entity.Deployment;
@@ -25,6 +24,7 @@ import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.cmdb.CloudService;
+import it.reply.orchestrator.dto.cmdb.ImageData;
 import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.dto.deployment.AwsSlaPlacementPolicy;
 import it.reply.orchestrator.dto.deployment.CredentialsAwareSlaPlacementPolicy;
@@ -32,9 +32,6 @@ import it.reply.orchestrator.dto.deployment.PlacementPolicy;
 import it.reply.orchestrator.dto.deployment.SlaPlacementPolicy;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
-import it.reply.orchestrator.dto.slam.Preference;
-import it.reply.orchestrator.dto.slam.PreferenceCustomer;
-import it.reply.orchestrator.dto.slam.Priority;
 import it.reply.orchestrator.dto.slam.Service;
 import it.reply.orchestrator.dto.slam.Sla;
 import it.reply.orchestrator.enums.DeploymentType;
@@ -51,8 +48,9 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -79,8 +77,8 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
 
     // Filter out providers that do not support the requested images
     ArchiveRoot ar = toscaService.parseTemplate(deployment.getTemplate());
-    Set<CloudProvider> providersToDiscard = Sets.newHashSet();
-    Set<CloudService> servicesToDiscard = Sets.newHashSet();
+    Set<CloudProvider> providersToDiscard = new HashSet<>();
+    Set<CloudService> servicesToDiscard = new HashSet<>();
 
     if (!CollectionUtils.isEmpty(rankCloudProvidersMessage.getPlacementPolicies())) {
       this.discardOnPlacementPolicies(rankCloudProvidersMessage.getPlacementPolicies(),
@@ -107,35 +105,38 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
     // FIXME: It's just a demo hack to for Chronos jobs default provider override!!
     if (rankCloudProvidersMessage.getDeploymentType() == DeploymentType.CHRONOS
         || rankCloudProvidersMessage.getDeploymentType() == DeploymentType.MARATHON) {
-      for (CloudProvider cloudProvider : rankCloudProvidersMessage.getCloudProviders().values()) {
-        if (!cloudProvider.getName().equalsIgnoreCase(chronosCloudProviderName)) {
-          LOG.debug(
-              "Discarded provider {} because it doesn't match Chronos default provider {}"
-                  + " for deployment {}",
-              cloudProvider.getId(), chronosCloudProviderName, deployment.getId());
-          addProviderToDiscard(providersToDiscard, servicesToDiscard, cloudProvider);
-        }
-      }
+      rankCloudProvidersMessage.getCloudProviders()
+          .values()
+          .stream()
+          .filter(
+              cloudProvider -> cloudProvider.getName().equalsIgnoreCase(chronosCloudProviderName))
+          .forEach(cloudProvider -> {
+            LOG.debug(
+                "Discarded provider {} because it doesn't match Chronos default provider {}"
+                    + " for deployment {}",
+                cloudProvider.getId(), chronosCloudProviderName, deployment.getId());
+            addProviderToDiscard(providersToDiscard, servicesToDiscard, cloudProvider);
+          });
     }
 
     discardProvidersAndServices(providersToDiscard, servicesToDiscard, rankCloudProvidersMessage);
 
     // Filter provider by image contextualization check
-    for (CloudProvider cloudProvider : rankCloudProvidersMessage.getCloudProviders().values()) {
-      for (CloudService cloudService : cloudProvider.getCmbdProviderServicesByType(Type.COMPUTE)) {
-        try {
-          toscaService.contextualizeImages(ar, cloudProvider, cloudService.getId());
-        } catch (Exception ex) {
+    rankCloudProvidersMessage.getCloudProviders().values().forEach(cloudProvider -> {
+      cloudProvider.getCmbdProviderServicesByType(Type.COMPUTE).forEach(cloudService -> {
+        Map<Boolean, Map<NodeTemplate, ImageData>> contextualizedImages =
+            toscaService.contextualizeImages(ar, cloudProvider, cloudService.getId());
+        if (!contextualizedImages.get(Boolean.FALSE).isEmpty()) {
           // Failed to match all required images -> discard provider
           LOG.debug(
               "Discarded service {} of provider {} because it doesn't match images requirements"
-                  + " for deployment {}: {}",
-              cloudService.getId(), cloudProvider.getId(), deployment.getId(), ex.getMessage());
+                  + " for deployment {}",
+              cloudService.getId(), cloudProvider.getId(), deployment.getId());
           addServiceToDiscard(servicesToDiscard, cloudService);
           cloudProvider.getCmdbProviderImages().remove(cloudService.getId());
         }
-      }
-    }
+      });
+    });
 
     discardProvidersAndServices(providersToDiscard, servicesToDiscard, rankCloudProvidersMessage);
 
@@ -221,15 +222,12 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
       Set<CloudService> servicesToDiscard, RankCloudProvidersMessage rankCloudProvidersMessage) {
     // Add providers that doesn't have any compute service anymore
     for (CloudProvider cloudProvider : rankCloudProvidersMessage.getCloudProviders().values()) {
-      boolean remove = true;
-      for (CloudService cloudService : cloudProvider.getCmbdProviderServicesByType(Type.COMPUTE)) {
-        if (!servicesToDiscard.contains(cloudService)) {
-          remove = false;
-        } else {
-          cloudProvider.getCmdbProviderServices().remove(cloudService.getId());
-        }
-      }
-      if (remove) {
+      cloudProvider.getCmbdProviderServicesByType(Type.COMPUTE)
+          .stream()
+          .filter(computeService -> servicesToDiscard.contains(computeService))
+          .forEach(computeServiceToDiscard -> cloudProvider.getCmdbProviderServices()
+              .remove(computeServiceToDiscard.getId()));
+      if (cloudProvider.getCmbdProviderServicesByType(Type.COMPUTE).isEmpty()) {
         addProviderToDiscard(providersToDiscard, servicesToDiscard, cloudProvider);
       }
     }
@@ -237,38 +235,32 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
     // Remove discarded provider and services from SLAs and Preferences
     for (CloudProvider providerToDiscard : providersToDiscard) {
       rankCloudProvidersMessage.getCloudProviders().remove(providerToDiscard.getId());
-      Iterator<Sla> slaIt = rankCloudProvidersMessage.getSlamPreferences().getSla().iterator();
-      while (slaIt.hasNext()) {
-        Sla sla = slaIt.next();
-        if (Objects.equals(providerToDiscard.getId(), sla.getCloudProviderId())) {
-          slaIt.remove();
-        }
-      }
+      rankCloudProvidersMessage.getSlamPreferences().getSla().removeIf(
+          sla -> Objects.equals(providerToDiscard.getId(), sla.getCloudProviderId()));
     }
 
-    for (CloudService cloudService : servicesToDiscard) {
-      Iterator<Preference> extPrefIt =
-          rankCloudProvidersMessage.getSlamPreferences().getPreferences().iterator();
-      while (extPrefIt.hasNext()) {
-        Preference extPreference = extPrefIt.next();
-        Iterator<PreferenceCustomer> intPrefIt = extPreference.getPreferences().iterator();
-        while (intPrefIt.hasNext()) {
-          PreferenceCustomer intPreference = intPrefIt.next();
-          Iterator<Priority> priorityIt = intPreference.getPriority().iterator();
-          while (priorityIt.hasNext()) {
-            if (Objects.equals(cloudService.getId(), priorityIt.next().getServiceId())) {
-              priorityIt.remove();
-            }
-          }
-          if (intPreference.getPriority().isEmpty()) {
-            intPrefIt.remove();
-          }
-        }
-        if (extPreference.getPreferences().isEmpty()) {
-          extPrefIt.remove();
-        }
-      }
-    }
+    // for each cloudService to discard
+    servicesToDiscard.forEach(cloudService -> {
+
+      // remove all the preferences from rankCloudProvidersMessage with no preferenceCustomer
+      rankCloudProvidersMessage.getSlamPreferences().getPreferences().removeIf(preference -> {
+
+        // remove all the preferenceCustomer with no priorities
+        preference.getPreferences().removeIf(preferenceCustomer -> {
+
+          // remove all the priority with the id of the cloud service to remove
+          preferenceCustomer.getPriority().removeIf(priority -> {
+            return Objects.equals(cloudService.getId(), priority.getServiceId());
+          });
+
+          return preferenceCustomer.getPriority().isEmpty();
+        });
+
+        return preference.getPreferences().isEmpty();
+
+      });
+
+    });
     providersToDiscard.clear();
     servicesToDiscard.clear();
   }

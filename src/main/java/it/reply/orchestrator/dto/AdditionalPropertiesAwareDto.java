@@ -30,7 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
-import java.util.Map;
 
 @Data
 @ToString(exclude = "log")
@@ -41,12 +40,8 @@ public abstract class AdditionalPropertiesAwareDto {
 
   @JsonIgnore
   @NonNull
+  @Getter(onMethod_ = { @JsonAnyGetter })
   private HashMap<String, Object> additionalProperties = new HashMap<>();
-
-  @JsonAnyGetter
-  public Map<String, Object> getAdditionalProperties() {
-    return this.additionalProperties;
-  }
 
   @JsonAnySetter
   public void setAdditionalProperty(String name, Object value) {

@@ -36,7 +36,9 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 @Service
 @Slf4j
@@ -54,24 +56,23 @@ public class CloudProviderEndpointServiceImpl {
   public RankedCloudProvider chooseCloudProvider(Deployment deployment,
       RankCloudProvidersMessage rankCloudProvidersMessage) {
 
-    // TODO Check ranker errors (i.e. providers with ranked = false)
-    RankedCloudProvider chosenCp = null;
-    for (RankedCloudProvider rcp : rankCloudProvidersMessage.getRankedCloudProviders()) {
-      // Choose the one with highest rank AND that matches iaasType (TEMPORARY)
-      if (chosenCp == null || rcp.getRank() > chosenCp.getRank()) {
-        chosenCp = rcp;
-      }
-    }
+    // Choose the one with highest rank AND that matches iaasType (TEMPORARY)
+    final RankedCloudProvider chosenCp = rankCloudProvidersMessage.getRankedCloudProviders()
+        .stream()
+        .filter(Objects::nonNull)
+        .filter(RankedCloudProvider::isRanked)
+        .sorted(Comparator.comparing(RankedCloudProvider::getRank).reversed())
+        .findFirst()
+        .orElseThrow(() -> {
+          String errorMsg = "No Cloud Provider suitable for deploy found";
+          LOG.error("{}\n ranked providers list: {}", errorMsg,
+              rankCloudProvidersMessage.getRankedCloudProviders());
+          return new DeploymentException(errorMsg);
+        });
 
-    if (chosenCp == null) {
-      String errorMsg = "No Cloud Provider suitable for deploy found";
-      LOG.error("{}\n ranked providers list: {}", errorMsg,
-          rankCloudProvidersMessage.getRankedCloudProviders());
-      throw new DeploymentException(errorMsg);
-    } else {
-      LOG.debug("Selected Cloud Provider is: {}", chosenCp);
-    }
+    LOG.debug("Selected Cloud Provider is: {}", chosenCp);
     return chosenCp;
+
   }
 
   /**
@@ -98,8 +99,8 @@ public class CloudProviderEndpointServiceImpl {
     ///////////////////////////////
     // TODO Improve and move somewhere else
     placementPolicies.stream()
-        .filter(p -> p instanceof CredentialsAwareSlaPlacementPolicy)
-        .map(policy -> CredentialsAwareSlaPlacementPolicy.class.cast(policy))
+        .filter(CredentialsAwareSlaPlacementPolicy.class::isInstance)
+        .map(CredentialsAwareSlaPlacementPolicy.class::cast)
         .findFirst()
         .ifPresent(policy -> {
           cpe.setUsername(policy.getUsername());
@@ -121,8 +122,10 @@ public class CloudProviderEndpointServiceImpl {
       iaasType = IaaSType.AWS;
       // TODO support multiple policies
       // TODO do a match between sla and service id
-      AwsSlaPlacementPolicy placementPolicy = (AwsSlaPlacementPolicy) placementPolicies.stream()
-          .filter(p -> p instanceof AwsSlaPlacementPolicy).findFirst()
+      AwsSlaPlacementPolicy placementPolicy = placementPolicies.stream()
+          .filter(AwsSlaPlacementPolicy.class::isInstance)
+          .map(AwsSlaPlacementPolicy.class::cast)
+          .findFirst()
           .orElseThrow(() -> new OrchestratorException("No AWS credentials provided"));
       cpe.setUsername(placementPolicy.getAccessKey());
       cpe.setPassword(placementPolicy.getSecretKey());

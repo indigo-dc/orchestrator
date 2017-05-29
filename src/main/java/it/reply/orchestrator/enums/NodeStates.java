@@ -24,8 +24,6 @@ package it.reply.orchestrator.enums;
  */
 public enum NodeStates {
 
-  // @formatter:off
-
   // Node is not yet created. Node only exists as a template definition.
   INITIAL,
 
@@ -56,6 +54,5 @@ public enum NodeStates {
 
   // Node is in an error state.
   ERROR;
-  // @formatter:on
 
 }
