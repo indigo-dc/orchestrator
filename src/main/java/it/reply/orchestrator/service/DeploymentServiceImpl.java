@@ -16,9 +16,6 @@
 
 package it.reply.orchestrator.service;
 
-import com.google.common.collect.Maps;
-import com.google.common.collect.Sets;
-
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.model.topology.RelationshipTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
@@ -77,6 +74,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Service
 public class DeploymentServiceImpl implements DeploymentService {
@@ -124,7 +122,8 @@ public class DeploymentServiceImpl implements DeploymentService {
     if (oidcProperties.isEnabled()) {
       OidcEntityId requesterId = oauth2TokenService.generateOidcEntityIdFromCurrentAuth();
 
-      OidcEntity requester = oidcEntityRepository.findByOidcEntityId(requesterId)
+      OidcEntity requester = oidcEntityRepository
+          .findByOidcEntityId(requesterId)
           .orElseGet(oauth2TokenService::generateOidcEntityFromCurrentAuth);
       // exchange token if a refresh token is not yet associated with the user
       if (requester.getRefreshToken() == null) {
@@ -400,10 +399,9 @@ public class DeploymentServiceImpl implements DeploymentService {
         new TopologicalOrderIterator<>(graph);
 
     // Map with all the resources created for each node
-    Map<NodeTemplate, Set<Resource>> resourcesMap = Maps.newHashMap();
+    Map<NodeTemplate, Set<Resource>> resourcesMap = new HashMap<>();
 
-    while (nodeIterator.hasNext()) {
-      NodeTemplate node = nodeIterator.next();
+    CommonUtils.iteratorToStream(nodeIterator).forEachOrdered(node -> {
       Set<RelationshipTemplate> relationships = graph.incomingEdgesOf(node);
 
       // Get all the parents
@@ -411,26 +409,26 @@ public class DeploymentServiceImpl implements DeploymentService {
           relationships.stream().map(graph::getEdgeSource).collect(Collectors.toList());
 
       int nodeCount = toscaService.getCount(node).orElse(1);
-      Set<Resource> resources = Sets.newHashSet();
-      for (int i = 0; i < nodeCount; ++i) {
+      Set<Resource> resources = IntStream
+          .range(0, nodeCount)
+          .mapToObj(i -> {
 
-        Resource tmpResource = new Resource();
-        tmpResource.setDeployment(deployment);
-        tmpResource.setState(NodeStates.INITIAL);
-        tmpResource.setToscaNodeName(node.getName());
-        tmpResource.setToscaNodeType(node.getType());
+            Resource tmpResource = new Resource();
+            tmpResource.setDeployment(deployment);
+            tmpResource.setState(NodeStates.INITIAL);
+            tmpResource.setToscaNodeName(node.getName());
+            tmpResource.setToscaNodeType(node.getType());
 
-        final Resource resource = resourceRepository.save(tmpResource);
-        resources.add(resource);
+            Resource resource = resourceRepository.save(tmpResource);
 
-        // bind parents resources with child resource
-        parentNodes.forEach(parentNode -> resourcesMap.get(parentNode).forEach(parentResource -> {
-          parentResource.getRequiredBy().add(resource.getId());
-          resource.getRequires().add(parentResource.getId());
-        }));
-      }
+            // bind parents resources with child resource
+            parentNodes.forEach(
+                parentNode -> resourcesMap.get(parentNode).forEach(resource::addRequiredResource));
+            return resource;
+          })
+          .collect(Collectors.toSet());
       // add all the resources created for this node
       resourcesMap.put(node, resources);
-    }
+    });
   }
 }

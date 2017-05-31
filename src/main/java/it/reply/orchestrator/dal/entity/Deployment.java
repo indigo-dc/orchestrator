@@ -27,10 +27,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -98,13 +98,13 @@ public class Deployment extends AbstractResourceEntity {
   private Map<String, Object> outputs = new HashMap<>();
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "deployment", orphanRemoval = true)
-  private List<Resource> resources = new ArrayList<>();
+  private Set<Resource> resources = new HashSet<>();
 
   @Column(name = "cloudProviderName", length = 128)
   private String cloudProviderName;
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "deployment", orphanRemoval = true)
-  private List<WorkflowReference> workflowReferences = new ArrayList<>();
+  private Set<WorkflowReference> workflowReferences = new HashSet<>();
 
   @ManyToOne(
       cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })

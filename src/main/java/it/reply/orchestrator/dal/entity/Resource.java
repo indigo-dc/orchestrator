@@ -22,16 +22,18 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
-import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
 import javax.persistence.Index;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
@@ -59,13 +61,13 @@ public class Resource extends AbstractResourceEntity {
   @Column(name = "toscaNodeName")
   private String toscaNodeName;
 
-  @ElementCollection
-  @Column(name = "requiredBy")
-  private List<String> requiredBy = new ArrayList<>();
+  @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
+  @JoinTable(name = "Resource_requiredBy", joinColumns = @JoinColumn(name = "Resource_uuid"),
+      inverseJoinColumns = @JoinColumn(name = "requiredBy"))
+  private Set<Resource> requiredBy = new HashSet<>();
 
-  @ElementCollection
-  @Column(name = "requires")
-  private List<String> requires = new ArrayList<>();
+  @ManyToMany(mappedBy = "requiredBy")
+  private Set<Resource> requires = new HashSet<>();
 
   @ManyToOne
   @JoinColumn(name = "deployment_uuid")
@@ -81,5 +83,15 @@ public class Resource extends AbstractResourceEntity {
     super();
     this.toscaNodeName = toscaNodeName;
     state = NodeStates.INITIAL;
+  }
+
+  public void addRequiredResource(Resource resource) {
+    requires.add(resource);
+    resource.requiredBy.add(this);
+  }
+
+  public void removeRequiredResource(Resource resource) {
+    requires.remove(resource);
+    resource.requiredBy.remove(this);
   }
 }

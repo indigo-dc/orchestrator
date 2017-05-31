@@ -59,6 +59,7 @@ import it.reply.orchestrator.service.ToscaServiceImpl;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.util.TestUtil;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -158,8 +159,7 @@ public class ImServiceTest {
     Assert.assertEquals(dm.getDeployment().getDeploymentProvider(), DeploymentProvider.IM);
     Assert.assertEquals(dm.getDeployment().getEndpoint(), infrastructureId);
     Assert.assertEquals(dm.getDeployment().getResources().size(), 2);
-    Assert.assertEquals(dm.getDeployment().getResources().get(0).getState(), NodeStates.CREATING);
-    Assert.assertEquals(dm.getDeployment().getResources().get(1).getState(), NodeStates.CREATING);
+    Assertions.assertThat(dm.getDeployment().getResources()).extracting(Resource::getState).allMatch(NodeStates.CREATING::equals);
     Assert.assertTrue(dm.isCreateComplete());
     Assert.assertTrue(returnValue);
   }
@@ -188,8 +188,7 @@ public class ImServiceTest {
     Assert.assertEquals(dm.getDeployment().getTask(), Task.NONE);
     Assert.assertEquals(dm.getDeployment().getStatus(), Status.CREATE_FAILED);
     Assert.assertEquals(dm.getDeployment().getResources().size(), 2);
-    Assert.assertEquals(dm.getDeployment().getResources().get(0).getState(), NodeStates.ERROR);
-    Assert.assertEquals(dm.getDeployment().getResources().get(1).getState(), NodeStates.ERROR);
+    Assertions.assertThat(dm.getDeployment().getResources()).extracting(Resource::getState).allMatch(NodeStates.ERROR::equals);
     Assert.assertEquals(dm.getDeployment().getDeploymentProvider(), DeploymentProvider.IM);
     Assert.assertEquals(dm.getDeployment().getEndpoint(), null);
     Assert.assertFalse(dm.isCreateComplete());
@@ -222,8 +221,7 @@ public class ImServiceTest {
 
     Assert.assertEquals(dm.getDeployment().getTask(), Task.NONE);
     Assert.assertEquals(dm.getDeployment().getStatus(), Status.CREATE_FAILED);
-    Assert.assertEquals(dm.getDeployment().getResources().get(0).getState(), NodeStates.ERROR);
-    Assert.assertEquals(dm.getDeployment().getResources().get(1).getState(), NodeStates.ERROR);
+    Assertions.assertThat(dm.getDeployment().getResources()).extracting(Resource::getState).allMatch(NodeStates.ERROR::equals);
     Assert.assertEquals(dm.getDeployment().getDeploymentProvider(), DeploymentProvider.IM);
     Assert.assertEquals(dm.getDeployment().getResources().size(), 2);
     Assert.assertEquals(dm.getDeployment().getEndpoint(), null);
@@ -253,8 +251,7 @@ public class ImServiceTest {
 
     Assert.assertEquals(dm.getDeployment().getTask(), Task.NONE);
     Assert.assertEquals(dm.getDeployment().getStatus(), Status.CREATE_FAILED);
-    Assert.assertEquals(dm.getDeployment().getResources().get(0).getState(), NodeStates.ERROR);
-    Assert.assertEquals(dm.getDeployment().getResources().get(1).getState(), NodeStates.ERROR);
+    Assertions.assertThat(dm.getDeployment().getResources()).extracting(Resource::getState).allMatch(NodeStates.ERROR::equals);
     Assert.assertEquals(dm.getDeployment().getDeploymentProvider(), DeploymentProvider.IM);
     Assert.assertEquals(dm.getDeployment().getResources().size(), 2);
     Assert.assertEquals(dm.getDeployment().getEndpoint(), null);
@@ -281,8 +278,7 @@ public class ImServiceTest {
     Assert.assertEquals(dm.getDeployment().getDeploymentProvider(), DeploymentProvider.IM);
     Assert.assertEquals(dm.getDeployment().getEndpoint(), dm.getDeployment().getEndpoint());
     Assert.assertEquals(dm.getDeployment().getResources().size(), 2);
-    Assert.assertEquals(dm.getDeployment().getResources().get(0).getState(), NodeStates.CREATING);
-    Assert.assertEquals(dm.getDeployment().getResources().get(1).getState(), NodeStates.CREATING);
+    Assertions.assertThat(dm.getDeployment().getResources()).extracting(Resource::getState).allMatch(NodeStates.CREATING::equals);
     Assert.assertTrue(dm.isPollComplete());
     Assert.assertTrue(returnValue);
   }
@@ -355,8 +351,7 @@ public class ImServiceTest {
     Assert.assertEquals(dm.getDeployment().getDeploymentProvider(), DeploymentProvider.IM);
     Assert.assertEquals(dm.getDeployment().getEndpoint(), dm.getDeployment().getEndpoint());
     Assert.assertEquals(dm.getDeployment().getResources().size(), 2);
-    Assert.assertEquals(dm.getDeployment().getResources().get(0).getState(), NodeStates.CREATING);
-    Assert.assertEquals(dm.getDeployment().getResources().get(1).getState(), NodeStates.CREATING);
+    Assertions.assertThat(dm.getDeployment().getResources()).extracting(Resource::getState).allMatch(NodeStates.CREATING::equals);
     Assert.assertFalse(dm.isPollComplete());
     Assert.assertFalse(returnValue);
   }
@@ -393,8 +388,7 @@ public class ImServiceTest {
     Assert.assertEquals(dm.getDeployment().getDeploymentProvider(), DeploymentProvider.IM);
     Assert.assertEquals(dm.getDeployment().getEndpoint(), dm.getDeployment().getEndpoint());
     Assert.assertEquals(dm.getDeployment().getResources().size(), 2);
-    Assert.assertEquals(dm.getDeployment().getResources().get(0).getState(), NodeStates.ERROR);
-    Assert.assertEquals(dm.getDeployment().getResources().get(1).getState(), NodeStates.ERROR);
+    Assertions.assertThat(dm.getDeployment().getResources()).extracting(Resource::getState).allMatch(NodeStates.ERROR::equals);
     Assert.assertFalse(dm.isPollComplete());
   }
 
@@ -429,8 +423,7 @@ public class ImServiceTest {
     Assert.assertEquals(dm.getDeployment().getDeploymentProvider(), DeploymentProvider.IM);
     Assert.assertEquals(dm.getDeployment().getEndpoint(), dm.getDeployment().getEndpoint());
     Assert.assertEquals(dm.getDeployment().getResources().size(), 2);
-    Assert.assertEquals(dm.getDeployment().getResources().get(0).getState(), NodeStates.ERROR);
-    Assert.assertEquals(dm.getDeployment().getResources().get(1).getState(), NodeStates.ERROR);
+    Assertions.assertThat(dm.getDeployment().getResources()).extracting(Resource::getState).allMatch(NodeStates.ERROR::equals);
     Assert.assertFalse(dm.isPollComplete());
   }
 
@@ -450,19 +443,20 @@ public class ImServiceTest {
     vmUrls.getUris().add(new InfrastructureUri(
         "http://localhost/infrastructures/" + dm.getDeployment().getEndpoint() + "/" + 1));
 
+    List<Resource> resources = new ArrayList<>(dm.getDeployment().getResources());
     VirtualMachineInfo vmInfo0 = new VirtualMachineInfo(Lists.newArrayList());
     vmInfo0.getVmProperties().add(Maps.newHashMap());
     vmInfo0.getVmProperties().get(0).put("id",
-        dm.getDeployment().getResources().get(0).getToscaNodeName());
+        resources.get(0).getToscaNodeName());
     VirtualMachineInfo vmInfo1 = new VirtualMachineInfo(Lists.newArrayList());
     vmInfo0.getVmProperties().get(0).put("id",
-        dm.getDeployment().getResources().get(1).getToscaNodeName());
+        resources.get(1).getToscaNodeName());
 
     Mockito.when(deploymentRepository.findOne(dm.getDeployment().getId()))
         .thenReturn(dm.getDeployment());
     Mockito.when(deploymentRepository.save(dm.getDeployment())).thenReturn(dm.getDeployment());
-    Mockito.when(resourceRepository.findByDeployment_id(dm.getDeployment().getId(), null))
-        .thenReturn(new PageImpl<Resource>(dm.getDeployment().getResources()));
+    Mockito.when(resourceRepository.findByDeployment_id(dm.getDeployment().getId()))
+        .thenReturn(resources);
     Mockito.doReturn(infrastructureManager).when(imService)
         .getClient(Mockito.any(DeploymentMessage.class));
 
@@ -484,8 +478,7 @@ public class ImServiceTest {
     Assert.assertEquals(dm.getDeployment().getDeploymentProvider(), DeploymentProvider.IM);
     Assert.assertEquals(dm.getDeployment().getEndpoint(), dm.getDeployment().getEndpoint());
     Assert.assertEquals(dm.getDeployment().getResources().size(), 2);
-    Assert.assertEquals(dm.getDeployment().getResources().get(0).getState(), NodeStates.STARTED);
-    Assert.assertEquals(dm.getDeployment().getResources().get(1).getState(), NodeStates.STARTED);
+    Assertions.assertThat(dm.getDeployment().getResources()).extracting(Resource::getState).allMatch(NodeStates.STARTED::equals);
     Assert.assertFalse(dm.isPollComplete());
   }
 
