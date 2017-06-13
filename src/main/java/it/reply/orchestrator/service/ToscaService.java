@@ -41,7 +41,6 @@ import it.reply.orchestrator.exception.service.ToscaException;
 import org.jgrapht.graph.DirectedMultigraph;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -97,7 +96,7 @@ public interface ToscaService {
    *           .
    */
   public void addElasticClusterParameters(ArchiveRoot parsingResult, String deploymentId,
-      String oauthToken) throws ParseException;
+      String oauthToken);
 
   /**
    * Replace images data in 'tosca.capabilities.indigo.OperatingSystem' capabilities in the TOSCA
@@ -110,8 +109,8 @@ public interface ToscaService {
    * @param cloudProvider
    *          the chosen cloud provider data.
    */
-  public Map<Capability, ImageData> contextualizeAndReplaceImages(ArchiveRoot parsingResult,
-      CloudProvider cloudProvider, String cloudServiceId, DeploymentProvider deploymentProvider);
+  public void contextualizeAndReplaceImages(ArchiveRoot parsingResult, CloudProvider cloudProvider,
+      String cloudServiceId, DeploymentProvider deploymentProvider);
 
   /**
    * Find matches for images data in 'tosca.capabilities.indigo.OperatingSystem' capabilities in the
@@ -124,7 +123,7 @@ public interface ToscaService {
    * @param cloudServiceId
    *          the cloud service of the cloud provider to search for.
    */
-  public Map<Capability, ImageData> contextualizeImages(ArchiveRoot parsingResult,
+  public Map<Boolean, Map<NodeTemplate, ImageData>> contextualizeImages(ArchiveRoot parsingResult,
       CloudProvider cloudProvider, String cloudServiceId);
 
   /**
@@ -298,5 +297,11 @@ public interface ToscaService {
 
   public <V> Map<String, V> parseComplexPropertyValue(ComplexPropertyValue value,
       Function<Object, V> mapper);
+
+  public Collection<NodeTemplate> getElasticClusterNodes(ArchiveRoot archiveRoot);
+
+  public Collection<NodeTemplate> getNodesOfType(ArchiveRoot archiveRoot, String type);
+
+  public Map<NodeTemplate, ImageData> extractImageRequirements(ArchiveRoot parsingResult);
 
 }

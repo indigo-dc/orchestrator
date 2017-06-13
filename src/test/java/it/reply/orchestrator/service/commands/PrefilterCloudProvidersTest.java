@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.assertj.core.util.Maps;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -30,12 +31,14 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.CloudServiceData;
+import it.reply.orchestrator.dto.cmdb.ImageData;
 import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.deployment.PlacementPolicy;
@@ -114,7 +117,7 @@ public class PrefilterCloudProvidersTest {
     Mockito
         .when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
             Mockito.anyObject()))
-        .thenReturn(new HashMap<>());
+        .thenReturn(Maps.newHashMap(Boolean.FALSE, new HashMap<>()));
     Assert.assertEquals(rankCloudProvidersMessage,
         prefilterCloudProviders.customExecute(rankCloudProvidersMessage));
 
@@ -231,8 +234,11 @@ public class PrefilterCloudProvidersTest {
     Mockito.when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
         .thenReturn(generateDeployDm.getDeployment());
 
-    Mockito.doThrow(new IllegalArgumentException()).when(toscaService).contextualizeImages(
-        Mockito.anyObject(), Mockito.anyObject(), Mockito.anyObject());
+    Mockito
+        .when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
+            Mockito.anyObject()))
+        .thenReturn(
+            Maps.newHashMap(Boolean.FALSE, Maps.newHashMap(new NodeTemplate(), new ImageData())));
 
     Assert.assertEquals(rankCloudProvidersMessage,
         prefilterCloudProviders.customExecute(rankCloudProvidersMessage));

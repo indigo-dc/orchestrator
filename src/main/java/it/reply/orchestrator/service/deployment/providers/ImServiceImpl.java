@@ -73,7 +73,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -515,7 +514,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
       toscaService.contextualizeAndReplaceImages(newAr, deploymentMessage.getChosenCloudProvider(),
           chosenCloudProviderEndpoint.getCpComputeServiceId(), DeploymentProvider.IM);
-    } catch (ParsingException | IOException | ToscaException | ParseException ex) {
+    } catch (ParsingException | IOException | ToscaException ex) {
       throw new OrchestratorException(ex);
     }
     // find Count nodes into new and old template
