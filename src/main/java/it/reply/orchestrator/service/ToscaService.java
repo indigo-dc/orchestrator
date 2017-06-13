@@ -299,6 +299,8 @@ public interface ToscaService {
   public <V> Map<String, V> parseComplexPropertyValue(ComplexPropertyValue value,
       Function<Object, V> mapper);
 
+  public boolean isHybridDeployment(ArchiveRoot archiveRoot);
+
   public Collection<NodeTemplate> getNodesOfType(ArchiveRoot archiveRoot, String type);
 
   public Map<NodeTemplate, ImageData> extractImageRequirements(ArchiveRoot parsingResult);

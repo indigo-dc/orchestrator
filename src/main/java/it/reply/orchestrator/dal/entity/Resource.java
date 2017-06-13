@@ -16,6 +16,8 @@
 
 package it.reply.orchestrator.dal.entity;
 
+import it.reply.orchestrator.dal.util.CloudProviderEndpointToJsonConverter;
+import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.enums.NodeStates;
 
 import lombok.Getter;
@@ -27,6 +29,7 @@ import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -72,6 +75,10 @@ public class Resource extends AbstractResourceEntity {
   @ManyToOne
   @JoinColumn(name = "deployment_uuid")
   private Deployment deployment;
+
+  @Column(name = "cloudProviderEndpoint", columnDefinition = "TEXT")
+  @Convert(converter = CloudProviderEndpointToJsonConverter.class)
+  private CloudProviderEndpoint cloudProviderEndpoint;
 
   /**
    * Creates a new Resource object.

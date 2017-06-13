@@ -172,6 +172,7 @@ public class DeploymentServiceImpl implements DeploymentService {
     Map<String, OneData> odRequirements = new HashMap<>();
     List<PlacementPolicy> placementPolicies = new ArrayList<>();
     DeploymentType deploymentType;
+    boolean isHybrid;
 
     try {
       // Parse once, validate structure and user's inputs, replace user's input
@@ -201,6 +202,8 @@ public class DeploymentServiceImpl implements DeploymentService {
 
       placementPolicies = toscaService.extractPlacementPolicies(parsingResult);
 
+      isHybrid = toscaService.isHybridDeployment(parsingResult);
+
       deployment = deploymentRepository.save(deployment);
 
       // Create internal resources representation (to store in DB)
@@ -227,6 +230,7 @@ public class DeploymentServiceImpl implements DeploymentService {
     deploymentMessage.setPlacementPolicies(
         CommonUtils.notNullOrDefaultValue(placementPolicies, new ArrayList<>()));
     deploymentMessage.setDeploymentType(deploymentType);
+    deploymentMessage.setHybrid(isHybrid);
     params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
 
     ProcessInstance pi = null;
@@ -346,6 +350,8 @@ public class DeploymentServiceImpl implements DeploymentService {
   @Transactional
   public void updateDeployment(String id, DeploymentRequest request) {
     Deployment deployment = deploymentRepository.findOne(id);
+    boolean isHybrid;
+    List<PlacementPolicy> placementPolicies = new ArrayList<>();
     if (deployment != null) {
 
       if (deployment.getDeploymentProvider() == DeploymentProvider.CHRONOS
@@ -360,8 +366,10 @@ public class DeploymentServiceImpl implements DeploymentService {
         try {
           // Check if the new template is valid: parse, validate structure and user's inputs,
           // replace user's inputs
-          toscaService.prepareTemplate(request.getTemplate(), deployment.getParameters());
-
+          ArchiveRoot parsingResult =
+              toscaService.prepareTemplate(request.getTemplate(), deployment.getParameters());
+          isHybrid = toscaService.isHybridDeployment(parsingResult);
+          placementPolicies = toscaService.extractPlacementPolicies(parsingResult);
         } catch (ParsingException | IOException ex) {
           throw new OrchestratorException(ex);
         }
@@ -389,6 +397,9 @@ public class DeploymentServiceImpl implements DeploymentService {
 
         DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
         deploymentMessage.setDeploymentType(deploymentType);
+
+        deploymentMessage.setHybrid(isHybrid);
+        deploymentMessage.setPlacementPolicies(placementPolicies);
 
         ProcessInstance pi = null;
         try {

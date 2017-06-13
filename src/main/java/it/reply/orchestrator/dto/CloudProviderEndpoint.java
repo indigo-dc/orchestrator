@@ -16,13 +16,16 @@
 
 package it.reply.orchestrator.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import java.io.Serializable;
+import java.util.Optional;
 
 /**
  * This class holds information to connect (and authenticate) to a CloudProvider.
@@ -52,5 +55,13 @@ public class CloudProviderEndpoint extends AdditionalPropertiesAwareDto implemen
 
   private String username;
   private String password;
+
+  @JsonProperty
+  private String iaasHeaderId;
+
+  @JsonIgnore
+  public Optional<String> getIaasHeaderId() {
+    return Optional.ofNullable(iaasHeaderId);
+  }
 
 }

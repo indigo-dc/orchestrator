@@ -65,7 +65,7 @@
 		<openid.connect.version>1.2.6</openid.connect.version>
 		<log4j.version>2.7</log4j.version>
 		<slf4j.version>1.7.22</slf4j.version>
-		<im-java-api.version>0.4.7</im-java-api.version>
+		<im-java-api.version>0.4.9</im-java-api.version>
 		<monitoring.pillar.domain.version>1.8.1-FINAL</monitoring.pillar.domain.version>
 		<lombok.version>1.16.16</lombok.version>
 		<mockito.version>1.10.19</mockito.version>
