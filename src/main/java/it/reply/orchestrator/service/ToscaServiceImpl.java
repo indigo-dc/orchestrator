@@ -639,6 +639,18 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
+  public boolean isHybridDeployment(ArchiveRoot archiveRoot) {
+    // check if there is a "hybrid" ScalarPropertyValue with "true" as value
+    return getNodesOfType(archiveRoot, ToscaConstants.Nodes.ELASTIC_CLUSTER).stream()
+        .anyMatch(node -> getNodePropertyByName(node, "hybrid")
+            .filter(ScalarPropertyValue.class::isInstance)
+            .map(ScalarPropertyValue.class::cast)
+            .map(ScalarPropertyValue::getValue)
+            .filter(Boolean::valueOf)
+            .isPresent());
+  }
+
+  @Override
   public void addElasticClusterParameters(ArchiveRoot archiveRoot, String deploymentId,
       @Nullable String oauthToken) {
     getNodesOfType(archiveRoot, ToscaConstants.Nodes.ELASTIC_CLUSTER).forEach(node -> {

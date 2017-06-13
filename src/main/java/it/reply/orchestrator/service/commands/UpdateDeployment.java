@@ -99,25 +99,31 @@ public class UpdateDeployment extends BaseCommand<UpdateDeployment> {
           rankCloudProvidersMessage.getCloudProviders().get(chosenCp.getName()));
 
       // Update Deployment
-      deployment.setCloudProviderName(chosenCp.getName());
+      if (deployment.getCloudProviderName() == null) {
+        deployment.setCloudProviderName(chosenCp.getName());
+      }
 
       // FIXME Set/update all required selected CP data
 
       // FIXME Generate CP Endpoint
       CloudProviderEndpoint chosenCloudProviderEndpoint = cloudProviderEndpointServiceImpl
           .getCloudProviderEndpoint(deploymentMessage.getChosenCloudProvider(),
-              rankCloudProvidersMessage.getPlacementPolicies());
+              rankCloudProvidersMessage.getPlacementPolicies(), deploymentMessage.isHybrid());
       deploymentMessage.setChosenCloudProviderEndpoint(chosenCloudProviderEndpoint);
       LOG.debug("Generated Cloud Provider Endpoint is: {}", chosenCloudProviderEndpoint);
 
       // FIXME Use another method to hold CP Endpoint (i.e. CMDB service ID reference?)
       // Save CPE in Deployment for future use
-      deployment.setCloudProviderEndpoint(chosenCloudProviderEndpoint);
+      if (deployment.getCloudProviderEndpoint() == null) {
+        deployment.setCloudProviderEndpoint(chosenCloudProviderEndpoint);
+      }
 
-      DeploymentProvider deploymentProvider =
-          cloudProviderEndpointServiceImpl.getDeploymentProvider(
-              deploymentMessage.getDeploymentType(), deploymentMessage.getChosenCloudProvider());
-      deployment.setDeploymentProvider(deploymentProvider);
+      if (deployment.getDeploymentProvider() == null) {
+        DeploymentProvider deploymentProvider =
+            cloudProviderEndpointServiceImpl.getDeploymentProvider(
+                deploymentMessage.getDeploymentType(), deploymentMessage.getChosenCloudProvider());
+        deployment.setDeploymentProvider(deploymentProvider);
+      }
 
       // FIXME Implement OneData scheduling properly and move in a dedicated command
       generateOneDataParameters(rankCloudProvidersMessage, deploymentMessage);

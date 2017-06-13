@@ -18,10 +18,6 @@ package it.reply.orchestrator.utils;
 
 import com.google.common.base.Preconditions;
 
-import es.upv.i3m.grycap.file.NoNullOrEmptyFile;
-import es.upv.i3m.grycap.file.Utf8File;
-import es.upv.i3m.grycap.im.exceptions.FileException;
-
 import lombok.experimental.UtilityClass;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -29,11 +25,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.nio.file.Paths;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Spliterator;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
@@ -45,10 +42,6 @@ import java.util.stream.StreamSupport;
 
 @UtilityClass
 public class CommonUtils {
-
-  public static String getFileContentAsString(String fileUri) throws FileException {
-    return new NoNullOrEmptyFile(new Utf8File(Paths.get(fileUri))).read();
-  }
 
   /**
    * Verify that a <code>@Nullable</code> reference is effectively non null and cast it to a
@@ -153,6 +146,27 @@ public class CommonUtils {
         .map(ServletRequestAttributes.class::cast)
         .map(ServletRequestAttributes::getRequest)
         .isPresent();
+  }
+
+  /**
+   * Filter a stream removing all the duplicate elements. The uniqueness is evaluated on the result
+   * of the provided mapping function. All the stream elements for which the mapping function return
+   * null are filtered out.
+   * 
+   * @param stream
+   *          the stream to filter
+   * @param uniquenessMapper
+   *          the mapping function on which evaluate the uniqueness
+   * @return the filtered stream
+   */
+  public static <T, V> Stream<T> filterUnique(Stream<T> stream,
+      Function<T, V> uniquenessMapper) {
+    Set<V> seen = new HashSet<>();
+    return stream
+        .filter(vaule -> {
+          V uniqueValue = uniquenessMapper.apply(vaule);
+          return uniqueValue != null && seen.add(uniqueValue);
+        });
   }
 
   /**

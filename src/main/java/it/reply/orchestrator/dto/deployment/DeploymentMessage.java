@@ -68,6 +68,8 @@ public class DeploymentMessage implements Serializable {
   private boolean pollComplete;
   private boolean skipPollInterval;
 
+  private boolean hybrid;
+
   private CloudProvider chosenCloudProvider;
   private CloudProviderEndpoint chosenCloudProviderEndpoint;
 

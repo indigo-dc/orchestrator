@@ -39,6 +39,7 @@ import org.springframework.stereotype.Service;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 
 @Service
 @Slf4j
@@ -86,7 +87,7 @@ public class CloudProviderEndpointServiceImpl {
    * @return .
    */
   public CloudProviderEndpoint getCloudProviderEndpoint(CloudProvider chosenCloudProvider,
-      List<PlacementPolicy> placementPolicies) {
+      List<PlacementPolicy> placementPolicies, boolean isHybrid) {
 
     if (chosenCloudProvider.getCmbdProviderServicesByType(Type.COMPUTE).isEmpty()) {
       throw new IllegalArgumentException(
@@ -139,8 +140,15 @@ public class CloudProviderEndpointServiceImpl {
     cpe.setCpEndpoint(computeService.getData().getEndpoint());
     cpe.setCpComputeServiceId(computeService.getId());
     cpe.setIaasType(iaasType);
-    cpe.setImEndpoint(imEndpoint);
 
+    if (isHybrid) {
+      // generate and set IM iaasHeaderId
+      cpe.setIaasHeaderId(computeService.getId());
+      // default to PaaS Level IM
+      cpe.setImEndpoint(null);
+    } else {
+      cpe.setImEndpoint(imEndpoint);
+    }
     return cpe;
   }
 
