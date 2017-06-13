@@ -16,7 +16,8 @@
 
 package it.reply.orchestrator.service;
 
-import com.google.common.collect.Lists;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Strings;
 import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
 
@@ -87,7 +88,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.ParseException;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -95,6 +96,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -114,6 +116,8 @@ public class ToscaServiceImpl implements ToscaService {
   public static final String REMOVAL_LIST_PROPERTY_NAME = "removal_list";
 
   public static final String SCALABLE_CAPABILITY_NAME = "scalable";
+
+  public static final String OS_CAPABILITY_NAME = "os";
 
   @Autowired
   private ApplicationContext ctx;
@@ -263,21 +267,16 @@ public class ToscaServiceImpl implements ToscaService {
   public void validateUserInputs(Map<String, PropertyDefinition> templateInputs,
       Map<String, Object> inputs) throws ToscaException {
 
-    // No input to validate
-    if (templateInputs == null) {
-      return;
-    }
-
     // Check if every required input has been given by the user or has a default value
-    for (Map.Entry<String, PropertyDefinition> templateInput : templateInputs.entrySet()) {
-      if (templateInput.getValue().isRequired() && templateInput.getValue().getDefault() == null
-          && !inputs.containsKey(templateInput.getKey())) {
+    templateInputs.forEach((inputName, inputDefinition) -> {
+      if (inputDefinition.isRequired()
+          && inputs.getOrDefault(inputName, inputDefinition.getDefault()) == null) {
         // Input required and no value to replace -> error
         throw new ToscaException(
             String.format("Input <%s> is required and is not present in the user's input list,"
-                + " nor has a default value", templateInput.getKey()));
+                + " nor has a default value", inputName));
       }
-    }
+    });
 
     // Reference:
     // http://docs.oasis-open.org/tosca/TOSCA-Simple-Profile-YAML/v1.0/csprd02/TOSCA-Simple-Profile-YAML-v1.0-csprd02.html#TYPE_YAML_STRING
@@ -329,101 +328,96 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
-  public Map<Capability, ImageData> contextualizeAndReplaceImages(ArchiveRoot parsingResult,
-      CloudProvider cloudProvider, String cloudServiceId, DeploymentProvider deploymentProvider) {
-    Map<Capability, ImageData> contextualizedImages =
+  public void contextualizeAndReplaceImages(ArchiveRoot parsingResult, CloudProvider cloudProvider,
+      String cloudServiceId, DeploymentProvider deploymentProvider) {
+    Map<Boolean, Map<NodeTemplate, ImageData>> contextualizedImages =
         contextualizeImages(parsingResult, cloudProvider, cloudServiceId);
-    return replaceImage(contextualizedImages, cloudProvider, deploymentProvider);
+    Preconditions.checkState(contextualizedImages.get(Boolean.FALSE).isEmpty(),
+        "Error contextualizing images");
+    replaceImage(contextualizedImages.get(Boolean.TRUE), cloudProvider, deploymentProvider);
   }
 
   @Override
-  public Map<Capability, ImageData> contextualizeImages(ArchiveRoot parsingResult,
+  public Map<NodeTemplate, ImageData> extractImageRequirements(ArchiveRoot parsingResult) {
+    // Only indigo.Compute nodes are relevant
+    return getNodesOfType(parsingResult, "tosca.nodes.indigo.Compute").stream().map(node -> {
+      ImageData imageMetadata = new ImageData();
+      Optional.ofNullable(node.getCapabilities())
+          .map(capabilities -> capabilities.get(OS_CAPABILITY_NAME))
+          .ifPresent(osCapability -> {
+            // We've got an OS capability -> Check the attributes to find best match for the image
+            this.<ScalarPropertyValue>getTypedCapabilityPropertyByName(osCapability, "image")
+                .ifPresent(property -> imageMetadata.setImageName(property.getValue()));
+
+            this.<ScalarPropertyValue>getTypedCapabilityPropertyByName(osCapability, "architecture")
+                .ifPresent(property -> imageMetadata.setArchitecture(property.getValue()));
+
+            this.<ScalarPropertyValue>getTypedCapabilityPropertyByName(osCapability, "type")
+                .ifPresent(property -> imageMetadata.setType(property.getValue()));
+
+            this.<ScalarPropertyValue>getTypedCapabilityPropertyByName(osCapability, "distribution")
+                .ifPresent(property -> imageMetadata.setDistribution(property.getValue()));
+
+            this.<ScalarPropertyValue>getTypedCapabilityPropertyByName(osCapability, "version")
+                .ifPresent(property -> imageMetadata.setVersion(property.getValue()));
+          });
+      return new SimpleEntry<>(node, imageMetadata);
+    }).collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+  }
+
+  @Override
+  public Map<Boolean, Map<NodeTemplate, ImageData>> contextualizeImages(ArchiveRoot parsingResult,
       CloudProvider cloudProvider, String cloudServiceId) {
     try {
-      Map<Capability, ImageData> contextualizedImages = Maps.newHashMap();
-      if (parsingResult.getTopology() != null) {
-        Map<String, NodeTemplate> nodes = parsingResult.getTopology().getNodeTemplates();
-        if (nodes != null) {
-          for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
-            NodeTemplate node = entry.getValue();
-            // Only indigo.Compute nodes are relevant
-            // FIXME: Check inheritance of tosca.nodes.indigo.Compute
-            if ("tosca.nodes.indigo.Compute".equals(node.getType())) {
-              Capability osCapability = null;
-              if (node.getCapabilities() == null
-                  || (osCapability = node.getCapabilities().get("os")) == null) {
-                // The node doesn't have an OS Capability -> need to add a dummy one to hold a
-                // random image for underlying deployment systems
-                LOG.debug("Generating default OperatingSystem capability for node <{}>",
-                    node.getName());
-                if (node.getCapabilities() == null) {
-                  node.setCapabilities(new HashMap<>());
-                }
-                osCapability = new Capability();
-                osCapability.setType("tosca.capabilities.indigo.OperatingSystem");
-                node.getCapabilities().put("os", osCapability);
-              }
+      return extractImageRequirements(parsingResult).entrySet().stream().map(entry -> {
+        NodeTemplate node = entry.getKey();
+        ImageData imageMetadata = entry.getValue();
 
-              // We've got an OS capability -> Check the attributes to find best match for the image
-              ImageData imageMetadata = new ImageData();
-
-              this.<ScalarPropertyValue>getTypedCapabilityPropertyByName(osCapability, "image")
-                  .ifPresent(property -> imageMetadata.setImageName(property.getValue()));
-
-              this.<ScalarPropertyValue>getTypedCapabilityPropertyByName(osCapability,
-                  "architecture")
-                  .ifPresent(property -> imageMetadata.setArchitecture(property.getValue()));
-
-              this.<ScalarPropertyValue>getTypedCapabilityPropertyByName(osCapability, "type")
-                  .ifPresent(property -> imageMetadata.setType(property.getValue()));
-
-              this.<ScalarPropertyValue>getTypedCapabilityPropertyByName(osCapability,
-                  "distribution")
-                  .ifPresent(property -> imageMetadata.setDistribution(property.getValue()));
-
-              this.<ScalarPropertyValue>getTypedCapabilityPropertyByName(osCapability, "version")
-                  .ifPresent(property -> imageMetadata.setVersion(property.getValue()));
-
-              ImageData image = null;
-              // TODO FILTER ON DEPLOYMENT PROVIDER?
-              if (isImImageUri(imageMetadata.getImageName())) {
-                image = imageMetadata;
-              } else {
-                List<ImageData> images = cloudProvider.getCmdbProviderImages().get(cloudServiceId);
-                if (images != null) {
-                  image = getBestImageForCloudProvider(imageMetadata, images).orElse(null);
-                }
-              }
-
-              // No image match found -> throw error
-              if (image == null) {
-                LOG.error("Failed to found a match in provider <{}> for image metadata <{}>",
-                    cloudProvider.getId(), imageMetadata);
-                throw new IllegalArgumentException(String.format(
-                    "Failed to found a match in provider <%s> for image metadata <%s>",
-                    cloudProvider.getId(), imageMetadata));
-              }
-              // Found a good image -> replace the image attribute with the provider-specific ID
-              LOG.debug(
-                  "Found image match in <{}> for image metadata <{}>"
-                      + ", provider-specific image id <{}>",
-                  cloudProvider.getId(), imageMetadata, image.getImageId());
-              contextualizedImages.put(osCapability, image);
-            }
-          }
+        final Optional<ImageData> image;
+        // TODO FILTER ON DEPLOYMENT PROVIDER?
+        if (isImImageUri(imageMetadata.getImageName())) {
+          image = Optional.of(imageMetadata);
+        } else {
+          List<ImageData> images = cloudProvider.getCmdbProviderImages()
+              .getOrDefault(cloudServiceId, Collections.emptyList());
+          image = getBestImageForCloudProvider(imageMetadata, images);
         }
-      }
-      return contextualizedImages;
+
+        if (image.isPresent()) {
+          // Found a good image -> replace the image attribute with the provider-specific ID
+          LOG.debug(
+              "Found image match in <{}> for image metadata <{}>"
+                  + ", provider-specific image id <{}>",
+              cloudProvider.getId(), imageMetadata, image.get().getImageId());
+        } else {
+          // No image match found -> throw error
+          LOG.debug("Failed to found a match in provider <{}> for image metadata <{}>",
+              cloudProvider.getId(), imageMetadata);
+        }
+        return new SimpleEntry<>(node, image);
+      }).collect(Collectors.partitioningBy(entry -> entry.getValue().isPresent(),
+          Collectors.toMap(Entry::getKey, entry -> entry.getValue().orElse(null))));
     } catch (Exception ex) {
-      throw new RuntimeException("Failed to contextualize images: " + ex.getMessage(), ex);
+      throw new RuntimeException("Failed to contextualize images", ex);
     }
   }
 
-  private Map<Capability, ImageData> replaceImage(Map<Capability, ImageData> contextualizedImages,
+  private void replaceImage(Map<NodeTemplate, ImageData> contextualizedImages,
       CloudProvider cloudProvider, DeploymentProvider deploymentProvider) {
-    for (Map.Entry<Capability, ImageData> contextualizedImage : contextualizedImages.entrySet()) {
-      Capability osCapability = contextualizedImage.getKey();
-      ImageData image = contextualizedImage.getValue();
+    contextualizedImages.forEach((node, image) -> {
+      Map<String, Capability> capabilities =
+          Optional.ofNullable(node.getCapabilities()).orElseGet(() -> {
+            node.setCapabilities(new HashMap<>());
+            return node.getCapabilities();
+          });
+      // The node doesn't have an OS Capability -> need to add a dummy one to hold a
+      // random image for underlying deployment systems
+      Capability osCapability = capabilities.computeIfAbsent(OS_CAPABILITY_NAME, key -> {
+        LOG.debug("Generating default OperatingSystem capability for node <{}>", node.getName());
+        Capability capability = new Capability();
+        capability.setType("tosca.capabilities.indigo.OperatingSystem");
+        return capability;
+      });
       String imageId = image.getImageId();
       if (deploymentProvider == DeploymentProvider.IM) {
         if (isImImageUri(image.getImageName())) {
@@ -432,23 +426,22 @@ public class ToscaServiceImpl implements ToscaService {
           imageId = generateImImageUri(cloudProvider, image);
         }
       }
-      ScalarPropertyValue scalarPropertyValue = new ScalarPropertyValue(imageId);
-      scalarPropertyValue.setPrintable(true);
+      ScalarPropertyValue scalarPropertyValue = createScalarPropertyValue(imageId);
       osCapability.getProperties().put("image", scalarPropertyValue);
+
       if (StringUtils.isNotBlank(image.getUserName())) {
-        Map<String, Object> credential = Maps.newHashMap();
+        Map<String, Object> credential = new HashMap<>();
         ComplexPropertyValue credentialProperty = new ComplexPropertyValue(credential);
         credentialProperty.setPrintable(true);
         osCapability.getProperties().put("credential", credentialProperty);
-        scalarPropertyValue = new ScalarPropertyValue(image.getUserName());
-        scalarPropertyValue.setPrintable(true);
+
+        scalarPropertyValue = createScalarPropertyValue(image.getUserName());
         credential.put("user", scalarPropertyValue);
-        scalarPropertyValue = new ScalarPropertyValue("\"\"");
-        scalarPropertyValue.setPrintable(true);
+
+        scalarPropertyValue = createScalarPropertyValue("\"\"");
         credential.put("token", scalarPropertyValue);
       }
-    }
-    return contextualizedImages;
+    });
   }
 
   @Deprecated
@@ -464,7 +457,7 @@ public class ToscaServiceImpl implements ToscaService {
         .append("aws")
         .append(")://.+")
         .toString();
-    return imageName != null && imageName.trim().matches(regex);
+    return Strings.nullToEmpty(imageName).trim().matches(regex);
   }
 
   @Deprecated
@@ -616,39 +609,51 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
+  public Collection<NodeTemplate> getElasticClusterNodes(ArchiveRoot archiveRoot) {
+    return getNodesOfType(archiveRoot, "tosca.nodes.indigo.ElasticCluster");
+  }
+
+  @Override
+  public Collection<NodeTemplate> getNodesOfType(ArchiveRoot archiveRoot, String type) {
+    Preconditions.checkNotNull(type);
+    return getNodesFromArchiveRoot(archiveRoot).stream()
+        // FIXME: Check inheritance
+        .filter(node -> type.equals(node.getType()))
+        .collect(Collectors.toList());
+  }
+
+  @Override
   public void addElasticClusterParameters(ArchiveRoot archiveRoot, String deploymentId,
-      @Nullable String oauthToken) throws ParseException {
-    Collection<NodeTemplate> nodes = getNodesFromArchiveRoot(archiveRoot);
-
-    for (NodeTemplate node : nodes) {
-      if ("tosca.nodes.indigo.ElasticCluster".equals(node.getType())) {
-        // create properties Map if null
-        Map<String, AbstractPropertyValue> properties =
-            Optional.ofNullable(node.getProperties()).orElse(new HashMap<>());
-        node.setProperties(properties);
-
-        // Create new property with the deploymentId and set as printable
-        properties.put("deployment_id", createScalarPropertyValue(deploymentId));
-
-        // Create new property with the orchestrator_url and set as printable
-        properties.put("orchestrator_url", createScalarPropertyValue(orchestratorUrl));
-
-        if (oauthToken != null) {
-          // Create new property with the iam_access_token and set as printable
-          properties.put("iam_access_token", createScalarPropertyValue(oauthToken));
-
-          Optional<OidcClientProperties> cluesInfo = oauth2tokenService.getCluesInfo(oauthToken);
-          cluesInfo.ifPresent(info -> {
-            // Create new property with the iam_clues_client_id and set as printable
-            properties.put("iam_clues_client_id", createScalarPropertyValue(info.getClientId()));
-
-            // Create new property with the iam_clues_client_secret and set as printable
-            properties.put("iam_clues_client_secret",
-                createScalarPropertyValue(info.getClientSecret()));
+      @Nullable String oauthToken) {
+    getElasticClusterNodes(archiveRoot).forEach(node -> {
+      // create properties Map if null
+      Map<String, AbstractPropertyValue> properties =
+          Optional.ofNullable(node.getProperties()).orElseGet(() -> {
+            node.setProperties(new HashMap<>());
+            return node.getProperties();
           });
-        }
+
+      // Create new property with the deploymentId and set as printable
+      properties.put("deployment_id", createScalarPropertyValue(deploymentId));
+
+      // Create new property with the orchestrator_url and set as printable
+      properties.put("orchestrator_url", createScalarPropertyValue(orchestratorUrl));
+
+      if (oauthToken != null) {
+        // Create new property with the iam_access_token and set as printable
+        properties.put("iam_access_token", createScalarPropertyValue(oauthToken));
+
+        Optional<OidcClientProperties> cluesInfo = oauth2tokenService.getCluesInfo(oauthToken);
+        cluesInfo.ifPresent(info -> {
+          // Create new property with the iam_clues_client_id and set as printable
+          properties.put("iam_clues_client_id", createScalarPropertyValue(info.getClientId()));
+
+          // Create new property with the iam_clues_client_secret and set as printable
+          properties.put("iam_clues_client_secret",
+              createScalarPropertyValue(info.getClientSecret()));
+        });
       }
-    }
+    });
   }
 
   private static ScalarPropertyValue createScalarPropertyValue(String value) {
@@ -748,8 +753,7 @@ public class ToscaServiceImpl implements ToscaService {
 
     for (NodeTemplate node : allNodes) {
       getNodeCapabilityByName(node, SCALABLE_CAPABILITY_NAME)
-          .flatMap(capability -> this
-              .<ScalarPropertyValue>getTypedCapabilityPropertyByName(capability, "count"))
+          .flatMap(capability -> getCapabilityPropertyByName(capability, "count"))
           // Check if this value is read from the template and is not a default value
           .filter(countProperty -> countProperty.isPrintable())
           .ifPresent(countProperty -> scalableNodes.add(node));
@@ -857,11 +861,10 @@ public class ToscaServiceImpl implements ToscaService {
 
   @Override
   public List<PlacementPolicy> extractPlacementPolicies(ArchiveRoot archiveRoot) {
-    List<PlacementPolicy> placementPolicies = Lists.newArrayList();
+    List<PlacementPolicy> placementPolicies = new ArrayList<>();
     Optional.ofNullable(archiveRoot.getTopology())
         .map(topology -> topology.getPolicies())
         .orElse(Collections.emptyList())
-        .stream()
         .forEach(policy -> {
           if (policy instanceof alien4cloud.model.topology.PlacementPolicy) {
             PlacementPolicy placementPolicy =
@@ -938,8 +941,7 @@ public class ToscaServiceImpl implements ToscaService {
         .entrySet()
         .stream()
         .filter(entry -> entry.getValue() != null)
-        .collect(
-            Collectors.toMap(entry -> entry.getKey(), mapper.compose(entry -> entry.getValue())));
+        .collect(Collectors.toMap(Entry::getKey, mapper.compose(Entry::getValue)));
   }
 
 }
