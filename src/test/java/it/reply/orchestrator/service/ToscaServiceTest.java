@@ -198,12 +198,7 @@ public class ToscaServiceTest extends WebAppConfigurationAware {
   @Test
   public void checkUserInputNotRequiredNoDefaultValueNotGiven() throws Exception {
     checkUserInputGeneric("tosca_inputs_not_required_no_default_not_given.yaml",
-        "No given input or default value available");
-  }
-
-  @Test
-  public void checkUserInputPresentButEmptyInputList() throws Exception {
-    checkUserInputGeneric("tosca_inputs_empty_input_list.yaml", "Empty template input list");
+        "Failed to replace input function on <node_templates[my_server][capabilities][host][properties][num_cpus]> with parameters: <[cpus]>");
   }
 
   private void checkUserInputGeneric(String templateName, String expectedMessage) throws Exception {
