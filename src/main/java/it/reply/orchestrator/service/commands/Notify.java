@@ -29,7 +29,7 @@ import org.springframework.stereotype.Component;
 
 @Component
 @AllArgsConstructor(onConstructor = @__({ @Autowired }))
-public class Notify extends BaseCommand {
+public class Notify extends BaseCommand<Notify> {
 
   private CallbackService callbackService;
 

@@ -36,7 +36,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  *
  */
 @Slf4j
-public abstract class BaseRankCloudProvidersCommand extends BaseCommand {
+public abstract class BaseRankCloudProvidersCommand<T extends BaseRankCloudProvidersCommand<T>>
+    extends BaseCommand<T> {
 
   @Autowired
   protected DeploymentStatusHelper deploymentStatusHelper;
@@ -57,7 +58,7 @@ public abstract class BaseRankCloudProvidersCommand extends BaseCommand {
     }
     ExecutionResults exResults = new ExecutionResults();
     try {
-      rankCloudProvidersMessage = customExecute(rankCloudProvidersMessage);
+      rankCloudProvidersMessage = this.getFacade().customExecute(rankCloudProvidersMessage);
       exResults.setData(WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE,
           rankCloudProvidersMessage);
       exResults.getData().putAll(resultOccurred(true).getData());

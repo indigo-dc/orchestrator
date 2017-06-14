@@ -41,7 +41,7 @@ import java.util.Optional;
  *
  */
 @Slf4j
-public abstract class BaseDeployCommand extends BaseCommand {
+public abstract class BaseDeployCommand<T extends BaseDeployCommand<T>> extends BaseCommand<T> {
 
   @Autowired
   protected DeploymentStatusHelper deploymentStatusHelper;
@@ -69,7 +69,7 @@ public abstract class BaseDeployCommand extends BaseCommand {
       deploymentMessage
           .setDeployment(deploymentRepository.findOne(deploymentMessage.getDeploymentId()));
 
-      exResults.getData().putAll(customExecute(ctx, deploymentMessage).getData());
+      exResults.getData().putAll(this.getFacade().customExecute(ctx, deploymentMessage).getData());
       exResults.setData(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
     } catch (Exception ex) {
       LOG.error(String.format("Error executing %s", this.getClass().getSimpleName()), ex);
