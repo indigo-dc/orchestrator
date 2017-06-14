@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class GetMonitoringData extends BaseRankCloudProvidersCommand {
+public class GetMonitoringData extends BaseRankCloudProvidersCommand<GetMonitoringData> {
 
   @Autowired
   private MonitoringService monitoringService;
@@ -49,8 +49,14 @@ public class GetMonitoringData extends BaseRankCloudProvidersCommand {
       if (!isPublicCloud) {
         // TODO fix ugliness
         rankCloudProvidersMessage.getCloudProvidersMonitoringData().put(providerEntry.getKey(),
-            monitoringService.getProviderData(cp.getId()).getGroups().get(0).getPaasMachines()
-                .get(0).getServices().get(0).getPaasMetrics());
+            monitoringService.getProviderData(cp.getId())
+                .getGroups()
+                .get(0)
+                .getPaasMachines()
+                .get(0)
+                .getServices()
+                .get(0)
+                .getPaasMetrics());
       }
     }
     return rankCloudProvidersMessage;

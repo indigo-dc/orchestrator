@@ -56,7 +56,8 @@ import java.util.Set;
 
 @Component
 @Slf4j
-public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
+public class PrefilterCloudProviders
+    extends BaseRankCloudProvidersCommand<PrefilterCloudProviders> {
 
   @Value("${chronos.cloudProviderName}")
   private String chronosCloudProviderName;

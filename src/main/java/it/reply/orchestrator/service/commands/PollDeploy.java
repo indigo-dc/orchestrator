@@ -35,7 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PollDeploy extends BaseDeployCommand {
+public class PollDeploy extends BaseDeployCommand<PollDeploy> {
 
   @Autowired
   private DeploymentProviderServiceRegistry deploymentProviderServiceRegistry;

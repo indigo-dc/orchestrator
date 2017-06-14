@@ -31,7 +31,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
-public class GetProvidersRank extends BaseRankCloudProvidersCommand {
+public class GetProvidersRank extends BaseRankCloudProvidersCommand<GetProvidersRank> {
 
   @Autowired
   private CloudProviderRankerService cloudProviderRankerService;

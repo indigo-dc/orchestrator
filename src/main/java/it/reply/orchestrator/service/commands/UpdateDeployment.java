@@ -53,7 +53,7 @@ import java.util.stream.Collectors;
  */
 @Component
 @Slf4j
-public class UpdateDeployment extends BaseCommand {
+public class UpdateDeployment extends BaseCommand<UpdateDeployment> {
 
   @Autowired
   private OneDataService oneDataService;

@@ -26,7 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class Undeploy extends BaseDeployCommand {
+public class Undeploy extends BaseDeployCommand<Undeploy> {
 
   @Autowired
   private DeploymentProviderServiceRegistry deploymentProviderServiceRegistry;

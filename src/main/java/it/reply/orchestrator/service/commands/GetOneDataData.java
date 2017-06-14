@@ -26,7 +26,7 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 @Component
-public class GetOneDataData extends BaseRankCloudProvidersCommand {
+public class GetOneDataData extends BaseRankCloudProvidersCommand<GetOneDataData> {
 
   @Autowired
   private OneDataService oneDataService;
