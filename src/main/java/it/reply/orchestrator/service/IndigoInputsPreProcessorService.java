@@ -40,8 +40,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -86,14 +85,15 @@ public class IndigoInputsPreProcessorService {
     Optional<Topology> topology = Optional.ofNullable(archiveRoot).map(ArchiveRoot::getTopology);
 
     Map<String, NodeTemplate> nodes =
-        topology.map(Topology::getNodeTemplates).orElse(new HashMap<>());
+        topology.map(Topology::getNodeTemplates).orElseGet(Collections::emptyMap);
 
     Map<String, PropertyDefinition> templateInputs =
-        topology.map(Topology::getInputs).orElse(new HashMap<>());
+        topology.map(Topology::getInputs).orElseGet(Collections::emptyMap);
 
     // Process policies
-    topology.map(Topology::getPolicies)
-        .orElse(new ArrayList<>())
+    topology
+        .map(Topology::getPolicies)
+        .orElseGet(Collections::emptyList)
         .forEach(policy -> processGetInput(templateInputs, inputs, policy.getProperties(),
             String.format("policies[%s][properties]", policy.getName())));
 
@@ -105,8 +105,9 @@ public class IndigoInputsPreProcessorService {
           String.format("node_templates[%s][properties]", nodeName));
 
       // process node's relationships
-      Optional.ofNullable(nodeTemplate.getRelationships())
-          .orElse(new HashMap<>())
+      Optional
+          .ofNullable(nodeTemplate.getRelationships())
+          .orElseGet(Collections::emptyMap)
           .forEach(
               (relationshipName, relationship) -> processGetInput(templateInputs, inputs,
                   relationship.getProperties(),
@@ -115,25 +116,26 @@ public class IndigoInputsPreProcessorService {
                       nodeName, relationship.getRequirementName(), relationshipName)));
 
       // process node's capabilities
-      Optional.ofNullable(nodeTemplate.getCapabilities())
-          .orElse(new HashMap<>())
+      Optional
+          .ofNullable(nodeTemplate.getCapabilities())
+          .orElseGet(Collections::emptyMap)
           .forEach((capablilityName, capablility) -> processGetInput(templateInputs, inputs,
               capablility.getProperties(), String.format(
                   "node_templates[%s][capabilities][%s][properties]", nodeName, capablilityName)));
 
       // process node's artifacts
-      Optional.ofNullable(nodeTemplate.getArtifacts())
-          .orElse(new HashMap<>())
-          .forEach(
-              (artifactName,
-                  artifact) -> processGetInput(templateInputs,
-                      inputs, artifact.getFile(), String.format(
-                          "node_templates[%s][artifacts][%s][file]", nodeName, artifactName))
-                              .ifPresent(artifact::setFile));
+      Optional
+          .ofNullable(nodeTemplate.getArtifacts())
+          .orElseGet(Collections::emptyMap)
+          .forEach((artifactName, artifact) -> processGetInput(templateInputs,
+              inputs, artifact.getFile(), String.format(
+                  "node_templates[%s][artifacts][%s][file]", nodeName, artifactName))
+                      .ifPresent(artifact::setFile));
 
       // process node's interfaces
-      Optional.ofNullable(nodeTemplate.getInterfaces())
-          .orElse(new HashMap<>())
+      Optional
+          .ofNullable(nodeTemplate.getInterfaces())
+          .orElseGet(Collections::emptyMap)
           .forEach((interfaceName, toscaInterface) -> processInterfaceOperationsInputs(
               templateInputs, inputs, toscaInterface.getOperations(),
               String.format("node_templates[%s][interfaces][%s]", nodeName, interfaceName)));
@@ -142,10 +144,9 @@ public class IndigoInputsPreProcessorService {
   }
 
   protected Optional<AbstractPropertyValue> processGetInput(
-      Map<String, PropertyDefinition> optionalTemplateInputs, Map<String, Object> inputs,
+      Map<String, PropertyDefinition> templateInputs, Map<String, Object> inputs,
       AbstractPropertyValue propertyValue, String propertyName) {
-    Map<String, PropertyDefinition> templateInputs =
-        CommonUtils.notNullOrDefaultValue(optionalTemplateInputs, new HashMap<>());
+
     // Only FunctionPropertyValue are interesting
     if (propertyValue instanceof FunctionPropertyValue) {
       FunctionPropertyValue function = (FunctionPropertyValue) propertyValue;
@@ -156,24 +157,29 @@ public class IndigoInputsPreProcessorService {
 
           String inputName = function.getParameters().get(0);
           // Alien4Cloud already validates existing input name
-          PropertyDefinition templateInput = templateInputs.get(inputName);
+          PropertyDefinition templateInput = CommonUtils
+              .getFromOptionalMap(templateInputs, inputName)
+              .orElseThrow(() -> new IllegalArgumentException(
+                  String.format("No input with name <%s> defined in the template", inputName)));
           // Look for user's given input, if not present use the default one
-          Object inputValue =
-              Optional.ofNullable(inputs.getOrDefault(inputName, templateInput.getDefault()))
-                  // No given input or default value available -> error
-                  .orElseThrow(() -> new IllegalArgumentException(String.format(
-                      "No input provided for <%s> and no default value is available", inputName)));
+          Object inputValue = Optional
+              .ofNullable(inputs.getOrDefault(inputName, templateInput.getDefault()))
+              // No given input or default value available -> error
+              .orElseThrow(() -> new IllegalArgumentException(
+                  String.format(
+                      "No input provided for <%s> and no default value provided in the definition",
+                      inputName)));
 
           LOG.debug(
-              "TOSCA input function replacement: " + "<{}>, input name <{}>, input value <{}>",
+              "TOSCA input function replacement: <{}>, input name <{}>, input value <{}>",
               propertyName, inputName, inputValue);
 
           return Optional.of(handleInputValue(inputValue, inputName));
 
         } catch (Exception ex) {
           throw new ToscaException(String.format(
-              "Failed to replace input function on <%s> with parameters: <%s>, caused by: %s",
-              propertyName, function.getParameters(), ex.getMessage()), ex);
+              "Failed to replace input function on <%s>, caused by: %s",
+              propertyName, ex.getMessage()), ex);
         }
       }
     } else if (propertyValue instanceof ComplexPropertyValue) {
@@ -193,65 +199,76 @@ public class IndigoInputsPreProcessorService {
       Map<String, Object> inputs, Map<String, ? super AbstractPropertyValue> optionalProperties,
       String propertyName) {
 
-    Optional.ofNullable(optionalProperties)
-        .ifPresent(properties -> properties.replaceAll((key, oldValue) -> {
-          if (oldValue instanceof AbstractPropertyValue) {
-            AbstractPropertyValue oldPropertyValue = (AbstractPropertyValue) oldValue;
-            return processGetInput(templateInputs, inputs, oldPropertyValue,
-                String.format("%s[%s]", propertyName, key))
-                    // Replace function value with the replaced value (if non null and changed)
-                    .filter(newPropertyValue -> newPropertyValue != oldPropertyValue)
-                    .orElse(oldPropertyValue);
-          } else {
-            // DO NOTHING, NOT A SUBSTITUTABLE TYPE
-            return oldValue;
-          }
-        }));
+    Optional
+        .ofNullable(optionalProperties)
+        .ifPresent(properties -> properties
+            .replaceAll((key, oldValue) -> {
+              if (oldValue instanceof AbstractPropertyValue) {
+                AbstractPropertyValue oldPropertyValue = (AbstractPropertyValue) oldValue;
+                return processGetInput(templateInputs, inputs, oldPropertyValue,
+                    String.format("%s[%s]", propertyName, key))
+                        // Replace function value with the replaced value (if non null and changed)
+                        .filter(newPropertyValue -> newPropertyValue != oldPropertyValue)
+                        .orElse(oldPropertyValue);
+              } else {
+                // DO NOTHING, NOT A SUBSTITUTABLE TYPE
+                return oldValue;
+              }
+            }));
   }
 
   protected void processGetInput(Map<String, PropertyDefinition> templateInputs,
       Map<String, Object> inputs, List<? super AbstractPropertyValue> optionalProperties,
       String propertyName) {
 
-    Optional.ofNullable(optionalProperties)
-        .ifPresent(properties -> IntStream.range(0, properties.size()).forEach(i -> {
-          Object oldValue = properties.get(i);
-          if (oldValue instanceof AbstractPropertyValue) {
-            AbstractPropertyValue oldPropertyValue = (AbstractPropertyValue) oldValue;
-            processGetInput(templateInputs, inputs, oldPropertyValue,
-                String.format("%s[%s]", propertyName, i))
-                    // Replace function value with the replaced value (if non null and changed)
-                    .filter(newPropertyValue -> newPropertyValue != oldPropertyValue)
-                    .ifPresent(newPropertyValue -> properties.set(i, newPropertyValue));
-          } else {
-            // DO NOTHING, NOT A SUBSTITUTABLE TYPE
-          }
-        }));
+    Optional
+        .ofNullable(optionalProperties)
+        .ifPresent(properties -> IntStream
+            .range(0, properties.size())
+            .forEach(i -> {
+              Object oldValue = properties.get(i);
+              if (oldValue instanceof AbstractPropertyValue) {
+                AbstractPropertyValue oldPropertyValue = (AbstractPropertyValue) oldValue;
+                processGetInput(templateInputs, inputs, oldPropertyValue,
+                    String.format("%s[%s]", propertyName, i))
+                        // Replace function value with the replaced value (if non null and changed)
+                        .filter(newPropertyValue -> newPropertyValue != oldPropertyValue)
+                        .ifPresent(newPropertyValue -> properties.set(i, newPropertyValue));
+              } else {
+                // DO NOTHING, NOT A SUBSTITUTABLE TYPE
+              }
+            }));
   }
 
   private void processInterfaceOperationsInputs(Map<String, PropertyDefinition> templateInputs,
       Map<String, Object> inputs, Map<String, Operation> optionalOperations, String propertyName) {
-    Optional.ofNullable(optionalOperations)
-        .orElse(new HashMap<>())
+    Optional
+        .ofNullable(optionalOperations)
+        .orElseGet(Collections::emptyMap)
         .forEach((operationName, operation) -> processGetInput(templateInputs, inputs,
             operation.getInputParameters(),
             String.format("%s[inputs][%s]", propertyName, operationName)));
   }
 
   private AbstractPropertyValue handleInputValue(Object inputValue, String inputName) {
-    Preconditions.checkArgument(inputValue != null, "Invalid input value %s=%s", inputName,
-        inputValue);
+    Preconditions.checkArgument(inputValue != null, "The value <%s> for input <%s> is invalid",
+        inputValue, inputName);
     final AbstractPropertyValue val;
     if (PRIMITIVE_CLASSES.contains(Primitives.wrap(inputValue.getClass()))) {
       val = new ScalarPropertyValue(inputValue.toString());
     } else if (inputValue instanceof List) {
-      List<Object> list = ((List<?>) inputValue).stream()
+      List<Object> list = ((List<?>) inputValue)
+          .stream()
           .map(entry -> handleInputValue(entry, inputName))
           .collect(Collectors.toList());
       val = new ListPropertyValue(list);
     } else if (inputValue instanceof Map) {
-      Map<String, Object> map = ((Map<String, Object>) inputValue).entrySet().stream().collect(
-          Collectors.toMap(Entry::getKey, entry -> handleInputValue(entry.getValue(), inputName)));
+      Map<String, Object> map = ((Map<String, Object>) inputValue)
+          .entrySet()
+          .stream()
+          .collect(
+              Collectors.toMap(Entry::getKey,
+                  entry -> handleInputValue(entry.getValue(), inputName)));
       val = new ComplexPropertyValue(map);
     } else {
       throw new IllegalArgumentException(
