@@ -396,7 +396,9 @@ public class ToscaServiceImpl implements ToscaService {
         }
         return new SimpleEntry<>(node, image);
       }).collect(Collectors.partitioningBy(entry -> entry.getValue().isPresent(),
-          Collectors.toMap(Entry::getKey, entry -> entry.getValue().orElse(null))));
+          // do not use the Collectors.toMap() because it doesn't play nice with null values
+          // https://bugs.openjdk.java.net/browse/JDK-8148463
+          CommonUtils.toMap(Entry::getKey, entry -> entry.getValue().orElse(null))));
     } catch (Exception ex) {
       throw new RuntimeException("Failed to contextualize images", ex);
     }
