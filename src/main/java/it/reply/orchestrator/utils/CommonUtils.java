@@ -16,6 +16,8 @@
 
 package it.reply.orchestrator.utils;
 
+import com.google.common.base.Preconditions;
+
 import es.upv.i3m.grycap.file.NoNullOrEmptyFile;
 import es.upv.i3m.grycap.file.Utf8File;
 import es.upv.i3m.grycap.im.exceptions.FileException;
@@ -28,10 +30,16 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Spliterator;
+import java.util.function.BiConsumer;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
+import java.util.function.Supplier;
+import java.util.stream.Collector;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -73,6 +81,27 @@ public class CommonUtils {
   public static <T> T notNullOrDefaultValue(@Nullable T reference, @NonNull T defaultValue) {
     if (reference == null) {
       return checkNotNull(defaultValue);
+    } else {
+      return reference;
+    }
+  }
+
+  /**
+   * Verify that a <code>@Nullable</code> reference is effectively non null and cast it to a
+   * <code>@NonNull</code> reference. If the reference is instead null, the <code>@NonNull</code>
+   * a default value will be generated through the provided supplier and returned.
+   * 
+   * @param reference
+   *          the <code>@Nullable</code> reference
+   * @param defaultValueSupplier
+   *          the <code>@NonNull</code> default value supplier
+   * @return the <code>@NonNull</code> reference
+   */
+  @NonNull
+  public static <T> T notNullOrDefaultValue(@Nullable T reference,
+      Supplier<@NonNull T> defaultValueSupplier) {
+    if (reference == null) {
+      return checkNotNull(defaultValueSupplier.get());
     } else {
       return reference;
     }
@@ -124,5 +153,37 @@ public class CommonUtils {
         .map(ServletRequestAttributes.class::cast)
         .map(ServletRequestAttributes::getRequest)
         .isPresent();
+  }
+
+  /**
+   * Returns a {@code Collector} that accumulates elements into a {@code Map} whose keys and values
+   * are the result of applying the provided mapping functions to the input elements.
+   *
+   * <p>
+   * If the mapped keys contains duplicates (according to {@link Object#equals(Object)}), an
+   * {@code IllegalStateException} is thrown when the collection operation is performed.
+   * </p>
+   * 
+   * @param keyMapper
+   *          a mapping function to produce keys
+   * @param valueMapper
+   *          a mapping function to produce values
+   * @return a {@code Collector} which collects elements into a {@code Map} whose keys and values
+   *         are the result of applying mapping functions to the input elements
+   */
+  public static <T, K, U> Collector<T, Map<K, U>, Map<K, U>> toMap(
+      Function<? super T, ? extends K> keyMapper,
+      Function<? super T, ? extends U> valueMapper) {
+
+    BiConsumer<Map<K, U>, T> accumulator =
+        (map, element) -> map.put(keyMapper.apply(element), valueMapper.apply(element));
+    BinaryOperator<Map<K, U>> combiner = (map1, map2) -> {
+      map2.forEach((key, value) -> {
+        U oldMapping = map1.put(key, value);
+        Preconditions.checkState(oldMapping == null, "Duplicate key %s", key);
+      });
+      return map1;
+    };
+    return Collector.of(HashMap::new, accumulator, combiner);
   }
 }
