@@ -51,6 +51,7 @@ import alien4cloud.utils.FileUtil;
 import es.upv.i3m.grycap.im.auth.credentials.ServiceProvider;
 
 import it.reply.orchestrator.config.properties.OidcProperties.OidcClientProperties;
+import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.ImageData;
@@ -62,6 +63,7 @@ import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
+import it.reply.orchestrator.utils.ToscaConstants;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -106,7 +108,6 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import javax.validation.ValidationException;
 
 @Service
@@ -122,7 +123,7 @@ public class ToscaServiceImpl implements ToscaService {
   @Autowired
   private ApplicationContext ctx;
 
-  @Resource
+  @Autowired
   private ArchiveParser parser;
 
   @Autowired
@@ -340,7 +341,7 @@ public class ToscaServiceImpl implements ToscaService {
   @Override
   public Map<NodeTemplate, ImageData> extractImageRequirements(ArchiveRoot parsingResult) {
     // Only indigo.Compute nodes are relevant
-    return getNodesOfType(parsingResult, "tosca.nodes.indigo.Compute").stream().map(node -> {
+    return getNodesOfType(parsingResult, ToscaConstants.Nodes.COMPUTE).stream().map(node -> {
       ImageData imageMetadata = new ImageData();
       Optional.ofNullable(node.getCapabilities())
           .map(capabilities -> capabilities.get(OS_CAPABILITY_NAME))
@@ -611,23 +612,37 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
-  public Collection<NodeTemplate> getElasticClusterNodes(ArchiveRoot archiveRoot) {
-    return getNodesOfType(archiveRoot, "tosca.nodes.indigo.ElasticCluster");
-  }
-
-  @Override
   public Collection<NodeTemplate> getNodesOfType(ArchiveRoot archiveRoot, String type) {
     Preconditions.checkNotNull(type);
     return getNodesFromArchiveRoot(archiveRoot).stream()
-        // FIXME: Check inheritance
-        .filter(node -> type.equals(node.getType()))
+        .filter(node -> isOfToscaType(node, type))
         .collect(Collectors.toList());
+  }
+
+  @Override
+  public boolean isOfToscaType(NodeTemplate node, String nodeType) {
+    return isSubTypeOf(Preconditions.checkNotNull(node).getType(), nodeType);
+  }
+  
+  @Override
+  public boolean isOfToscaType(Resource resource, String nodeType) {
+    return isSubTypeOf(Preconditions.checkNotNull(resource).getToscaNodeType(), nodeType);
+  }
+  
+  private boolean isSubTypeOf(@Nullable String optionalNodeType, String superNodeType) {
+    return Optional
+        .ofNullable(optionalNodeType)
+        // FIXME: Check inheritance
+        .filter(nodeType -> CommonUtils
+            .checkNotNull(nodeType)
+            .equals(Preconditions.checkNotNull(superNodeType)))
+        .isPresent();
   }
 
   @Override
   public void addElasticClusterParameters(ArchiveRoot archiveRoot, String deploymentId,
       @Nullable String oauthToken) {
-    getElasticClusterNodes(archiveRoot).forEach(node -> {
+    getNodesOfType(archiveRoot, ToscaConstants.Nodes.ELASTIC_CLUSTER).forEach(node -> {
       // create properties Map if null
       Map<String, AbstractPropertyValue> properties =
           Optional.ofNullable(node.getProperties()).orElseGet(() -> {

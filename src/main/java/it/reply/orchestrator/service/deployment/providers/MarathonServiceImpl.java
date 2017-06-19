@@ -45,6 +45,7 @@ import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.EnumUtils;
+import it.reply.orchestrator.utils.ToscaConstants;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -122,12 +123,13 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
         new TopologicalOrderIterator<>(graph);
 
     List<NodeTemplate> orderedMarathonApps = CommonUtils.iteratorToStream(orderIterator)
-        .filter(node -> MarathonApp.TOSCA_NODE_NAME.equals(node.getType()))
+        .filter(node -> toscaService.isOfToscaType(node, ToscaConstants.Nodes.MARATHON))
         .collect(Collectors.toList());
 
     Map<String, Resource> resources = deployment.getResources()
         .stream()
-        .filter(resource -> MarathonApp.TOSCA_NODE_NAME.equals(resource.getToscaNodeType()))
+        .filter(resource -> toscaService.isOfToscaType(resource,
+            ToscaConstants.Nodes.MARATHON))
         .collect(Collectors.toMap(Resource::getToscaNodeName, Function.identity()));
 
     Group group = new Group();
@@ -248,7 +250,8 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
         String prefix = String.format("/%s/", deployment.getEndpoint());
         Map<String, Resource> resources = deployment.getResources()
             .stream()
-            .filter(resource -> MarathonApp.TOSCA_NODE_NAME.equals(resource.getToscaNodeType()))
+            .filter(resource -> toscaService.isOfToscaType(resource,
+                ToscaConstants.Nodes.MARATHON))
             .collect(
                 Collectors.toMap(resource -> prefix + resource.getIaasId(), Function.identity()));
 

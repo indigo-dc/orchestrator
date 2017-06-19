@@ -49,6 +49,7 @@ import it.reply.orchestrator.exception.http.NotFoundException;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
+import it.reply.orchestrator.utils.ToscaConstants;
 import it.reply.orchestrator.utils.WorkflowConstants;
 import it.reply.workflowmanager.exceptions.WorkflowException;
 import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager;
@@ -237,11 +238,11 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   }
 
-  private static DeploymentType inferDeploymentType(Map<String, NodeTemplate> nodes) {
-    for (Map.Entry<String, NodeTemplate> node : nodes.entrySet()) {
-      if (node.getValue().getType().contains("Chronos")) {
+  private DeploymentType inferDeploymentType(Map<String, NodeTemplate> nodes) {
+    for (NodeTemplate node : nodes.values()) {
+      if (toscaService.isOfToscaType(node, ToscaConstants.Nodes.CHRONOS)) {
         return DeploymentType.CHRONOS;
-      } else if (node.getValue().getType().contains("Marathon")) {
+      } else if (toscaService.isOfToscaType(node, ToscaConstants.Nodes.MARATHON)) {
         return DeploymentType.MARATHON;
       }
     }

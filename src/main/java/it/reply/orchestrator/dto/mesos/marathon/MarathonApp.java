@@ -17,6 +17,7 @@
 package it.reply.orchestrator.dto.mesos.marathon;
 
 import it.reply.orchestrator.dto.mesos.MesosTask;
+import it.reply.orchestrator.utils.ToscaConstants;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -32,15 +33,12 @@ import javax.annotation.Nonnull;
 @ToString(callSuper = true)
 public class MarathonApp extends MesosTask<MarathonApp> {
 
-  public static final String TOSCA_NODE_NAME =
-      "tosca.nodes.indigo.Container.Application.Docker.Marathon";
-
   @Nonnull
   private Map<String, String> labels = new HashMap<>();
 
   @Override
   public String getToscaNodeName() {
-    return TOSCA_NODE_NAME;
+    return ToscaConstants.Nodes.MARATHON;
   }
 
 }
