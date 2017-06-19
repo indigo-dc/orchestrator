@@ -76,6 +76,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -397,6 +398,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     app.setMem(marathonTask.getMemSize());
     app.setUris(marathonTask.getUris());
     app.setLabels(marathonTask.getLabels());
+    app.setEnv(new HashMap<>(marathonTask.getEnv()));
     marathonTask.getContainer()
         .ifPresent(mesosContainer -> app.setContainer(generateContainer(mesosContainer)));
     //// HARDCODED BITS //////
