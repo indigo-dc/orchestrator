@@ -53,6 +53,7 @@ import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.utils.CommonUtils;
+import it.reply.orchestrator.utils.ToscaConstants;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -856,7 +857,7 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
   }
 
   protected boolean isChronosNode(NodeTemplate nodeTemplate) {
-    return "tosca.nodes.indigo.Container.Application.Docker.Chronos".equals(nodeTemplate.getType());
+    return toscaService.isOfToscaType(nodeTemplate, ToscaConstants.Nodes.CHRONOS);
   }
 
   protected List<String> getJobParents(NodeTemplate nodeTemplate, String nodeName,

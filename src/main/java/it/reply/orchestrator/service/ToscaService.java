@@ -31,6 +31,7 @@ import alien4cloud.tosca.normative.InvalidPropertyValueException;
 import alien4cloud.tosca.parser.ParsingException;
 import alien4cloud.tosca.parser.ParsingResult;
 
+import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.ImageData;
 import it.reply.orchestrator.dto.deployment.PlacementPolicy;
@@ -298,10 +299,12 @@ public interface ToscaService {
   public <V> Map<String, V> parseComplexPropertyValue(ComplexPropertyValue value,
       Function<Object, V> mapper);
 
-  public Collection<NodeTemplate> getElasticClusterNodes(ArchiveRoot archiveRoot);
-
   public Collection<NodeTemplate> getNodesOfType(ArchiveRoot archiveRoot, String type);
 
   public Map<NodeTemplate, ImageData> extractImageRequirements(ArchiveRoot parsingResult);
+
+  boolean isOfToscaType(NodeTemplate node, String nodeType);
+
+  boolean isOfToscaType(Resource resource, String nodeType);
 
 }
