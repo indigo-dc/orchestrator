@@ -109,7 +109,7 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
           .values()
           .stream()
           .filter(
-              cloudProvider -> cloudProvider.getName().equalsIgnoreCase(chronosCloudProviderName))
+              cloudProvider -> !cloudProvider.getName().equalsIgnoreCase(chronosCloudProviderName))
           .forEach(cloudProvider -> {
             LOG.debug(
                 "Discarded provider {} because it doesn't match Chronos default provider {}"
