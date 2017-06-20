@@ -299,8 +299,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       if (oidcProperties.isEnabled() && Optional
           .ofNullable(ex.getResponseError())
           .map(ResponseError::getCode)
-          .map(code -> code.equals(401))
-          .orElse(false)) {
+          .filter(code -> code.equals(401))
+          .isPresent()) {
         oauth2TokenService.refreshAccessToken(requestedWithToken,
             OAuth2TokenService.REQUIRED_SCOPES);
         client = getClient(cloudProviderEndpoints, requestedWithToken);

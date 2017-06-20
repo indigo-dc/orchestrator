@@ -76,7 +76,7 @@ public class JwtUtils {
 
   public static boolean isJtwTokenExpired(JWT jwtToken) {
     return getExpirationTimeFromJwt(jwtToken)
-        .map(expirationDate -> expirationDate.before(new Date())).orElse(false);
+        .filter(expirationDate -> expirationDate.before(new Date())).isPresent();
   }
 
   public static boolean isJtwTokenExpired(String jwtToken) {

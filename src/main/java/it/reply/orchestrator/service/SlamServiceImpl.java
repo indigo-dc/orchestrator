@@ -83,8 +83,8 @@ public class SlamServiceImpl implements SlamService {
       return function.apply(request.build());
     } catch (HttpClientErrorException ex) {
       if (Optional.ofNullable(ex.getStatusCode())
-          .map(code -> HttpStatus.UNAUTHORIZED == code)
-          .orElse(false)) {
+          .filter(HttpStatus.UNAUTHORIZED::equals)
+          .isPresent()) {
         String accessToken = oauth2TokenService
             .refreshAccessToken(tokenId, OAuth2TokenService.REQUIRED_SCOPES).getAccessToken();
         HeadersBuilder<?> request = RequestEntity.get(requestUri).header(HttpHeaders.AUTHORIZATION,

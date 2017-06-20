@@ -71,8 +71,8 @@ public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData
     Preconditions.checkNotNull(type);
     return Optional.ofNullable(getData())
         .map(CloudServiceData::getServiceType)
-        .map(type::equals)
-        .orElse(false);
+        .filter(type::equals)
+        .isPresent();
   }
 
   /**
