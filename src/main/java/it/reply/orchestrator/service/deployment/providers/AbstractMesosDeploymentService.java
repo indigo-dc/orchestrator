@@ -156,7 +156,7 @@ public abstract class AbstractMesosDeploymentService<T extends MesosTask<T>, S e
     List<String> containerVolumes = volumesProperty
         .map(property -> toscaService.parseListPropertyValue(property,
             item -> (ScalarPropertyValue) item))
-        .orElse(Collections.emptyList())
+        .orElseGet(Collections::emptyList)
         .stream()
         .map(ScalarPropertyValue::getValue)
         .collect(Collectors.toList());

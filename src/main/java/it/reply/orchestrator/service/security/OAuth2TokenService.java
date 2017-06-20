@@ -219,7 +219,7 @@ public class OAuth2TokenService {
 
     boolean headerAuthSupported =
         Optional.ofNullable(serverConfiguration.getTokenEndpointAuthMethodsSupported())
-            .orElse(Collections.emptyList())
+            .orElseGet(Collections::emptyList)
             .stream()
             .anyMatch("client_secret_basic"::equals);
 

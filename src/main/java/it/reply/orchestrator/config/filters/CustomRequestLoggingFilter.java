@@ -347,12 +347,12 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
     return safeTrimmedString(request.getHeader(HttpHeaders.X_FORWARDED_FOR))
         .map(header -> header.split(", ?"))
         .map(Stream::of)
-        .orElse(Stream.empty())
+        .orElseGet(Stream::empty)
         .map(CustomRequestLoggingFilter::safeTrimmedString)
         .filter(Optional::isPresent)
         .map(Optional::get)
         .findFirst()
-        .orElse(request.getRemoteAddr());
+        .orElseGet(request::getRemoteAddr);
   }
 
 }

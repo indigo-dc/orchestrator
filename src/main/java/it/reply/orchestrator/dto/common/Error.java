@@ -56,8 +56,12 @@ public class Error implements Serializable {
       code = safeStatus.value();
       title = safeStatus.getReasonPhrase();
     });
-    this.message = Optional.ofNullable(message)
-        .orElse(Optional.ofNullable(exception).map(Exception::getMessage).orElse(null));
+    this.message = Optional
+        .ofNullable(message)
+        .orElseGet(() -> Optional
+            .ofNullable(exception)
+            .map(Exception::getMessage)
+            .orElse(null));
   }
 
 }

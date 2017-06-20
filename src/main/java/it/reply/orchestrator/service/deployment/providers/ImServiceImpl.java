@@ -270,7 +270,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     } else {
       imUrl = Optional
           .ofNullable(cloudProviderEndpoints.get(0).getImEndpoint())
-          .orElse(imProperties.getUrl());
+          .orElseGet(imProperties::getUrl);
     }
     return imUrl;
   }

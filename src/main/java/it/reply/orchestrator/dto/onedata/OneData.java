@@ -94,7 +94,7 @@ public class OneData implements Serializable {
     return Optional.ofNullable(providers)
         .map(value -> CommonUtils.checkNotNull(value).split(","))
         .map(Stream::of)
-        .orElse(Stream.empty())
+        .orElseGet(Stream::empty)
         .map(endpoint -> OneDataProviderInfo.builder().endpoint(endpoint).build())
         .collect(Collectors.toList());
   }
