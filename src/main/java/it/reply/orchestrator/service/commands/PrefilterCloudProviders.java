@@ -164,8 +164,8 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
       for (CloudService cloudService : cloudProvider.getCmbdProviderServicesByType(Type.COMPUTE)) {
         boolean serviceSlaIsCloudService = selectedSla.getService()
             .map(Service::getServiceId)
-            .map(serviceId -> CommonUtils.checkNotNull(serviceId).equals(cloudService.getId()))
-            .orElse(false);
+            .filter(serviceId -> CommonUtils.checkNotNull(serviceId).equals(cloudService.getId()))
+            .isPresent();
         if (serviceSlaIsCloudService) {
           // TODO change this
           if (cloudService.isAwsComputeProviderService()

@@ -85,15 +85,14 @@ public class OAuth2TokenCacheService {
    */
   public static boolean isGrantExpired(AccessGrant grant, long leeway) {
     Preconditions.checkNotNull(grant);
-    Preconditions.checkArgument(leeway >= 0, "skew must be >= 0");
+    Preconditions.checkArgument(leeway >= 0, "leeway must be >= 0");
 
     return Optional.ofNullable(grant.getExpireTime())
-        .map(expireTime -> Instant.now()
-            .isAfter(Instant.ofEpochMilli(expireTime)
-                // if expiring in ${skew} mins -> return true
-                .minus(Duration.ofMinutes(leeway))))
-        // no expireTime -> return false
-        .orElse(false);
+        .map(expireTime -> Instant.ofEpochMilli(expireTime)
+            // if expiring in ${skew} mins -> return true
+            .minus(Duration.ofMinutes(leeway)))
+        .filter(Instant.now()::isAfter)
+        .isPresent();
   }
 
   public static boolean isGrantExpired(AccessGrant grant) {
