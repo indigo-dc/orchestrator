@@ -183,7 +183,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
       // TMP TODO remove it and use an use an update marathon version
       Group group = this.getPolulatedGroup(groupId);
       ///////////////////////////////////////////////////////////////
-      Collection<App> apps = Optional.ofNullable(group.getApps()).orElse(new ArrayList<>());
+      Collection<App> apps = Optional.ofNullable(group.getApps()).orElseGet(ArrayList::new);
       LOG.debug("Marathon App Group for deployment {} current status:\n{}", deployment.getId(),
           group);
 
@@ -205,7 +205,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     Group group = client.getGroup(groupId);
     // LOG.debug("Marathon App Group for deployment {} current status:\n{}", deployment.getId(),
     // group);
-    Collection<App> apps = Optional.ofNullable(group.getApps()).orElse(Collections.emptyList());
+    Collection<App> apps = Optional.ofNullable(group.getApps()).orElseGet(Collections::emptyList);
 
     List<App> completeInfoApps = new ArrayList<>();
     for (App app : apps) {
@@ -221,7 +221,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     boolean noDeploymentsLeft = CollectionUtils.isEmpty(app.getDeployments());
     boolean allTasksReady;
     List<HealthCheck> healtchecks =
-        Optional.ofNullable(app.getHealthChecks()).orElse(Collections.emptyList());
+        Optional.ofNullable(app.getHealthChecks()).orElseGet(Collections::emptyList);
     if (healtchecks.isEmpty()) {
       // if no health-checks are defined -> we're good if they are running
       allTasksReady = ObjectUtils.compare(app.getInstances(), app.getTasksRunning(), false) <= 0;
@@ -259,7 +259,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
         Group group = this.getPolulatedGroup(groupId);
 
         List<App> failedApps = Optional.ofNullable(group.getApps())
-            .orElse(Collections.emptyList())
+            .orElseGet(Collections::emptyList)
             .stream()
             .filter(app -> !this.isAppDeployed(app))
             .collect(Collectors.toList());

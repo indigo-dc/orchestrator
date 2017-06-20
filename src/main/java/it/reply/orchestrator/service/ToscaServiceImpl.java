@@ -18,7 +18,6 @@ package it.reply.orchestrator.service;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
-import com.google.common.collect.Maps;
 import com.google.common.io.ByteStreams;
 
 import alien4cloud.component.repository.exception.CSARVersionAlreadyExistsException;
@@ -601,14 +600,14 @@ public class ToscaServiceImpl implements ToscaService {
   private Collection<NodeTemplate> getNodesFromArchiveRoot(ArchiveRoot archiveRoot) {
     return Optional.ofNullable(archiveRoot.getTopology())
         .map(this::getNodesFromTopology)
-        .orElse(new ArrayList<>());
+        .orElseGet(ArrayList::new);
   }
 
   private Collection<NodeTemplate> getNodesFromTopology(Topology topology) {
     return Optional.ofNullable(topology.getNodeTemplates())
         .map(Map::values)
         .map(nodes -> nodes.stream().filter(Objects::nonNull).collect(Collectors.toList()))
-        .orElse(new ArrayList<>());
+        .orElseGet(ArrayList::new);
   }
 
   @Override
@@ -802,7 +801,7 @@ public class ToscaServiceImpl implements ToscaService {
             capability -> getTypedCapabilityPropertyByName(capability, REMOVAL_LIST_PROPERTY_NAME));
 
     List<Object> items =
-        listPropertyValue.map(property -> property.getValue()).orElse(Collections.emptyList());
+        listPropertyValue.map(property -> property.getValue()).orElseGet(Collections::emptyList);
 
     List<String> removalList = new ArrayList<>();
     for (Object item : items) {
@@ -881,7 +880,7 @@ public class ToscaServiceImpl implements ToscaService {
     List<PlacementPolicy> placementPolicies = new ArrayList<>();
     Optional.ofNullable(archiveRoot.getTopology())
         .map(topology -> topology.getPolicies())
-        .orElse(Collections.emptyList())
+        .orElseGet(Collections::emptyList)
         .forEach(policy -> {
           if (policy instanceof alien4cloud.model.topology.PlacementPolicy) {
             PlacementPolicy placementPolicy =
@@ -907,7 +906,7 @@ public class ToscaServiceImpl implements ToscaService {
       graph.addVertex(toNode);
 
       Map<String, RelationshipTemplate> relationships =
-          Optional.ofNullable(toNode.getRelationships()).orElse(Maps.newHashMap());
+          Optional.ofNullable(toNode.getRelationships()).orElseGet(HashMap::new);
 
       relationships.values().forEach(relationship -> {
         NodeTemplate fromNode = nodes.get(relationship.getTarget());
@@ -943,7 +942,7 @@ public class ToscaServiceImpl implements ToscaService {
   @Override
   public <V> List<V> parseListPropertyValue(ListPropertyValue value, Function<Object, V> mapper) {
     return Optional.ofNullable(value.getValue())
-        .orElse(Collections.emptyList())
+        .orElseGet(Collections::emptyList)
         .stream()
         .filter(item -> item != null)
         .map(mapper)
@@ -954,7 +953,7 @@ public class ToscaServiceImpl implements ToscaService {
   public <V> Map<String, V> parseComplexPropertyValue(ComplexPropertyValue value,
       Function<Object, V> mapper) {
     return Optional.ofNullable(value.getValue())
-        .orElse(Collections.emptyMap())
+        .orElseGet(Collections::emptyMap)
         .entrySet()
         .stream()
         .filter(entry -> entry.getValue() != null)
