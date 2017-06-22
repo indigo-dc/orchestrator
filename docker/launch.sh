@@ -67,5 +67,15 @@ if [ "${ENABLE_DEBUG}" = "true" ];
 fi
 
 CLUSTER_MESSAGING_PASSWORD="pwd"
+
+wait_for() {
+  host=${1%:*}
+  port=${1#*:}
+  echo Waiting for $host to listen on $port and being ready...
+  while ! echo -n | nc -w1 $host $port > /dev/null 2>&1; do echo Waiting...; sleep 2; done
+}
+wait_for $ORCHESTRATOR_DB_ENDPOINT
+wait_for $WORKFLOW_DB_ENDPOINT
+
 exec "$@" -c $JBOSS_CONF_FILE -Djboss.bind.address=$HOSTNAME -Djboss.bind.address.management=$HOSTNAME \
 	-Djgroups.bind_addr=$HOSTNAME -Djboss.node.name=$HOSTNAME -Djboss.messaging.cluster.password=$CLUSTER_MESSAGING_PASSWORD $DEBUG_ARG
