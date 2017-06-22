@@ -114,10 +114,6 @@
 		<xsl:attribute name="name">DEBUG</xsl:attribute>
 	</xsl:template>
 	
-	<xsl:template match="//log:subsystem/log:console-handler[@name='CONSOLE']/log:formatter/log:named-formatter/@name">
-		<xsl:attribute name="name">jsonFormatter</xsl:attribute>
-	</xsl:template>
-	
 	<xsl:template match="//log:subsystem/log:periodic-rotating-file-handler[@name='FILE']">
 		<xsl:copy>
 			<xsl:attribute name="enabled">false</xsl:attribute>
