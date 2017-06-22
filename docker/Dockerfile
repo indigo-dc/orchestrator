@@ -19,7 +19,7 @@ FROM jboss/wildfly:9.0.2.Final
 MAINTAINER Alberto Brigandì <a.brigandi@reply.it>
 
 USER root
-RUN yum install -y libaio && yum clean all
+RUN yum install -y libaio nc && yum clean all
 USER jboss
 
 ENV MYSQL_CONNECTOR_VERSION=5.1.38 \
