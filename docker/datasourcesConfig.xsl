@@ -20,7 +20,8 @@
                 xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
 				xmlns:dm="urn:jboss:domain:3.0"
                 xmlns:ds="urn:jboss:domain:datasources:3.0"
-				xmlns:ee="urn:jboss:domain:ee:3.0">
+				xmlns:ee="urn:jboss:domain:ee:3.0"
+				xmlns:log="urn:jboss:domain:logging:3.0">
 
     <xsl:output method="xml" indent="yes" />
 
@@ -32,6 +33,8 @@
     <xsl:param name="workflow.DB.name" />
     <xsl:param name="workflow.DB.user" />
 	<xsl:param name="workflow.DB.pwd" />
+	
+	<xsl:param name="jsonLogging" />
 
  	<xsl:variable name="newDatasourcesDefinition">
 		<datasources xmlns="urn:jboss:domain:datasources:3.0">
@@ -110,4 +113,15 @@
         </xsl:copy>
     </xsl:template>
 
+	
+	<xsl:template match="//log:subsystem/log:console-handler[@name='CONSOLE']/log:formatter/log:named-formatter/@name">
+       <xsl:choose>
+         <xsl:when test="$jsonLogging = 'true'">
+           <xsl:attribute name="name">jsonFormatter</xsl:attribute>
+         </xsl:when>
+         <xsl:otherwise>
+          <xsl:attribute name="name">COLOR-PATTERN</xsl:attribute>
+         </xsl:otherwise>
+       </xsl:choose>
+	</xsl:template>
 </xsl:stylesheet>

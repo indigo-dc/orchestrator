@@ -23,7 +23,8 @@ java -jar /usr/share/java/saxon.jar -o:$JBOSS_HOME/standalone/configuration/$JBO
 	workflow.DB.endpoint=$WORKFLOW_DB_ENDPOINT \
 	workflow.DB.name=$WORKFLOW_DB_NAME \
 	workflow.DB.user=$WORKFLOW_DB_USER \
-	workflow.DB.pwd=$WORKFLOW_DB_PWD
+	workflow.DB.pwd=$WORKFLOW_DB_PWD \
+	jsonLogging=${JSON_LOGGING:-false}
 
 CHRONOS_PROP_FILE="$JBOSS_HOME/standalone/deployments/$WAR_NAME/WEB-INF/classes/chronos/chronos.properties"
 CMDB_PROP_FILE="$JBOSS_HOME/standalone/deployments/$WAR_NAME/WEB-INF/classes/cmdb/cmdb.properties"
