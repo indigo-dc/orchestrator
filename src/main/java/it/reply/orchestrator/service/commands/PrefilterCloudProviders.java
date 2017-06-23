@@ -110,7 +110,7 @@ public class PrefilterCloudProviders
           .values()
           .stream()
           .filter(
-              cloudProvider -> !cloudProvider.getName().equalsIgnoreCase(chronosCloudProviderName))
+              cloudProvider -> !cloudProvider.getId().equalsIgnoreCase(chronosCloudProviderName))
           .forEach(cloudProvider -> {
             LOG.debug(
                 "Discarded provider {} because it doesn't match Chronos default provider {}"

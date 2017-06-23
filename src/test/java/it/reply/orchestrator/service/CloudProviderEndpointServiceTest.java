@@ -84,7 +84,7 @@ public class CloudProviderEndpointServiceTest {
 
   @Test(expected = IllegalArgumentException.class)
   public void failGetCloudProviderEndpoint() {
-    CloudProvider chosenCloudProvider = new CloudProvider();
+    CloudProvider chosenCloudProvider = new CloudProvider("provider-RECAS-BARI");
     List<PlacementPolicy> placementPolicies = new ArrayList<>();
 
     cloudProviderEndpointServiceImpl.getCloudProviderEndpoint(chosenCloudProvider,

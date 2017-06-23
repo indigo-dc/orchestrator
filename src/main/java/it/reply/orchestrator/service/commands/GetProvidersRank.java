@@ -16,17 +16,17 @@
 
 package it.reply.orchestrator.service.commands;
 
-import com.google.common.collect.Lists;
-
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.ranker.CloudProviderRankerRequest;
 import it.reply.orchestrator.dto.ranker.Monitoring;
+import it.reply.orchestrator.dto.slam.Preference;
 import it.reply.orchestrator.dto.slam.PreferenceCustomer;
 import it.reply.orchestrator.service.CloudProviderRankerService;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -45,18 +45,24 @@ public class GetProvidersRank extends BaseRankCloudProvidersCommand<GetProviders
       return rankCloudProvidersMessage;
     }
     // Prepare Ranker's request
-    List<Monitoring> monitoring = rankCloudProvidersMessage.getCloudProvidersMonitoringData()
+    List<Monitoring> monitoring = rankCloudProvidersMessage
+        .getCloudProvidersMonitoringData()
         .entrySet()
         .stream()
         .map(e -> Monitoring.builder().provider(e.getKey()).metrics(e.getValue()).build())
         .collect(Collectors.toList());
 
-    List<PreferenceCustomer> preferences = Lists.newArrayList();
-    if (!rankCloudProvidersMessage.getSlamPreferences().getPreferences().isEmpty()) {
-      preferences =
-          rankCloudProvidersMessage.getSlamPreferences().getPreferences().get(0).getPreferences();
-    }
-    CloudProviderRankerRequest cprr = CloudProviderRankerRequest.builder()
+    List<PreferenceCustomer> preferences = rankCloudProvidersMessage
+        .getSlamPreferences()
+        .getPreferences()
+        .stream()
+        .map(Preference::getPreferences)
+        // why why why is this a list?
+        .findFirst()
+        .orElseGet(ArrayList::new);
+
+    CloudProviderRankerRequest cprr = CloudProviderRankerRequest
+        .builder()
         .preferences(preferences)
         .sla(rankCloudProvidersMessage.getSlamPreferences().getSla())
         .monitoring(monitoring)

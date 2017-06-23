@@ -56,19 +56,22 @@ public class CloudProviderEndpointServiceImpl {
   public RankedCloudProvider chooseCloudProvider(Deployment deployment,
       RankCloudProvidersMessage rankCloudProvidersMessage) {
 
-    // Choose the one with highest rank AND that matches iaasType (TEMPORARY)
-    final RankedCloudProvider chosenCp = rankCloudProvidersMessage.getRankedCloudProviders()
-        .stream()
-        .filter(Objects::nonNull)
-        .filter(RankedCloudProvider::isRanked)
-        .sorted(Comparator.comparing(RankedCloudProvider::getRank).reversed())
-        .findFirst()
-        .orElseThrow(() -> {
-          String errorMsg = "No Cloud Provider suitable for deploy found";
-          LOG.error("{}\n ranked providers list: {}", errorMsg,
-              rankCloudProvidersMessage.getRankedCloudProviders());
-          return new DeploymentException(errorMsg);
-        });
+    final RankedCloudProvider chosenCp =
+        rankCloudProvidersMessage
+            .getRankedCloudProviders()
+            .stream()
+            .filter(Objects::nonNull)
+            // Choose the one ranked
+            .filter(RankedCloudProvider::isRanked)
+            // and with the highest rank
+            .sorted(Comparator.comparing(RankedCloudProvider::getRank).reversed())
+            .findFirst()
+            .orElseThrow(() -> {
+              String errorMsg = "No Cloud Provider suitable for deploy found";
+              LOG.error("{}\n ranked providers list: {}", errorMsg,
+                  rankCloudProvidersMessage.getRankedCloudProviders());
+              return new DeploymentException(errorMsg);
+            });
 
     LOG.debug("Selected Cloud Provider is: {}", chosenCp);
     return chosenCp;

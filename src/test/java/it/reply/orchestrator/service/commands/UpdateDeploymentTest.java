@@ -87,7 +87,7 @@ public class UpdateDeploymentTest {
     RankCloudProvidersMessage rankCloudProvidersMessage = new RankCloudProvidersMessage();
     rankCloudProvidersMessage.setDeploymentId(deployment.getId());
 
-    CloudProvider cp = new CloudProvider();
+    CloudProvider cp = new CloudProvider("provider-RECAS-BARI");
     Map<String, CloudProvider> map = new HashMap<>();
     map.put("name", cp);
     rankCloudProvidersMessage.setCloudProviders(map);
@@ -135,7 +135,7 @@ public class UpdateDeploymentTest {
     RankCloudProvidersMessage rankCloudProvidersMessage = new RankCloudProvidersMessage();
     rankCloudProvidersMessage.setDeploymentId(deployment.getId());
 
-    CloudProvider cp = new CloudProvider();
+    CloudProvider cp = new CloudProvider("provider-RECAS-BARI");
     Map<String, CloudProvider> map = new HashMap<>();
     map.put("name", cp);
     rankCloudProvidersMessage.setCloudProviders(map);
@@ -179,7 +179,7 @@ public class UpdateDeploymentTest {
     RankCloudProvidersMessage rankCloudProvidersMessage = new RankCloudProvidersMessage();
     rankCloudProvidersMessage.setDeploymentId(deployment.getId());
 
-    CloudProvider cp = new CloudProvider();
+    CloudProvider cp = new CloudProvider("provider-RECAS-BARI");
     Map<String, CloudProvider> map = new HashMap<>();
     map.put("name", cp);
     rankCloudProvidersMessage.setCloudProviders(map);

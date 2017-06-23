@@ -293,8 +293,7 @@ public class PrefilterCloudProvidersTest {
   }
 
   private Map<String, CloudProvider> getCloudProviders(Map<String, CloudService> cloudServices) {
-    CloudProvider cloudProvider = new CloudProvider();
-    cloudProvider.setName("name");
+    CloudProvider cloudProvider = new CloudProvider("provider-RECAS-BARI");
     cloudProvider.setCmdbProviderServices(cloudServices);
     Map<String, CloudProvider> cloudProviders = new HashMap<>();
     cloudProviders.put("key", cloudProvider);

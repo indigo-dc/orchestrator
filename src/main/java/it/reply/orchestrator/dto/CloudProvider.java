@@ -23,8 +23,11 @@ import it.reply.orchestrator.dto.cmdb.Provider;
 import it.reply.orchestrator.dto.cmdb.Type;
 
 import lombok.Data;
+import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -42,13 +45,16 @@ import java.util.stream.Collectors;
  *
  */
 @Data
+@NoArgsConstructor
+@RequiredArgsConstructor
 public class CloudProvider implements Serializable {
 
   private static final long serialVersionUID = 6559999818418491070L;
 
-  private String name;
+  @NonNull
   private String id;
 
+  @Nullable
   private Provider cmdbProviderData;
 
   @NonNull
@@ -56,13 +62,6 @@ public class CloudProvider implements Serializable {
 
   @NonNull
   private Map<String, List<ImageData>> cmdbProviderImages = new HashMap<>();
-
-  public CloudProvider() {
-  }
-
-  public CloudProvider(String id) {
-    this.id = id;
-  }
 
   /**
    * Add the images of the cloud service.

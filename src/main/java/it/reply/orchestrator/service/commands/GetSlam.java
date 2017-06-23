@@ -18,8 +18,6 @@ package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
-import it.reply.orchestrator.dto.slam.Service;
-import it.reply.orchestrator.dto.slam.Sla;
 import it.reply.orchestrator.service.SlamService;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,16 +36,22 @@ public class GetSlam extends BaseRankCloudProvidersCommand<GetSlam> {
         slamService.getCustomerPreferences(rankCloudProvidersMessage.getRequestedWithToken()));
 
     // Get VO (customer) preferences and SLAs (infer available Cloud Providers from it)
-    for (Sla sla : rankCloudProvidersMessage.getSlamPreferences().getSla()) {
-      // Create Cloud Provider, add to the list
-      CloudProvider cp = rankCloudProvidersMessage.getCloudProviders().computeIfAbsent(
-          sla.getCloudProviderId(), cloudProviderId -> new CloudProvider(cloudProviderId));
+    rankCloudProvidersMessage
+        .getSlamPreferences()
+        .getSla()
+        .forEach(sla -> {
+          // Create Cloud Provider, add to the list
+          CloudProvider cp = rankCloudProvidersMessage
+              .getCloudProviders()
+              .computeIfAbsent(sla.getCloudProviderId(),
+                  cloudProviderId -> new CloudProvider(cloudProviderId));
 
-      // Get provider's services
-      for (Service service : sla.getServices()) {
-        cp.getCmdbProviderServices().put(service.getServiceId(), null);
-      }
-    }
+          // Get provider's services
+          sla.getServices().forEach(
+              service -> cp
+                  .getCmdbProviderServices()
+                  .put(service.getServiceId(), null));
+        });
 
     return rankCloudProvidersMessage;
   }
