@@ -146,7 +146,6 @@ public class CmdbServiceImpl implements CmdbService {
   public CloudProvider fillCloudProviderInfo(CloudProvider cp) {
     // Get provider's data
     cp.setCmdbProviderData(getProviderById(cp.getId()));
-    cp.setName(cp.getCmdbProviderData().getId());
 
     Map<String, CloudService> allServices = getServicesByProvider(cp.getId()).stream()
         .collect(Collectors.toMap(CloudService::getId, Function.identity()));
