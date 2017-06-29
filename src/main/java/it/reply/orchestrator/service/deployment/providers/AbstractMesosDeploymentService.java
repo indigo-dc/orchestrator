@@ -70,7 +70,7 @@ public abstract class AbstractMesosDeploymentService<T extends MesosTask<T>, S e
    *           if some TOSCA properties are not of the right type
    */
   public T buildTask(DirectedMultigraph<NodeTemplate, RelationshipTemplate> graph,
-      NodeTemplate taskNode, String taskId) throws InvalidPropertyValueException {
+      NodeTemplate taskNode, String taskId) {
 
     T task = createInternalTaskRepresentation();
     task.setId(taskId);
@@ -137,25 +137,26 @@ public abstract class AbstractMesosDeploymentService<T extends MesosTask<T>, S e
 
     Capability dockerCapability = getHostCapability(graph, taskNode);
 
-    Optional<ScalarPropertyValue> cpusProperty =
-        toscaService.getTypedCapabilityPropertyByName(dockerCapability, "num_cpus");
-    if (cpusProperty.isPresent()) {
-      task.setCpus(toscaService.parseScalarPropertyValue(cpusProperty.get(), FloatType.class));
-    }
+    toscaService
+        .<ScalarPropertyValue>getTypedCapabilityPropertyByName(dockerCapability, "num_cpus")
+        .ifPresent(value -> {
+          Double numCpus = toscaService.parseScalarPropertyValue(value, FloatType.class);
+          task.setCpus(numCpus);
+        });
 
-    Optional<ScalarPropertyValue> memProperty =
-        toscaService.getTypedCapabilityPropertyByName(dockerCapability, "mem_size");
-    if (memProperty.isPresent()) {
-      Size memSize = toscaService.parseScalarPropertyValue(memProperty.get(), SizeType.class);
-      task.setMemSize(memSize.convert("MB")); // Mesos wants MB
-    }
+    toscaService
+        .<ScalarPropertyValue>getTypedCapabilityPropertyByName(dockerCapability, "mem_size")
+        .ifPresent(value -> {
+          Size memSize = toscaService.parseScalarPropertyValue(value, SizeType.class);
+          task.setMemSize(memSize.convert("MB")); // Mesos wants MB
+        });
 
     Optional<ListPropertyValue> volumesProperty =
         toscaService.getTypedCapabilityPropertyByName(dockerCapability, "volumes");
 
     List<String> containerVolumes = volumesProperty
-        .map(property -> toscaService.parseListPropertyValue(property,
-            item -> (ScalarPropertyValue) item))
+        .map(property -> toscaService
+            .parseListPropertyValue(property, item -> (ScalarPropertyValue) item))
         .orElseGet(Collections::emptyList)
         .stream()
         .map(ScalarPropertyValue::getValue)

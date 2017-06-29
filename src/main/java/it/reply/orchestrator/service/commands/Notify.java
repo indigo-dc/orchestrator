@@ -21,26 +21,30 @@ import it.reply.orchestrator.utils.WorkflowConstants;
 import it.reply.workflowmanager.spring.orchestrator.bpm.ejbcommands.BaseCommand;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @AllArgsConstructor(onConstructor = @__({ @Autowired }))
+@Slf4j
 public class Notify extends BaseCommand<Notify> {
 
   private CallbackService callbackService;
 
   @Override
-  protected ExecutionResults customExecute(CommandContext ctx) throws Exception {
-    String deploymentId = getParameter(ctx, WorkflowConstants.WF_PARAM_DEPLOYMENT_ID);
+  @Transactional
+  public ExecutionResults customExecute(CommandContext ctx) {
+    String deploymentId = getRequiredParameter(ctx, WorkflowConstants.WF_PARAM_DEPLOYMENT_ID);
     try {
       boolean result = callbackService.doCallback(deploymentId);
       return resultOccurred(result);
-    } catch (Exception ex) {
-      logger.error("Error tring to executing callback", ex);
+    } catch (RuntimeException ex) {
+      LOG.error("Error tring to executing callback for deployment {}", deploymentId, ex);
       return resultOccurred(false);
     }
   }

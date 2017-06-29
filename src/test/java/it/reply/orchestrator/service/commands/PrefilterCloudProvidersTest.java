@@ -26,6 +26,8 @@ import org.assertj.core.util.Maps;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.kie.api.executor.CommandContext;
+import org.kie.api.executor.ExecutionResults;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -33,6 +35,9 @@ import org.mockito.MockitoAnnotations;
 
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
+
+import it.reply.orchestrator.controller.ControllerTestUtils;
+import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
@@ -54,11 +59,12 @@ import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.util.TestUtil;
+import it.reply.orchestrator.utils.WorkflowConstants;
 
 public class PrefilterCloudProvidersTest {
 
   @InjectMocks
-  PrefilterCloudProviders prefilterCloudProviders;
+  private PrefilterCloudProviders prefilterCloudProviders;
 
   @Mock
   private DeploymentRepository deploymentRepository;
@@ -73,24 +79,28 @@ public class PrefilterCloudProvidersTest {
 
   @Test
   public void testBasicCustomExecuteSuccess() throws Exception {
-    DeploymentMessage generateDeployDm = TestUtil.generateDeployDm();
-    generateDeployDm.getDeployment().setDeploymentProvider(DeploymentProvider.HEAT);
+    Deployment deployment = ControllerTestUtils.createDeployment();
+    DeploymentMessage generateDeployDm = TestUtil.generateDeployDm(deployment);
+    deployment.setDeploymentProvider(DeploymentProvider.HEAT);
     RankCloudProvidersMessage rankCloudProvidersMessage = new RankCloudProvidersMessage();
     rankCloudProvidersMessage.setDeploymentId(generateDeployDm.getDeploymentId());
 
     Mockito.when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
-        .thenReturn(generateDeployDm.getDeployment());
-    Assert.assertEquals(rankCloudProvidersMessage,
-        prefilterCloudProviders.customExecute(rankCloudProvidersMessage));
+        .thenReturn(deployment);
+    ExecutionResults expectedResult = TestUtil.generateExpectedResult(true);
+
+    ExecutionResults result = prefilterCloudProviders.customExecute(new CommandContext(), rankCloudProvidersMessage);
+    TestUtil.assertBaseResults(expectedResult, result);
   }
 
 
   @Test
   public void testCustomExecuteSuccess() throws Exception {
-    DeploymentMessage generateDeployDm = TestUtil.generateDeployDm();
+    Deployment deployment = ControllerTestUtils.createDeployment();
+    DeploymentMessage generateDeployDm = TestUtil.generateDeployDm(deployment);
     String id = UUID.randomUUID().toString();
     RankCloudProvidersMessage rankCloudProvidersMessage =
-        generateRankCloudProvidersMessage(generateDeployDm, DeploymentProvider.CHRONOS);
+        generateRankCloudProvidersMessage(deployment, DeploymentProvider.CHRONOS);
 
     // set slam preferences
     SlamPreferences slamPreferences = getSlamPreferences(id);
@@ -112,23 +122,26 @@ public class PrefilterCloudProvidersTest {
 
     ArchiveRoot ar = new ArchiveRoot();
     Mockito.when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
-        .thenReturn(generateDeployDm.getDeployment());
+        .thenReturn(deployment);
     Mockito.when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
     Mockito
         .when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
             Mockito.anyObject()))
         .thenReturn(Maps.newHashMap(Boolean.FALSE, new HashMap<>()));
-    Assert.assertEquals(rankCloudProvidersMessage,
-        prefilterCloudProviders.customExecute(rankCloudProvidersMessage));
+    ExecutionResults expectedResult = TestUtil.generateExpectedResult(true);
+
+    ExecutionResults result = prefilterCloudProviders.customExecute(new CommandContext(), rankCloudProvidersMessage);
+    TestUtil.assertBaseResults(expectedResult, result);
 
   }
 
   @Test(expected = OrchestratorException.class)
   public void testCustomExecuteOrchestratorExceptionNoSinglePlacement() throws Exception {
     String id = UUID.randomUUID().toString();
-    DeploymentMessage generateDeployDm = TestUtil.generateDeployDm();
+    Deployment deployment = ControllerTestUtils.createDeployment();
+    DeploymentMessage generateDeployDm = TestUtil.generateDeployDm(deployment);
     RankCloudProvidersMessage rankCloudProvidersMessage =
-        generateRankCloudProvidersMessage(generateDeployDm, DeploymentProvider.CHRONOS);
+        generateRankCloudProvidersMessage(deployment, DeploymentProvider.CHRONOS);
 
     // set slam preferences
     SlamPreferences slamPreferences = getSlamPreferences(id);
@@ -144,23 +157,26 @@ public class PrefilterCloudProvidersTest {
     rankCloudProvidersMessage.setPlacementPolicies(placementPolicies);
     ArchiveRoot ar = new ArchiveRoot();
     Mockito.when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
-        .thenReturn(generateDeployDm.getDeployment());
+        .thenReturn(deployment);
     Mockito.when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
     Mockito
         .when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
             Mockito.anyObject()))
         .thenReturn(new HashMap<>());
-    Assert.assertEquals(rankCloudProvidersMessage,
-        prefilterCloudProviders.customExecute(rankCloudProvidersMessage));
+    ExecutionResults expectedResult = TestUtil.generateExpectedResult(true);
+
+    ExecutionResults result = prefilterCloudProviders.customExecute(new CommandContext(), rankCloudProvidersMessage);
+    TestUtil.assertBaseResults(expectedResult, result);
 
   }
 
   @Test(expected = OrchestratorException.class)
   public void testCustomExecuteOrchestratorExceptioNoSLAWithId() throws Exception {
     String id = UUID.randomUUID().toString();
-    DeploymentMessage generateDeployDm = TestUtil.generateDeployDm();
+    Deployment deployment = ControllerTestUtils.createDeployment();
+    DeploymentMessage generateDeployDm = TestUtil.generateDeployDm(deployment);
     RankCloudProvidersMessage rankCloudProvidersMessage =
-        generateRankCloudProvidersMessage(generateDeployDm, DeploymentProvider.CHRONOS);
+        generateRankCloudProvidersMessage(deployment, DeploymentProvider.CHRONOS);
 
     // set slam preferences
     SlamPreferences slamPreferences = getSlamPreferences(id);
@@ -175,23 +191,26 @@ public class PrefilterCloudProvidersTest {
     rankCloudProvidersMessage.setPlacementPolicies(placementPolicies);
     ArchiveRoot ar = new ArchiveRoot();
     Mockito.when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
-        .thenReturn(generateDeployDm.getDeployment());
+        .thenReturn(deployment);
     Mockito.when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
     Mockito
         .when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
             Mockito.anyObject()))
         .thenReturn(new HashMap<>());
-    Assert.assertEquals(rankCloudProvidersMessage,
-        prefilterCloudProviders.customExecute(rankCloudProvidersMessage));
+    ExecutionResults expectedResult = TestUtil.generateExpectedResult(true);
+
+    ExecutionResults result = prefilterCloudProviders.customExecute(new CommandContext(), rankCloudProvidersMessage);
+    TestUtil.assertBaseResults(expectedResult, result);
 
   }
 
   @Test(expected = OrchestratorException.class)
   public void testCustomExecuteOrchestratorExceptioNoSLAPlacement() throws Exception {
     String id = UUID.randomUUID().toString();
-    DeploymentMessage generateDeployDm = TestUtil.generateDeployDm();
+    Deployment deployment = ControllerTestUtils.createDeployment();
+    DeploymentMessage generateDeployDm = TestUtil.generateDeployDm(deployment);
     RankCloudProvidersMessage rankCloudProvidersMessage =
-        generateRankCloudProvidersMessage(generateDeployDm, DeploymentProvider.CHRONOS);
+        generateRankCloudProvidersMessage(deployment, DeploymentProvider.CHRONOS);
 
     // set slam preferences
     SlamPreferences slamPreferences = getSlamPreferences(id);
@@ -204,23 +223,26 @@ public class PrefilterCloudProvidersTest {
 
     ArchiveRoot ar = new ArchiveRoot();
     Mockito.when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
-        .thenReturn(generateDeployDm.getDeployment());
+        .thenReturn(deployment);
     Mockito.when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
     Mockito
         .when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
             Mockito.anyObject()))
         .thenReturn(new HashMap<>());
-    Assert.assertEquals(rankCloudProvidersMessage,
-        prefilterCloudProviders.customExecute(rankCloudProvidersMessage));
+    ExecutionResults expectedResult = TestUtil.generateExpectedResult(true);
+
+    ExecutionResults result = prefilterCloudProviders.customExecute(new CommandContext(), rankCloudProvidersMessage);
+    TestUtil.assertBaseResults(expectedResult, result);
 
   }
 
   @Test
   public void testCustomExecuteRemoveCloudService() throws Exception {
     String id = UUID.randomUUID().toString();
-    DeploymentMessage generateDeployDm = TestUtil.generateDeployDm();
+    Deployment deployment = ControllerTestUtils.createDeployment();
+    DeploymentMessage generateDeployDm = TestUtil.generateDeployDm(deployment);
     RankCloudProvidersMessage rankCloudProvidersMessage =
-        generateRankCloudProvidersMessage(generateDeployDm, DeploymentProvider.HEAT);
+        generateRankCloudProvidersMessage(deployment, DeploymentProvider.HEAT);
 
     // set slam preferences
     SlamPreferences slamPreferences = getSlamPreferences(id);
@@ -232,7 +254,7 @@ public class PrefilterCloudProvidersTest {
     rankCloudProvidersMessage.setCloudProviders(cloudProviders);
 
     Mockito.when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
-        .thenReturn(generateDeployDm.getDeployment());
+        .thenReturn(deployment);
 
     Mockito
         .when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
@@ -240,18 +262,20 @@ public class PrefilterCloudProvidersTest {
         .thenReturn(
             Maps.newHashMap(Boolean.FALSE, Maps.newHashMap(new NodeTemplate(), new ImageData())));
 
-    Assert.assertEquals(rankCloudProvidersMessage,
-        prefilterCloudProviders.customExecute(rankCloudProvidersMessage));
+    ExecutionResults expectedResult = TestUtil.generateExpectedResult(true);
+
+    ExecutionResults result = prefilterCloudProviders.customExecute(new CommandContext(), rankCloudProvidersMessage);
+    TestUtil.assertBaseResults(expectedResult, result);
 
   }
 
 
 
-  private RankCloudProvidersMessage generateRankCloudProvidersMessage(DeploymentMessage dm,
+  private RankCloudProvidersMessage generateRankCloudProvidersMessage(Deployment deployment,
       DeploymentProvider dp) {
-    dm.getDeployment().setDeploymentProvider(dp);
+    deployment.setDeploymentProvider(dp);
     RankCloudProvidersMessage rankCloudProvidersMessage = new RankCloudProvidersMessage();
-    rankCloudProvidersMessage.setDeploymentId(dm.getDeploymentId());
+    rankCloudProvidersMessage.setDeploymentId(deployment.getId());
     return rankCloudProvidersMessage;
   }
 

@@ -26,9 +26,7 @@ import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.model.topology.RelationshipTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.normative.IntegerType;
-import alien4cloud.tosca.normative.InvalidPropertyValueException;
 import alien4cloud.tosca.normative.StringType;
-import alien4cloud.tosca.parser.ParsingException;
 
 import it.reply.orchestrator.annotation.DeploymentProviderQualifier;
 import it.reply.orchestrator.config.properties.MarathonProperties;
@@ -72,7 +70,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -109,8 +106,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
         marathonProperties.getUsername(), marathonProperties.getPassword());
   }
 
-  protected Group createGroup(Deployment deployment)
-      throws ToscaException, ParsingException, IOException, InvalidPropertyValueException {
+  protected Group createGroup(Deployment deployment) {
     ArchiveRoot ar =
         toscaService.prepareTemplate(deployment.getTemplate(), deployment.getParameters());
     Map<String, NodeTemplate> nodes = ar.getTopology().getNodeTemplates();
@@ -122,11 +118,13 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     TopologicalOrderIterator<NodeTemplate, RelationshipTemplate> orderIterator =
         new TopologicalOrderIterator<>(graph);
 
-    List<NodeTemplate> orderedMarathonApps = CommonUtils.iteratorToStream(orderIterator)
+    List<NodeTemplate> orderedMarathonApps = CommonUtils
+        .iteratorToStream(orderIterator)
         .filter(node -> toscaService.isOfToscaType(node, ToscaConstants.Nodes.MARATHON))
         .collect(Collectors.toList());
 
-    Map<String, Resource> resources = deployment.getResources()
+    Map<String, Resource> resources = deployment
+        .getResources()
         .stream()
         .filter(resource -> toscaService.isOfToscaType(resource,
             ToscaConstants.Nodes.MARATHON))
@@ -151,52 +149,38 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
 
   @Override
   public boolean doDeploy(DeploymentMessage deploymentMessage) {
-    Deployment deployment = deploymentMessage.getDeployment();
+    Deployment deployment = getDeployment(deploymentMessage);
 
-    try {
+    Group group = createGroup(deployment);
 
-      Group group = createGroup(deployment);
+    group.setId(UUID.randomUUID().toString());
 
-      group.setId(UUID.randomUUID().toString());
+    LOG.info("Creating Marathon App Group for deployment {} with definition:\n{}",
+        deployment.getId(), group);
+    getMarathonClient().createGroup(group);
+    deployment.setEndpoint(group.getId());
+    return true;
 
-      LOG.info("Creating Marathon App Group for deployment {} with definition:\n{}",
-          deployment.getId(), group);
-      getMarathonClient().createGroup(group);
-      deployment.setEndpoint(group.getId());
-      return true;
-
-    } catch (ToscaException | ParsingException | IOException | InvalidPropertyValueException
-        | MarathonException ex) {
-      LOG.error("Failed to deploy Marathon apps <{}>", deployment.getId(), ex);
-      updateOnError(deployment.getId(), ex);
-      return false;
-    }
   }
 
   @Override
   public boolean isDeployed(DeploymentMessage deploymentMessage) throws DeploymentException {
-    Deployment deployment = deploymentMessage.getDeployment();
-    try {
-      String groupId = deployment.getEndpoint();
-      // final Marathon client = getMarathonClient();
-      // Group group = client.getGroup(groupId);
-      // TMP TODO remove it and use an use an update marathon version
-      Group group = this.getPolulatedGroup(groupId);
-      ///////////////////////////////////////////////////////////////
-      Collection<App> apps = Optional.ofNullable(group.getApps()).orElseGet(ArrayList::new);
-      LOG.debug("Marathon App Group for deployment {} current status:\n{}", deployment.getId(),
-          group);
+    Deployment deployment = getDeployment(deploymentMessage);
+    String groupId = deployment.getEndpoint();
+    // final Marathon client = getMarathonClient();
+    // Group group = client.getGroup(groupId);
+    // TMP TODO remove it and use an use an update marathon version
+    Group group = this.getPolulatedGroup(groupId);
+    ///////////////////////////////////////////////////////////////
+    Collection<App> apps = Optional.ofNullable(group.getApps()).orElseGet(ArrayList::new);
+    LOG.debug("Marathon App Group for deployment {} current status:\n{}", deployment.getId(),
+        group);
 
-      // if no Mesos deployments are left -> deploy is done
-      boolean isDeployed = apps.stream().allMatch(app -> isAppDeployed(app));
-      LOG.debug("Marathon App Group for deployment {} is deployed? {}", deployment.getId(),
-          isDeployed);
-      return isDeployed;
-    } catch (Exception ex) {
-      LOG.error("Error polling Marathon for deployment <{}>", deployment.getId(), ex);
-      updateOnError(deployment.getId(), ex);
-      return false;
-    }
+    // if no Mesos deployments are left -> deploy is done
+    boolean isDeployed = apps.stream().allMatch(app -> isAppDeployed(app));
+    LOG.debug("Marathon App Group for deployment {} is deployed? {}", deployment.getId(),
+        isDeployed);
+    return isDeployed;
   }
 
   @Deprecated
@@ -233,122 +217,49 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   }
 
   @Override
-  public void finalizeDeploy(DeploymentMessage deploymentMessage, boolean deployed) {
-    if (deployed) {
-      try {
-
-        // Update deployment status
-        updateOnSuccess(deploymentMessage.getDeploymentId());
-      } catch (Exception ex) {
-        LOG.error("Error finalizing deployment", ex);
-        // Update deployment status
-        updateOnError(deploymentMessage.getDeploymentId(), ex);
-      }
-    } else {
-      try {
-        Deployment deployment = deploymentMessage.getDeployment();
-        String prefix = String.format("/%s/", deployment.getEndpoint());
-        Map<String, Resource> resources = deployment.getResources()
-            .stream()
-            .filter(resource -> toscaService.isOfToscaType(resource,
-                ToscaConstants.Nodes.MARATHON))
-            .collect(
-                Collectors.toMap(resource -> prefix + resource.getIaasId(), Function.identity()));
-
-        String groupId = deployment.getEndpoint();
-        Group group = this.getPolulatedGroup(groupId);
-
-        List<App> failedApps = Optional.ofNullable(group.getApps())
-            .orElseGet(Collections::emptyList)
-            .stream()
-            .filter(app -> !this.isAppDeployed(app))
-            .collect(Collectors.toList());
-
-        List<String> failedAppsMessage = new ArrayList<>();
-        for (App app : failedApps) {
-          Optional.ofNullable(app.getLastTaskFailure())
-              .map(failure -> failure.getMessage())
-              .ifPresent(appMessage -> {
-                Resource resource = resources.get(app.getId());
-                failedAppsMessage.add(String.format(
-                    "%n - App <%s> with id <%s> (Marathon id %s): %s", resource.getToscaNodeName(),
-                    resource.getId(), resource.getIaasId(), appMessage));
-              });
-        }
-
-        if (failedAppsMessage.isEmpty()) {
-          updateOnError(deploymentMessage.getDeploymentId());
-        } else {
-          StringBuilder message = new StringBuilder("Some Application failed:");
-          failedAppsMessage.forEach(message::append);
-          updateOnError(deploymentMessage.getDeploymentId(), message.toString());
-        }
-      } catch (Exception ex) {
-        LOG.error("Error finalizing deployment", ex);
-        updateOnError(deploymentMessage.getDeploymentId());
-      }
-    }
-
-    // TODO (?) Update resources attributes on DB?
-  }
-
-  @Override
   public boolean doUpdate(DeploymentMessage deploymentMessage, String template) {
     throw new UnsupportedOperationException("Marathon app deployments do not support update.");
   }
 
   @Override
   public boolean doUndeploy(DeploymentMessage deploymentMessage) {
-    Deployment deployment = deploymentMessage.getDeployment();
-    try {
-      String groupId = deployment.getEndpoint();
-      getMarathonClient().deleteGroup(groupId, true);
+    Deployment deployment = getDeployment(deploymentMessage);
+
+    String groupId = deployment.getEndpoint();
+    if (groupId == null) {
       return true;
-    } catch (Exception ex) {
-      if (ex instanceof MarathonException
-          && HttpStatus.NOT_FOUND.value() == ((MarathonException) ex).getStatus()) {
-        LOG.info("Marathon Group <{}> of deployment <{}> was already undeployed",
-            deployment.getEndpoint(), deployment.getId());
-        return true;
-      }
-      LOG.error("Failed to delete Marathon deployment <{}>", deployment.getId(), ex);
-      updateOnError(deployment.getId(), ex);
-      return false;
     }
+
+    try {
+      getMarathonClient().deleteGroup(groupId, true);
+    } catch (MarathonException ex) {
+      if (HttpStatus.NOT_FOUND.value() != ex.getStatus()) {
+        throw ex;
+      }
+    }
+    return true;
   }
 
   @Override
   public boolean isUndeployed(DeploymentMessage deploymentMessage) throws DeploymentException {
     boolean isUndeployed = false;
-    Deployment deployment = deploymentMessage.getDeployment();
+    Deployment deployment = getDeployment(deploymentMessage);
     String groupId = deployment.getEndpoint();
+    if (groupId == null) {
+      return true;
+    }
     try {
       getMarathonClient().getGroup(groupId);
     } catch (MarathonException ex) {
       if (HttpStatus.NOT_FOUND.value() == ex.getStatus()) {
         isUndeployed = true;
       } else {
-        LOG.error("Error polling Marathon for deployment <{}>", deployment.getId(), ex);
-        updateOnError(deployment.getId(), ex);
+        throw ex;
       }
     }
     LOG.debug("Marathon App Group for deployment {} is undeployed? {}", deployment.getId(),
         isUndeployed);
     return isUndeployed;
-
-  }
-
-  @Override
-  public void finalizeUndeploy(DeploymentMessage deploymentMessage, boolean undeployed) {
-    if (undeployed) {
-      updateOnSuccess(deploymentMessage.getDeploymentId());
-    } else {
-      updateOnError(deploymentMessage.getDeploymentId());
-    }
-
-    // TODO (?) Update resources attributes on DB?
-
-    return;
 
   }
 
@@ -359,7 +270,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
 
   @Override
   public MarathonApp buildTask(DirectedMultigraph<NodeTemplate, RelationshipTemplate> graph,
-      NodeTemplate taskNode, String taskId) throws InvalidPropertyValueException {
+      NodeTemplate taskNode, String taskId) {
     MarathonApp app = super.buildTask(graph, taskNode, taskId);
 
     Optional<ComplexPropertyValue> envVars =
@@ -383,7 +294,8 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
               .stream()
               .map(this::generatePortMapping)
               .collect(Collectors.toList());
-      app.getContainer()
+      app
+          .getContainer()
           .orElseThrow(() -> new RuntimeException(
               "there are ports to publish but no container is present in Marathon DTO"))
           .setPortMappings(portMapping);
@@ -402,7 +314,8 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     app.setUris(marathonTask.getUris());
     app.setLabels(marathonTask.getLabels());
     app.setEnv(new HashMap<>(marathonTask.getEnv()));
-    marathonTask.getContainer()
+    marathonTask
+        .getContainer()
         .ifPresent(mesosContainer -> app.setContainer(generateContainer(mesosContainer)));
     //// HARDCODED BITS //////
     app.setInstances(1);
@@ -414,14 +327,16 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     Container container = new Container();
     if (mesosContainer.getType() == MesosContainer.Type.DOCKER) {
       container.setType(MesosContainer.Type.DOCKER.getName());
-      container.setVolumes(mesosContainer.getVolumes()
+      container.setVolumes(mesosContainer
+          .getVolumes()
           .stream()
           .map(this::generateVolume)
           .collect(Collectors.toList()));
       Docker docker = new Docker();
       container.setDocker(docker);
       docker.setImage(mesosContainer.getImage());
-      List<Port> ports = mesosContainer.getPortMappings()
+      List<Port> ports = mesosContainer
+          .getPortMappings()
           .stream()
           .map(this::generatePort)
           .collect(Collectors.toList());
@@ -442,35 +357,27 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     Map<String, ScalarPropertyValue> values = toscaService
         .parseComplexPropertyValue(portMappingProperties, value -> (ScalarPropertyValue) value);
 
-    try {
-      ScalarPropertyValue sourcePortProperty =
-          CommonUtils.getFromOptionalMap(values, "source").orElseThrow(
-              () -> new ToscaException("source port in 'publish_ports' property must be provided"));
+    ScalarPropertyValue sourcePortProperty =
+        CommonUtils
+            .getFromOptionalMap(values, "source")
+            .orElseThrow(() -> new ToscaException(
+                "source port in 'publish_ports' property must be provided"));
 
-      Long sourcePortVaule =
-          toscaService.parseScalarPropertyValue(sourcePortProperty, IntegerType.class);
-      MesosPortMapping portMapping = new MesosPortMapping(Ints.checkedCast(sourcePortVaule));
+    Long sourcePortVaule =
+        toscaService.parseScalarPropertyValue(sourcePortProperty, IntegerType.class);
+    MesosPortMapping portMapping = new MesosPortMapping(Ints.checkedCast(sourcePortVaule));
 
-      Optional<ScalarPropertyValue> targetPortProperty =
-          CommonUtils.getFromOptionalMap(values, "target");
-      if (targetPortProperty.isPresent()) {
-        Long targetPortVaule =
-            toscaService.parseScalarPropertyValue(targetPortProperty.get(), IntegerType.class);
-        portMapping.setServicePort(Ints.checkedCast(targetPortVaule));
-      }
+    CommonUtils.getFromOptionalMap(values, "target").ifPresent(value -> {
+      Long targetPortVaule = toscaService.parseScalarPropertyValue(value, IntegerType.class);
+      portMapping.setServicePort(Ints.checkedCast(targetPortVaule));
+    });
 
-      Optional<ScalarPropertyValue> protocolProperty =
-          CommonUtils.getFromOptionalMap(values, "protocol");
-      if (protocolProperty.isPresent()) {
-        String protocolVaule =
-            toscaService.parseScalarPropertyValue(protocolProperty.get(), StringType.class);
-        Protocol protocol = EnumUtils.fromNameOrThrow(Protocol.class, protocolVaule);
-        portMapping.setProtocol(protocol);
-      }
-      return portMapping;
-    } catch (InvalidPropertyValueException ex) {
-      throw new ToscaException("Error parsing port mapping", ex);
-    }
+    CommonUtils.getFromOptionalMap(values, "protocol").ifPresent(value -> {
+      String protocolVaule = toscaService.parseScalarPropertyValue(value, StringType.class);
+      Protocol protocol = EnumUtils.fromNameOrThrow(Protocol.class, protocolVaule);
+      portMapping.setProtocol(protocol);
+    });
+    return portMapping;
   }
 
   private Port generatePort(MesosPortMapping portMapping) {
@@ -491,7 +398,8 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     }
 
     // split the volumeMount string and extract only the non blank strings
-    List<String> volumeMountSegments = Arrays.asList(containerVolumeMount.split(":"))
+    List<String> volumeMountSegments = Arrays
+        .asList(containerVolumeMount.split(":"))
         .stream()
         .sequential()
         .filter(StringUtils::isNotBlank)
@@ -518,5 +426,52 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     volume.setContainerPath(volumeMountSegments.get(1));
     volume.setMode(volumeMountSegments.get(2).toUpperCase(Locale.US));
     return volume;
+  }
+
+  @Override
+  public Optional<String> getAdditionalErrorInfoInternal(DeploymentMessage deploymentMessage) {
+    Deployment deployment = getDeployment(deploymentMessage);
+    String prefix = String.format("/%s/", deployment.getEndpoint());
+    Map<String, Resource> resources = deployment
+        .getResources()
+        .stream()
+        .filter(resource -> toscaService.isOfToscaType(resource,
+            ToscaConstants.Nodes.MARATHON))
+        .collect(
+            Collectors.toMap(resource -> prefix + resource.getIaasId(), Function.identity()));
+
+    String groupId = deployment.getEndpoint();
+    if (groupId == null) {
+      return Optional.empty();
+    }
+    Group group = getPolulatedGroup(groupId);
+
+    List<App> failedApps = Optional
+        .ofNullable(group.getApps())
+        .orElseGet(Collections::emptyList)
+        .stream()
+        .filter(app -> !this.isAppDeployed(app))
+        .collect(Collectors.toList());
+
+    List<String> failedAppsMessage = new ArrayList<>();
+    for (App app : failedApps) {
+      Optional
+          .ofNullable(app.getLastTaskFailure())
+          .map(failure -> failure.getMessage())
+          .ifPresent(appMessage -> {
+            Resource resource = resources.get(app.getId());
+            failedAppsMessage.add(String.format(
+                "%n - App <%s> with id <%s> (Marathon id %s): %s", resource.getToscaNodeName(),
+                resource.getId(), resource.getIaasId(), appMessage));
+          });
+    }
+
+    if (failedAppsMessage.isEmpty()) {
+      return Optional.empty();
+    } else {
+      StringBuilder message = new StringBuilder("Some Application failed:");
+      failedAppsMessage.forEach(message::append);
+      return Optional.of(message.toString());
+    }
   }
 }

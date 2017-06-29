@@ -57,7 +57,6 @@ public class Resource extends AbstractResourceEntity {
   @Column(name = "iaasId", length = 500)
   private String iaasId;
 
-  // @Enumerated(EnumType.STRING)
   @Column(name = "toscaNodeType")
   private String toscaNodeType;
 

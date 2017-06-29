@@ -335,7 +335,7 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
           new ResponseWrapper(request, response, getMaxPayloadLength(), responseTime)));
     } catch (IOException ex) {
       // shouldn't happen
-      LOG.error("Error logging response {} for request ", response, request, ex);
+      LOG.error("Error logging response {} for request {}", response, request, ex);
     }
   }
 

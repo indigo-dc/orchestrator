@@ -26,10 +26,6 @@ public class OrchestratorException extends RuntimeException {
 
   private static final long serialVersionUID = -8879317682949851699L;
 
-  public OrchestratorException() {
-    super();
-  }
-
   public OrchestratorException(String message) {
     super(message);
   }

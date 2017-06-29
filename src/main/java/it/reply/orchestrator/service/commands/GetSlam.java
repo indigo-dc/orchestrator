@@ -20,8 +20,11 @@ import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.service.SlamService;
 
+import org.kie.api.executor.CommandContext;
+import org.kie.api.executor.ExecutionResults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class GetSlam extends BaseRankCloudProvidersCommand<GetSlam> {
@@ -30,7 +33,8 @@ public class GetSlam extends BaseRankCloudProvidersCommand<GetSlam> {
   private SlamService slamService;
 
   @Override
-  protected RankCloudProvidersMessage customExecute(
+  @Transactional
+  public ExecutionResults customExecute(CommandContext ctx,
       RankCloudProvidersMessage rankCloudProvidersMessage) {
     rankCloudProvidersMessage.setSlamPreferences(
         slamService.getCustomerPreferences(rankCloudProvidersMessage.getRequestedWithToken()));
@@ -47,13 +51,15 @@ public class GetSlam extends BaseRankCloudProvidersCommand<GetSlam> {
                   cloudProviderId -> new CloudProvider(cloudProviderId));
 
           // Get provider's services
-          sla.getServices().forEach(
-              service -> cp
-                  .getCmdbProviderServices()
-                  .put(service.getServiceId(), null));
+          sla
+              .getServices()
+              .forEach(
+                  service -> cp
+                      .getCmdbProviderServices()
+                      .put(service.getServiceId(), null));
         });
 
-    return rankCloudProvidersMessage;
+    return resultOccurred(rankCloudProvidersMessage.getSlamPreferences());
   }
 
   @Override

@@ -16,6 +16,8 @@
 
 package it.reply.orchestrator.exception.http;
 
+import org.springframework.http.HttpStatus;
+
 /**
  * Exception thrown when the client request is bad (i.e. wrong information, wrong resource status,
  * etc)
@@ -28,10 +30,10 @@ public class BadRequestException extends OrchestratorApiException {
   private static final long serialVersionUID = 1L;
 
   public BadRequestException(String message) {
-    super(message);
+    super(HttpStatus.BAD_REQUEST, message);
   }
 
   public BadRequestException(String message, Throwable ex) {
-    super(message, ex);
+    super(HttpStatus.BAD_REQUEST, message, ex);
   }
 }

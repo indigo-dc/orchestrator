@@ -17,10 +17,8 @@
 package it.reply.orchestrator.exception;
 
 import it.reply.orchestrator.dto.common.Error;
-import it.reply.orchestrator.exception.http.BadRequestException;
-import it.reply.orchestrator.exception.http.ConflictException;
-import it.reply.orchestrator.exception.http.NotFoundException;
-import it.reply.orchestrator.exception.service.ToscaException;
+import it.reply.orchestrator.exception.http.OrchestratorApiException;
+import it.reply.orchestrator.utils.CommonUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,63 +32,25 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import java.util.Optional;
-
 @ControllerAdvice
 @Slf4j
 public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHandler {
 
   /**
-   * Not Found exception handler.
+   * {@link OrchestratorApiException} handler.
    * 
    * @param ex
    *          the exception
    * @return a {@code ResponseEntity} instance
    */
   @ExceptionHandler
-  public ResponseEntity<Object> handleException(NotFoundException ex, WebRequest request) {
-    return handleExceptionInternal(ex, HttpStatus.NOT_FOUND, request);
+  public ResponseEntity<Object> handleException(OrchestratorApiException ex, WebRequest request) {
+    return handleExceptionInternal(ex, ex.getHttpStatus(), request);
   }
 
   /**
-   * Conflict exception handler.
-   * 
-   * @param ex
-   *          the exception
-   * @return a {@code ResponseEntity} instance
-   */
-  @ExceptionHandler
-  public ResponseEntity<Object> handleException(ConflictException ex, WebRequest request) {
-    return handleExceptionInternal(ex, HttpStatus.CONFLICT, request);
-  }
-
-  /**
-   * Bad Request exception handler.
-   * 
-   * @param ex
-   *          the exception
-   * @return a {@code ResponseEntity} instance
-   */
-  @ExceptionHandler
-  public ResponseEntity<Object> handleException(BadRequestException ex, WebRequest request) {
-    return logAndHandleExceptionInternal(ex, HttpStatus.BAD_REQUEST, request);
-  }
-
-  /**
-   * Invalid TOSCA exception handler.
-   * 
-   * @param ex
-   *          the exception
-   * @return a {@code ResponseEntity} instance
-   */
-  @ExceptionHandler
-  public ResponseEntity<Object> handleException(ToscaException ex, WebRequest request) {
-    return logAndHandleExceptionInternal(ex, HttpStatus.BAD_REQUEST, request);
-  }
-
-  /**
-   * OAuth2Exception exception handler. This handler will just re-throw the exception and will let
-   * the {@link AbstractOAuth2SecurityExceptionHandler} to handle it.
+   * OAuth2Exception exception handler. This handler will just re-throw the exception and to let
+   * the {@link AbstractOAuth2SecurityExceptionHandler} handle it.
    * 
    * @param ex
    *          the exception
@@ -115,30 +75,25 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
     if (ex.getCause() instanceof OAuth2Exception) {
       return this.handleException((OAuth2Exception) ex.getCause(), request);
     } else {
-      return logAndHandleExceptionInternal(ex, HttpStatus.INTERNAL_SERVER_ERROR, request);
+      return handleExceptionInternal(ex, HttpStatus.INTERNAL_SERVER_ERROR, request);
     }
   }
 
   @Override
   protected ResponseEntity<Object> handleExceptionInternal(Exception ex, Object body,
       HttpHeaders headers, HttpStatus status, WebRequest request) {
-    final HttpHeaders headersToWrite = Optional.ofNullable(headers).orElseGet(HttpHeaders::new);
-    final Object bodyToWrite =
-        Optional
-          .ofNullable(body)
-          .orElseGet(() -> Error.builder().exception(ex).status(status).build());
+    final HttpHeaders headersToWrite = CommonUtils.notNullOrDefaultValue(headers, HttpHeaders::new);
+    final Object bodyToWrite = CommonUtils.notNullOrDefaultValue(body,
+        () -> CommonUtils.checkNotNull(Error.builder().exception(ex).status(status).build()));
     return super.handleExceptionInternal(ex, bodyToWrite, headersToWrite, status, request);
   }
 
   protected ResponseEntity<Object> handleExceptionInternal(Exception ex, HttpStatus status,
       WebRequest request) {
+    if (status != HttpStatus.NOT_FOUND && status != HttpStatus.CONFLICT) {
+      LOG.error("Error handling request {}", request, ex);
+    }
     return handleExceptionInternal(ex, null, null, status, request);
-  }
-
-  protected ResponseEntity<Object> logAndHandleExceptionInternal(Exception ex, HttpStatus status,
-      WebRequest request) {
-    LOG.error("Error handling request {}", request, ex);
-    return handleExceptionInternal(ex, status, request);
   }
 
 }

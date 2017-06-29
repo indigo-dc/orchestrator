@@ -27,6 +27,10 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Iterator;
 
 @Service
 @Slf4j
@@ -36,18 +40,26 @@ public class DeploymentStatusHelperImpl implements DeploymentStatusHelper {
   private DeploymentRepository deploymentRepository;
 
   @Override
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void updateOnError(String deploymentUuid, String message, Throwable throwable) {
     updateOnError(deploymentUuid, String.format("%s: %s", message, throwable.getMessage()));
   }
 
   @Override
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void updateOnError(String deploymentUuid, Throwable throwable) {
     updateOnError(deploymentUuid, throwable.getMessage());
   }
 
   @Override
+  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void updateOnError(String deploymentUuid, String message) {
     Deployment deployment = deploymentRepository.findOne(deploymentUuid);
+    if (deployment == null) {
+      LOG.error("Unable to set deployment <{}> on error with message {} as it has been deleted",
+          deploymentUuid, message);
+      return;
+    }
     switch (deployment.getStatus()) {
       case CREATE_FAILED:
       case UPDATE_FAILED:
@@ -56,21 +68,24 @@ public class DeploymentStatusHelperImpl implements DeploymentStatusHelper {
             deployment.getStatus());
         break;
       case CREATE_IN_PROGRESS:
+      case CREATE_COMPLETE:
         deployment.setStatus(Status.CREATE_FAILED);
         break;
       case DELETE_IN_PROGRESS:
+      case DELETE_COMPLETE:
         deployment.setStatus(Status.DELETE_FAILED);
         break;
       case UPDATE_IN_PROGRESS:
+      case UPDATE_COMPLETE:
         deployment.setStatus(Status.UPDATE_FAILED);
         break;
       default:
         LOG.error("updateOnError: unsupported deployment status: {}. Setting status to {}",
-            deployment.getStatus(), Status.UNKNOWN.toString());
+            deployment.getStatus(), Status.UNKNOWN);
         deployment.setStatus(Status.UNKNOWN);
         break;
     }
-    deployment.setTask(Task.NONE);
+    updateResources(deployment, deployment.getStatus());
     if (message != null) {
       deployment.setStatusReason(message);
     }
@@ -80,76 +95,89 @@ public class DeploymentStatusHelperImpl implements DeploymentStatusHelper {
   @Override
   public void updateOnSuccess(String deploymentUuid) {
     Deployment deployment = deploymentRepository.findOne(deploymentUuid);
+    //// TODO will it be ever removed?
+    if (deployment == null) {
+      return;
+    }
     if (deployment.getStatus() == Status.DELETE_IN_PROGRESS) {
       deploymentRepository.delete(deployment);
-    } else {
-      switch (deployment.getStatus()) {
-        case CREATE_COMPLETE:
-        case DELETE_COMPLETE:
-        case UPDATE_COMPLETE:
-          LOG.warn("Deployment < {} > was already in {} state.", deploymentUuid,
-              deployment.getStatus());
-          break;
-        case CREATE_IN_PROGRESS:
-          deployment.setStatus(Status.CREATE_COMPLETE);
-          updateResources(deployment, Status.CREATE_COMPLETE);
-          break;
-        case UPDATE_IN_PROGRESS:
-          deployment.setStatus(Status.UPDATE_COMPLETE);
-          updateResources(deployment, Status.UPDATE_COMPLETE);
-          break;
-        default:
-          LOG.error("updateOnSuccess: unsupported deployment status: {}. Setting status to {}",
-              deployment.getStatus(), Status.UNKNOWN.toString());
-          deployment.setStatus(Status.UNKNOWN);
-          updateResources(deployment, Status.UNKNOWN);
-          break;
-      }
-      deployment.setTask(Task.NONE);
-      deployment.setStatusReason(null);
-      deploymentRepository.save(deployment);
+      return;
     }
+    ///////////////////////////////
+    switch (deployment.getStatus()) {
+      case CREATE_COMPLETE:
+      case DELETE_COMPLETE:
+      case UPDATE_COMPLETE:
+        LOG.warn("Deployment < {} > was already in {} state.", deploymentUuid,
+            deployment.getStatus());
+        break;
+      case CREATE_IN_PROGRESS:
+        deployment.setStatus(Status.CREATE_COMPLETE);
+        break;
+      case UPDATE_IN_PROGRESS:
+        deployment.setStatus(Status.UPDATE_COMPLETE);
+        break;
+      default:
+        LOG.error("updateOnSuccess: unsupported deployment status: {}. Setting status to {}",
+            deployment.getStatus(), Status.UNKNOWN.toString());
+        deployment.setStatus(Status.UNKNOWN);
+        break;
+    }
+    updateResources(deployment, deployment.getStatus());
+    deployment.setTask(Task.NONE);
+    deployment.setStatusReason(null);
+    deploymentRepository.save(deployment);
   }
 
   @Override
   public void updateResources(Deployment deployment, Status status) {
-
-    for (Resource resource : deployment.getResources()) {
-      if (status.equals(Status.CREATE_COMPLETE) || status.equals(Status.UPDATE_COMPLETE)) {
-        switch (resource.getState()) {
-          case INITIAL:
-          case CREATING:
-          case CREATED:
-          case CONFIGURING:
-          case CONFIGURED:
-          case STARTING:
+    Iterator<Resource> resourceIt = deployment.getResources().iterator();
+    while (resourceIt.hasNext()) {
+      Resource resource = resourceIt.next();
+      switch (status) {
+        case CREATE_COMPLETE:
+          resource.setState(NodeStates.STARTED);
+          break;
+        case UPDATE_COMPLETE:
+          if (resource.getState() == NodeStates.DELETING) {
+            resourceIt.remove();
+          } else {
             resource.setState(NodeStates.STARTED);
-            break;
-          case STARTED:
-            break;
-          case DELETING:
-            // Resource should be deleted into bindresource function
+          }
+          break;
+        case DELETE_COMPLETE:
+          resourceIt.remove();
+          break;
+        case CREATE_FAILED:
+        case DELETE_FAILED:
+          resource.setState(NodeStates.ERROR);
+          break;
+        case UPDATE_FAILED:
+          if (resource.getState() != NodeStates.STARTED) {
             resource.setState(NodeStates.ERROR);
-            break;
-          default:
-            resource.setState(NodeStates.ERROR);
-            break;
-        }
-      } else {
-        switch (resource.getState()) {
-          case INITIAL:
-          case CREATING:
-          case CREATED:
-          case CONFIGURING:
-          case CONFIGURED:
-          case STARTING:
-          case STOPPING:
-          case DELETING:
-            resource.setState(NodeStates.ERROR);
-            break;
-          default:
-            break;
-        }
+          }
+          break;
+        case CREATE_IN_PROGRESS:
+          resource.setState(NodeStates.CREATING);
+          break;
+        case UPDATE_IN_PROGRESS:
+          switch (resource.getState()) {
+            case CREATING:
+            case DELETING:
+            case STARTED:
+              break;
+            default:
+              resource.setState(NodeStates.CONFIGURING);
+              break;
+          }
+          break;
+        case DELETE_IN_PROGRESS:
+          resource.setState(NodeStates.DELETING);
+          break;
+        case UNKNOWN:
+        default:
+          resource.setState(NodeStates.ERROR);
+          break;
       }
     }
   }

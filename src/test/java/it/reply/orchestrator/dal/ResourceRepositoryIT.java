@@ -35,7 +35,7 @@ import java.util.Optional;
 @DatabaseTearDown("/data/database-empty.xml")
 @DatabaseSetup("/data/database-resource-init.xml")
 @Transactional
-public class ResourceRepositoryTest extends WebAppConfigurationAwareIT {
+public class ResourceRepositoryIT extends WebAppConfigurationAwareIT {
 
   final String deploymentId = "0748fbe9-6c1d-4298-b88f-06188734ab42";
   final String resourceId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";

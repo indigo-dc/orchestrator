@@ -17,18 +17,16 @@
 package it.reply.orchestrator.dto;
 
 import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.PaaSMetric;
-import it.reply.orchestrator.dal.entity.OidcTokenId;
-import it.reply.orchestrator.dto.deployment.DeploymentMessage;
-import it.reply.orchestrator.dto.deployment.PlacementPolicy;
-import it.reply.orchestrator.dto.onedata.OneData;
+import it.reply.orchestrator.dto.deployment.BaseWorkflowMessage;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
 import it.reply.orchestrator.dto.slam.SlamPreferences;
-import it.reply.orchestrator.enums.DeploymentType;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+import lombok.experimental.Tolerate;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -37,11 +35,11 @@ import java.util.List;
 import java.util.Map;
 
 @Data
-public class RankCloudProvidersMessage implements Serializable {
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+public class RankCloudProvidersMessage extends BaseWorkflowMessage implements Serializable {
 
   private static final long serialVersionUID = 6559999818418491070L;
-
-  private String deploymentId;
 
   private SlamPreferences slamPreferences;
 
@@ -57,39 +55,8 @@ public class RankCloudProvidersMessage implements Serializable {
   @NonNull
   private List<RankedCloudProvider> rankedCloudProviders = new ArrayList<>();
 
-  @NonNull
-  private Map<String, OneData> oneDataRequirements = new HashMap<>();
-
-  /**
-   * The Placement policies provided in the template.
-   */
-  @NonNull
-  private List<PlacementPolicy> placementPolicies = new ArrayList<>();
-
-  private DeploymentType deploymentType;
-
-  @Nullable
-  private OidcTokenId requestedWithToken;
-
-  public RankCloudProvidersMessage() {
+  @Tolerate
+  public RankCloudProvidersMessage(BaseWorkflowMessage baseWorkflowMessage) {
+    super(baseWorkflowMessage);
   }
-
-  public RankCloudProvidersMessage(String deploymentId) {
-    this.deploymentId = deploymentId;
-  }
-
-  /**
-   * Create a RankCloudProvidersMessage from a {@link DeploymentMessage}.
-   * 
-   * @param deploymentMessage
-   *          the DeploymentMessage
-   */
-  public RankCloudProvidersMessage(DeploymentMessage deploymentMessage) {
-    this.deploymentId = deploymentMessage.getDeploymentId();
-    this.oneDataRequirements = deploymentMessage.getOneDataRequirements();
-    this.placementPolicies = deploymentMessage.getPlacementPolicies();
-    this.deploymentType = deploymentMessage.getDeploymentType();
-    this.requestedWithToken = deploymentMessage.getRequestedWithToken();
-  }
-
 }

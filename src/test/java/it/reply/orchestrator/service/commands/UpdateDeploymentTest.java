@@ -31,6 +31,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
+import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dto.CloudProvider;
@@ -79,8 +80,8 @@ public class UpdateDeploymentTest {
 
   @Test
   public void testCustomExecuteSuccess() throws Exception {
-    DeploymentMessage dm = TestUtil.generateDeployDm();
-    Deployment deployment = TestUtil.generateDeployDm().getDeployment();
+    Deployment deployment = ControllerTestUtils.createDeployment();
+    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
     CommandContext commandContext = new CommandContext();
     WorkItemImpl workItem = new WorkItemImpl();
 
@@ -104,7 +105,7 @@ public class UpdateDeploymentTest {
 
     Mockito
         .when(cloudProviderEndpointServiceImpl.getCloudProviderEndpoint(cp,
-            rankCloudProvidersMessage.getPlacementPolicies()))
+            rankCloudProvidersMessage.getPlacementPolicies(), false))
         .thenReturn(dm.getChosenCloudProviderEndpoint());
     workItem.setParameter(WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE,
         rankCloudProvidersMessage);
@@ -127,8 +128,8 @@ public class UpdateDeploymentTest {
 
   @Test
   public void testCustomExecuteSuccessWithInputData() throws Exception {
-    DeploymentMessage dm = TestUtil.generateDeployDm();
-    Deployment deployment = TestUtil.generateDeployDm().getDeployment();
+    Deployment deployment = ControllerTestUtils.createDeployment();
+    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
     CommandContext commandContext = new CommandContext();
     WorkItemImpl workItem = new WorkItemImpl();
 
@@ -163,6 +164,7 @@ public class UpdateDeploymentTest {
     expectedResult = new ExecutionResults();
     expectedResult.setData(Constants.RESULT_STATUS, "OK");
     expectedResult.setData(Constants.OK_RESULT, false);
+    expectedResult.setData(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, dm);
     updateDeployment.generateOneDataParameters(rankCloudProvidersMessage, dm);
     Assert.assertEquals(expectedResult.toString(),
         updateDeployment.customExecute(commandContext).toString());
@@ -171,8 +173,8 @@ public class UpdateDeploymentTest {
 
   @Test
   public void testCustomExecuteSuccessWithOutputData() throws Exception {
-    DeploymentMessage dm = TestUtil.generateDeployDm();
-    Deployment deployment = TestUtil.generateDeployDm().getDeployment();
+    Deployment deployment = ControllerTestUtils.createDeployment();
+    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
     CommandContext commandContext = new CommandContext();
     WorkItemImpl workItem = new WorkItemImpl();
 
@@ -207,6 +209,7 @@ public class UpdateDeploymentTest {
     expectedResult = new ExecutionResults();
     expectedResult.setData(Constants.RESULT_STATUS, "OK");
     expectedResult.setData(Constants.OK_RESULT, false);
+    expectedResult.setData(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, dm);
     updateDeployment.generateOneDataParameters(rankCloudProvidersMessage, dm);
     Assert.assertEquals(expectedResult.toString(),
         updateDeployment.customExecute(commandContext).toString());

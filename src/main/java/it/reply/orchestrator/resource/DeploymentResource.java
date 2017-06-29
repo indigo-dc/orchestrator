@@ -63,7 +63,7 @@ public class DeploymentResource extends AbstractResource {
     super(uuid, creationTime, updateTime);
     this.status = status;
     this.statusReason = statusReason;
-    this.outputs = CommonUtils.notNullOrDefaultValue(outputs, new HashMap<>());
+    this.outputs = CommonUtils.notNullOrDefaultValue(outputs, HashMap::new);
     this.task = task;
     this.callback = callback;
     this.cloudProviderName = cloudProviderName;

@@ -16,17 +16,19 @@
 
 package it.reply.orchestrator.service.commands;
 
-import it.reply.orchestrator.dto.CloudProvider;
+import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.PaaSMetric;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.service.MonitoringService;
 
+import org.kie.api.executor.CommandContext;
+import org.kie.api.executor.ExecutionResults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
 
 @Component
 public class GetMonitoringData extends BaseRankCloudProvidersCommand<GetMonitoringData> {
@@ -35,31 +37,31 @@ public class GetMonitoringData extends BaseRankCloudProvidersCommand<GetMonitori
   private MonitoringService monitoringService;
 
   @Override
-  protected RankCloudProvidersMessage customExecute(
+  @Transactional
+  public ExecutionResults customExecute(CommandContext ctx,
       RankCloudProvidersMessage rankCloudProvidersMessage) {
 
     // Get monitoring data for each Cloud Provider
-    for (Map.Entry<String, CloudProvider> providerEntry : rankCloudProvidersMessage
-        .getCloudProviders().entrySet()) {
-      CloudProvider cp = providerEntry.getValue();
-      List<CloudService> computeServices = cp.getCmbdProviderServicesByType(Type.COMPUTE);
-      // TODO use cloudService field
-      boolean isPublicCloud =
-          computeServices.stream().anyMatch(service -> service.getData().isPublicService());
-      if (!isPublicCloud) {
-        // TODO fix ugliness
-        rankCloudProvidersMessage.getCloudProvidersMonitoringData().put(providerEntry.getKey(),
-            monitoringService.getProviderData(cp.getId())
-                .getGroups()
-                .get(0)
-                .getPaasMachines()
-                .get(0)
-                .getServices()
-                .get(0)
-                .getPaasMetrics());
-      }
-    }
-    return rankCloudProvidersMessage;
+    rankCloudProvidersMessage
+        .getCloudProviders()
+        .forEach((cloudProviderId, cloudProvider) -> {
+
+          List<CloudService> computeServices =
+              cloudProvider.getCmbdProviderServicesByType(Type.COMPUTE);
+          // TODO use cloudService field
+          boolean isPublicCloud = computeServices
+              .stream()
+              .parallel()
+              .unordered()
+              .anyMatch(service -> service.getData().isPublicService());
+          if (!isPublicCloud) {
+            List<PaaSMetric> metrics = monitoringService.getProviderData(cloudProviderId);
+            rankCloudProvidersMessage
+                .getCloudProvidersMonitoringData()
+                .put(cloudProviderId, metrics);
+          }
+        });
+    return resultOccurred(rankCloudProvidersMessage.getCloudProvidersMonitoringData());
   }
 
   @Override

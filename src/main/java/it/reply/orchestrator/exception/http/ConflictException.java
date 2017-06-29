@@ -16,6 +16,8 @@
 
 package it.reply.orchestrator.exception.http;
 
+import org.springframework.http.HttpStatus;
+
 /**
  * Exception thrown when the request could not be completed due to a conflict with the current state
  * of the resource.
@@ -28,7 +30,7 @@ public class ConflictException extends OrchestratorApiException {
   private static final long serialVersionUID = 1L;
 
   public ConflictException(String message) {
-    super(message);
+    super(HttpStatus.CONFLICT, message);
   }
 
 }

@@ -18,6 +18,7 @@ package it.reply.orchestrator.service.deployment.providers;
 
 import it.reply.orchestrator.annotation.DeploymentProviderQualifier;
 import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.OrchestratorException;
 
@@ -32,6 +33,9 @@ import java.util.stream.Stream;
 
 @Service
 public class DeploymentProviderServiceRegistry {
+
+  @Autowired
+  private DeploymentRepository deploymentRepository;
 
   private EnumMap<DeploymentProvider, DeploymentProviderService> providers =
       new EnumMap<>(DeploymentProvider.class);
@@ -60,6 +64,10 @@ public class DeploymentProviderServiceRegistry {
     });
   }
 
+  public DeploymentProviderService getDeploymentProviderService(String deploymentId) {
+    return getDeploymentProviderService(deploymentRepository.findOne(deploymentId));
+  }
+
   public DeploymentProviderService getDeploymentProviderService(Deployment deployment) {
     return getDeploymentProviderService(deployment.getDeploymentProvider());
   }
@@ -73,7 +81,8 @@ public class DeploymentProviderServiceRegistry {
    */
   public DeploymentProviderService getDeploymentProviderService(
       DeploymentProvider deploymentProvider) {
-    return Optional.ofNullable(providers.get(deploymentProvider))
+    return Optional
+        .ofNullable(providers.get(deploymentProvider))
         .orElseThrow(() -> new OrchestratorException(
             "No DeploymentProviderService found for deployment provider: " + deploymentProvider));
   }

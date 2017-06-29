@@ -19,12 +19,16 @@ package it.reply.orchestrator.service.commands;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.ranker.CloudProviderRankerRequest;
 import it.reply.orchestrator.dto.ranker.Monitoring;
+import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
 import it.reply.orchestrator.dto.slam.Preference;
 import it.reply.orchestrator.dto.slam.PreferenceCustomer;
 import it.reply.orchestrator.service.CloudProviderRankerService;
 
+import org.kie.api.executor.CommandContext;
+import org.kie.api.executor.ExecutionResults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -37,13 +41,10 @@ public class GetProvidersRank extends BaseRankCloudProvidersCommand<GetProviders
   private CloudProviderRankerService cloudProviderRankerService;
 
   @Override
-  protected RankCloudProvidersMessage customExecute(
+  @Transactional
+  public ExecutionResults customExecute(CommandContext ctx,
       RankCloudProvidersMessage rankCloudProvidersMessage) {
 
-    if (rankCloudProvidersMessage.getCloudProviders().isEmpty()) {
-      // nothing to rank
-      return rankCloudProvidersMessage;
-    }
     // Prepare Ranker's request
     List<Monitoring> monitoring = rankCloudProvidersMessage
         .getCloudProvidersMonitoringData()
@@ -69,10 +70,10 @@ public class GetProvidersRank extends BaseRankCloudProvidersCommand<GetProviders
         .build();
 
     // Get provider rank and save in message
-    rankCloudProvidersMessage
-        .setRankedCloudProviders(cloudProviderRankerService.getProviderRanking(cprr));
+    List<RankedCloudProvider> ranking = cloudProviderRankerService.getProviderRanking(cprr);
+    rankCloudProvidersMessage.setRankedCloudProviders(ranking);
 
-    return rankCloudProvidersMessage;
+    return resultOccurred(ranking);
   }
 
   @Override

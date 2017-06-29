@@ -20,7 +20,6 @@ import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 
 import it.reply.orchestrator.dal.entity.Deployment;
-import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.cmdb.CloudService;
@@ -43,9 +42,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
+import org.kie.api.executor.CommandContext;
+import org.kie.api.executor.ExecutionResults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -63,18 +65,15 @@ public class PrefilterCloudProviders
   private String chronosCloudProviderName;
 
   @Autowired
-  private DeploymentRepository deploymentRepository;
-
-  @Autowired
   private ToscaService toscaService;
 
   @Override
-  protected RankCloudProvidersMessage customExecute(
-      RankCloudProvidersMessage rankCloudProvidersMessage) throws Exception {
+  @Transactional
+  public ExecutionResults customExecute(CommandContext ctx,
+      RankCloudProvidersMessage rankCloudProvidersMessage) {
     // TODO Filter cloud providers (i.e. based on OneData)
 
-    Deployment deployment =
-        deploymentRepository.findOne(rankCloudProvidersMessage.getDeploymentId());
+    Deployment deployment = getDeployment(rankCloudProvidersMessage);
 
     // Filter out providers that do not support the requested images
     ArchiveRoot ar = toscaService.parseTemplate(deployment.getTemplate());
@@ -82,7 +81,7 @@ public class PrefilterCloudProviders
     Set<CloudService> servicesToDiscard = new HashSet<>();
 
     if (!CollectionUtils.isEmpty(rankCloudProvidersMessage.getPlacementPolicies())) {
-      this.discardOnPlacementPolicies(rankCloudProvidersMessage.getPlacementPolicies(),
+      discardOnPlacementPolicies(rankCloudProvidersMessage.getPlacementPolicies(),
           rankCloudProvidersMessage.getCloudProviders().values(),
           rankCloudProvidersMessage.getSlamPreferences().getSla(), servicesToDiscard);
     }
@@ -106,14 +105,15 @@ public class PrefilterCloudProviders
     // FIXME: It's just a demo hack to for Chronos jobs default provider override!!
     if (rankCloudProvidersMessage.getDeploymentType() == DeploymentType.CHRONOS
         || rankCloudProvidersMessage.getDeploymentType() == DeploymentType.MARATHON) {
-      rankCloudProvidersMessage.getCloudProviders()
+      rankCloudProvidersMessage
+          .getCloudProviders()
           .values()
           .stream()
           .filter(
               cloudProvider -> !cloudProvider.getId().equalsIgnoreCase(chronosCloudProviderName))
           .forEach(cloudProvider -> {
             LOG.debug(
-                "Discarded provider {} because it doesn't match Chronos default provider {}"
+                "Discarded provider {} because it doesn't match Mesos default provider {}"
                     + " for deployment {}",
                 cloudProvider.getId(), chronosCloudProviderName, deployment.getId());
             addProviderToDiscard(providersToDiscard, servicesToDiscard, cloudProvider);
@@ -141,7 +141,7 @@ public class PrefilterCloudProviders
 
     discardProvidersAndServices(providersToDiscard, servicesToDiscard, rankCloudProvidersMessage);
 
-    return rankCloudProvidersMessage;
+    return resultOccurred(true);
   }
 
   private void discardOnPlacementPolicies(List<PlacementPolicy> placementPolicies,
@@ -155,7 +155,8 @@ public class PrefilterCloudProviders
     }
     final SlaPlacementPolicy slaPlacementPolicy = (SlaPlacementPolicy) placementPolicies.get(0);
 
-    Sla selectedSla = slas.stream()
+    Sla selectedSla = slas
+        .stream()
         .filter(sla -> Objects.equals(sla.getId(), slaPlacementPolicy.getSlaId()))
         .findFirst()
         .orElseThrow(() -> new OrchestratorException(
@@ -163,7 +164,8 @@ public class PrefilterCloudProviders
 
     for (CloudProvider cloudProvider : cloudProviders) {
       for (CloudService cloudService : cloudProvider.getCmbdProviderServicesByType(Type.COMPUTE)) {
-        boolean serviceSlaIsCloudService = selectedSla.getService()
+        boolean serviceSlaIsCloudService = selectedSla
+            .getService()
             .map(Service::getServiceId)
             .filter(serviceId -> CommonUtils.checkNotNull(serviceId).equals(cloudService.getId()))
             .isPresent();
@@ -210,7 +212,8 @@ public class PrefilterCloudProviders
   protected void addProviderToDiscard(Set<CloudProvider> providersToDiscard,
       Set<CloudService> servicesToDiscard, CloudProvider providerEntry) {
     providersToDiscard.add(providerEntry);
-    providerEntry.getCmdbProviderServices()
+    providerEntry
+        .getCmdbProviderServices()
         .forEach((key, value) -> addServiceToDiscard(servicesToDiscard, value));
   }
 
@@ -223,10 +226,12 @@ public class PrefilterCloudProviders
       Set<CloudService> servicesToDiscard, RankCloudProvidersMessage rankCloudProvidersMessage) {
     // Add providers that doesn't have any compute service anymore
     for (CloudProvider cloudProvider : rankCloudProvidersMessage.getCloudProviders().values()) {
-      cloudProvider.getCmbdProviderServicesByType(Type.COMPUTE)
+      cloudProvider
+          .getCmbdProviderServicesByType(Type.COMPUTE)
           .stream()
           .filter(computeService -> servicesToDiscard.contains(computeService))
-          .forEach(computeServiceToDiscard -> cloudProvider.getCmdbProviderServices()
+          .forEach(computeServiceToDiscard -> cloudProvider
+              .getCmdbProviderServices()
               .remove(computeServiceToDiscard.getId()));
       if (cloudProvider.getCmbdProviderServicesByType(Type.COMPUTE).isEmpty()) {
         addProviderToDiscard(providersToDiscard, servicesToDiscard, cloudProvider);

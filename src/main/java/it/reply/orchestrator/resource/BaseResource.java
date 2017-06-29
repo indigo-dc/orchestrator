@@ -53,7 +53,7 @@ public class BaseResource extends AbstractResource {
     this.state = state;
     this.toscaNodeType = toscaNodeType;
     this.toscaNodeName = toscaNodeName;
-    this.requiredBy = CommonUtils.notNullOrDefaultValue(requiredBy, new ArrayList<>());
+    this.requiredBy = CommonUtils.notNullOrDefaultValue(requiredBy, ArrayList::new);
   }
 
 }

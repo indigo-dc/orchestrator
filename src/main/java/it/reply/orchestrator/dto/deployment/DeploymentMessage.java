@@ -16,50 +16,38 @@
 
 package it.reply.orchestrator.dto.deployment;
 
-import it.reply.orchestrator.dal.entity.Deployment;
-import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.onedata.OneData;
-import it.reply.orchestrator.enums.DeploymentType;
 import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl.IndigoJob;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
-/**
- * A message containing all the information needed during Deployment WF.
- * 
- * @author l.biava
- *
- */
 @Data
-@ToString(exclude = "deployment")
-public class DeploymentMessage implements Serializable {
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+public class DeploymentMessage extends BaseWorkflowMessage implements Serializable {
 
   private static final long serialVersionUID = 8003907220093782923L;
 
-  /**
-   * The internal deployment representation (stored in the DB).
-   */
-  private Deployment deployment;
+  // in ms
+  private Long timeoutTime;
 
-  @Nullable
-  private OidcTokenId requestedWithToken;
-
-  private String deploymentId;
-
-  private DeploymentType deploymentType;
+  public void setTimeoutTimeInMins(Integer timeoutMins) {
+    this.timeoutTime =
+        Optional.ofNullable(timeoutMins).map(value -> value * 60 * 1000L).orElse(null);
+  }
 
   private TemplateTopologicalOrderIterator templateTopologicalOrderIterator;
 
@@ -68,27 +56,14 @@ public class DeploymentMessage implements Serializable {
   private boolean pollComplete;
   private boolean skipPollInterval;
 
-  private boolean hybrid;
-
   private CloudProvider chosenCloudProvider;
   private CloudProviderEndpoint chosenCloudProviderEndpoint;
 
-  /**
-   * The OneData information the user gave and to be used to select the best provider.
-   */
-  @NonNull
-  private Map<String, OneData> oneDataRequirements = new HashMap<>();
   /**
    * The OneData information generated after the best provider choice.
    */
   @NonNull
   private Map<String, OneData> oneDataParameters = new HashMap<>();
-
-  /**
-   * The Placement policies provided in the template.
-   */
-  @NonNull
-  private List<PlacementPolicy> placementPolicies = new ArrayList<>();
 
   /**
    * TEMPORARY Chronos Job Graph (to avoid regenerating the template representation each time).
@@ -158,5 +133,4 @@ public class DeploymentMessage implements Serializable {
     }
 
   }
-
 }

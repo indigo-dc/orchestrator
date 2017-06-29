@@ -27,7 +27,6 @@ import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.model.topology.RelationshipTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.normative.IPropertyType;
-import alien4cloud.tosca.normative.InvalidPropertyValueException;
 import alien4cloud.tosca.parser.ParsingException;
 import alien4cloud.tosca.parser.ParsingResult;
 
@@ -39,6 +38,7 @@ import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.service.ToscaException;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jgrapht.graph.DirectedMultigraph;
 
 import java.io.IOException;
@@ -51,7 +51,7 @@ import java.util.function.Function;
 public interface ToscaService {
 
   public ParsingResult<ArchiveRoot> getArchiveRootFromTemplate(String toscaTemplate)
-      throws IOException, ParsingException;
+      throws ParsingException;
 
   /**
    * Obtain the string TOSCA template representation from the in-memory representation. <br/>
@@ -63,25 +63,7 @@ public interface ToscaService {
    * @throws IOException
    *           if there is an error serializing the template
    */
-  public String getTemplateFromTopology(ArchiveRoot archiveRoot) throws IOException;
-
-  // /**
-  // * Customize the template with INDIGO requirements, for example it adds the deploymentId.
-  // *
-  // * @param toscaTemplate
-  // * the TOSCA template
-  // * @param deploymentId
-  // * the deploymentId
-  // * @return the customized template
-  // *
-  // * @throws IOException
-  // * if there is an IO error
-  // * @throws ToscaException
-  // * if the template is not valid
-  // */
-  // @Nonnull
-  // public String customizeTemplate(@Nonnull String toscaTemplate, @NotNull String deploymentId)
-  // throws IOException, ToscaException;
+  public String getTemplateFromTopology(ArchiveRoot archiveRoot);
 
   /**
    * Adds the parameters needed for 'tosca.nodes.indigo.ElasticCluster' nodes (deployment_id,
@@ -139,7 +121,7 @@ public interface ToscaService {
    *           value doesn't match the defined input type.
    */
   public void validateUserInputs(Map<String, PropertyDefinition> templateInputs,
-      Map<String, Object> inputs) throws ToscaException;
+      Map<String, Object> inputs);
 
   /**
    * Replaces TOSCA input functions with the actual input values (user's input values or default
@@ -152,8 +134,7 @@ public interface ToscaService {
    * @throws ToscaException
    *           if the input replacement fails TODO.
    */
-  public void replaceInputFunctions(ArchiveRoot archiveRoot, Map<String, Object> inputs)
-      throws ToscaException;
+  public void replaceInputFunctions(ArchiveRoot archiveRoot, Map<String, Object> inputs);
 
   /**
    * Parse the TOSCA template (string) and get the in-memory representation.<br/>
@@ -169,8 +150,7 @@ public interface ToscaService {
    * @throws ToscaException
    *           if validation errors occur.
    */
-  public ArchiveRoot parseTemplate(String toscaTemplate)
-      throws IOException, ParsingException, ToscaException;
+  public ArchiveRoot parseTemplate(String toscaTemplate);
 
   /**
    * As for {@link #parseTemplate(String)} but also validates user's inputs.
@@ -185,8 +165,7 @@ public interface ToscaService {
    * @throws ToscaException
    *           if validation errors occur.
    */
-  public ArchiveRoot parseAndValidateTemplate(String toscaTemplate, Map<String, Object> inputs)
-      throws IOException, ParsingException, ToscaException;
+  public ArchiveRoot parseAndValidateTemplate(String toscaTemplate, Map<String, Object> inputs);
 
   /**
    * As for {@link #parseAndValidateTemplate(String)} but also replaces the user's inputs.
@@ -201,8 +180,7 @@ public interface ToscaService {
    * @throws ToscaException
    *           if validation errors occur.
    */
-  public ArchiveRoot prepareTemplate(String toscaTemplate, Map<String, Object> inputs)
-      throws IOException, ParsingException, ToscaException;
+  public ArchiveRoot prepareTemplate(String toscaTemplate, Map<String, Object> inputs);
 
   public Optional<Capability> getNodeCapabilityByName(NodeTemplate node, String propertyName);
 
@@ -255,7 +233,7 @@ public interface ToscaService {
    */
   public List<String> getRemovalList(NodeTemplate nodeTemplate);
 
-  public String updateTemplate(String template) throws IOException;
+  public String updateTemplate(String template);
 
   // public String updateCount(ArchiveRoot archiveRoot, int count) throws IOException;
 
@@ -280,6 +258,7 @@ public interface ToscaService {
    *          an {@link ArchiveRoot} representing the template.
    * @return the list of placementPolicies
    */
+  @NonNull
   public List<PlacementPolicy> extractPlacementPolicies(ArchiveRoot archiveRoot);
 
   public DirectedMultigraph<NodeTemplate, RelationshipTemplate> buildNodeGraph(
@@ -292,7 +271,7 @@ public interface ToscaService {
       Capability capability, String propertyName);
 
   public <T extends IPropertyType<V>, V> V parseScalarPropertyValue(ScalarPropertyValue value,
-      Class<T> clazz) throws InvalidPropertyValueException;
+      Class<T> clazz);
 
   public <V> List<V> parseListPropertyValue(ListPropertyValue value, Function<Object, V> mapper);
 
@@ -308,5 +287,9 @@ public interface ToscaService {
   boolean isOfToscaType(NodeTemplate node, String nodeType);
 
   boolean isOfToscaType(Resource resource, String nodeType);
+
+  void removeRemovalList(NodeTemplate node);
+
+  boolean isScalable(NodeTemplate nodeTemplate);
 
 }

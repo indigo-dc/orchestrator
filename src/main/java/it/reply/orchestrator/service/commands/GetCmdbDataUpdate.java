@@ -25,6 +25,7 @@ import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class GetCmdbDataUpdate extends BaseDeployCommand<GetCmdbDataUpdate> {
@@ -33,9 +34,10 @@ public class GetCmdbDataUpdate extends BaseDeployCommand<GetCmdbDataUpdate> {
   private CmdbService cmdbService;
 
   @Override
-  protected ExecutionResults customExecute(CommandContext ctx,
+  @Transactional
+  public ExecutionResults customExecute(CommandContext ctx,
       DeploymentMessage deploymentMessage) {
-    Deployment deployment = deploymentMessage.getDeployment();
+    Deployment deployment = getDeployment(deploymentMessage);
     CloudProvider cp = new CloudProvider(deployment.getCloudProviderName());
     cp.getCmdbProviderServices().put(deployment.getCloudProviderEndpoint().getCpComputeServiceId(),
         null);
