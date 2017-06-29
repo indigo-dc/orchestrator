@@ -88,7 +88,7 @@ public class CloudProviderEndpointServiceTest {
     List<PlacementPolicy> placementPolicies = new ArrayList<>();
 
     cloudProviderEndpointServiceImpl.getCloudProviderEndpoint(chosenCloudProvider,
-        placementPolicies);
+        placementPolicies, false);
   }
 
   @Test
@@ -118,7 +118,7 @@ public class CloudProviderEndpointServiceTest {
     result.setIaasType(IaaSType.OCCI);
 
     Assert.assertEquals(cloudProviderEndpointServiceImpl
-        .getCloudProviderEndpoint(chosenCloudProvider, placementPolicies), result);
+        .getCloudProviderEndpoint(chosenCloudProvider, placementPolicies, false), result);
   }
   
   @Test
@@ -145,7 +145,7 @@ public class CloudProviderEndpointServiceTest {
     result.setIaasType(IaaSType.OPENSTACK);
 
     Assert.assertEquals(cloudProviderEndpointServiceImpl
-        .getCloudProviderEndpoint(chosenCloudProvider, placementPolicies), result);
+        .getCloudProviderEndpoint(chosenCloudProvider, placementPolicies, false), result);
 
   }
   
@@ -173,7 +173,7 @@ public class CloudProviderEndpointServiceTest {
     result.setIaasType(IaaSType.OPENNEBULA);
 
     Assert.assertEquals(cloudProviderEndpointServiceImpl
-        .getCloudProviderEndpoint(chosenCloudProvider, placementPolicies), result);
+        .getCloudProviderEndpoint(chosenCloudProvider, placementPolicies, false), result);
   }
   
   @Test
@@ -207,7 +207,7 @@ public class CloudProviderEndpointServiceTest {
     result.setUsername(awsSlaPlacementPolicy.getAccessKey());
     result.setPassword(awsSlaPlacementPolicy.getSecretKey());
     Assert.assertEquals(cloudProviderEndpointServiceImpl
-        .getCloudProviderEndpoint(chosenCloudProvider, placementPolicies), result);
+        .getCloudProviderEndpoint(chosenCloudProvider, placementPolicies, false), result);
 
   }
 
@@ -233,7 +233,7 @@ public class CloudProviderEndpointServiceTest {
 
 
     cloudProviderEndpointServiceImpl.getCloudProviderEndpoint(chosenCloudProvider,
-        placementPolicies);
+        placementPolicies, false);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -257,7 +257,7 @@ public class CloudProviderEndpointServiceTest {
         .thenReturn(cmbdProviderServicesByType);
 
     cloudProviderEndpointServiceImpl.getCloudProviderEndpoint(chosenCloudProvider,
-        placementPolicies);
+        placementPolicies, false);
   }
 
 }

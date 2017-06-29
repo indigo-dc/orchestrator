@@ -16,7 +16,7 @@
 
 package it.reply.orchestrator.service;
 
-import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.MonitoringWrappedResponsePaas;
+import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.PaaSMetric;
 import it.reply.orchestrator.dto.monitoring.MonitoringResponse;
 import it.reply.orchestrator.exception.service.DeploymentException;
 
@@ -26,6 +26,8 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.List;
 
 @Service
 @PropertySource("classpath:monitoring/monitoring.properties")
@@ -43,12 +45,22 @@ public class MonitoringServiceImpl implements MonitoringService {
   }
 
   @Override
-  public MonitoringWrappedResponsePaas getProviderData(String providerId) {
+  public List<PaaSMetric> getProviderData(String providerId) {
 
     ResponseEntity<MonitoringResponse> response =
         restTemplate.getForEntity(url.concat(providerId), MonitoringResponse.class);
     if (response.getStatusCode().is2xxSuccessful()) {
-      return response.getBody().getResult();
+      // FIXME remove this ugliness
+      return response
+          .getBody()
+          .getResult()
+          .getGroups()
+          .get(0)
+          .getPaasMachines()
+          .get(0)
+          .getServices()
+          .get(0)
+          .getPaasMetrics();
     }
 
     throw new DeploymentException(

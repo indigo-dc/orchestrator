@@ -143,7 +143,7 @@ public class DeploymentControllerTest {
     String ownerIdString = ownerId.getSubject()+"@"+ownerId.getIssuer();
     OidcEntity owner = new OidcEntity();
     owner.setOidcEntityId(ownerId);
-    List<Deployment> deployments = ControllerTestUtils.createDeployments(2, true);
+    List<Deployment> deployments = ControllerTestUtils.createDeployments(2);
     deployments.forEach(deployment -> deployment.setOwner(owner));
     deployments.get(0).setStatus(Status.CREATE_FAILED);
     deployments.get(0).setStatusReason("Some reason");
@@ -186,7 +186,7 @@ public class DeploymentControllerTest {
   @Test
   public void getPagedDeployments() throws Exception {
 
-    List<Deployment> deployments = ControllerTestUtils.createDeployments(5, true);
+    List<Deployment> deployments = ControllerTestUtils.createDeployments(5);
     Pageable pageable =
         new PageRequest(1, 2, new Sort(Direction.DESC, AbstractResourceEntity.CREATED_COLUMN_NAME));
     Mockito.when(deploymentService.getDeployments(pageable, null))
@@ -212,7 +212,7 @@ public class DeploymentControllerTest {
   @Test
   public void deploymentsPagination() throws Exception {
 
-    List<Deployment> deployments = ControllerTestUtils.createDeployments(5, true);
+    List<Deployment> deployments = ControllerTestUtils.createDeployments(5);
     Pageable pageable = ControllerTestUtils.createDefaultPageable();
     Mockito.when(deploymentService.getDeployments(pageable, null))
         .thenReturn(new PageImpl<Deployment>(deployments));

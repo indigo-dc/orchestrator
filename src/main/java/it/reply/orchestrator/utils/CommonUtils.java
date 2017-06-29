@@ -16,6 +16,7 @@
 
 package it.reply.orchestrator.utils;
 
+import com.google.common.base.Equivalence;
 import com.google.common.base.Preconditions;
 
 import lombok.experimental.UtilityClass;
@@ -26,12 +27,11 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -122,17 +122,21 @@ public class CommonUtils {
     return optional.map(object -> (S) object);
   }
 
-  public static <E> Stream<E> spliteratorToStream(Spliterator<E> spliterator, boolean parallel) {
-    return StreamSupport.stream(spliterator, parallel);
-  }
-
   public static <E> Stream<E> spliteratorToStream(Spliterator<E> spliterator) {
-    return spliteratorToStream(spliterator, false);
+    return StreamSupport.stream(spliterator, false);
   }
 
+  /**
+   * Generate a <b>sequential</b> and <b>ordered</b> {@link Stream} from the remaining element of a
+   * {@link Iterator}.
+   * 
+   * @param iterator
+   *          the iterator from which generate the stream
+   * @return the stream
+   */
   public static <E> Stream<E> iteratorToStream(Iterator<E> iterator) {
-    Iterable<E> iterable = () -> iterator;
-    return spliteratorToStream(iterable.spliterator(), false);
+    return StreamSupport.stream(Spliterators.spliteratorUnknownSize(iterator, Spliterator.ORDERED),
+        false);
   }
 
   /**
@@ -149,24 +153,22 @@ public class CommonUtils {
   }
 
   /**
-   * Filter a stream removing all the duplicate elements. The uniqueness is evaluated on the result
-   * of the provided mapping function. All the stream elements for which the mapping function return
-   * null are filtered out.
+   * Filter a stream removing all the duplicate elements. The uniqueness is evaluated as
+   * <tt>(e==null&nbsp;?&nbsp;e2==null&nbsp;:&nbsp;e.equals(e2))</tt> on the result of the provided
+   * mapping function.
    * 
    * @param stream
    *          the stream to filter
-   * @param uniquenessMapper
+   * @param mapper
    *          the mapping function on which evaluate the uniqueness
    * @return the filtered stream
    */
-  public static <T, V> Stream<T> filterUnique(Stream<T> stream,
-      Function<T, V> uniquenessMapper) {
-    Set<V> seen = new HashSet<>();
+  public static <T, V> Stream<T> distinct(Stream<T> stream, Function<T, V> mapper) {
+    Equivalence<T> wrapper = Equivalence.equals().onResultOf(mapper::apply);
     return stream
-        .filter(vaule -> {
-          V uniqueValue = uniquenessMapper.apply(vaule);
-          return uniqueValue != null && seen.add(uniqueValue);
-        });
+        .map(wrapper::wrap)
+        .distinct()
+        .map(Equivalence.Wrapper::get);
   }
 
   /**

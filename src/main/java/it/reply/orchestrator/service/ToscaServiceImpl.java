@@ -58,6 +58,7 @@ import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.dto.deployment.PlacementPolicy;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.enums.DeploymentProvider;
+import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
@@ -201,23 +202,23 @@ public class ToscaServiceImpl implements ToscaService {
 
   @Override
   public ParsingResult<ArchiveRoot> getArchiveRootFromTemplate(String toscaTemplate)
-      throws IOException, ParsingException {
-    Path zipPath = Files.createTempFile("csar", ".zip");
-    try (InputStream is = new ByteArrayInputStream(toscaTemplate.getBytes());) {
+      throws ParsingException {
+    try (ByteArrayInputStream is = new ByteArrayInputStream(toscaTemplate.getBytes());) {
+      Path zipPath = Files.createTempFile("csar", ".zip");
       zip(is, zipPath);
-    }
-    try {
-      return parser.parse(zipPath);
+      return parser.parse(zipPath);   
     } catch (InvalidArgumentException iae) {
       // FIXME NOTE that InvalidArgumentException should not be thrown by the parse method, but it
       // is...
       // throw new ParsingException("DUMMY", new ParsingError(ErrorCode.INVALID_YAML, ));
       throw iae;
+    } catch (IOException ex) {
+      throw new OrchestratorException("Error Parsing TOSCA Template", ex);
     }
   }
 
   @Override
-  public String getTemplateFromTopology(ArchiveRoot archiveRoot) throws IOException {
+  public String getTemplateFromTopology(ArchiveRoot archiveRoot) {
     Map<String, Object> velocityCtx = new HashMap<>();
     velocityCtx.put("tosca_definitions_version",
         archiveRoot.getArchive().getToscaDefinitionsVersion());
@@ -228,7 +229,11 @@ public class ToscaServiceImpl implements ToscaService {
     velocityCtx.put("repositories", archiveRoot.getArchive().getRepositories());
     velocityCtx.put("topology", archiveRoot.getTopology());
     StringWriter writer = new StringWriter();
-    VelocityUtil.generate("templates/topology-1_0_0_INDIGO.yml.vm", writer, velocityCtx);
+    try {
+      VelocityUtil.generate("templates/topology-1_0_0_INDIGO.yml.vm", writer, velocityCtx);
+    } catch (IOException ex) {
+      throw new OrchestratorException("Error serializing TOSCA template", ex);
+    }
     String template = writer.toString();
 
     // Log the warning because Alien4Cloud uses an hard-coded Velocity template to encode the string
@@ -241,14 +246,12 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
-  public void replaceInputFunctions(ArchiveRoot archiveRoot, Map<String, Object> inputs)
-      throws ToscaException {
+  public void replaceInputFunctions(ArchiveRoot archiveRoot, Map<String, Object> inputs) {
     indigoInputsPreProcessorService.processGetInput(archiveRoot, inputs);
   }
 
   @Override
-  public ArchiveRoot parseAndValidateTemplate(String toscaTemplate, Map<String, Object> inputs)
-      throws IOException, ParsingException, ToscaException {
+  public ArchiveRoot parseAndValidateTemplate(String toscaTemplate, Map<String, Object> inputs) {
     ArchiveRoot ar = parseTemplate(toscaTemplate);
     Optional.ofNullable(ar.getTopology()).map(topology -> topology.getInputs()).ifPresent(
         topologyInputs -> validateUserInputs(topologyInputs, inputs));
@@ -256,8 +259,7 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
-  public ArchiveRoot prepareTemplate(String toscaTemplate, Map<String, Object> inputs)
-      throws IOException, ParsingException, ToscaException {
+  public ArchiveRoot prepareTemplate(String toscaTemplate, Map<String, Object> inputs) {
     ArchiveRoot ar = parseAndValidateTemplate(toscaTemplate, inputs);
     replaceInputFunctions(ar, inputs);
     return ar;
@@ -265,7 +267,7 @@ public class ToscaServiceImpl implements ToscaService {
 
   @Override
   public void validateUserInputs(Map<String, PropertyDefinition> templateInputs,
-      Map<String, Object> inputs) throws ToscaException {
+      Map<String, Object> inputs) {
 
     // Check if every required input has been given by the user or has a default value
     templateInputs.forEach((inputName, inputDefinition) -> {
@@ -285,7 +287,7 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
-  public ArchiveRoot parseTemplate(String toscaTemplate) throws IOException, ToscaException {
+  public ArchiveRoot parseTemplate(String toscaTemplate) {
 
     try {
       ParsingResult<ArchiveRoot> result = getArchiveRootFromTemplate(toscaTemplate);
@@ -307,7 +309,7 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
-  public String updateTemplate(String template) throws IOException {
+  public String updateTemplate(String template) {
     ArchiveRoot parsedTempalte = parseTemplate(template);
     removeRemovalList(parsedTempalte);
     return getTemplateFromTopology(parsedTempalte);
@@ -333,7 +335,13 @@ public class ToscaServiceImpl implements ToscaService {
     Map<Boolean, Map<NodeTemplate, ImageData>> contextualizedImages =
         contextualizeImages(parsingResult, cloudProvider, cloudServiceId);
     Preconditions.checkState(contextualizedImages.get(Boolean.FALSE).isEmpty(),
-        "Error contextualizing images");
+        "Error contextualizing images; images for nodes %s couldn't be contextualized",
+        contextualizedImages
+            .get(Boolean.FALSE)
+            .keySet()
+            .stream()
+            .map(NodeTemplate::getName)
+            .collect(Collectors.toList()));
     replaceImage(contextualizedImages.get(Boolean.TRUE), cloudProvider, deploymentProvider);
   }
 
@@ -690,15 +698,17 @@ public class ToscaServiceImpl implements ToscaService {
     return scalarPropertyValue;
   }
 
-  private void removeRemovalList(ArchiveRoot archiveRoot) {
 
-    Collection<NodeTemplate> nodes = getNodesFromArchiveRoot(archiveRoot);
+  public void removeRemovalList(ArchiveRoot archiveRoot) {
+    getNodesFromArchiveRoot(archiveRoot)
+        .forEach(this::removeRemovalList);
+  }
 
-    for (NodeTemplate node : nodes) {
-      getNodeCapabilityByName(node, SCALABLE_CAPABILITY_NAME).ifPresent(scalable -> CommonUtils
-          .removeFromOptionalMap(scalable.getProperties(), REMOVAL_LIST_PROPERTY_NAME));
-    }
-
+  @Override
+  public void removeRemovalList(NodeTemplate node) {
+    getNodeCapabilityByName(node, SCALABLE_CAPABILITY_NAME)
+        .ifPresent(scalable -> CommonUtils
+            .removeFromOptionalMap(scalable.getProperties(), REMOVAL_LIST_PROPERTY_NAME));
   }
 
   private static Optional<Authentication> setAutenticationForToscaImport() {
@@ -775,42 +785,34 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
-  public Collection<NodeTemplate> getScalableNodes(ArchiveRoot archiveRoot) {
-    List<NodeTemplate> scalableNodes = new ArrayList<>();
-    Collection<NodeTemplate> allNodes = getNodesFromArchiveRoot(archiveRoot);
-
-    for (NodeTemplate node : allNodes) {
-      getNodeCapabilityByName(node, SCALABLE_CAPABILITY_NAME)
-          .flatMap(capability -> getCapabilityPropertyByName(capability, "count"))
-          // Check if this value is read from the template and is not a default value
-          .filter(countProperty -> countProperty.isPrintable())
-          .ifPresent(countProperty -> scalableNodes.add(node));
-    }
-
-    return scalableNodes;
-  }
-
-  @Override
   public Optional<Integer> getCount(NodeTemplate nodeTemplate) {
-
-    // FIXME we should look it up by capability type, not name
     return getNodeCapabilityByName(nodeTemplate, SCALABLE_CAPABILITY_NAME)
         .flatMap(capability -> this
             .<ScalarPropertyValue>getTypedCapabilityPropertyByName(capability, "count"))
-        // Check if this value is read from the template and is not a default value
-        // FIXME Do we really need this?
-        .filter(property -> property.isPrintable())
         .map(property -> property.getValue())
         .map(value -> Integer.parseInt(value));
-
+  }
+  
+  @Override
+  public boolean isScalable(NodeTemplate nodeTemplate) {
+    return getCount(nodeTemplate).isPresent();
+  }
+  
+  @Override
+  public Collection<NodeTemplate> getScalableNodes(ArchiveRoot archiveRoot) {
+    return getNodesFromArchiveRoot(archiveRoot)
+        .stream()
+        .filter(this::isScalable)
+        .collect(Collectors.toList());
   }
 
   @Override
   public List<String> getRemovalList(NodeTemplate nodeTemplate) {
 
     Optional<ListPropertyValue> listPropertyValue =
-        getNodeCapabilityByName(nodeTemplate, SCALABLE_CAPABILITY_NAME).flatMap(
-            capability -> getTypedCapabilityPropertyByName(capability, REMOVAL_LIST_PROPERTY_NAME));
+        getNodeCapabilityByName(nodeTemplate, SCALABLE_CAPABILITY_NAME)
+            .flatMap(capability -> getTypedCapabilityPropertyByName(capability,
+                REMOVAL_LIST_PROPERTY_NAME));
 
     List<Object> items =
         listPropertyValue.map(property -> property.getValue()).orElseGet(Collections::emptyList);
@@ -941,13 +943,20 @@ public class ToscaServiceImpl implements ToscaService {
 
   @Override
   public <T extends IPropertyType<V>, V> V parseScalarPropertyValue(ScalarPropertyValue value,
-      Class<T> clazz) throws InvalidPropertyValueException {
+      Class<T> clazz) {
+    final T propertyParser;
     try {
-      return clazz.newInstance().parse(value.getValue());
+      propertyParser = clazz.newInstance();
     } catch (InstantiationException | IllegalAccessException ex) {
       // shouldn't happen
-      LOG.error("Error parsing scalar value <{}> as <{}>", value, clazz, ex);
-      throw new RuntimeException(ex);
+      throw new OrchestratorException(
+          String.format("Error instantiating parser %s for scalar value <%s>", clazz, value), ex);
+    }
+    try {
+      return propertyParser.parse(value.getValue());
+    } catch (InvalidPropertyValueException ex) {
+      throw new ToscaException(String.format("Error parsing scalar value <%s> as <%s>",
+          value.getValue(), propertyParser.getTypeName()), ex);
     }
   }
 

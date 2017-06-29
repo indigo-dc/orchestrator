@@ -19,6 +19,8 @@ package it.reply.orchestrator.service.deployment.providers;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.exception.service.DeploymentException;
 
+import java.util.Optional;
+
 public interface DeploymentProviderService {
 
   /**
@@ -56,9 +58,9 @@ public interface DeploymentProviderService {
    * @throws DeploymentException
    *           if the deployment fails.
    */
-  public boolean isDeployed(DeploymentMessage deploymentMessage) throws DeploymentException;
+  public boolean isDeployed(DeploymentMessage deploymentMessage);
 
-  public void finalizeDeploy(DeploymentMessage deploymentMessage, boolean deployed);
+  public void finalizeDeploy(DeploymentMessage deploymentMessage);
 
   public boolean doUpdate(DeploymentMessage deploymentMessage, String template);
 
@@ -97,8 +99,10 @@ public interface DeploymentProviderService {
    * @throws DeploymentException
    *           if the deployment fails.
    */
-  public boolean isUndeployed(DeploymentMessage deploymentMessage) throws DeploymentException;
+  public boolean isUndeployed(DeploymentMessage deploymentMessage);
 
-  public void finalizeUndeploy(DeploymentMessage deploymentMessage, boolean undeployed);
+  public void finalizeUndeploy(DeploymentMessage deploymentMessage);
+
+  public Optional<String> getAdditionalErrorInfo(DeploymentMessage deploymentMessage);
 
 }

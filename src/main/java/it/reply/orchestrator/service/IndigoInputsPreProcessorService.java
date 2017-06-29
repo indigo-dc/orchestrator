@@ -79,8 +79,7 @@ public class IndigoInputsPreProcessorService {
    * @throws ToscaException
    *           if the input replacement fails.
    */
-  public void processGetInput(ArchiveRoot archiveRoot, Map<String, Object> inputs)
-      throws ToscaException {
+  public void processGetInput(ArchiveRoot archiveRoot, Map<String, Object> inputs) {
 
     Optional<Topology> topology = Optional.ofNullable(archiveRoot).map(ArchiveRoot::getTopology);
 
@@ -176,7 +175,7 @@ public class IndigoInputsPreProcessorService {
 
           return Optional.of(handleInputValue(inputValue, inputName));
 
-        } catch (Exception ex) {
+        } catch (RuntimeException ex) {
           throw new ToscaException(String.format(
               "Failed to replace input function on <%s>, caused by: %s",
               propertyName, ex.getMessage()), ex);
@@ -263,6 +262,7 @@ public class IndigoInputsPreProcessorService {
           .collect(Collectors.toList());
       val = new ListPropertyValue(list);
     } else if (inputValue instanceof Map) {
+      @SuppressWarnings("unchecked")
       Map<String, Object> map = ((Map<String, Object>) inputValue)
           .entrySet()
           .stream()

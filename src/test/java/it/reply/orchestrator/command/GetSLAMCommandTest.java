@@ -51,7 +51,10 @@ public class GetSLAMCommandTest extends BaseRankCloudProviderCommandTest {
 
     RankCloudProvidersWorkflowTest.mockSlam(mockServer, slamService.getUrl());
 
-    ExecutionResults er = executeCommand(new RankCloudProvidersMessage(getDeploymentId()));
+    RankCloudProvidersMessage message = new RankCloudProvidersMessage();
+    message.setDeploymentId(getDeploymentId());
+    
+    ExecutionResults er = executeCommand(message);
 
     assertEquals(true, commandSucceeded(er));
   }

@@ -18,18 +18,14 @@ package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
-import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;
 
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class Undeploy extends BaseDeployCommand<Undeploy> {
-
-  @Autowired
-  private DeploymentProviderServiceRegistry deploymentProviderServiceRegistry;
 
   @Override
   protected String getErrorMessagePrefix() {
@@ -37,17 +33,15 @@ public class Undeploy extends BaseDeployCommand<Undeploy> {
   }
 
   @Override
-  protected ExecutionResults customExecute(CommandContext ctx,
+  @Transactional
+  public ExecutionResults customExecute(CommandContext ctx,
       DeploymentMessage deploymentMessage) {
-    DeploymentProviderService deploymentProviderService = deploymentProviderServiceRegistry
-        .getDeploymentProviderService(deploymentMessage.getDeployment());
+    DeploymentProviderService deploymentProviderService =
+        getDeploymentProviderService(deploymentMessage);
 
-    boolean result = deploymentProviderService.doUndeploy(deploymentMessage);
-    if (!result || deploymentMessage.isDeleteComplete()) {
-      deploymentProviderService.finalizeUndeploy(deploymentMessage, result);
-      deploymentMessage.setDeployment(null);
-    }
-    return resultOccurred(result);
+    deploymentMessage.setDeleteComplete(deploymentProviderService.doUndeploy(deploymentMessage));
+
+    return resultOccurred(true);
   }
 
 }

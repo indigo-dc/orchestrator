@@ -16,7 +16,9 @@
 
 package it.reply.orchestrator.exception.service;
 
-import it.reply.orchestrator.exception.OrchestratorException;
+import it.reply.orchestrator.exception.http.OrchestratorApiException;
+
+import org.springframework.http.HttpStatus;
 
 /**
  * Exception thrown when error occurred during the tosca parsing.
@@ -24,20 +26,16 @@ import it.reply.orchestrator.exception.OrchestratorException;
  * @author m.bassi
  *
  */
-public class ToscaException extends OrchestratorException {
+public class ToscaException extends OrchestratorApiException {
 
   private static final long serialVersionUID = 1L;
 
   public ToscaException(String message) {
-    super(message);
-  }
-
-  public ToscaException(Throwable cause) {
-    super(cause);
+    super(HttpStatus.BAD_REQUEST, message);
   }
 
   public ToscaException(String message, Throwable cause) {
-    super(message, cause);
+    super(HttpStatus.BAD_REQUEST, message, cause);
   }
 
 }

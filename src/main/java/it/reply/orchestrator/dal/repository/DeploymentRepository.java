@@ -23,11 +23,10 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Repository
-@Transactional(propagation = Propagation.MANDATORY)
+@Transactional(readOnly = true)
 public interface DeploymentRepository extends PagingAndSortingRepository<Deployment, String> {
 
   public Page<Deployment> findByOwner_oidcEntityId(OidcEntityId ownerId, Pageable pageable);

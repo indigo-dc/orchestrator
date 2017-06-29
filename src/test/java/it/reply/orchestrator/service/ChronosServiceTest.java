@@ -34,7 +34,10 @@ import it.infn.ba.indigo.chronos.client.ChronosClient;
 import it.infn.ba.indigo.chronos.client.model.v1.Job;
 import it.infn.ba.indigo.chronos.client.utils.ChronosException;
 import it.reply.orchestrator.config.specific.WebAppConfigurationAware;
+import it.reply.orchestrator.controller.ControllerTestUtils;
+import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
+import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage.TemplateTopologicalOrderIterator;
 import it.reply.orchestrator.dto.onedata.OneData;
@@ -85,6 +88,9 @@ public class ChronosServiceTest extends WebAppConfigurationAware {
   @Mock
   DeploymentStatusHelper deploymentStatusHelper;
 
+  @Mock
+  private DeploymentRepository deploymentRepository;
+  
   String endpoint = "https://www.endpoint.it";
   String username = "username";
   String password = "password";
@@ -231,57 +237,29 @@ public class ChronosServiceTest extends WebAppConfigurationAware {
   }
 
   @Test
-  public void failDeploy() throws ToscaException, ParsingException, IOException, ChronosException {
-    DeploymentMessage dm = TestUtil.generateDeployDm();
-    Assert.assertFalse(chronosServiceImplMock.doDeploy(dm));
-    
-    // more resource in templateTopologicalOrderIterator
-    ArrayList<Resource> resources = new ArrayList<>();
-    resources.add(new Resource("indigoJob"));
-    TemplateTopologicalOrderIterator templateTopologicalOrderIterator =
-        new TemplateTopologicalOrderIterator(resources);
-    dm.setTemplateTopologicalOrderIterator(templateTopologicalOrderIterator);
-    
-    ArchiveRoot ar = new ArchiveRoot();
-    Topology topology = new Topology();
-    Map<String,NodeTemplate> nodes = new HashMap<>();
-    topology.setNodeTemplates(nodes);
-    ar.setTopology(topology);
-    // set jbo graph
-    Map<String,IndigoJob> chronosJobGraph = new HashMap<String,IndigoJob>();
-
-    IndigoJob indigoJob = new IndigoJob("indigoJob", new Job());
-    chronosJobGraph.put("indigoJob", indigoJob);
-    dm.setChronosJobGraph(chronosJobGraph);
-    
-    Chronos client = Mockito.mock(Chronos.class);
-    Mockito.doNothing().when(client).createJob(Mockito.anyObject());
-    
-    //Mockito.doReturn(client).when(chronosServiceImplMock).getChronosClient();
-    
-    Mockito.when(toscaServiceMock.prepareTemplate(Mockito.anyString(),Mockito.anyObject())).thenReturn(ar);
-    Assert.assertFalse(chronosServiceImplMock.doDeploy(dm));
-    
-  }
-
-  @Test
   public void doDeploy() throws Exception {
-    DeploymentMessage dm = TestUtil.generateDeployDm();
+    Deployment deployment = ControllerTestUtils.createDeployment(2);
+    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
     ArchiveRoot ar = new ArchiveRoot();
     Topology topology = new Topology();
     topology.setNodeTemplates(new HashMap<>());
     ar.setTopology(topology);
-    Mockito.when(toscaServiceMock.prepareTemplate(any(String.class), any(PersistentMap.class)))
+    Mockito.when(deploymentRepository.findOne(deployment.getId()))
+    .thenReturn(deployment);
+    Mockito.when(toscaServiceMock.prepareTemplate(any(String.class), anyMapOf(String.class, Object.class)))
         .thenReturn(ar);
     Assert.assertTrue(chronosServiceImplMock.doDeploy(dm));
   }
 
   @Test
   public void isDeployedNoMoreJob() {
-    DeploymentMessage dm = TestUtil.generateDeployDm();
+    Deployment deployment = ControllerTestUtils.createDeployment(2);
+    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
     TemplateTopologicalOrderIterator templateTopologicalOrderIterator =
         new TemplateTopologicalOrderIterator(new ArrayList<>());
     dm.setTemplateTopologicalOrderIterator(templateTopologicalOrderIterator);
+    Mockito.when(deploymentRepository.findOne(deployment.getId()))
+    .thenReturn(deployment);
     Assert.assertTrue(chronosServiceImplMock.isDeployed(dm));
   }
   
@@ -309,7 +287,8 @@ public class ChronosServiceTest extends WebAppConfigurationAware {
 
   @Test(expected = RuntimeException.class)
   public void isDeployedMoreJobFailGetJobStatu() {
-    DeploymentMessage dm = TestUtil.generateDeployDm();
+    Deployment deployment = ControllerTestUtils.createDeployment(2);
+    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
     Map<String, IndigoJob> jobGraph = new HashMap<>();
     Job chronosJob = new Job();
     chronosJob.setName("chronosJobName");
@@ -344,51 +323,41 @@ public class ChronosServiceTest extends WebAppConfigurationAware {
   public void finalizeUndeployUpdateOnSuccess() {
     DeploymentMessage dm = new DeploymentMessage();
     Mockito.doNothing().when(deploymentStatusHelper).updateOnSuccess(any(String.class));
-    chronosServiceImplMock.finalizeUndeploy(dm, true);
-  }
-  
-  @Test
-  public void finalizeUndeployOnError() {
-    DeploymentMessage dm = new DeploymentMessage();
-    Mockito.doNothing().when(deploymentStatusHelper).updateOnError(any(String.class),
-        any(String.class));
-    chronosServiceImplMock.finalizeUndeploy(dm, false);
+    chronosServiceImplMock.finalizeUndeploy(dm);
   }
   
   @Test
   public void doUndeployWithoutChronosJob() {
-    DeploymentMessage dm = TestUtil.generateDeployDm();
+    Deployment deployment = ControllerTestUtils.createDeployment(2);
+    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
     Map<String, IndigoJob> jobGraph = new HashMap<>();
     Job chronosJob = new Job();
     chronosJob.setName("chronosJobName");
     IndigoJob job = new IndigoJob("toscaNodeName", chronosJob);
     jobGraph.put("toscaNodeName", job);
     dm.setChronosJobGraph(jobGraph);
-    Assert.assertFalse(chronosServiceImplMock.doUndeploy(dm));
+    
+    Mockito.when(deploymentRepository.findOne(deployment.getId()))
+    .thenReturn(deployment);
+    
+    Assert.assertTrue(chronosServiceImplMock.doUndeploy(dm));
   }
   
   @Test
   public void doUndeployWithChronosJob() {
-    DeploymentMessage dm = TestUtil.generateDeployDm();
+    Deployment deployment = ControllerTestUtils.createDeployment(2);
+    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
+    Mockito.when(deploymentRepository.findOne(deployment.getId()))
+    .thenReturn(deployment);
     Assert.assertTrue(chronosServiceImplMock.doUndeploy(dm));
   }
 
   @Test
   public void finalizeDeployTestUpdateOnSuccess() {
-    DeploymentMessage dm = TestUtil.generateDeployDm();
+    Deployment deployment = ControllerTestUtils.createDeployment(2);
+    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
     Mockito.doNothing().when(deploymentStatusHelper).updateOnSuccess(any(String.class));
-    chronosServiceImplMock.finalizeDeploy(dm, true);
+    chronosServiceImplMock.finalizeDeploy(dm);
   }
-  
-  
-  @Test
-  public void finalizeDeployTestUpdateOnError() {
-    DeploymentMessage dm = TestUtil.generateDeployDm();
-    Mockito.doNothing().when(deploymentStatusHelper).updateOnError(any(String.class),
-        any(String.class));
-    chronosServiceImplMock.finalizeDeploy(dm, false);
-  }
-  
-  
 
 }

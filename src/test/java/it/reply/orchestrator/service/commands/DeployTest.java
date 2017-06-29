@@ -27,37 +27,37 @@ import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
 import org.mockito.Mockito;
 
-public class UndeployTest extends BaseDeployCommandTest<Undeploy> {
+public class DeployTest extends BaseDeployCommandTest<Deploy> {
 
-  public UndeployTest() {
-    super(new Undeploy());
+  public DeployTest() {
+    super(new Deploy());
   }
 
   @Test
-  public void testUndeployComplete() throws Exception {
-    testUndeploy(true);
+  public void testDeployComplete() throws Exception {
+    testDeploy(true);
   }
 
   @Test
-  public void testUndeployNotComplete() throws Exception {
-    testUndeploy(false);
+  public void testDeployNotComplete() throws Exception {
+    testDeploy(false);
   }
 
-  public void testUndeploy(boolean complete) throws Exception {
+  public void testDeploy(boolean complete) throws Exception {
     DeploymentMessage dm = new DeploymentMessage();
     CommandContext commandContext = new CommandContext();
 
     WorkItemImpl workItem = new WorkItemImpl();
     commandContext.setData(Constants.WORKITEM, workItem);
 
-    Mockito.when(deploymentProviderService.doUndeploy(dm)).thenReturn(complete);
+    Mockito.when(deploymentProviderService.doDeploy(dm)).thenReturn(complete);
 
     ExecutionResults expectedResult = TestUtil.generateExpectedResult(true);
 
     ExecutionResults result = command.customExecute(commandContext, dm);
 
     TestUtil.assertBaseResults(expectedResult, result);
-    Assertions.assertThat(dm.isDeleteComplete()).isEqualTo(complete);
+    Assertions.assertThat(dm.isCreateComplete()).isEqualTo(complete);
   }
 
 }

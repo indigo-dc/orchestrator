@@ -14,15 +14,11 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.service;
+package it.reply.orchestrator.service.commands;
 
-import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.PaaSMetric;
+public class PollUndeployTest extends BasePollCommandTest<PollUndeploy> {
 
-import java.util.List;
-
-public interface MonitoringService {
-
-  public List<PaaSMetric> getProviderData(String providerId);
-
-  public String getUrl();
+  public PollUndeployTest() {
+    super(new PollUndeploy());
+  }
 }

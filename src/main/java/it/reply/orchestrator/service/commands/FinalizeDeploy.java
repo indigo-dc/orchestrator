@@ -16,46 +16,32 @@
 
 package it.reply.orchestrator.service.commands;
 
-import it.reply.orchestrator.dto.RankCloudProvidersMessage;
-import it.reply.orchestrator.dto.onedata.OneData;
-import it.reply.orchestrator.service.OneDataService;
+import it.reply.orchestrator.dto.deployment.DeploymentMessage;
+import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
 
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Map;
-
 @Component
-public class GetOneDataData extends BaseRankCloudProvidersCommand<GetOneDataData> {
-
-  @Autowired
-  private OneDataService oneDataService;
+public class FinalizeDeploy extends BaseDeployCommand<FinalizeDeploy> {
 
   @Override
   @Transactional
   public ExecutionResults customExecute(CommandContext ctx,
-      RankCloudProvidersMessage rankCloudProvidersMessage) {
+      DeploymentMessage deploymentMessage) {
 
-    Map<String, OneData> oneDataRequirements = rankCloudProvidersMessage.getOneDataRequirements();
+    DeploymentProviderService deploymentProviderService =
+        getDeploymentProviderService(deploymentMessage);
 
-    OneData inputRequirement = oneDataRequirements.get("input");
-    if (inputRequirement != null) {
-      oneDataService.populateProviderInfo(inputRequirement);
-    }
-
-    OneData outputRequirement = oneDataRequirements.get("output");
-    if (outputRequirement != null) {
-      oneDataService.populateProviderInfo(outputRequirement);
-    }
-
-    return resultOccurred(oneDataRequirements);
+    deploymentProviderService.finalizeDeploy(deploymentMessage);
+    return resultOccurred(true);
   }
 
   @Override
   protected String getErrorMessagePrefix() {
-    return "Error retrieving info from OneData";
+    return "Error finalizing deployment";
   }
+
 }

@@ -21,13 +21,12 @@ import it.reply.orchestrator.dal.entity.OidcTokenId;
 
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
 @Repository
-@Transactional(propagation = Propagation.MANDATORY)
+@Transactional(readOnly = true)
 public interface OidcTokenRepository extends CrudRepository<OidcRefreshToken, String> {
 
   public Optional<OidcRefreshToken> findByEntity_OidcEntityId_IssuerAndOriginalTokenId(

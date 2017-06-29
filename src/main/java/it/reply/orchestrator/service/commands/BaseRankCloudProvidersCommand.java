@@ -17,15 +17,7 @@
 package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
-import it.reply.orchestrator.service.deployment.providers.DeploymentStatusHelper;
 import it.reply.orchestrator.utils.WorkflowConstants;
-import it.reply.workflowmanager.spring.orchestrator.bpm.ejbcommands.BaseCommand;
-
-import lombok.extern.slf4j.Slf4j;
-
-import org.kie.api.executor.CommandContext;
-import org.kie.api.executor.ExecutionResults;
-import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * Base behavior for all RankCloudProvider WF tasks. <br/>
@@ -35,47 +27,11 @@ import org.springframework.beans.factory.annotation.Autowired;
  * @author l.biava
  *
  */
-@Slf4j
 public abstract class BaseRankCloudProvidersCommand<T extends BaseRankCloudProvidersCommand<T>>
-    extends BaseCommand<T> {
+    extends BaseWorkflowCommand<RankCloudProvidersMessage, T> {
 
-  @Autowired
-  protected DeploymentStatusHelper deploymentStatusHelper;
-
-  protected abstract String getErrorMessagePrefix();
-
-  /**
-   * <b>This method SHOULD NOT be overridden! It cannot be final for INJECTION purpose!</b> <br/>
-   * Use the {@link #customExecute(RankCloudProvidersMessage)} method to implement command logic.
-   */
   @Override
-  protected ExecutionResults customExecute(CommandContext ctx) throws Exception {
-    RankCloudProvidersMessage rankCloudProvidersMessage =
-        getParameter(ctx, WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE);
-    if (rankCloudProvidersMessage == null) {
-      throw new IllegalArgumentException(String.format("WF parameter <%s> cannot be null",
-          WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE));
-    }
-    ExecutionResults exResults = new ExecutionResults();
-    try {
-      rankCloudProvidersMessage = this.getFacade().customExecute(rankCloudProvidersMessage);
-      exResults.setData(WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE,
-          rankCloudProvidersMessage);
-      exResults.getData().putAll(resultOccurred(true).getData());
-    } catch (Exception ex) {
-      LOG.error(String.format("Error executing %s", this.getClass().getSimpleName()), ex);
-      exResults.getData().putAll(resultOccurred(false).getData());
-
-      // Update deployment with error
-      // TODO: what if this fails??
-      deploymentStatusHelper.updateOnError(rankCloudProvidersMessage.getDeploymentId(),
-          getErrorMessagePrefix(), ex);
-    }
-
-    return exResults;
+  protected String getMessageParameterName() {
+    return WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE;
   }
-
-  protected abstract RankCloudProvidersMessage customExecute(
-      RankCloudProvidersMessage rankCloudProvidersMessage) throws Exception;
-
 }

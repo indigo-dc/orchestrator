@@ -18,90 +18,25 @@ package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
-import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;
-import it.reply.orchestrator.utils.WorkflowConstants;
-import it.reply.utils.misc.polling.AbstractPollingBehaviour;
-import it.reply.utils.misc.polling.ExternallyControlledPoller;
-import it.reply.utils.misc.polling.PollingBehaviour;
-import it.reply.utils.misc.polling.PollingException;
-import it.reply.workflowmanager.spring.orchestrator.bpm.OrchestratorContextBean;
 
-import org.kie.api.executor.CommandContext;
-import org.kie.api.executor.ExecutionResults;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-@Component
-public class PollUndeploy extends BaseDeployCommand<PollUndeploy> {
+import java.io.Serializable;
+import java.util.function.BiFunction;
 
-  @Autowired
-  private DeploymentProviderServiceRegistry deploymentProviderServiceRegistry;
+@Component
+public class PollUndeploy extends AbstractPollingCommand<PollUndeploy> {
 
   @Override
   protected String getErrorMessagePrefix() {
-    return "Error during undeploy status check";
+    return "Error while checking the undeployment status";
   }
 
   @Override
-  protected ExecutionResults customExecute(CommandContext ctx,
-      DeploymentMessage deploymentMessage) {
-
-    ExecutionResults exResults = new ExecutionResults();
-    ExternallyControlledPoller<DeploymentMessage, Boolean> pollingStatus =
-        getParameter(ctx, WorkflowConstants.WF_PARAM_POLLING_STATUS);
-    if (pollingStatus == null) {
-      pollingStatus = getPoller();
-    }
-    exResults.setData(WorkflowConstants.WF_PARAM_POLLING_STATUS, pollingStatus);
-
-    DeploymentProviderService deploymentProviderService = deploymentProviderServiceRegistry
-        .getDeploymentProviderService(deploymentMessage.getDeployment());
-
-    try {
-      Boolean result = pollingStatus.doPollEvent(deploymentMessage);
-      if (result != null && result) {
-        deploymentProviderService.finalizeUndeploy(deploymentMessage, result);
-        deploymentMessage.setDeployment(null);
-        return resultOccurred(true, exResults);
-      } else {
-        return resultOccurred(false, exResults);
-      }
-    } catch (PollingException ex) {
-      deploymentProviderService.finalizeUndeploy(deploymentMessage, false);
-      return resultOccurred(true, exResults);
-    }
+  protected BiFunction<DeploymentMessage, DeploymentProviderService, Boolean> getPollingFunction() {
+    return (Serializable & BiFunction<DeploymentMessage, DeploymentProviderService, Boolean>) (
+        DeploymentMessage deploymentMessage, DeploymentProviderService service) -> service
+            .isUndeployed(deploymentMessage);
   }
 
-  private static ExternallyControlledPoller<DeploymentMessage, Boolean> getPoller() {
-
-    long timeoutTime = 3 * 60 * 60 * 1000L;
-
-    PollingBehaviour<DeploymentMessage, Boolean> pollBehavior =
-        new AbstractPollingBehaviour<DeploymentMessage, Boolean>(timeoutTime) {
-
-          private static final long serialVersionUID = -5994059867039967783L;
-
-          @Override
-          public Boolean doPolling(DeploymentMessage deploymentMessage) throws PollingException {
-            try {
-              DeploymentProviderServiceRegistry registry =
-                  OrchestratorContextBean.getBean(DeploymentProviderServiceRegistry.class);
-              DeploymentProviderService deploymentProviderService =
-                  registry.getDeploymentProviderService(deploymentMessage.getDeployment());
-              return deploymentProviderService.isUndeployed(deploymentMessage);
-            } catch (Exception ex) {
-              throw new PollingException("Polling for undeploy - error occured: " + ex.getMessage(),
-                  ex);
-            }
-          }
-
-          @Override
-          public boolean pollExit(Boolean pollResult) {
-            return pollResult != null && pollResult;
-          }
-
-        };
-
-    return new ExternallyControlledPoller<>(pollBehavior, 3);
-  }
 }

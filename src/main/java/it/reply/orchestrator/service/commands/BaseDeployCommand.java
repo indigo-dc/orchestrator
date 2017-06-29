@@ -16,21 +16,12 @@
 
 package it.reply.orchestrator.service.commands;
 
-import it.reply.orchestrator.dal.entity.Deployment;
-import it.reply.orchestrator.dal.repository.DeploymentRepository;
-import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
-import it.reply.orchestrator.service.deployment.providers.DeploymentStatusHelper;
+import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
+import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;
 import it.reply.orchestrator.utils.WorkflowConstants;
-import it.reply.workflowmanager.spring.orchestrator.bpm.ejbcommands.BaseCommand;
 
-import lombok.extern.slf4j.Slf4j;
-
-import org.kie.api.executor.CommandContext;
-import org.kie.api.executor.ExecutionResults;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.Optional;
 
 /**
  * Base behavior for all Deploy WF tasks. <br/>
@@ -40,64 +31,21 @@ import java.util.Optional;
  * @author l.biava
  *
  */
-@Slf4j
-public abstract class BaseDeployCommand<T extends BaseDeployCommand<T>> extends BaseCommand<T> {
+public abstract class BaseDeployCommand<T extends BaseDeployCommand<T>>
+    extends BaseWorkflowCommand<DeploymentMessage, T> {
 
   @Autowired
-  protected DeploymentStatusHelper deploymentStatusHelper;
+  private DeploymentProviderServiceRegistry deploymentProviderServiceRegistry;
 
-  @Autowired
-  protected DeploymentRepository deploymentRepository;
-
-  protected abstract String getErrorMessagePrefix();
-
-  /**
-   * <b>This method SHOULD NOT be overridden! It cannot be final for INJECTION purpose!</b> <br/>
-   * Use the {@link #customExecute(RankCloudProvidersMessage)} method to implement command logic.
-   */
   @Override
-  protected ExecutionResults customExecute(CommandContext ctx) throws Exception {
-    DeploymentMessage deploymentMessage =
-        getParameter(ctx, WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE);
-    if (deploymentMessage == null) {
-      throw new IllegalArgumentException(String.format("WF parameter <%s> cannot be null",
-          WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE));
-    }
-    ExecutionResults exResults = new ExecutionResults();
-    try {
-      // Load the DB Deployment from ID (this way we avoid jBPM JPA serialization issues)
-      deploymentMessage
-          .setDeployment(deploymentRepository.findOne(deploymentMessage.getDeploymentId()));
-
-      exResults.getData().putAll(this.getFacade().customExecute(ctx, deploymentMessage).getData());
-      exResults.setData(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
-    } catch (Exception ex) {
-      LOG.error(String.format("Error executing %s", this.getClass().getSimpleName()), ex);
-      exResults.getData().putAll(resultOccurred(false).getData());
-
-      // Update deployment with error
-      // TODO: what if this fails??
-      deploymentStatusHelper.updateOnError(deploymentMessage.getDeploymentId(),
-          generateErrorMessagePrefix(deploymentMessage), ex);
-    }
-
-    // Save and then remove entities (again for jBPM JPA serialization issues)
-    if (deploymentMessage.getDeployment() != null) {
-      deploymentRepository.save(deploymentMessage.getDeployment());
-      deploymentMessage.setDeployment(null);
-    }
-    return exResults;
+  protected String getMessageParameterName() {
+    return WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE;
   }
 
-  protected abstract ExecutionResults customExecute(CommandContext ctx,
-      DeploymentMessage deploymentMessage);
-
-  private String generateErrorMessagePrefix(DeploymentMessage deploymentMessage) {
-    String deploymentProviderMessagePrefix = Optional.ofNullable(deploymentMessage.getDeployment())
-        .map(Deployment::getDeploymentProvider)
-        .map(deploymentProvider -> " with deployment provider " + deploymentProvider.toString())
-        .orElse("");
-    return String.format("%s%s", getErrorMessagePrefix(), deploymentProviderMessagePrefix);
+  protected DeploymentProviderService getDeploymentProviderService(
+      DeploymentMessage deploymentMessage) {
+    return deploymentProviderServiceRegistry
+        .getDeploymentProviderService(deploymentMessage.getDeploymentId());
   }
 
 }

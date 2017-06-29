@@ -37,4 +37,7 @@ public class DeploymentRequest {
   @Nullable
   private String callback;
 
+  @Nullable
+  private Integer timeoutMins;
+
 }

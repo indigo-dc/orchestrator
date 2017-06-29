@@ -213,36 +213,6 @@ public class OneDataServiceImpl implements OneDataService {
     return restTemplate.exchange(endpoint, HttpMethod.GET, entity, entityClass);
   }
 
-  // private boolean sameUrl(String lhs, String rhs) {
-  // if (lhs == null && rhs == null) {
-  // return true;
-  // } else if (lhs != null && rhs != null) {
-  // URI lhsUri = URI.create(addTrailingSlash(lhs));
-  // URI rhsUri = URI.create(addTrailingSlash(rhs));
-  // if (!Objects.equal(lhsUri.getHost(), rhsUri.getHost())) {
-  // return false;
-  // } else if (!Objects.equal(lhsUri.getPath(), rhsUri.getPath())) {
-  // return false;
-  // } else {
-  // if (lhsUri.getScheme().equals("http") && rhsUri.getScheme().equals("http")) {
-  // if ((lhsUri.getPort() == -1 || lhsUri.getPort() == 80) && (rhsUri.getPort() == -1 ||
-  // rhsUri.getPort() == 80)) {
-  // return true;
-  // }
-  // } else if (lhsUri.getScheme().equals("https") && rhsUri.getScheme().equals("https")) {
-  // if ((lhsUri.getPort() == -1 || lhsUri.getPort() == 443) && (rhsUri.getPort() == -1 ||
-  // rhsUri.getPort() == 443)) {
-  // return true;
-  // }
-  // }
-  // return Objects.equal(lhsUri.getScheme(), rhsUri.getScheme()) && lhsUri.getPort() ==
-  // rhsUri.getPort();
-  // }
-  // } else {
-  // return false;
-  // }
-  // }
-
   @Override
   public OneData populateProviderInfo(OneData onedataParameter) {
     boolean addAllProvidersinfo = false;

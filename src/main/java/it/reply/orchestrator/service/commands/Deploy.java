@@ -16,31 +16,27 @@
 
 package it.reply.orchestrator.service.commands;
 
-import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
-import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;
 
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class Deploy extends BaseDeployCommand<Deploy> {
 
-  @Autowired
-  private DeploymentProviderServiceRegistry deploymentProviderServiceRegistry;
-
   @Override
-  protected ExecutionResults customExecute(CommandContext ctx,
+  @Transactional
+  public ExecutionResults customExecute(CommandContext ctx,
       DeploymentMessage deploymentMessage) {
-    Deployment deployment = deploymentMessage.getDeployment();
 
     DeploymentProviderService deploymentProviderService =
-        deploymentProviderServiceRegistry.getDeploymentProviderService(deployment);
+        getDeploymentProviderService(deploymentMessage);
 
-    return resultOccurred(deploymentProviderService.doDeploy(deploymentMessage));
+    deploymentMessage.setCreateComplete(deploymentProviderService.doDeploy(deploymentMessage));
+    return resultOccurred(true);
   }
 
   @Override

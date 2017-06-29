@@ -16,6 +16,8 @@
 
 package it.reply.orchestrator.exception.http;
 
+import org.springframework.http.HttpStatus;
+
 /**
  * Exception thrown when a resource doesn't exist.
  * 
@@ -27,7 +29,7 @@ public class NotFoundException extends OrchestratorApiException {
   private static final long serialVersionUID = 1L;
 
   public NotFoundException(String message) {
-    super(message);
+    super(HttpStatus.NOT_FOUND, message);
   }
 
 }

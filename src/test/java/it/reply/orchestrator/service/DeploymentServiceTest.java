@@ -50,6 +50,7 @@ import org.assertj.core.api.Assertions;
 import org.jbpm.ruleflow.instance.RuleFlowProcessInstance;
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -98,7 +99,7 @@ public class DeploymentServiceTest {
 
   @Test
   public void getDeploymentsSuccessful() throws Exception {
-    List<Deployment> deployments = ControllerTestUtils.createDeployments(5, false);
+    List<Deployment> deployments = ControllerTestUtils.createDeployments(5);
 
     Mockito.when(deploymentRepository.findAll((Pageable) null))
         .thenReturn(new PageImpl<Deployment>(deployments));
@@ -112,7 +113,7 @@ public class DeploymentServiceTest {
   @Test
   public void getDeploymentsPagedSuccessful() throws Exception {
     Pageable pageable = new PageRequest(0, 10);
-    List<Deployment> deployments = ControllerTestUtils.createDeployments(10, false);
+    List<Deployment> deployments = ControllerTestUtils.createDeployments(10);
 
     Mockito.when(deploymentRepository.findAll(pageable))
         .thenReturn(new PageImpl<Deployment>(deployments));
@@ -342,22 +343,6 @@ public class DeploymentServiceTest {
   }
 
   @Test
-  public void deleteDeploymentNoProviderSuccesful() throws Exception {
-    Deployment deployment = ControllerTestUtils.createDeployment();
-    deployment.setStatus(Status.CREATE_COMPLETE);
-    deployment.setDeploymentProvider(null);
-    deployment.setEndpoint(null);
-
-    Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
-    Mockito.when(deploymentRepository.save(deployment)).thenReturn(deployment);
-
-    deploymentService.deleteDeployment(deployment.getId());
-
-    Mockito.verifyZeroInteractions(wfService);
-    Mockito.verify(deploymentRepository).delete(deployment);
-  }
-
-  @Test
   public void deleteDeploymentSuccesfulWithReferences() throws Exception {
     Deployment deployment = ControllerTestUtils.createDeployment();
     deployment.setStatus(Status.CREATE_IN_PROGRESS);
@@ -435,24 +420,6 @@ public class DeploymentServiceTest {
     Mockito.when(deploymentRepository.findOne(id)).thenReturn(deployment);
 
     deploymentService.updateDeployment(id, null);
-  }
-
-  @Test(expected = OrchestratorException.class)
-  public void updateDeploymentOrchestratorException() throws Exception {
-
-    DeploymentRequest request = new DeploymentRequest();
-    request.setTemplate("template");
-
-    String id = UUID.randomUUID().toString();
-    Deployment deployment = ControllerTestUtils.createDeployment(id);
-    deployment.setDeploymentProvider(DeploymentProvider.HEAT);
-    deployment.setStatus(Status.CREATE_COMPLETE);
-    deployment.setParameters(new HashMap<String, Object>());
-    Mockito.when(deploymentRepository.findOne(id)).thenReturn(deployment);
-    Mockito.doThrow(new IOException()).when(toscaService)
-      .prepareTemplate(request.getTemplate(), deployment.getParameters());
-
-    deploymentService.updateDeployment(id, request);
   }
 
 

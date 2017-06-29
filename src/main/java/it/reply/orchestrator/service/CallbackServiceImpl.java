@@ -26,6 +26,7 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 @Service
@@ -39,13 +40,13 @@ public class CallbackServiceImpl implements CallbackService {
   private RestTemplate restTemplate;
 
   @Override
+  @Transactional(readOnly = true)
   public boolean doCallback(String deploymentId) {
     Deployment deployment = deploymentRepository.findOne(deploymentId);
     return doCallback(deployment);
   }
 
-  @Override
-  public boolean doCallback(Deployment deployment) {
+  private boolean doCallback(Deployment deployment) {
     if (deployment.getCallback() != null) {
       DeploymentResource deploymentResource = deploymentResourceAssembler.toResource(deployment);
       ResponseEntity<?> response =

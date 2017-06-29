@@ -19,8 +19,11 @@ package it.reply.orchestrator.service.commands;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.service.CmdbService;
 
+import org.kie.api.executor.CommandContext;
+import org.kie.api.executor.ExecutionResults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class GetCmdbDataDeploy extends BaseRankCloudProvidersCommand<GetCmdbDataDeploy> {
@@ -29,14 +32,16 @@ public class GetCmdbDataDeploy extends BaseRankCloudProvidersCommand<GetCmdbData
   private CmdbService cmdbService;
 
   @Override
-  protected RankCloudProvidersMessage customExecute(
+  @Transactional
+  public ExecutionResults customExecute(CommandContext ctx,
       RankCloudProvidersMessage rankCloudProvidersMessage) {
 
     // Get CMDB data for each Cloud Provider
-    rankCloudProvidersMessage.getCloudProviders()
+    rankCloudProvidersMessage
+        .getCloudProviders()
         .forEach((key, cloudProvider) -> cmdbService.fillCloudProviderInfo(cloudProvider));
 
-    return rankCloudProvidersMessage;
+    return resultOccurred(rankCloudProvidersMessage.getCloudProviders());
   }
 
   @Override
