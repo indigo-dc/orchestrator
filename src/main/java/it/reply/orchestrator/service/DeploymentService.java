@@ -19,12 +19,13 @@ package it.reply.orchestrator.service;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface DeploymentService {
 
-  public Page<Deployment> getDeployments(Pageable pageable);
+  public Page<Deployment> getDeployments(Pageable pageable, @Nullable String owner);
 
   public Deployment getDeployment(String id);
 
