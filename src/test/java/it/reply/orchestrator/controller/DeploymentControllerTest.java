@@ -30,6 +30,8 @@ import static org.springframework.restdocs.operation.preprocess.Preprocessors.pr
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
 import static org.springframework.restdocs.payload.PayloadDocumentation.requestFields;
 import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
+import static org.springframework.restdocs.request.RequestDocumentation.parameterWithName;
+import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -41,6 +43,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import it.reply.orchestrator.config.filters.CustomRequestLoggingFilter;
 import it.reply.orchestrator.dal.entity.AbstractResourceEntity;
 import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.entity.OidcEntity;
+import it.reply.orchestrator.dal.entity.OidcEntityId;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.exception.GlobalControllerExceptionHandler;
@@ -78,6 +82,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import jersey.repackaged.com.google.common.collect.Maps;
 
@@ -132,22 +137,31 @@ public class DeploymentControllerTest {
   @Test
   public void getDeployments() throws Exception {
 
+    OidcEntityId ownerId = new OidcEntityId();
+    ownerId.setSubject(UUID.randomUUID().toString());
+    ownerId.setIssuer("https://iam-test.indigo-datacloud.eu/");
+    String ownerIdString = ownerId.getSubject()+"@"+ownerId.getIssuer();
+    OidcEntity owner = new OidcEntity();
+    owner.setOidcEntityId(ownerId);
     List<Deployment> deployments = ControllerTestUtils.createDeployments(2, true);
+    deployments.forEach(deployment -> deployment.setOwner(owner));
     deployments.get(0).setStatus(Status.CREATE_FAILED);
     deployments.get(0).setStatusReason("Some reason");
     deployments.get(1).setStatus(Status.CREATE_COMPLETE);
     Pageable pageable = ControllerTestUtils.createDefaultPageable();
-    Mockito.when(deploymentService.getDeployments(pageable))
+    Mockito.when(deploymentService.getDeployments(pageable, ownerIdString))
         .thenReturn(new PageImpl<Deployment>(deployments));
 
     mockMvc
-        .perform(get("/deployments").accept(MediaType.APPLICATION_JSON)
+        .perform(get("/deployments").param("createdBy", ownerIdString).accept(MediaType.APPLICATION_JSON)
             .header(HttpHeaders.AUTHORIZATION, OAuth2AccessToken.BEARER_TYPE + " <access token>"))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andDo(document("authentication", requestHeaders(
             headerWithName(HttpHeaders.AUTHORIZATION).description("OAuth2 bearer token"))))
-        .andDo(document("deployments", preprocessResponse(prettyPrint()),
+        .andDo(document("deployments", preprocessResponse(prettyPrint()), requestParameters(
+            parameterWithName("createdBy").description(
+                "Parameter to filter the deployments based on who created them. The following values can be used:\n - \"{OIDC_subject}@{OIDC_issuer}\": to ask for the deployemnts of a generic user\n - \"me\": shourtcut to ask for the deployments created by the user making the request")),
 
             responseFields(fieldWithPath("links[]").ignored(),
 
@@ -161,6 +175,8 @@ public class DeploymentControllerTest {
                     "Verbose explanation of reason that lead to the deployment status (Present only if the deploy is in some error status)"),
                 fieldWithPath("content[].task").description(
                     "The current step of the deployment process. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Task.html)"),
+                fieldWithPath("content[].createdBy").description(
+                    "The OIDC info of the deployment's creator."),
                 fieldWithPath("content[].callback").description(
                     "The endpoint used by the orchestrator to notify the progress of the deployment process."),
                 fieldWithPath("content[].outputs").description("The outputs of the TOSCA document"),
@@ -173,7 +189,7 @@ public class DeploymentControllerTest {
     List<Deployment> deployments = ControllerTestUtils.createDeployments(5, true);
     Pageable pageable =
         new PageRequest(1, 2, new Sort(Direction.DESC, AbstractResourceEntity.CREATED_COLUMN_NAME));
-    Mockito.when(deploymentService.getDeployments(pageable))
+    Mockito.when(deploymentService.getDeployments(pageable, null))
         .thenReturn(new PageImpl<Deployment>(deployments, pageable, deployments.size()));
 
     mockMvc
@@ -198,7 +214,7 @@ public class DeploymentControllerTest {
 
     List<Deployment> deployments = ControllerTestUtils.createDeployments(5, true);
     Pageable pageable = ControllerTestUtils.createDefaultPageable();
-    Mockito.when(deploymentService.getDeployments(pageable))
+    Mockito.when(deploymentService.getDeployments(pageable, null))
         .thenReturn(new PageImpl<Deployment>(deployments));
 
     mockMvc

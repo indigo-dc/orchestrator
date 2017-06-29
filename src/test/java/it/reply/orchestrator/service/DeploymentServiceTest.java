@@ -103,7 +103,7 @@ public class DeploymentServiceTest {
     Mockito.when(deploymentRepository.findAll((Pageable) null))
         .thenReturn(new PageImpl<Deployment>(deployments));
 
-    Page<Deployment> pagedDeployment = deploymentService.getDeployments(null);
+    Page<Deployment> pagedDeployment = deploymentService.getDeployments(null, null);
 
     Assert.assertEquals(pagedDeployment.getContent(), deployments);
 
@@ -117,7 +117,7 @@ public class DeploymentServiceTest {
     Mockito.when(deploymentRepository.findAll(pageable))
         .thenReturn(new PageImpl<Deployment>(deployments));
 
-    Page<Deployment> pagedDeployment = deploymentService.getDeployments(pageable);
+    Page<Deployment> pagedDeployment = deploymentService.getDeployments(pageable, null);
 
     Assert.assertEquals(pagedDeployment.getContent(), deployments);
     Assert.assertTrue(pagedDeployment.getNumberOfElements() == 10);

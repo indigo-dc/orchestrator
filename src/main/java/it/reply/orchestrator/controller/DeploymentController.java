@@ -27,6 +27,7 @@ import it.reply.orchestrator.validator.DeploymentRequestValidator;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -43,6 +44,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -81,11 +83,12 @@ public class DeploymentController {
   @RequestMapping(value = "/deployments", method = RequestMethod.GET,
       produces = MediaType.APPLICATION_JSON_VALUE)
   public PagedResources<DeploymentResource> getDeployments(
+      @RequestParam(name = "createdBy", required = false) @Nullable String owner,
       @PageableDefault(sort = AbstractResourceEntity.CREATED_COLUMN_NAME,
           direction = Direction.DESC) Pageable pageable,
       PagedResourcesAssembler<Deployment> pagedAssembler) {
 
-    Page<Deployment> deployments = deploymentService.getDeployments(pageable);
+    Page<Deployment> deployments = deploymentService.getDeployments(pageable, owner);
 
     return pagedAssembler.toResource(deployments, deploymentResourceAssembler);
 

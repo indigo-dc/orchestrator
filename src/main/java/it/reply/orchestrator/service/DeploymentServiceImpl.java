@@ -74,11 +74,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Service
 public class DeploymentServiceImpl implements DeploymentService {
+
+  private static final Pattern OWNER_PATTERN = Pattern.compile("([^@]+)@([^@]+)");
 
   @Autowired
   private DeploymentRepository deploymentRepository;
@@ -103,8 +107,25 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   @Override
   @Transactional(readOnly = true)
-  public Page<Deployment> getDeployments(Pageable pageable) {
-    return deploymentRepository.findAll(pageable);
+  public Page<Deployment> getDeployments(Pageable pageable, String owner) {
+    if (owner == null) {
+      return deploymentRepository.findAll(pageable);
+    } else {
+      OidcEntityId ownerId;
+      if ("me".equals(owner)) {
+        ownerId = oauth2TokenService.generateOidcEntityIdFromCurrentAuth();
+      } else {
+        Matcher matcher = OWNER_PATTERN.matcher(owner);
+        if (matcher.matches()) {
+          ownerId = new OidcEntityId();
+          ownerId.setSubject(matcher.group(0));
+          ownerId.setIssuer(matcher.group(1));
+        } else {
+          throw new BadRequestException("Value " + owner + " for param createdBy is illegal");
+        }
+      }
+      return deploymentRepository.findByOwner_oidcEntityId(ownerId, pageable);
+    }
   }
 
   @Override
