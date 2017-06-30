@@ -153,15 +153,15 @@ public class DeploymentControllerTest {
         .thenReturn(new PageImpl<Deployment>(deployments));
 
     mockMvc
-        .perform(get("/deployments").param("createdBy", ownerIdString).accept(MediaType.APPLICATION_JSON)
+        .perform(get("/deployments?createdBy=" + ownerIdString).accept(MediaType.APPLICATION_JSON)
             .header(HttpHeaders.AUTHORIZATION, OAuth2AccessToken.BEARER_TYPE + " <access token>"))
         .andExpect(status().isOk())
         .andExpect(content().contentType(MediaType.APPLICATION_JSON))
         .andDo(document("authentication", requestHeaders(
             headerWithName(HttpHeaders.AUTHORIZATION).description("OAuth2 bearer token"))))
-        .andDo(document("deployments", preprocessResponse(prettyPrint()), requestParameters(
-            parameterWithName("createdBy").description(
-                "Parameter to filter the deployments based on who created them. The following values can be used:\n - \"{OIDC_subject}@{OIDC_issuer}\": to ask for the deployemnts of a generic user\n - \"me\": shourtcut to ask for the deployments created by the user making the request")),
+        .andDo(document("deployments", preprocessRequest(prettyPrint()), preprocessResponse(prettyPrint()),
+            requestParameters(parameterWithName("createdBy").description(
+                "Optional parameter to filter the deployments based on who created them. The following values can be used:\n* \"{OIDC_subject}@{OIDC_issuer}\": to ask for the deployments of a generic user\n* \"me\": shortcut to ask for the deployments created by the user making the request")),
 
             responseFields(fieldWithPath("links[]").ignored(),
 

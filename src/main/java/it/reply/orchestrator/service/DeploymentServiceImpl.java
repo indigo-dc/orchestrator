@@ -118,8 +118,8 @@ public class DeploymentServiceImpl implements DeploymentService {
         Matcher matcher = OWNER_PATTERN.matcher(owner);
         if (matcher.matches()) {
           ownerId = new OidcEntityId();
-          ownerId.setSubject(matcher.group(0));
-          ownerId.setIssuer(matcher.group(1));
+          ownerId.setSubject(matcher.group(1));
+          ownerId.setIssuer(matcher.group(2));
         } else {
           throw new BadRequestException("Value " + owner + " for param createdBy is illegal");
         }

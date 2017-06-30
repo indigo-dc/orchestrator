@@ -127,6 +127,10 @@ This resource represents a TOSCA template deployment.
 
 A `GET` request is used to list all the deployments.
 
+==== Request parameters
+
+include::{snippets}/deployments/request-parameters.adoc[]
+
 ==== Example request
 
 include::{snippets}/deployments/curl-request.adoc[]
