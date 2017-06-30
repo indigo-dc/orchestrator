@@ -35,6 +35,8 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.hateoas.PagedResources;
+import org.springframework.hateoas.core.DummyInvocationUtils;
+import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -83,14 +85,20 @@ public class DeploymentController {
   @RequestMapping(value = "/deployments", method = RequestMethod.GET,
       produces = MediaType.APPLICATION_JSON_VALUE)
   public PagedResources<DeploymentResource> getDeployments(
-      @RequestParam(name = "createdBy", required = false) @Nullable String owner,
+      @RequestParam(name = "createdBy", required = false) @Nullable String createdBy,
       @PageableDefault(sort = AbstractResourceEntity.CREATED_COLUMN_NAME,
           direction = Direction.DESC) Pageable pageable,
       PagedResourcesAssembler<Deployment> pagedAssembler) {
 
-    Page<Deployment> deployments = deploymentService.getDeployments(pageable, owner);
+    Page<Deployment> deployments = deploymentService.getDeployments(pageable, createdBy);
 
-    return pagedAssembler.toResource(deployments, deploymentResourceAssembler);
+    return pagedAssembler.toResource(deployments, deploymentResourceAssembler,
+        ControllerLinkBuilder
+            .linkTo(
+                DummyInvocationUtils
+                    .methodOn(DeploymentController.class)
+                    .getDeployments(createdBy, pageable, pagedAssembler))
+            .withSelfRel());
 
   }
 

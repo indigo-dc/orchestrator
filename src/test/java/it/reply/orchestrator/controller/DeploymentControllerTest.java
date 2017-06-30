@@ -161,7 +161,7 @@ public class DeploymentControllerTest {
             headerWithName(HttpHeaders.AUTHORIZATION).description("OAuth2 bearer token"))))
         .andDo(document("deployments", preprocessRequest(prettyPrint()), preprocessResponse(prettyPrint()),
             requestParameters(parameterWithName("createdBy").description(
-                "Optional parameter to filter the deployments based on who created them. The following values can be used:\n* \"{OIDC_subject}@{OIDC_issuer}\": to ask for the deployments of a generic user\n* \"me\": shortcut to ask for the deployments created by the user making the request")),
+                "Optional parameter to filter the deployments based on who created them. The following values can be used:\n\n* `*OIDC_subject@OIDC_issuer*`: to ask for the deployments of a generic user\n* `*me*`: shortcut to ask for the deployments created by the user making the request")),
 
             responseFields(fieldWithPath("links[]").ignored(),
 
