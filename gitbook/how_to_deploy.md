@@ -84,6 +84,10 @@ By default the REST APIs are not authenticated; if you want to enable the IAM in
  1. Register the Orchestrator on IAM as **protected resource server** with
      1. `HTTP Basic` as Token Endpoint Authentication Method
      2. `openid`, `profile` and `offline_access` as scopes
+     3. `urn:ietf:params:oauth:grant-type:token-exchange` as additional grant type
+     4. Expiration time for the authorization token must be set to 3600 seconds
+     5. Expiration time for the id token must be set to 1800 seconds 
+     6. Expiration info for the exchanged token must not be disabled
  2. Retrieve the _**client id**_ and the _**client secret**_
  3. Retrieve the _**issuer**_ value of the IAM from its WebFinger endpoint: 
  https://{iam-url}/.well-known/openid-configuration
