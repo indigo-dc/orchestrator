@@ -71,6 +71,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.util.Collection;
@@ -277,7 +278,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           .ofNullable(cloudProviderEndpoints.get(0).getImEndpoint())
           .orElseGet(imProperties::getUrl);
     }
-    return new InfrastructureManager(imUrl, String.format("%s\\n%s", imAuthHeader, iaasHeaders));
+    String imHeader = String.format("%s\\n%s", imAuthHeader, iaasHeaders);
+    LOG.trace("IM auth header: {}", imHeader);
+    return new InfrastructureManager(imUrl, imHeader);
   }
 
   @FunctionalInterface
@@ -331,9 +334,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       if (oidcProperties.isEnabled() && Optional
           .ofNullable(ex.getResponseError())
           .map(ResponseError::getCode)
-          .filter(code -> code.equals(401))
+          .filter(code -> code.equals(HttpStatus.UNAUTHORIZED.value()))
           .isPresent()) {
-        oauth2TokenService.refreshAccessToken(requestedWithToken,
+        oauth2TokenService.getRefreshedAccessToken(requestedWithToken,
             OAuth2TokenService.REQUIRED_SCOPES);
         client = getClient(cloudProviderEndpoints, requestedWithToken);
         return function.apply(client);
