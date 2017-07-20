@@ -186,7 +186,7 @@ public class OAuth2TokenService {
   }
 
   /**
-   * Refresh an access token and put it in the cache.
+   * Refresh an access token.
    * 
    * @param id
    *          the id of the token
@@ -194,13 +194,28 @@ public class OAuth2TokenService {
    *          the scopes to request
    * @return the exchanged grant
    */
-  public AccessGrant refreshAccessToken(OidcTokenId id, List<String> scopes) {
+  protected AccessGrant refreshAccessToken(OidcTokenId id, List<String> scopes) {
     handleSecurityDisabled();
     CustomOAuth2Template template = generateOAuth2Template(id.getIssuer());
     String refreshToken =
         oidcTokenRepository.findByOidcTokenId(id).map(OidcRefreshToken::getVaule).orElseThrow(
             () -> new OrchestratorException("No refresh token suitable found"));
     return template.refreshToken(refreshToken, scopes);
+  }
+
+  /**
+   * Refresh an access token and put it into the cache.
+   * 
+   * @param id
+   *          the id of the token
+   * @param scopes
+   *          the scopes to request
+   * @return the exchanged grant
+   */
+  public String getRefreshedAccessToken(OidcTokenId id, List<String> scopes) {
+    handleSecurityDisabled();
+    oauth2TokenCacheService.evict(id);
+    return oauth2TokenCacheService.get(id).getAccessToken();
   }
 
   public String getAccessToken(OidcTokenId id, List<String> scopes) {

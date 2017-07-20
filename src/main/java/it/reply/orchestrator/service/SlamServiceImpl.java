@@ -86,7 +86,7 @@ public class SlamServiceImpl implements SlamService {
           .filter(HttpStatus.UNAUTHORIZED::equals)
           .isPresent()) {
         String accessToken = oauth2TokenService
-            .refreshAccessToken(tokenId, OAuth2TokenService.REQUIRED_SCOPES).getAccessToken();
+            .getRefreshedAccessToken(tokenId, OAuth2TokenService.REQUIRED_SCOPES);
         HeadersBuilder<?> request = RequestEntity.get(requestUri).header(HttpHeaders.AUTHORIZATION,
             "Bearer " + accessToken);
         return function.apply(request.build());
