@@ -69,7 +69,11 @@ public class OAuth2TokenCacheService {
 
         @Override
         public AccessGrant load(OidcTokenId key) throws Exception {
-          return oauth2TokenService.refreshAccessToken(key, OAuth2TokenService.REQUIRED_SCOPES);
+          LOG.debug("Loading and putting new access token for {} into cache", key);
+          AccessGrant grant = oauth2TokenService.refreshAccessToken(key,
+              OAuth2TokenService.REQUIRED_SCOPES);
+          LOG.debug("New access token for {}={}", key, grant.getAccessToken());
+          return grant;
         }
 
       });
@@ -122,7 +126,9 @@ public class OAuth2TokenCacheService {
     Preconditions.checkNotNull(grantLoader);
     Callable<? extends AccessGrant> loggingGrantLoader = () -> {
       LOG.debug("Loading and putting new access token for {} into cache", id);
-      return grantLoader.call();
+      AccessGrant grant = grantLoader.call();
+      LOG.debug("New access token for {}={}", id, grant.getAccessToken());
+      return grant;
     };
 
     try {
