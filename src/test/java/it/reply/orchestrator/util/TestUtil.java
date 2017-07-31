@@ -24,9 +24,12 @@ import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.workflowmanager.utils.Constants;
 
+import org.apache.commons.io.Charsets;
+import org.apache.commons.io.FileUtils;
 import org.assertj.core.api.Assertions;
 import org.kie.api.executor.ExecutionResults;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.UUID;
 
@@ -43,6 +46,10 @@ public class TestUtil {
     return mapper.writeValueAsBytes(object);
   }
 
+  public static String getFileContentAsString(String fileUri) throws IOException {
+    return FileUtils.readFileToString(new File(fileUri), Charsets.UTF_8);
+  }
+  
   public static DeploymentMessage generateDeployDm(Deployment deployment) {
     DeploymentMessage dm = new DeploymentMessage();
     dm.setDeploymentId(deployment.getId());

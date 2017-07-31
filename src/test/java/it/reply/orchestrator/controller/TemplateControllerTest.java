@@ -25,13 +25,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import es.upv.i3m.grycap.file.NoNullOrEmptyFile;
-import es.upv.i3m.grycap.file.Utf8File;
-
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.exception.GlobalControllerExceptionHandler;
 import it.reply.orchestrator.exception.http.NotFoundException;
 import it.reply.orchestrator.service.TemplateService;
+import it.reply.orchestrator.util.TestUtil;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -50,7 +48,6 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.nio.charset.Charset;
-import java.nio.file.Paths;
 
 public class TemplateControllerTest {
 
@@ -89,7 +86,7 @@ public class TemplateControllerTest {
 
     Deployment deployment = ControllerTestUtils.createDeployment();
 
-    String template = new NoNullOrEmptyFile(new Utf8File(Paths.get(templatePath))).read();
+    String template = TestUtil.getFileContentAsString(templatePath);
     deployment.setTemplate(template);
 
     Mockito.when(templateService.getTemplate(deployment.getId()))
