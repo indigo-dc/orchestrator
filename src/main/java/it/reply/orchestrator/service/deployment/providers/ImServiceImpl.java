@@ -95,7 +95,7 @@ import java.util.stream.Stream;
 public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   private static final Pattern OS_ENDPOINT_PATTERN =
-      Pattern.compile("(https?:\\/\\/[^\\/]*)\\/?([^\\/]*)");
+      Pattern.compile("(https?:\\/\\/[^\\/]+)(?:\\/(?:([^\\/]+)\\/?)?)?");
 
   @Autowired
   private ToscaService toscaService;
@@ -133,8 +133,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           .withUsername("indigo-dc")
           .withPassword(accessToken)
           .withHost(endpoint);
-      if (matcher.groupCount() > 1 && "v3".equals(matcher.group(2))) {
-        cred.withAuthVersion(OpenStackAuthVersion.PASSWORD_3_X);
+      if (Strings.isNullOrEmpty(matcher.group(2)) || "v3".equals(matcher.group(2))) {
+        // if no API version is specified or V3 is specified -> 3.x_oidc_access_token
+        cred.withAuthVersion(OpenStackAuthVersion.PASSWORD_3_X_TOKEN);
       }
       return cred;
     }
