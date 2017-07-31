@@ -16,27 +16,20 @@
 
 package it.reply.orchestrator.service.deployment.providers;
 
-import com.google.common.collect.Lists;
 import com.google.common.primitives.Ints;
 
-import alien4cloud.model.components.ComplexPropertyValue;
-import alien4cloud.model.components.DeploymentArtifact;
-import alien4cloud.model.components.ListPropertyValue;
-import alien4cloud.model.components.PropertyValue;
 import alien4cloud.model.components.ScalarPropertyValue;
-import alien4cloud.model.topology.Capability;
 import alien4cloud.model.topology.NodeTemplate;
+import alien4cloud.model.topology.RelationshipTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.normative.IntegerType;
-import alien4cloud.tosca.normative.SizeType;
-import alien4cloud.tosca.normative.StringType;
-
 import it.infn.ba.indigo.chronos.client.Chronos;
 import it.infn.ba.indigo.chronos.client.ChronosClient;
 import it.infn.ba.indigo.chronos.client.model.v1.Container;
 import it.infn.ba.indigo.chronos.client.model.v1.EnvironmentVariable;
 import it.infn.ba.indigo.chronos.client.model.v1.Job;
 import it.infn.ba.indigo.chronos.client.model.v1.Parameters;
+import it.infn.ba.indigo.chronos.client.model.v1.Volume;
 import it.infn.ba.indigo.chronos.client.utils.ChronosException;
 import it.reply.orchestrator.annotation.DeploymentProviderQualifier;
 import it.reply.orchestrator.dal.entity.Deployment;
@@ -44,6 +37,8 @@ import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage.TemplateTopologicalOrderIterator;
+import it.reply.orchestrator.dto.mesos.MesosContainer;
+import it.reply.orchestrator.dto.mesos.chronos.ChronosJob;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
@@ -56,9 +51,8 @@ import it.reply.orchestrator.utils.ToscaConstants;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.jgrapht.alg.CycleDetector;
-import org.jgrapht.graph.DefaultDirectedGraph;
-import org.jgrapht.graph.DefaultEdge;
+import org.apache.commons.lang3.StringUtils;
+import org.jgrapht.graph.DirectedMultigraph;
 import org.jgrapht.traverse.TopologicalOrderIterator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -67,11 +61,14 @@ import org.springframework.stereotype.Service;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -79,8 +76,7 @@ import java.util.stream.Collectors;
 @DeploymentProviderQualifier(DeploymentProvider.CHRONOS)
 @PropertySource(value = { "classpath:application.properties", "${conf-file-path.chronos}" })
 @Slf4j
-public class ChronosServiceImpl extends AbstractDeploymentProviderService
-    implements DeploymentProviderService {
+public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJob, Job> {
 
   @Autowired
   ToscaService toscaService;
@@ -95,6 +91,7 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
   @Value("${chronos.password}")
   private String password;
 
+  // TODO validate it is > 0 (otherwise no job executed)
   @Value("${orchestrator.chronos.jobChunkSize}")
   private int jobChunkSize;
 
@@ -225,49 +222,6 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
     }
 
     return templateTopologicalOrderIterator.getNext() != null;
-  }
-
-  /**
-   * Generate the topological ordering for the given jobGraph.
-   * 
-   * @param jobgraph
-   *          the job graph
-   * @return a {@link List} of the {@link IndigoJob} in topological order
-   * @throws IllegalArgumentException
-   *           if the graph has cycles (hence no topological order exists).
-   */
-  protected List<IndigoJob> getJobsTopologicalOrder(Map<String, IndigoJob> jobgraph) {
-    DefaultDirectedGraph<IndigoJob, DefaultEdge> graph =
-        new DefaultDirectedGraph<IndigoJob, DefaultEdge>(DefaultEdge.class);
-
-    for (IndigoJob job : jobgraph.values()) {
-      graph.addVertex(job);
-    }
-
-    for (IndigoJob job : jobgraph.values()) {
-      for (IndigoJob parent : job.getParents()) {
-        graph.addEdge(parent, job); // job depends on parent
-      }
-    }
-
-    LOG.debug("IndigoJob graph: {}", graph.toString());
-
-    // Are there cycles in the dependencies.
-    CycleDetector<IndigoJob, DefaultEdge> cycleDetector =
-        new CycleDetector<IndigoJob, DefaultEdge>(graph);
-    if (cycleDetector.detectCycles()) {
-      LOG.error("Job graph has cycles!");
-      throw new IllegalArgumentException(String
-          .format("Failed to generate topological order for a graph with cycles: <%s>", graph));
-    }
-
-    TopologicalOrderIterator<IndigoJob, DefaultEdge> orderIterator =
-        new TopologicalOrderIterator<IndigoJob, DefaultEdge>(graph);
-
-    List<IndigoJob> topoOrder = Lists.newArrayList(orderIterator);
-    LOG.debug("IndigoJob topological order: {}", topoOrder);
-
-    return topoOrder;
   }
 
   @Override
@@ -487,6 +441,10 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
 
   }
 
+  private List<IndigoJob> getJobsTopologicalOrder(Map<String, IndigoJob> chronosJobGraph) {
+    return chronosJobGraph.values().stream().collect(Collectors.toList());
+  }
+
   /**
    * Deletes all the jobs from Chronos.
    * 
@@ -564,7 +522,6 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
 
     private Job chronosJob;
     private String toscaNodeName;
-    private Collection<IndigoJob> children = new ArrayList<>();
     private Collection<IndigoJob> parents = new ArrayList<>();
 
     /**
@@ -589,12 +546,12 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
       return chronosJob;
     }
 
-    public Collection<IndigoJob> getChildren() {
-      return children;
-    }
-
     public Collection<IndigoJob> getParents() {
       return parents;
+    }
+    
+    public void setParents(Collection<IndigoJob> parents) {
+      this.parents = parents;
     }
 
     @Override
@@ -614,77 +571,63 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
    */
   protected Map<String, IndigoJob> generateJobGraph(Deployment deployment,
       Map<String, OneData> odParameters) {
-    String deploymentId = deployment.getId();
-    Map<String, IndigoJob> jobs = new HashMap<String, ChronosServiceImpl.IndigoJob>();
 
-    // Parse TOSCA template
-    Map<String, NodeTemplate> nodes = null;
-    String customizedTemplate = deployment.getTemplate();
     /*
      * FIXME TEMPORARY - Replace hard-coded properties in nodes (WARNING: Cannot be done when
      * receiving the template because we still miss OneData settings that are obtained during the WF
      * after the site choice, which in turns depends on the template nodes and properties...)
      */
-    customizedTemplate = replaceHardCodedParams(customizedTemplate, odParameters);
+    String customizedTemplate = replaceHardCodedParams(deployment.getTemplate(), odParameters);
 
-    // Re-parse template (TODO: serialize the template in-memory representation?)
     ArchiveRoot ar = toscaService.prepareTemplate(customizedTemplate, deployment.getParameters());
 
-    nodes = ar.getTopology().getNodeTemplates();
+    Map<String, NodeTemplate> nodes = ar.getTopology().getNodeTemplates();
 
-    // TODO Iterate on Chronos nodes and related dependencies (just ignore others - also if invalid
-    // - for now)
+    // don't check for cycles, already validated at web-service time
+    DirectedMultigraph<NodeTemplate, RelationshipTemplate> graph =
+        toscaService.buildNodeGraph(nodes, false);
 
-    // Populate resources (nodes) hashmap to speed up job creation (id-name mapping is needed)
+    TopologicalOrderIterator<NodeTemplate, RelationshipTemplate> orderIterator =
+        new TopologicalOrderIterator<>(graph);
+
+    List<NodeTemplate> orderedMarathonApps = CommonUtils
+        .iteratorToStream(orderIterator)
+        .filter(node -> toscaService.isOfToscaType(node, ToscaConstants.Nodes.CHRONOS))
+        .collect(Collectors.toList());
+
     Map<String, Resource> resources = deployment
         .getResources()
         .stream()
+        .filter(resource -> toscaService.isOfToscaType(resource,
+            ToscaConstants.Nodes.CHRONOS))
         .collect(Collectors.toMap(Resource::getToscaNodeName, Function.identity()));
 
-    // Only create Indigo Jobs
-    for (Map.Entry<String, NodeTemplate> node : nodes.entrySet()) {
-      NodeTemplate nodeTemplate = node.getValue();
-      String nodeName = node.getKey();
-      if (toscaService.isOfToscaType(nodeTemplate, ToscaConstants.Nodes.CHRONOS)) {
-        Job chronosJob = createJob(nodes, deploymentId, nodeName, nodeTemplate, resources);
-        IndigoJob job = new IndigoJob(nodeName, chronosJob);
-        jobs.put(nodeName, job);
+    LinkedHashMap<String, ChronosJob> jobs = new LinkedHashMap<>();
+    LinkedHashMap<String, IndigoJob> indigoJobs = new LinkedHashMap<>();
+    for (NodeTemplate marathonNode : orderedMarathonApps) {
+      Resource appResource = resources.get(marathonNode.getName());
+      String id = appResource.getIaasId();
+      if (id == null) {
+        id = UUID.randomUUID().toString();
+        appResource.setIaasId(id);
       }
+      ChronosJob mesosTask = buildTask(graph, marathonNode, id);
+      jobs.put(marathonNode.getName(), mesosTask);
+      List<NodeTemplate> parentNodes = getParentNodes("parent_job", graph, marathonNode);
+      mesosTask.setParents(parentNodes
+          .stream()
+          .map(parentNode -> jobs.get(parentNode.getName()))
+          .collect(Collectors.toList()));
+      Job chronosJob = generateExternalTaskRepresentation(mesosTask);
+      IndigoJob indigoJob = new IndigoJob(marathonNode.getName(), chronosJob);
+      indigoJob.setParents(parentNodes
+          .stream()
+          .map(parentNode -> indigoJobs.get(parentNode.getName()))
+          .collect(Collectors.toList()));
+      indigoJobs.put(marathonNode.getName(), indigoJob);
     }
 
-    // Create jobs hierarchy
-    for (Map.Entry<String, IndigoJob> job : jobs.entrySet()) {
-      IndigoJob indigoJob = job.getValue();
-      String nodeName = job.getKey();
-      NodeTemplate nodeTemplate = nodes.get(nodeName);
-
-      // Retrieve Job parents
-      List<String> parentNames = getJobParents(nodeTemplate, nodeName, nodes);
-
-      if (parentNames != null && !parentNames.isEmpty()) {
-        List<String> chronosParentList = new ArrayList<>();
-
-        for (String parentName : parentNames) {
-          IndigoJob parentJob = jobs.get(parentName);
-          // Add this job to the parent
-          parentJob.getChildren().add(indigoJob);
-          // Add the parent to this job
-          indigoJob.getParents().add(parentJob);
-
-          // Add to the Chronos DSL parent list
-          chronosParentList.add(parentJob.getChronosJob().getName());
-        }
-
-        // Update Chronos DSL parent list
-        indigoJob.getChronosJob().setParents(chronosParentList);
-      }
-    }
-
-    // Validate (no cycles!)
-    // FIXME Shouldn't just return the topological order ?
-    getJobsTopologicalOrder(jobs);
-
-    return jobs;
+    return indigoJobs;
   }
 
   /**
@@ -743,171 +686,6 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
     return customizedTemplate;
   }
 
-  protected void putStringProperty(NodeTemplate nodeTemplate, String name, String value) {
-    ScalarPropertyValue scalarPropertyValue = new ScalarPropertyValue(value);
-    scalarPropertyValue.setPrintable(true);
-    if (nodeTemplate.getProperties() == null) {
-      nodeTemplate.setProperties(new HashMap<>());
-    }
-    nodeTemplate.getProperties().put(name, scalarPropertyValue);
-  }
-
-  protected List<String> getJobParents(NodeTemplate nodeTemplate, String nodeName,
-      Map<String, NodeTemplate> nodes) {
-    // Get Chronos parent job dependency
-    String parentJobCapabilityName = "parent_job";
-    Map<String, NodeTemplate> parentJobs =
-        toscaService.getAssociatedNodesByCapability(nodes, nodeTemplate, parentJobCapabilityName);
-
-    if (parentJobs.isEmpty()) {
-      return null;
-    } else {
-      // WARNING: cycle check is done later!
-      return Lists.newArrayList(parentJobs.keySet());
-    }
-  }
-
-  protected Job createJob(Map<String, NodeTemplate> nodes, String deploymentId, String nodeName,
-      NodeTemplate nodeTemplate, Map<String, Resource> resources) {
-    try {
-      Job chronosJob = new Job();
-      // Init job infos
-
-      // Get the generated UUID for the node (in DB resource ?)
-      // FIXME This is just for prototyping... Otherwise is madness!!
-      Resource resourceJob = resources.get(nodeName);
-
-      chronosJob.setName(resourceJob.getId());
-
-      // TODO Validation
-      Optional<ScalarPropertyValue> retriesProperty =
-          toscaService.getTypedNodePropertyByName(nodeTemplate, "retries");
-      if (retriesProperty.isPresent()) {
-        chronosJob.setRetries(Ints.saturatedCast(
-            toscaService.parseScalarPropertyValue(retriesProperty.get(), IntegerType.class)));
-      }
-
-      Optional<ScalarPropertyValue> cmdProperty =
-          toscaService.getTypedNodePropertyByName(nodeTemplate, "command");
-      if (cmdProperty.isPresent()) {
-        chronosJob
-            .setCommand(toscaService.parseScalarPropertyValue(cmdProperty.get(), StringType.class));
-      }
-
-      // TODO Enable epsilon setting in TOSCA tplt ?
-      chronosJob.setEpsilon("PT10S");
-
-      Optional<ListPropertyValue> inputUris =
-          CommonUtils.optionalCast(toscaService.getNodePropertyByName(nodeTemplate, "uris"));
-      if (inputUris.isPresent()) {
-        // Convert List<Object> to List<String>
-        chronosJob.setUris(inputUris
-            .get()
-            .getValue()
-            .stream()
-            .map(e -> ((PropertyValue<?>) e).getValue().toString())
-            .collect(Collectors.toList()));
-
-      }
-
-      List<EnvironmentVariable> envs = new ArrayList<>();
-      Optional<ComplexPropertyValue> inputEnvVars = CommonUtils
-          .optionalCast(toscaService.getNodePropertyByName(nodeTemplate, "environment_variables"));
-      if (inputEnvVars.isPresent()) {
-        for (Map.Entry<String, Object> var : inputEnvVars.get().getValue().entrySet()) {
-          EnvironmentVariable envVar = new EnvironmentVariable();
-          envVar.setName(var.getKey());
-          envVar.setValue(((PropertyValue<?>) var.getValue()).getValue().toString());
-          envs.add(envVar);
-        }
-        chronosJob.setEnvironmentVariables(envs);
-      }
-
-      // Docker image
-      DeploymentArtifact image;
-      // <image> artifact available
-      if (nodeTemplate.getArtifacts() == null
-          || (image = nodeTemplate.getArtifacts().get("image")) == null) {
-        throw new IllegalArgumentException(
-            String.format("<image> artifact not found in node <%s> of type <%s>", nodeName,
-                nodeTemplate.getType()));
-      }
-
-      // TODO Remove hard-coded?
-      List<String> supportedTypes =
-          Lists.newArrayList("tosca.artifacts.Deployment.Image.Container.Docker");
-      // <image> artifact type check
-      if (!supportedTypes.contains(image.getArtifactType())) {
-        throw new IllegalArgumentException(String.format(
-            "Unsupported artifact type for <image> artifact in node <%s> of type <%s>. "
-                + "Given <%s>, supported <%s>",
-            nodeName, nodeTemplate.getType(), image.getArtifactType(), supportedTypes));
-      }
-
-      // Requirements
-
-      // Get Docker host dependency
-      String dockerCapabilityName = "host";
-      Map<String, NodeTemplate> dockerRelationships =
-          toscaService.getAssociatedNodesByCapability(nodes, nodeTemplate, dockerCapabilityName);
-      if (!dockerRelationships.isEmpty()) {
-        /*
-         * WARNING: The TOSCA validation should already check the limits (currently Alien4Cloud does
-         * not...)
-         */
-        NodeTemplate dockerNode = dockerRelationships.values().iterator().next();
-        Capability dockerCapability = dockerNode.getCapabilities().get(dockerCapabilityName);
-        CommonUtils
-            .<ScalarPropertyValue>optionalCast(
-                toscaService.getCapabilityPropertyByName(dockerCapability, "num_cpus"))
-            .map(ScalarPropertyValue::getValue)
-            .map(Double::parseDouble)
-            .ifPresent(chronosJob::setCpus);
-
-        // Converting Memory Size (as TOSCA scalar-unit.size)
-        Optional<String> memSizeRaw = CommonUtils
-            .<ScalarPropertyValue>optionalCast(
-                toscaService.getCapabilityPropertyByName(dockerCapability, "mem_size"))
-            .map(ScalarPropertyValue::getValue);
-        if (memSizeRaw.isPresent()) {
-          // Chronos wants MB
-          double memSizeDouble = new SizeType().parse(memSizeRaw.get()).convert("MB");
-          chronosJob.setMem(memSizeDouble);
-        }
-      }
-
-      Container container = new Container();
-      container.setType("DOCKER");
-
-      // Run the container in Privileged Mode
-      Parameters param = new Parameters();
-      param.setKey("privileged");
-      param.setValue("true");
-      Collection<Parameters> parameters = new ArrayList<Parameters>();
-      parameters.add(param);
-      container.setParameters(parameters);
-
-      // FIXME ForcePullImage must be parametrizable by tosca template
-      container.setForcePullImage(true);
-      ////////////////////////////////////////////////////////////////
-
-      String imageName =
-          CommonUtils
-              .<ScalarPropertyValue>optionalCast(image.getFile())
-              .orElseThrow(() -> new IllegalArgumentException(String.format(
-                  "<file> field for <image> artifact in node <%s> must be provided", nodeName)))
-              .getValue();
-      container.setImage(imageName);
-
-      chronosJob.setContainer(container);
-
-      return chronosJob;
-    } catch (Exception ex) {
-      throw new RuntimeException(String.format("Failed to parse node <%s> of type <%s>: %s",
-          nodeName, nodeTemplate.getType(), ex.getMessage()), ex);
-    }
-  }
-
   public enum JobState {
     FRESH,
     FAILURE,
@@ -939,5 +717,115 @@ public class ChronosServiceImpl extends AbstractDeploymentProviderService
   @Override
   public Optional<String> getAdditionalErrorInfoInternal(DeploymentMessage deploymentMessage) {
     return Optional.empty();
+  }
+
+  @Override
+  protected ChronosJob createInternalTaskRepresentation() {
+    return new ChronosJob();
+  }
+
+  @Override
+  public ChronosJob buildTask(DirectedMultigraph<NodeTemplate, RelationshipTemplate> graph,
+      NodeTemplate taskNode, String taskId) {
+    ChronosJob job = super.buildTask(graph, taskNode, taskId);
+
+    toscaService
+        .<ScalarPropertyValue>getTypedNodePropertyByName(taskNode, "retries")
+        .ifPresent(property -> job.setRetries(Ints
+            .saturatedCast(toscaService.parseScalarPropertyValue(property, IntegerType.class))));
+    
+    return job;
+  }
+
+  @Override
+  protected Job generateExternalTaskRepresentation(ChronosJob mesosTask) {
+    Job chronosJob = new Job();
+    chronosJob.setName(mesosTask.getId());
+    chronosJob.setRetries(mesosTask.getRetries());
+    chronosJob.setCommand(mesosTask.getCmd());
+    chronosJob.setUris(mesosTask.getUris());
+    
+    chronosJob.setEnvironmentVariables(mesosTask
+        .getEnv()
+        .entrySet()
+        .stream()
+        .map(entry -> {
+          EnvironmentVariable envVar = new EnvironmentVariable();
+          envVar.setName(entry.getKey());
+          envVar.setValue(entry.getValue());
+          return envVar;
+        })
+        .collect(Collectors.toList()));
+    
+    chronosJob.setCpus(mesosTask.getCpus());
+    chronosJob.setMem(mesosTask.getMemSize());
+    chronosJob.setConstraints(mesosTask.getConstraints());
+
+    chronosJob.setParents(
+        mesosTask
+            .getParents()
+            .stream()
+            .map(ChronosJob::getId)
+            .collect(Collectors.toList()));
+    
+    mesosTask
+        .getContainer()
+        .ifPresent(mesosContainer -> chronosJob
+            .setContainer(generateContainer(mesosContainer)));
+
+    //// HARDCODED BITS //////
+    chronosJob.setEpsilon("PT10S");
+    //////////////////////////
+
+    return chronosJob;
+  }
+
+  private Container generateContainer(MesosContainer mesosContainer) {
+    Container container = new Container();
+    if (mesosContainer.getType() == MesosContainer.Type.DOCKER) {
+      container.setType(MesosContainer.Type.DOCKER.getName());
+      container.setImage(mesosContainer.getImage());
+      container.setVolumes(mesosContainer
+          .getVolumes()
+          .stream()
+          .map(this::generateVolume)
+          .collect(Collectors.toList()));
+      //// HARDCODED BITS //////
+      Parameters param = new Parameters();
+      param.setKey("privileged");
+      param.setValue("true");
+      Collection<Parameters> parameters = new ArrayList<>();
+      parameters.add(param);
+      container.setParameters(parameters);
+      container.setForcePullImage(true);
+      //////////////////////////
+
+    } else {
+      throw new DeploymentException(
+          "Unknown Mesos container type: " + mesosContainer.getType().toString());
+    }
+    return container;
+  }
+  
+  private Volume generateVolume(String containerVolumeMount) {
+
+    // split the volumeMount string and extract only the non blank strings
+    List<String> volumeMountSegments = Arrays
+        .asList(containerVolumeMount.split(":"))
+        .stream()
+        .sequential()
+        .filter(StringUtils::isNotBlank)
+        .collect(Collectors.toList());
+
+    if (volumeMountSegments.size() != 3) {
+      throw new DeploymentException(String
+          .format("Volume mount <%s> not supported for chronos containers", containerVolumeMount));
+    }
+    
+    Volume volume = new Volume();
+    volume.setHostPath(volumeMountSegments.get(0));
+    volume.setContainerPath(volumeMountSegments.get(1));
+    volume.setMode(volumeMountSegments.get(2).toUpperCase(Locale.US));
+    return volume;
   }
 }

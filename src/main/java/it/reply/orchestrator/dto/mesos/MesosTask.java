@@ -41,17 +41,20 @@ public abstract class MesosTask<T extends MesosTask<T>> {
 
   private Double memSize;
 
-  private List<T> parents;
+  @Nonnull
+  private List<T> parents = new ArrayList<>();
 
-  private List<T> children;
-
-  List<List<String>> constraints = new ArrayList<>();
+  @Nonnull
+  private List<List<String>> constraints = new ArrayList<>();
 
   @Nonnull
   private List<String> uris = new ArrayList<>();
 
   @Nonnull
   private Map<String, String> env = new HashMap<>();
+
+  @Nonnull
+  private Map<String, String> labels = new HashMap<>();
 
   public Optional<MesosContainer> getContainer() {
     return Optional.ofNullable(this.container);

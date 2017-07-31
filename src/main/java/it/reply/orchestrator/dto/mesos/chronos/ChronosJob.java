@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.dto.mesos.marathon;
+package it.reply.orchestrator.dto.mesos.chronos;
 
 import it.reply.orchestrator.dto.mesos.MesosTask;
 import it.reply.orchestrator.utils.ToscaConstants;
@@ -26,11 +26,13 @@ import lombok.ToString;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class MarathonApp extends MesosTask<MarathonApp> {
+public class ChronosJob extends MesosTask<ChronosJob> {
+
+  private Integer retries;
 
   @Override
   public final String getToscaNodeName() {
-    return ToscaConstants.Nodes.MARATHON;
+    return ToscaConstants.Nodes.CHRONOS;
   }
 
 }

@@ -16,17 +16,9 @@
 
 package it.reply.orchestrator.service.deployment.providers;
 
-import com.google.common.primitives.Ints;
-
-import alien4cloud.model.components.ComplexPropertyValue;
-import alien4cloud.model.components.ListPropertyValue;
-import alien4cloud.model.components.ScalarPropertyValue;
-import alien4cloud.model.topology.Capability;
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.model.topology.RelationshipTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
-import alien4cloud.tosca.normative.IntegerType;
-import alien4cloud.tosca.normative.StringType;
 
 import it.reply.orchestrator.annotation.DeploymentProviderQualifier;
 import it.reply.orchestrator.config.properties.MarathonProperties;
@@ -35,14 +27,11 @@ import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.mesos.MesosContainer;
 import it.reply.orchestrator.dto.mesos.MesosPortMapping;
-import it.reply.orchestrator.dto.mesos.MesosPortMapping.Protocol;
 import it.reply.orchestrator.dto.mesos.marathon.MarathonApp;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.service.DeploymentException;
-import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.utils.CommonUtils;
-import it.reply.orchestrator.utils.EnumUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 
 import lombok.extern.slf4j.Slf4j;
@@ -269,41 +258,6 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   }
 
   @Override
-  public MarathonApp buildTask(DirectedMultigraph<NodeTemplate, RelationshipTemplate> graph,
-      NodeTemplate taskNode, String taskId) {
-    MarathonApp app = super.buildTask(graph, taskNode, taskId);
-
-    Optional<ComplexPropertyValue> envVars =
-        toscaService.getTypedNodePropertyByName(taskNode, "labels");
-
-    if (envVars.isPresent()) {
-      // Convert Map<String, Object> to Map<String, String>
-      app.setLabels(toscaService.parseComplexPropertyValue(envVars.get(),
-          value -> ((ScalarPropertyValue) value).getValue()));
-    }
-
-    Capability dockerCapability = getHostCapability(graph, taskNode);
-
-    Optional<ListPropertyValue> publishPortsProperty =
-        toscaService.getTypedCapabilityPropertyByName(dockerCapability, "publish_ports");
-    if (publishPortsProperty.isPresent()) {
-      List<MesosPortMapping> portMapping =
-          toscaService
-              .parseListPropertyValue(publishPortsProperty.get(),
-                  item -> (ComplexPropertyValue) item)
-              .stream()
-              .map(this::generatePortMapping)
-              .collect(Collectors.toList());
-      app
-          .getContainer()
-          .orElseThrow(() -> new RuntimeException(
-              "there are ports to publish but no container is present in Marathon DTO"))
-          .setPortMappings(portMapping);
-    }
-    return app;
-  }
-
-  @Override
   protected App generateExternalTaskRepresentation(MarathonApp marathonTask) {
     App app = new App();
     app.setId(marathonTask.getId());
@@ -348,36 +302,9 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
       //////////////////////////
     } else {
       throw new DeploymentException(
-          "Unknown Marathon container type: " + mesosContainer.getType().toString());
+          "Unknown Mesos container type: " + mesosContainer.getType().toString());
     }
     return container;
-  }
-
-  private MesosPortMapping generatePortMapping(ComplexPropertyValue portMappingProperties) {
-    Map<String, ScalarPropertyValue> values = toscaService
-        .parseComplexPropertyValue(portMappingProperties, value -> (ScalarPropertyValue) value);
-
-    ScalarPropertyValue sourcePortProperty =
-        CommonUtils
-            .getFromOptionalMap(values, "source")
-            .orElseThrow(() -> new ToscaException(
-                "source port in 'publish_ports' property must be provided"));
-
-    Long sourcePortVaule =
-        toscaService.parseScalarPropertyValue(sourcePortProperty, IntegerType.class);
-    MesosPortMapping portMapping = new MesosPortMapping(Ints.checkedCast(sourcePortVaule));
-
-    CommonUtils.getFromOptionalMap(values, "target").ifPresent(value -> {
-      Long targetPortVaule = toscaService.parseScalarPropertyValue(value, IntegerType.class);
-      portMapping.setServicePort(Ints.checkedCast(targetPortVaule));
-    });
-
-    CommonUtils.getFromOptionalMap(values, "protocol").ifPresent(value -> {
-      String protocolVaule = toscaService.parseScalarPropertyValue(value, StringType.class);
-      Protocol protocol = EnumUtils.fromNameOrThrow(Protocol.class, protocolVaule);
-      portMapping.setProtocol(protocol);
-    });
-    return portMapping;
   }
 
   private Port generatePort(MesosPortMapping portMapping) {
