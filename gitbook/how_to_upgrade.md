@@ -59,3 +59,6 @@ In this release the IAM integration has undergone a major rework, thus some chan
   now it wolud be:
    * `OIDC_IAM-PROPERTIES[https://iam-test.indigo-datacloud.eu/]_ORCHESTRATOR_CLIENT-ID`: _**client_id**_
    * `OIDC_IAM-PROPERTIES[https://iam-test.indigo-datacloud.eu/]_ORCHESTRATOR_CLIENT-SECRET`: _**client_secret**_
+### UPGRADING TO v1.4.x
+#### Upgrading to v1.4.0-FINAL
+No action required.

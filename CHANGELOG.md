@@ -12,7 +12,32 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 - `#<number>` is a link to an issue, `!<number>` is a link to a merge request in the internal issue system.
 
 ---
-## [v1.3.0] - 2016-04-10
+## [v1.4.0] - 2017-07-31
+
+### Added:
+- Support for deployment of hybrid clusters (#231)
+- [Docker] Validate DB connection before starting wildfly (#230)
+- Add information of who created the deployments in REST response (#229)
+- Allow filtering of deployment though param in REST APIs (#222)
+
+### Changed:
+**NONE**
+
+### Deprecated:
+**NONE**
+
+### Removed:
+**NONE**
+
+### Fixed:
+- Fix IM header generation for IAM federated OpenStacks (#232)
+
+### Security:
+**NONE**
+
+
+
+## [v1.3.0] - 2017-04-10
 
 ### Added:
 - IAM token exchange and refresh (#96)
@@ -39,7 +64,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 
 
-## [v1.2.2] - 2016-03-27
+## [v1.2.2] - 2017-03-27
 
 ### Added:
 - SLAM REST endpoint authentication (#189)
