@@ -31,13 +31,10 @@ import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingException;
 
-import es.upv.i3m.grycap.file.NoNullOrEmptyFile;
-import es.upv.i3m.grycap.file.Utf8File;
-import es.upv.i3m.grycap.im.exceptions.FileException;
-
 import it.reply.orchestrator.config.specific.WebAppConfigurationAware;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.exception.service.ToscaException;
+import it.reply.orchestrator.util.TestUtil;
 import it.reply.orchestrator.utils.CommonUtils;
 
 import org.junit.Rule;
@@ -46,7 +43,6 @@ import org.junit.rules.ExpectedException;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -99,10 +95,10 @@ public class ToscaServiceTest extends WebAppConfigurationAware {
   // }
 
   @Test
-  public void getRemovalList() throws IOException, ParsingException, FileException {
+  public void getRemovalList() throws IOException, ParsingException {
     List<String> expectedRemovalList = Arrays.asList("to-be-deleted-1", "to-be-deleted-2");
     String template =
-        getFileContentAsString(TEMPLATES_BASE_DIR + "galaxy_tosca_clues_removal_list.yaml");
+        TestUtil.getFileContentAsString(TEMPLATES_BASE_DIR + "galaxy_tosca_clues_removal_list.yaml");
     NodeTemplate node = toscaService.getArchiveRootFromTemplate(template).getResult().getTopology()
         .getNodeTemplates().get("torque_wn");
     List<String> removalList = toscaService.getRemovalList(node);
@@ -112,7 +108,7 @@ public class ToscaServiceTest extends WebAppConfigurationAware {
   @Test
   public void checkUserInputDefaultReplaced() throws Exception {
     String template =
-        getFileContentAsString(TEMPLATES_INPUT_BASE_DIR + "tosca_inputs_default_replaced.yaml");
+        TestUtil.getFileContentAsString(TEMPLATES_INPUT_BASE_DIR + "tosca_inputs_default_replaced.yaml");
     Map<String, Object> inputs = new HashMap<String, Object>();
     ArchiveRoot ar = toscaService.prepareTemplate(template, inputs);
     AbstractPropertyValue numCpus = ar.getTopology().getNodeTemplates().get("my_server")
@@ -125,7 +121,7 @@ public class ToscaServiceTest extends WebAppConfigurationAware {
   public void checkUserInputReplacedInNodeArtifactsRelationshipsCapabilitiesProperties()
       throws Exception {
     String template =
-        getFileContentAsString(TEMPLATES_INPUT_BASE_DIR + "tosca_inputs_replaced_all_types.yaml");
+        TestUtil.getFileContentAsString(TEMPLATES_INPUT_BASE_DIR + "tosca_inputs_replaced_all_types.yaml");
     Map<String, Object> inputs = new HashMap<String, Object>();
     inputs.put("input_urls", Arrays.asList("http://a.it", "http://b.it"));
     inputs.put("output_filenames", "test1, test2");
@@ -205,14 +201,14 @@ public class ToscaServiceTest extends WebAppConfigurationAware {
     thrown.expect(ToscaException.class);
     thrown.expectMessage(expectedMessage);
 
-    String template = getFileContentAsString(TEMPLATES_INPUT_BASE_DIR + templateName);
+    String template = TestUtil.getFileContentAsString(TEMPLATES_INPUT_BASE_DIR + templateName);
     Map<String, Object> inputs = new HashMap<String, Object>();
     toscaService.prepareTemplate(template, inputs);
   }
 
   @Test
   public void checkOneDataHardCodedRequirementsExtractionInUserDefinedTemplate() throws Exception {
-    String template = getFileContentAsString(
+    String template = TestUtil.getFileContentAsString(
         TEMPLATES_ONEDATA_BASE_DIR + "tosca_onedata_requirements_hardcoded_userdefined.yaml");
     Map<String, Object> inputs = new HashMap<String, Object>();
     inputs.put("input_onedata_providers", "input_provider_1,input_provider_2");
@@ -232,7 +228,7 @@ public class ToscaServiceTest extends WebAppConfigurationAware {
 
   @Test
   public void checkOneDataHardCodedRequirementsExtractionInServiceTemplate() throws Exception {
-    String template = getFileContentAsString(
+    String template = TestUtil.getFileContentAsString(
         TEMPLATES_ONEDATA_BASE_DIR + "tosca_onedata_requirements_hardcoded_service.yaml");
 
     Map<String, Object> inputs = new HashMap<String, Object>();
@@ -241,7 +237,4 @@ public class ToscaServiceTest extends WebAppConfigurationAware {
     assertEquals(0, odr.size());
   }
 
-  private String getFileContentAsString(String fileUri) throws FileException {
-    return new NoNullOrEmptyFile(new Utf8File(Paths.get(fileUri))).read();
-  }
 }

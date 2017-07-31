@@ -47,8 +47,6 @@ import it.reply.orchestrator.service.deployment.providers.DeploymentStatusHelper
 import it.reply.orchestrator.util.TestUtil;
 import it.reply.orchestrator.utils.CommonUtils;
 
-import org.apache.commons.io.Charsets;
-import org.apache.commons.io.FileUtils;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -60,8 +58,6 @@ import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.util.ReflectionTestUtils;
 
-import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -97,7 +93,7 @@ public class ChronosServiceTest extends WebAppConfigurationAware {
 
   @Test
   public void checkOneDataHardCodedParamsSubstitutionInUserDefinedTemplate() throws Exception {
-    String template = getFileContentAsString(ToscaServiceTest.TEMPLATES_ONEDATA_BASE_DIR
+    String template = TestUtil.getFileContentAsString(ToscaServiceTest.TEMPLATES_ONEDATA_BASE_DIR
         + "tosca_onedata_requirements_hardcoded_userdefined.yaml");
     Map<String, Object> inputs = new HashMap<String, Object>();
     inputs.put("input_onedata_providers", "input_provider_1,input_provider_2");
@@ -144,7 +140,7 @@ public class ChronosServiceTest extends WebAppConfigurationAware {
 
   @Test
   public void checkOneDataHardCodedParamsSubstitutionInServiceTemplate() throws Exception {
-    String template = getFileContentAsString(ToscaServiceTest.TEMPLATES_ONEDATA_BASE_DIR
+    String template = TestUtil.getFileContentAsString(ToscaServiceTest.TEMPLATES_ONEDATA_BASE_DIR
         + "tosca_onedata_requirements_hardcoded_service.yaml");
 
     Map<String, Object> inputs = new HashMap<String, Object>();
@@ -194,10 +190,6 @@ public class ChronosServiceTest extends WebAppConfigurationAware {
     assertEquals(serviceOd.getProviders().stream().map(info -> info.getEndpoint())
         .collect(Collectors.toList()).get(0),
         ((ScalarPropertyValue) envVars.get("ONEDATA_PROVIDERS")).getValue());
-  }
-
-  private String getFileContentAsString(String fileUri) throws IOException {
-    return FileUtils.readFileToString(new File(fileUri), Charsets.UTF_8);
   }
 
   @Test
