@@ -19,6 +19,7 @@ package it.reply.orchestrator.service.commands;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.service.OneDataService;
+import it.reply.orchestrator.utils.CommonUtils;
 
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
@@ -41,15 +42,13 @@ public class GetOneDataData extends BaseRankCloudProvidersCommand<GetOneDataData
 
     Map<String, OneData> oneDataRequirements = rankCloudProvidersMessage.getOneDataRequirements();
 
-    OneData inputRequirement = oneDataRequirements.get("input");
-    if (inputRequirement != null) {
-      oneDataService.populateProviderInfo(inputRequirement);
-    }
+    CommonUtils
+        .getFromOptionalMap(oneDataRequirements, "input")
+        .ifPresent(oneDataService::populateProviderInfo);
 
-    OneData outputRequirement = oneDataRequirements.get("output");
-    if (outputRequirement != null) {
-      oneDataService.populateProviderInfo(outputRequirement);
-    }
+    CommonUtils
+        .getFromOptionalMap(oneDataRequirements, "output")
+        .ifPresent(oneDataService::populateProviderInfo);
 
     return resultOccurred(oneDataRequirements);
   }
