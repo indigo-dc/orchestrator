@@ -26,6 +26,7 @@ import it.reply.workflowmanager.orchestrator.bpm.OrchestratorContext;
 import it.reply.workflowmanager.spring.orchestrator.bpm.OrchestratorContextBean;
 import it.reply.workflowmanager.utils.Constants;
 
+import org.apache.commons.lang.SerializationUtils;
 import org.assertj.core.api.Assertions;
 import org.drools.core.process.instance.impl.WorkItemImpl;
 import org.junit.Before;
@@ -35,6 +36,8 @@ import org.kie.api.executor.ExecutionResults;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.context.support.StaticApplicationContext;
+
+import java.io.Serializable;
 
 public abstract class BasePollCommandTest<T extends AbstractPollingCommand<T>>
     extends BaseDeployCommandTest<T> {
@@ -56,6 +59,13 @@ public abstract class BasePollCommandTest<T extends AbstractPollingCommand<T>>
     OrchestratorContext orchestratorContext = new OrchestratorContextBean(applicationContext);
     Mockito.when(applicationContext.getBean(DeploymentProviderServiceRegistry.class)).thenReturn(
         deploymentProviderServiceRegistry);
+  }
+
+  @Test
+  public void testPollingFunctionIsSerializable() {
+    Assertions
+        .assertThat(SerializationUtils.clone((Serializable) command.getPollingFunction()))
+        .isEqualToComparingFieldByFieldRecursively(command.getPollingFunction());
   }
 
   @Test
