@@ -68,7 +68,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -125,7 +124,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
       Resource appResource = resources.get(marathonNode.getName());
       String id = appResource.getIaasId();
       if (id == null) {
-        id = UUID.randomUUID().toString();
+        id = appResource.getId();
         appResource.setIaasId(id);
       }
       MarathonApp marathonTask = buildTask(graph, marathonNode, id);
@@ -142,7 +141,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
 
     Group group = createGroup(deployment);
 
-    group.setId(UUID.randomUUID().toString());
+    group.setId(deployment.getId());
 
     LOG.info("Creating Marathon App Group for deployment {} with definition:\n{}",
         deployment.getId(), group);

@@ -68,7 +68,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -590,7 +589,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     TopologicalOrderIterator<NodeTemplate, RelationshipTemplate> orderIterator =
         new TopologicalOrderIterator<>(graph);
 
-    List<NodeTemplate> orderedMarathonApps = CommonUtils
+    List<NodeTemplate> orderedChronosJobs = CommonUtils
         .iteratorToStream(orderIterator)
         .filter(node -> toscaService.isOfToscaType(node, ToscaConstants.Nodes.CHRONOS))
         .collect(Collectors.toList());
@@ -604,27 +603,27 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
 
     LinkedHashMap<String, ChronosJob> jobs = new LinkedHashMap<>();
     LinkedHashMap<String, IndigoJob> indigoJobs = new LinkedHashMap<>();
-    for (NodeTemplate marathonNode : orderedMarathonApps) {
-      Resource appResource = resources.get(marathonNode.getName());
-      String id = appResource.getIaasId();
+    for (NodeTemplate chronosNode : orderedChronosJobs) {
+      Resource jobResource = resources.get(chronosNode.getName());
+      String id = jobResource.getIaasId();
       if (id == null) {
-        id = UUID.randomUUID().toString();
-        appResource.setIaasId(id);
+        id = jobResource.getId();
+        jobResource.setIaasId(id);
       }
-      ChronosJob mesosTask = buildTask(graph, marathonNode, id);
-      jobs.put(marathonNode.getName(), mesosTask);
-      List<NodeTemplate> parentNodes = getParentNodes("parent_job", graph, marathonNode);
+      ChronosJob mesosTask = buildTask(graph, chronosNode, id);
+      jobs.put(chronosNode.getName(), mesosTask);
+      List<NodeTemplate> parentNodes = getParentNodes("parent_job", graph, chronosNode);
       mesosTask.setParents(parentNodes
           .stream()
           .map(parentNode -> jobs.get(parentNode.getName()))
           .collect(Collectors.toList()));
       Job chronosJob = generateExternalTaskRepresentation(mesosTask);
-      IndigoJob indigoJob = new IndigoJob(marathonNode.getName(), chronosJob);
+      IndigoJob indigoJob = new IndigoJob(chronosNode.getName(), chronosJob);
       indigoJob.setParents(parentNodes
           .stream()
           .map(parentNode -> indigoJobs.get(parentNode.getName()))
           .collect(Collectors.toList()));
-      indigoJobs.put(marathonNode.getName(), indigoJob);
+      indigoJobs.put(chronosNode.getName(), indigoJob);
     }
 
     return indigoJobs;
