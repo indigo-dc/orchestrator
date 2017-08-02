@@ -416,13 +416,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           Optional<String> additionalErrorInfo = getAdditionalErrorInfo(deploymentMessage);
           StringBuilder sb =
               new StringBuilder(
-                  "Some error occurred during the contextualization of the Deployment")
-                      .append("\nThe state of the VMs is ")
+                  "Some error occurred during the contextualization of the IM infrastructure\n")
                       .append(infrastructureState.getFormattedInfrastructureStateString());
           if (additionalErrorInfo.isPresent()) {
-            sb
-                .append("\nContextualization Message: ")
-                .append(additionalErrorInfo.get());
+            sb.append("\n").append(additionalErrorInfo.get());
           }
           throw new DeploymentException(sb.toString());
         default:

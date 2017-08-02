@@ -400,7 +400,7 @@ public class ImServiceTest {
     } catch (DeploymentException ex) {
       Assert
           .assertEquals(
-              "Some error occurred during the contextualization of the Deployment\nThe state of the VMs is "
+              "Some error occurred during the contextualization of the IM infrastructure\n"
                   +
                   infrastructureState.getFormattedInfrastructureStateString(),
               ex.getMessage());
@@ -440,7 +440,7 @@ public class ImServiceTest {
     } catch (DeploymentException ex) {
       Assert
           .assertEquals(
-              "Some error occurred during the contextualization of the Deployment\nThe state of the VMs is "
+              "Some error occurred during the contextualization of the IM infrastructure\n"
                   +
                   infrastructureState.getFormattedInfrastructureStateString(),
               ex.getMessage());
