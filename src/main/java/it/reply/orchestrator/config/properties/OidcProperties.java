@@ -30,6 +30,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.autoconfigure.security.SecurityPrerequisite;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
+import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.validation.annotation.Validated;
 
@@ -47,16 +48,15 @@ import javax.validation.constraints.NotNull;
 @Data
 @NoArgsConstructor
 @ConfigurationProperties(prefix = OidcProperties.PROPERTIES_PREFIX)
+@Component
 public class OidcProperties implements SecurityPrerequisite, InitializingBean {
 
   public static final List<String> REQUIRED_SCOPES =
       ImmutableList.of("openid", "profile", "offline_access");
-  
+
   protected static final String PROPERTIES_PREFIX = "oidc";
 
-  public static final String OIDC_ENABLED_CONDITION =
-      "@'" + PROPERTIES_PREFIX + "-it.reply.orchestrator.config.properties.OidcProperties'.enabled";
-  public static final String OIDC_DISABLED_CONDITION = "!" + OIDC_ENABLED_CONDITION;
+  public static final String SECURITY_ENABLED_PROPERTY = PROPERTIES_PREFIX + ".enabled";
 
   private boolean enabled;
 

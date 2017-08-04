@@ -16,7 +16,6 @@
 
 package it.reply.orchestrator.controller;
 
-import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.dal.entity.AbstractResourceEntity;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
@@ -56,9 +55,8 @@ import javax.validation.Valid;
 @Slf4j
 public class DeploymentController {
 
-  private static final String OFFLINE_AND_PROFILE_REQUIRED_CONDITION =
-      OidcProperties.OIDC_DISABLED_CONDITION + " || "
-          + "#oauth2.throwOnError(#oauth2.hasScope('offline_access'))";
+  private static final String OFFLINE_ACCESS_REQUIRED_CONDITION =
+      "#oauth2.throwOnError(#oauth2.hasScope('offline_access'))";
 
   @Autowired
   private DeploymentService deploymentService;
@@ -111,7 +109,7 @@ public class DeploymentController {
   @ResponseStatus(HttpStatus.CREATED)
   @RequestMapping(value = "/deployments", method = RequestMethod.POST,
       produces = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize(OFFLINE_AND_PROFILE_REQUIRED_CONDITION)
+  @PreAuthorize(OFFLINE_ACCESS_REQUIRED_CONDITION)
   public DeploymentResource createDeployment(@Valid @RequestBody DeploymentRequest request) {
 
     LOG.info("Creating deployment with template\n{}", request.getTemplate());
@@ -131,7 +129,7 @@ public class DeploymentController {
   @ResponseStatus(HttpStatus.ACCEPTED)
   @RequestMapping(value = "/deployments/{deploymentId}", method = RequestMethod.PUT,
       produces = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize(OFFLINE_AND_PROFILE_REQUIRED_CONDITION)
+  @PreAuthorize(OFFLINE_ACCESS_REQUIRED_CONDITION)
   public void updateDeployment(@PathVariable("deploymentId") String id,
       @Valid @RequestBody DeploymentRequest request) {
 
@@ -164,7 +162,7 @@ public class DeploymentController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @RequestMapping(value = "/deployments/{deploymentId}", method = RequestMethod.DELETE,
       produces = MediaType.APPLICATION_JSON_VALUE)
-  @PreAuthorize(OFFLINE_AND_PROFILE_REQUIRED_CONDITION)
+  @PreAuthorize(OFFLINE_ACCESS_REQUIRED_CONDITION)
   public void deleteDeployment(@PathVariable("deploymentId") String id) {
 
     deploymentService.deleteDeployment(id);
