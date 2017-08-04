@@ -16,17 +16,18 @@
 
 package it.reply.orchestrator.config;
 
+import com.google.common.collect.ImmutableList;
+
 import it.reply.orchestrator.config.properties.OrchestratorProperties;
 import it.reply.workflowmanager.orchestrator.config.ConfigProducer;
 
 import org.kie.api.io.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -56,19 +57,11 @@ public class WorkflowConfigProducerBean implements ConfigProducer {
   private List<WorkflowResource> resources;
 
   @Autowired
+  @Lazy //TODO Ugly
   private OrchestratorProperties orchestratorProperties;
 
   public WorkflowConfigProducerBean() {
-    initResourceList();
-  }
-
-  private void initResourceList() {
-    resources = new ArrayList<>();
-    resources.add(DEPLOY);
-    resources.add(UNDEPLOY);
-    resources.add(UPDATE);
-    resources.add(RANK_CLOUD_PROVIDERS);
-    resources = Collections.unmodifiableList(resources);
+    resources = ImmutableList.of(DEPLOY, UNDEPLOY, UPDATE, RANK_CLOUD_PROVIDERS);
   }
 
   @Override
