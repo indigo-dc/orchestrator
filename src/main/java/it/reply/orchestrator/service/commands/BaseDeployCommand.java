@@ -38,7 +38,7 @@ public abstract class BaseDeployCommand<T extends BaseDeployCommand<T>>
   private DeploymentProviderServiceRegistry deploymentProviderServiceRegistry;
 
   @Override
-  protected final String getMessageParameterName() {
+  protected String getMessageParameterName() {
     return WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE;
   }
 

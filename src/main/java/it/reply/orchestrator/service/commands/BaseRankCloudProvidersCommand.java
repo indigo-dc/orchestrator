@@ -31,7 +31,7 @@ public abstract class BaseRankCloudProvidersCommand<T extends BaseRankCloudProvi
     extends BaseWorkflowCommand<RankCloudProvidersMessage, T> {
 
   @Override
-  protected final String getMessageParameterName() {
+  protected String getMessageParameterName() {
     return WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE;
   }
 }
