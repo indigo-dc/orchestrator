@@ -60,6 +60,7 @@ import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.service.ToscaServiceImpl;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.util.TestUtil;
+import it.reply.orchestrator.utils.CommonUtils;
 
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.Condition;
@@ -74,6 +75,7 @@ import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.data.domain.PageImpl;
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -106,7 +108,7 @@ public class ImServiceTest {
   private InfrastructureManager infrastructureManager;
 
   @Spy
-  private ImProperties imProperties = new ImProperties("im.url");
+  private ImProperties imProperties;
 
   @Mock
   private OidcProperties oidcProperties;
@@ -117,6 +119,7 @@ public class ImServiceTest {
   @Before
   public void setup() throws ParsingException {
     MockitoAnnotations.initMocks(this);
+    imProperties.setUrl(CommonUtils.checkNotNull(URI.create("im.url")));
   }
 
   private DeploymentMessage generateIsDeployedDm() {
@@ -596,7 +599,7 @@ public class ImServiceTest {
          .withHost("https://recas.ba.infn");
     
     String imAuthHeader = ImCredentials.buildCredentials().withToken("J1qK1c18UUGJFAzz9xnH56584l4").serialize();
-    String imUrl = imProperties.getUrl();
+    String imUrl = imProperties.getUrl().toString();
     
     InfrastructureManager result = new InfrastructureManager(imUrl, String.format("%s\\n%s", imAuthHeader, cred.serialize()));
     // TO-DO: Assert equals both result and client (How?)

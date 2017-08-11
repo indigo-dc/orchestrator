@@ -19,6 +19,7 @@ package it.reply.orchestrator.dto.onedata;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import lombok.Builder;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -27,6 +28,7 @@ import java.util.List;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Builder
 public class ProviderDetails implements Serializable {
 
   private static final long serialVersionUID = -368387049626457198L;
@@ -44,6 +46,7 @@ public class ProviderDetails implements Serializable {
   private String redirectionPoint;
 
   @JsonProperty("urls")
+  @Builder.Default
   private List<String> urls = new ArrayList<>();
 
   @JsonProperty("latitude")

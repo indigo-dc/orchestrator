@@ -17,8 +17,10 @@
 package it.reply.orchestrator.config;
 
 import it.reply.orchestrator.config.filters.CustomRequestLoggingFilter;
+import it.reply.orchestrator.config.properties.OrchestratorProperties;
 
 import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.ApplicationContext;
@@ -34,6 +36,7 @@ import java.util.Properties;
 import java.util.stream.Collectors;
 
 @Configuration
+@EnableConfigurationProperties(OrchestratorProperties.class)
 public class WebAppInitializer {
 
   /**

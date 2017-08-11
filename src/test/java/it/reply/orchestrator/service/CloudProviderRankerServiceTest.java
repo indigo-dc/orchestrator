@@ -32,6 +32,7 @@ import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -47,6 +48,7 @@ public class CloudProviderRankerServiceTest {
   @Mock
   private RestTemplate restTemplate;
 
+  @Spy
   private CprProperties cprProperties;
 
   private CloudProviderRankerService cloudProviderRankerService;
@@ -54,14 +56,14 @@ public class CloudProviderRankerServiceTest {
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
-    cprProperties = new CprProperties(CommonUtils.checkNotNull(URI.create("http://test.com")));
+    cprProperties.setUrl(URI.create("http://test.com"));
     cloudProviderRankerService = new CloudProviderRankerServiceImpl(cprProperties, restTemplate);
   }
 
   private void mockTemplate(CloudProviderRankerRequest cprr,
       ResponseEntity<List<RankedCloudProvider>> response) {
     HttpEntity<CloudProviderRankerRequest> entity = new HttpEntity<>(cprr);
-    Mockito.when(restTemplate.exchange(eq(cprProperties.getUrl()), eq(HttpMethod.POST), eq(entity),
+    Mockito.when(restTemplate.exchange(eq(URI.create(cprProperties.getUrl() + "/rank")), eq(HttpMethod.POST), eq(entity),
         eq(new ParameterizedTypeReference<List<RankedCloudProvider>>() {
         }))).thenReturn(response);
   }

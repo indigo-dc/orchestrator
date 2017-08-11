@@ -23,6 +23,7 @@ import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.model.topology.RelationshipTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.normative.IntegerType;
+
 import it.infn.ba.indigo.chronos.client.Chronos;
 import it.infn.ba.indigo.chronos.client.ChronosClient;
 import it.infn.ba.indigo.chronos.client.model.v1.Container;
@@ -32,6 +33,8 @@ import it.infn.ba.indigo.chronos.client.model.v1.Parameters;
 import it.infn.ba.indigo.chronos.client.model.v1.Volume;
 import it.infn.ba.indigo.chronos.client.utils.ChronosException;
 import it.reply.orchestrator.annotation.DeploymentProviderQualifier;
+import it.reply.orchestrator.config.properties.ChronosProperties;
+import it.reply.orchestrator.config.properties.OrchestratorProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
@@ -55,8 +58,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.jgrapht.graph.DirectedMultigraph;
 import org.jgrapht.traverse.TopologicalOrderIterator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
 import java.io.Serializable;
@@ -73,26 +75,21 @@ import java.util.stream.Collectors;
 
 @Service
 @DeploymentProviderQualifier(DeploymentProvider.CHRONOS)
-@PropertySource(value = { "classpath:application.properties", "${conf-file-path.chronos}" })
 @Slf4j
+@EnableConfigurationProperties(ChronosProperties.class)
 public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJob, Job> {
 
   @Autowired
-  ToscaService toscaService;
+  private ToscaService toscaService;
 
   @Autowired
   private ResourceRepository resourceRepository;
 
-  @Value("${chronos.endpoint}")
-  private String endpoint;
-  @Value("${chronos.username}")
-  private String username;
-  @Value("${chronos.password}")
-  private String password;
+  @Autowired
+  private ChronosProperties chronosProperties;
 
-  // TODO validate it is > 0 (otherwise no job executed)
-  @Value("${orchestrator.chronos.jobChunkSize}")
-  private int jobChunkSize;
+  @Autowired
+  private OrchestratorProperties orchestratorProperties;
 
   /**
    * Temporary method to instantiate a default Chronos client (<b>just for experimental purpose</b>
@@ -101,10 +98,9 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
    * @return the Chronos client.
    */
   public Chronos getChronosClient() {
-    LOG.info("Generating Chronos client with parameters: URL={}, username={}", endpoint, username);
-    Chronos client = ChronosClient.getInstanceWithBasicAuth(endpoint, username, password);
-
-    return client;
+    LOG.info("Generating Chronos client with parameters: {}", chronosProperties);
+    return ChronosClient.getInstanceWithBasicAuth(chronosProperties.getUrl().toString(),
+        chronosProperties.getUsername(), chronosProperties.getPassword());
   }
 
   public Collection<Job> getJobs(Chronos client) {
@@ -145,11 +141,12 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     }
 
     // Create Jobs in the required order on Chronos (but 1 at each invocation)
-    LOG.debug("Launching <{}> jobs for deployment <{}> on Chronos", jobChunkSize,
+    LOG.debug("Launching <{}> jobs for deployment <{}> on Chronos",
+        orchestratorProperties.getJobChunkSize(),
         deployment.getId());
     boolean noMoreJob = false;
     Chronos client = getChronosClient();
-    for (int i = 0; i < jobChunkSize && !noMoreJob; i++) {
+    for (int i = 0; i < orchestratorProperties.getJobChunkSize() && !noMoreJob; i++) {
       noMoreJob =
           !createJobsOnChronosIteratively(deployment, deploymentMessage.getChronosJobGraph(),
               deploymentMessage.getTemplateTopologicalOrderIterator(), client);
@@ -238,10 +235,11 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     TemplateTopologicalOrderIterator templateTopologicalOrderIterator =
         deploymentMessage.getTemplateTopologicalOrderIterator();
 
-    LOG.debug("Polling <{}> jobs for deployment <{}> on Chronos", jobChunkSize,
+    LOG.debug("Polling <{}> jobs for deployment <{}> on Chronos",
+        orchestratorProperties.getJobChunkSize(),
         deployment.getId());
     boolean noMoreJob = templateTopologicalOrderIterator.getCurrent() == null;
-    for (int i = 0; i < jobChunkSize && !noMoreJob; i++) {
+    for (int i = 0; i < orchestratorProperties.getJobChunkSize() && !noMoreJob; i++) {
       boolean jobCompleted =
           checkJobsOnChronosIteratively(deployment, deploymentMessage.getChronosJobGraph(),
               deploymentMessage.getTemplateTopologicalOrderIterator(), client);
@@ -416,11 +414,12 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
         deploymentMessage.getTemplateTopologicalOrderIterator();
 
     // Delete Jobs
-    LOG.debug("Deleting <{}> jobs for deployment <{}> on Chronos", jobChunkSize,
+    LOG.debug("Deleting <{}> jobs for deployment <{}> on Chronos",
+        orchestratorProperties.getJobChunkSize(),
         deployment.getId());
     Chronos client = getChronosClient();
     boolean noMoreJob = templateTopologicalOrderIterator.getCurrent() == null;
-    for (int i = 0; i < jobChunkSize && !noMoreJob; i++) {
+    for (int i = 0; i < orchestratorProperties.getJobChunkSize() && !noMoreJob; i++) {
       deleteJobsOnChronosIteratively(deployment, deploymentMessage.getChronosJobGraph(),
           templateTopologicalOrderIterator, client, true);
 

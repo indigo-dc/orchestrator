@@ -17,6 +17,7 @@
 package it.reply.orchestrator.service;
 
 import it.reply.orchestrator.config.properties.OidcProperties;
+import it.reply.orchestrator.config.properties.SlamProperties;
 import it.reply.orchestrator.dal.entity.OidcEntity;
 import it.reply.orchestrator.dal.entity.OidcRefreshToken;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
@@ -26,14 +27,12 @@ import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.RequestEntity.HeadersBuilder;
 import org.springframework.http.ResponseEntity;
-import org.springframework.social.support.URIBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
@@ -42,8 +41,10 @@ import java.net.URI;
 import java.util.Optional;
 import java.util.function.Function;
 
+import javax.ws.rs.core.UriBuilder;
+
 @Service
-@PropertySource("classpath:slam/slam.properties")
+@EnableConfigurationProperties(SlamProperties.class)
 public class SlamServiceImpl implements SlamService {
 
   @Autowired
@@ -56,18 +57,10 @@ public class SlamServiceImpl implements SlamService {
   private OidcProperties oidcProperties;
 
   @Autowired
+  private SlamProperties slamProperties;
+
+  @Autowired
   private OAuth2TokenService oauth2TokenService;
-
-  @Value("${slam.url}")
-  private String url;
-
-  @Value("${preferences}")
-  private String preferences;
-
-  @Override
-  public String getUrl() {
-    return url;
-  }
 
   protected <R> R executeWithClient(Function<RequestEntity<?>, R> function, URI requestUri,
       OidcTokenId tokenId) {
@@ -105,7 +98,10 @@ public class SlamServiceImpl implements SlamService {
         .map(OidcEntity::getOrganization)
         .orElse("indigo-dc");
 
-    URI requestUri = URIBuilder.fromUri(url.concat(preferences).concat(slamCustomer)).build();
+    URI requestUri = UriBuilder
+        .fromUri(slamProperties.getUrl() + slamProperties.getCustomerPreferencesPath())
+        .build(slamCustomer)
+        .normalize();
 
     ResponseEntity<SlamPreferences> response = this.executeWithClient(
         request -> restTemplate.exchange(request, SlamPreferences.class), requestUri, tokenId);

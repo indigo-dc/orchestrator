@@ -50,6 +50,7 @@ import alien4cloud.utils.FileUtil;
 import es.upv.i3m.grycap.im.auth.credentials.ServiceProvider;
 
 import it.reply.orchestrator.config.properties.OidcProperties.OidcClientProperties;
+import it.reply.orchestrator.config.properties.OrchestratorProperties;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudService;
@@ -145,8 +146,8 @@ public class ToscaServiceImpl implements ToscaService {
   @Value("${tosca.definitions.indigo}")
   private String indigoLocalName;
 
-  @Value("${orchestrator.url}")
-  private String orchestratorUrl;
+  @Autowired
+  private OrchestratorProperties orchestratorProperties;
 
   /**
    * Load normative and non-normative types.
@@ -674,7 +675,8 @@ public class ToscaServiceImpl implements ToscaService {
       properties.put("deployment_id", createScalarPropertyValue(deploymentId));
 
       // Create new property with the orchestrator_url and set as printable
-      properties.put("orchestrator_url", createScalarPropertyValue(orchestratorUrl));
+      properties.put("orchestrator_url",
+          createScalarPropertyValue(orchestratorProperties.getUrl().toString()));
 
       if (oauthToken != null) {
         // Create new property with the iam_access_token and set as printable

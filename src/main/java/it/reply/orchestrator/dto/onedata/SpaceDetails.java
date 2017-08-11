@@ -19,6 +19,7 @@ package it.reply.orchestrator.dto.onedata;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import lombok.Builder;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -27,6 +28,7 @@ import java.util.Map;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Builder
 public class SpaceDetails implements Serializable {
 
   private static final long serialVersionUID = -368387049626457198L;
@@ -41,6 +43,7 @@ public class SpaceDetails implements Serializable {
   private String canonicalName;
 
   @JsonProperty("providersSupports")
+  @Builder.Default
   private Map<String, Long> providersSupports = new HashMap<>();
 
 }

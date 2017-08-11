@@ -18,6 +18,8 @@ package it.reply.orchestrator.service.commands;
 
 import com.google.common.collect.ImmutableMap;
 
+import it.reply.orchestrator.config.properties.OneDataProperties;
+import it.reply.orchestrator.config.properties.OneDataProperties.ServiceSpaceProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
@@ -26,7 +28,6 @@ import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.service.CloudProviderEndpointServiceImpl;
-import it.reply.orchestrator.service.OneDataService;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
@@ -54,7 +55,7 @@ import java.util.stream.Collectors;
 public class UpdateDeployment extends BaseDeployCommand<UpdateDeployment> {
 
   @Autowired
-  private OneDataService oneDataService;
+  private OneDataProperties oneDataProperties;
 
   @Autowired
   private CloudProviderEndpointServiceImpl cloudProviderEndpointServiceImpl;
@@ -157,15 +158,17 @@ public class UpdateDeployment extends BaseDeployCommand<UpdateDeployment> {
    */
   protected OneData generateStubOneData(DeploymentMessage deploymentMessage) {
 
-    String path = new StringBuilder().append(oneDataService.getServiceSpacePath())
+    ServiceSpaceProperties serviceSpaceProperties = oneDataProperties.getServiceSpace();
+
+    String path = new StringBuilder().append(serviceSpaceProperties.getBaseFolderPath())
         .append(deploymentMessage.getDeploymentId())
         .toString();
 
     OneData stub = OneData.builder()
-        .token(oneDataService.getServiceSpaceToken())
-        .space(oneDataService.getServiceSpaceName())
+        .token(serviceSpaceProperties.getToken())
+        .space(serviceSpaceProperties.getName())
         .path(path)
-        .providers(oneDataService.getServiceSpaceProvider())
+        .providers(serviceSpaceProperties.getOneproviderUrl().toString())
         .build();
 
     LOG.info("Generated OneData settings {}", stub);

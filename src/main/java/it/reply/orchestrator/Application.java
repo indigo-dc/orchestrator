@@ -21,10 +21,8 @@ import bitronix.tm.jndi.BitronixInitialContextFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.web.ErrorMvcAutoConfiguration;
-import org.springframework.context.annotation.PropertySource;
 
 @SpringBootApplication(exclude = ErrorMvcAutoConfiguration.class)
-@PropertySource(value = { "${conf-file-path.im}", "${conf-file-path.marathon}" })
 public class Application {
 
   public static final Class<Application> applicationClass = Application.class;

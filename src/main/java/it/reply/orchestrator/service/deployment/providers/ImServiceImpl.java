@@ -273,11 +273,11 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     if (cloudProviderEndpoints.size() != 1) {
       // multiple endpoints (or no endpoint for some reason) -> return PaaS level IM instance by
       // default
-      imUrl = imProperties.getUrl();
+      imUrl = imProperties.getUrl().toString();
     } else {
       imUrl = Optional
           .ofNullable(cloudProviderEndpoints.get(0).getImEndpoint())
-          .orElseGet(imProperties::getUrl);
+          .orElseGet(() -> imProperties.getUrl().toString());
     }
     String imHeader = String.format("%s\\n%s", imAuthHeader, iaasHeaders);
     LOG.trace("IM auth header: {}", imHeader);

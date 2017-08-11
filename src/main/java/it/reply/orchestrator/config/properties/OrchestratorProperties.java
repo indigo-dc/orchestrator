@@ -21,24 +21,47 @@ import lombok.NoArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.validation.annotation.Validated;
 
 import java.net.URI;
 
+import javax.validation.Valid;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 @Validated
 @Data
-@ConfigurationProperties(prefix = "cpr")
+@ConfigurationProperties(prefix = "orchestrator")
 @NoArgsConstructor
-public class CprProperties {
+public class OrchestratorProperties {
 
   @NotNull
   @NonNull
   private URI url;
 
+  @Min(1)
+  private int jobChunkSize = 1;
+
   @NotNull
   @NonNull
-  private String rankPath = "/rank";
+  @Valid
+  @NestedConfigurationProperty
+  private ExecutorServiceProperties executorService = new ExecutorServiceProperties();
 
+  @Validated
+  @Data
+  @NoArgsConstructor
+  public static class ExecutorServiceProperties {
+
+    @Min(0)
+    private int threadPoolSize = 10;
+
+    @Min(1)
+    private int interval = 2;
+
+    @Min(0)
+    private int retries = 3;
+
+  }
 }

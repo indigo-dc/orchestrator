@@ -18,31 +18,31 @@ package it.reply.orchestrator.config.properties;
 
 import com.google.common.base.Preconditions;
 
-import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 import javax.validation.constraints.NotNull;
 
+@Validated
 @Data
 @ConfigurationProperties(prefix = "im")
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
-@RequiredArgsConstructor
+@NoArgsConstructor
 public class ImProperties implements InitializingBean {
 
   @NotNull
   @NonNull
-  private String url;
+  private URI url;
 
   @Nullable
   private String imAuthHeader;
@@ -63,9 +63,9 @@ public class ImProperties implements InitializingBean {
   @Override
   public void afterPropertiesSet() throws Exception {
     Preconditions.checkNotNull(url);
-    iaasAuthHeaders.entrySet().stream().forEach(entry -> {
-      Preconditions.checkNotNull(entry.getKey());
-      Preconditions.checkNotNull(entry.getValue());
+    iaasAuthHeaders.forEach((key, value) -> {
+      Preconditions.checkNotNull(key);
+      Preconditions.checkNotNull(value);
     });
 
   }

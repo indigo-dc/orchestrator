@@ -18,7 +18,7 @@ package it.reply.orchestrator.config.security;
 
 import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.config.properties.OidcProperties.IamProperties;
-import it.reply.orchestrator.config.properties.OidcProperties.OrchestratorProperties;
+import it.reply.orchestrator.config.properties.OidcProperties.ScopedOidcClientProperties;
 import it.reply.orchestrator.exception.CustomOAuth2ExceptionRenderer;
 import it.reply.orchestrator.service.security.IndigoUserInfoFetcher;
 import it.reply.orchestrator.service.security.UserInfoIntrospectingTokenService;
@@ -92,7 +92,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
             .getIamProperties()
             .entrySet()) {
           IamProperties configuration = configurationEntry.getValue();
-          OrchestratorProperties orchestrator = configuration.getOrchestrator();
+          ScopedOidcClientProperties orchestrator = configuration.getOrchestrator();
           RegisteredClient client = new RegisteredClient();
           client.setClientId(orchestrator.getClientId());
           client.setClientSecret(orchestrator.getClientSecret());
