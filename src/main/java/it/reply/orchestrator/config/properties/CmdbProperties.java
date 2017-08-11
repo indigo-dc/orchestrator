@@ -29,9 +29,9 @@ import javax.validation.constraints.NotNull;
 
 @Validated
 @Data
-@ConfigurationProperties(prefix = "cpr")
+@ConfigurationProperties(prefix = "cmdb")
 @NoArgsConstructor
-public class CprProperties {
+public class CmdbProperties {
 
   @NotNull
   @NonNull
@@ -39,6 +39,24 @@ public class CprProperties {
 
   @NotNull
   @NonNull
-  private String rankPath = "/rank";
+  private String providerByIdPath = "/provider/id/{providerId}";
+
+  @NotNull
+  @NonNull
+  private String servicesByProviderIdPath =
+      "/provider/id/{providerId}/has_many/services?include_docs=true";
+
+  @NotNull
+  @NonNull
+  private String serviceByIdPath = "/service/id/{serviceId}";
+
+  @NotNull
+  @NonNull
+  private String imagesByServiceIdPath =
+      "/service/id/{serviceId}/has_many/images?include_docs=true";
+
+  @NotNull
+  @NonNull
+  private String imageByIdPath = "/image/id/{imageId}";
 
 }

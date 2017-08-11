@@ -55,28 +55,28 @@ This is the list of additional parameters that allows to configure the orchestra
 
  * `ORCHESTRATOR_URL`
     * **Description**: Self reference to the orchestrator REST interface
-    * **Format**: http://{host}:{port}/orchestrator
-    * **Default value**: http://localhost:8081/orchestrator
+    * **Format**: http://{host}:{port}
+    * **Default value**: http://localhost:8080
  * `IM_URL`
     * **Description**: The Infrastructure Manager REST endpoint
     * **Format**: http://{host}:{port}
     * **Default value**: https://servproject.i3m.upv.es:8811
- * `CMDB_ENDPOINT`
+ * `CMDB_URL`
     * **Description**: The CMDB REST endpoint
-    * **Format**: http://{host}:{port}/cmdb/
-    * **Default value**: http://indigo.cloud.plgrid.pl/cmdb/
- * `SLAM_ENDPOINT`
+    * **Format**: http://{host}:{port}/cmdb
+    * **Default value**: http://indigo.cloud.plgrid.pl/cmdb
+ * `SLAM_URL`
     * **Description**: The SLAM REST endpoint
-    * **Format**: http://{host}:{port}/slam/
-    * **Default value**: http://indigo.cloud.plgrid.pl/slam/
- * `CPR_ENDPOINT`
+    * **Format**: http://{host}:{port}/slam
+    * **Default value**: http://indigo.cloud.plgrid.pl/slam
+ * `CPR_URL`
     * **Description**: The Cloud Provider Ranker endpoint
-    * **Format**: https://{host}:{port}/rank
-    * **Default value**: http://indigo-ranker.pd.infn.it:8443/rank
- * `WRAPPER_URL`
+    * **Format**: https://{host}:{port}
+    * **Default value**: https://indigo-paas.cloud.ba.infn.it/cpr
+ * `MONITORING_URL`
     * **Description**: The Zabbix Wrapper endpoint
-    * **Format**: http://{host}:{port}/monitoring/adapters/zabbix/zones/indigo/types/infrastructure/groups/Cloud_Providers/hosts/
-    * **Default value**: http://90.147.170.181/monitoring/adapters/zabbix/zones/indigo/types/infrastructure/groups/Cloud_Providers/hosts/
+    * **Format**: http://{host}:{port}
+    * **Default value**: http://90.147.170.181
 
 ### Configure IAM integration (optional)
 By default the REST APIs are not authenticated; if you want to enable the IAM integration you must (for each IAM you want to associate):
@@ -115,7 +115,7 @@ Please make reference to the [IAM guide](https://indigo-dc.gitbooks.io/iam/conte
 ### Configure Chronos (optional)
 The orchestrator allows to run jobs on Chronos; to do that you need to configure the following parameters 
 
- * `CHRONOS_ENDPOINT`
+ * `CHRONOS_URL`
     * **Description**: The Chronos REST endpoint
     * **Format**: http://{host}:{port}
  * `CHRONOS_USERNAME`
@@ -142,13 +142,20 @@ The Orchestrator, when the Chronos parameters are set, allows to exploit a [OneD
 
 To enable this functionality you need to configure the following parameters:
 
- * `ONEZONE_DEFAULT_URL`
-    * **Description**: The default OneZone endpoint to which your OneData user is registered
+ * `ONEDATA_ONEZONE_URL`
+    * **Description**: The endpoint of the default OneZone to which your OneData user is registered
     * **Format**: http://{host}:{port}
- * `SERVICE_SPACE_TOKEN`
-    * **Description**: The OneData service space token; you can retrieve it from the OneZone user interface
- * `SERVICE_SPACE_NAME`
-    * **Description**: The name of the OneData space that you want to use as service space
- * `SERVICE_SPACE_PROVIDER`
+    * **Default value**: https://onezone.cloud.ba.infn.it:8443
+ * `ONEDATA_SERVICE_SPACE_ONEPROVIDER_URL`
     * **Description**: The OneData service space provider that hosts the service space
-    * **Format**: http://{host}:{port}
+    * **Format**: {host}:{port}
+    * **Default value**: cdmi-indigo.recas.ba.infn.it
+ * `ONEDATA_SERVICE_SPACE_TOKEN`
+    * **Description**: The OneData service space token; you can retrieve it from the OneZone user interface
+ * `ONEDATA_SERVICE_SPACE_NAME`
+    * **Description**: The name of the OneData space that you want to use as service space
+    * **Default value**: `INDIGO Service Space`
+ * `ONEDATA_SERVICE_SPACE_BASE_FOLDER_PATH`
+    * **Description**: The path (relative to the space one) to the folder that will host the files
+    * **Default value**: Empty (files will be hosted directly in the space folder) 
+

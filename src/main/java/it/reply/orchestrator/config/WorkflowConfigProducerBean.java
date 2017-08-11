@@ -16,10 +16,11 @@
 
 package it.reply.orchestrator.config;
 
-import it.reply.orchestrator.annotation.SpringDefaultProfile;
+import it.reply.orchestrator.config.properties.OrchestratorProperties;
 import it.reply.workflowmanager.orchestrator.config.ConfigProducer;
 
 import org.kie.api.io.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.stereotype.Component;
 
@@ -30,7 +31,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Component
-@SpringDefaultProfile
 @ComponentScan(basePackages = "it.reply.workflowmanager")
 public class WorkflowConfigProducerBean implements ConfigProducer {
 
@@ -54,6 +54,9 @@ public class WorkflowConfigProducerBean implements ConfigProducer {
   }
 
   private List<WorkflowResource> resources;
+
+  @Autowired
+  private OrchestratorProperties orchestratorProperties;
 
   public WorkflowConfigProducerBean() {
     initResourceList();
@@ -80,12 +83,16 @@ public class WorkflowConfigProducerBean implements ConfigProducer {
 
   @Override
   public int getExecutorServiceThreadPoolSize() {
-    return 10;
+    return orchestratorProperties.getExecutorService().getThreadPoolSize();
   }
 
   @Override
   public int getExecutorServiceInterval() {
-    return 2;
+    return orchestratorProperties.getExecutorService().getInterval();
   }
 
+  @Override
+  public int getExecutorServiceRetries() {
+    return orchestratorProperties.getExecutorService().getRetries();
+  }
 }

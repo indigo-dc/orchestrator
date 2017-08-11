@@ -18,6 +18,7 @@ package it.reply.orchestrator.config.properties;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -29,9 +30,10 @@ import javax.validation.constraints.NotNull;
 
 @Validated
 @Data
-@ConfigurationProperties(prefix = "cpr")
+@ToString(exclude = "password")
+@ConfigurationProperties(prefix = "chronos")
 @NoArgsConstructor
-public class CprProperties {
+public class ChronosProperties {
 
   @NotNull
   @NonNull
@@ -39,6 +41,15 @@ public class CprProperties {
 
   @NotNull
   @NonNull
-  private String rankPath = "/rank";
+  private String username;
+
+  @NotNull
+  @NonNull
+  private String password;
+
+  @NotNull
+  @NonNull
+  @Deprecated
+  private String cloudProviderName;
 
 }

@@ -17,38 +17,41 @@
 package it.reply.orchestrator.service;
 
 import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.PaaSMetric;
+import it.reply.orchestrator.config.properties.MonitoringProperties;
 import it.reply.orchestrator.dto.monitoring.MonitoringResponse;
 import it.reply.orchestrator.exception.service.DeploymentException;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
 import java.util.List;
 
+import javax.ws.rs.core.UriBuilder;
+
 @Service
-@PropertySource("classpath:monitoring/monitoring.properties")
+@EnableConfigurationProperties(MonitoringProperties.class)
 public class MonitoringServiceImpl implements MonitoringService {
 
-  @Value("${wrapper.url}")
-  private String url;
+  @Autowired
+  private MonitoringProperties monitoringProperties;
 
   @Autowired
   private RestTemplate restTemplate;
 
   @Override
-  public String getUrl() {
-    return url;
-  }
-
-  @Override
   public List<PaaSMetric> getProviderData(String providerId) {
 
-    ResponseEntity<MonitoringResponse> response =
-        restTemplate.getForEntity(url.concat(providerId), MonitoringResponse.class);
+    URI requestUri = UriBuilder
+        .fromUri(monitoringProperties.getUrl() + monitoringProperties.getProviderMetricsPath())
+        .build(providerId)
+        .normalize();
+
+    ResponseEntity<MonitoringResponse> response = restTemplate
+        .getForEntity(requestUri, MonitoringResponse.class);
     if (response.getStatusCode().is2xxSuccessful()) {
       // FIXME remove this ugliness
       return response

@@ -90,7 +90,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
 
   protected Marathon getMarathonClient() {
     LOG.info("Generating Marathon client with parameters: {}", marathonProperties);
-    return MarathonClient.getInstanceWithBasicAuth(marathonProperties.getUrl(),
+    return MarathonClient.getInstanceWithBasicAuth(marathonProperties.getUrl().toString(),
         marathonProperties.getUsername(), marathonProperties.getPassword());
   }
 

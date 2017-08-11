@@ -16,35 +16,61 @@
 
 package it.reply.orchestrator.command;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
+import it.reply.orchestrator.config.properties.OidcProperties;
+import it.reply.orchestrator.config.properties.SlamProperties;
+import it.reply.orchestrator.dal.repository.OidcTokenRepository;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
-import it.reply.orchestrator.service.SlamService;
-import it.reply.orchestrator.service.commands.BaseRankCloudProvidersCommand;
+import it.reply.orchestrator.service.SlamServiceImpl;
 import it.reply.orchestrator.service.commands.GetSlam;
 import it.reply.orchestrator.workflow.RankCloudProvidersWorkflowTest;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.kie.api.executor.ExecutionResults;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
-public class GetSLAMCommandTest extends BaseRankCloudProviderCommandTest {
+import java.net.URI;
 
-  @Autowired
+public class GetSLAMCommandTest extends BaseRankCloudProviderCommandTest<GetSlam> {
+
+  @InjectMocks
   private GetSlam getSLAMCommand;
 
-  @Autowired
-  private SlamService slamService;
+  @Spy
+  @InjectMocks
+  private SlamServiceImpl slamService;
+
+  @Spy
+  private SlamProperties slamProperties;
+
+  @Spy
+  private OidcProperties oidcProperties;
+
+  @Mock
+  private OidcTokenRepository tokenRepository;
+
+  private final String endpoint = "https://www.endpoint.com";
+
+  @Before
+  public void setup() {
+    MockitoAnnotations.initMocks(this);
+    slamProperties.setUrl(URI.create(endpoint));
+  }
 
   @Override
-  protected BaseRankCloudProvidersCommand getCommand() {
+  protected GetSlam getCommand() {
     return getSLAMCommand;
   }
 
   @Test
   public void doexecuteSuccesfully() throws Exception {
 
-    RankCloudProvidersWorkflowTest.mockSlam(mockServer, slamService.getUrl());
+    RankCloudProvidersWorkflowTest.mockSlam(mockServer, slamProperties.getUrl());
 
     RankCloudProvidersMessage message = new RankCloudProvidersMessage();
     message.setDeploymentId(getDeploymentId());

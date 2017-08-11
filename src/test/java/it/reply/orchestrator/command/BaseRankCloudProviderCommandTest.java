@@ -16,7 +16,6 @@
 
 package it.reply.orchestrator.command;
 
-import it.reply.orchestrator.config.specific.WebAppConfigurationAware;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.service.commands.BaseRankCloudProvidersCommand;
 import it.reply.orchestrator.utils.WorkflowConstants;
@@ -26,19 +25,21 @@ import it.reply.workflowmanager.utils.Constants;
 import org.junit.Before;
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 
-public abstract class BaseRankCloudProviderCommandTest extends WebAppConfigurationAware {
+public abstract class BaseRankCloudProviderCommandTest<T extends BaseRankCloudProvidersCommand<T>> {
 
   protected MockRestServiceServer mockServer;
 
-  @Autowired
+  @Spy
   protected RestTemplate restTemplate;
 
   @Before
-  public void setUp() {
+  public void baseSetup() {
+    MockitoAnnotations.initMocks(this);
     mockServer = MockRestServiceServer.createServer(restTemplate);
   }
 
@@ -74,5 +75,5 @@ public abstract class BaseRankCloudProviderCommandTest extends WebAppConfigurati
         .serializeJson(er.getData(WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE)));
   }
 
-  protected abstract BaseRankCloudProvidersCommand getCommand();
+  protected abstract T getCommand();
 }

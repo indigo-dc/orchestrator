@@ -18,27 +18,62 @@ package it.reply.orchestrator.config.properties;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.validation.annotation.Validated;
 
 import java.net.URI;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Validated
 @Data
-@ConfigurationProperties(prefix = "cpr")
+@ConfigurationProperties(prefix = "onedata")
 @NoArgsConstructor
-public class CprProperties {
+public class OneDataProperties {
 
   @NotNull
   @NonNull
-  private URI url;
+  private URI onezoneUrl;
 
   @NotNull
   @NonNull
-  private String rankPath = "/rank";
+  private String onezoneBasePath = "/api/v3/onezone/";
 
+  @NotNull
+  @NonNull
+  private String oneproviderBasePath = "/api/v3/oneprovider/";
+
+  @NotNull
+  @NonNull
+  @Valid
+  @NestedConfigurationProperty
+  private ServiceSpaceProperties serviceSpace;
+
+  @Validated
+  @Data
+  @NoArgsConstructor
+  @ToString(exclude = "token")
+  public static class ServiceSpaceProperties {
+
+    @NotNull
+    @NonNull
+    private URI oneproviderUrl;
+
+    @NotNull
+    @NonNull
+    private String token;
+
+    @NotNull
+    @NonNull
+    private String name;
+
+    @NotNull
+    @NonNull
+    private String baseFolderPath = "";
+  }
 }

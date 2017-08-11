@@ -18,114 +18,56 @@ package it.reply.orchestrator.service;
 
 import com.google.common.collect.Lists;
 
+import it.reply.orchestrator.config.properties.OneDataProperties;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
 import it.reply.orchestrator.dto.onedata.ProviderDetails;
 import it.reply.orchestrator.dto.onedata.SpaceDetails;
 import it.reply.orchestrator.dto.onedata.UserSpaces;
 import it.reply.orchestrator.exception.service.DeploymentException;
+import it.reply.orchestrator.utils.CommonUtils;
+
+import lombok.AllArgsConstructor;
 
 import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Objects;
 
-import javax.annotation.PostConstruct;
+import javax.ws.rs.core.UriBuilder;
 
 @Service
-@PropertySource(value = { "classpath:application.properties", "${conf-file-path.onedata}" })
+@EnableConfigurationProperties(OneDataProperties.class)
+@AllArgsConstructor
 public class OneDataServiceImpl implements OneDataService {
 
-  @Autowired
   private RestTemplate restTemplate;
 
-  @Value("${onezone.default.url}")
-  private String defaultOneZoneEndpoint;
-
-  @Value("${onezone.base.rest.path}")
-  private String oneZoneBaseRestPath;
-
-  @Value("${oneprovider.base.rest.path}")
-  private String oneProviderBaseRestPath;
-
-  @Value("${service.space.token}")
-  private String serviceSpaceToken;
-
-  @Value("${service.space.name}")
-  private String serviceSpaceName;
-
-  @Value("${service.space.provider}")
-  private String serviceSpaceProvider;
-
-  @Value("${service.space.path:''}")
-  private String serviceSpacePath;
-
-  @PostConstruct
-  private void init() {
-    defaultOneZoneEndpoint = addTrailingSlash(defaultOneZoneEndpoint);
-
-    if (oneZoneBaseRestPath.startsWith("/")) {
-      oneZoneBaseRestPath = oneZoneBaseRestPath.substring(1);
-    }
-    oneZoneBaseRestPath = addTrailingSlash(oneZoneBaseRestPath);
-
-    if (oneProviderBaseRestPath.startsWith("/")) {
-      oneProviderBaseRestPath = oneProviderBaseRestPath.substring(1);
-    }
-    oneProviderBaseRestPath = addTrailingSlash(oneProviderBaseRestPath);
-
-  }
-
-  private String addTrailingSlash(String endpoint) {
-    if (!endpoint.endsWith("/")) {
-      endpoint += "/";
-    }
-    return endpoint;
-  }
+  private OneDataProperties oneDataProperties;
 
   @Override
-  public String getServiceSpaceToken() {
-    return serviceSpaceToken;
-  }
+  public UserSpaces getUserSpacesId(@Nullable String oneZoneEndpoint, String oneDataToken) {
 
-  @Override
-  public String getServiceSpaceName() {
-    return serviceSpaceName;
-  }
+    URI requestUri = UriBuilder
+        .fromUri(getOneZoneBaseEndpoint(oneZoneEndpoint) + "/user/spaces")
+        .build()
+        .normalize();
 
-  @Override
-  public String getServiceSpaceProvider() {
-    return serviceSpaceProvider;
-  }
-
-  @Override
-  public String getServiceSpacePath() {
-    return serviceSpacePath;
-  }
-
-  @Override
-  public UserSpaces getUserSpacesId(String oneZoneEndpoint, String oneDataToken) {
-    if (oneZoneEndpoint == null) {
-      oneZoneEndpoint = defaultOneZoneEndpoint;
+    try {
+      return restTemplate
+          .exchange(requestUri, HttpMethod.GET, withToken(oneDataToken), UserSpaces.class)
+          .getBody();
+    } catch (RuntimeException ex) {
+      throw new DeploymentException("Error retrieving OneData spaces", ex);
     }
-    oneZoneEndpoint = addTrailingSlash(oneZoneEndpoint) + oneZoneBaseRestPath + "user/spaces";
-
-    ResponseEntity<UserSpaces> response =
-        getForEntity(restTemplate, oneZoneEndpoint, oneDataToken, UserSpaces.class);
-    if (response.getStatusCode().is2xxSuccessful()) {
-      return response.getBody();
-    }
-    throw new DeploymentException("Unable to get OneData spaces. "
-        + response.getStatusCode().toString() + " " + response.getStatusCode().getReasonPhrase());
   }
 
   @Override
@@ -134,21 +76,22 @@ public class OneDataServiceImpl implements OneDataService {
   }
 
   @Override
-  public SpaceDetails getSpaceDetailsFromId(String oneZoneEndpoint, String oneDataToken,
+  public SpaceDetails getSpaceDetailsFromId(@Nullable String oneZoneEndpoint, String oneDataToken,
       String oneSpaceId) {
-    if (oneZoneEndpoint == null) {
-      oneZoneEndpoint = defaultOneZoneEndpoint;
-    }
-    oneZoneEndpoint =
-        addTrailingSlash(oneZoneEndpoint) + oneZoneBaseRestPath + "user/spaces/" + oneSpaceId;
 
-    ResponseEntity<SpaceDetails> response =
-        getForEntity(restTemplate, oneZoneEndpoint, oneDataToken, SpaceDetails.class);
-    if (response.getStatusCode().is2xxSuccessful()) {
-      return response.getBody();
+    URI requestUri = UriBuilder
+        .fromUri(getOneZoneBaseEndpoint(oneZoneEndpoint) + "/user/spaces/{oneSpaceId}")
+        .build(oneSpaceId)
+        .normalize();
+
+    try {
+      return restTemplate
+          .exchange(requestUri, HttpMethod.GET, withToken(oneDataToken), SpaceDetails.class)
+          .getBody();
+    } catch (RuntimeException ex) {
+      throw new DeploymentException(
+          String.format("Error retrieving details for OneData space %s", oneSpaceId), ex);
     }
-    throw new DeploymentException("Unable to OneData space details. "
-        + response.getStatusCode().toString() + " " + response.getStatusCode().getReasonPhrase());
   }
 
   @Override
@@ -157,45 +100,25 @@ public class OneDataServiceImpl implements OneDataService {
   }
 
   @Override
-  public String getUserSpaceNameById(String oneZoneEndpoint, String oneDataToken,
-      String oneSpaceId) {
-    SpaceDetails details = getSpaceDetailsFromId(oneZoneEndpoint, oneDataToken, oneSpaceId);
-    return details.getName();
-  }
+  public ProviderDetails getProviderDetailsFromId(@Nullable String oneZoneEndpoint,
+      String oneDataToken, String oneSpaceId, String oneProviderId) {
 
-  @Override
-  public String getUserSpaceNameById(String onedataToken, String oneSpaceId) {
-    return getUserSpaceNameById(null, onedataToken, oneSpaceId);
-  }
+    URI requestUri = UriBuilder
+        .fromUri(getOneZoneBaseEndpoint(oneZoneEndpoint)
+            + "/spaces/{oneSpaceId}/providers/{oneProviderId}")
+        .build(oneSpaceId, oneProviderId)
+        .normalize();
 
-  @Override
-  public List<String> getProvidersIdBySpaceId(String oneZoneEndpoint, String oneDataToken,
-      String oneSpaceId) {
-    SpaceDetails details = getSpaceDetailsFromId(oneZoneEndpoint, oneDataToken, oneSpaceId);
-    return Lists.newArrayList(details.getProvidersSupports().keySet());
-  }
-
-  @Override
-  public List<String> getProvidersIdBySpaceId(String oneDataToken, String oneSpaceId) {
-    return getProvidersIdBySpaceId(null, oneDataToken, oneSpaceId);
-  }
-
-  @Override
-  public ProviderDetails getProviderDetailsFromId(String oneZoneEndpoint, String oneDataToken,
-      String oneSpaceId, String oneProviderId) {
-    if (oneZoneEndpoint == null) {
-      oneZoneEndpoint = defaultOneZoneEndpoint;
+    try {
+      return restTemplate
+          .exchange(requestUri, HttpMethod.GET, withToken(oneDataToken), ProviderDetails.class)
+          .getBody();
+    } catch (RuntimeException ex) {
+      throw new DeploymentException(
+          String.format("Error retrieving details for OneData provider %s (space %s)",
+              oneProviderId, oneSpaceId),
+          ex);
     }
-    oneZoneEndpoint = String.format("%s%sspaces/%s/providers/%s", addTrailingSlash(oneZoneEndpoint),
-        oneZoneBaseRestPath, oneSpaceId, oneProviderId);
-
-    ResponseEntity<ProviderDetails> response =
-        getForEntity(restTemplate, oneZoneEndpoint, oneDataToken, ProviderDetails.class);
-    if (response.getStatusCode().is2xxSuccessful()) {
-      return response.getBody();
-    }
-    throw new DeploymentException("Unable to OneData provider details. "
-        + response.getStatusCode().toString() + " " + response.getStatusCode().getReasonPhrase());
   }
 
   @Override
@@ -204,13 +127,16 @@ public class OneDataServiceImpl implements OneDataService {
     return getProviderDetailsFromId(null, oneDataToken, oneSpaceId, oneProviderId);
   }
 
-  private <T> ResponseEntity<T> getForEntity(RestTemplate restTemplate, String endpoint,
-      String oneDataToken, Class<T> entityClass) {
+  private String getOneZoneBaseEndpoint(@Nullable String oneZoneEndpoint) {
+    return CommonUtils
+        .notNullOrDefaultValue(oneZoneEndpoint, () -> oneDataProperties.getOnezoneUrl().toString())
+        .concat(oneDataProperties.getOnezoneBasePath());
+  }
+
+  private HttpEntity<?> withToken(String oneDataToken) {
     HttpHeaders headers = new HttpHeaders();
     headers.set("macaroon", oneDataToken);
-
-    HttpEntity<?> entity = new HttpEntity<>(headers);
-    return restTemplate.exchange(endpoint, HttpMethod.GET, entity, entityClass);
+    return new HttpEntity<>(headers);
   }
 
   @Override
@@ -227,17 +153,19 @@ public class OneDataServiceImpl implements OneDataService {
     List<String> providersId = Lists.newArrayList();
     SpaceDetails spaceDetail = null;
     for (String spaceId : spaces.getSpaces()) {
-      spaceDetail =
+      SpaceDetails tmpSpaceDetail =
           getSpaceDetailsFromId(onedataParameter.getZone(), onedataParameter.getToken(), spaceId);
-      if (Objects.equals(onedataParameter.getSpace(), spaceDetail.getCanonicalName())) {
+      if (Objects.equals(onedataParameter.getSpace(), tmpSpaceDetail.getCanonicalName())) {
+        spaceDetail = tmpSpaceDetail;
         providersId.addAll(spaceDetail.getProvidersSupports().keySet());
         break;
       }
     }
     if (spaceDetail == null) {
-      throw new DeploymentException(String.format("Could not found space %s in onezone %s",
-          onedataParameter.getSpace(), onedataParameter.getZone() != null
-              ? onedataParameter.getZone() : defaultOneZoneEndpoint));
+      throw new DeploymentException(
+          String.format("No space with name %s could be found in onezone %s",
+              onedataParameter.getSpace(), onedataParameter.getZone() != null
+                  ? onedataParameter.getZone() : oneDataProperties.getOnezoneBasePath()));
     }
 
     for (String providerId : providersId) {

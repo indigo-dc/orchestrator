@@ -16,375 +16,354 @@
 
 package it.reply.orchestrator.service;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import static org.assertj.core.api.Assertions.*;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.test.util.ReflectionTestUtils;
-import org.springframework.web.client.RestTemplate;
-
-import com.google.common.collect.Lists;
-
+import it.reply.orchestrator.config.properties.OneDataProperties;
+import it.reply.orchestrator.config.properties.OneDataProperties.ServiceSpaceProperties;
 import it.reply.orchestrator.dto.onedata.OneData;
+import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
 import it.reply.orchestrator.dto.onedata.ProviderDetails;
 import it.reply.orchestrator.dto.onedata.SpaceDetails;
 import it.reply.orchestrator.dto.onedata.UserSpaces;
-import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
 import it.reply.orchestrator.exception.service.DeploymentException;
+import it.reply.utils.json.JsonUtility;
 
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.test.web.client.response.MockRestResponseCreators;
+import org.springframework.web.client.RestTemplate;
+
+import java.io.IOException;
+import java.net.URI;
+import java.util.UUID;
+
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+import junitparams.converters.Nullable;
+
+@RunWith(JUnitParamsRunner.class)
 public class OneDataServiceTest {
 
   @InjectMocks
-  private OneDataService oneDataService = new OneDataServiceImpl();
+  private OneDataServiceImpl oneDataService;
 
-  @Mock
+  @Spy
+  private OneDataProperties oneDataProperties;
+
+  @Spy
+  private ServiceSpaceProperties serviceSpaceProperties;
+
+  @Spy
   private RestTemplate restTemplate;
 
-  private String oneZoneBaseRestPath = "test";
-  private String defaultOneZoneEndpoint = "zone";
-  String onedataToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9";
+  private MockRestServiceServer mockServer;
+
+  private String defaultOneZoneEndpoint = "http://localhost";
+  private String onezoneBasePath = "/api/v3/onezone/";
+  private String onedataToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9";
 
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
-    // injection spring value in onedataservice
-    ReflectionTestUtils.setField(oneDataService, "oneZoneBaseRestPath", oneZoneBaseRestPath);
-    ReflectionTestUtils.setField(oneDataService, "defaultOneZoneEndpoint", defaultOneZoneEndpoint);
+    oneDataProperties.setOnezoneUrl(URI.create(defaultOneZoneEndpoint));
+    oneDataProperties.setServiceSpace(serviceSpaceProperties);
+    serviceSpaceProperties.setToken(onedataToken);
+    mockServer = MockRestServiceServer.createServer(restTemplate);
   }
 
+  private String generateExpectedOneZoneEndpoint(String oneZoneEndpoint) {
+    return oneZoneEndpoint != null ? oneZoneEndpoint : defaultOneZoneEndpoint;
+  }
+
+  @Parameters({ "null", "http://endpoint.com" })
   @Test
-  public void testGetAttributes() {
-    String serviceSpaceToken = "serviceSpaceToken";
-    String serviceSpaceName = "serviceSpaceName";
-    String serviceSpaceProvider = "serviceSpaceProvider";
-    String serviceSpacePath = "getServiceSpacePath";
+  public void testSuccessGetUserSpaceId(@Nullable String oneZoneEndpoint) throws IOException {
+    UserSpaces userSpace = generateUserSpaces();
+    String endpoint = generateExpectedOneZoneEndpoint(oneZoneEndpoint);
 
-    ReflectionTestUtils.setField(oneDataService, "serviceSpaceToken", serviceSpaceToken);
-    ReflectionTestUtils.setField(oneDataService, "serviceSpaceName", serviceSpaceName);
-    ReflectionTestUtils.setField(oneDataService, "serviceSpaceProvider", serviceSpaceProvider);
-    ReflectionTestUtils.setField(oneDataService, "serviceSpacePath", serviceSpacePath);
+    mockServer
+        .expect(requestTo(endpoint + onezoneBasePath + "user/spaces"))
+        .andExpect(method(HttpMethod.GET))
+        .andExpect(header("macaroon", onedataToken))
+        .andRespond(
+            withSuccess(JsonUtility.serializeJson(userSpace), MediaType.APPLICATION_JSON_UTF8));
 
-    Assert.assertEquals(oneDataService.getServiceSpaceToken(), serviceSpaceToken);
-    Assert.assertEquals(oneDataService.getServiceSpaceName(), serviceSpaceName);
-    Assert.assertEquals(oneDataService.getServiceSpaceProvider(), serviceSpaceProvider);
-    Assert.assertEquals(oneDataService.getServiceSpacePath(), serviceSpacePath);
-
+    assertThat(oneDataService.getUserSpacesId(endpoint, onedataToken))
+        .isEqualTo(userSpace);
+    mockServer.verify();
   }
 
+  @Parameters({ "null", "http://endpoint.com" })
   @Test
-  public void testSuccessGetUserSpaceId() {
-    UserSpaces userSpace = getUserSpaces();
+  public void testFailGetUserSpaceId(@Nullable String oneZoneEndpoint) {
+    String endpoint = generateExpectedOneZoneEndpoint(oneZoneEndpoint);
+    mockServer
+        .expect(requestTo(endpoint + onezoneBasePath + "user/spaces"))
+        .andExpect(method(HttpMethod.GET))
+        .andExpect(header("macaroon", onedataToken))
+        .andRespond(withBadRequest());
 
-    HttpEntity<UserSpaces> entity = getEntity(onedataToken);
-    ResponseEntity<UserSpaces> responseEntity =
-        new ResponseEntity<UserSpaces>(userSpace, HttpStatus.OK);
-
-    Mockito.when(
-        restTemplate.exchange(defaultOneZoneEndpoint + "/" + oneZoneBaseRestPath + "user/spaces",
-            HttpMethod.GET, entity, UserSpaces.class))
-        .thenReturn(responseEntity);
-
-    Assert.assertEquals(oneDataService.getUserSpacesId(defaultOneZoneEndpoint, onedataToken),
-        userSpace);
-    Assert.assertEquals(oneDataService.getUserSpacesId(onedataToken), userSpace);
-
+    assertThatThrownBy(() -> oneDataService.getUserSpacesId(endpoint, onedataToken))
+        .isInstanceOf(DeploymentException.class);
+    mockServer.verify();
   }
 
-  @Test(expected = DeploymentException.class)
-  public void testFailGetUserSpaceId() {
-
-    UserSpaces userSpace = getUserSpaces();
-
-    HttpEntity<UserSpaces> entity = getEntity(onedataToken);
-
-    // bad status
-    ResponseEntity<UserSpaces> responseEntity =
-        new ResponseEntity<UserSpaces>(userSpace, HttpStatus.BAD_REQUEST);
-
-    Mockito.when(
-        restTemplate.exchange(defaultOneZoneEndpoint + "/" + oneZoneBaseRestPath + "user/spaces",
-            HttpMethod.GET, entity, UserSpaces.class))
-        .thenReturn(responseEntity);
-
-    oneDataService.getUserSpacesId(defaultOneZoneEndpoint, onedataToken);
-
-  }
-
+  @Parameters({ "null", "http://endpoint.com" })
   @Test
-  public void testSuccessGetSpaceDetailsFromId() {
+  public void testSuccessGetSpaceDetailsFromId(@Nullable String oneZoneEndpoint)
+      throws IOException {
 
-    SpaceDetails details = getSpaceDetails();
+    SpaceDetails details = generateSpaceDetails();
     String spaceId = details.getSpaceId();
 
-    String keyProvider = "x";
-    HashMap<String, Long> providerSupports = new HashMap<>();
-    providerSupports.put(keyProvider, 1L);
-    details.setProvidersSupports(providerSupports);
+    String endpoint = generateExpectedOneZoneEndpoint(oneZoneEndpoint);
+    mockServer
+        .expect(requestTo(endpoint + onezoneBasePath + "user/spaces/" + spaceId))
+        .andExpect(method(HttpMethod.GET))
+        .andExpect(header("macaroon", onedataToken))
+        .andRespond(
+            withSuccess(JsonUtility.serializeJson(details), MediaType.APPLICATION_JSON_UTF8));
 
-    HttpEntity<SpaceDetails> entity = getEntity(onedataToken);
-    ResponseEntity<SpaceDetails> responseEntity =
-        new ResponseEntity<SpaceDetails>(details, HttpStatus.OK);
-
-    Mockito.when(restTemplate.exchange(
-        defaultOneZoneEndpoint + "/" + oneZoneBaseRestPath + "user/spaces/" + spaceId,
-        HttpMethod.GET, entity, SpaceDetails.class)).thenReturn(responseEntity);
-
-    Assert.assertEquals(
-        oneDataService.getSpaceDetailsFromId(defaultOneZoneEndpoint, onedataToken, spaceId),
-        details);
-    Assert.assertEquals(oneDataService.getSpaceDetailsFromId(onedataToken, spaceId), details);
-    Assert.assertEquals(
-        oneDataService.getUserSpaceNameById(defaultOneZoneEndpoint, onedataToken, spaceId),
-        details.getName());
-    Assert.assertEquals(oneDataService.getUserSpaceNameById(onedataToken, spaceId),
-        details.getName());
-
-    // Result providerSupports
-
-    ArrayList<String> result = Lists.newArrayList(providerSupports.keySet());
-    Assert.assertEquals(
-        oneDataService.getProvidersIdBySpaceId(defaultOneZoneEndpoint, onedataToken, spaceId),
-        result);
-    Assert.assertEquals(oneDataService.getProvidersIdBySpaceId(onedataToken, spaceId), result);
-
+    assertThat(oneDataService.getSpaceDetailsFromId(endpoint, onedataToken, spaceId))
+        .isEqualTo(details);
+    mockServer.verify();
   }
 
-  @Test(expected = DeploymentException.class)
-  public void testFailGetSpaceDetailsFromId() {
-
-    // UserSpaces userSpace = getUserSpaces();
-    SpaceDetails details = getSpaceDetails();
-    String spaceId = details.getSpaceId();
-
-    HttpEntity<SpaceDetails> entity = getEntity(onedataToken);
-    ResponseEntity<SpaceDetails> responseEntity =
-        new ResponseEntity<SpaceDetails>(HttpStatus.BAD_REQUEST);
-
-    Mockito.when(restTemplate.exchange(
-        defaultOneZoneEndpoint + "/" + oneZoneBaseRestPath + "user/spaces/" + spaceId,
-        HttpMethod.GET, entity, SpaceDetails.class)).thenReturn(responseEntity);
-
-    oneDataService.getSpaceDetailsFromId(defaultOneZoneEndpoint, onedataToken, spaceId);
-    oneDataService.getSpaceDetailsFromId(onedataToken, spaceId);
-
-  }
-
+  @Parameters({ "null", "http://endpoint.com" })
   @Test
-  public void testSuccessGetProviderDetailsFromId() {
+  public void testFailGetSpaceDetailsFromId(@Nullable String oneZoneEndpoint) {
+    String endpoint = generateExpectedOneZoneEndpoint(oneZoneEndpoint);
+    String spaceId = UUID.randomUUID().toString();
+    mockServer
+        .expect(requestTo(endpoint + onezoneBasePath + "user/spaces/" + spaceId))
+        .andExpect(method(HttpMethod.GET))
+        .andExpect(header("macaroon", onedataToken))
+        .andRespond(withBadRequest());
+
+    assertThatThrownBy(() -> oneDataService.getSpaceDetailsFromId(endpoint, onedataToken, spaceId))
+        .isInstanceOf(DeploymentException.class);
+    mockServer.verify();
+  }
+
+  @Parameters({ "null", "http://endpoint.com" })
+  @Test
+  public void testSuccessGetProviderDetailsFromId(@Nullable String oneZoneEndpoint)
+      throws IOException {
 
     String spaceId = UUID.randomUUID().toString();
-    ProviderDetails providerDetail = getProviderDetails();
+
+    ProviderDetails providerDetail = generateProviderDetails();
     String providerId = providerDetail.getProviderId();
 
-    HttpEntity<ProviderDetails> entity = getEntity(onedataToken);
-    ResponseEntity<ProviderDetails> responseEntity =
-        new ResponseEntity<ProviderDetails>(providerDetail, HttpStatus.OK);
+    String endpoint = generateExpectedOneZoneEndpoint(oneZoneEndpoint);
+    mockServer
+        .expect(requestTo(
+            endpoint + onezoneBasePath + "spaces/" + spaceId + "/providers/" + providerId))
+        .andExpect(method(HttpMethod.GET))
+        .andExpect(header("macaroon", onedataToken))
+        .andRespond(MockRestResponseCreators.withSuccess(JsonUtility.serializeJson(providerDetail),
+            MediaType.APPLICATION_JSON_UTF8));
 
-    Mockito.when(restTemplate.exchange(
-        "zone/" + oneZoneBaseRestPath + "spaces/" + spaceId + "/providers/" + providerId,
-        HttpMethod.GET, entity, ProviderDetails.class)).thenReturn(responseEntity);
-
-    Assert.assertEquals(oneDataService.getProviderDetailsFromId(defaultOneZoneEndpoint,
-        onedataToken, spaceId, providerId), providerDetail);
-    Assert.assertEquals(oneDataService.getProviderDetailsFromId(onedataToken, spaceId, providerId),
-        providerDetail);
-
+    assertThat(oneDataService.getProviderDetailsFromId(endpoint, onedataToken, spaceId, providerId))
+        .isEqualTo(providerDetail);
+    mockServer.verify();
   }
 
-  @Test(expected = DeploymentException.class)
-  public void testFailGetProviderDetailsFromId() {
+  @Parameters({ "null", "http://endpoint.com" })
+  @Test
+  public void testFailGetProviderDetailsFromId(@Nullable String oneZoneEndpoint) {
 
     String spaceId = UUID.randomUUID().toString();
-    ProviderDetails providerDetail = getProviderDetails();
-    String providerId = providerDetail.getProviderId();
+    String providerId = UUID.randomUUID().toString();
 
-    HttpEntity<ProviderDetails> entity = getEntity(onedataToken);
-    ResponseEntity<ProviderDetails> responseEntity =
-        new ResponseEntity<ProviderDetails>(HttpStatus.BAD_REQUEST);
+    String endpoint = generateExpectedOneZoneEndpoint(oneZoneEndpoint);
 
-    Mockito.when(restTemplate.exchange(
-        "zone/" + oneZoneBaseRestPath + "spaces/" + spaceId + "/providers/" + providerId,
-        HttpMethod.GET, entity, ProviderDetails.class)).thenReturn(responseEntity);
+    mockServer
+        .expect(requestTo(
+            endpoint + onezoneBasePath + "spaces/" + spaceId + "/providers/" + providerId))
+        .andExpect(method(HttpMethod.GET))
+        .andExpect(header("macaroon", onedataToken))
+        .andRespond(MockRestResponseCreators.withBadRequest());
 
-    oneDataService.getProviderDetailsFromId(defaultOneZoneEndpoint, onedataToken, spaceId,
-        providerId);
-    oneDataService.getProviderDetailsFromId(onedataToken, spaceId, providerId);
-
+    assertThatThrownBy(
+        () -> oneDataService.getProviderDetailsFromId(endpoint, onedataToken, spaceId, providerId))
+            .isInstanceOf(DeploymentException.class);
+    mockServer.verify();
   }
 
+  @Parameters({ "null", "http://endpoint.com" })
   @Test
-  public void testEmptyPopulateProviderInfo() {
+  public void testEmptyPopulateProviderInfo(@Nullable String oneZoneEndpoint) throws IOException {
 
-    SpaceDetails details = getSpaceDetails();
-    String spaceId = details.getSpaceId();
-
-    UserSpaces userSpace = getUserSpaces();
-    userSpace.getSpaces().add(spaceId);
-
-    OneData oneData =
-        OneData.builder().token(onedataToken).space("cname2").zone(defaultOneZoneEndpoint).build();
-
-    HttpEntity<UserSpaces> userSpaceEntity = getEntity(onedataToken);
-    ResponseEntity<UserSpaces> responseUserSpaceEntity =
-        new ResponseEntity<UserSpaces>(userSpace, HttpStatus.OK);
-
-    Mockito.when(
-        restTemplate.exchange(defaultOneZoneEndpoint + "/" + oneZoneBaseRestPath + "user/spaces",
-            HttpMethod.GET, userSpaceEntity, UserSpaces.class))
-        .thenReturn(responseUserSpaceEntity);
-
-    HttpEntity<SpaceDetails> spaceDetailsEntity = getEntity(onedataToken);
-    ResponseEntity<SpaceDetails> responseSpaceDetailsEntity =
-        new ResponseEntity<SpaceDetails>(details, HttpStatus.OK);
-
-    Mockito
-        .when(restTemplate.exchange(
-            defaultOneZoneEndpoint + "/" + oneZoneBaseRestPath + "user/spaces/"
-                + userSpace.getSpaces().get(0),
-            HttpMethod.GET, spaceDetailsEntity, SpaceDetails.class))
-        .thenReturn(responseSpaceDetailsEntity);
-
-    Assert.assertEquals(oneDataService.populateProviderInfo(oneData), oneData);
-
-  }
-
-  @Test(expected = DeploymentException.class)
-  public void testFailEmptyPopulateProviderInfo() {
-
-    SpaceDetails details = getSpaceDetails();
-    String spaceId = details.getSpaceId();
-
-    UserSpaces userSpace = getUserSpaces();
-    List<String> spaces = new ArrayList<String>();
-    userSpace.getSpaces().add(spaceId);
-
-    OneData oneData =
-        OneData.builder().token(onedataToken).space("cname2").zone(defaultOneZoneEndpoint).build();
-
-    HttpEntity<UserSpaces> entity = getEntity(onedataToken);
-    ResponseEntity<UserSpaces> responseEntity =
-        new ResponseEntity<UserSpaces>(userSpace, HttpStatus.OK);
-
-    spaces.clear();
-    userSpace.setSpaces(spaces);
-    responseEntity = new ResponseEntity<UserSpaces>(userSpace, HttpStatus.OK);
-
-    Mockito.when(
-        restTemplate.exchange(defaultOneZoneEndpoint + "/" + oneZoneBaseRestPath + "user/spaces",
-            HttpMethod.GET, entity, UserSpaces.class))
-        .thenReturn(responseEntity);
-
-    oneDataService.populateProviderInfo(oneData);
-  }
-
-  @Test
-  public void testAddProviderInfoToOneData() {
-    String keyProvider = "x";
-    HashMap<String, Long> providerSupports = new HashMap<>();
-    providerSupports.put(keyProvider, 1L);
-
-    SpaceDetails spaceDetails = getSpaceDetails();
-    spaceDetails.setCanonicalName("cname2");
-    spaceDetails.setProvidersSupports(providerSupports);
+    SpaceDetails spaceDetails = generateSpaceDetails();
     String spaceId = spaceDetails.getSpaceId();
+    String canonicalName = spaceDetails.getCanonicalName();
 
-    UserSpaces userSpace = getUserSpaces();
-    userSpace.getSpaces().add("cname2");
+    UserSpaces userSpace = generateUserSpaces();
+    userSpace.getSpaces().add(spaceId);
 
-    ProviderDetails providerDetails = getProviderDetails();
+    String endpoint = generateExpectedOneZoneEndpoint(oneZoneEndpoint);
 
-    // user space
-    HttpEntity<UserSpaces> userSpaceEntity = getEntity(onedataToken);
-    ResponseEntity<UserSpaces> responseUserSpaceEntity =
-        new ResponseEntity<UserSpaces>(userSpace, HttpStatus.OK);
+    OneData oneData = OneData
+        .builder()
+        .token(onedataToken)
+        .space(canonicalName)
+        .zone(endpoint)
+        .build();
 
-    Mockito.when(
-        restTemplate.exchange(defaultOneZoneEndpoint + "/" + oneZoneBaseRestPath + "user/spaces",
-            HttpMethod.GET, userSpaceEntity, UserSpaces.class))
-        .thenReturn(responseUserSpaceEntity);
+    mockServer
+        .expect(requestTo(endpoint + onezoneBasePath + "user/spaces"))
+        .andExpect(method(HttpMethod.GET))
+        .andExpect(header("macaroon", onedataToken))
+        .andRespond(MockRestResponseCreators.withSuccess(JsonUtility.serializeJson(userSpace),
+            MediaType.APPLICATION_JSON_UTF8));
 
-    // space details
-    HttpEntity<SpaceDetails> spaceDetailsEntity = getEntity(onedataToken);
-    ResponseEntity<SpaceDetails> responseSpaceDetailsEntity =
-        new ResponseEntity<SpaceDetails>(spaceDetails, HttpStatus.OK);
+    mockServer
+        .expect(requestTo(endpoint + onezoneBasePath + "user/spaces/" + spaceId))
+        .andExpect(method(HttpMethod.GET))
+        .andExpect(header("macaroon", onedataToken))
+        .andRespond(MockRestResponseCreators.withSuccess(JsonUtility.serializeJson(spaceDetails),
+            MediaType.APPLICATION_JSON_UTF8));
 
-    Mockito
-        .when(restTemplate.exchange(
-            defaultOneZoneEndpoint + "/" + oneZoneBaseRestPath + "user/spaces/"
-                + userSpace.getSpaces().get(0),
-            HttpMethod.GET, spaceDetailsEntity, SpaceDetails.class))
-        .thenReturn(responseSpaceDetailsEntity);
-
-    // provider details
-    HttpEntity<ProviderDetails> providerDetailsEntity = getEntity(onedataToken);
-    ResponseEntity<ProviderDetails> responseProviderDetailsEntity =
-        new ResponseEntity<ProviderDetails>(providerDetails, HttpStatus.OK);
-
-    Mockito
-        .when(
-            restTemplate.exchange(
-                defaultOneZoneEndpoint + "/" + oneZoneBaseRestPath + "spaces/" + spaceId
-                    + "/providers/" + keyProvider,
-                HttpMethod.GET, providerDetailsEntity, ProviderDetails.class))
-        .thenReturn(responseProviderDetailsEntity);
-
-    // onedata without new provider details
-    OneData oneData =
-        OneData.builder().token(onedataToken).space("cname2").zone(defaultOneZoneEndpoint).build();
-    OneData populateProviderInfo = oneDataService.populateProviderInfo(oneData);
-
-    // correct result with new provider details
-    OneDataProviderInfo providerInfo = OneDataProviderInfo.builder().build();
-    providerInfo.setId(providerDetails.getProviderId());
-    providerInfo.setEndpoint(providerDetails.getRedirectionPoint());
-    oneData.getProviders().add(providerInfo);
-
-    Assert.assertEquals(populateProviderInfo, oneData);
+    assertThat(oneDataService.populateProviderInfo(oneData).getProviders()).isEmpty();
+    mockServer.verify();
   }
 
-  private UserSpaces getUserSpaces() {
-    UserSpaces userSpace = new UserSpaces();
-    userSpace.setDefaultSpace("defaultSpace");
-    userSpace.setSpaces(new ArrayList<String>());
-    return userSpace;
+  @Parameters({ "null", "http://endpoint.com" })
+  @Test
+  public void testFailEmptyPopulateProviderInfo(@Nullable String oneZoneEndpoint)
+      throws IOException {
+
+    SpaceDetails spaceDetails = generateSpaceDetails();
+    String spaceId = spaceDetails.getSpaceId();
+    String canonicalName = spaceDetails.getCanonicalName();
+
+    UserSpaces userSpace = generateUserSpaces();
+    userSpace.getSpaces().add(spaceId);
+
+    String endpoint = generateExpectedOneZoneEndpoint(oneZoneEndpoint);
+
+    OneData oneData = OneData
+        .builder()
+        .token(onedataToken)
+        .space(UUID.randomUUID().toString())
+        .zone(endpoint)
+        .build();
+
+    assertThat(canonicalName).isNotEqualTo(oneData.getSpace());
+
+    mockServer
+        .expect(requestTo(endpoint + onezoneBasePath + "user/spaces"))
+        .andExpect(method(HttpMethod.GET))
+        .andExpect(header("macaroon", onedataToken))
+        .andRespond(MockRestResponseCreators.withSuccess(JsonUtility.serializeJson(userSpace),
+            MediaType.APPLICATION_JSON_UTF8));
+
+    mockServer
+        .expect(requestTo(endpoint + onezoneBasePath + "user/spaces/" + spaceId))
+        .andExpect(method(HttpMethod.GET))
+        .andExpect(header("macaroon", onedataToken))
+        .andRespond(MockRestResponseCreators.withSuccess(JsonUtility.serializeJson(spaceDetails),
+            MediaType.APPLICATION_JSON_UTF8));
+
+    assertThatThrownBy(() -> oneDataService.populateProviderInfo(oneData))
+        .isInstanceOf(DeploymentException.class);
+    mockServer.verify();
   }
 
-  private SpaceDetails getSpaceDetails() {
-    SpaceDetails details = new SpaceDetails();
-    details.setCanonicalName("cname");
-    details.setName("name");
-    details.setSpaceId(UUID.randomUUID().toString());
-    return details;
+  @Parameters({ "null", "http://endpoint.com" })
+  @Test
+  public void testAddProviderInfoToOneData(@Nullable String oneZoneEndpoint) throws IOException {
+
+    ProviderDetails providerDetails = generateProviderDetails();
+    String providerId = providerDetails.getProviderId();
+
+    SpaceDetails spaceDetails = generateSpaceDetails();
+    spaceDetails.getProvidersSupports().put(providerId, 1L);
+    String spaceId = spaceDetails.getSpaceId();
+    String canonicalName = spaceDetails.getCanonicalName();
+
+    UserSpaces userSpace = generateUserSpaces();
+    userSpace.getSpaces().add(spaceId);
+
+    String endpoint = generateExpectedOneZoneEndpoint(oneZoneEndpoint);
+
+    mockServer
+        .expect(requestTo(endpoint + onezoneBasePath + "user/spaces"))
+        .andExpect(method(HttpMethod.GET))
+        .andExpect(header("macaroon", onedataToken))
+        .andRespond(MockRestResponseCreators.withSuccess(JsonUtility.serializeJson(userSpace),
+            MediaType.APPLICATION_JSON_UTF8));
+
+    mockServer
+        .expect(requestTo(endpoint + onezoneBasePath + "user/spaces/" + spaceId))
+        .andExpect(method(HttpMethod.GET))
+        .andExpect(header("macaroon", onedataToken))
+        .andRespond(MockRestResponseCreators.withSuccess(JsonUtility.serializeJson(spaceDetails),
+            MediaType.APPLICATION_JSON_UTF8));
+
+    mockServer
+        .expect(requestTo(
+            endpoint + onezoneBasePath + "spaces/" + spaceId + "/providers/" + providerId))
+        .andExpect(method(HttpMethod.GET))
+        .andExpect(header("macaroon", onedataToken))
+        .andRespond(MockRestResponseCreators.withSuccess(JsonUtility.serializeJson(providerDetails),
+            MediaType.APPLICATION_JSON_UTF8));
+
+    OneData oneData = OneData
+        .builder()
+        .token(onedataToken)
+        .space(canonicalName)
+        .zone(endpoint)
+        .build();
+
+    OneDataProviderInfo providerInfo = OneDataProviderInfo
+        .builder()
+        .id(providerId)
+        .endpoint(providerDetails.getRedirectionPoint())
+        .build();
+
+    assertThat(oneDataService.populateProviderInfo(oneData).getProviders())
+        .hasSize(1)
+        .allMatch(providerInfo::equals);
+    mockServer.verify();
   }
 
-  private ProviderDetails getProviderDetails() {
-    ProviderDetails details = new ProviderDetails();
-    details.setClientName("clientName");
-    details.setCsr("csr");
-    details.setLatitude(41.25);
-    details.setLongitude(-120.9762);
-    details.setProviderId(UUID.randomUUID().toString());
-    details.setRedirectionPoint("http://www.redirection.example");
-    return details;
+  private UserSpaces generateUserSpaces() {
+    return UserSpaces
+        .builder()
+        .defaultSpace("defaultSpace")
+        .build();
   }
 
-  private <T> HttpEntity<T> getEntity(String token) {
-    HttpHeaders headers = new HttpHeaders();
-    headers.set("macaroon", token);
-    return new HttpEntity<>(headers);
+  private SpaceDetails generateSpaceDetails() {
+    return SpaceDetails
+        .builder()
+        .canonicalName("cname")
+        .name("name")
+        .spaceId(UUID.randomUUID().toString())
+        .build();
+  }
+
+  private ProviderDetails generateProviderDetails() {
+    return ProviderDetails
+        .builder()
+        .clientName("clientName")
+        .csr("csr")
+        .latitude(41.25)
+        .longitude(-120.9762)
+        .providerId(UUID.randomUUID().toString())
+        .redirectionPoint("http://www.redirection.example")
+        .build();
   }
 
 }

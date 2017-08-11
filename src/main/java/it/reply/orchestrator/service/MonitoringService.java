@@ -24,5 +24,4 @@ public interface MonitoringService {
 
   public List<PaaSMetric> getProviderData(String providerId);
 
-  public String getUrl();
 }

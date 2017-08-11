@@ -21,30 +21,44 @@ import static org.junit.Assert.assertEquals;
 import it.reply.orchestrator.config.properties.CprProperties;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
-import it.reply.orchestrator.service.CloudProviderRankerService;
 import it.reply.orchestrator.service.CloudProviderRankerServiceIT;
+import it.reply.orchestrator.service.CloudProviderRankerServiceImpl;
 import it.reply.orchestrator.service.CloudProviderRankerServiceTest;
-import it.reply.orchestrator.service.commands.BaseRankCloudProvidersCommand;
 import it.reply.orchestrator.service.commands.GetProvidersRank;
-import it.reply.orchestrator.workflow.RankCloudProvidersWorkflowTest;
 import it.reply.utils.json.JsonUtility;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.kie.api.executor.ExecutionResults;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.InjectMocks;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
+import java.net.URI;
 import java.util.List;
 
-public class GetProvidersRankCommandTest extends BaseRankCloudProviderCommandTest {
+public class GetProvidersRankCommandTest extends BaseRankCloudProviderCommandTest<GetProvidersRank> {
 
-  @Autowired
+  @InjectMocks
   private GetProvidersRank getProvidersRankCommand;
   
-  @Autowired
+  @Spy
+  @InjectMocks
+  private CloudProviderRankerServiceImpl cloudProviderRankerService;
+  
+  @Spy
   private CprProperties cprProperties;
 
+  private final String endpoint = "https://www.endpoint.com";
+
+  @Before
+  public void setup() {
+    MockitoAnnotations.initMocks(this);
+    cprProperties.setUrl(URI.create(endpoint));
+  }
+  
   @Override
-  protected BaseRankCloudProvidersCommand getCommand() {
+  protected GetProvidersRank getCommand() {
     return getProvidersRankCommand;
   }
 

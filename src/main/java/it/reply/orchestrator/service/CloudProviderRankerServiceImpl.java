@@ -24,7 +24,6 @@ import it.reply.orchestrator.exception.service.DeploymentException;
 import lombok.AllArgsConstructor;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpMethod;
@@ -32,10 +31,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
 import java.util.List;
 
+import javax.ws.rs.core.UriBuilder;
+
 @Service
-@PropertySource("classpath:cloud-provider-ranker/cloud-provider-ranker.properties")
 @AllArgsConstructor
 @EnableConfigurationProperties(CprProperties.class)
 public class CloudProviderRankerServiceImpl implements CloudProviderRankerService {
@@ -48,10 +49,15 @@ public class CloudProviderRankerServiceImpl implements CloudProviderRankerServic
   public List<RankedCloudProvider> getProviderRanking(
       CloudProviderRankerRequest cloudProviderRankerRequest) {
 
+    URI requestUri = UriBuilder
+        .fromUri(cprProperties.getUrl() + cprProperties.getRankPath())
+        .build()
+        .normalize();
+
     HttpEntity<CloudProviderRankerRequest> entity = new HttpEntity<>(cloudProviderRankerRequest);
 
     ResponseEntity<List<RankedCloudProvider>> response =
-        restTemplate.exchange(cprProperties.getUrl(), HttpMethod.POST, entity,
+        restTemplate.exchange(requestUri, HttpMethod.POST, entity,
             new ParameterizedTypeReference<List<RankedCloudProvider>>() {
             });
     if (response.getStatusCode().is2xxSuccessful()) {

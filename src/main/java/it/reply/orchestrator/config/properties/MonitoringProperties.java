@@ -29,9 +29,9 @@ import javax.validation.constraints.NotNull;
 
 @Validated
 @Data
-@ConfigurationProperties(prefix = "cpr")
+@ConfigurationProperties(prefix = "monitoring")
 @NoArgsConstructor
-public class CprProperties {
+public class MonitoringProperties {
 
   @NotNull
   @NonNull
@@ -39,6 +39,8 @@ public class CprProperties {
 
   @NotNull
   @NonNull
-  private String rankPath = "/rank";
+  private String providerMetricsPath =
+      "/monitoring/adapters/zabbix/zones/indigo/types/"
+          + "infrastructure/groups/Cloud_Providers/hosts/{cloudProviderName}";
 
 }

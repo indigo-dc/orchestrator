@@ -19,6 +19,7 @@ package it.reply.orchestrator.service.commands;
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 
+import it.reply.orchestrator.config.properties.ChronosProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
@@ -45,7 +46,6 @@ import org.apache.commons.collections4.MapUtils;
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,8 +61,8 @@ import java.util.Set;
 public class PrefilterCloudProviders
     extends BaseRankCloudProvidersCommand<PrefilterCloudProviders> {
 
-  @Value("${chronos.cloudProviderName}")
-  private String chronosCloudProviderName;
+  @Autowired
+  private ChronosProperties chronosProperties;
 
   @Autowired
   private ToscaService toscaService;
@@ -110,12 +110,15 @@ public class PrefilterCloudProviders
           .values()
           .stream()
           .filter(
-              cloudProvider -> !cloudProvider.getId().equalsIgnoreCase(chronosCloudProviderName))
+              cloudProvider -> !cloudProvider
+                  .getId()
+                  .equalsIgnoreCase(chronosProperties.getCloudProviderName()))
           .forEach(cloudProvider -> {
             LOG.debug(
                 "Discarded provider {} because it doesn't match Mesos default provider {}"
                     + " for deployment {}",
-                cloudProvider.getId(), chronosCloudProviderName, deployment.getId());
+                cloudProvider.getId(), chronosProperties.getCloudProviderName(),
+                deployment.getId());
             addProviderToDiscard(providersToDiscard, servicesToDiscard, cloudProvider);
           });
     }

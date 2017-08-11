@@ -16,36 +16,53 @@
 
 package it.reply.orchestrator.command;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
+import it.reply.orchestrator.config.properties.CmdbProperties;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
-import it.reply.orchestrator.service.CmdbService;
-import it.reply.orchestrator.service.commands.BaseRankCloudProvidersCommand;
+import it.reply.orchestrator.service.CmdbServiceImpl;
 import it.reply.orchestrator.service.commands.GetCmdbDataDeploy;
 import it.reply.orchestrator.workflow.RankCloudProvidersWorkflowTest;
 import it.reply.utils.json.JsonUtility;
 
+import org.junit.Before;
 import org.junit.Test;
 import org.kie.api.executor.ExecutionResults;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.InjectMocks;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
-public class GetCMDBDataCommandTest extends BaseRankCloudProviderCommandTest {
+import java.net.URI;
 
-  @Autowired
+public class GetCMDBDataCommandTest extends BaseRankCloudProviderCommandTest<GetCmdbDataDeploy> {
+
+  @InjectMocks
   private GetCmdbDataDeploy getCMDBDataCommand;
 
-  @Autowired
-  private CmdbService cmdbService;
+  @Spy
+  @InjectMocks
+  private CmdbServiceImpl cmdbService;
+
+  @Spy
+  private CmdbProperties cmdbProperties;
+
+  private final String endpoint = "https://www.endpoint.com";
+
+  @Before
+  public void setup() {
+    MockitoAnnotations.initMocks(this);
+    cmdbProperties.setUrl(URI.create(endpoint));
+  }
 
   @Override
-  protected BaseRankCloudProvidersCommand getCommand() {
+  protected GetCmdbDataDeploy getCommand() {
     return getCMDBDataCommand;
   }
 
   @Test
   public void doexecuteSuccesfully() throws Exception {
 
-    RankCloudProvidersWorkflowTest.mockCmdb(mockServer, cmdbService.getUrl());
+    RankCloudProvidersWorkflowTest.mockCmdb(mockServer, cmdbProperties.getUrl());
 
     ExecutionResults er = executeCommand(JsonUtility.deserializeJson(
         "{\"deploymentId\":\"mmd34483-d937-4578-bfdb-ebe196bf82dd\",\"slamPreferences\":{\"preferences\":[{\"customer\":\"indigo-dc\",\"preferences\":[{\"service_type\":\"compute\",\"priority\":[{\"sla_id\":\"4401ac5dc8cfbbb737b0a02575ee53f6\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e81d9b\",\"weight\":0.5},{\"sla_id\":\"4401ac5dc8cfbbb737b0a02575ee3b58\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"weight\":0.5}]}],\"id\":\"4401ac5dc8cfbbb737b0a02575ee0e55\"}],\"sla\":[{\"customer\":\"indigo-dc\",\"provider\":\"provider-UPV-GRyCAP\",\"start_date\":\"11.01.2016+15:50:00\",\"end_date\":\"11.02.2016+15:50:00\",\"services\":[{\"type\":\"compute\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e81d9b\",\"targets\":[{\"type\":\"public_ip\",\"unit\":\"none\",\"restrictions\":{\"total_guaranteed\":10}}]}],\"id\":\"4401ac5dc8cfbbb737b0a02575ee3b58\"},{\"customer\":\"indigo-dc\",\"provider\":\"provider-RECAS-BARI\",\"start_date\":\"11.01.2016+15:50:00\",\"end_date\":\"11.02.2016+15:50:00\",\"services\":[{\"type\":\"compute\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"targets\":[{\"type\":\"computing_time\",\"unit\":\"h\",\"restrictions\":{\"total_guaranteed\":200}}]}],\"id\":\"4401ac5dc8cfbbb737b0a02575ee53f6\"}]},\"cloudProviders\":{\"provider-RECAS-BARI\":{\"id\":\"provider-RECAS-BARI\",\"cmdbProviderData\":null,\"cmdbProviderServices\":{\"4401ac5dc8cfbbb737b0a02575e6f4bc\":null},\"cmdbProviderImages\":{}},\"provider-UPV-GRyCAP\":{\"id\":\"provider-UPV-GRyCAP\",\"cmdbProviderData\":null,\"cmdbProviderServices\":{\"4401ac5dc8cfbbb737b0a02575e81d9b\":null},\"cmdbProviderImages\":{}}},\"cloudProvidersMonitoringData\":{},\"rankedCloudProviders\":[]}",

@@ -16,25 +16,28 @@
 
 package it.reply.orchestrator.config.properties;
 
-import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
+
+import java.net.URI;
 
 import javax.validation.constraints.NotNull;
 
+@Validated
 @Data
 @ToString(exclude = "password")
 @ConfigurationProperties(prefix = "marathon")
-@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@NoArgsConstructor
 public class MarathonProperties {
 
   @NotNull
   @NonNull
-  private String url;
+  private URI url;
 
   @NotNull
   @NonNull

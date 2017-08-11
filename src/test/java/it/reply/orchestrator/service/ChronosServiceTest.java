@@ -32,6 +32,8 @@ import alien4cloud.tosca.model.ArchiveRoot;
 import it.infn.ba.indigo.chronos.client.Chronos;
 import it.infn.ba.indigo.chronos.client.ChronosClient;
 import it.infn.ba.indigo.chronos.client.model.v1.Job;
+import it.reply.orchestrator.config.properties.ChronosProperties;
+import it.reply.orchestrator.config.properties.OrchestratorProperties;
 import it.reply.orchestrator.config.specific.WebAppConfigurationAware;
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
@@ -56,8 +58,8 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.test.util.ReflectionTestUtils;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -67,6 +69,12 @@ public class ChronosServiceTest extends WebAppConfigurationAware {
 
   @InjectMocks
   private ChronosServiceImpl chronosService;
+  
+  @Spy
+  private ChronosProperties chronosProperties;
+  
+  @Spy
+  private OrchestratorProperties orchestratorProperties;
 
   @Spy
   @Autowired
@@ -78,17 +86,17 @@ public class ChronosServiceTest extends WebAppConfigurationAware {
   @Mock
   private DeploymentRepository deploymentRepository;
   
-  String endpoint = "https://www.endpoint.it";
-  String username = "username";
-  String password = "password";
+  private final static String endpoint = "https://www.endpoint.it";
+  private final static String username = "username";
+  private final static String password = "password";
 
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
-    ReflectionTestUtils.setField(chronosService, "endpoint", endpoint);
-    ReflectionTestUtils.setField(chronosService, "username", username);
-    ReflectionTestUtils.setField(chronosService, "password", "password");
-    ReflectionTestUtils.setField(chronosService, "jobChunkSize", 100);
+    chronosProperties.setUrl(URI.create(endpoint));
+    chronosProperties.setUsername(username);
+    chronosProperties.setPassword(password);
+    orchestratorProperties.setJobChunkSize(100);
   }
 
   @Test
@@ -282,7 +290,7 @@ public class ChronosServiceTest extends WebAppConfigurationAware {
     TemplateTopologicalOrderIterator templateTopologicalOrderIterator =
         Mockito.mock(TemplateTopologicalOrderIterator.class);
     dm.setTemplateTopologicalOrderIterator(templateTopologicalOrderIterator);
-    ReflectionTestUtils.setField(chronosService, "jobChunkSize", 1);
+    orchestratorProperties.setJobChunkSize(1);
 
     Resource currentNode = new Resource();
     currentNode.setToscaNodeName("toscaNodeName");

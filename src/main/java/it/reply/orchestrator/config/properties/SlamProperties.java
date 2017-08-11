@@ -14,30 +14,31 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.dto.onedata;
+package it.reply.orchestrator.config.properties;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
+import java.net.URI;
+
+import javax.validation.constraints.NotNull;
+
+@Validated
 @Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@Builder
-public class UserSpaces implements Serializable {
+@ConfigurationProperties(prefix = "slam")
+@NoArgsConstructor
+public class SlamProperties {
 
-  private static final long serialVersionUID = 2242273425591647283L;
+  @NotNull
+  @NonNull
+  private URI url;
 
-  @JsonProperty("spaces")
-  @Builder.Default
-  private List<String> spaces = new ArrayList<>();
-
-  @JsonProperty("defaultSpace")
-  private String defaultSpace;
+  @NotNull
+  @NonNull
+  private String customerPreferencesPath = "/preferences/{customerName}";
 
 }

@@ -16,6 +16,7 @@
 
 package it.reply.orchestrator.service.commands;
 
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import org.drools.core.process.instance.impl.WorkItemImpl;
@@ -31,6 +32,8 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
+import it.reply.orchestrator.config.properties.OneDataProperties;
+import it.reply.orchestrator.config.properties.OneDataProperties.ServiceSpaceProperties;
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
@@ -60,6 +63,12 @@ public class UpdateDeploymentTest {
 
   @Mock
   OneDataService oneDataService;
+  
+  @Spy
+  private OneDataProperties oneDataProperties;
+  
+  @Spy
+  private ServiceSpaceProperties serviceSpaceProperties;
 
   @Mock
   DeploymentStatusHelper deploymentStatusHelper;
@@ -67,6 +76,7 @@ public class UpdateDeploymentTest {
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
+    oneDataProperties.setServiceSpace(serviceSpaceProperties);
   }
 
   @Test(expected = IllegalArgumentException.class)
@@ -117,8 +127,8 @@ public class UpdateDeploymentTest {
     expectedResult.setData(Constants.RESULT_STATUS, "OK");
     expectedResult.setData(Constants.OK_RESULT, true);
     expectedResult.setData(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, dm);
-
-    Mockito.when(oneDataService.getServiceSpacePath()).thenReturn("servicepath/");
+    
+    serviceSpaceProperties.setOneproviderUrl(URI.create("http://endpoint.com"));
     
     updateDeployment.generateOneDataParameters(rankCloudProvidersMessage, dm);
     Assert.assertEquals(expectedResult.toString(),

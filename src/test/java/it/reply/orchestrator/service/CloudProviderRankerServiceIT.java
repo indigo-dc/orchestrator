@@ -69,7 +69,7 @@ public class CloudProviderRankerServiceIT extends WebAppConfigurationAwareIT {
 
   public static void mockCpr(MockRestServiceServer mockServer, URI baseUrl,
       List<RankedCloudProvider> response) throws Exception {
-    mockServer.expect(requestTo(baseUrl)).andExpect(method(HttpMethod.POST)).andRespond(
+    mockServer.expect(requestTo(baseUrl + "/rank")).andExpect(method(HttpMethod.POST)).andRespond(
         withSuccess(JsonUtility.serializeJson(response), MediaType.APPLICATION_JSON));
   }
 

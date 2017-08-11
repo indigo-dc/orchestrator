@@ -23,5 +23,4 @@ public interface SlamService {
 
   public SlamPreferences getCustomerPreferences(OidcTokenId tokenId);
 
-  public String getUrl();
 }

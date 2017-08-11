@@ -16,6 +16,7 @@
 
 package it.reply.orchestrator.service;
 
+import it.reply.orchestrator.config.properties.CmdbProperties;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.CmdbHasManyList;
@@ -29,14 +30,14 @@ import it.reply.orchestrator.exception.service.DeploymentException;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.PropertySource;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -45,55 +46,63 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import javax.ws.rs.core.UriBuilder;
+
 @Service
 @Slf4j
-@PropertySource("classpath:cmdb/cmdb.properties")
+@EnableConfigurationProperties(CmdbProperties.class)
 public class CmdbServiceImpl implements CmdbService {
 
   @Autowired
   private RestTemplate restTemplate;
 
-  @Value("${cmdb.url}")
-  private String url;
-
-  @Value("${service.id}")
-  private String serviceIdUrlPath;
-
-  @Value("${provider.id}")
-  private String providerIdUrlPath;
+  @Autowired
+  private CmdbProperties cmdbProperties;
 
   @Override
-  public String getUrl() {
-    return url;
-  }
+  public CloudService getServiceById(String serviceId) {
 
-  @Override
-  public CloudService getServiceById(String id) {
+    URI requestUri = UriBuilder
+        .fromUri(cmdbProperties.getUrl() + cmdbProperties.getServiceByIdPath())
+        .build(serviceId)
+        .normalize();
 
     ResponseEntity<CloudService> response =
-        restTemplate.getForEntity(url.concat(serviceIdUrlPath).concat(id), CloudService.class);
+        restTemplate.getForEntity(requestUri, CloudService.class);
     if (response.getStatusCode().is2xxSuccessful()) {
       return response.getBody();
     }
-    throw new DeploymentException("Unable to find service <" + id + "> in the CMDB."
+    throw new DeploymentException("Unable to find service <" + serviceId + "> in the CMDB."
         + response.getStatusCode().toString() + " " + response.getStatusCode().getReasonPhrase());
   }
 
   @Override
-  public Provider getProviderById(String id) {
+  public Provider getProviderById(String providerId) {
+
+    URI requestUri = UriBuilder
+        .fromUri(cmdbProperties.getUrl() + cmdbProperties.getProviderByIdPath())
+        .build(providerId)
+        .normalize();
+
     ResponseEntity<Provider> response =
-        restTemplate.getForEntity(url.concat(providerIdUrlPath).concat(id), Provider.class);
+        restTemplate.getForEntity(requestUri, Provider.class);
     if (response.getStatusCode().is2xxSuccessful()) {
       return response.getBody();
     }
-    throw new DeploymentException("Unable to find provider <" + id + "> in the CMDB."
+    throw new DeploymentException("Unable to find provider <" + providerId + "> in the CMDB."
         + response.getStatusCode().toString() + " " + response.getStatusCode().getReasonPhrase());
   }
 
   @Override
   public Image getImageById(String imageId) {
+
+    URI requestUri = UriBuilder
+        .fromUri(cmdbProperties.getUrl() + cmdbProperties.getImageByIdPath())
+        .build(imageId)
+        .normalize();
+
     ResponseEntity<Image> response =
-        restTemplate.getForEntity(url.concat("image/id").concat(imageId), Image.class);
+        restTemplate.getForEntity(requestUri, Image.class);
     if (response.getStatusCode().is2xxSuccessful()) {
       return response.getBody();
     }
@@ -103,8 +112,14 @@ public class CmdbServiceImpl implements CmdbService {
 
   @Override
   public List<Image> getImagesByService(String serviceId) {
+
+    URI requestUri = UriBuilder
+        .fromUri(cmdbProperties.getUrl() + cmdbProperties.getImagesByServiceIdPath())
+        .build(serviceId)
+        .normalize();
+
     ResponseEntity<CmdbHasManyList<CmdbRow<Image>>> response = restTemplate.exchange(
-        url.concat(serviceIdUrlPath).concat(serviceId).concat("/has_many/images?include_docs=true"),
+        requestUri,
         HttpMethod.GET, null, new ParameterizedTypeReference<CmdbHasManyList<CmdbRow<Image>>>() {
         });
 
@@ -122,10 +137,14 @@ public class CmdbServiceImpl implements CmdbService {
 
   @Override
   public List<CloudService> getServicesByProvider(String providerId) {
+
+    URI requestUri = UriBuilder
+        .fromUri(cmdbProperties.getUrl() + cmdbProperties.getServicesByProviderIdPath())
+        .build(providerId)
+        .normalize();
+
     ResponseEntity<CmdbHasManyList<CmdbRow<CloudService>>> response = restTemplate.exchange(
-        url.concat(providerIdUrlPath)
-            .concat(providerId)
-            .concat("/has_many/services?include_docs=true"),
+        requestUri,
         HttpMethod.GET, null,
         new ParameterizedTypeReference<CmdbHasManyList<CmdbRow<CloudService>>>() {
         });
