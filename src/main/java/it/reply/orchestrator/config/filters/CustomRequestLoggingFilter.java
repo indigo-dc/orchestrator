@@ -17,7 +17,6 @@
 package it.reply.orchestrator.config.filters;
 
 import com.google.common.base.Strings;
-import com.google.common.net.HttpHeaders;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -35,20 +34,18 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.slf4j.MDC;
 import org.springframework.http.server.ServletServerHttpRequest;
+import org.springframework.util.StopWatch;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.ContentCachingRequestWrapper;
 import org.springframework.web.util.WebUtils;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.time.Duration;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Stream;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -61,6 +58,11 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
 
   public static final String X_REQUEST_ID = "X-Request-ID";
   public static final String REQUEST_ID_MDC_KEY = "request_id";
+  public static final String ATTRIBUTE_REQUEST_ID = CustomRequestLoggingFilter.class.getName()
+      + ".RequestId";
+
+  private static final String ATTRIBUTE_STOP_WATCH = CustomRequestLoggingFilter.class.getName()
+      + ".StopWatch";
 
   @JsonInclude(JsonInclude.Include.NON_NULL)
   @Data
@@ -164,7 +166,7 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
      *          the request
      */
     public void setClientIpFromRequest(HttpServletRequest request) {
-      safeTrimmedString(getRemoteAddr(request)).ifPresent(this::setClientIp);
+      safeTrimmedString(request.getRemoteAddr()).ifPresent(this::setClientIp);
     }
 
     /**
@@ -274,15 +276,17 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
   protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response,
       FilterChain filterChain) throws ServletException, IOException {
 
-    Instant startingInstant = Instant.now();
+    StopWatch stopWatch = createStopWatchIfNecessary(request);
+    String requestId = createRequestIdIfNecessary(request);
+
     boolean isFirstRequest = !isAsyncDispatch(request);
     HttpServletRequest requestToUse = request;
 
-    String requestId = "req-" + UUID.randomUUID().toString();
-
     try {
-      MDC.put(REQUEST_ID_MDC_KEY, requestId);
-      response.addHeader(X_REQUEST_ID, requestId);
+      if (isFirstRequest) {
+        MDC.put(REQUEST_ID_MDC_KEY, requestId);
+        response.addHeader(X_REQUEST_ID, requestId);
+      }
 
       if (isIncludePayload() && isFirstRequest
           && !(request instanceof ContentCachingRequestWrapper)) {
@@ -296,13 +300,55 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
       try {
         filterChain.doFilter(requestToUse, response);
       } finally {
-        if (shouldLog && !isAsyncStarted(requestToUse)) {
-          afterRequest(requestToUse, response, getElapsedMillisec(startingInstant));
+        if (!isAsyncStarted(requestToUse)) {
+          stopWatch.stop();
+          request.removeAttribute(ATTRIBUTE_STOP_WATCH);
+          request.removeAttribute(ATTRIBUTE_REQUEST_ID);
+          if (shouldLog) {
+            afterRequest(requestToUse, response, stopWatch.getTotalTimeMillis());
+          }
         }
       }
     } finally {
-      MDC.remove(REQUEST_ID_MDC_KEY);
+      if (isFirstRequest) {
+        MDC.remove(REQUEST_ID_MDC_KEY);
+      }
     }
+  }
+
+  private StopWatch createStopWatchIfNecessary(HttpServletRequest request) {
+    return Optional
+        .ofNullable(request.getAttribute(ATTRIBUTE_STOP_WATCH))
+        .filter(StopWatch.class::isInstance)
+        .map(StopWatch.class::cast)
+        .orElseGet(() -> {
+          StopWatch stopWatch = new StopWatch();
+          stopWatch.start();
+          request.setAttribute(ATTRIBUTE_STOP_WATCH, stopWatch);
+          return stopWatch;
+        });
+  }
+
+  private String createRequestIdIfNecessary(HttpServletRequest request) {
+    return Optional
+        .ofNullable(request.getAttribute(ATTRIBUTE_REQUEST_ID))
+        .filter(String.class::isInstance)
+        .map(String.class::cast)
+        .orElseGet(() -> {
+          String requestId = "req-" + UUID.randomUUID().toString();
+          request.setAttribute(ATTRIBUTE_REQUEST_ID, requestId);
+          return requestId;
+        });
+  }
+
+  /**
+   * The default value is "false" so that the filter may log a "before" message at the start of
+   * request processing and an "after" message at the end from when the last asynchronously
+   * dispatched thread is exiting.
+   */
+  @Override
+  protected boolean shouldNotFilterAsyncDispatch() {
+    return false;
   }
 
   public static Optional<String> safeTrimmedString(@Nullable String input) {
@@ -337,22 +383,6 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
       // shouldn't happen
       LOG.error("Error logging response {} for request {}", response, request, ex);
     }
-  }
-
-  private double getElapsedMillisec(Instant startingInstant) {
-    return Duration.between(startingInstant, Instant.now()).toMillis();
-  }
-
-  private static String getRemoteAddr(HttpServletRequest request) {
-    return safeTrimmedString(request.getHeader(HttpHeaders.X_FORWARDED_FOR))
-        .map(header -> header.split(", ?"))
-        .map(Stream::of)
-        .orElseGet(Stream::empty)
-        .map(CustomRequestLoggingFilter::safeTrimmedString)
-        .filter(Optional::isPresent)
-        .map(Optional::get)
-        .findFirst()
-        .orElseGet(request::getRemoteAddr);
   }
 
 }
