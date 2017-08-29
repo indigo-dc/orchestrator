@@ -87,10 +87,10 @@ public class PrefilterCloudProvidersTest {
 
     Mockito.when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
         .thenReturn(deployment);
-    ExecutionResults expectedResult = TestUtil.generateExpectedResult(true);
-
+    
     ExecutionResults result = prefilterCloudProviders.customExecute(new CommandContext(), rankCloudProvidersMessage);
-    TestUtil.assertBaseResults(expectedResult, result);
+   
+    TestCommandHelper.assertBaseResults(true, result);
   }
 
 
@@ -128,11 +128,10 @@ public class PrefilterCloudProvidersTest {
         .when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
             Mockito.anyObject()))
         .thenReturn(Maps.newHashMap(Boolean.FALSE, new HashMap<>()));
-    ExecutionResults expectedResult = TestUtil.generateExpectedResult(true);
 
     ExecutionResults result = prefilterCloudProviders.customExecute(new CommandContext(), rankCloudProvidersMessage);
-    TestUtil.assertBaseResults(expectedResult, result);
-
+   
+    TestCommandHelper.assertBaseResults(true, result);
   }
 
   @Test(expected = OrchestratorException.class)
@@ -163,11 +162,10 @@ public class PrefilterCloudProvidersTest {
         .when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
             Mockito.anyObject()))
         .thenReturn(new HashMap<>());
-    ExecutionResults expectedResult = TestUtil.generateExpectedResult(true);
 
     ExecutionResults result = prefilterCloudProviders.customExecute(new CommandContext(), rankCloudProvidersMessage);
-    TestUtil.assertBaseResults(expectedResult, result);
-
+ 
+    TestCommandHelper.assertBaseResults(true, result);
   }
 
   @Test(expected = OrchestratorException.class)
@@ -197,11 +195,10 @@ public class PrefilterCloudProvidersTest {
         .when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
             Mockito.anyObject()))
         .thenReturn(new HashMap<>());
-    ExecutionResults expectedResult = TestUtil.generateExpectedResult(true);
 
     ExecutionResults result = prefilterCloudProviders.customExecute(new CommandContext(), rankCloudProvidersMessage);
-    TestUtil.assertBaseResults(expectedResult, result);
 
+    TestCommandHelper.assertBaseResults(true, result);
   }
 
   @Test(expected = OrchestratorException.class)
@@ -229,11 +226,10 @@ public class PrefilterCloudProvidersTest {
         .when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
             Mockito.anyObject()))
         .thenReturn(new HashMap<>());
-    ExecutionResults expectedResult = TestUtil.generateExpectedResult(true);
 
     ExecutionResults result = prefilterCloudProviders.customExecute(new CommandContext(), rankCloudProvidersMessage);
-    TestUtil.assertBaseResults(expectedResult, result);
-
+ 
+    TestCommandHelper.assertBaseResults(true, result);
   }
 
   @Test
@@ -262,11 +258,9 @@ public class PrefilterCloudProvidersTest {
         .thenReturn(
             Maps.newHashMap(Boolean.FALSE, Maps.newHashMap(new NodeTemplate(), new ImageData())));
 
-    ExecutionResults expectedResult = TestUtil.generateExpectedResult(true);
-
     ExecutionResults result = prefilterCloudProviders.customExecute(new CommandContext(), rankCloudProvidersMessage);
-    TestUtil.assertBaseResults(expectedResult, result);
-
+ 
+    TestCommandHelper.assertBaseResults(true, result);
   }
 
 

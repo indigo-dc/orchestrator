@@ -22,14 +22,16 @@ import it.reply.orchestrator.resource.DeploymentResource;
 import it.reply.orchestrator.resource.DeploymentResourceAssembler;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
 @AllArgsConstructor
+@Slf4j
 public class CallbackServiceImpl implements CallbackService {
 
   private DeploymentRepository deploymentRepository;
@@ -48,9 +50,13 @@ public class CallbackServiceImpl implements CallbackService {
   private boolean doCallback(Deployment deployment) {
     if (deployment.getCallback() != null) {
       DeploymentResource deploymentResource = deploymentResourceAssembler.toResource(deployment);
-      ResponseEntity<?> response =
-          restTemplate.postForEntity(deployment.getCallback(), deploymentResource, Object.class);
-      return response.getStatusCode().is2xxSuccessful();
+      try {
+        restTemplate.postForEntity(deployment.getCallback(), deploymentResource, Object.class);
+        return true;
+      } catch (HttpStatusCodeException ex) {
+        LOG.error("Error executing callback for deployment {}", deployment.getId(), ex);
+        return false;
+      }
     }
     return false;
   }

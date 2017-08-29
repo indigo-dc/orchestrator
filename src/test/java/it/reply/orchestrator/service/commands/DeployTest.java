@@ -17,11 +17,9 @@
 package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
-import it.reply.orchestrator.util.TestUtil;
-import it.reply.workflowmanager.utils.Constants;
+import it.reply.orchestrator.utils.WorkflowConstants;
 
 import org.assertj.core.api.Assertions;
-import org.drools.core.process.instance.impl.WorkItemImpl;
 import org.junit.Test;
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
@@ -45,18 +43,16 @@ public class DeployTest extends BaseDeployCommandTest<Deploy> {
 
   public void testDeploy(boolean complete) throws Exception {
     DeploymentMessage dm = new DeploymentMessage();
-    CommandContext commandContext = new CommandContext();
-
-    WorkItemImpl workItem = new WorkItemImpl();
-    commandContext.setData(Constants.WORKITEM, workItem);
+    CommandContext commandContext = TestCommandHelper
+        .buildCommandContext()
+        .withParam(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, dm)
+        .get();
 
     Mockito.when(deploymentProviderService.doDeploy(dm)).thenReturn(complete);
 
-    ExecutionResults expectedResult = TestUtil.generateExpectedResult(true);
+    ExecutionResults result = command.customExecute(commandContext);
 
-    ExecutionResults result = command.customExecute(commandContext, dm);
-
-    TestUtil.assertBaseResults(expectedResult, result);
+    TestCommandHelper.assertBaseResults(true, result);
     Assertions.assertThat(dm.isCreateComplete()).isEqualTo(complete);
   }
 

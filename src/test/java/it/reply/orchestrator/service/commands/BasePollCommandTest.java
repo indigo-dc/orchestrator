@@ -16,28 +16,28 @@
 
 package it.reply.orchestrator.service.commands;
 
+import static org.assertj.core.api.Assertions.*;
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
+
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;
-import it.reply.orchestrator.util.TestUtil;
 import it.reply.orchestrator.utils.WorkflowConstants;
 import it.reply.utils.misc.polling.ExternallyControlledPoller;
 import it.reply.workflowmanager.orchestrator.bpm.OrchestratorContext;
 import it.reply.workflowmanager.spring.orchestrator.bpm.OrchestratorContextBean;
-import it.reply.workflowmanager.utils.Constants;
 
 import org.apache.commons.lang.SerializationUtils;
-import org.assertj.core.api.Assertions;
-import org.drools.core.process.instance.impl.WorkItemImpl;
 import org.junit.Before;
 import org.junit.Test;
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.springframework.context.support.StaticApplicationContext;
 
-import java.io.Serializable;
+import java.util.concurrent.TimeoutException;
 
 public abstract class BasePollCommandTest<T extends AbstractPollingCommand<T>>
     extends BaseDeployCommandTest<T> {
@@ -49,131 +49,132 @@ public abstract class BasePollCommandTest<T extends AbstractPollingCommand<T>>
 
   public BasePollCommandTest(T pollingCommand) {
     super(pollingCommand);
-    statusPoller =
-        AbstractPollingCommand.getPoller(Long.MAX_VALUE, pollingCommand.getPollingFunction());
+    statusPoller = command.getPoller(Long.MAX_VALUE);
   }
 
   @Before
   public void setupBasePollCommandTest() {
     @SuppressWarnings("unused") // needed to set up the static field
     OrchestratorContext orchestratorContext = new OrchestratorContextBean(applicationContext);
-    Mockito.when(applicationContext.getBean(DeploymentProviderServiceRegistry.class)).thenReturn(
-        deploymentProviderServiceRegistry);
+
+    when(applicationContext.getBean(DeploymentProviderServiceRegistry.class))
+        .thenReturn(deploymentProviderServiceRegistry);
   }
 
   @Test
   public void testPollingFunctionIsSerializable() {
-    Assertions
-        .assertThat(SerializationUtils.clone((Serializable) command.getPollingFunction()))
+    assertThat(SerializationUtils.clone(command.getPollingFunction()))
         .isEqualToComparingFieldByFieldRecursively(command.getPollingFunction());
   }
 
   @Test
-  public void testCustomExecuteFalsePollingStatusNull() throws Exception {
+  public void testPollerIsSerializable() {
+    assertThat(SerializationUtils.clone(command.getPoller(0)))
+        .isEqualToComparingFieldByFieldRecursively(command.getPoller(0));
+  }
 
-    CommandContext commandContext = new CommandContext();
+  @Test
+  public void testCustomExecutePollingStatusNull() throws Exception {
     DeploymentMessage dm = new DeploymentMessage();
+    CommandContext commandContext = TestCommandHelper
+        .buildCommandContext()
+        .withParam(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, dm)
+        .get();
 
-    WorkItemImpl workItem = new WorkItemImpl();
+    ExecutionResults result = command.customExecute(commandContext);
+    verify(command, times(1)).getPoller(anyLong());
 
-    commandContext.setData(Constants.WORKITEM, workItem);
-
-    ExecutionResults expectedResult = TestUtil.generateExpectedResult(true);
-
-    ExecutionResults result = command.customExecute(commandContext, dm);
-
-    TestUtil.assertBaseResults(expectedResult, result);
-    Assertions.assertThat(WorkflowConstants.WF_PARAM_POLLING_STATUS).isNotNull();
+    TestCommandHelper.assertBaseResults(true, result);
+    assertThat(result.getData(WorkflowConstants.WF_PARAM_POLLING_STATUS)).isNotNull();
 
   }
 
   @Test
   public void testCustomExecutePollingStatusNotNull() throws Exception {
-
-    CommandContext commandContext = new CommandContext();
     DeploymentMessage dm = new DeploymentMessage();
+    CommandContext commandContext = TestCommandHelper
+        .buildCommandContext()
+        .withParam(WorkflowConstants.WF_PARAM_POLLING_STATUS, statusPoller)
+        .withParam(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, dm)
+        .get();
 
-    WorkItemImpl workItem = new WorkItemImpl();
-    workItem.setParameter(WorkflowConstants.WF_PARAM_POLLING_STATUS, statusPoller);
+    ExecutionResults result = command.customExecute(commandContext);
+    verify(command, never()).getPoller(anyLong());
 
-    commandContext.setData(Constants.WORKITEM, workItem);
+    TestCommandHelper.assertBaseResults(true, result);
+    assertThat(result.getData(WorkflowConstants.WF_PARAM_POLLING_STATUS)).isNotNull();
+  }
 
-    ExecutionResults expectedResult = TestUtil.generateExpectedResult(true);
-    expectedResult.setData(WorkflowConstants.WF_PARAM_POLLING_STATUS, statusPoller);
+  public void testCustomExecuteSuccessful(boolean pollComplete) throws Exception {
+    DeploymentMessage dm = new DeploymentMessage();
+    CommandContext commandContext = TestCommandHelper
+        .buildCommandContext()
+        .withParam(WorkflowConstants.WF_PARAM_POLLING_STATUS, statusPoller)
+        .withParam(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, dm)
+        .get();
 
-    ExecutionResults result = command.customExecute(commandContext, dm);
+    when(command.getPollingFunction().test(dm, deploymentProviderService)).thenReturn(pollComplete);
 
-    TestUtil.assertBaseResults(expectedResult, result);
-    Assertions.assertThat(WorkflowConstants.WF_PARAM_POLLING_STATUS).isNotNull();
+    ExecutionResults result = command.customExecute(commandContext);
+
+    TestCommandHelper.assertBaseResults(true, result);
+    assertThat(dm.isPollComplete()).isEqualTo(pollComplete);
   }
 
   @Test
-  public void testCustomExecutePollComplete() throws Exception {
-
-    CommandContext commandContext = new CommandContext();
-    DeploymentMessage dm = new DeploymentMessage();
-
-    WorkItemImpl workItem = new WorkItemImpl();
-    workItem.setParameter(WorkflowConstants.WF_PARAM_POLLING_STATUS, statusPoller);
-
-    commandContext.setData(Constants.WORKITEM, workItem);
-
-    ExecutionResults expectedResult = TestUtil.generateExpectedResult(true);
-    expectedResult.setData(WorkflowConstants.WF_PARAM_POLLING_STATUS, statusPoller);
-
-    Mockito
-        .when(command.getPollingFunction().apply(dm, deploymentProviderService))
-        .thenReturn(true);
-
-    ExecutionResults result = command.customExecute(commandContext, dm);
-
-    TestUtil.assertBaseResults(expectedResult, result);
-    Assertions.assertThat(dm.isPollComplete()).isTrue();
+  public void testCustomExecuteSuccessfulAndComplete() throws Exception {
+    testCustomExecuteSuccessful(true);
   }
 
   @Test
-  public void testCustomExecuteNotPollComplete() throws Exception {
-
-    CommandContext commandContext = new CommandContext();
-    DeploymentMessage dm = new DeploymentMessage();
-
-    WorkItemImpl workItem = new WorkItemImpl();
-    workItem.setParameter(WorkflowConstants.WF_PARAM_POLLING_STATUS, statusPoller);
-
-    commandContext.setData(Constants.WORKITEM, workItem);
-
-    ExecutionResults expectedResult = TestUtil.generateExpectedResult(true);
-    expectedResult.setData(WorkflowConstants.WF_PARAM_POLLING_STATUS, statusPoller);
-
-    Mockito
-        .when(command.getPollingFunction().apply(dm, deploymentProviderService))
-        .thenReturn(false);
-
-    ExecutionResults result = command.customExecute(commandContext, dm);
-
-    TestUtil.assertBaseResults(expectedResult, result);
-    Assertions.assertThat(dm.isPollComplete()).isFalse();
+  public void testCustomExecuteSuccessfulAndNotComplete() throws Exception {
+    testCustomExecuteSuccessful(false);
   }
 
   @Test
-  public void testCustomExecuteException() throws Exception {
-
-    CommandContext commandContext = new CommandContext();
+  public void testCustomExecuteMaxRetryException() throws Exception {
     DeploymentMessage dm = new DeploymentMessage();
+    CommandContext commandContext = TestCommandHelper
+        .buildCommandContext()
+        .withParam(WorkflowConstants.WF_PARAM_POLLING_STATUS, statusPoller)
+        .withParam(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, dm)
+        .get();
 
-    WorkItemImpl workItem = new WorkItemImpl();
-    workItem.setParameter(WorkflowConstants.WF_PARAM_POLLING_STATUS, statusPoller);
-
-    commandContext.setData(Constants.WORKITEM, workItem);
-
-    Mockito
-        .when(command.getPollingFunction().apply(dm, deploymentProviderService))
+    when(command.getPollingFunction().test(dm, deploymentProviderService))
         .thenThrow(new DeploymentException("some error"));
 
-    Assertions
-        .assertThatThrownBy(() -> command.customExecute(commandContext, dm))
+    ExecutionResults result = command.customExecute(commandContext);
+
+    String message = command.getErrorMessagePrefix();
+    ArgumentCaptor<Exception> captor = ArgumentCaptor.forClass(Exception.class);
+    verify(deploymentStatusHelper).updateOnError(eq(dm.getDeploymentId()),
+        eq(message), captor.capture());
+    assertThat(captor.getValue())
         .isInstanceOf(DeploymentException.class)
         .hasMessage("some error");
+
+    TestCommandHelper.assertBaseResults(false, result);
+
   }
 
+  @Test
+  public void testCustomExecuteTimeoutException() throws Exception {
+    DeploymentMessage dm = new DeploymentMessage();
+    CommandContext commandContext = TestCommandHelper
+        .buildCommandContext()
+        .withParam(WorkflowConstants.WF_PARAM_POLLING_STATUS, command.getPoller(Long.MIN_VALUE))
+        .withParam(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, dm)
+        .get();
+
+    ExecutionResults result = command.customExecute(commandContext);
+
+    String message = command.getErrorMessagePrefix();
+    ArgumentCaptor<Exception> captor = ArgumentCaptor.forClass(Exception.class);
+    verify(deploymentStatusHelper).updateOnError(eq(dm.getDeploymentId()),
+        eq(message), captor.capture());
+    assertThat(captor.getValue()).isInstanceOf(TimeoutException.class);
+
+    TestCommandHelper.assertBaseResults(false, result);
+
+  }
 }

@@ -14,15 +14,17 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.command;
-
-import com.google.common.collect.Maps;
+package it.reply.orchestrator.service.commands;
 
 import it.reply.workflowmanager.orchestrator.bpm.WIHs.EJBWorkItemHelper;
+import it.reply.workflowmanager.utils.Constants;
 
+import org.assertj.core.api.Assertions;
 import org.drools.core.process.instance.impl.WorkItemImpl;
 import org.kie.api.executor.CommandContext;
+import org.kie.api.executor.ExecutionResults;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class TestCommandHelper {
@@ -32,7 +34,7 @@ public class TestCommandHelper {
   }
 
   public static class CommandContextBuilder {
-    Map<String, Object> params = Maps.newHashMap();
+    private Map<String, Object> params = new HashMap<>();
 
     public CommandContextBuilder withParam(String key, Object value) {
       params.put(key, value);
@@ -44,11 +46,19 @@ public class TestCommandHelper {
       workItem.setDeploymentId("deploymentId");
       workItem.setProcessInstanceId(0);
       CommandContext ctx = EJBWorkItemHelper.buildCommandContext(workItem, null);
-      if (params != null) {
-        params.entrySet().stream().forEach(e -> workItem.setParameter(e.getKey(), e.getValue()));
-      }
+
+      params.forEach((key, value) -> workItem.setParameter(key, value));
+
       return ctx;
     }
   }
 
+  public static void assertBaseResults(Object status, ExecutionResults actualResult) {
+    Assertions
+        .assertThat(actualResult.getData(Constants.RESULT_STATUS))
+        .isEqualTo("OK");
+    Assertions
+        .assertThat(actualResult.getData(Constants.OK_RESULT))
+        .isEqualTo(status);
+  }
 }

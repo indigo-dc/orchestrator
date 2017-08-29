@@ -63,9 +63,9 @@ import java.util.List;
 import java.util.Map;
 
 @Ignore //FIXME Re-enable when jBPM serialization problems are solved
-public class RankCloudProvidersWorkflowTest extends WebAppConfigurationAwareIT {
+public class RankCloudProvidersWorkflowIT extends WebAppConfigurationAwareIT {
 
-  static final Logger LOG = LoggerFactory.getLogger(RankCloudProvidersWorkflowTest.class);
+  static final Logger LOG = LoggerFactory.getLogger(RankCloudProvidersWorkflowIT.class);
 
   // @Mock
   // private WorkItemHandlersProducer testWorkItemHandlersProducer;

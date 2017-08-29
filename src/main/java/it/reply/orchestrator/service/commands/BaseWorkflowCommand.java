@@ -75,7 +75,7 @@ public abstract class BaseWorkflowCommand<M extends BaseWorkflowMessage,
     return exResults;
   }
 
-  public abstract ExecutionResults customExecute(CommandContext ctx, M message) throws Exception;
+  protected abstract ExecutionResults customExecute(CommandContext ctx, M message) throws Exception;
 
   protected Deployment getDeployment(M message) {
     return deploymentRepository.findOne(message.getDeploymentId());
