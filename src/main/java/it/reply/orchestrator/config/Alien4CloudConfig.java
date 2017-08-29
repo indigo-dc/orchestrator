@@ -24,8 +24,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.FilterType;
+import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.io.ResourceLoader;
 
+import java.io.IOException;
+import java.util.List;
+import java.util.Properties;
+import java.util.stream.Collectors;
 
 @Configuration
 @ComponentScan(basePackages = { "alien4cloud", "org.elasticsearch.mapping" },
@@ -44,4 +49,22 @@ public class Alien4CloudConfig {
     return AlienYamlPropertiesFactoryBeanFactory.get(resourceLoader);
   }
 
+  /**
+   * Resolves Alien4Cloud ${...} placeholders within bean definition property values and @Value
+   * annotations.
+   *
+   */
+  @Bean
+  public static PropertySourcesPlaceholderConfigurer propertyPlaceholderConfigurer(
+      List<YamlPropertiesFactoryBean> factories) throws IOException {
+
+    PropertySourcesPlaceholderConfigurer propertyPlaceholderConfigurer =
+        new PropertySourcesPlaceholderConfigurer();
+    propertyPlaceholderConfigurer.setPropertiesArray(factories
+        .stream()
+        .map(YamlPropertiesFactoryBean::getObject)
+        .collect(Collectors.toList())
+        .toArray(new Properties[0]));
+    return propertyPlaceholderConfigurer;
+  }
 }

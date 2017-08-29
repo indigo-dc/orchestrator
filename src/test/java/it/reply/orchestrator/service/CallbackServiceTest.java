@@ -16,7 +16,9 @@
 
 package it.reply.orchestrator.service;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.*;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
 
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
@@ -25,34 +27,41 @@ import it.reply.orchestrator.resource.DeploymentResource;
 import it.reply.orchestrator.resource.DeploymentResourceAssembler;
 
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 
 public class CallbackServiceTest {
+
+  @Rule
+  public MockitoRule rule = MockitoJUnit.rule();
 
   @Mock
   private DeploymentRepository deploymentRepository;
 
   @Spy
-  private DeploymentResourceAssembler deploymentResourceAssembler =
-      new DeploymentResourceAssembler();
+  private DeploymentResourceAssembler deploymentResourceAssembler;
 
-  @Mock
+  @Spy
   private RestTemplate restTemplate;
 
-  private CallbackService callbackService;
+  @InjectMocks
+  private CallbackServiceImpl callbackService;
+
+  protected MockRestServiceServer mockServer;
 
   @Before
-  public void setUp() {
-    MockitoAnnotations.initMocks(this);
-    callbackService =
-        new CallbackServiceImpl(deploymentRepository, deploymentResourceAssembler, restTemplate);
+  public void setup() {
+    mockServer = MockRestServiceServer.createServer(restTemplate);
   }
 
   private boolean doCallback(String url, HttpStatus status) {
@@ -63,9 +72,10 @@ public class CallbackServiceTest {
     Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
     Mockito.when(deploymentResourceAssembler.toResource(deployment)).thenReturn(resource);
     if (status != null) {
-      ResponseEntity<Object> response = new ResponseEntity<>(status);
-      Mockito.when(restTemplate.postForEntity(deployment.getCallback(), resource, Object.class))
-      .thenReturn(response);
+      mockServer
+          .expect(requestTo(url))
+          .andExpect(method(HttpMethod.POST))
+          .andRespond(withStatus(status));
     }
 
     return callbackService.doCallback(deployment.getId());
@@ -74,20 +84,19 @@ public class CallbackServiceTest {
   @Test
   public void doCallbackSuccessfully() {
     boolean result = doCallback("http://test.com", HttpStatus.OK);
-    assertEquals(true, result);
+    assertThat(result).isTrue();
   }
 
   @Test
   public void doCallbackError() {
     boolean result = doCallback("http://test.com", HttpStatus.INTERNAL_SERVER_ERROR);
-    assertEquals(false, result);
+    assertThat(result).isFalse();
   }
 
   @Test
   public void doCallbackWithoutUrlSuccessfully() {
     boolean result = doCallback(null, null);
-    assertEquals(false, result);
-
+    assertThat(result).isFalse();
   }
 
 }

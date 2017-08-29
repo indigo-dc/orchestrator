@@ -17,12 +17,9 @@
 package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
-import it.reply.orchestrator.util.TestUtil;
 import it.reply.orchestrator.utils.WorkflowConstants;
-import it.reply.workflowmanager.utils.Constants;
 
 import org.assertj.core.api.Assertions;
-import org.drools.core.process.instance.impl.WorkItemImpl;
 import org.junit.Test;
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
@@ -46,19 +43,18 @@ public class UpdateTest extends BaseDeployCommandTest<Update> {
 
   public void testUpdate(boolean complete) throws Exception {
     DeploymentMessage dm = new DeploymentMessage();
-    CommandContext commandContext = new CommandContext();
+    String updateTemplate = "template";
+    CommandContext commandContext = TestCommandHelper
+        .buildCommandContext()
+        .withParam(WorkflowConstants.WF_PARAM_TOSCA_TEMPLATE, updateTemplate)
+        .withParam(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, dm)
+        .get();
 
-    WorkItemImpl workItem = new WorkItemImpl();
-    workItem.setParameter(WorkflowConstants.WF_PARAM_TOSCA_TEMPLATE, "template");
-    commandContext.setData(Constants.WORKITEM, workItem);
+    Mockito.when(deploymentProviderService.doUpdate(dm, updateTemplate)).thenReturn(complete);
 
-    Mockito.when(deploymentProviderService.doUpdate(dm, "template")).thenReturn(complete);
+    ExecutionResults result = command.customExecute(commandContext);
 
-    ExecutionResults expectedResult = TestUtil.generateExpectedResult(true);
-
-    ExecutionResults result = command.customExecute(commandContext, dm);
-
-    TestUtil.assertBaseResults(expectedResult, result);
+    TestCommandHelper.assertBaseResults(true, result);
     Assertions.assertThat(dm.isCreateComplete()).isEqualTo(complete);
   }
 

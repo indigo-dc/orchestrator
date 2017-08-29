@@ -22,12 +22,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
-import it.reply.workflowmanager.utils.Constants;
 
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
-import org.assertj.core.api.Assertions;
-import org.kie.api.executor.ExecutionResults;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,21 +55,6 @@ public class TestUtil {
     dm.setChosenCloudProviderEndpoint(chosenCloudProviderEndpoint);
     deployment.setCloudProviderEndpoint(chosenCloudProviderEndpoint);
     return dm;
-  }
-
-  public static ExecutionResults generateExpectedResult(boolean status) {
-    ExecutionResults expectedResult = new ExecutionResults();
-    expectedResult.setData(Constants.RESULT_STATUS, "OK");
-    expectedResult.setData(Constants.OK_RESULT, status);
-    return expectedResult;
-  }
-
-  public static void assertBaseResults(ExecutionResults expectedResult,
-      ExecutionResults actualResult) {
-    Assertions.assertThat(actualResult.getData(Constants.RESULT_STATUS)).isEqualTo(
-        expectedResult.getData(Constants.RESULT_STATUS));
-    Assertions.assertThat(actualResult.getData(Constants.OK_RESULT)).isEqualTo(
-        expectedResult.getData(Constants.OK_RESULT));
   }
 
 }

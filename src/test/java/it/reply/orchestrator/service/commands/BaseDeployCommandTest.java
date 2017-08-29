@@ -16,21 +16,18 @@
 
 package it.reply.orchestrator.service.commands;
 
+import static org.mockito.Matchers.*;
+import static org.mockito.Mockito.*;
+
+import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;
 
 import org.junit.Before;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.runners.MockitoJUnitRunner;
 
-@RunWith(MockitoJUnitRunner.class)
-public abstract class BaseDeployCommandTest<T extends BaseDeployCommand<T>> {
-
-  @InjectMocks
-  protected T command;
+public abstract class BaseDeployCommandTest<T extends BaseDeployCommand<T>>
+    extends BaseWorkflowCommandTest<DeploymentMessage, T> {
 
   @Mock
   protected DeploymentProviderService deploymentProviderService;
@@ -39,14 +36,12 @@ public abstract class BaseDeployCommandTest<T extends BaseDeployCommand<T>> {
   protected DeploymentProviderServiceRegistry deploymentProviderServiceRegistry;
 
   public BaseDeployCommandTest(T command) {
-    this.command = command;
+    super(command);
   }
 
   @Before
   public void setupBaseDeployCommandTest() {
-    Mockito
-        .when(deploymentProviderServiceRegistry
-            .getDeploymentProviderService(Mockito.anyString()))
+    when(deploymentProviderServiceRegistry.getDeploymentProviderService(anyString()))
         .thenReturn(deploymentProviderService);
   }
 

@@ -21,9 +21,6 @@ import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServ
 
 import org.springframework.stereotype.Component;
 
-import java.io.Serializable;
-import java.util.function.BiFunction;
-
 @Component
 public class PollDeploy extends AbstractPollingCommand<PollDeploy> {
 
@@ -33,10 +30,10 @@ public class PollDeploy extends AbstractPollingCommand<PollDeploy> {
   }
 
   @Override
-  protected BiFunction<DeploymentMessage, DeploymentProviderService, Boolean> getPollingFunction() {
-    return (Serializable & BiFunction<DeploymentMessage, DeploymentProviderService, Boolean>) (
-        DeploymentMessage deploymentMessage, DeploymentProviderService service) -> service
-            .isDeployed(deploymentMessage);
+  protected SerializableBiPredicate<DeploymentMessage, DeploymentProviderService>
+      getPollingFunction() {
+    return (DeploymentMessage deploymentMessage, DeploymentProviderService service) -> service
+        .isDeployed(deploymentMessage);
   }
 
 }

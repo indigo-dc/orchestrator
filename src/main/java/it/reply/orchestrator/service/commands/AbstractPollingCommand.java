@@ -33,8 +33,9 @@ import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.Serializable;
 import java.util.Optional;
-import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 
 public abstract class AbstractPollingCommand<T extends AbstractPollingCommand<T>>
     extends BaseDeployCommand<T> {
@@ -52,7 +53,7 @@ public abstract class AbstractPollingCommand<T extends AbstractPollingCommand<T>
         AbstractPollingCommand
             .<ExternallyControlledPoller<DeploymentMessage, Boolean>>getOptionalParameter(ctx,
                 WorkflowConstants.WF_PARAM_POLLING_STATUS)
-            .or(() -> getPoller(timeoutTime, getPollingFunction()));
+            .or(() -> getPoller(timeoutTime));
 
     exResults.setData(WorkflowConstants.WF_PARAM_POLLING_STATUS, pollingStatus);
 
@@ -70,8 +71,7 @@ public abstract class AbstractPollingCommand<T extends AbstractPollingCommand<T>
     Throwable cause = ex.getCause();
     if (cause == null || cause == ex) {
       throw ex;
-    } else if (cause instanceof RetriesExceededException
-        && lastException != null) {
+    } else if (cause instanceof RetriesExceededException && lastException != null) {
       if (lastException instanceof PollingException) {
         throw handlePollingException((PollingException) lastException, null);
       } else {
@@ -95,47 +95,62 @@ public abstract class AbstractPollingCommand<T extends AbstractPollingCommand<T>
     return Optional.ofNullable(pollingStatus.doPollEvent(deploymentMessage)).orElse(false);
   }
 
-  protected abstract BiFunction<DeploymentMessage, DeploymentProviderService, Boolean>
+  protected abstract SerializableBiPredicate<DeploymentMessage, DeploymentProviderService>
       getPollingFunction();
 
-  protected static ExternallyControlledPoller<DeploymentMessage, Boolean> getPoller(
-      long timeoutTime,
-      BiFunction<DeploymentMessage, DeploymentProviderService, Boolean> pollingFunction) {
+  protected ExternallyControlledPoller<DeploymentMessage, Boolean> getPoller(
+      long timeoutTime) {
 
     PollingBehaviour<DeploymentMessage, Boolean> pollBehavior =
-        new AbstractPollingBehaviour<DeploymentMessage, Boolean>(timeoutTime) {
-
-          private static final long serialVersionUID = -5994059867039967783L;
-
-          @Override
-          public Boolean doPolling(DeploymentMessage deploymentMessage) throws PollingException {
-            try {
-              DeploymentProviderServiceRegistry registry =
-                  OrchestratorContextBean.getBean(DeploymentProviderServiceRegistry.class);
-              DeploymentProviderService deploymentProviderService =
-                  registry.getDeploymentProviderService(deploymentMessage.getDeploymentId());
-              return pollingFunction.apply(deploymentMessage, deploymentProviderService);
-            } catch (InterruptedException e) {
-              // it will hardly happen, we've already waited for the orchestrator context in the
-              // dispatch phase
-              Thread.currentThread().interrupt();
-              return false;
-            }
-          }
-
-          @Override
-          public boolean pollExit(Boolean pollResult) {
-            return Boolean.TRUE.equals(pollResult);
-          }
-
-          @Override
-          public boolean pollSuccessful(DeploymentMessage params, Boolean pollResult) {
-            return pollExit(pollResult);
-          }
-
-        };
+        new PollingBehaviourImpl(getPollingFunction(), timeoutTime);
 
     // Only 1 try until the exceptions on which retry will be configurable
     return new ExternallyControlledPoller<>(pollBehavior, 1);
+  }
+
+  @FunctionalInterface
+  public interface SerializableBiPredicate<T, U> extends BiPredicate<T, U>, Serializable {
+
+  }
+
+  public static class PollingBehaviourImpl
+      extends AbstractPollingBehaviour<DeploymentMessage, Boolean> {
+
+    private static final long serialVersionUID = -5994059867039967783L;
+    private SerializableBiPredicate<DeploymentMessage, DeploymentProviderService> pollingFunction;
+
+    public PollingBehaviourImpl(
+        SerializableBiPredicate<DeploymentMessage, DeploymentProviderService> pollingFunction,
+        long timeoutTime) {
+      super(timeoutTime);
+      this.pollingFunction = pollingFunction;
+    }
+
+    @Override
+    public Boolean doPolling(DeploymentMessage deploymentMessage) throws PollingException {
+      try {
+        DeploymentProviderServiceRegistry registry =
+            OrchestratorContextBean.getBean(DeploymentProviderServiceRegistry.class);
+        DeploymentProviderService deploymentProviderService =
+            registry.getDeploymentProviderService(deploymentMessage.getDeploymentId());
+        return pollingFunction.test(deploymentMessage, deploymentProviderService);
+      } catch (InterruptedException e) {
+        // it will hardly happen, we've already waited for the orchestrator context in the
+        // dispatch phase
+        Thread.currentThread().interrupt();
+        return false;
+      }
+    }
+
+    @Override
+    public boolean pollExit(Boolean pollResult) {
+      return Boolean.TRUE.equals(pollResult);
+    }
+
+    @Override
+    public boolean pollSuccessful(DeploymentMessage params, Boolean pollResult) {
+      return pollExit(pollResult);
+    }
+
   }
 }

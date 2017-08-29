@@ -14,29 +14,24 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.command;
-
-import static org.junit.Assert.*;
+package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.config.properties.SlamProperties;
 import it.reply.orchestrator.dal.repository.OidcTokenRepository;
-import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.service.SlamServiceImpl;
-import it.reply.orchestrator.service.commands.GetSlam;
-import it.reply.orchestrator.workflow.RankCloudProvidersWorkflowTest;
+import it.reply.orchestrator.workflow.RankCloudProvidersWorkflowIT;
 
 import org.junit.Before;
 import org.junit.Test;
 import org.kie.api.executor.ExecutionResults;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
 import java.net.URI;
 
-public class GetSLAMCommandTest extends BaseRankCloudProviderCommandTest<GetSlam> {
+public class GetSlamTest extends BaseRankCloudProvidersCommandTest<GetSlam> {
 
   @InjectMocks
   private GetSlam getSLAMCommand;
@@ -56,28 +51,24 @@ public class GetSLAMCommandTest extends BaseRankCloudProviderCommandTest<GetSlam
 
   private final String endpoint = "https://www.endpoint.com";
 
-  @Before
-  public void setup() {
-    MockitoAnnotations.initMocks(this);
-    slamProperties.setUrl(URI.create(endpoint));
+  public GetSlamTest() {
+    super(new GetSlam());
   }
 
-  @Override
-  protected GetSlam getCommand() {
-    return getSLAMCommand;
+  @Before
+  public void setup() {
+    slamProperties.setUrl(URI.create(endpoint));
   }
 
   @Test
   public void doexecuteSuccesfully() throws Exception {
 
-    RankCloudProvidersWorkflowTest.mockSlam(mockServer, slamProperties.getUrl());
+    RankCloudProvidersWorkflowIT.mockSlam(mockServer, slamProperties.getUrl());
 
-    RankCloudProvidersMessage message = new RankCloudProvidersMessage();
-    message.setDeploymentId(getDeploymentId());
-    
-    ExecutionResults er = executeCommand(message);
+    ExecutionResults result =
+        executeCommand("{\"deploymentId\":\"mmd34483-d937-4578-bfdb-ebe196bf82dd\"}");
 
-    assertEquals(true, commandSucceeded(er));
+    TestCommandHelper.assertBaseResults(true, result);
   }
 
 }

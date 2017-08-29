@@ -16,10 +16,8 @@
 
 package it.reply.orchestrator.service;
 
-import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.any;
-import static org.mockito.Matchers.anyMapOf;
-import static org.mockito.Matchers.anyString;
+import static org.junit.Assert.*;
+import static org.mockito.Matchers.*;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -34,7 +32,7 @@ import it.infn.ba.indigo.chronos.client.ChronosClient;
 import it.infn.ba.indigo.chronos.client.model.v1.Job;
 import it.reply.orchestrator.config.properties.ChronosProperties;
 import it.reply.orchestrator.config.properties.OrchestratorProperties;
-import it.reply.orchestrator.config.specific.WebAppConfigurationAware;
+import it.reply.orchestrator.config.specific.ToscaParserAwareTest;
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
@@ -57,7 +55,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -65,7 +62,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class ChronosServiceTest extends WebAppConfigurationAware {
+public class ChronosServiceTest extends ToscaParserAwareTest {
 
   @InjectMocks
   private ChronosServiceImpl chronosService;
@@ -77,8 +74,11 @@ public class ChronosServiceTest extends WebAppConfigurationAware {
   private OrchestratorProperties orchestratorProperties;
 
   @Spy
-  @Autowired
-  private ToscaService toscaService;
+  @InjectMocks
+  private ToscaServiceImpl toscaService;
+  
+  @Spy
+  private IndigoInputsPreProcessorService indigoInputsPreProcessorService;
 
   @Mock
   private DeploymentStatusHelper deploymentStatusHelper;
@@ -97,6 +97,11 @@ public class ChronosServiceTest extends WebAppConfigurationAware {
     chronosProperties.setUsername(username);
     chronosProperties.setPassword(password);
     orchestratorProperties.setJobChunkSize(100);
+  }
+
+  @Override
+  protected ToscaServiceImpl getToscaService() {
+    return toscaService;
   }
 
   @Test

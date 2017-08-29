@@ -16,60 +16,70 @@
 
 package it.reply.orchestrator.service.commands;
 
-import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.*;
 
-import it.reply.orchestrator.command.TestCommandHelper;
 import it.reply.orchestrator.service.CallbackService;
 import it.reply.orchestrator.utils.WorkflowConstants;
-import it.reply.workflowmanager.utils.Constants;
 
-import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.kie.api.executor.CommandContext;
+import org.kie.api.executor.ExecutionResults;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 import java.util.UUID;
 
-public class NotifyCommandTest {
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+
+@RunWith(JUnitParamsRunner.class)
+public class NotifyTest {
+
+  @Rule
+  public MockitoRule rule = MockitoJUnit.rule();
+
+  @InjectMocks
+  private Notify notifyCommand;
 
   @Mock
   private CallbackService callbackService;
 
-  private Notify notifyCommand;
-
-  @Before
-  public void setUp() {
-    MockitoAnnotations.initMocks(this);
-    notifyCommand = new Notify(callbackService);
-  }
-
   @Test
-  public void doExecuteSuccesfully() throws Exception {
+  @Parameters({ "true", "false" })
+  public void doExecuteSuccesfully(boolean serviceResult) throws Exception {
     String deploymentId = UUID.randomUUID().toString();
 
-    CommandContext ctx = TestCommandHelper.buildCommandContext()
+    CommandContext ctx = TestCommandHelper
+        .buildCommandContext()
         .withParam(WorkflowConstants.WF_PARAM_DEPLOYMENT_ID, deploymentId)
         .get();
 
-    Mockito.when(callbackService.doCallback(deploymentId)).thenReturn(true);
-    boolean result = (boolean) notifyCommand.customExecute(ctx).getData(Constants.RESULT);
-    assertEquals(true, result);
+    when(callbackService.doCallback(deploymentId)).thenReturn(serviceResult);
+
+    ExecutionResults result = notifyCommand.customExecute(ctx);
+
+    TestCommandHelper.assertBaseResults(serviceResult, result);
 
   }
 
   @Test
-  public void doExecuteWithoutUrlSuccesfully() throws Exception {
+  public void doExecuteWithRuntimeException() throws Exception {
     String deploymentId = UUID.randomUUID().toString();
 
-    CommandContext ctx = TestCommandHelper.buildCommandContext()
+    CommandContext ctx = TestCommandHelper
+        .buildCommandContext()
         .withParam(WorkflowConstants.WF_PARAM_DEPLOYMENT_ID, deploymentId)
         .get();
 
-    Mockito.when(callbackService.doCallback(deploymentId)).thenThrow(new RuntimeException());
-    boolean result = (boolean) notifyCommand.customExecute(ctx).getData(Constants.RESULT);
-    assertEquals(false, result);
+    when(callbackService.doCallback(deploymentId)).thenThrow(new RuntimeException("some error"));
+
+    ExecutionResults result = notifyCommand.customExecute(ctx);
+
+    TestCommandHelper.assertBaseResults(false, result);
 
   }
 

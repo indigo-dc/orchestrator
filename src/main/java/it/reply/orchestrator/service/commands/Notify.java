@@ -26,7 +26,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @AllArgsConstructor
@@ -36,14 +35,13 @@ public class Notify extends BaseCommand<Notify> {
   private CallbackService callbackService;
 
   @Override
-  @Transactional
   public ExecutionResults customExecute(CommandContext ctx) {
     String deploymentId = getRequiredParameter(ctx, WorkflowConstants.WF_PARAM_DEPLOYMENT_ID);
     try {
       boolean result = callbackService.doCallback(deploymentId);
       return resultOccurred(result);
     } catch (RuntimeException ex) {
-      LOG.error("Error tring to executing callback for deployment {}", deploymentId, ex);
+      LOG.error("Error executing callback for deployment {}", deploymentId, ex);
       return resultOccurred(false);
     }
   }

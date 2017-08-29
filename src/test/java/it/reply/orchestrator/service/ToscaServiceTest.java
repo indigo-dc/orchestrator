@@ -16,10 +16,8 @@
 
 package it.reply.orchestrator.service;
 
-import static org.hamcrest.CoreMatchers.instanceOf;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.CoreMatchers.*;
+import static org.junit.Assert.*;
 
 import alien4cloud.model.components.AbstractPropertyValue;
 import alien4cloud.model.components.ComplexPropertyValue;
@@ -31,16 +29,16 @@ import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingException;
 
-import it.reply.orchestrator.config.specific.WebAppConfigurationAware;
+import it.reply.orchestrator.config.specific.ToscaParserAwareTest;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.util.TestUtil;
 import it.reply.orchestrator.utils.CommonUtils;
 
-import org.junit.Rule;
+import org.assertj.core.api.Assertions;
 import org.junit.Test;
-import org.junit.rules.ExpectedException;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.InjectMocks;
+import org.mockito.Spy;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -49,13 +47,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class ToscaServiceTest extends WebAppConfigurationAware {
+public class ToscaServiceTest extends ToscaParserAwareTest {
 
-  @Autowired
-  private ToscaService toscaService;
+  @InjectMocks
+  protected ToscaServiceImpl toscaService;
 
-  @Rule
-  public ExpectedException thrown = ExpectedException.none();
+  @Spy
+  private IndigoInputsPreProcessorService indigoInputsPreProcessorService;
+  
+  @Override
+  protected ToscaServiceImpl getToscaService() {
+    return toscaService;
+  }
 
   public static final String TEMPLATES_BASE_DIR = "./src/test/resources/tosca/";
   public static final String TEMPLATES_INPUT_BASE_DIR = TEMPLATES_BASE_DIR + "inputs/";
@@ -188,7 +191,8 @@ public class ToscaServiceTest extends WebAppConfigurationAware {
 
   @Test
   public void checkUserInputRequiredNoDefaultValueNotGiven() throws Exception {
-    checkUserInputGeneric("tosca_inputs_required_not_given.yaml", "required and is not present");
+    checkUserInputGeneric("tosca_inputs_required_not_given.yaml",
+        "Input <cpus> is required and is not present in the user's input list, nor has a default value");
   }
 
   @Test
@@ -198,12 +202,13 @@ public class ToscaServiceTest extends WebAppConfigurationAware {
   }
 
   private void checkUserInputGeneric(String templateName, String expectedMessage) throws Exception {
-    thrown.expect(ToscaException.class);
-    thrown.expectMessage(expectedMessage);
 
     String template = TestUtil.getFileContentAsString(TEMPLATES_INPUT_BASE_DIR + templateName);
     Map<String, Object> inputs = new HashMap<String, Object>();
-    toscaService.prepareTemplate(template, inputs);
+    Assertions
+        .assertThatThrownBy(() -> toscaService.prepareTemplate(template, inputs))
+        .isInstanceOf(ToscaException.class)
+        .hasMessage(expectedMessage);
   }
 
   @Test
