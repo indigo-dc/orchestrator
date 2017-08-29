@@ -23,6 +23,7 @@ import com.google.common.primitives.Primitives;
 import alien4cloud.deployment.InputsPreProcessorService;
 import alien4cloud.model.components.AbstractPropertyValue;
 import alien4cloud.model.components.ComplexPropertyValue;
+import alien4cloud.model.components.ConcatPropertyValue;
 import alien4cloud.model.components.FunctionPropertyValue;
 import alien4cloud.model.components.ListPropertyValue;
 import alien4cloud.model.components.Operation;
@@ -180,6 +181,28 @@ public class IndigoInputsPreProcessorService {
               "Failed to replace input function on <%s>, caused by: %s",
               propertyName, ex.getMessage()), ex);
         }
+      }
+    } else if (propertyValue instanceof ConcatPropertyValue) {
+      ConcatPropertyValue concatPropertyValue = (ConcatPropertyValue) propertyValue;
+      processGetInput(templateInputs, inputs, concatPropertyValue.getParameters(),
+          String.format("%s[concat]", propertyName));
+      boolean allParametersAreScalarValues = concatPropertyValue
+          .getParameters()
+          .stream()
+          .allMatch(ScalarPropertyValue.class::isInstance);
+      if (allParametersAreScalarValues) {
+        // if all the parameters of the concat functyion are scalars they can be joined
+        // TODO should we raise an error if Complex or ListPropertyValue are encountered?
+        ScalarPropertyValue scalarPropertyValue = new ScalarPropertyValue(concatPropertyValue
+            .getParameters()
+            .stream()
+            .map(ScalarPropertyValue.class::cast)
+            .map(ScalarPropertyValue::getValue)
+            .collect(Collectors.joining()));
+        scalarPropertyValue.setPrintable(true);
+        return Optional.of(scalarPropertyValue);
+      } else {
+        return Optional.of(propertyValue);
       }
     } else if (propertyValue instanceof ComplexPropertyValue) {
       processGetInput(templateInputs, inputs, ((ComplexPropertyValue) propertyValue).getValue(),
