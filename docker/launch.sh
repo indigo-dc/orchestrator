@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #
 # Copyright © 2015-2017 Santer Reply S.p.A.
 #
@@ -15,67 +15,30 @@
 # limitations under the License.
 #
 
-java -jar /usr/share/java/saxon.jar -o:$JBOSS_HOME/standalone/configuration/$JBOSS_CONF_FILE -s:$JBOSS_HOME/standalone/configuration/$JBOSS_CONF_FILE -xsl:/datasourcesConfig.xsl \
-	orchestrator.DB.endpoint=$ORCHESTRATOR_DB_ENDPOINT \
-	orchestrator.DB.name=$ORCHESTRATOR_DB_NAME \
-	orchestrator.DB.user=$ORCHESTRATOR_DB_USER \
-	orchestrator.DB.pwd=$ORCHESTRATOR_DB_PWD \
-	workflow.DB.endpoint=$WORKFLOW_DB_ENDPOINT \
-	workflow.DB.name=$WORKFLOW_DB_NAME \
-	workflow.DB.user=$WORKFLOW_DB_USER \
-	workflow.DB.pwd=$WORKFLOW_DB_PWD \
-	jsonLogging=${JSON_LOGGING:-false}
+set -o errexit
+set -o pipefail
+set -o nounset
 
-CHRONOS_PROP_FILE="$JBOSS_HOME/standalone/deployments/$WAR_NAME/WEB-INF/classes/chronos/chronos.properties"
-CMDB_PROP_FILE="$JBOSS_HOME/standalone/deployments/$WAR_NAME/WEB-INF/classes/cmdb/cmdb.properties"
-SLAM_PROP_FILE="$JBOSS_HOME/standalone/deployments/$WAR_NAME/WEB-INF/classes/slam/slam.properties"
-CPR_PROP_FILE="$JBOSS_HOME/standalone/deployments/$WAR_NAME/WEB-INF/classes/cloud-provider-ranker/cloud-provider-ranker.properties"
+export DATASOURCE_ORCHESTRATOR_URL="jdbc:mysql://${ORCHESTRATOR_DB_ENDPOINT}/${ORCHESTRATOR_DB_NAME}?useSSL=false"
+export DATASOURCE_ORCHESTRATOR_USERNAME="${ORCHESTRATOR_DB_USER}"
+export DATASOURCE_ORCHESTRATOR_PASSWORD="${ORCHESTRATOR_DB_PWD}"
 
-if [[ $CHRONOS_ENDPOINT ]];
-	then sed -i "s/^\(chronos\.endpoint=\).*$/\1$(echo $CHRONOS_ENDPOINT | sed -e 's/[\/&]/\\&/g')/" ${CHRONOS_PROP_FILE};
-fi;
+export DATASOURCE_WORKFLOW_URL="jdbc:mysql://${WORKFLOW_DB_ENDPOINT}/${WORKFLOW_DB_NAME}?useSSL=false"
+export DATASOURCE_WORKFLOW_USERNAME="${WORKFLOW_DB_USER}"
+export DATASOURCE_WORKFLOW_PASSWORD="${WORKFLOW_DB_PWD}"
 
-if [[ $CHRONOS_USERNAME ]];
-	then sed -i "s/^\(chronos\.username=\).*$/\1$(echo $CHRONOS_USERNAME | sed -e 's/[\/&]/\\&/g')/" ${CHRONOS_PROP_FILE};
-fi;
-
-if [[ $CHRONOS_PASSWORD ]];
-	then sed -i "s/^\(chronos\.password=\).*$/\1$(echo $CHRONOS_PASSWORD | sed -e 's/[\/&]/\\&/g')/" ${CHRONOS_PROP_FILE};
-fi;
-
-if [[ $CHRONOS_PROVIDER ]];
-	then sed -i "s/^\(chronos\.cloudProviderName=\).*$/\1$(echo $CHRONOS_PROVIDER | sed -e 's/[\/&]/\\&/g')/" ${CHRONOS_PROP_FILE};
-fi;
-
-if [[ $CMDB_ENDPOINT ]];
-	then sed -i "s/^\(cmdb\.url=\).*$/\1$(echo $CMDB_ENDPOINT | sed -e 's/[\/&]/\\&/g')/" ${CMDB_PROP_FILE};
-fi;
-
-if [[ $SLAM_ENDPOINT ]];
-	then sed -i "s/^\(slam\.url=\).*$/\1$(echo $SLAM_ENDPOINT | sed -e 's/[\/&]/\\&/g')/" ${SLAM_PROP_FILE};
-fi;
-
-if [[ $CPR_ENDPOINT ]];
-	then sed -i "s/^\(cloud-provider-ranker\.url=\).*$/\1$(echo $CPR_ENDPOINT | sed -e 's/[\/&]/\\&/g')/" ${CPR_PROP_FILE};
-fi;
-
-################################
-
-if [ "${ENABLE_DEBUG}" = "true" ];
-	then DEBUG_ARG="--debug";
-	else DEBUG_ARG="";
+if [ "${ENABLE_DEBUG:-false}" = "true" ];
+	then JAVA_OPTS="${JAVA_OPTS} -Xdebug -Xrunjdwp:server=y,transport=dt_socket,address=8787,suspend=n";
 fi
 
-CLUSTER_MESSAGING_PASSWORD="pwd"
-
 wait_for() {
-  host=${1%:*}
-  port=${1#*:}
-  echo Waiting for $host to listen on $port and being ready...
-  while ! echo -n | nc -w1 $host $port > /dev/null 2>&1; do echo Waiting...; sleep 2; done
+  HOST="${1%:*}"
+  PORT="${1#*:}"
+  echo Waiting for "${1}" to be ready...
+  while ! echo -n | nc -w1 "${HOST}" "${PORT}" > /dev/null 2>&1; do echo Still waiting for "${1}"...; sleep 2; done
+  echo "${1}" is ready!
 }
-wait_for $ORCHESTRATOR_DB_ENDPOINT
-wait_for $WORKFLOW_DB_ENDPOINT
+wait_for "${ORCHESTRATOR_DB_ENDPOINT}"
+wait_for "${WORKFLOW_DB_ENDPOINT}"
 
-exec "$@" -c $JBOSS_CONF_FILE -Djboss.bind.address=$HOSTNAME -Djboss.bind.address.management=$HOSTNAME \
-	-Djgroups.bind_addr=$HOSTNAME -Djboss.node.name=$HOSTNAME -Djboss.messaging.cluster.password=$CLUSTER_MESSAGING_PASSWORD $DEBUG_ARG
+exec "${@}" ${JAVA_OPTS} -Djava.security.egd=file:/dev/./urandom -jar "${ARTIFACT_NAME}"
