@@ -19,14 +19,11 @@ package it.reply.orchestrator.config;
 import it.reply.orchestrator.config.filters.CustomRequestLoggingFilter;
 import it.reply.orchestrator.config.properties.OrchestratorProperties;
 
-import org.springframework.beans.factory.config.YamlPropertiesFactoryBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.io.Resource;
 import org.springframework.web.client.RestTemplate;
 
 @Configuration
@@ -51,24 +48,6 @@ public class WebAppInitializer {
   @Bean
   public CustomRequestLoggingFilter customRequestLoggingFilter() {
     return new CustomRequestLoggingFilter();
-  }
-
-  /**
-   * Create a YamlPropertiesFactoryBean for OIDC configuration.
-   * 
-   * @param applicationContext
-   *          the application context
-   * @return the factory
-   */
-  @Bean
-  public YamlPropertiesFactoryBean oidcYamlFactoryBean(ApplicationContext applicationContext) {
-    String resolvedPath = applicationContext
-        .getEnvironment()
-        .resolvePlaceholders("${conf-file-path.oidc}");
-    Resource resource = applicationContext.getResource(resolvedPath);
-    YamlPropertiesFactoryBean factory = new YamlPropertiesFactoryBean();
-    factory.setResources(resource);
-    return factory;
   }
 
   @Bean
