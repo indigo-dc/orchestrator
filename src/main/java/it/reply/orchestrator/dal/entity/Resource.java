@@ -79,18 +79,6 @@ public class Resource extends AbstractResourceEntity {
   @Convert(converter = CloudProviderEndpointToJsonConverter.class)
   private CloudProviderEndpoint cloudProviderEndpoint;
 
-  /**
-   * Creates a new Resource object.
-   * 
-   * @param toscaNodeName
-   *          the TOSCA node name of the resource
-   */
-  public Resource(String toscaNodeName) {
-    super();
-    this.toscaNodeName = toscaNodeName;
-    state = NodeStates.INITIAL;
-  }
-
   public void addRequiredResource(Resource resource) {
     requires.add(resource);
     resource.requiredBy.add(this);

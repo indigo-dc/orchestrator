@@ -141,12 +141,13 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
 
     Group group = createGroup(deployment);
 
-    group.setId(deployment.getId());
+    String groupId = deployment.getId();
+    deployment.setEndpoint(groupId);
+    group.setId(groupId);
 
     LOG.info("Creating Marathon App Group for deployment {} with definition:\n{}",
         deployment.getId(), group);
     getMarathonClient().createGroup(group);
-    deployment.setEndpoint(group.getId());
     return true;
 
   }
@@ -154,7 +155,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   @Override
   public boolean isDeployed(DeploymentMessage deploymentMessage) throws DeploymentException {
     Deployment deployment = getDeployment(deploymentMessage);
-    String groupId = deployment.getEndpoint();
+    String groupId = deployment.getId();
     // final Marathon client = getMarathonClient();
     // Group group = client.getGroup(groupId);
     // TMP TODO remove it and use an use an update marathon version
@@ -213,10 +214,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   public boolean doUndeploy(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
 
-    String groupId = deployment.getEndpoint();
-    if (groupId == null) {
-      return true;
-    }
+    String groupId = deployment.getId();
 
     try {
       getMarathonClient().deleteGroup(groupId, true);
@@ -232,10 +230,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   public boolean isUndeployed(DeploymentMessage deploymentMessage) throws DeploymentException {
     boolean isUndeployed = false;
     Deployment deployment = getDeployment(deploymentMessage);
-    String groupId = deployment.getEndpoint();
-    if (groupId == null) {
-      return true;
-    }
+    String groupId = deployment.getId();
     try {
       getMarathonClient().getGroup(groupId);
     } catch (MarathonException ex) {
@@ -357,19 +352,16 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   @Override
   public Optional<String> getAdditionalErrorInfoInternal(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
-    String prefix = String.format("/%s/", deployment.getEndpoint());
+    String groupId = deployment.getId();
+    String prefix = String.format("/%s/", groupId);
     Map<String, Resource> resources = deployment
         .getResources()
         .stream()
         .filter(resource -> toscaService.isOfToscaType(resource,
             ToscaConstants.Nodes.MARATHON))
         .collect(
-            Collectors.toMap(resource -> prefix + resource.getIaasId(), Function.identity()));
+            Collectors.toMap(resource -> prefix + resource.getId(), Function.identity()));
 
-    String groupId = deployment.getEndpoint();
-    if (groupId == null) {
-      return Optional.empty();
-    }
     Group group = getPolulatedGroup(groupId);
 
     List<App> failedApps = Optional
@@ -388,7 +380,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
             Resource resource = resources.get(app.getId());
             failedAppsMessage.add(String.format(
                 "%n - App <%s> with id <%s> (Marathon id %s): %s", resource.getToscaNodeName(),
-                resource.getId(), resource.getIaasId(), appMessage));
+                resource.getId(), resource.getId(), appMessage));
           });
     }
 

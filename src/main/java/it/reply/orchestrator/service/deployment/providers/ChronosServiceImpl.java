@@ -21,6 +21,7 @@ import com.google.common.primitives.Ints;
 import alien4cloud.model.components.ScalarPropertyValue;
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.model.topology.RelationshipTemplate;
+import alien4cloud.model.topology.Topology;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.normative.IntegerType;
 
@@ -65,6 +66,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -103,10 +105,6 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
         chronosProperties.getUsername(), chronosProperties.getPassword());
   }
 
-  public Collection<Job> getJobs(Chronos client) {
-    return client.getJobs();
-  }
-
   @Override
   public boolean doDeploy(DeploymentMessage deploymentMessage) {
 
@@ -114,6 +112,8 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     // Update status of the deployment - if not already done (remember the Iterative mode)
     if (deployment.getTask() != Task.DEPLOYER) {
       deployment.setTask(Task.DEPLOYER);
+    }
+    if (deployment.getEndpoint() == null) {
       deployment.setEndpoint("<NO_ENDPOINT>");
     }
 
@@ -136,7 +136,12 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
       deploymentMessage.setTemplateTopologicalOrderIterator(
           new TemplateTopologicalOrderIterator(topoOrder
               .stream()
-              .map(e -> new Resource(e.getToscaNodeName()))
+              .map(e -> {
+                Resource res = new Resource();
+                res.setToscaNodeName(e.getToscaNodeName());
+                res.setState(NodeStates.INITIAL);
+                return res;
+              })
               .collect(Collectors.toList())));
     }
 
@@ -384,30 +389,40 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     // Delete all Jobs on Chronos
     Deployment deployment = getDeployment(deploymentMessage);
 
-    String deploymentEndpoint = deployment.getEndpoint();
-    if (deploymentEndpoint == null) {
-      return true;
-    }
+    try {
+      // Generate INDIGOJob graph
+      // FIXME: Do not regenerate every time (just for prototyping!)
+      // Generate INDIGOJob graph
+      if (deploymentMessage.getChronosJobGraph() == null) {
+        LOG.debug("Generating job graph for deployment <{}>", deployment.getId());
+        deploymentMessage.setChronosJobGraph(
+            generateJobGraph(deployment, deploymentMessage.getOneDataParameters()));
+      }
 
-    // Generate INDIGOJob graph
-    // FIXME: Do not regenerate every time (just for prototyping!)
-    // Generate INDIGOJob graph
-    if (deploymentMessage.getChronosJobGraph() == null) {
-      LOG.debug("Generating job graph for deployment <{}>", deployment.getId());
-      deploymentMessage.setChronosJobGraph(
-          generateJobGraph(deployment, deploymentMessage.getOneDataParameters()));
-    }
+      // Create nodes iterator if not done yet
+      if (deploymentMessage.getTemplateTopologicalOrderIterator() == null) {
+        // Create topological order
+        List<IndigoJob> topoOrder = getJobsTopologicalOrder(deploymentMessage.getChronosJobGraph());
 
-    // Create nodes iterator if not done yet
-    if (deploymentMessage.getTemplateTopologicalOrderIterator() == null) {
-      // Create topological order
-      List<IndigoJob> topoOrder = getJobsTopologicalOrder(deploymentMessage.getChronosJobGraph());
-
-      deploymentMessage.setTemplateTopologicalOrderIterator(
-          new TemplateTopologicalOrderIterator(topoOrder
-              .stream()
-              .map(e -> new Resource(e.getToscaNodeName()))
-              .collect(Collectors.toList())));
+        deploymentMessage.setTemplateTopologicalOrderIterator(
+            new TemplateTopologicalOrderIterator(topoOrder
+                .stream()
+                .map(e -> {
+                  Resource res = new Resource();
+                  res.setToscaNodeName(e.getToscaNodeName());
+                  res.setState(NodeStates.INITIAL);
+                  return res;
+                })
+                .collect(Collectors.toList())));
+      }
+    } catch (RuntimeException ex) {
+      LOG.error(
+          "Error generating the topology for deployment {} during its deletion.\n{}",
+          deployment.getId(), "Deployment will be marked as deleted", ex);
+      // if we can't generate the topology -> just set as deleted
+      // as we don't check anymore for the nullness of the deployment endpoint, we must be able to
+      // delete deployment for which the deploy failure also happened during the topology generation
+      return true; // noMoreJob = true
     }
 
     TemplateTopologicalOrderIterator templateTopologicalOrderIterator =
@@ -485,6 +500,9 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
         // Chronos API hack (to avoid error 400 if the job to delete does not exist)
         if (ce.getStatus() != 400 && ce.getStatus() != 404) {
           throw new RuntimeException(String.format("Status Code: <%s>", ce.getStatus()));
+        } else {
+          // TODO do we need to consider all the other jobs as not existing if endpoint is null? 
+          // Attentions: Are we sure that graph dependency generation is stable?
         }
       }
     } catch (Exception ex) {
@@ -579,7 +597,10 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
 
     ArchiveRoot ar = toscaService.prepareTemplate(customizedTemplate, deployment.getParameters());
 
-    Map<String, NodeTemplate> nodes = ar.getTopology().getNodeTemplates();
+    Map<String, NodeTemplate> nodes = Optional
+        .ofNullable(ar.getTopology())
+        .map(Topology::getNodeTemplates)
+        .orElseGet(HashMap::new);
 
     // don't check for cycles, already validated at web-service time
     DirectedMultigraph<NodeTemplate, RelationshipTemplate> graph =
