@@ -28,15 +28,14 @@ import alien4cloud.model.topology.Topology;
 import alien4cloud.tosca.model.ArchiveRoot;
 
 import it.infn.ba.indigo.chronos.client.Chronos;
-import it.infn.ba.indigo.chronos.client.ChronosClient;
 import it.infn.ba.indigo.chronos.client.model.v1.Job;
-import it.reply.orchestrator.config.properties.ChronosProperties;
 import it.reply.orchestrator.config.properties.OrchestratorProperties;
 import it.reply.orchestrator.config.specific.ToscaParserAwareTest;
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
+import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage.TemplateTopologicalOrderIterator;
 import it.reply.orchestrator.dto.onedata.OneData;
@@ -47,6 +46,7 @@ import it.reply.orchestrator.service.deployment.providers.DeploymentStatusHelper
 import it.reply.orchestrator.util.TestUtil;
 import it.reply.orchestrator.utils.CommonUtils;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -56,7 +56,6 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -65,10 +64,8 @@ import java.util.stream.Collectors;
 public class ChronosServiceTest extends ToscaParserAwareTest {
 
   @InjectMocks
-  private ChronosServiceImpl chronosService;
-  
   @Spy
-  private ChronosProperties chronosProperties;
+  private ChronosServiceImpl chronosService;
   
   @Spy
   private OrchestratorProperties orchestratorProperties;
@@ -86,17 +83,16 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
   @Mock
   private DeploymentRepository deploymentRepository;
   
-  private final static String endpoint = "https://www.endpoint.it";
-  private final static String username = "username";
-  private final static String password = "password";
+  @Mock
+  private ResourceRepository resourceRepository;
+  
+  @Mock
+  private Chronos chronos;
 
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
-    chronosProperties.setUrl(URI.create(endpoint));
-    chronosProperties.setUsername(username);
-    chronosProperties.setPassword(password);
-    orchestratorProperties.setJobChunkSize(100);
+    Mockito.doReturn(chronos).when(chronosService).getChronosClient();
   }
 
   @Override
@@ -222,18 +218,6 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
   }
 
   @Test
-  public void getChronosClientAndChronosJob() {
-
-    Chronos result = ChronosClient.getInstanceWithBasicAuth(endpoint, username, password);
-    assertEquals(result, chronosService.getChronosClient());
-
-    result = Mockito.mock(Chronos.class);
-    Mockito.when(result.getJobs()).thenReturn(new ArrayList<>());
-
-    assertEquals(new ArrayList<>(), chronosService.getJobs(result));
-  }
-
-  @Test
   public void doDeploy() throws Exception {
     Deployment deployment = ControllerTestUtils.createDeployment(2);
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
@@ -245,7 +229,7 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
     .thenReturn(deployment);
     Mockito.doReturn(ar).when(toscaService).prepareTemplate(anyString(),
         anyMapOf(String.class, Object.class));
-    Assert.assertTrue(chronosService.doDeploy(dm));
+    Assertions.assertThat(chronosService.doDeploy(dm)).isTrue();
   }
 
   @Test
@@ -324,7 +308,7 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
   }
   
   @Test
-  public void doUndeployWithoutChronosJob() {
+  public void doUndeployWithChronosJob() {
     Deployment deployment = ControllerTestUtils.createDeployment(2);
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
     Map<String, IndigoJob> jobGraph = new HashMap<>();
@@ -337,11 +321,11 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
     Mockito.when(deploymentRepository.findOne(deployment.getId()))
     .thenReturn(deployment);
     
-    Assert.assertTrue(chronosService.doUndeploy(dm));
+   Assertions.assertThat(chronosService.doUndeploy(dm)).isTrue();
   }
   
   @Test
-  public void doUndeployWithChronosJob() {
+  public void doUndeployWithoutChronosJob() {
     Deployment deployment = ControllerTestUtils.createDeployment(2);
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
     Mockito.when(deploymentRepository.findOne(deployment.getId()))
