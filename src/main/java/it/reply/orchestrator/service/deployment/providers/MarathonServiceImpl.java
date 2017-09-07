@@ -31,13 +31,13 @@ import it.reply.orchestrator.dto.mesos.marathon.MarathonApp;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.ToscaService;
+import it.reply.orchestrator.service.deployment.providers.factory.MarathonClientFactory;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 
 import lombok.extern.slf4j.Slf4j;
 
 import mesosphere.marathon.client.Marathon;
-import mesosphere.marathon.client.MarathonClient;
 import mesosphere.marathon.client.MarathonException;
 import mesosphere.marathon.client.model.v2.App;
 import mesosphere.marathon.client.model.v2.Container;
@@ -89,9 +89,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   }
 
   protected Marathon getMarathonClient() {
-    LOG.info("Generating Marathon client with parameters: {}", marathonProperties);
-    return MarathonClient.getInstanceWithBasicAuth(marathonProperties.getUrl().toString(),
-        marathonProperties.getUsername(), marathonProperties.getPassword());
+    return MarathonClientFactory.build(marathonProperties);
   }
 
   protected Group createGroup(Deployment deployment) {
