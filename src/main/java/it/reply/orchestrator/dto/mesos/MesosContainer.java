@@ -22,6 +22,8 @@ import com.google.common.collect.Multimap;
 import lombok.Data;
 import lombok.Getter;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -47,9 +49,10 @@ public class MesosContainer {
   @Nonnull
   private Type type;
 
+  @Nullable
   private String image;
 
-  private String network = "BRIDGE";
+  private String network;
 
   @Nonnull
   private List<MesosPortMapping> portMappings = new ArrayList<>();
@@ -57,9 +60,21 @@ public class MesosContainer {
   @Nonnull
   private Multimap<String, String> parameters = ArrayListMultimap.create();
 
-  private boolean forcePullImage;
+  @Nullable
+  private Boolean forcePullImage;
+
+  @Nullable
+  private Boolean priviliged;
 
   @Nonnull
   private List<String> volumes = new ArrayList<>();
+
+  public boolean isForcePullImage() {
+    return Boolean.TRUE.equals(forcePullImage);
+  }
+
+  public boolean isPriviliged() {
+    return Boolean.TRUE.equals(priviliged);
+  }
 
 }
