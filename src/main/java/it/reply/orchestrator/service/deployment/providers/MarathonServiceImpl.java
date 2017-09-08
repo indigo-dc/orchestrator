@@ -18,12 +18,14 @@ package it.reply.orchestrator.service.deployment.providers;
 
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.model.topology.RelationshipTemplate;
+import alien4cloud.model.topology.Topology;
 import alien4cloud.tosca.model.ArchiveRoot;
 
 import it.reply.orchestrator.annotation.DeploymentProviderQualifier;
 import it.reply.orchestrator.config.properties.MarathonProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
+import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.mesos.MesosContainer;
 import it.reply.orchestrator.dto.mesos.MesosPortMapping;
@@ -35,6 +37,7 @@ import it.reply.orchestrator.service.deployment.providers.factory.MarathonClient
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import mesosphere.marathon.client.Marathon;
@@ -53,7 +56,6 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jgrapht.graph.DirectedMultigraph;
 import org.jgrapht.traverse.TopologicalOrderIterator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -67,35 +69,37 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @DeploymentProviderQualifier(DeploymentProvider.MARATHON)
 @EnableConfigurationProperties(MarathonProperties.class)
 @Slf4j
+@AllArgsConstructor
 public class MarathonServiceImpl extends AbstractMesosDeploymentService<MarathonApp, App> {
 
-  private ToscaService toscaService;
+  private final ToscaService toscaService;
 
-  private MarathonProperties marathonProperties;
+  private final MarathonProperties marathonProperties;
 
-  @Autowired
-  public MarathonServiceImpl(ToscaService toscaService, MarathonProperties marathonProperties) {
-    this.toscaService = toscaService;
-    this.marathonProperties = marathonProperties;
-  }
+  private final ResourceRepository resourceRepository;
 
   protected Marathon getMarathonClient() {
     return MarathonClientFactory.build(marathonProperties);
   }
 
   protected Group createGroup(Deployment deployment) {
-    ArchiveRoot ar =
-        toscaService.prepareTemplate(deployment.getTemplate(), deployment.getParameters());
-    Map<String, NodeTemplate> nodes = ar.getTopology().getNodeTemplates();
+    ArchiveRoot ar = toscaService
+        .prepareTemplate(deployment.getTemplate(), deployment.getParameters());
+
+    Map<String, NodeTemplate> nodes = Optional
+        .ofNullable(ar.getTopology())
+        .map(Topology::getNodeTemplates)
+        .orElseGet(HashMap::new);
 
     // don't check for cycles, already validated at web-service time
     DirectedMultigraph<NodeTemplate, RelationshipTemplate> graph =
@@ -109,23 +113,17 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
         .filter(node -> toscaService.isOfToscaType(node, ToscaConstants.Nodes.MARATHON))
         .collect(Collectors.toList());
 
-    Map<String, Resource> resources = deployment
-        .getResources()
-        .stream()
-        .filter(resource -> toscaService.isOfToscaType(resource,
-            ToscaConstants.Nodes.MARATHON))
-        .collect(Collectors.toMap(Resource::getToscaNodeName, Function.identity()));
-
     Group group = new Group();
     List<App> apps = new ArrayList<>();
     for (NodeTemplate marathonNode : orderedMarathonApps) {
-      Resource appResource = resources.get(marathonNode.getName());
-      String id = appResource.getIaasId();
-      if (id == null) {
-        id = appResource.getId();
-        appResource.setIaasId(id);
-      }
-      MarathonApp marathonTask = buildTask(graph, marathonNode, id);
+
+      MarathonApp marathonTask = buildTask(graph, marathonNode, marathonNode.getName());
+      List<Resource> resources = resourceRepository
+          .findByToscaNodeNameAndDeployment_id(marathonNode.getName(), deployment.getId());
+
+      resources.forEach(resource -> resource.setIaasId(marathonTask.getId()));
+      marathonTask.setInstances(resources.size());
+
       App marathonApp = generateExternalTaskRepresentation(marathonTask);
       apps.add(marathonApp);
     }
@@ -154,10 +152,8 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   public boolean isDeployed(DeploymentMessage deploymentMessage) throws DeploymentException {
     Deployment deployment = getDeployment(deploymentMessage);
     String groupId = deployment.getId();
-    // final Marathon client = getMarathonClient();
-    // Group group = client.getGroup(groupId);
-    // TMP TODO remove it and use an use an update marathon version
-    Group group = this.getPolulatedGroup(groupId);
+
+    Group group = getPolulatedGroup(groupId);
     ///////////////////////////////////////////////////////////////
     Collection<App> apps = Optional.ofNullable(group.getApps()).orElseGet(ArrayList::new);
     LOG.debug("Marathon App Group for deployment {} current status:\n{}", deployment.getId(),
@@ -171,11 +167,12 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   }
 
   @Deprecated
+  // TODO remove it and use just getGroup with embed params (requires marathon client version >
+  // 6.0.0)
   private Group getPolulatedGroup(String groupId) throws MarathonException {
     final Marathon client = getMarathonClient();
     Group group = client.getGroup(groupId);
-    // LOG.debug("Marathon App Group for deployment {} current status:\n{}", deployment.getId(),
-    // group);
+
     Collection<App> apps = Optional.ofNullable(group.getApps()).orElseGet(Collections::emptyList);
 
     List<App> completeInfoApps = new ArrayList<>();
@@ -260,12 +257,10 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     app.setUris(marathonTask.getUris());
     app.setLabels(marathonTask.getLabels());
     app.setEnv(new HashMap<>(marathonTask.getEnv()));
+    app.setInstances(marathonTask.getInstances());
     marathonTask
         .getContainer()
         .ifPresent(mesosContainer -> app.setContainer(generateContainer(mesosContainer)));
-    //// HARDCODED BITS //////
-    app.setInstances(1);
-    //////////////////////////
     return app;
   }
 
@@ -303,7 +298,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     Port port = new Port();
     port.setContainerPort(portMapping.getContainerPort());
     port.setProtocol(portMapping.getProtocol().getName());
-    Optional.ofNullable(portMapping.getServicePort()).ifPresent(port::setServicePort);
+    port.setServicePort(portMapping.getServicePort());
     return port;
   }
 
@@ -351,43 +346,25 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   public Optional<String> getAdditionalErrorInfoInternal(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
     String groupId = deployment.getId();
-    String prefix = String.format("/%s/", groupId);
-    Map<String, Resource> resources = deployment
-        .getResources()
-        .stream()
-        .filter(resource -> toscaService.isOfToscaType(resource,
-            ToscaConstants.Nodes.MARATHON))
-        .collect(
-            Collectors.toMap(resource -> prefix + resource.getId(), Function.identity()));
 
     Group group = getPolulatedGroup(groupId);
 
-    List<App> failedApps = Optional
+    Stream<App> failedApps = Optional
         .ofNullable(group.getApps())
         .orElseGet(Collections::emptyList)
         .stream()
-        .filter(app -> !this.isAppDeployed(app))
-        .collect(Collectors.toList());
+        .filter(app -> !this.isAppDeployed(app));
 
-    List<String> failedAppsMessage = new ArrayList<>();
-    for (App app : failedApps) {
-      Optional
-          .ofNullable(app.getLastTaskFailure())
-          .map(failure -> failure.getMessage())
-          .ifPresent(appMessage -> {
-            Resource resource = resources.get(app.getId());
-            failedAppsMessage.add(String.format(
-                "%n - App <%s> with id <%s> (Marathon id %s): %s", resource.getToscaNodeName(),
-                resource.getId(), resource.getId(), appMessage));
-          });
-    }
+    String failedAppsMessage = failedApps
+        .map(App::getLastTaskFailure)
+        .filter(Objects::nonNull)
+        .map(Objects::toString)
+        .collect(Collectors.joining("\n"));
 
     if (failedAppsMessage.isEmpty()) {
       return Optional.empty();
     } else {
-      StringBuilder message = new StringBuilder("Some Application failed:");
-      failedAppsMessage.forEach(message::append);
-      return Optional.of(message.toString());
+      return Optional.of("Some Application failed:\n" + failedAppsMessage);
     }
   }
 }
