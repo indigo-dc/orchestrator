@@ -828,15 +828,15 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
           .stream()
           .map(this::generateVolume)
           .collect(Collectors.toList()));
-      //// HARDCODED BITS //////
-      Parameters param = new Parameters();
-      param.setKey("privileged");
-      param.setValue("true");
-      Collection<Parameters> parameters = new ArrayList<>();
-      parameters.add(param);
-      container.setParameters(parameters);
-      container.setForcePullImage(true);
-      //////////////////////////
+      container.setForcePullImage(mesosContainer.isForcePullImage());
+      if (mesosContainer.isPriviliged()) {
+        Parameters param = new Parameters();
+        param.setKey("privileged");
+        param.setValue("true");
+        Collection<Parameters> parameters = new ArrayList<>();
+        parameters.add(param);
+        container.setParameters(parameters);
+      }
 
     } else {
       throw new DeploymentException(

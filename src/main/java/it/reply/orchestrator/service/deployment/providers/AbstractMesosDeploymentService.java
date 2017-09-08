@@ -26,6 +26,7 @@ import alien4cloud.model.components.ScalarPropertyValue;
 import alien4cloud.model.topology.Capability;
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.model.topology.RelationshipTemplate;
+import alien4cloud.tosca.normative.BooleanType;
 import alien4cloud.tosca.normative.FloatType;
 import alien4cloud.tosca.normative.IntegerType;
 import alien4cloud.tosca.normative.InvalidPropertyValueException;
@@ -154,6 +155,20 @@ public abstract class AbstractMesosDeploymentService<T extends MesosTask<T>, S e
         .getValue();
 
     container.setImage(imageName);
+
+    toscaService
+        .<ScalarPropertyValue>getTypedNodePropertyByName(taskNode, "priviliged")
+        .ifPresent(value -> {
+          Boolean priviliged = toscaService.parseScalarPropertyValue(value, BooleanType.class);
+          container.setPriviliged(priviliged);
+        });
+
+    toscaService
+        .<ScalarPropertyValue>getTypedNodePropertyByName(taskNode, "force_pull_image")
+        .ifPresent(value -> {
+          Boolean forcePullImage = toscaService.parseScalarPropertyValue(value, BooleanType.class);
+          container.setForcePullImage(forcePullImage);
+        });
 
     Capability dockerCapability = getHostCapability(graph, taskNode);
 

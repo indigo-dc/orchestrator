@@ -283,9 +283,11 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
           .collect(Collectors.toList());
       docker.setPortMappings(ports);
 
+      docker.setForcePullImage(mesosContainer.isForcePullImage());
+      docker.setPrivileged(mesosContainer.isPriviliged());
+
       //// HARDCODED BITS //////
       docker.setNetwork("BRIDGE");
-      docker.setForcePullImage(true);
       //////////////////////////
     } else {
       throw new DeploymentException(
