@@ -28,7 +28,13 @@ import lombok.ToString;
 @ToString(callSuper = true)
 public class ChronosJob extends MesosTask<ChronosJob> {
 
+  private String schedule;
+
+  private String description;
+
   private Integer retries;
+
+  private String epsilon;
 
   @Override
   public final String getToscaNodeName() {

@@ -48,6 +48,7 @@ import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.service.DeploymentException;
+import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
@@ -637,6 +638,10 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
           .stream()
           .map(parentNode -> jobs.get(parentNode.getName()))
           .collect(Collectors.toList()));
+      if (mesosTask.getSchedule() != null && !mesosTask.getParents().isEmpty()) {
+        throw new ToscaException("Error creating Job <" + chronosNode.getName()
+            + ">: 'schedule' parameter and job depencency are both specified");
+      }
       Job chronosJob = generateExternalTaskRepresentation(mesosTask);
       IndigoJob indigoJob = new IndigoJob(chronosNode.getName(), chronosJob);
       indigoJob.setParents(parentNodes
@@ -753,6 +758,18 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
         .ifPresent(property -> job.setRetries(Ints
             .saturatedCast(toscaService.parseScalarPropertyValue(property, IntegerType.class))));
     
+    toscaService
+        .<ScalarPropertyValue>getTypedNodePropertyByName(taskNode, "schedule")
+        .ifPresent(property -> job.setSchedule(property.getValue()));
+
+    toscaService
+        .<ScalarPropertyValue>getTypedNodePropertyByName(taskNode, "description")
+        .ifPresent(property -> job.setDescription(property.getValue()));
+    
+    toscaService
+        .<ScalarPropertyValue>getTypedNodePropertyByName(taskNode, "epsilon")
+        .ifPresent(property -> job.setEpsilon(property.getValue()));
+    
     return job;
   }
 
@@ -760,6 +777,8 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
   protected Job generateExternalTaskRepresentation(ChronosJob mesosTask) {
     Job chronosJob = new Job();
     chronosJob.setName(mesosTask.getId());
+    chronosJob.setSchedule(mesosTask.getSchedule());
+    chronosJob.setDescription(mesosTask.getDescription());
     chronosJob.setRetries(mesosTask.getRetries());
     chronosJob.setCommand(mesosTask.getCmd());
     chronosJob.setUris(mesosTask.getUris());
@@ -779,6 +798,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     chronosJob.setCpus(mesosTask.getCpus());
     chronosJob.setMem(mesosTask.getMemSize());
     chronosJob.setConstraints(mesosTask.getConstraints());
+    chronosJob.setEpsilon(mesosTask.getEpsilon());
 
     chronosJob.setParents(
         mesosTask
@@ -786,15 +806,14 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
             .stream()
             .map(ChronosJob::getId)
             .collect(Collectors.toList()));
+    if (chronosJob.getParents().isEmpty()) {
+      chronosJob.setParents(null);
+    }
     
     mesosTask
         .getContainer()
         .ifPresent(mesosContainer -> chronosJob
             .setContainer(generateContainer(mesosContainer)));
-
-    //// HARDCODED BITS //////
-    chronosJob.setEpsilon("PT10S");
-    //////////////////////////
 
     return chronosJob;
   }
