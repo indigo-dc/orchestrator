@@ -28,6 +28,8 @@ import lombok.ToString;
 @ToString(callSuper = true)
 public class MarathonApp extends MesosTask<MarathonApp> {
 
+  private Integer instances;
+
   @Override
   public final String getToscaNodeName() {
     return ToscaConstants.Nodes.MARATHON;
