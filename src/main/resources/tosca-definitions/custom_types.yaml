@@ -361,6 +361,66 @@ node_types:
     properties:
       os_storage:
         type: string
+        description: Storage type (Iaas Block Storage (default), Onedata, Filesystem encryption)
+        default: "IaaS"
+        required: true
+      token:
+        type: string
+        description: Access token for onedata space
+        default: "not_a_token"
+        required: false
+      provider:
+        type: string
+        description: default OneProvider
+        default: "not_a_provider_url"
+        required: false
+      space:
+        type: string
+        description: Onedata space
+        default: "galaxy"
+        required: false
+    artifacts:
+      indigorepo_role:
+        file: indigo-dc.galaxycloud-indigorepo
+        type: tosca.artifacts.AnsibleGalaxy.role
+      oneclient_role:
+        file: indigo-dc.oneclient
+        type: tosca.artifacts.AnsibleGalaxy.role
+      galaxy_os_role:
+        file: indigo-dc.galaxycloud-os
+        type: tosca.artifacts.AnsibleGalaxy.role
+      galaxy_role:
+        file: indigo-dc.galaxycloud
+        type: tosca.artifacts.AnsibleGalaxy.role
+    interfaces:
+      Standard:
+        configure:
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/galaxy/galaxy_os_install.yml
+          inputs:
+            os_storage: { get_property: [ SELF, os_storage ] }
+            userdata_token: { get_property: [ SELF, token ] }
+            userdata_oneprovider: { get_property: [ SELF, provider ] }
+            userdata_space: { get_property: [ SELF, space ] }
+            galaxy_install_path: { get_property: [ SELF, install_path ] }
+            galaxy_user: { get_property: [ SELF, user ] }
+            galaxy_admin: { get_property: [ SELF, admin_email ] }
+            galaxy_admin_api_key: { get_property: [ SELF, admin_api_key ] }
+            galaxy_lrms: { get_property: [ SELF, lrms, type ] }
+            galaxy_version: { get_property: [ SELF, version ] }
+            galaxy_instance_description: { get_property: [ SELF, instance_description ] }
+            galaxy_instance_key_pub:  { get_property: [ SELF, instance_key_pub ] }
+            export_dir: { get_property: [ SELF, export_dir ] }
+
+  tosca.nodes.indigo.GalaxyPortalFastConfig:
+    derived_from: tosca.nodes.indigo.GalaxyPortalAndStorage
+    properties:
+      flavor:
+        type: string
+        description: name of the Galaxy flavor
+        required: true
+        default: galaxy-no-tools
+      os_storage:
+        type: string
         description: Storage type (Iaas Block Storage (default), Onedaata, Filesystem encryption)
         default: "IaaS"
         required: true
@@ -386,13 +446,13 @@ node_types:
       galaxy_os_role:
         file: indigo-dc.galaxycloud-os
         type: tosca.artifacts.AnsibleGalaxy.role
-      galaxy_role:
-        file: indigo-dc.galaxycloud
+      galaxy_role-fastconfig:
+        file: indigo-dc.galaxycloud-fastconfig
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/galaxy/galaxy_os_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/galaxy/galaxy_fastconfig.yml
           inputs:
             os_storage: { get_property: [ SELF, os_storage ] }
             userdata_token: { get_property: [ SELF, token ] }
@@ -441,6 +501,9 @@ node_types:
     artifacts:
       galaxy_role:
         file: indigo-dc.galaxy-tools,master
+        type: tosca.artifacts.AnsibleGalaxy.role
+      tooldeps_role:
+        file: indigo-dc.galaxycloud-tooldeps
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
@@ -938,6 +1001,7 @@ node_types:
       enable_chronos:
         type: boolean
         required: no
+        default: true
       chronos_enable_ssl:
         type: boolean
         required: no
@@ -953,6 +1017,7 @@ node_types:
       enable_nfs_share:
         type: boolean
         required: no
+        default: false
     artifacts:
       docker_agent_role:
         file: indigo-dc.docker
@@ -1037,6 +1102,12 @@ node_types:
       marathon_password:
         type: string
         required: yes
+      onedatatoken:
+        type: string
+        required: no
+      onedatacache:
+        type: string
+        required: no
     artifacts:
       cms_config_role:
         file: indigo-dc.cms_config
@@ -1055,6 +1126,8 @@ node_types:
             cms_config_squid_image: { get_property: [ SELF, cms_squid_image ] }
             cms_config_wn_image: { get_property: [ SELF, cms_wn_image ] }
             cms_config_proxycache_image: { get_property: [ SELF, cms_proxycache_image ]}
+            cms_config_onedatacache: { get_property: [ SELF, onedatacache ] }
+            cms_config_onedatatoken: { get_property: [ SELF, onedatatoken ] }
             marathon_user: { get_property: [ SELF, marathon_username ] }
             marathon_pass: { get_property: [ SELF, marathon_password ] }
     requirements:
@@ -1081,6 +1154,7 @@ node_types:
       enable_nfs_share:
         type: boolean
         required: no
+        default: false
     artifacts:
       docker_agent_role:
         file: indigo-dc.docker
@@ -1131,6 +1205,12 @@ node_types:
       cms_stageoutprefix_fallback:
         type: string
         required: yes
+      cms_input_path:
+        type: string
+        required: yes
+      cms_input_protocol:
+        type: string
+        required: yes
       mysquid_host:
         type: string
         required: yes
@@ -1161,6 +1241,8 @@ node_types:
             cms_config_stageoutsite_fallback: { get_property: [ SELF, cms_stageoutsite_fallback ] }
             cms_config_stageoutserver_fallback: { get_property: [ SELF, cms_stageoutserver_fallback ] }
             cms_config_stageoutprefix_fallback: { get_property: [ SELF, cms_stageoutprefix_fallback ] }
+            cms_input_path: { get_property: [ SELF, cms_input_path ] }
+            cms_input_protocol: { get_property: [ SELF, cms_input_protocol ] }
             cms_config_elastic_secret: { get_property: [ SELF, elasticsearch_secret ] }
             monitordb_ip: { get_property: [ SELF, monitordb_ip ] }
     requirements:
@@ -1287,8 +1369,8 @@ node_types:
           inputs:
             marathon_password: { get_property: [ SELF, marathon_password ] }
             zookeeper_peers: { get_property: [ SELF, zookeeper_peers ] }
-            spark_mesos_hdfs_uri: { get_property: [ SELF, spark_hdfs_uri ] }
-            spark_mesos_swift_auth_url: { get_property: [ SELF, spark_swift_auth_url ] }
+            spark_hdfs_uri: { get_property: [ SELF, spark_hdfs_uri ] }
+            spark_swift_auth_url: { get_property: [ SELF, spark_swift_auth_url ] }
             spark_mesos_swift_http_port: { get_property: [ SELF, spark_swift_http_port ] }
             spark_mesos_swift_region: { get_property: [ SELF, spark_swift_region  ] }
             spark_mesos_swift_tenant: { get_property: [ SELF, spark_swift_tenant ] }
@@ -1302,7 +1384,7 @@ node_types:
             spark_mesos_driver_cores: { get_property: [ SELF, spark_driver_cores ] }
     requirements:
       host:
-        capability: tosca.capabilities.indigo.MesosMaster
+        type: tosca.capabilities.indigo.MesosMaster
         relationship: tosca.relationships.HostedOn
         node: tosca.nodes.SoftwareComponent
         occurrences: [1, 1]
