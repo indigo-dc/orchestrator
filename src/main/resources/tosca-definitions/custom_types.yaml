@@ -863,6 +863,10 @@ node_types:
       retries:
         required: no
         type: integer
+      epsilon:
+        required: no
+        type: string
+        default: PT10S
     capabilities:
       parent_job:
         type: tosca.capabilities.indigo.Container.Application.Docker.Chronos
