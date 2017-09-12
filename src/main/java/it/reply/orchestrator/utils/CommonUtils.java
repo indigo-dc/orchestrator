@@ -26,6 +26,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -81,8 +82,8 @@ public class CommonUtils {
 
   /**
    * Verify that a <code>@Nullable</code> reference is effectively non null and cast it to a
-   * <code>@NonNull</code> reference. If the reference is instead null, the <code>@NonNull</code>
-   * a default value will be generated through the provided supplier and returned.
+   * <code>@NonNull</code> reference. If the reference is instead null, the <code>@NonNull</code> a
+   * default value will be generated through the provided supplier and returned.
    * 
    * @param reference
    *          the <code>@Nullable</code> reference
@@ -139,13 +140,18 @@ public class CommonUtils {
         false);
   }
 
+  public static <E> Stream<E> nullableCollectionToStream(Collection<E> collection) {
+    return collection == null ? Stream.empty() : collection.stream();
+  }
+
   /**
    * Check if there is a HTTP request associated to the current thread or not.
    * 
    * @return true if inside of a HTTP request, false otherwise
    */
   public static boolean isInHttpRequest() {
-    return Optional.ofNullable(RequestContextHolder.getRequestAttributes())
+    return Optional
+        .ofNullable(RequestContextHolder.getRequestAttributes())
         .filter(ServletRequestAttributes.class::isInstance)
         .map(ServletRequestAttributes.class::cast)
         .map(ServletRequestAttributes::getRequest)
