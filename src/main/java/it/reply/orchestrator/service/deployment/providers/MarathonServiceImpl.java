@@ -87,6 +87,8 @@ import java.util.stream.Stream;
 @AllArgsConstructor
 public class MarathonServiceImpl extends AbstractMesosDeploymentService<MarathonApp, App> {
 
+  private static final int MAX_EXTERNAL_VOLUME_NAME_LENGHT = 255; // OST cinder volume name limit
+
   private final ToscaService toscaService;
 
   private final MarathonProperties marathonProperties;
@@ -145,6 +147,27 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     Group group = createGroup(deployment);
 
     String groupId = deployment.getId();
+
+    // prepend group id to volume name
+    CommonUtils
+        .nullableCollectionToStream(group.getApps())
+        .filter(Objects::nonNull)
+        .map(app -> app.getContainer())
+        .filter(Objects::nonNull)
+        .flatMap(container -> CommonUtils.nullableCollectionToStream(container.getVolumes()))
+        .filter(ExternalVolume.class::isInstance)
+        .map(ExternalVolume.class::cast)
+        .forEach(volume -> {
+          String baseVolumeName = groupId + "-";
+          String nameWithGroupId = baseVolumeName + volume.getName();
+          if (nameWithGroupId.length() > MAX_EXTERNAL_VOLUME_NAME_LENGHT) {
+            throw new IllegalArgumentException(String.format(
+                "Volume name %s is too long. Only names less than %s chars are allowed",
+                volume.getName(), MAX_EXTERNAL_VOLUME_NAME_LENGHT - baseVolumeName.length()));
+          }
+          volume.setName(nameWithGroupId);
+        });
+
     deployment.setEndpoint(groupId);
     group.setId(groupId);
 
