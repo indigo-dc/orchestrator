@@ -19,7 +19,9 @@ package it.reply.orchestrator.service.deployment.providers;
 import alien4cloud.tosca.parser.ParsingException;
 
 import it.reply.orchestrator.config.properties.MarathonProperties;
+import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.exception.service.DeploymentException;
+import it.reply.orchestrator.service.IndigoInputsPreProcessorService;
 import it.reply.orchestrator.service.ToscaService;
 
 import mesosphere.marathon.client.model.v2.ExternalVolume;
@@ -42,10 +44,17 @@ public class MarathonServiceTest {
   @Mock
   private MarathonProperties marathonProperties;
 
+  @Mock
+  private ResourceRepository resourceRepository;
+  
+  @Mock
+  private IndigoInputsPreProcessorService indigoInputsPreProcessorService;
+
   @Before
   public void setup() throws ParsingException {
     MockitoAnnotations.initMocks(this);
-    marathonServiceImpl = new MarathonServiceImpl(toscaService, marathonProperties);
+    marathonServiceImpl = new MarathonServiceImpl(toscaService, marathonProperties,
+        resourceRepository, indigoInputsPreProcessorService);
   }
 
   @Test

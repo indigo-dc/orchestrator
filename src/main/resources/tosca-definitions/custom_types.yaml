@@ -991,6 +991,10 @@ node_types:
 
   tosca.nodes.indigo.Container.Application.Docker.Marathon:
     derived_from: tosca.nodes.indigo.Container.Application.Docker
+    attributes:
+      load_balancer_ips:
+        type: list
+        entry_schema: string
     properties:
       force_pull_image:
         required: no

@@ -16,6 +16,9 @@
 
 package it.reply.orchestrator.service.deployment.providers;
 
+import com.google.common.collect.MoreCollectors;
+
+import alien4cloud.model.components.OutputDefinition;
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.model.topology.RelationshipTemplate;
 import alien4cloud.model.topology.Topology;
@@ -32,6 +35,8 @@ import it.reply.orchestrator.dto.mesos.MesosPortMapping;
 import it.reply.orchestrator.dto.mesos.marathon.MarathonApp;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.service.DeploymentException;
+import it.reply.orchestrator.service.IndigoInputsPreProcessorService;
+import it.reply.orchestrator.service.IndigoInputsPreProcessorService.RuntimeProperties;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.deployment.providers.factory.MarathonClientFactory;
 import it.reply.orchestrator.utils.CommonUtils;
@@ -87,6 +92,8 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   private final MarathonProperties marathonProperties;
 
   private final ResourceRepository resourceRepository;
+
+  private final IndigoInputsPreProcessorService indigoInputsPreProcessorService;
 
   protected Marathon getMarathonClient() {
     return MarathonClientFactory.build(marathonProperties);
@@ -369,4 +376,63 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
       return Optional.of("Some Application failed:\n" + failedAppsMessage);
     }
   }
+
+  @Override
+  public void finalizeDeploy(DeploymentMessage deploymentMessage) {
+    Deployment deployment = getDeployment(deploymentMessage);
+
+    ArchiveRoot ar = toscaService
+        .prepareTemplate(deployment.getTemplate(), deployment.getParameters());
+
+    Map<String, OutputDefinition> outputs = Optional
+        .ofNullable(ar.getTopology())
+        .map(Topology::getOutputs)
+        .orElseGet(HashMap::new);
+    if (!outputs.isEmpty()) {
+      String groupId = deployment.getId();
+      Group group = getMarathonClient().getGroup(groupId);
+
+      Map<String, NodeTemplate> nodes = Optional
+          .ofNullable(ar.getTopology())
+          .map(Topology::getNodeTemplates)
+          .orElseGet(HashMap::new);
+
+      DirectedMultigraph<NodeTemplate, RelationshipTemplate> graph =
+          toscaService.buildNodeGraph(nodes, false);
+
+      TopologicalOrderIterator<NodeTemplate, RelationshipTemplate> orderIterator =
+          new TopologicalOrderIterator<>(graph);
+
+      List<NodeTemplate> orderedMarathonApps = CommonUtils
+          .iteratorToStream(orderIterator)
+          .filter(node -> toscaService.isOfToscaType(node, ToscaConstants.Nodes.MARATHON))
+          .collect(Collectors.toList());
+
+      RuntimeProperties runtimeProperties = new RuntimeProperties();
+      for (NodeTemplate marathonNode : orderedMarathonApps) {
+
+        runtimeProperties.put(marathonProperties.getLoadBalancerIps(), marathonNode.getName(),
+            "load_balancer_ips");
+
+        List<Integer> ports = group
+            .getApps()
+            .stream()
+            .filter(
+                app -> app.getId().endsWith("/" + marathonNode.getName()))
+            .collect(MoreCollectors.toOptional())
+            .map(App::getPorts)
+            .orElseGet(ArrayList::new);
+
+        NodeTemplate hostNode = getHostNode(graph, marathonNode);
+        for (int i = 0; i < ports.size(); ++i) {
+          runtimeProperties.put(ports.get(i), hostNode.getName(), "host",
+              "publish_ports", String.valueOf(i), "target");
+        }
+      }
+      deployment.setOutputs(indigoInputsPreProcessorService.processOutputs(ar,
+          deployment.getParameters(), runtimeProperties));
+    }
+    super.finalizeDeploy(deploymentMessage);
+  }
+
 }

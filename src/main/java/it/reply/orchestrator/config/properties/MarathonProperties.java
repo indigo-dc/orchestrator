@@ -25,6 +25,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.validation.constraints.NotNull;
 
@@ -46,5 +48,9 @@ public class MarathonProperties {
   @NotNull
   @NonNull
   private String password;
+
+  @NotNull
+  @NonNull
+  private List<String> loadBalancerIps = new ArrayList<>();
 
 }

@@ -136,6 +136,8 @@ The orchestrator allows to run applications on Marathon; to do that you need to 
     * **Description**: The Marathon username
  * `MARATHON_PASSWORD`
     * **Description**: The Marathon password
+ * `MARATHON_LOAD_BALANCER_IPS`
+    * **Description**: The list of Marathon LB IPs
  
 ### Configure OneData (optional)
 The Orchestrator, when the Chronos parameters are set, allows to exploit a [OneData](https://onedata.org/) service space. This enables the users to execute tasks on Chronos that use temporary files hosted on a shared OneData space.
