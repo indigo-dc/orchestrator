@@ -283,7 +283,6 @@ public class DeploymentServiceImpl implements DeploymentService {
     deployment.setStatus(Status.DELETE_IN_PROGRESS);
     deployment.setStatusReason(null);
     deployment.setTask(Task.NONE);
-    deployment = deploymentRepository.save(deployment);
 
     // Abort all WF currently active on this deployment
     Iterator<WorkflowReference> wrIt = deployment.getWorkflowReferences().iterator();
@@ -297,6 +296,12 @@ public class DeploymentServiceImpl implements DeploymentService {
 
     // Build deployment message
     DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, requester);
+    if (deployment.getDeploymentProvider() == null) {
+      // no deployment provider -> no resources created
+      // TODO handle it in a better way (e.g. a stub provider)
+      deploymentRepository.delete(deployment);
+      return;
+    }
     DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
     deploymentMessage.setDeploymentType(deploymentType);
 
