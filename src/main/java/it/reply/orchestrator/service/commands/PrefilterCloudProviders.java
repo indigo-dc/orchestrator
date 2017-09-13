@@ -76,7 +76,9 @@ public class PrefilterCloudProviders
     Deployment deployment = getDeployment(rankCloudProvidersMessage);
 
     // Filter out providers that do not support the requested images
-    ArchiveRoot ar = toscaService.parseTemplate(deployment.getTemplate());
+    ArchiveRoot ar =
+        toscaService.prepareTemplate(deployment.getTemplate(), deployment.getParameters());
+
     Set<CloudProvider> providersToDiscard = new HashSet<>();
     Set<CloudService> servicesToDiscard = new HashSet<>();
 
