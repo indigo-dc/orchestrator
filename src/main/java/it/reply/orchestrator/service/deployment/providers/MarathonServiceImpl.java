@@ -77,6 +77,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -88,6 +89,10 @@ import java.util.stream.Stream;
 public class MarathonServiceImpl extends AbstractMesosDeploymentService<MarathonApp, App> {
 
   private static final int MAX_EXTERNAL_VOLUME_NAME_LENGHT = 255; // OST cinder volume name limit
+
+  private static final Pattern APP_NAME_VALIDATOR = Pattern.compile(
+      "^(([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9])\\.)*"
+          + "([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9])|(\\.|\\.\\.)$");
 
   private final ToscaService toscaService;
 
@@ -279,7 +284,14 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   @Override
   protected App generateExternalTaskRepresentation(MarathonApp marathonTask) {
     App app = new App();
-    app.setId(marathonTask.getId());
+    String id = marathonTask.getId();
+    if (!APP_NAME_VALIDATOR.matcher(id).matches()) {
+      throw new IllegalArgumentException(String.format(
+          "Illegal name for TOSCA node <%s>: "
+              + "name for nodes of type %s must fully match regular expression %s",
+          id, marathonTask.getToscaNodeName(), APP_NAME_VALIDATOR.pattern()));
+    }
+    app.setId(id);
     app.setCmd(marathonTask.getCmd());
     app.setConstraints(marathonTask.getConstraints());
     app.setCpus(marathonTask.getCpus());
