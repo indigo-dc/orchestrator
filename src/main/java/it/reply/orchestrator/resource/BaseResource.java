@@ -47,9 +47,9 @@ public class BaseResource extends AbstractResource {
   private List<String> requiredBy = new ArrayList<>();
 
   @Builder
-  protected BaseResource(String uuid, Date creationTime, Date updateTime, NodeStates state,
-      String toscaNodeType, String toscaNodeName, List<String> requiredBy) {
-    super(uuid, creationTime, updateTime);
+  protected BaseResource(String uuid, Date creationTime, Date updateTime, String physicalId,
+      NodeStates state, String toscaNodeType, String toscaNodeName, List<String> requiredBy) {
+    super(uuid, creationTime, updateTime, physicalId);
     this.state = state;
     this.toscaNodeType = toscaNodeType;
     this.toscaNodeName = toscaNodeName;

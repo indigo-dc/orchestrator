@@ -41,6 +41,8 @@ public class BaseResourceAssembler extends ResourceAssemblerSupport<Resource, Ba
     BaseResource resource = BaseResource.builder()
         .uuid(entity.getId())
         .creationTime(entity.getCreated())
+        .updateTime(entity.getUpdated())
+        .physicalId(entity.getIaasId())
         .state(entity.getState())
         .toscaNodeType(entity.getToscaNodeType())
         .toscaNodeName(entity.getToscaNodeName())

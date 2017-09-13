@@ -49,6 +49,7 @@ public class DeploymentResourceAssembler
         .uuid(entity.getId())
         .creationTime(entity.getCreated())
         .updateTime(entity.getUpdated())
+        .physicalId(entity.getEndpoint())
         .status(entity.getStatus())
         .statusReason(entity.getStatusReason())
         .cloudProviderName(entity.getCloudProviderName())

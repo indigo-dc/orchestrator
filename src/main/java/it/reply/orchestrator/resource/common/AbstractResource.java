@@ -45,4 +45,5 @@ public class AbstractResource extends ResourceSupport {
   @JsonFormat(timezone = "UTC", pattern = "yyyy-MM-dd'T'HH:mmZ")
   private Date updateTime;
 
+  private String physicalId;
 }
