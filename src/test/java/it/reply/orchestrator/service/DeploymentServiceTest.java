@@ -366,7 +366,6 @@ public class DeploymentServiceTest {
     Mockito.verify(deploymentRepository, Mockito.never()).delete(deployment);
     Mockito.verify(wfService).abortProcess(wr1.getId(), wr1.getRuntimeStrategy());
     Mockito.verify(wfService).abortProcess(wr2.getId(), wr2.getRuntimeStrategy());
-    Mockito.verify(deploymentRepository, Mockito.atLeast(1)).save(deployment);
   }
 
   @Test
@@ -374,10 +373,8 @@ public class DeploymentServiceTest {
 
     Deployment deployment = ControllerTestUtils.createDeployment();
     deployment.setStatus(Status.CREATE_IN_PROGRESS);
-    deployment.setDeploymentProvider(DeploymentProvider.IM);
 
     Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
-    Mockito.when(deploymentRepository.save(deployment)).thenReturn(deployment);
 
     Mockito.when(wfService.startProcess(Mockito.any(), Mockito.any(), Mockito.any()))
         .thenReturn(new RuleFlowProcessInstance());
@@ -386,7 +383,8 @@ public class DeploymentServiceTest {
 
     Mockito.verify(wfService, Mockito.never()).abortProcess(Mockito.anyLong(),
         Mockito.any(RUNTIME_STRATEGY.class));
-    Mockito.verify(deploymentRepository, Mockito.atLeast(1)).save(deployment);
+    Mockito.verify(deploymentRepository, Mockito.never()).save(deployment);
+    Mockito.verify(deploymentRepository, Mockito.times(1)).delete(deployment);
   }
 
   // test fail with chrono
