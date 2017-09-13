@@ -57,10 +57,10 @@ public class DeploymentResource extends AbstractResource {
   private OidcEntityId createdBy;
 
   @Builder
-  protected DeploymentResource(String uuid, Date creationTime, Date updateTime, Status status,
-      String statusReason, Map<String, Object> outputs, Task task, String callback,
+  protected DeploymentResource(String uuid, Date creationTime, Date updateTime, String physicalId,
+      Status status, String statusReason, Map<String, Object> outputs, Task task, String callback,
       String cloudProviderName, OidcEntityId createdBy) {
-    super(uuid, creationTime, updateTime);
+    super(uuid, creationTime, updateTime, physicalId);
     this.status = status;
     this.statusReason = statusReason;
     this.outputs = CommonUtils.notNullOrDefaultValue(outputs, HashMap::new);
