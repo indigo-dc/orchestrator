@@ -16,7 +16,6 @@
 
 package it.reply.orchestrator.service.deployment.providers;
 
-import com.google.common.base.Preconditions;
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.Lists;
@@ -31,11 +30,6 @@ import alien4cloud.model.topology.Topology;
 import alien4cloud.tosca.model.ArchiveRoot;
 
 import es.upv.i3m.grycap.im.InfrastructureManager;
-import es.upv.i3m.grycap.im.auth.credentials.providers.AmazonEc2Credentials;
-import es.upv.i3m.grycap.im.auth.credentials.providers.ImCredentials;
-import es.upv.i3m.grycap.im.auth.credentials.providers.OpenNebulaCredentials;
-import es.upv.i3m.grycap.im.auth.credentials.providers.OpenStackAuthVersion;
-import es.upv.i3m.grycap.im.auth.credentials.providers.OpenStackCredentials;
 import es.upv.i3m.grycap.im.exceptions.ImClientErrorException;
 import es.upv.i3m.grycap.im.exceptions.ImClientException;
 import es.upv.i3m.grycap.im.pojo.InfrastructureState;
@@ -52,23 +46,20 @@ import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
-import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
-import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.function.ThrowingFunction;
 import it.reply.orchestrator.service.ToscaService;
+import it.reply.orchestrator.service.deployment.providers.factory.ImClientFactory;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
 
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -84,8 +75,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -94,9 +83,6 @@ import java.util.stream.Stream;
 @EnableConfigurationProperties(ImProperties.class)
 @Slf4j
 public class ImServiceImpl extends AbstractDeploymentProviderService {
-
-  private static final Pattern OS_ENDPOINT_PATTERN =
-      Pattern.compile("(https?:\\/\\/[^\\/]+)(?:\\/(?:([^\\/]+)\\/?)?)?");
 
   @Autowired
   private ToscaService toscaService;
@@ -108,182 +94,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   private OidcProperties oidcProperties;
 
   @Autowired
-  private ImProperties imProperties;
-
-  @Autowired
   private OAuth2TokenService oauth2TokenService;
 
-  private String getAccessToken(@NonNull OidcTokenId id) {
-    return oauth2TokenService.getAccessToken(id);
-  }
-
-  protected OpenStackCredentials getOpenStackAuthHeader(CloudProviderEndpoint cloudProviderEndpoint,
-      @NonNull OidcTokenId requestedWithToken) {
-    String endpoint = cloudProviderEndpoint.getCpEndpoint();
-    Matcher matcher = OS_ENDPOINT_PATTERN.matcher(endpoint);
-    if (!matcher.matches()) {
-      throw new DeploymentException("Wrong OS endpoint format: " + endpoint);
-    } else {
-      endpoint = matcher.group(1);
-      String accessToken = getAccessToken(requestedWithToken);
-      OpenStackCredentials cred = cloudProviderEndpoint
-          .getIaasHeaderId()
-          .map(OpenStackCredentials::buildCredentials)
-          .orElseGet(OpenStackCredentials::buildCredentials)
-          .withTenant("oidc")
-          .withUsername("indigo-dc")
-          .withPassword(accessToken)
-          .withHost(endpoint);
-      if (Strings.isNullOrEmpty(matcher.group(2)) || "v3".equals(matcher.group(2))) {
-        // if no API version is specified or V3 is specified -> 3.x_oidc_access_token
-        cred.withAuthVersion(OpenStackAuthVersion.PASSWORD_3_X_TOKEN);
-      }
-      return cred;
-    }
-  }
-
-  protected OpenNebulaCredentials getOpenNebulaAuthHeader(
-      CloudProviderEndpoint cloudProviderEndpoint, @NonNull OidcTokenId requestedWithToken) {
-    String accessToken = getAccessToken(requestedWithToken);
-    return cloudProviderEndpoint
-        .getIaasHeaderId()
-        .map(OpenNebulaCredentials::buildCredentials)
-        .orElseGet(OpenNebulaCredentials::buildCredentials)
-        .withHost(cloudProviderEndpoint.getCpEndpoint())
-        .withToken(accessToken);
-  }
-
-  protected AmazonEc2Credentials getAwsAuthHeader(CloudProviderEndpoint cloudProviderEndpoint) {
-    return cloudProviderEndpoint
-        .getIaasHeaderId()
-        .map(AmazonEc2Credentials::buildCredentials)
-        .orElseGet(AmazonEc2Credentials::buildCredentials)
-        .withUsername(cloudProviderEndpoint.getUsername())
-        .withPassword(cloudProviderEndpoint.getPassword());
-  }
-
-  protected String getImAuthHeader(@Nullable OidcTokenId requestedWithToken) {
-    if (oidcProperties.isEnabled()) {
-      String accessToken = getAccessToken(CommonUtils.checkNotNull(requestedWithToken));
-      String header = ImCredentials.buildCredentials().withToken(accessToken).serialize();
-      LOG.debug("IM authorization header built from access token");
-      return header;
-    } else {
-      String header = imProperties
-          .getImAuthHeader()
-          .orElseThrow(() -> new OrchestratorException(
-              "No Authentication info provided for for Infrastructure Manager "
-                  + "and OAuth2 authentication is disabled"));
-      LOG.debug("IM authorization header retrieved from properties file");
-      return header;
-    }
-  }
-
-  @Deprecated
-  private String handleOtcHeader(CloudProviderEndpoint cloudProviderEndpoint, String iaasHeader) {
-    final String iaasHeaderToReturn;
-    if (cloudProviderEndpoint.getCpEndpoint() != null
-        && cloudProviderEndpoint.getCpEndpoint().contains("otc.t-systems.com")) {
-      String username = cloudProviderEndpoint.getUsername();
-      String password = cloudProviderEndpoint.getPassword();
-      Pattern pattern = Pattern.compile("\\s*(\\w+)\\s+(\\w+)\\s*");
-      Matcher matcher = pattern.matcher(username);
-      if (matcher.matches()) {
-        String otcUsername = Preconditions.checkNotNull(matcher.group(1),
-            "No vaild username provided for Open Telekom Cloud");
-        String otcDomain = Preconditions.checkNotNull(matcher.group(2),
-            "No vaild username provided for Open Telekom Cloud");
-        if (otcUsername.matches("[0-9]+")) {
-          // old style username, it must keep the domain too
-          otcUsername = username;
-        }
-        iaasHeaderToReturn =
-            iaasHeader
-                .replaceFirst(Matcher.quoteReplacement("<USERNAME>"), otcUsername)
-                .replaceFirst(Matcher.quoteReplacement("<PASSWORD>"), password)
-                .replaceFirst(Matcher.quoteReplacement("<TENANT>"), otcDomain);
-        LOG.info("Placed OTC credentials in auth header");
-      } else {
-        throw new DeploymentException("No vaild credentials provided for Open Telekom Cloud");
-      }
-    } else {
-      // do nothing, no a OTC service
-      iaasHeaderToReturn = iaasHeader;
-    }
-    return iaasHeaderToReturn;
-  }
-
-  protected InfrastructureManager getClient(List<CloudProviderEndpoint> cloudProviderEndpoints,
-      @Nullable OidcTokenId requestedWithToken) {
-    String imAuthHeader = getImAuthHeader(requestedWithToken);
-    String iaasHeaders = cloudProviderEndpoints
-        .stream()
-        .map(cloudProviderEndpoint -> getIaasAuthHeader(cloudProviderEndpoint, requestedWithToken))
-        .collect(Collectors.joining("\\n"));
-    return getIm(cloudProviderEndpoints, imAuthHeader, iaasHeaders);
-  }
-
-  private String getIaasAuthHeader(CloudProviderEndpoint cloudProviderEndpoint,
-      @Nullable OidcTokenId requestedWithToken) {
-    IaaSType iaasType = cloudProviderEndpoint.getIaasType();
-    LOG.debug("Generating {} credentials with: {}", iaasType, cloudProviderEndpoint);
-    String computeServiceId = cloudProviderEndpoint.getCpComputeServiceId();
-    Optional<String> iaasHeaderInProperties = imProperties.getIaasHeader(computeServiceId);
-    String iaasHeader;
-    if (iaasHeaderInProperties.isPresent()) {
-      String iaasHeaderFromProperties = iaasHeaderInProperties.get();
-      // substitute id with the subdeployment one (if present)
-      iaasHeader = cloudProviderEndpoint
-          .getIaasHeaderId()
-          .map(subDeploymentId -> iaasHeaderFromProperties.replaceFirst(
-              "(.*(?:^|\\s+|;)(?:;\\s*)?id\\s*=\\s*)(\\w+)(.*)", "$1" + subDeploymentId + "$3"))
-          .orElse(iaasHeaderFromProperties);
-      LOG.debug("IaaS authorization header for compute service " + computeServiceId
-          + " retrieved from properties file");
-      iaasHeader = handleOtcHeader(cloudProviderEndpoint, iaasHeader);
-    } else {
-      oidcProperties.runIfSecurityDisabled(() -> {
-        throw new OrchestratorException("No Authentication info provided for compute service "
-            + computeServiceId + " and OAuth2 authentication is disabled");
-      });
-      switch (iaasType) {
-        case OPENSTACK:
-          iaasHeader = getOpenStackAuthHeader(cloudProviderEndpoint,
-              CommonUtils.checkNotNull(requestedWithToken)).serialize();
-          break;
-        case OPENNEBULA:
-          iaasHeader = getOpenNebulaAuthHeader(cloudProviderEndpoint,
-              CommonUtils.checkNotNull(requestedWithToken)).serialize();
-          break;
-        case AWS:
-          iaasHeader = getAwsAuthHeader(cloudProviderEndpoint).serialize();
-          break;
-        default:
-          throw new IllegalArgumentException(
-              String.format("Unsupported provider type <%s>", iaasType));
-      }
-    }
-    return iaasHeader;
-  }
-
-  @Deprecated
-  @SneakyThrows(ImClientException.class)
-  private InfrastructureManager getIm(List<CloudProviderEndpoint> cloudProviderEndpoints,
-      String imAuthHeader, String iaasHeaders) {
-    final String imUrl;
-    if (cloudProviderEndpoints.size() != 1) {
-      // multiple endpoints (or no endpoint for some reason) -> return PaaS level IM instance by
-      // default
-      imUrl = imProperties.getUrl().toString();
-    } else {
-      imUrl = Optional
-          .ofNullable(cloudProviderEndpoints.get(0).getImEndpoint())
-          .orElseGet(() -> imProperties.getUrl().toString());
-    }
-    String imHeader = String.format("%s\\n%s", imAuthHeader, iaasHeaders);
-    LOG.trace("IM auth header: {}", imHeader);
-    return new InfrastructureManager(imUrl, imHeader);
-  }
+  @Autowired
+  private ImClientFactory imClientFactory;
 
   protected <R> R executeWithClient(CloudProviderEndpoint cloudProviderEndpoint,
       @Nullable OidcTokenId requestedWithToken,
@@ -297,7 +111,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       @Nullable OidcTokenId requestedWithToken,
       ThrowingFunction<InfrastructureManager, R, ImClientException> function)
       throws ImClientException {
-    InfrastructureManager client = getClient(cloudProviderEndpoints, requestedWithToken);
+    InfrastructureManager client =
+        imClientFactory.build(cloudProviderEndpoints, requestedWithToken);
     try {
       return function.apply(client);
     } catch (ImClientErrorException ex) {
@@ -307,7 +122,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           .filter(code -> code.equals(HttpStatus.UNAUTHORIZED.value()))
           .isPresent()) {
         oauth2TokenService.getRefreshedAccessToken(requestedWithToken);
-        client = getClient(cloudProviderEndpoints, requestedWithToken);
+        client = imClientFactory.build(cloudProviderEndpoints, requestedWithToken);
         return function.apply(client);
       } else {
         throw ex;
@@ -337,7 +152,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
     String accessToken = null;
     if (oidcProperties.isEnabled()) {
-      accessToken = getAccessToken(CommonUtils.checkNotNull(requestedWithToken));
+      accessToken = oauth2TokenService.getAccessToken(requestedWithToken);
     }
     toscaService.addElasticClusterParameters(ar, deployment.getId(), accessToken);
     toscaService.contextualizeAndReplaceImages(ar, deploymentMessage.getChosenCloudProvider(),
@@ -468,7 +283,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
     String accessToken = null;
     if (oidcProperties.isEnabled()) {
-      accessToken = getAccessToken(CommonUtils.checkNotNull(requestedWithToken));
+      accessToken = oauth2TokenService.getAccessToken(requestedWithToken);
     }
     toscaService.addElasticClusterParameters(newAr, deployment.getId(), accessToken);
 

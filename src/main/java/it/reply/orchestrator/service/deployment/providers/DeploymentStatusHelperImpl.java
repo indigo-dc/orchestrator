@@ -23,9 +23,9 @@ import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,9 +34,9 @@ import java.util.Iterator;
 
 @Service
 @Slf4j
+@AllArgsConstructor
 public class DeploymentStatusHelperImpl implements DeploymentStatusHelper {
 
-  @Autowired
   private DeploymentRepository deploymentRepository;
 
   @Override
