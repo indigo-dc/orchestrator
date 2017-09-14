@@ -17,6 +17,7 @@
 package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
+import it.reply.orchestrator.function.SerializableBiPredicate;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
 
 import org.springframework.stereotype.Component;

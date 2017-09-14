@@ -37,6 +37,7 @@ import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.normative.ToscaFunctionConstants;
 
 import it.reply.orchestrator.exception.service.ToscaException;
+import it.reply.orchestrator.function.ToscaFunction;
 import it.reply.orchestrator.utils.CommonUtils;
 
 import lombok.Data;
@@ -52,7 +53,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -84,11 +84,6 @@ public class IndigoInputsPreProcessorService {
       Long.class,
       Short.class);
 
-  @FunctionalInterface
-  public static interface ToscaLambda
-      extends BiFunction<FunctionPropertyValue, String, Optional<AbstractPropertyValue>> {
-  }
-
   /**
    * Process the get inputs functions of a topology to inject actual input provided by the user.
    *
@@ -106,7 +101,7 @@ public class IndigoInputsPreProcessorService {
               .ofNullable(topology.getInputs())
               .orElseGet(Collections::emptyMap);
 
-      Map<String, ToscaLambda> functions = new HashMap<>();
+      Map<String, ToscaFunction> functions = new HashMap<>();
       functions.put(ToscaFunctionConstants.GET_INPUT, (FunctionPropertyValue function,
           String propertyName) -> processGetInputFuction(function, templateInputs, inputs,
               propertyName));
@@ -130,7 +125,7 @@ public class IndigoInputsPreProcessorService {
     Map<String, Object> processedOutputs = new HashMap<>();
     Optional.ofNullable(archiveRoot).map(ArchiveRoot::getTopology).ifPresent(topology -> {
 
-      Map<String, ToscaLambda> functions = new HashMap<>();
+      Map<String, ToscaFunction> functions = new HashMap<>();
       functions.put(ToscaFunctionConstants.GET_ATTRIBUTE, (FunctionPropertyValue function,
           String propertyName) -> processGetAttibute(function, runtimeProperties,
               propertyName));
@@ -161,7 +156,7 @@ public class IndigoInputsPreProcessorService {
     return processedOutputs;
   }
 
-  protected void processFunctions(Topology topology, Map<String, ToscaLambda> functions) {
+  protected void processFunctions(Topology topology, Map<String, ToscaFunction> functions) {
 
     Map<String, NodeTemplate> nodes =
         Optional
@@ -231,7 +226,7 @@ public class IndigoInputsPreProcessorService {
   }
 
   protected Optional<AbstractPropertyValue> processFunctions(
-      Map<String, ToscaLambda> functions, AbstractPropertyValue propertyValue,
+      Map<String, ToscaFunction> functions, AbstractPropertyValue propertyValue,
       String propertyName) {
 
     if (propertyValue instanceof FunctionPropertyValue) {
@@ -253,7 +248,7 @@ public class IndigoInputsPreProcessorService {
     return Optional.ofNullable(propertyValue);
   }
 
-  protected void processFunctions(Map<String, ToscaLambda> functions,
+  protected void processFunctions(Map<String, ToscaFunction> functions,
       Map<String, ? super AbstractPropertyValue> optionalProperties, String propertyName) {
 
     Optional
@@ -274,7 +269,7 @@ public class IndigoInputsPreProcessorService {
             }));
   }
 
-  protected void processFunctions(Map<String, ToscaLambda> functions,
+  protected void processFunctions(Map<String, ToscaFunction> functions,
       List<? super AbstractPropertyValue> optionalProperties,
       String propertyName) {
 
@@ -297,7 +292,7 @@ public class IndigoInputsPreProcessorService {
             }));
   }
 
-  private Optional<AbstractPropertyValue> processConcat(Map<String, ToscaLambda> functions,
+  private Optional<AbstractPropertyValue> processConcat(Map<String, ToscaFunction> functions,
       ConcatPropertyValue concatPropertyValue, String propertyName) {
     processFunctions(functions, concatPropertyValue.getParameters(),
         String.format("%s[concat]", propertyName));
@@ -322,7 +317,7 @@ public class IndigoInputsPreProcessorService {
     }
   }
 
-  private void processInterfaceOperationsInputs(Map<String, ToscaLambda> functions,
+  private void processInterfaceOperationsInputs(Map<String, ToscaFunction> functions,
       Map<String, Operation> optionalOperations, String propertyName) {
     Optional
         .ofNullable(optionalOperations)

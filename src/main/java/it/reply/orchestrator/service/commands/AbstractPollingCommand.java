@@ -18,6 +18,7 @@ package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.exception.service.DeploymentException;
+import it.reply.orchestrator.function.SerializableBiPredicate;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;
 import it.reply.orchestrator.utils.CommonUtils;
@@ -33,9 +34,7 @@ import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.Serializable;
 import java.util.Optional;
-import java.util.function.BiPredicate;
 
 public abstract class AbstractPollingCommand<T extends AbstractPollingCommand<T>>
     extends BaseDeployCommand<T> {
@@ -106,11 +105,6 @@ public abstract class AbstractPollingCommand<T extends AbstractPollingCommand<T>
 
     // Only 1 try until the exceptions on which retry will be configurable
     return new ExternallyControlledPoller<>(pollBehavior, 1);
-  }
-
-  @FunctionalInterface
-  public interface SerializableBiPredicate<T, U> extends BiPredicate<T, U>, Serializable {
-
   }
 
   public static class PollingBehaviourImpl

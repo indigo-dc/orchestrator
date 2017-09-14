@@ -60,6 +60,7 @@ import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
+import it.reply.orchestrator.function.ThrowingFunction;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
@@ -282,38 +283,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     String imHeader = String.format("%s\\n%s", imAuthHeader, iaasHeaders);
     LOG.trace("IM auth header: {}", imHeader);
     return new InfrastructureManager(imUrl, imHeader);
-  }
-
-  @FunctionalInterface
-  public interface ThrowingFunction<T, R, E extends Exception> {
-    R apply(T param) throws E;
-
-  }
-
-  @FunctionalInterface
-  public interface ThrowingConsumer<T, E extends Exception> {
-    void accept(T param) throws E;
-
-    /**
-     * Converts the ThrowingConsumer in a ThrowingFunction.
-     * 
-     * @return a ThrowingFunction returning always null
-     */
-    default ThrowingFunction<T, Void, E> asFunction() {
-      return (T param) -> {
-        accept(param);
-        return (Void) null;
-      };
-    }
-  }
-
-  @FunctionalInterface
-  public interface ThrowingSupplier<T, E extends Exception> {
-    T get() throws E;
-
-    default <C> ThrowingFunction<C, T, E> asFunction() {
-      return (C ignored) -> get();
-    }
   }
 
   protected <R> R executeWithClient(CloudProviderEndpoint cloudProviderEndpoint,
