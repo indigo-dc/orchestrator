@@ -108,6 +108,7 @@ public class CloudProviderEndpointServiceImpl {
         .ifPresent(policy -> {
           cpe.setUsername(policy.getUsername());
           cpe.setPassword(policy.getPassword());
+          cpe.setTenant(policy.getTenant());
         });
     ///////////////////////////////
 
