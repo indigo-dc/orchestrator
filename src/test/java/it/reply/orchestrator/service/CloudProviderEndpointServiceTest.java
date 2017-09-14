@@ -196,7 +196,7 @@ public class CloudProviderEndpointServiceTest {
         .thenReturn(cmbdProviderServicesByType);
     CredentialsAwareSlaPlacementPolicy awsSlaPlacementPolicy =
         new CredentialsAwareSlaPlacementPolicy(new ArrayList<>(),
-            UUID.randomUUID().toString(), "accessKey", "secretKey");
+            UUID.randomUUID().toString(), "accessKey", "secretKey", null);
     awsSlaPlacementPolicy.getServiceIds().add("random.id");
     awsSlaPlacementPolicy.getServiceIds().add("aws.id");
     placementPolicies.add(awsSlaPlacementPolicy);

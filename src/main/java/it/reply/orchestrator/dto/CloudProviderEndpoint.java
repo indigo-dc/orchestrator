@@ -24,6 +24,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.io.Serializable;
 import java.util.Optional;
 
@@ -55,6 +57,9 @@ public class CloudProviderEndpoint extends AdditionalPropertiesAwareDto implemen
 
   private String username;
   private String password;
+
+  @Nullable
+  private String tenant;
 
   @JsonProperty
   private String iaasHeaderId;

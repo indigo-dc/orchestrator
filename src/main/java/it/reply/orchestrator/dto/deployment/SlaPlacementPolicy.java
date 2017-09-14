@@ -19,12 +19,15 @@ package it.reply.orchestrator.dto.deployment;
 import alien4cloud.model.components.AbstractPropertyValue;
 import alien4cloud.model.components.ScalarPropertyValue;
 
+import lombok.Getter;
+
 import org.springframework.util.Assert;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+@Getter
 public class SlaPlacementPolicy implements PlacementPolicy {
 
   private static final long serialVersionUID = 2712997001319905444L;
@@ -46,22 +49,13 @@ public class SlaPlacementPolicy implements PlacementPolicy {
   }
 
   @Override
-  public List<String> getNodes() {
-    return nodes;
-  }
-
-  @Override
   public void setNodes(List<String> nodes) {
     Objects.requireNonNull(nodes, "nodes list must not be null");
     this.nodes = nodes;
   }
 
-  public String getSlaId() {
-    return slaId;
-  }
-
   public void setSlaId(String slaId) {
-    Objects.requireNonNull(slaId, "slaId must not be null");
+    Objects.requireNonNull(slaId, PlacementPolicy.PLACEMENT_ID_PROPERTY_NAME + " must not be null");
     this.slaId = slaId;
   }
 
@@ -72,13 +66,10 @@ public class SlaPlacementPolicy implements PlacementPolicy {
    *          the SLA id
    */
   public void setSlaId(AbstractPropertyValue slaId) {
-    Objects.requireNonNull(slaId, "slaId must not be null");
-    Assert.isInstanceOf(ScalarPropertyValue.class, slaId, "slaId must be a scalar value");
+    Objects.requireNonNull(slaId, PlacementPolicy.PLACEMENT_ID_PROPERTY_NAME + " must not be null");
+    Assert.isInstanceOf(ScalarPropertyValue.class, slaId,
+        PlacementPolicy.PLACEMENT_ID_PROPERTY_NAME + " must be a scalar value");
     this.slaId = ((ScalarPropertyValue) slaId).getValue();
-  }
-
-  public List<String> getServiceIds() {
-    return serviceIds;
   }
 
   public void setServiceIds(List<String> serviceIds) {
