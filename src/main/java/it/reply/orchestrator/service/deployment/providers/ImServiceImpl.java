@@ -113,7 +113,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   private OAuth2TokenService oauth2TokenService;
 
   private String getAccessToken(@NonNull OidcTokenId id) {
-    return oauth2TokenService.getAccessToken(id, OAuth2TokenService.REQUIRED_SCOPES);
+    return oauth2TokenService.getAccessToken(id);
   }
 
   protected OpenStackCredentials getOpenStackAuthHeader(CloudProviderEndpoint cloudProviderEndpoint,
@@ -337,8 +337,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           .map(ResponseError::getCode)
           .filter(code -> code.equals(HttpStatus.UNAUTHORIZED.value()))
           .isPresent()) {
-        oauth2TokenService.getRefreshedAccessToken(requestedWithToken,
-            OAuth2TokenService.REQUIRED_SCOPES);
+        oauth2TokenService.getRefreshedAccessToken(requestedWithToken);
         client = getClient(cloudProviderEndpoints, requestedWithToken);
         return function.apply(client);
       } else {

@@ -148,7 +148,7 @@ public class DeploymentServiceImpl implements DeploymentService {
       if (requester.getRefreshToken() == null) {
         OidcTokenId currentTokenId = oauth2TokenService.generateTokenIdFromCurrentAuth();
         AccessGrant grant = oauth2TokenService.exchangeAccessToken(currentTokenId,
-            oauth2TokenService.getOAuth2TokenFromCurrentAuth(), OAuth2TokenService.REQUIRED_SCOPES);
+            oauth2TokenService.getOAuth2TokenFromCurrentAuth(), OidcProperties.REQUIRED_SCOPES);
 
         OidcRefreshToken token = OidcRefreshToken.fromAccessGrant(currentTokenId, grant);
 

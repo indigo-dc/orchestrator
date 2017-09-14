@@ -587,7 +587,7 @@ public class ImServiceTest {
 
     Mockito.when(oidcProperties.isEnabled()).thenReturn(true);
     OidcTokenId id = new OidcTokenId();
-    Mockito.when(oauth2TokenService.getAccessToken(id, OAuth2TokenService.REQUIRED_SCOPES))
+    Mockito.when(oauth2TokenService.getAccessToken(id))
         .thenReturn("J1qK1c18UUGJFAzz9xnH56584l4");
     InfrastructureManager client = imService.getClient(Lists.newArrayList(cloudProviderEndpoint), id);
     
@@ -620,7 +620,7 @@ public class ImServiceTest {
     Mockito.when(oidcProperties.isEnabled()).thenReturn(true);
     OidcTokenId id = new OidcTokenId();
 
-    Mockito.when(oauth2TokenService.getAccessToken(id, OAuth2TokenService.REQUIRED_SCOPES))
+    Mockito.when(oauth2TokenService.getAccessToken(id))
         .thenReturn("J1qK1c18UUGJFAzz9xnH56584l4");
     InfrastructureManager client = imService.getClient(Lists.newArrayList(cloudProviderEndpoint), id);
 
@@ -646,7 +646,7 @@ public class ImServiceTest {
 
     Mockito.when(oidcProperties.isEnabled()).thenReturn(true);
     OidcTokenId id = new OidcTokenId();
-    Mockito.when(oauth2TokenService.getAccessToken(id, OAuth2TokenService.REQUIRED_SCOPES))
+    Mockito.when(oauth2TokenService.getAccessToken(id))
         .thenReturn("J1qK1c18UUGJFAzz9xnH56584l4");
     InfrastructureManager client = imService.getClient(Lists.newArrayList(cloudProviderEndpoint), id);
 
@@ -664,7 +664,7 @@ public class ImServiceTest {
 
     Mockito.when(oidcProperties.isEnabled()).thenReturn(true);
     OidcTokenId id = new OidcTokenId();
-    Mockito.when(oauth2TokenService.getAccessToken(id, OAuth2TokenService.REQUIRED_SCOPES))
+    Mockito.when(oauth2TokenService.getAccessToken(id))
         .thenReturn("J1qK1c18UUGJFAzz9xnH56584l4");
 
     imService.getClient(Lists.newArrayList(cloudProviderEndpoint), id);

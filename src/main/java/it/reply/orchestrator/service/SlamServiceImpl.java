@@ -68,8 +68,7 @@ public class SlamServiceImpl implements SlamService {
       return function.apply(RequestEntity.get(requestUri).build());
     }
     try {
-      String accessToken =
-          oauth2TokenService.getAccessToken(tokenId, OAuth2TokenService.REQUIRED_SCOPES);
+      String accessToken = oauth2TokenService.getAccessToken(tokenId);
       HeadersBuilder<?> request =
           RequestEntity.get(requestUri).header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
 
@@ -78,8 +77,7 @@ public class SlamServiceImpl implements SlamService {
       if (Optional.ofNullable(ex.getStatusCode())
           .filter(HttpStatus.UNAUTHORIZED::equals)
           .isPresent()) {
-        String accessToken = oauth2TokenService
-            .getRefreshedAccessToken(tokenId, OAuth2TokenService.REQUIRED_SCOPES);
+        String accessToken = oauth2TokenService.getRefreshedAccessToken(tokenId);
         HeadersBuilder<?> request = RequestEntity.get(requestUri).header(HttpHeaders.AUTHORIZATION,
             "Bearer " + accessToken);
         return function.apply(request.build());

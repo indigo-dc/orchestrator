@@ -23,6 +23,7 @@ import com.google.common.cache.LoadingCache;
 import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
+import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.exception.OrchestratorException;
 
@@ -71,7 +72,7 @@ public class OAuth2TokenCacheService {
         public AccessGrant load(OidcTokenId key) throws Exception {
           LOG.debug("Loading and putting new access token for {} into cache", key);
           AccessGrant grant = oauth2TokenService.refreshAccessToken(key,
-              OAuth2TokenService.REQUIRED_SCOPES);
+              OidcProperties.REQUIRED_SCOPES);
           LOG.trace("New access token for {}={}", key, grant.getAccessToken());
           return grant;
         }
