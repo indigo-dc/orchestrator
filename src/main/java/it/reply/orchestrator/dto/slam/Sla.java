@@ -31,7 +31,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Data
@@ -64,10 +63,5 @@ public class Sla extends AdditionalPropertiesAwareDto implements Serializable {
   @JsonProperty("id")
   @Nullable
   private String id;
-
-  @Deprecated
-  public Optional<Service> getService() {
-    return Optional.ofNullable(services.get(0));
-  }
 
 }

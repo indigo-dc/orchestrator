@@ -26,7 +26,6 @@ import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.ImageData;
 import it.reply.orchestrator.dto.cmdb.Type;
-import it.reply.orchestrator.dto.deployment.AwsSlaPlacementPolicy;
 import it.reply.orchestrator.dto.deployment.CredentialsAwareSlaPlacementPolicy;
 import it.reply.orchestrator.dto.deployment.PlacementPolicy;
 import it.reply.orchestrator.dto.deployment.SlaPlacementPolicy;
@@ -55,6 +54,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Component
 @Slf4j
@@ -152,40 +152,46 @@ public class PrefilterCloudProviders
   private void discardOnPlacementPolicies(List<PlacementPolicy> placementPolicies,
       Collection<CloudProvider> cloudProviders, List<Sla> slas,
       Set<CloudService> servicesToDiscard) {
+    
     if (placementPolicies.size() != 1) {
-      throw new OrchestratorException("Only single placement policies are supported");
+      //TODO relax this constraint
+      throw new OrchestratorException("Only a single placement policy is supported");
     }
-    if (!(placementPolicies.get(0) instanceof SlaPlacementPolicy)) {
-      throw new OrchestratorException("Only SLA placement policies are supported");
-    }
-    final SlaPlacementPolicy slaPlacementPolicy = (SlaPlacementPolicy) placementPolicies.get(0);
+    
+    placementPolicies.forEach(placementPolicy -> {
+      if (placementPolicy instanceof SlaPlacementPolicy) {
+        final SlaPlacementPolicy slaPlacementPolicy = (SlaPlacementPolicy) placementPolicy;
+        Sla selectedSla = slas
+            .stream()
+            .filter(sla -> Objects.equals(sla.getId(), slaPlacementPolicy.getSlaId()))
+            .findFirst()
+            .orElseThrow(() -> new OrchestratorException(
+                String.format("No SLA with id %s available", slaPlacementPolicy.getSlaId())));
 
-    Sla selectedSla = slas
-        .stream()
-        .filter(sla -> Objects.equals(sla.getId(), slaPlacementPolicy.getSlaId()))
-        .findFirst()
-        .orElseThrow(() -> new OrchestratorException(
-            String.format("No SLA with id %s available", slaPlacementPolicy.getSlaId())));
-
-    for (CloudProvider cloudProvider : cloudProviders) {
-      for (CloudService cloudService : cloudProvider.getCmbdProviderServicesByType(Type.COMPUTE)) {
-        boolean serviceSlaIsCloudService = selectedSla
-            .getService()
+        slaPlacementPolicy.setServiceIds(selectedSla
+            .getServices()
+            .stream()
             .map(Service::getServiceId)
-            .filter(serviceId -> CommonUtils.checkNotNull(serviceId).equals(cloudService.getId()))
-            .isPresent();
-        if (serviceSlaIsCloudService) {
-          // TODO change this
-          if (cloudService.isAwsComputeProviderService()
-              && slaPlacementPolicy instanceof CredentialsAwareSlaPlacementPolicy) {
-            placementPolicies.set(0,
-                new AwsSlaPlacementPolicy((CredentialsAwareSlaPlacementPolicy) slaPlacementPolicy));
-          }
-        } else {
-          addServiceToDiscard(servicesToDiscard, cloudService);
-        }
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList()));
+
+        cloudProviders.forEach(cloudProvider -> {
+          cloudProvider
+              .getCmbdProviderServicesByType(Type.COMPUTE)
+              .forEach(cloudService -> {
+                boolean serviceIsInSlaPolicy = slaPlacementPolicy
+                    .getServiceIds()
+                    .stream()
+                    .anyMatch(serviceId -> serviceId.equals(cloudService.getId()));
+                if (!serviceIsInSlaPolicy) {
+                  addServiceToDiscard(servicesToDiscard, cloudService);
+                }
+              });
+        });
+      } else {
+        throw new OrchestratorException("Only SLA placement policies are supported");
       }
-    }
+    });
   }
 
   private void discardOnOneDataRequirements(OneData requirement,

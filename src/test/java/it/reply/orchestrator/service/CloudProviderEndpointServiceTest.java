@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Assert;
 import org.junit.Test;
 import org.mockito.InjectMocks;
@@ -36,7 +37,6 @@ import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.CloudServiceData;
 import it.reply.orchestrator.dto.cmdb.Type;
-import it.reply.orchestrator.dto.deployment.AwsSlaPlacementPolicy;
 import it.reply.orchestrator.dto.deployment.CredentialsAwareSlaPlacementPolicy;
 import it.reply.orchestrator.dto.deployment.PlacementPolicy;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
@@ -186,6 +186,7 @@ public class CloudProviderEndpointServiceTest {
 
     CloudServiceData cloudServiceDataOCC = new CloudServiceData();
     CloudService cloudService = new CloudService();
+    cloudService.setId("aws.id");
     
     cloudServiceDataOCC.setServiceType("com.amazonaws.ec2");
     cloudService.setData(cloudServiceDataOCC);
@@ -193,9 +194,11 @@ public class CloudProviderEndpointServiceTest {
     cmbdProviderServicesByType.add(cloudService);
     Mockito.when(chosenCloudProvider.getCmbdProviderServicesByType(Type.COMPUTE))
         .thenReturn(cmbdProviderServicesByType);
-    AwsSlaPlacementPolicy awsSlaPlacementPolicy =
-        new AwsSlaPlacementPolicy(new CredentialsAwareSlaPlacementPolicy(new ArrayList<>(),
-            UUID.randomUUID().toString(), "username", "password"));
+    CredentialsAwareSlaPlacementPolicy awsSlaPlacementPolicy =
+        new CredentialsAwareSlaPlacementPolicy(new ArrayList<>(),
+            UUID.randomUUID().toString(), "accessKey", "secretKey");
+    awsSlaPlacementPolicy.getServiceIds().add("random.id");
+    awsSlaPlacementPolicy.getServiceIds().add("aws.id");
     placementPolicies.add(awsSlaPlacementPolicy);
  
     
@@ -204,36 +207,13 @@ public class CloudProviderEndpointServiceTest {
     result.setCpComputeServiceId(cloudService.getId());
 
     result.setIaasType(IaaSType.AWS);
-    result.setUsername(awsSlaPlacementPolicy.getAccessKey());
-    result.setPassword(awsSlaPlacementPolicy.getSecretKey());
-    Assert.assertEquals(cloudProviderEndpointServiceImpl
-        .getCloudProviderEndpoint(chosenCloudProvider, placementPolicies, false), result);
+    result.setUsername(awsSlaPlacementPolicy.getUsername());
+    result.setPassword(awsSlaPlacementPolicy.getPassword());
+    Assertions
+        .assertThat(cloudProviderEndpointServiceImpl
+            .getCloudProviderEndpoint(chosenCloudProvider, placementPolicies, false))
+        .isEqualTo(result);
 
-  }
-
-  @Test(expected = OrchestratorException.class)
-  public void failGetCloudProviderEndpointFailNoAWSCredentialProvider() {
-    List<PlacementPolicy> placementPolicies = new ArrayList<>();
-
-    List<CloudService> cmbdProviderServicesByType = new ArrayList<>();
-
-    CloudProvider chosenCloudProvider = Mockito.mock(CloudProvider.class);
-
-    CloudServiceData cloudServiceDataOCC = new CloudServiceData();
-    cloudServiceDataOCC.setServiceType("com.amazonaws.ec2");
-    cloudServiceDataOCC.setEndpoint("www.endpoint.com");
-
-    CloudService cloudService = new CloudService();
-    cloudService.setId(UUID.randomUUID().toString());
-    cloudService.setData(cloudServiceDataOCC);
-    cmbdProviderServicesByType.add(cloudService);
-
-    Mockito.when(chosenCloudProvider.getCmbdProviderServicesByType(Type.COMPUTE))
-        .thenReturn(cmbdProviderServicesByType);
-
-
-    cloudProviderEndpointServiceImpl.getCloudProviderEndpoint(chosenCloudProvider,
-        placementPolicies, false);
   }
 
   @Test(expected = IllegalArgumentException.class)

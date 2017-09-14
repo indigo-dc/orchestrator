@@ -32,6 +32,8 @@ public class SlaPlacementPolicy implements PlacementPolicy {
   private List<String> nodes = new ArrayList<>();
 
   private String slaId;
+  
+  private List<String> serviceIds = new ArrayList<>();
 
   public SlaPlacementPolicy(List<String> nodes, String slaId) {
     this.setNodes(nodes);
@@ -73,6 +75,15 @@ public class SlaPlacementPolicy implements PlacementPolicy {
     Objects.requireNonNull(slaId, "slaId must not be null");
     Assert.isInstanceOf(ScalarPropertyValue.class, slaId, "slaId must be a scalar value");
     this.slaId = ((ScalarPropertyValue) slaId).getValue();
+  }
+
+  public List<String> getServiceIds() {
+    return serviceIds;
+  }
+
+  public void setServiceIds(List<String> serviceIds) {
+    Objects.requireNonNull(serviceIds, "service IDs list must not be null");
+    this.serviceIds = serviceIds;
   }
 
 }

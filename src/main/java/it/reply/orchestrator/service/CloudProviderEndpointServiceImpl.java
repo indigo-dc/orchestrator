@@ -23,13 +23,11 @@ import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.Type;
-import it.reply.orchestrator.dto.deployment.AwsSlaPlacementPolicy;
 import it.reply.orchestrator.dto.deployment.CredentialsAwareSlaPlacementPolicy;
 import it.reply.orchestrator.dto.deployment.PlacementPolicy;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.DeploymentType;
-import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 
 import lombok.extern.slf4j.Slf4j;
@@ -101,9 +99,11 @@ public class CloudProviderEndpointServiceImpl {
 
     ///////////////////////////////
     // TODO Improve and move somewhere else
-    placementPolicies.stream()
+    placementPolicies
+        .stream()
         .filter(CredentialsAwareSlaPlacementPolicy.class::isInstance)
         .map(CredentialsAwareSlaPlacementPolicy.class::cast)
+        .filter(policy -> policy.getServiceIds().contains(computeService.getId()))
         .findFirst()
         .ifPresent(policy -> {
           cpe.setUsername(policy.getUsername());
@@ -123,15 +123,6 @@ public class CloudProviderEndpointServiceImpl {
       iaasType = IaaSType.OCCI;
     } else if (computeService.isAwsComputeProviderService()) {
       iaasType = IaaSType.AWS;
-      // TODO support multiple policies
-      // TODO do a match between sla and service id
-      AwsSlaPlacementPolicy placementPolicy = placementPolicies.stream()
-          .filter(AwsSlaPlacementPolicy.class::isInstance)
-          .map(AwsSlaPlacementPolicy.class::cast)
-          .findFirst()
-          .orElseThrow(() -> new OrchestratorException("No AWS credentials provided"));
-      cpe.setUsername(placementPolicy.getAccessKey());
-      cpe.setPassword(placementPolicy.getSecretKey());
     } else {
       throw new IllegalArgumentException("Unknown Cloud Provider type: " + computeService);
     }
