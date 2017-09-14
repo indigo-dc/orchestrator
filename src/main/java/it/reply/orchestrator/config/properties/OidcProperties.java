@@ -16,7 +16,7 @@
 
 package it.reply.orchestrator.config.properties;
 
-import it.reply.orchestrator.service.security.OAuth2TokenService;
+import com.google.common.collect.ImmutableList;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -33,7 +33,6 @@ import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.util.Assert;
 import org.springframework.validation.annotation.Validated;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,6 +49,9 @@ import javax.validation.constraints.NotNull;
 @ConfigurationProperties(prefix = OidcProperties.PROPERTIES_PREFIX)
 public class OidcProperties implements SecurityPrerequisite, InitializingBean {
 
+  public static final List<String> REQUIRED_SCOPES =
+      ImmutableList.of("openid", "profile", "offline_access");
+  
   protected static final String PROPERTIES_PREFIX = "oidc";
 
   public static final String OIDC_ENABLED_CONDITION =
@@ -176,7 +178,7 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
 
     @NotNull
     @NonNull
-    private List<String> scopes = new ArrayList<>(OAuth2TokenService.REQUIRED_SCOPES);
+    private List<String> scopes = REQUIRED_SCOPES;
 
   }
 }

@@ -16,8 +16,6 @@
 
 package it.reply.orchestrator.service.security;
 
-import com.google.common.collect.ImmutableList;
-
 import com.nimbusds.jwt.JWTClaimsSet;
 
 import it.reply.orchestrator.config.properties.OidcProperties;
@@ -47,9 +45,6 @@ import java.util.Optional;
 
 @Service
 public class OAuth2TokenService {
-
-  public static final List<String> REQUIRED_SCOPES =
-      ImmutableList.of("openid", "profile", "offline_access");
 
   @Autowired
   private OidcProperties oidcProperties;
@@ -208,17 +203,15 @@ public class OAuth2TokenService {
    * 
    * @param id
    *          the id of the token
-   * @param scopes
-   *          the scopes to request
    * @return the exchanged grant
    */
-  public String getRefreshedAccessToken(OidcTokenId id, List<String> scopes) {
+  public String getRefreshedAccessToken(OidcTokenId id) {
     handleSecurityDisabled();
     oauth2TokenCacheService.evict(id);
     return oauth2TokenCacheService.get(id).getAccessToken();
   }
 
-  public String getAccessToken(OidcTokenId id, List<String> scopes) {
+  public String getAccessToken(OidcTokenId id) {
     handleSecurityDisabled();
     return oauth2TokenCacheService.get(id).getAccessToken();
   }
