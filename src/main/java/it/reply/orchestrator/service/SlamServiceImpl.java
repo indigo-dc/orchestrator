@@ -26,6 +26,7 @@ import it.reply.orchestrator.dto.slam.SlamPreferences;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.HttpHeaders;
@@ -33,13 +34,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.RequestEntity.HeadersBuilder;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
 import java.util.Optional;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 
 import javax.ws.rs.core.UriBuilder;
 
@@ -62,25 +64,18 @@ public class SlamServiceImpl implements SlamService {
   @Autowired
   private OAuth2TokenService oauth2TokenService;
 
-  protected <R> R executeWithClient(Function<RequestEntity<?>, R> function, URI requestUri,
-      OidcTokenId tokenId) {
+  protected <R> R executeWithClient(URI requestUri, OidcTokenId tokenId,
+      BiFunction<URI, @Nullable String, R> function) {
     if (!oidcProperties.isEnabled()) {
-      return function.apply(RequestEntity.get(requestUri).build());
+      return function.apply(requestUri, null);
     }
     try {
       String accessToken = oauth2TokenService.getAccessToken(tokenId);
-      HeadersBuilder<?> request =
-          RequestEntity.get(requestUri).header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
-
-      return function.apply(request.build());
+      return function.apply(requestUri, accessToken);
     } catch (HttpClientErrorException ex) {
-      if (Optional.ofNullable(ex.getStatusCode())
-          .filter(HttpStatus.UNAUTHORIZED::equals)
-          .isPresent()) {
-        String accessToken = oauth2TokenService.getRefreshedAccessToken(tokenId);
-        HeadersBuilder<?> request = RequestEntity.get(requestUri).header(HttpHeaders.AUTHORIZATION,
-            "Bearer " + accessToken);
-        return function.apply(request.build());
+      if (HttpStatus.UNAUTHORIZED == ex.getStatusCode()) {
+        String refreshedAccessToken = oauth2TokenService.getRefreshedAccessToken(tokenId);
+        return function.apply(requestUri, refreshedAccessToken);
       } else {
         throw ex;
       }
@@ -90,7 +85,8 @@ public class SlamServiceImpl implements SlamService {
   @Override
   public SlamPreferences getCustomerPreferences(OidcTokenId tokenId) {
 
-    String slamCustomer = Optional.ofNullable(tokenId)
+    String slamCustomer = Optional
+        .ofNullable(tokenId)
         .flatMap(tokenRepository::findByOidcTokenId)
         .map(OidcRefreshToken::getEntity)
         .map(OidcEntity::getOrganization)
@@ -101,8 +97,15 @@ public class SlamServiceImpl implements SlamService {
         .build(slamCustomer)
         .normalize();
 
-    ResponseEntity<SlamPreferences> response = this.executeWithClient(
-        request -> restTemplate.exchange(request, SlamPreferences.class), requestUri, tokenId);
+    ResponseEntity<SlamPreferences> response = this.executeWithClient(requestUri, tokenId,
+        (uri, accessToken) -> {
+          HeadersBuilder<?> requestBuilder = RequestEntity.get(uri);
+          if (accessToken != null) {
+            requestBuilder.header(HttpHeaders.AUTHORIZATION,
+                String.format("%s %s", OAuth2AccessToken.BEARER_TYPE, accessToken));
+          }
+          return restTemplate.exchange(requestBuilder.build(), SlamPreferences.class);
+        });
 
     if (response.getStatusCode().is2xxSuccessful()) {
       return response.getBody();
