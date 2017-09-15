@@ -128,38 +128,42 @@ public class ImClientFactory {
     }
   }
 
-  @Deprecated
-  private String handleOtcHeader(CloudProviderEndpoint cloudProviderEndpoint, String iaasHeader) {
-    final String iaasHeaderToReturn;
-    if (cloudProviderEndpoint.getCpEndpoint() != null
-        && cloudProviderEndpoint.getCpEndpoint().contains("otc.t-systems.com")) {
+  private OpenStackCredentials getOtcAuthHeader(CloudProviderEndpoint cloudProviderEndpoint) {
+    String endpoint = cloudProviderEndpoint.getCpEndpoint();
+    Matcher endpointMatcher = OS_ENDPOINT_PATTERN.matcher(endpoint);
+    if (!endpointMatcher.matches()) {
+      throw new DeploymentException("Wrong OS endpoint format: " + endpoint);
+    } else {
       String username = cloudProviderEndpoint.getUsername();
       String password = cloudProviderEndpoint.getPassword();
+      String tenant = cloudProviderEndpoint.getTenant();
+      // TODO REMOVE and use explicit cloudProviderEndpoint information
       Pattern pattern = Pattern.compile("\\s*(\\w+)\\s+(\\w+)\\s*");
-      Matcher matcher = pattern.matcher(username);
-      if (matcher.matches()) {
-        String otcUsername = Preconditions.checkNotNull(matcher.group(1),
+      Matcher credentialsMatcher = pattern.matcher(username);
+      if (credentialsMatcher.matches()) {
+        String otcUsername = Preconditions.checkNotNull(credentialsMatcher.group(1),
             "No vaild username provided for Open Telekom Cloud");
-        String otcDomain = Preconditions.checkNotNull(matcher.group(2),
+        tenant = Preconditions.checkNotNull(credentialsMatcher.group(2),
             "No vaild username provided for Open Telekom Cloud");
-        if (otcUsername.matches("[0-9]+")) {
-          // old style username, it must keep the domain too
-          otcUsername = username;
+        if (!otcUsername.matches("[0-9]+")) {
+          // new style username, it domain part not needed
+          username = otcUsername;
         }
-        iaasHeaderToReturn =
-            iaasHeader
-                .replaceFirst(Matcher.quoteReplacement("<USERNAME>"), otcUsername)
-                .replaceFirst(Matcher.quoteReplacement("<PASSWORD>"), password)
-                .replaceFirst(Matcher.quoteReplacement("<TENANT>"), otcDomain);
-        LOG.info("Placed OTC credentials in auth header");
-      } else {
-        throw new DeploymentException("No vaild credentials provided for Open Telekom Cloud");
       }
-    } else {
-      // do nothing, no a OTC service
-      iaasHeaderToReturn = iaasHeader;
+      /////////////////////////////////////////////////////////////////
+      return cloudProviderEndpoint
+          .getIaasHeaderId()
+          .map(OpenStackCredentials::buildCredentials)
+          .orElseGet(OpenStackCredentials::buildCredentials)
+          .withDomain(tenant)
+          .withUsername(username)
+          .withPassword(password)
+          .withTenant("eu-de")
+          .withAuthVersion(OpenStackAuthVersion.PASSWORD_3_X)
+          .withHost(endpointMatcher.group(1))
+          .withServiceName("None")
+          .withServiceRegion("eu-de");
     }
-    return iaasHeaderToReturn;
   }
 
   private String getIaasAuthHeader(CloudProviderEndpoint cloudProviderEndpoint,
@@ -177,9 +181,25 @@ public class ImClientFactory {
           .map(subDeploymentId -> iaasHeaderFromProperties.replaceFirst(
               "(.*(?:^|\\s+|;)(?:;\\s*)?id\\s*=\\s*)(\\w+)(.*)", "$1" + subDeploymentId + "$3"))
           .orElse(iaasHeaderFromProperties);
+
+      if (cloudProviderEndpoint.getUsername() != null) {
+        iaasHeader = iaasHeader
+            .replaceFirst(Matcher.quoteReplacement("<USERNAME>"),
+                cloudProviderEndpoint.getUsername());
+      }
+      if (cloudProviderEndpoint.getPassword() != null) {
+        iaasHeader = iaasHeader
+            .replaceFirst(Matcher.quoteReplacement("<PASSWORD>"),
+                cloudProviderEndpoint.getPassword());
+      }
+      if (cloudProviderEndpoint.getTenant() != null) {
+        iaasHeader = iaasHeader
+            .replaceFirst(Matcher.quoteReplacement("<TENANT>"),
+                cloudProviderEndpoint.getTenant());
+      }
+
       LOG.debug("IaaS authorization header for compute service " + computeServiceId
           + " retrieved from properties file");
-      iaasHeader = handleOtcHeader(cloudProviderEndpoint, iaasHeader);
     } else {
       oidcProperties.runIfSecurityDisabled(() -> {
         throw new OrchestratorException("No Authentication info provided for compute service "
@@ -196,6 +216,9 @@ public class ImClientFactory {
           break;
         case AWS:
           iaasHeader = getAwsAuthHeader(cloudProviderEndpoint).serialize();
+          break;
+        case OTC:
+          iaasHeader = getOtcAuthHeader(cloudProviderEndpoint).serialize();
           break;
         default:
           throw new IllegalArgumentException(

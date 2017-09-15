@@ -482,7 +482,7 @@ public class ToscaServiceImpl implements ToscaService {
       }
       StringBuilder sb = new StringBuilder();
 
-      if (cs.isOpenStackComputeProviderService()) {
+      if (cs.isOpenStackComputeProviderService() || cs.isOtcComputeProviderService()) {
         sb
             .append("ost")
             .append("://")
