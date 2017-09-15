@@ -29,6 +29,7 @@ import lombok.ToString;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.Serializable;
+import java.util.Objects;
 import java.util.Optional;
 
 @Data
@@ -81,7 +82,21 @@ public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData
    * @return true if the service is a OpenStack compute service
    */
   public boolean isOpenStackComputeProviderService() {
-    return isServiceOfType(OPENSTACK_COMPUTE_SERVICE);
+    return isServiceOfType(OPENSTACK_COMPUTE_SERVICE) && !isOtcComputeProviderService();
+  }
+
+  /**
+   * Get if the the service is a OTC compute service.
+   * 
+   * @return true if the service is a OTC compute service
+   */
+  public boolean isOtcComputeProviderService() {
+    return isServiceOfType(OPENSTACK_COMPUTE_SERVICE) && Optional
+        .ofNullable(getData())
+        .map(CloudServiceData::getEndpoint)
+        .filter(Objects::nonNull)
+        .filter(endpoint -> endpoint.contains("otc.t-systems.com"))
+        .isPresent();
   }
 
   /**

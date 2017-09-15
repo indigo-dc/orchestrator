@@ -47,7 +47,8 @@ public class CloudProviderEndpoint extends AdditionalPropertiesAwareDto implemen
     OPENSTACK,
     OPENNEBULA,
     OCCI,
-    AWS
+    AWS,
+    OTC;
   }
 
   private String imEndpoint;
@@ -55,7 +56,10 @@ public class CloudProviderEndpoint extends AdditionalPropertiesAwareDto implemen
   private String cpComputeServiceId;
   private IaaSType iaasType;
 
+  @Nullable
   private String username;
+
+  @Nullable
   private String password;
 
   @Nullable
