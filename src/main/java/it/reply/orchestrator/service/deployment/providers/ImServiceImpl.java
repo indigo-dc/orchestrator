@@ -68,8 +68,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -289,8 +290,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
     updateResources(deployment, deployment.getStatus());
 
-    // List of resources to be removed
-    Set<Resource> resourcesToRemove = new HashSet<>();
+    // Ordered set of resources to be removed
+    Set<Resource> resourcesToRemove = new LinkedHashSet<>();
 
     Map<String, NodeTemplate> newNodes =
         Optional
@@ -346,6 +347,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
             List<Resource> remainingResources = resources
                 .stream()
                 .filter(resource -> resource.getState() != NodeStates.DELETING)
+                // null (thus no IaaS resources) first
+                .sorted(Comparator.comparing(resource -> resource.getIaasId() != null ? 1 : 0))
                 .collect(Collectors.toList());
 
             for (int i = 0; i < remainingResources.size() - newCount; ++i) {
@@ -395,17 +398,23 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
     // FIXME: There's not check if the Template actually changed!
     deployment.setTemplate(toscaService.updateTemplate(template));
-
-    List<String> vmIds = resourcesToRemove
-        .stream()
-        .map(Resource::getIaasId)
-        .collect(Collectors.toList());
-
+    
+    Set<Resource> iaasResourcesToRemove =
+        resourcesToRemove
+            .stream()
+            .filter(resource -> resource.getIaasId() != null)
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+    
     try {
-      if (!vmIds.isEmpty()) {
+      if (!iaasResourcesToRemove.isEmpty()) {
         List<CloudProviderEndpoint> cloudProviderEndpoints =
-            getEndpointsList(resourcesToRemove, deployment.getCloudProviderEndpoint());
+            getEndpointsList(iaasResourcesToRemove, deployment.getCloudProviderEndpoint());
 
+        List<String> vmIds = iaasResourcesToRemove
+            .stream()
+            .map(Resource::getIaasId)
+            .collect(Collectors.toList());
+        
         LOG.debug("Deleting VMs {}", vmIds);
 
         executeWithClient(cloudProviderEndpoints, requestedWithToken, client -> {
