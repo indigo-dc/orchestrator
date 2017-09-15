@@ -458,7 +458,7 @@ public class ToscaServiceImpl implements ToscaService {
   @Deprecated
   private boolean isImImageUri(String imageName) {
     try {
-      List<String> schemes = ImmutableList.of("ost", "one", "aws");
+      List<String> schemes = ImmutableList.of("ost", "one", "aws", "azr");
       return schemes.contains(URI.create(imageName).getScheme().trim());
     } catch (RuntimeException ex) {
       return false;
@@ -499,6 +499,10 @@ public class ToscaServiceImpl implements ToscaService {
       } else if (cs.isAwsComputeProviderService()) {
         sb
             .append("aws")
+            .append("://");
+      } else if (cs.isAzureComputeProviderService()) {
+        sb
+            .append("azr")
             .append("://");
       } else {
         throw new DeploymentException("Unknown IaaSType of cloud provider " + cloudProvider);

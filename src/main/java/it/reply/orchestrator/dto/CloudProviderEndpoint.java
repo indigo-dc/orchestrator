@@ -48,7 +48,8 @@ public class CloudProviderEndpoint extends AdditionalPropertiesAwareDto implemen
     OPENNEBULA,
     OCCI,
     AWS,
-    OTC;
+    OTC,
+    AZURE;
   }
 
   private String imEndpoint;

@@ -21,6 +21,7 @@ import com.google.common.base.Strings;
 
 import es.upv.i3m.grycap.im.InfrastructureManager;
 import es.upv.i3m.grycap.im.auth.credentials.providers.AmazonEc2Credentials;
+import es.upv.i3m.grycap.im.auth.credentials.providers.AzureCredentials;
 import es.upv.i3m.grycap.im.auth.credentials.providers.ImCredentials;
 import es.upv.i3m.grycap.im.auth.credentials.providers.OpenNebulaCredentials;
 import es.upv.i3m.grycap.im.auth.credentials.providers.OpenStackAuthVersion;
@@ -108,6 +109,16 @@ public class ImClientFactory {
         .orElseGet(AmazonEc2Credentials::buildCredentials)
         .withUsername(cloudProviderEndpoint.getUsername())
         .withPassword(cloudProviderEndpoint.getPassword());
+  }
+
+  protected AzureCredentials getAzureAuthHeader(CloudProviderEndpoint cloudProviderEndpoint) {
+    return cloudProviderEndpoint
+        .getIaasHeaderId()
+        .map(AzureCredentials::buildCredentials)
+        .orElseGet(AzureCredentials::buildCredentials)
+        .withUsername(cloudProviderEndpoint.getUsername())
+        .withPassword(cloudProviderEndpoint.getPassword())
+        .withSubscriptionId(cloudProviderEndpoint.getTenant());
   }
 
   protected String getImAuthHeader(@Nullable OidcTokenId requestedWithToken) {
@@ -219,6 +230,9 @@ public class ImClientFactory {
           break;
         case OTC:
           iaasHeader = getOtcAuthHeader(cloudProviderEndpoint).serialize();
+          break;
+        case AZURE:
+          iaasHeader = getAzureAuthHeader(cloudProviderEndpoint).serialize();
           break;
         default:
           throw new IllegalArgumentException(
