@@ -753,6 +753,10 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
       NodeTemplate taskNode, String taskId) {
     ChronosJob job = super.buildTask(graph, taskNode, taskId);
 
+    if (job.getCmd() == null) { // command is required in chronos
+      throw new ToscaException(String.format(
+          "<command> property of node <%s> must be provided", taskNode.getName()));
+    }
     toscaService
         .<ScalarPropertyValue>getTypedNodePropertyByName(taskNode, "retries")
         .ifPresent(property -> job.setRetries(Ints

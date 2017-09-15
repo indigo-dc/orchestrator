@@ -85,7 +85,14 @@ public abstract class AbstractMesosDeploymentService<T extends MesosTask<T>, S e
 
     toscaService
         .<ScalarPropertyValue>getTypedNodePropertyByName(taskNode, "command")
-        .ifPresent(property -> task.setCmd(property.getValue()));
+        .map(ScalarPropertyValue::getValue)
+        .map(String::trim)
+        .ifPresent(task::setCmd);
+
+    if ("".equals(task.getCmd())) { // it must be either null or not empty
+      throw new ToscaException(String.format(
+          "<command> property of node <%s> must not be an empty string", taskNode.getName()));
+    }
 
     toscaService
         .<ListPropertyValue>getTypedNodePropertyByName(taskNode, "uris")

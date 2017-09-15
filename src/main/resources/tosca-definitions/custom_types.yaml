@@ -825,7 +825,7 @@ node_types:
     derived_from: tosca.nodes.Container.Application.Docker
     properties:
       command:
-        required: yes
+        required: no
         type: string
       uris:
         required: no
@@ -864,6 +864,9 @@ node_types:
     properties:
       schedule:
         required: no
+        type: string
+      command:
+        required: yes
         type: string
       description:
         required: no
