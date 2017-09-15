@@ -126,6 +126,8 @@ public class CloudProviderEndpointServiceImpl {
       iaasType = IaaSType.AWS;
     } else if (computeService.isOtcComputeProviderService()) {
       iaasType = IaaSType.OTC;
+    } else if (computeService.isAzureComputeProviderService()) {
+      iaasType = IaaSType.AZURE;
     } else {
       throw new IllegalArgumentException("Unknown Cloud Provider type: " + computeService);
     }
