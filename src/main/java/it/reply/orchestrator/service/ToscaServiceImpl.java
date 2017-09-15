@@ -17,7 +17,7 @@
 package it.reply.orchestrator.service;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.ByteStreams;
 
 import alien4cloud.component.repository.exception.CSARVersionAlreadyExistsException;
@@ -46,8 +46,6 @@ import alien4cloud.tosca.parser.ParsingException;
 import alien4cloud.tosca.parser.ParsingResult;
 import alien4cloud.tosca.serializer.VelocityUtil;
 import alien4cloud.utils.FileUtil;
-
-import es.upv.i3m.grycap.im.auth.credentials.ServiceProvider;
 
 import it.reply.orchestrator.config.properties.OidcProperties.OidcClientProperties;
 import it.reply.orchestrator.config.properties.OrchestratorProperties;
@@ -88,6 +86,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -450,7 +449,7 @@ public class ToscaServiceImpl implements ToscaService {
         scalarPropertyValue = createScalarPropertyValue(image.getUserName());
         credential.put("user", scalarPropertyValue);
 
-        scalarPropertyValue = createScalarPropertyValue("\"\"");
+        scalarPropertyValue = createScalarPropertyValue("");
         credential.put("token", scalarPropertyValue);
       }
     });
@@ -458,18 +457,12 @@ public class ToscaServiceImpl implements ToscaService {
 
   @Deprecated
   private boolean isImImageUri(String imageName) {
-    // TODO use IM image constants
-    String regex = new StringBuilder().append("(")
-        .append(ServiceProvider.OPENSTACK.getId())
-        .append("|")
-        .append(ServiceProvider.OPENNEBULA.getId())
-        .append("|")
-        .append(ServiceProvider.OCCI.getId())
-        .append("|")
-        .append("aws")
-        .append(")://.+")
-        .toString();
-    return Strings.nullToEmpty(imageName).trim().matches(regex);
+    try {
+      List<String> schemes = ImmutableList.of("ost", "one", "aws");
+      return schemes.contains(URI.create(imageName).getScheme().trim());
+    } catch (RuntimeException ex) {
+      return false;
+    }
   }
 
   @Deprecated
@@ -487,31 +480,30 @@ public class ToscaServiceImpl implements ToscaService {
           cs = cloudProvider.getCmbdProviderServicesByType(Type.COMPUTE).get(0);
         }
       }
-      // TODO use IM image constants instead
-      ServiceProvider imServiceProvider;
+      StringBuilder sb = new StringBuilder();
 
       if (cs.isOpenStackComputeProviderService()) {
-        imServiceProvider = ServiceProvider.OPENSTACK;
-      } else if (cs.isOpenNebulaComputeProviderService()) {
-        imServiceProvider = ServiceProvider.OPENNEBULA;
+        sb
+            .append("ost")
+            .append("://")
+            .append(new URL(cs.getData().getEndpoint()).getHost())
+            .append("/");
+      } else if (cs.isOpenNebulaComputeProviderService() || cs.isOpenNebulaToscaProviderService()) {
+        sb
+            .append("one")
+            .append("://")
+            .append(new URL(cs.getData().getEndpoint()).getHost())
+            .append("/");
       } else if (cs.isOcciComputeProviderService()) {
-        imServiceProvider = ServiceProvider.OCCI;
+        // DO NOTHING ??
       } else if (cs.isAwsComputeProviderService()) {
-        imServiceProvider = ServiceProvider.EC2;
+        sb
+            .append("aws")
+            .append("://");
       } else {
         throw new DeploymentException("Unknown IaaSType of cloud provider " + cloudProvider);
       }
-      StringBuilder sb = new StringBuilder();
-      sb.append(imServiceProvider.getId()).append("://");
-      if (imServiceProvider != ServiceProvider.EC2) {
-        // NO endopoint info needed for EC2, already contained in auth info
-        URL endpoint = new URL(cs.getData().getEndpoint());
-        sb.append(endpoint.getHost()).append("/");
-      } else {
-        // TODO remove it and use a constant
-        sb = new StringBuilder();
-        sb.append("aws").append("://");
-      }
+
       sb.append(image.getImageId());
       return sb.toString();
     } catch (Exception ex) {
