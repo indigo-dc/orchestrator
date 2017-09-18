@@ -66,6 +66,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -224,8 +225,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     List<CloudProviderEndpoint> cloudProviderEndpoints =
         getEndpointsList(deployment.getResources(), deployment.getCloudProviderEndpoint());
 
-    // Try to get the logs of the virtual infrastructure for debug
-    // purpose.
+    // Try to get the logs of the virtual infrastructure for debug purposes.
     try {
       Property contMsg = executeWithClient(cloudProviderEndpoints, requestedWithToken,
           client -> client.getInfrastructureContMsg(deployment.getEndpoint()));
@@ -288,10 +288,38 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     }
     toscaService.addElasticClusterParameters(newAr, deployment.getId(), accessToken);
 
-    updateResources(deployment, deployment.getStatus());
-
     // Ordered set of resources to be removed
     Set<Resource> resourcesToRemove = new LinkedHashSet<>();
+    Set<String> vmsToRemove = new LinkedHashSet<>();
+
+    try {
+      List<CloudProviderEndpoint> cloudProviderEndpoints =
+          getEndpointsList(deployment.getResources(), deployment.getCloudProviderEndpoint());
+
+      InfrastructureState infrastructureState = executeWithClient(cloudProviderEndpoints,
+          requestedWithToken, client -> client.getInfrastructureState(deployment.getEndpoint()));
+      Set<String> exsistingVms =
+          Optional
+              .ofNullable(infrastructureState.getVmStates())
+              .map(Map::keySet)
+              .orElseGet(LinkedHashSet::new);
+      deployment
+          .getResources()
+          .stream()
+          .filter(resource -> resource.getIaasId() != null)
+          .forEach(resource -> {
+            if (!exsistingVms.remove(resource.getIaasId())) {
+              resource.setIaasId(null); // exclude it from the IM invocation so we will not get 404
+              resource.setState(NodeStates.DELETING);
+              resourcesToRemove.add(resource);
+            }
+          });
+      vmsToRemove.addAll(exsistingVms); // remaining VMs that we didn't know of their existence
+    } catch (ImClientException exception) {
+      throw handleImClientException(exception);
+    }
+
+    updateResources(deployment, deployment.getStatus());
 
     Map<String, NodeTemplate> newNodes =
         Optional
@@ -398,29 +426,26 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
     // FIXME: There's not check if the Template actually changed!
     deployment.setTemplate(toscaService.updateTemplate(template));
-    
-    Set<Resource> iaasResourcesToRemove =
-        resourcesToRemove
-            .stream()
-            .filter(resource -> resource.getIaasId() != null)
-            .collect(Collectors.toCollection(LinkedHashSet::new));
-    
-    try {
-      if (!iaasResourcesToRemove.isEmpty()) {
-        List<CloudProviderEndpoint> cloudProviderEndpoints =
-            getEndpointsList(iaasResourcesToRemove, deployment.getCloudProviderEndpoint());
 
-        List<String> vmIds = iaasResourcesToRemove
-            .stream()
-            .map(Resource::getIaasId)
-            .collect(Collectors.toList());
-        
-        LOG.debug("Deleting VMs {}", vmIds);
+    resourcesToRemove
+        .stream()
+        .map(Resource::getIaasId)
+        .filter(Objects::nonNull)
+        .forEach(vmsToRemove::add);
+
+    try {
+      if (!vmsToRemove.isEmpty()) {
+        List<CloudProviderEndpoint> cloudProviderEndpoints =
+            getEndpointsList(deployment.getResources(), deployment.getCloudProviderEndpoint());
+
+        LOG.debug("Deleting VMs {}", vmsToRemove);
 
         executeWithClient(cloudProviderEndpoints, requestedWithToken, client -> {
-          client.removeResource(deployment.getEndpoint(), vmIds);
+          client.removeResource(deployment.getEndpoint(), new ArrayList<>(vmsToRemove));
           return true;
         });
+      } else {
+        LOG.debug("No VMs to delete");
       }
 
       String templateToDeploy = toscaService.getTemplateFromTopology(newAr);
@@ -574,7 +599,12 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           vmMap.get(bindedResource.getToscaNodeName()).remove(bindedResource.getIaasId());
       if (!vmIsPresent && bindedResource.getState() != NodeStates.DELETING) {
         // the node isn't supposed to be deleted -> put it again in the pool of bindable resources
-        bindedResource.setId(null);
+        // TODO maybe throw an error? Eventual consistency (for update) should already have been
+        // handled
+        LOG.warn("Resource <{}> in status {} was binded to the VM <{}> which doesn't exist anymore",
+            bindedResource.getId(), bindedResource.getState(), bindedResource.getIaasId());
+        bindedResource.setIaasId(null);
+        bindedResource.setCloudProviderEndpoint(null);
         resources.get(false).add(bindedResource);
       }
     }
