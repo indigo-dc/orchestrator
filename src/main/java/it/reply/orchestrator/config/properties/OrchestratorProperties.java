@@ -20,6 +20,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.validation.annotation.Validated;
@@ -49,6 +50,12 @@ public class OrchestratorProperties {
   @NestedConfigurationProperty
   private ExecutorServiceProperties executorService = new ExecutorServiceProperties();
 
+  @NotNull
+  @NonNull
+  @Valid
+  @NestedConfigurationProperty
+  private CleanUpTaskProperties cleanUpTask = new CleanUpTaskProperties();
+
   @Validated
   @Data
   @NoArgsConstructor
@@ -62,6 +69,22 @@ public class OrchestratorProperties {
 
     @Min(0)
     private int retries = 3;
+
+  }
+
+  @Validated
+  @Data
+  @NoArgsConstructor
+  public static class CleanUpTaskProperties {
+
+    @Nullable
+    private String olderThanPeriod = "1d";
+
+    @Nullable
+    private String schedulingPeriod;
+
+    @Nullable
+    private Integer firstRunDelay;
 
   }
 }

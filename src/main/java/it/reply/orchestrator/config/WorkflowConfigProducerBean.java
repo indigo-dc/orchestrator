@@ -95,4 +95,19 @@ public class WorkflowConfigProducerBean implements ConfigProducer {
   public int getExecutorServiceRetries() {
     return orchestratorProperties.getExecutorService().getRetries();
   }
+
+  @Override
+  public String getCleanUpOlderThanPeriod() {
+    return orchestratorProperties.getCleanUpTask().getOlderThanPeriod();
+  }
+
+  @Override
+  public String getCleanUpSchedulingPeriod() {
+    return orchestratorProperties.getCleanUpTask().getSchedulingPeriod();
+  }
+
+  @Override
+  public Integer getCleanUpFirstRunDelay() {
+    return orchestratorProperties.getCleanUpTask().getFirstRunDelay();
+  }
 }
