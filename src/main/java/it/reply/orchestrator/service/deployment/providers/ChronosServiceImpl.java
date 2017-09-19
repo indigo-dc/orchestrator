@@ -197,10 +197,12 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
       if (currentJob.getParents().isEmpty()) {
         // Scheduled job (not dependent)
         nodeTypeMsg = "scheduled";
+        LOG.debug("creating scheduled Chronos job {}", currentJob.getChronosJob());
         client.createJob(currentJob.getChronosJob());
       } else {
         // Dependent job
         nodeTypeMsg = String.format("parents <%s>", currentJob.getChronosJob().getParents());
+        LOG.debug("creating depended Chronos job {}", currentJob.getChronosJob());
         client.createDependentJob(currentJob.getChronosJob());
       }
 
@@ -626,11 +628,12 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     LinkedHashMap<String, IndigoJob> indigoJobs = new LinkedHashMap<>();
     for (NodeTemplate chronosNode : orderedChronosJobs) {
       Resource jobResource = resources.get(chronosNode.getName());
-      String id = jobResource.getIaasId();
-      if (id == null) {
-        id = jobResource.getId();
-        jobResource.setIaasId(id);
-      }
+      String id = Optional
+          .ofNullable(jobResource.getIaasId())
+          .orElseGet(() -> {
+            jobResource.setIaasId(jobResource.getId());
+            return jobResource.getIaasId();
+          });
       ChronosJob mesosTask = buildTask(graph, chronosNode, id);
       jobs.put(chronosNode.getName(), mesosTask);
       List<NodeTemplate> parentNodes = getParentNodes("parent_job", graph, chronosNode);
@@ -643,6 +646,12 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
             + ">: 'schedule' parameter and job depencency are both specified");
       }
       Job chronosJob = generateExternalTaskRepresentation(mesosTask);
+      CommonUtils
+          .nullableCollectionToStream(chronosJob.getContainer().getVolumes())
+          .forEach(volume -> {
+            // set as /basePath/groupId
+            volume.setHostPath(chronosProperties.generateLocalVolumesHostPath(id));
+          });
       IndigoJob indigoJob = new IndigoJob(chronosNode.getName(), chronosJob);
       indigoJob.setParents(parentNodes
           .stream()
@@ -859,15 +868,14 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
         .filter(StringUtils::isNotBlank)
         .collect(Collectors.toList());
 
-    if (volumeMountSegments.size() != 3) {
+    if (volumeMountSegments.size() != 2) {
       throw new DeploymentException(String
           .format("Volume mount <%s> not supported for chronos containers", containerVolumeMount));
     }
     
     Volume volume = new Volume();
-    volume.setHostPath(volumeMountSegments.get(0));
-    volume.setContainerPath(volumeMountSegments.get(1));
-    volume.setMode(volumeMountSegments.get(2).toUpperCase(Locale.US));
+    volume.setContainerPath(volumeMountSegments.get(0));
+    volume.setMode(volumeMountSegments.get(1).toUpperCase(Locale.US));
     return volume;
   }
 }

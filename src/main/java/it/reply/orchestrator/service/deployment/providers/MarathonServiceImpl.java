@@ -153,24 +153,30 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
 
     String groupId = deployment.getId();
 
-    // prepend group id to volume name
     CommonUtils
         .nullableCollectionToStream(group.getApps())
         .filter(Objects::nonNull)
         .map(app -> app.getContainer())
         .filter(Objects::nonNull)
         .flatMap(container -> CommonUtils.nullableCollectionToStream(container.getVolumes()))
-        .filter(ExternalVolume.class::isInstance)
-        .map(ExternalVolume.class::cast)
         .forEach(volume -> {
-          String baseVolumeName = groupId + "-";
-          String nameWithGroupId = baseVolumeName + volume.getName();
-          if (nameWithGroupId.length() > MAX_EXTERNAL_VOLUME_NAME_LENGHT) {
-            throw new IllegalArgumentException(String.format(
-                "Volume name %s is too long. Only names less than %s chars are allowed",
-                volume.getName(), MAX_EXTERNAL_VOLUME_NAME_LENGHT - baseVolumeName.length()));
+          if (volume instanceof ExternalVolume) {
+            // prepend group id to volume name
+            ExternalVolume externalVolume = (ExternalVolume) volume;
+            String baseVolumeName = groupId + "-";
+            String nameWithGroupId = baseVolumeName + externalVolume.getName();
+            if (nameWithGroupId.length() > MAX_EXTERNAL_VOLUME_NAME_LENGHT) {
+              throw new IllegalArgumentException(String.format(
+                  "Volume name %s is too long. Only names less than %s chars are allowed",
+                  externalVolume.getName(),
+                  MAX_EXTERNAL_VOLUME_NAME_LENGHT - baseVolumeName.length()));
+            }
+            externalVolume.setName(nameWithGroupId);
+          } else if (volume instanceof LocalVolume) {
+            // set as /basePath/groupId
+            ((LocalVolume) volume)
+                .setHostPath(marathonProperties.generateLocalVolumesHostPath(groupId));
           }
-          volume.setName(nameWithGroupId);
         });
 
     deployment.setEndpoint(groupId);
@@ -351,7 +357,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     Supplier<DeploymentException> validationExceptionSupplier = () -> new DeploymentException(String
         .format("Volume mount <%s> not supported for marathon containers", containerVolumeMount));
 
-    if (!containerVolumeMount.matches("([^:]+):([^:]+):([^:]+)(?::([^:]+):([^:]+))?")) {
+    if (!containerVolumeMount.matches("([^:]+):([^:]+)(?::([^:]+):([^:]+):([^:]+))?")) {
       throw validationExceptionSupplier.get();
     }
 
@@ -363,27 +369,23 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
         .filter(StringUtils::isNotBlank)
         .collect(Collectors.toList());
 
-    final Volume volume;
     switch (volumeMountSegments.size()) {
-      case 3:
+      case 2:
         LocalVolume localVolume = new LocalVolume();
-        localVolume.setHostPath(volumeMountSegments.get(0));
-        volume = localVolume;
-        break;
+        localVolume.setContainerPath(volumeMountSegments.get(0));
+        localVolume.setMode(volumeMountSegments.get(1).toUpperCase(Locale.US));
+        return localVolume;
       case 5:
         ExternalVolume externalVolume = new ExternalVolume();
         externalVolume.setName(volumeMountSegments.get(0));
+        externalVolume.setContainerPath(volumeMountSegments.get(1));
+        externalVolume.setMode(volumeMountSegments.get(2).toUpperCase(Locale.US));
         externalVolume.setProvider(volumeMountSegments.get(3));
         externalVolume.setDriver(volumeMountSegments.get(4));
-        volume = externalVolume;
-        break;
+        return externalVolume;
       default:
         throw validationExceptionSupplier.get();
     }
-
-    volume.setContainerPath(volumeMountSegments.get(1));
-    volume.setMode(volumeMountSegments.get(2).toUpperCase(Locale.US));
-    return volume;
   }
 
   @Override

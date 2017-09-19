@@ -59,9 +59,8 @@ public class MarathonServiceTest {
 
   @Test
   public void testGenerateLocalVolumeSuccess() {
-    Volume actualVolume = marathonServiceImpl.generateVolume("local/path:/var/lib/mysql:rw");
+    Volume actualVolume = marathonServiceImpl.generateVolume("/var/lib/mysql:rw");
     LocalVolume expectedVolume = new LocalVolume();
-    expectedVolume.setHostPath("local/path");
     expectedVolume.setContainerPath("/var/lib/mysql");
     expectedVolume.setMode("RW");
     Assertions.assertThat(actualVolume).isEqualToComparingFieldByFieldRecursively(expectedVolume);
@@ -81,7 +80,7 @@ public class MarathonServiceTest {
 
   @Test(expected = DeploymentException.class)
   public void testGenerateVolumeFail() {
-    marathonServiceImpl.generateVolume("nota:valid:volume:mount::string");
+    marathonServiceImpl.generateVolume("local/path:/var/lib/mysql:rw");
   }
 
 }
