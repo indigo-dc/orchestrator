@@ -125,6 +125,8 @@ The orchestrator allows to run jobs on Chronos; to do that you need to configure
  * `CHRONOS_PROVIDER`
     * **Description**: The Cloud Provider that hosts the Mesos cluster on which it runs Chronos; it should be the same id that's returned from the CMDB service
     * **Default value**: `provider-RECAS-BARI`
+ * `CHRONOS_LOCAL_VOLUMES_HOST_BASE_PATH`
+    * **Description**: (Optional) The host path on which the local volumes will be mounted. If not provided support for local volumes will be disabled
 
 ### Configure Marathon (optional)
 The orchestrator allows to run applications on Marathon; to do that you need to configure the following parameters 
@@ -138,6 +140,8 @@ The orchestrator allows to run applications on Marathon; to do that you need to 
     * **Description**: The Marathon password
  * `MARATHON_LOAD_BALANCER_IPS`
     * **Description**: The list of Marathon LB IPs
+ * `MARATHON_LOCAL_VOLUMES_HOST_BASE_PATH`
+    * **Description**: (Optional) The host path on which the local volumes will be mounted. If not provided support for local volumes will be disabled
  
 ### Configure OneData (optional)
 The Orchestrator, when the Chronos parameters are set, allows to exploit a [OneData](https://onedata.org/) service space. This enables the users to execute tasks on Chronos that use temporary files hosted on a shared OneData space.

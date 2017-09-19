@@ -17,6 +17,7 @@
 package it.reply.orchestrator.config.properties;
 
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
@@ -24,7 +25,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,22 +32,11 @@ import javax.validation.constraints.NotNull;
 
 @Validated
 @Data
-@ToString(exclude = "password")
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 @ConfigurationProperties(prefix = "marathon")
 @NoArgsConstructor
-public class MarathonProperties {
-
-  @NotNull
-  @NonNull
-  private URI url;
-
-  @NotNull
-  @NonNull
-  private String username;
-
-  @NotNull
-  @NonNull
-  private String password;
+public class MarathonProperties extends MesosProperties {
 
   @NotNull
   @NonNull
