@@ -475,6 +475,11 @@ node_types:
         type: string
         description: IP of the Front-End node
         required: true
+      export_dir:
+        type: string
+        description: path to store galaxy data
+        default: /export
+        required: true
     requirements:
       host:
         type: tosca.capabilities.Container
@@ -486,6 +491,7 @@ node_types:
           implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/galaxy/galaxy_wn_configure.yml
           inputs:
             galaxy_front_end_ip: { get_property: [ SELF, front_end_ip ] }
+            export_dir: { get_property: [ SELF, export_dir ] }
 
   tosca.nodes.indigo.GalaxyShedTool:
     derived_from: tosca.nodes.WebApplication
@@ -1026,6 +1032,18 @@ node_types:
         type: string
         required: no
         default: "{ get_attribute: [ HOST, public_address ] }"
+      mesos_authenticate_http:
+        type: boolean
+        required: no
+        default: true
+      mesos_username:
+        type: string
+        required: no
+        default: 'admin'       
+      mesos_password:
+        type: string
+        required: no
+        default: 'admin'         
       marathon_enable_ssl:
         type: boolean
         required: no
@@ -1085,6 +1103,9 @@ node_types:
           implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/mesos_master_install.yml
           inputs:
             mesos_masters_list_ips: { get_property: [ SELF, mesos_masters_list ] }
+            mesos_authenticate_http: { get_property: [ SELF, mesos_authenticate_http ] }
+            mesos_username: { get_property: [ SELF, mesos_username ] }
+            mesos_password: { get_property: [ SELF, mesos_password ] }
             marathon_enable_ssl: { get_property: [ SELF, marathon_enable_ssl ] }
             marathon_user: { get_property: [ SELF, marathon_username ] }
             marathon_pass: { get_property: [ SELF, marathon_password ] }
