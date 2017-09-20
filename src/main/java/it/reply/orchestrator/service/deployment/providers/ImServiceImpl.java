@@ -18,7 +18,6 @@ package it.reply.orchestrator.service.deployment.providers;
 
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Lists;
 import com.google.common.collect.MoreCollectors;
 import com.google.common.collect.Multimap;
 
@@ -78,7 +77,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 @DeploymentProviderQualifier(DeploymentProvider.IM)
@@ -101,35 +99,39 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   @Autowired
   private ImClientFactory imClientFactory;
 
-  protected <R> R executeWithClient(CloudProviderEndpoint cloudProviderEndpoint,
-      @Nullable OidcTokenId requestedWithToken,
-      ThrowingFunction<InfrastructureManager, R, ImClientException> function)
-      throws ImClientException {
-    return this.executeWithClient(Lists.newArrayList(cloudProviderEndpoint), requestedWithToken,
-        function);
-  }
-
   protected <R> R executeWithClient(List<CloudProviderEndpoint> cloudProviderEndpoints,
       @Nullable OidcTokenId requestedWithToken,
       ThrowingFunction<InfrastructureManager, R, ImClientException> function)
       throws ImClientException {
-    InfrastructureManager client =
-        imClientFactory.build(cloudProviderEndpoints, requestedWithToken);
-    try {
+    if (!oidcProperties.isEnabled()) {
+      InfrastructureManager client = imClientFactory.build(cloudProviderEndpoints, null);
       return function.apply(client);
-    } catch (ImClientErrorException ex) {
-      if (oidcProperties.isEnabled() && Optional
-          .ofNullable(ex.getResponseError())
-          .map(ResponseError::getCode)
-          .filter(code -> code.equals(HttpStatus.UNAUTHORIZED.value()))
-          .isPresent()) {
-        oauth2TokenService.getRefreshedAccessToken(requestedWithToken);
-        client = imClientFactory.build(cloudProviderEndpoints, requestedWithToken);
+    } else {
+      String accessToken =
+          oauth2TokenService.getAccessToken(CommonUtils.checkNotNull(requestedWithToken));
+      try {
+        InfrastructureManager client = imClientFactory.build(cloudProviderEndpoints, accessToken);
         return function.apply(client);
-      } else {
-        throw ex;
+      } catch (ImClientErrorException ex) {
+        if (isUnauthorized(ex.getResponseError())) {
+          String refreshedAccessToken =
+              oauth2TokenService.getRefreshedAccessToken(requestedWithToken);
+          InfrastructureManager client =
+              imClientFactory.build(cloudProviderEndpoints, refreshedAccessToken);
+          return function.apply(client);
+        } else {
+          throw ex;
+        }
       }
     }
+  }
+
+  private static boolean isUnauthorized(ResponseError error) {
+    return Optional
+        .ofNullable(error)
+        .map(ResponseError::getCode)
+        .filter(code -> code.equals(HttpStatus.UNAUTHORIZED.value()))
+        .isPresent();
   }
 
   @Override
@@ -161,11 +163,15 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         chosenCloudProviderEndpoint.getCpComputeServiceId(), DeploymentProvider.IM);
     String imCustomizedTemplate = toscaService.getTemplateFromTopology(ar);
 
+    List<CloudProviderEndpoint> cloudProviderEndpoints =
+        deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
+
     // Deploy on IM
     try {
-      String infrastructureId = executeWithClient(chosenCloudProviderEndpoint, requestedWithToken,
-          client -> client.createInfrastructure(imCustomizedTemplate, BodyContentType.TOSCA))
-              .getInfrastructureId();
+      String infrastructureId =
+          executeWithClient(cloudProviderEndpoints, requestedWithToken,
+              client -> client.createInfrastructure(imCustomizedTemplate, BodyContentType.TOSCA))
+                  .getInfrastructureId();
       LOG.info("InfrastructureId for deployment <{}> is: {}", deploymentMessage.getDeploymentId(),
           infrastructureId);
       deployment.setEndpoint(infrastructureId);
@@ -182,7 +188,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
 
     List<CloudProviderEndpoint> cloudProviderEndpoints =
-        getEndpointsList(deployment.getResources(), deployment.getCloudProviderEndpoint());
+        deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
 
     try {
 
@@ -223,7 +229,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
 
     List<CloudProviderEndpoint> cloudProviderEndpoints =
-        getEndpointsList(deployment.getResources(), deployment.getCloudProviderEndpoint());
+        deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
 
     // Try to get the logs of the virtual infrastructure for debug purposes.
     try {
@@ -244,31 +250,19 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     Deployment deployment = getDeployment(deploymentMessage);
 
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
+
+    List<CloudProviderEndpoint> cloudProviderEndpoints =
+        deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
+
     try {
       deployment
-          .setOutputs(executeWithClient(deployment.getCloudProviderEndpoint(), requestedWithToken,
+          .setOutputs(executeWithClient(cloudProviderEndpoints, requestedWithToken,
               client -> client.getInfrastructureOutputs(deployment.getEndpoint()))
                   .getOutputs());
     } catch (ImClientException exception) {
       throw handleImClientException(exception);
     }
     updateOnSuccess(deployment.getId());
-  }
-
-  private List<CloudProviderEndpoint> getEndpointsList(Collection<Resource> resources,
-      CloudProviderEndpoint... cloudProviderEndpoints) {
-    Stream<Resource> resourcesStream = CommonUtils.iteratorToStream(resources.iterator());
-
-    Stream<CloudProviderEndpoint> cloudProviderEndpointStream = Stream
-        .concat(Stream.of(cloudProviderEndpoints),
-            resourcesStream.map(Resource::getCloudProviderEndpoint))
-        .filter(Objects::nonNull);
-
-    return CommonUtils
-        .distinct(cloudProviderEndpointStream, cloudProviderEndpoint -> cloudProviderEndpoint
-            .getIaasHeaderId()
-            .orElse(null))
-        .collect(Collectors.toList());
   }
 
   @Override
@@ -294,8 +288,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
     try {
       List<CloudProviderEndpoint> cloudProviderEndpoints =
-          getEndpointsList(deployment.getResources(), deployment.getCloudProviderEndpoint());
-
+          deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
       InfrastructureState infrastructureState = executeWithClient(cloudProviderEndpoints,
           requestedWithToken, client -> client.getInfrastructureState(deployment.getEndpoint()));
       Set<String> exsistingVms =
@@ -312,6 +305,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
               resource.setIaasId(null); // exclude it from the IM invocation so we will not get 404
               resource.setState(NodeStates.DELETING);
               resourcesToRemove.add(resource);
+            } else {
+              if (resource.getState() == NodeStates.DELETING) {
+                resourcesToRemove.add(resource);
+              }
             }
           });
       vmsToRemove.addAll(exsistingVms); // remaining VMs that we didn't know of their existence
@@ -436,7 +433,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     try {
       if (!vmsToRemove.isEmpty()) {
         List<CloudProviderEndpoint> cloudProviderEndpoints =
-            getEndpointsList(deployment.getResources(), deployment.getCloudProviderEndpoint());
+            deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
 
         LOG.debug("Deleting VMs {}", vmsToRemove);
 
@@ -452,8 +449,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       LOG.debug("Template sent: \n{}", templateToDeploy);
 
       List<CloudProviderEndpoint> cloudProviderEndpoints =
-          getEndpointsList(deployment.getResources(), chosenCloudProviderEndpoint,
-              deployment.getCloudProviderEndpoint());
+          deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
+      cloudProviderEndpoints.add(0, chosenCloudProviderEndpoint);
 
       executeWithClient(cloudProviderEndpoints,
           requestedWithToken, client -> client.addResource(deployment.getEndpoint(),
@@ -496,15 +493,13 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     Deployment deployment = getDeployment(deploymentMessage);
 
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
-    final CloudProviderEndpoint chosenCloudProviderEndpoint =
-        deploymentMessage.getChosenCloudProviderEndpoint();
 
     String deploymentEndpoint = deployment.getEndpoint();
     if (deploymentEndpoint != null) {
       deployment.setTask(Task.DEPLOYER);
 
       List<CloudProviderEndpoint> cloudProviderEndpoints =
-          getEndpointsList(deployment.getResources(), chosenCloudProviderEndpoint);
+          deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
 
       try {
         executeWithClient(cloudProviderEndpoints, requestedWithToken, client -> {
@@ -535,7 +530,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
     List<CloudProviderEndpoint> cloudProviderEndpoints =
-        getEndpointsList(deployment.getResources(), deployment.getCloudProviderEndpoint());
+        deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
     try {
       InfrastructureState infrastructureState =
           executeWithClient(cloudProviderEndpoints, requestedWithToken,
@@ -569,11 +564,14 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     String infrastructureId = deployment.getEndpoint();
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
 
+    List<CloudProviderEndpoint> cloudProviderEndpoints =
+        deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
+
     // for each URL get the tosca Node Name about the VM
     Multimap<String, String> vmMap = HashMultimap.create();
     for (String vmId : infrastructureState.getVmStates().keySet()) {
       VirtualMachineInfo vmInfo =
-          executeWithClient(deployment.getCloudProviderEndpoint(), requestedWithToken,
+          executeWithClient(cloudProviderEndpoints, requestedWithToken,
               client -> client.getVmInfo(infrastructureId, vmId));
       vmInfo
           .getVmProperties()

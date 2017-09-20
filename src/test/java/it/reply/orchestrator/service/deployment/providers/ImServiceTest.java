@@ -811,6 +811,10 @@ public class ImServiceTest {
     Mockito.doReturn(deployment.getTemplate()).when(toscaService)
         .updateTemplate(Mockito.anyString());
 
+    InfrastructureState infrastructureState = generateInfrastructureState(States.CONFIGURED, 1);
+    Mockito.when(infrastructureManager.getInfrastructureState(deployment.getEndpoint()))
+        .thenReturn(infrastructureState);
+    
     Assert.assertTrue(imService.doUpdate(dm, "newTemplate"));
 
   }
@@ -870,7 +874,10 @@ public class ImServiceTest {
     Mockito.doReturn(resource2).when(resourceRepository).save(resource2);
     Mockito.doReturn(deployment.getTemplate()).when(toscaService)
         .updateTemplate(Mockito.anyString());
-
+    
+    InfrastructureState infrastructureState = generateInfrastructureState(States.CONFIGURED, 2);
+    Mockito.when(infrastructureManager.getInfrastructureState(deployment.getEndpoint()))
+        .thenReturn(infrastructureState);
     Assert.assertTrue(imService.doUpdate(dm, "newTemplate"));
   }
 
@@ -965,8 +972,8 @@ public class ImServiceTest {
     InfrastructureManager im = Mockito.mock(InfrastructureManager.class);
     Mockito.doReturn(im).when(imClientFactory).build(Mockito.anyListOf(CloudProviderEndpoint.class), Mockito.any());
     Mockito.doThrow(new ImClientErrorException(new ResponseError("message", 404))).when(im)
-        .addResource(Mockito.anyString(), Mockito.anyString(), Mockito.anyObject());
-
+        .getInfrastructureState(deployment.getEndpoint());
+    
     Assert.assertFalse(imService.doUpdate(dm, "newTemplate"));
 
   }
