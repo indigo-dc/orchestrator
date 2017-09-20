@@ -94,9 +94,8 @@ public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData
   public boolean isOtcComputeProviderService() {
     return isServiceOfType(OPENSTACK_COMPUTE_SERVICE) && Optional
         .ofNullable(getData())
-        .map(CloudServiceData::getEndpoint)
-        .filter(Objects::nonNull)
-        .filter(endpoint -> endpoint.contains("otc.t-systems.com"))
+        // the only OST public (for now)
+        .filter(CloudServiceData::isPublicService)
         .isPresent();
   }
 

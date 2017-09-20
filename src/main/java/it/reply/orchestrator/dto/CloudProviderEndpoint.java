@@ -24,9 +24,14 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -36,7 +41,7 @@ import java.util.Optional;
  *
  */
 @Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @EqualsAndHashCode(callSuper = false)
 @ToString(exclude = "password", callSuper = false)
 public class CloudProviderEndpoint extends AdditionalPropertiesAwareDto implements Serializable {
@@ -69,9 +74,25 @@ public class CloudProviderEndpoint extends AdditionalPropertiesAwareDto implemen
   @JsonProperty
   private String iaasHeaderId;
 
+  @NonNull
+  private Map<String, CloudProviderEndpoint> hybridCloudProviderEndpoints = new HashMap<>();
+
   @JsonIgnore
   public Optional<String> getIaasHeaderId() {
     return Optional.ofNullable(iaasHeaderId);
+  }
+
+  /**
+   * Generates a list with all the CloudProviderEndpoint of the deployments.
+   * 
+   * @return the list
+   */
+  @JsonIgnore
+  public List<CloudProviderEndpoint> getAllCloudProviderEndpoint() {
+    List<CloudProviderEndpoint> returnList = new ArrayList<>();
+    returnList.add(this);
+    returnList.addAll(hybridCloudProviderEndpoints.values());
+    return returnList;
   }
 
 }

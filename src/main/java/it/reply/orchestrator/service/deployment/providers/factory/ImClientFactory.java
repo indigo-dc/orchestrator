@@ -17,7 +17,6 @@
 package it.reply.orchestrator.service.deployment.providers.factory;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 
 import es.upv.i3m.grycap.im.InfrastructureManager;
 import es.upv.i3m.grycap.im.auth.credentials.providers.AmazonEc2Credentials;
@@ -30,12 +29,10 @@ import es.upv.i3m.grycap.im.exceptions.ImClientException;
 
 import it.reply.orchestrator.config.properties.ImProperties;
 import it.reply.orchestrator.config.properties.OidcProperties;
-import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
-import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
 
 import lombok.AllArgsConstructor;
@@ -51,6 +48,7 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -64,17 +62,14 @@ public class ImClientFactory {
 
   private ImProperties imProperties;
 
-  private OAuth2TokenService oauth2TokenService;
-
   protected OpenStackCredentials getOpenStackAuthHeader(CloudProviderEndpoint cloudProviderEndpoint,
-      @NonNull OidcTokenId requestedWithToken) {
+      @NonNull String accessToken) {
     String endpoint = cloudProviderEndpoint.getCpEndpoint();
     Matcher matcher = OS_ENDPOINT_PATTERN.matcher(endpoint);
     if (!matcher.matches()) {
       throw new DeploymentException("Wrong OS endpoint format: " + endpoint);
     } else {
       endpoint = matcher.group(1);
-      String accessToken = oauth2TokenService.getAccessToken(requestedWithToken);
       OpenStackCredentials cred = cloudProviderEndpoint
           .getIaasHeaderId()
           .map(OpenStackCredentials::buildCredentials)
@@ -83,8 +78,9 @@ public class ImClientFactory {
           .withUsername("indigo-dc")
           .withPassword(accessToken)
           .withHost(endpoint);
-      if (Strings.isNullOrEmpty(matcher.group(2)) || "v3".equals(matcher.group(2))) {
-        // if no API version is specified or V3 is specified -> 3.x_oidc_access_token
+      if ("v2".equals(matcher.group(2))) {
+        throw new DeploymentException("Openstack keystone v2 not supported");
+      } else {
         cred.withAuthVersion(OpenStackAuthVersion.PASSWORD_3_X_TOKEN);
       }
       return cred;
@@ -92,8 +88,7 @@ public class ImClientFactory {
   }
 
   protected OpenNebulaCredentials getOpenNebulaAuthHeader(
-      CloudProviderEndpoint cloudProviderEndpoint, @NonNull OidcTokenId requestedWithToken) {
-    String accessToken = oauth2TokenService.getAccessToken(requestedWithToken);
+      CloudProviderEndpoint cloudProviderEndpoint, @NonNull String accessToken) {
     return cloudProviderEndpoint
         .getIaasHeaderId()
         .map(OpenNebulaCredentials::buildCredentials)
@@ -121,21 +116,23 @@ public class ImClientFactory {
         .withSubscriptionId(cloudProviderEndpoint.getTenant());
   }
 
-  protected String getImAuthHeader(@Nullable OidcTokenId requestedWithToken) {
-    if (oidcProperties.isEnabled()) {
-      String accessToken =
-          oauth2TokenService.getAccessToken(CommonUtils.checkNotNull(requestedWithToken));
-      String header = ImCredentials.buildCredentials().withToken(accessToken).serialize();
+  protected String getImAuthHeader(@Nullable String accessToken) {
+    Optional<String> imAuthHeader = imProperties.getImAuthHeader();
+    if (imAuthHeader.isPresent()) {
+      LOG.debug("IM authorization header retrieved from properties file");
+      return imAuthHeader.get();
+    } else if (oidcProperties.isEnabled()) {
+      String header = ImCredentials
+          .buildCredentials()
+          .withToken(accessToken)
+          .serialize();
       LOG.debug("IM authorization header built from access token");
       return header;
     } else {
-      String header = imProperties
-          .getImAuthHeader()
-          .orElseThrow(() -> new OrchestratorException(
-              "No Authentication info provided for for Infrastructure Manager "
-                  + "and OAuth2 authentication is disabled"));
-      LOG.debug("IM authorization header retrieved from properties file");
-      return header;
+      throw new OrchestratorException(
+          "No Authentication info provided for for Infrastructure Manager "
+              + "and OAuth2 authentication is disabled");
+
     }
   }
 
@@ -178,7 +175,7 @@ public class ImClientFactory {
   }
 
   private String getIaasAuthHeader(CloudProviderEndpoint cloudProviderEndpoint,
-      @Nullable OidcTokenId requestedWithToken) {
+      @Nullable String accessToken) {
     IaaSType iaasType = cloudProviderEndpoint.getIaasType();
     LOG.debug("Generating {} credentials with: {}", iaasType, cloudProviderEndpoint);
     String computeServiceId = cloudProviderEndpoint.getCpComputeServiceId();
@@ -219,11 +216,11 @@ public class ImClientFactory {
       switch (iaasType) {
         case OPENSTACK:
           iaasHeader = getOpenStackAuthHeader(cloudProviderEndpoint,
-              CommonUtils.checkNotNull(requestedWithToken)).serialize();
+              CommonUtils.checkNotNull(accessToken)).serialize();
           break;
         case OPENNEBULA:
           iaasHeader = getOpenNebulaAuthHeader(cloudProviderEndpoint,
-              CommonUtils.checkNotNull(requestedWithToken)).serialize();
+              CommonUtils.checkNotNull(accessToken)).serialize();
           break;
         case AWS:
           iaasHeader = getAwsAuthHeader(cloudProviderEndpoint).serialize();
@@ -242,42 +239,38 @@ public class ImClientFactory {
     return iaasHeader;
   }
 
-  @Deprecated
-  @SneakyThrows(ImClientException.class)
-  private InfrastructureManager getIm(List<CloudProviderEndpoint> cloudProviderEndpoints,
-      String imAuthHeader, String iaasHeaders) {
-    final String imUrl;
-    if (cloudProviderEndpoints.size() != 1) {
-      // multiple endpoints (or no endpoint for some reason) -> return PaaS level IM instance by
-      // default
-      imUrl = imProperties.getUrl().toString();
-    } else {
-      imUrl = Optional
-          .ofNullable(cloudProviderEndpoints.get(0).getImEndpoint())
-          .orElseGet(() -> imProperties.getUrl().toString());
-    }
-    String imHeader = String.format("%s\\n%s", imAuthHeader, iaasHeaders);
-    LOG.trace("IM auth header: {}", imHeader);
-    return new InfrastructureManager(imUrl, imHeader);
-  }
-
   /**
    * Generates a Infrastructure Manager client.
    * 
    * @param cloudProviderEndpoints
    *          the cloud providers information on which IM will authenticate
-   * @param requestedWithToken
+   * @param accessToken
    *          the optional OAuth2 token
    * @return the generated client
    */
+  @SneakyThrows(ImClientException.class)
   public InfrastructureManager build(List<CloudProviderEndpoint> cloudProviderEndpoints,
-      @Nullable OidcTokenId requestedWithToken) {
-    String imAuthHeader = getImAuthHeader(requestedWithToken);
-    String iaasHeaders = cloudProviderEndpoints
+      @Nullable String accessToken) {
+    String imAuthHeader = getImAuthHeader(accessToken);
+    Stream<String> iaasHeadersStream = cloudProviderEndpoints
         .stream()
-        .map(cloudProviderEndpoint -> getIaasAuthHeader(cloudProviderEndpoint, requestedWithToken))
+        .map(cloudProviderEndpoint -> getIaasAuthHeader(cloudProviderEndpoint, accessToken));
+
+    String imHeader = Stream
+        .concat(Stream.of(imAuthHeader), iaasHeadersStream)
         .collect(Collectors.joining("\\n"));
-    return getIm(cloudProviderEndpoints, imAuthHeader, iaasHeaders);
+    LOG.trace("IM auth header: {}", imHeader);
+
+    String imUrl = null;
+    if (cloudProviderEndpoints.size() == 1) {
+      // use im local endpoint only if not hybrid (and if available)
+      imUrl = cloudProviderEndpoints.get(0).getImEndpoint();
+    }
+    if (imUrl == null) {
+      imUrl = imProperties.getUrl().toString();
+    }
+
+    return new InfrastructureManager(imUrl, imHeader);
   }
 
 }

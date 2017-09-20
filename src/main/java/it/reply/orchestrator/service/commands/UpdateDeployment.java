@@ -42,6 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -94,8 +95,16 @@ public class UpdateDeployment extends BaseDeployCommand<UpdateDeployment> {
 
     // FIXME Use another method to hold CP Endpoint (i.e. CMDB service ID reference?)
     // Save CPE in Deployment for future use
-    if (deployment.getCloudProviderEndpoint() == null) {
+    if (deployment.getCloudProviderEndpoint() == null) { // create
       deployment.setCloudProviderEndpoint(chosenCloudProviderEndpoint);
+    } else {
+      Optional<String> iaasheaderId = chosenCloudProviderEndpoint.getIaasHeaderId();
+      if (deploymentMessage.isHybrid() && iaasheaderId.isPresent()) { // hybrid update
+        deployment
+            .getCloudProviderEndpoint()
+            .getHybridCloudProviderEndpoints()
+            .put(iaasheaderId.get(), chosenCloudProviderEndpoint);
+      }
     }
 
     if (deployment.getDeploymentProvider() == null) {
