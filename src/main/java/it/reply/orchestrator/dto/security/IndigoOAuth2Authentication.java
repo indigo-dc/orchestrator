@@ -23,6 +23,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.mitre.openid.connect.model.UserInfo;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
@@ -40,8 +41,7 @@ public class IndigoOAuth2Authentication extends OAuth2Authentication {
   @NotNull
   private OAuth2AccessToken token;
 
-  @NonNull
-  @NotNull
+  @Nullable
   private UserInfo userInfo;
 
   /**
@@ -56,10 +56,10 @@ public class IndigoOAuth2Authentication extends OAuth2Authentication {
    *          credentials).
    */
   public IndigoOAuth2Authentication(OAuth2Authentication authentication, OAuth2AccessToken token,
-      UserInfo userInfo) {
+      @Nullable UserInfo userInfo) {
     super(authentication.getOAuth2Request(), authentication.getUserAuthentication());
     this.token = Preconditions.checkNotNull(token);
-    this.userInfo = Preconditions.checkNotNull(userInfo);
+    this.userInfo = userInfo;
   }
 
 }
