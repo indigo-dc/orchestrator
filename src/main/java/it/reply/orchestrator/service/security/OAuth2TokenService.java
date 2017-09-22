@@ -156,8 +156,12 @@ public class OAuth2TokenService {
 
     IndigoOAuth2Authentication autentication = getCurrentAuthentication();
     IndigoUserInfo userInfo = (IndigoUserInfo) autentication.getUserInfo();
-    String organization = userInfo.getOrganizationName();
-    newEntity.setOrganization(organization);
+    if (userInfo != null) {
+      String organization = userInfo.getOrganizationName();
+      newEntity.setOrganization(organization);
+    } else {
+      throw new OrchestratorException("Client Credentials Grant not supported");
+    }
     return newEntity;
   }
 
