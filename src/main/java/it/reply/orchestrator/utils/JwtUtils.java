@@ -40,8 +40,8 @@ public class JwtUtils {
    */
   public static JWT parseJwt(String jwtToken) {
     try {
-      return JWTParser.parse(Preconditions.checkNotNull(jwtToken));
-    } catch (ParseException ex) {
+      return JWTParser.parse(jwtToken);
+    } catch (RuntimeException | ParseException ex) {
       throw new IllegalArgumentException(String.format("<%S> is not a valid JWT", jwtToken), ex);
     }
   }
@@ -62,25 +62,60 @@ public class JwtUtils {
     }
   }
 
-  public static JWTClaimsSet getJwtClaimsSet(String jwtToken) {
-    return getJwtClaimsSet(parseJwt(jwtToken));
+  /**
+   * Extract the issuer claim from a {@link JWT}.
+   * 
+   * @param jwtToken
+   *          the JWT token
+   * @return the issuer claim
+   */
+  public static String getIssuer(JWT jwtToken) {
+    return Optional
+        .ofNullable(JwtUtils.getJwtClaimsSet(jwtToken).getIssuer())
+        .orElseThrow(() -> new IllegalArgumentException("No issuer claim found in JWT"));
   }
 
-  public static Optional<Date> getExpirationTimeFromJwt(JWT jwtToken) {
+  /**
+   * Extract the subject claim from a {@link JWT}.
+   * 
+   * @param jwtToken
+   *          the JWT token
+   * @return the subject claim
+   */
+  public static String getSubject(JWT jwtToken) {
+    return Optional
+        .ofNullable(JwtUtils.getJwtClaimsSet(jwtToken).getSubject())
+        .orElseThrow(() -> new IllegalArgumentException("No subject claim found in JWT"));
+  }
+
+  /**
+   * Extract the jti claim from a {@link JWT}.
+   * 
+   * @param jwtToken
+   *          the JWT token
+   * @return the jti claim
+   */
+  public static String getJti(JWT jwtToken) {
+    return Optional
+        .ofNullable(JwtUtils.getJwtClaimsSet(jwtToken).getJWTID())
+        .orElseThrow(() -> new IllegalArgumentException("No jti claim found in JWT"));
+  }
+
+  public static Optional<Date> getExpirationTime(JWT jwtToken) {
     return Optional.ofNullable(getJwtClaimsSet(jwtToken).getExpirationTime());
   }
 
-  public static Optional<Date> getExpirationTimeFromJwt(String jwtToken) {
-    return getExpirationTimeFromJwt(parseJwt(jwtToken));
-  }
-
+  /**
+   * Checks if a {@link JWT} is expired.
+   * 
+   * @param jwtToken
+   *          the JWT token
+   * @return true if the JWT is expired, false otherwise
+   */
   public static boolean isJtwTokenExpired(JWT jwtToken) {
-    return getExpirationTimeFromJwt(jwtToken)
-        .filter(expirationDate -> expirationDate.before(new Date())).isPresent();
-  }
-
-  public static boolean isJtwTokenExpired(String jwtToken) {
-    return isJtwTokenExpired(parseJwt(jwtToken));
+    return getExpirationTime(jwtToken)
+        .filter(expirationDate -> expirationDate.before(new Date()))
+        .isPresent();
   }
 
 }

@@ -36,7 +36,7 @@ public class UserInfoIntrospectingTokenServiceTest {
   UserInfoIntrospectingTokenService iserInfoIntrospectingTokenService;
 
   @Mock
-  ServerConfigurationService serverConfigurationService;
+  OAuth2ConfigurationsService oauth2ConfigurationsService;
 
   @Mock
   UserInfoFetcher userInfoFetcher;
@@ -48,7 +48,7 @@ public class UserInfoIntrospectingTokenServiceTest {
   public void setup() {
     MockitoAnnotations.initMocks(this);
     iserInfoIntrospectingTokenService =
-        new UserInfoIntrospectingTokenService(serverConfigurationService, null, validationServices);
+        new UserInfoIntrospectingTokenService(oauth2ConfigurationsService, null, validationServices);
   }
 
   @Test
@@ -76,7 +76,7 @@ public class UserInfoIntrospectingTokenServiceTest {
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbGljZSIsImlzcyI6Imh0dHBzOi8vYzJpZC5jb20iLCJleHAiOjE0ODg1NTIyNzIxOTV9.3c7wkuOXGjXxVLJXcsaZ259HK07jtwVCQZcwN_fhF3M";
 
     ServerConfiguration serverConfiguration = new ServerConfiguration();
-    Mockito.when(serverConfigurationService.getServerConfiguration("https://c2id.com"))
+    Mockito.when(oauth2ConfigurationsService.getServerConfiguration("https://c2id.com"))
         .thenReturn(serverConfiguration);
 
     Mockito.when(validationServices.getValidator(null)).thenReturn(null);

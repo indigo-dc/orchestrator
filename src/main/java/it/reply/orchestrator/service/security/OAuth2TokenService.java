@@ -16,7 +16,9 @@
 
 package it.reply.orchestrator.service.security;
 
-import com.nimbusds.jwt.JWTClaimsSet;
+import com.google.common.base.Preconditions;
+
+import com.nimbusds.jwt.JWT;
 
 import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.config.properties.OidcProperties.IamProperties;
@@ -34,7 +36,6 @@ import it.reply.orchestrator.utils.JwtUtils;
 import org.mitre.oauth2.model.RegisteredClient;
 import org.mitre.openid.connect.config.ServerConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.social.oauth2.AccessGrant;
 import org.springframework.stereotype.Service;
@@ -50,7 +51,7 @@ public class OAuth2TokenService {
   private OidcProperties oidcProperties;
 
   @Autowired
-  private OAuth2ConfigurationsService oauth2cConfigurationsService;
+  private OAuth2ConfigurationsService oauth2ConfigurationsService;
 
   @Autowired
   private OidcTokenRepository oidcTokenRepository;
@@ -69,8 +70,8 @@ public class OAuth2TokenService {
    */
   public IndigoOAuth2Authentication getCurrentAuthentication() {
     handleSecurityDisabled();
-    return Optional.of(SecurityContextHolder.getContext())
-        .map(SecurityContext::getAuthentication)
+    return Optional
+        .of(SecurityContextHolder.getContext().getAuthentication())
         .filter(IndigoOAuth2Authentication.class::isInstance)
         .map(IndigoOAuth2Authentication.class::cast)
         .orElseThrow(() -> new IllegalStateException("User is not authenticated"));
@@ -101,7 +102,7 @@ public class OAuth2TokenService {
    */
   public Optional<OidcClientProperties> getCluesInfo(String accessToken) {
     handleSecurityDisabled();
-    String iss = JwtUtils.getJwtClaimsSet(accessToken).getIssuer();
+    String iss = JwtUtils.getIssuer(JwtUtils.parseJwt(accessToken));
     return oidcProperties.getIamConfiguration(iss).flatMap(IamProperties::getClues);
   }
 
@@ -112,10 +113,10 @@ public class OAuth2TokenService {
    */
   public OidcTokenId generateTokenIdFromCurrentAuth() {
     handleSecurityDisabled();
-    JWTClaimsSet claims = JwtUtils.getJwtClaimsSet(getOAuth2TokenFromCurrentAuth());
+    JWT jwt = JwtUtils.parseJwt(getOAuth2TokenFromCurrentAuth());
     OidcTokenId tokenId = new OidcTokenId();
-    tokenId.setIssuer(claims.getIssuer());
-    tokenId.setJti(claims.getJWTID());
+    tokenId.setIssuer(JwtUtils.getIssuer(jwt));
+    tokenId.setJti(JwtUtils.getJti(jwt));
     return tokenId;
   }
 
@@ -125,10 +126,10 @@ public class OAuth2TokenService {
    * @return the OidcEntityId
    */
   public static OidcEntityId generateOidcEntityIdFromToken(String accessToken) {
-    JWTClaimsSet claims = JwtUtils.getJwtClaimsSet(accessToken);
+    JWT jwt = JwtUtils.parseJwt(accessToken);
     OidcEntityId id = new OidcEntityId();
-    id.setIssuer(claims.getIssuer());
-    id.setSubject(claims.getSubject());
+    id.setIssuer(JwtUtils.getIssuer(jwt));
+    id.setSubject(JwtUtils.getSubject(jwt));
     return id;
   }
 
@@ -157,10 +158,11 @@ public class OAuth2TokenService {
     IndigoOAuth2Authentication autentication = getCurrentAuthentication();
     IndigoUserInfo userInfo = (IndigoUserInfo) autentication.getUserInfo();
     if (userInfo != null) {
-      String organization = userInfo.getOrganizationName();
+      String organization = Preconditions.checkNotNull(userInfo.getOrganizationName(),
+          "Organization name not found between the user info claims");
       newEntity.setOrganization(organization);
     } else {
-      throw new OrchestratorException("Client Credentials Grant not supported");
+      throw new OrchestratorException("Client credentials grant not supported");
     }
     return newEntity;
   }
@@ -171,7 +173,7 @@ public class OAuth2TokenService {
    * @param id
    *          the id of the token
    * @param accessToken
-   *          the acces token
+   *          the access token
    * @param scopes
    *          the scopes to request
    * @return the exchanged grant
@@ -197,8 +199,10 @@ public class OAuth2TokenService {
     handleSecurityDisabled();
     CustomOAuth2Template template = generateOAuth2Template(id.getIssuer());
     String refreshToken =
-        oidcTokenRepository.findByOidcTokenId(id).map(OidcRefreshToken::getVaule).orElseThrow(
-            () -> new OrchestratorException("No refresh token suitable found"));
+        oidcTokenRepository
+            .findByOidcTokenId(id)
+            .map(OidcRefreshToken::getVaule)
+            .orElseThrow(() -> new OrchestratorException("No refresh token suitable found"));
     return template.refreshToken(refreshToken, scopes);
   }
 
@@ -212,7 +216,7 @@ public class OAuth2TokenService {
   public String getRefreshedAccessToken(OidcTokenId id) {
     handleSecurityDisabled();
     oauth2TokenCacheService.evict(id);
-    return oauth2TokenCacheService.get(id).getAccessToken();
+    return getAccessToken(id);
   }
 
   public String getAccessToken(OidcTokenId id) {
@@ -224,16 +228,16 @@ public class OAuth2TokenService {
     handleSecurityDisabled();
 
     ServerConfiguration serverConfiguration =
-        oauth2cConfigurationsService.getServerConfiguration(issuer);
+        oauth2ConfigurationsService.getServerConfiguration(issuer);
 
     RegisteredClient clientConfiguration =
-        oauth2cConfigurationsService.getClientConfiguration(serverConfiguration);
+        oauth2ConfigurationsService.getClientConfiguration(serverConfiguration);
 
     boolean headerAuthSupported =
-        Optional.ofNullable(serverConfiguration.getTokenEndpointAuthMethodsSupported())
+        Optional
+            .ofNullable(serverConfiguration.getTokenEndpointAuthMethodsSupported())
             .orElseGet(Collections::emptyList)
-            .stream()
-            .anyMatch("client_secret_basic"::equals);
+            .contains("client_secret_basic");
 
     CustomOAuth2Template template = new CustomOAuth2Template(clientConfiguration.getClientId(),
         clientConfiguration.getClientSecret(), serverConfiguration.getAuthorizationEndpointUri(),

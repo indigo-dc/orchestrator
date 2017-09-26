@@ -58,8 +58,7 @@ public class DeploymentController {
 
   private static final String OFFLINE_AND_PROFILE_REQUIRED_CONDITION =
       OidcProperties.OIDC_DISABLED_CONDITION + " || "
-          + "#oauth2.throwOnError(#oauth2.hasScope('offline_access') && "
-          + "#oauth2.hasScope('profile'))";
+          + "#oauth2.throwOnError(#oauth2.hasScope('offline_access'))";
 
   @Autowired
   private DeploymentService deploymentService;
