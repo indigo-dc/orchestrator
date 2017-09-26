@@ -16,8 +16,6 @@
 
 package it.reply.orchestrator.dto.security;
 
-import com.google.common.base.Preconditions;
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
@@ -25,6 +23,7 @@ import lombok.ToString;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.mitre.openid.connect.model.UserInfo;
+import org.springframework.security.oauth2.common.DefaultOAuth2AccessToken;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 
@@ -39,7 +38,7 @@ public class IndigoOAuth2Authentication extends OAuth2Authentication {
 
   @NonNull
   @NotNull
-  private OAuth2AccessToken token;
+  private DefaultOAuth2AccessToken token;
 
   @Nullable
   private UserInfo userInfo;
@@ -58,7 +57,11 @@ public class IndigoOAuth2Authentication extends OAuth2Authentication {
   public IndigoOAuth2Authentication(OAuth2Authentication authentication, OAuth2AccessToken token,
       @Nullable UserInfo userInfo) {
     super(authentication.getOAuth2Request(), authentication.getUserAuthentication());
-    this.token = Preconditions.checkNotNull(token);
+    this.token = new DefaultOAuth2AccessToken(token.getValue());
+    this.token.setRefreshToken(token.getRefreshToken());
+    this.token.setExpiration(token.getExpiration());
+    this.token.setScope(token.getScope());
+    this.token.setTokenType(token.getTokenType());
     this.userInfo = userInfo;
   }
 

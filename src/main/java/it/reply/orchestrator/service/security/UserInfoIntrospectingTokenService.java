@@ -22,13 +22,13 @@ import com.nimbusds.jwt.SignedJWT;
 import it.reply.orchestrator.dto.security.IndigoOAuth2Authentication;
 import it.reply.orchestrator.utils.JwtUtils;
 
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.mitre.jwt.signer.service.JWTSigningAndValidationService;
 import org.mitre.jwt.signer.service.impl.JWKSetCacheService;
 import org.mitre.oauth2.introspectingfilter.IntrospectingTokenService;
 import org.mitre.openid.connect.client.UserInfoFetcher;
-import org.mitre.openid.connect.client.service.ServerConfigurationService;
 import org.mitre.openid.connect.config.ServerConfiguration;
 import org.mitre.openid.connect.model.PendingOIDCAuthenticationToken;
 import org.mitre.openid.connect.model.UserInfo;
@@ -42,110 +42,69 @@ import java.text.ParseException;
 import java.util.Optional;
 
 @Slf4j
+@AllArgsConstructor
 public class UserInfoIntrospectingTokenService extends IntrospectingTokenService {
 
-  private ServerConfigurationService serverConfigurationService;
+  private OAuth2ConfigurationsService oauth2ConfigurationsService;
   private UserInfoFetcher userInfoFetcher;
   private JWKSetCacheService validationServices;
-
-  /**
-   * Generate a new UserInfoIntrospectingTokenService.
-   * 
-   * @param serverConfigurationService
-   *          the serverConfigurationService
-   * @param userInfoFetcher
-   *          the userInfoFetcher
-   * @param validationServices
-   *          the validationServices
-   */
-  public UserInfoIntrospectingTokenService(ServerConfigurationService serverConfigurationService,
-      UserInfoFetcher userInfoFetcher, JWKSetCacheService validationServices) {
-    this.serverConfigurationService = serverConfigurationService;
-    this.userInfoFetcher = userInfoFetcher;
-    this.validationServices = validationServices;
-  }
 
   @Override
   public OAuth2Authentication loadAuthentication(String accessToken)
       throws AuthenticationException {
-    IndigoOAuth2Authentication auth = null;
-    SignedJWT jwtToken = null;
     try {
-      jwtToken = SignedJWT.parse(accessToken);
-    } catch (Exception ex) {
-      LOG.info("Invalid access token, access token <{}> is not a signed JWT", accessToken, ex);
-      return null;
-    }
-    try {
-      // check if expired or not signed
+      // check if a JWT and signed
+      SignedJWT jwtToken = SignedJWT.parse(accessToken);
+      // check if not expired and with valid signature
       preValidate(jwtToken);
       OAuth2Authentication authentication = super.loadAuthentication(accessToken);
       OAuth2AccessToken token = super.readAccessToken(accessToken);
-      if (authentication != null) {
-        UserInfo userInfo = null;
-        if (!authentication.isClientOnly() && token.getScope().contains("openid")) {
-          userInfo = getUserInfo(authentication, jwtToken);
-        }
-        auth = new IndigoOAuth2Authentication(authentication, token, userInfo);
-      }
+      UserInfo userInfo = token.getScope().contains("openid") ? getUserInfo(jwtToken) : null;
+      return new IndigoOAuth2Authentication(authentication, token, userInfo);
+    } catch (ParseException ex) {
+      LOG.info("Invalid access token, access token <{}> is not a signed JWT", accessToken, ex);
+      return null;
     } catch (InvalidTokenException ex) {
       LOG.info("Invalid access token, {}", ex.getMessage());
       return null;
-    } catch (Exception ex) {
+    } catch (RuntimeException ex) {
       // if there is an exception return a null authentication
       // (this will translate to an "invalid_token" response)
       LOG.info("Error validating access token", ex);
       return null;
     }
-    return auth;
   }
 
-  private void preValidate(SignedJWT jwtToken) throws ParseException {
+  private void preValidate(SignedJWT jwtToken) {
     if (JwtUtils.isJtwTokenExpired(jwtToken)) {
       throw new InvalidTokenException("access token is expired");
     }
 
-    String issuer = getIssuer(jwtToken);
-    ServerConfiguration serverConfiguration = getServerConfiguration(issuer);
+    String issuer = JwtUtils.getIssuer(jwtToken);
+    ServerConfiguration serverConfiguration = oauth2ConfigurationsService
+        .getServerConfiguration(issuer);
     JWTSigningAndValidationService validationService = Optional
-        .ofNullable(validationServices.getValidator(serverConfiguration.getJwksUri())).orElseThrow(
-            () -> new AuthorizationServiceException("Couldn't retrive validator for issuer "
-                + issuer + ", validation of access token skipped"));
+        .ofNullable(validationServices.getValidator(serverConfiguration.getJwksUri()))
+        .orElseThrow(() -> new AuthorizationServiceException(String
+            .format("Couldn't retrive validator for issuer %s", issuer)));
 
-    if (!validationService.validateSignature((SignedJWT) jwtToken)) {
+    if (!validationService.validateSignature(jwtToken)) {
       throw new InvalidTokenException("access token has an invalid signature");
     }
   }
 
-  private UserInfo getUserInfo(OAuth2Authentication authentication, JWT jwtToken)
-      throws ParseException {
-    String accessToken = jwtToken.getParsedString();
-    String issuer = getIssuer(jwtToken);
-    ServerConfiguration serverConfiguration = getServerConfiguration(issuer);
+  private UserInfo getUserInfo(JWT jwtToken) {
+    String subject = JwtUtils.getSubject(jwtToken);
+    String issuer = JwtUtils.getIssuer(jwtToken);
+    ServerConfiguration serverConfiguration = oauth2ConfigurationsService
+        .getServerConfiguration(issuer);
     PendingOIDCAuthenticationToken infoKey =
-        new PendingOIDCAuthenticationToken(authentication.getPrincipal().toString(), issuer,
-            serverConfiguration, null, accessToken, null);
+        new PendingOIDCAuthenticationToken(subject, issuer,
+            serverConfiguration, null, jwtToken.getParsedString(), null);
 
-    return Optional.ofNullable(userInfoFetcher.loadUserInfo(infoKey))
+    return Optional
+        .ofNullable(userInfoFetcher.loadUserInfo(infoKey))
         .orElseThrow(() -> new AuthorizationServiceException("Error retrieving user info"));
   }
 
-  private String getIssuer(JWT jwtToken) {
-    return Optional.ofNullable(JwtUtils.getJwtClaimsSet(jwtToken).getIssuer())
-        .orElseThrow(() -> new IllegalArgumentException("No issuer claim found in JWT"));
-  }
-
-  /**
-   * Get a server configuration from a issuer.
-   * 
-   * @param issuer
-   *          the issuer
-   * @return the server configuration
-   */
-  public ServerConfiguration getServerConfiguration(String issuer) {
-    return Optional.ofNullable(serverConfigurationService.getServerConfiguration(issuer))
-        .orElseThrow(() -> new IllegalArgumentException(
-            "Could not find server configuration for issuer " + issuer));
-
-  }
 }

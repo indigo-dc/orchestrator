@@ -79,7 +79,7 @@ public class OidcRefreshToken implements Identifiable<String>, Serializable {
         .map(scopes -> Lists.newArrayList(scopes))
         .ifPresent(scopes -> token.setScopes(CommonUtils.checkNotNull(scopes)));
 
-    JwtUtils.getExpirationTimeFromJwt(token.getVaule())
+    JwtUtils.getExpirationTime(JwtUtils.parseJwt(token.getVaule()))
         .ifPresent(expirationDate -> token.setExpirationDate(expirationDate));
 
     return token;

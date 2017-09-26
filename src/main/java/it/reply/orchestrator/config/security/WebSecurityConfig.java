@@ -21,6 +21,7 @@ import it.reply.orchestrator.config.properties.OidcProperties.IamProperties;
 import it.reply.orchestrator.config.properties.OidcProperties.ScopedOidcClientProperties;
 import it.reply.orchestrator.exception.CustomOAuth2ExceptionRenderer;
 import it.reply.orchestrator.service.security.IndigoUserInfoFetcher;
+import it.reply.orchestrator.service.security.OAuth2ConfigurationsService;
 import it.reply.orchestrator.service.security.UserInfoIntrospectingTokenService;
 
 import org.mitre.jwt.signer.service.impl.JWKSetCacheService;
@@ -146,10 +147,11 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
     }
 
     @Bean
-    protected ResourceServerTokenServices introspectingTokenService(OidcProperties oidcProperties) {
+    protected ResourceServerTokenServices introspectingTokenService(OidcProperties oidcProperties,
+        OAuth2ConfigurationsService oauth2ConfigurationsService) {
       if (oidcProperties.isEnabled()) {
         UserInfoIntrospectingTokenService introspectingTokenService =
-            new UserInfoIntrospectingTokenService(serverConfigurationService(oidcProperties),
+            new UserInfoIntrospectingTokenService(oauth2ConfigurationsService,
                 userInfoFetcher(oidcProperties), validationServices(oidcProperties));
         introspectingTokenService.setIntrospectionConfigurationService(
             introspectionConfigurationService(oidcProperties));
@@ -209,7 +211,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
           .anyRequest()
           .fullyAuthenticated()
           .anyRequest()
-          .access("#oauth2.hasScopeMatching('openid')");
+          .access("#oauth2.hasScopeMatching('openid') and #oauth2.hasScopeMatching('profile')");
 
       ResourceServerSecurityConfigurer configurer = new ResourceServerSecurityConfigurer();
       configurer.setBuilder(http);
