@@ -25,9 +25,12 @@ import it.reply.workflowmanager.spring.orchestrator.bpm.ejbcommands.BaseCommand;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.kie.api.executor.CommandContext;
 import org.kie.api.executor.ExecutionResults;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import javax.persistence.OptimisticLockException;
 
 /**
  * Base behavior for all Deploy WF tasks. <br/>
@@ -65,8 +68,15 @@ public abstract class BaseWorkflowCommand<M extends BaseWorkflowMessage,
     } catch (Exception ex) {
       LOG.error(getErrorMessagePrefix(), ex);
       exResults = resultOccurred(false);
-
-      deploymentStatusHelper.updateOnError(message.getDeploymentId(), getErrorMessagePrefix(), ex);
+      if (ExceptionUtils.indexOfThrowable(ex, OptimisticLockException.class) == -1) {
+        // not due to OptimisticLockException
+        deploymentStatusHelper.updateOnError(message.getDeploymentId(), getErrorMessagePrefix(),
+            ex);
+      } else {
+        // due to OptimisticLockException, some other thread will handle it
+        LOG.debug(
+            "Not setting deployment in error because exception was caused by optimistic lock");
+      }
       if (ex instanceof InterruptedException) {
         Thread.currentThread().interrupt();
       }
