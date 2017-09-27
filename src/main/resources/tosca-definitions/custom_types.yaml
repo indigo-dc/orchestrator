@@ -493,6 +493,94 @@ node_types:
             galaxy_front_end_ip: { get_property: [ SELF, front_end_ip ] }
             export_dir: { get_property: [ SELF, export_dir ] }
 
+  tosca.nodes.indigo.GalaxyWnToolDeps:
+    derived_from: tosca.nodes.indigo.GalaxyWN
+    properties:
+      flavor:
+        type: string
+        description: name of the Galaxy flavor
+        required: true
+        default: galaxy-no-tools
+      version:
+        type: string
+        description: galaxy version installed
+        default: master
+        required: false
+    requirements:
+      host:
+        type: tosca.capabilities.Container
+        node: tosca.nodes.Compute
+        relationship: tosca.relationships.HostedOn
+    interfaces:
+      Standard:
+        configure:
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/galaxy/galaxy_wn_configure_tooldeps.yml
+          inputs:
+            galaxy_front_end_ip: { get_property: [ SELF, front_end_ip ] }
+            export_dir: { get_property: [ SELF, export_dir ] }
+            galaxy_flavor: { get_property: [ SELF, flavor ] }
+            galaxy_version: { get_property: [ SELF, version ] }
+
+  tosca.nodes.indigo.GalaxyWnCvmfsReferenceData:
+    derived_from: tosca.nodes.indigo.GalaxyWnToolDeps
+    properties:
+      reference_data:
+        type: boolean
+        description: Install Reference data
+        default: true
+        required: true
+      refdata_cvmfs_server_url:
+        type: string
+        description: CernVM-FS server, replica or stratum-zero
+        default: 'server_url'
+        required: false
+      refdata_cvmfs_repository_name:
+        type: string
+        description: Reference data CernVM-FS repository name
+        default: 'not_a_cvmfs_repository_name'
+        required: false
+      refdata_cvmfs_key_file:
+        type: string
+        description: CernVM-FS public key
+        default: 'not_a_key'
+        required: false
+      refdata_cvmfs_proxy_url:
+        type: string
+        description: CernVM-FS proxy url
+        default: 'DIRECT'
+        required: false
+      refdata_cvmfs_proxy_port:
+        type: integer
+        description: CernVM-FS proxy port
+        default: 80
+        required: false
+      refdata_dir:
+        type: string
+        description: path to store galaxy reference data
+        default: /refdata
+        required: false
+    requirements:
+      host:
+        type: tosca.capabilities.Container
+        node: tosca.nodes.Compute
+        relationship: tosca.relationships.HostedOn
+    interfaces:
+      Standard:
+        configure:
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/galaxy/galaxy_wn_configure_cvmfs.yml
+          inputs:
+            galaxy_front_end_ip: { get_property: [ SELF, front_end_ip ] }
+            export_dir: { get_property: [ SELF, export_dir ] }
+            galaxy_flavor: { get_property: [ SELF, flavor ] }
+            galaxy_version: { get_property: [ SELF, version ] }
+            get_refdata: { get_property: [ SELF, reference_data ] }
+            refdata_cvmfs_server_url: { get_property: [ SELF, refdata_cvmfs_server_url ] }
+            refdata_cvmfs_repository_name: { get_property: [ SELF, refdata_cvmfs_repository_name ] }
+            refdata_cvmfs_key_file: { get_property: [ SELF, refdata_cvmfs_key_file ] }
+            refdata_cvmfs_proxy_url: { get_property: [ SELF, refdata_cvmfs_proxy_url ] }
+            refdata_cvmfs_proxy_port: { get_property: [ SELF, refdata_cvmfs_proxy_port ] }
+            refdata_dir: { get_property: [ SELF, refdata_dir ] }
+
   tosca.nodes.indigo.GalaxyShedTool:
     derived_from: tosca.nodes.WebApplication
     properties:
@@ -505,6 +593,11 @@ node_types:
         type: string
         description: key to access the API with admin role
         default: not_very_secret_api_key
+        required: false
+      version:
+        type: string
+        description: galaxy version installed
+        default: master
         required: false
     requirements:
       host:
@@ -526,6 +619,7 @@ node_types:
             galaxy_flavor: { get_property: [ SELF, flavor ] }
             galaxy_admin_api_key: { get_property: [ HOST, admin_api_key ] }
             instance_public_ip: { get_attribute: [ HOST, public_address, 0 ] }
+            galaxy_version: { get_property: [ SELF, version ] }
 
   tosca.nodes.indigo.GalaxyReferenceData:
     derived_from: tosca.nodes.WebApplication
@@ -926,6 +1020,10 @@ node_types:
         type: integer
         required: no
         default: 1024
+      cache_image:
+        type: string
+        required: no
+        default: 'redis'
       db_cpus:
         type: float
         required: no
@@ -934,6 +1032,10 @@ node_types:
         type: integer
         required: no
         default: 1024
+      db_image:
+        type: string
+        required: no
+        default: 'postgres'
       es_cpus:
         type: float
         required: no
@@ -942,6 +1044,10 @@ node_types:
         type: integer
         required: no
         default: 1024
+      es_image:
+        type: string
+        required: no
+        default: 'indigodatacloudapps/dariah-repository:elasticsearch'
       mq_cpus:
         type: float
         required: no
@@ -950,6 +1056,10 @@ node_types:
         type: integer
         required: no
         default: 1024
+      mq_image:
+        type: string
+        required: no
+        default: 'rabbitmq:3-management'
       statsd_cpus:
         type: float
         required: no
@@ -958,6 +1068,10 @@ node_types:
         type: integer
         required: no
         default: 1024
+      statsd_image:
+        type: string
+        required: no
+        default: 'indigodatacloudapps/dariah-repository:statsd'
       web_cpus:
         type: float
         required: no
@@ -966,6 +1080,10 @@ node_types:
         type: integer
         required: no
         default: 1024
+      web_image:
+        type: string
+        required: no
+        default: 'indigodatacloudapps/dariah-repository:web'
       worker_cpus:
         type: float
         required: no
@@ -974,6 +1092,10 @@ node_types:
         type: integer
         required: no
         default: 1024
+      worker_image:
+        type: string
+        required: no
+        default: 'indigodatacloudapps/dariah-repository:web'
     artifacts:
       dariahrepo_role:
         file: indigo-dc.dariahrepo
@@ -986,18 +1108,25 @@ node_types:
             marathon_password: { get_property: [ SELF, marathon_password ] }
             dariahrepo_app_cache_cpus: { get_property: [ SELF, cache_cpus ] }
             dariahrepo_app_cache_mem: { get_property: [ SELF, cache_mem ] }
+            dariahrepo_app_cache_image: { get_property: [ SELF, cache_image ] }
             dariahrepo_app_db_cpus: { get_property: [ SELF, db_cpus ] }
             dariahrepo_app_db_mem: { get_property: [ SELF, db_mem ] }
+            dariahrepo_app_db_image: { get_property: [ SELF, db_image ] }
             dariahrepo_app_es_cpus: { get_property: [ SELF, es_cpus ] }
             dariahrepo_app_es_mem: { get_property: [ SELF, es_mem ] }
+            dariahrepo_app_es_image: { get_property: [ SELF, es_image ] }
             dariahrepo_app_mq_cpus: { get_property: [ SELF, mq_cpus ] }
             dariahrepo_app_mq_mem: { get_property: [ SELF, mq_mem ] }
+            dariahrepo_app_mq_image: { get_property: [ SELF, mq_image ] }
             dariahrepo_app_statsd_cpus: { get_property: [ SELF, statsd_cpus ] }
             dariahrepo_app_statsd_mem: { get_property: [ SELF, statsd_mem ] }
+            dariahrepo_app_statsd_image: { get_property: [ SELF, statsd_image ] }
             dariahrepo_app_web_cpus: { get_property: [ SELF, web_cpus ] }
             dariahrepo_app_web_mem: { get_property: [ SELF, web_mem ] }
+            dariahrepo_app_web_image: { get_property: [ SELF, web_image ] }
             dariahrepo_app_worker_cpus: { get_property: [ SELF, worker_cpus ] }
             dariahrepo_app_worker_mem: { get_property: [ SELF, worker_mem ] }
+            dariahrepo_app_worker_image: { get_property: [ SELF, worker_image ] }
     requirements:
       host:
         type: tosca.capabilities.indigo.MesosMaster
