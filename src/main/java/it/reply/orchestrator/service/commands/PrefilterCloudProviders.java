@@ -19,14 +19,13 @@ package it.reply.orchestrator.service.commands;
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 
-import it.reply.orchestrator.config.properties.ChronosProperties;
+import it.reply.orchestrator.config.properties.MesosProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.ImageData;
 import it.reply.orchestrator.dto.cmdb.Type;
-import it.reply.orchestrator.dto.deployment.CredentialsAwareSlaPlacementPolicy;
 import it.reply.orchestrator.dto.deployment.PlacementPolicy;
 import it.reply.orchestrator.dto.deployment.SlaPlacementPolicy;
 import it.reply.orchestrator.dto.onedata.OneData;
@@ -36,7 +35,6 @@ import it.reply.orchestrator.dto.slam.Sla;
 import it.reply.orchestrator.enums.DeploymentType;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.service.ToscaService;
-import it.reply.orchestrator.utils.CommonUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,7 +60,7 @@ public class PrefilterCloudProviders
     extends BaseRankCloudProvidersCommand<PrefilterCloudProviders> {
 
   @Autowired
-  private ChronosProperties chronosProperties;
+  private MesosProperties mesosProperties;
 
   @Autowired
   private ToscaService toscaService;
@@ -103,24 +101,15 @@ public class PrefilterCloudProviders
 
     discardProvidersAndServices(providersToDiscard, servicesToDiscard, rankCloudProvidersMessage);
 
-    // Filter provider for Chronos
-    // FIXME: It's just a demo hack to for Chronos jobs default provider override!!
-    if (rankCloudProvidersMessage.getDeploymentType() == DeploymentType.CHRONOS
-        || rankCloudProvidersMessage.getDeploymentType() == DeploymentType.MARATHON) {
+    if (DeploymentType.isMesosDeployment(rankCloudProvidersMessage.getDeploymentType())) {
       rankCloudProvidersMessage
           .getCloudProviders()
           .values()
           .stream()
-          .filter(
-              cloudProvider -> !cloudProvider
-                  .getId()
-                  .equalsIgnoreCase(chronosProperties.getCloudProviderName()))
+          .filter(cloudProvider -> !mesosProperties.getInstance(cloudProvider.getId()).isPresent())
           .forEach(cloudProvider -> {
-            LOG.debug(
-                "Discarded provider {} because it doesn't match Mesos default provider {}"
-                    + " for deployment {}",
-                cloudProvider.getId(), chronosProperties.getCloudProviderName(),
-                deployment.getId());
+            LOG.debug("Discarded provider {} because it doesn't have any registered Mesos instance",
+                cloudProvider.getId());
             addProviderToDiscard(providersToDiscard, servicesToDiscard, cloudProvider);
           });
     }

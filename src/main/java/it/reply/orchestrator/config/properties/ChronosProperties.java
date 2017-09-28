@@ -21,23 +21,13 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
-
-import javax.validation.constraints.NotNull;
 
 @Validated
 @Data
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-@ConfigurationProperties(prefix = "chronos")
 @NoArgsConstructor
-public class ChronosProperties extends MesosProperties {
-
-  @NotNull
-  @NonNull
-  @Deprecated
-  private String cloudProviderName;
+public class ChronosProperties extends MesosFrameworkProperties {
 
 }

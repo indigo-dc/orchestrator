@@ -35,6 +35,8 @@ import it.infn.ba.indigo.chronos.client.model.v1.Volume;
 import it.infn.ba.indigo.chronos.client.utils.ChronosException;
 import it.reply.orchestrator.annotation.DeploymentProviderQualifier;
 import it.reply.orchestrator.config.properties.ChronosProperties;
+import it.reply.orchestrator.config.properties.MarathonProperties;
+import it.reply.orchestrator.config.properties.MesosProperties;
 import it.reply.orchestrator.config.properties.OrchestratorProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
@@ -50,17 +52,19 @@ import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.service.ToscaService;
+import it.reply.orchestrator.service.deployment.providers.factory.MarathonClientFactory;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 
 import lombok.extern.slf4j.Slf4j;
+
+import mesosphere.marathon.client.Marathon;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jgrapht.graph.DirectedMultigraph;
 import org.jgrapht.traverse.TopologicalOrderIterator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
 import java.io.Serializable;
@@ -79,7 +83,6 @@ import java.util.stream.Collectors;
 @Service
 @DeploymentProviderQualifier(DeploymentProvider.CHRONOS)
 @Slf4j
-@EnableConfigurationProperties(ChronosProperties.class)
 public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJob, Job> {
 
   @Autowired
@@ -89,18 +92,22 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
   private ResourceRepository resourceRepository;
 
   @Autowired
-  private ChronosProperties chronosProperties;
+  private MesosProperties mesosProperties;
 
   @Autowired
   private OrchestratorProperties orchestratorProperties;
 
-  /**
-   * Temporary method to instantiate a default Chronos client (<b>just for experimental purpose</b>
-   * ).
-   * 
-   * @return the Chronos client.
-   */
-  public Chronos getChronosClient() {
+  protected ChronosProperties getChronosProperties(Deployment deployment) {
+    String cloudProviderName = deployment.getCloudProviderName();
+    return mesosProperties
+        .getInstance(cloudProviderName)
+        .orElseThrow(() -> new DeploymentException(String
+            .format("No Marathon instance available for cloud provider %s", cloudProviderName)))
+        .getChronos();
+  }
+
+  protected Chronos getChronosClient(Deployment deployment) {
+    ChronosProperties chronosProperties = getChronosProperties(deployment);
     LOG.info("Generating Chronos client with parameters: {}", chronosProperties);
     return ChronosClient.getInstanceWithBasicAuth(chronosProperties.getUrl().toString(),
         chronosProperties.getUsername(), chronosProperties.getPassword());
@@ -151,7 +158,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
         orchestratorProperties.getJobChunkSize(),
         deployment.getId());
     boolean noMoreJob = false;
-    Chronos client = getChronosClient();
+    Chronos client = getChronosClient(deployment);
     for (int i = 0; i < orchestratorProperties.getJobChunkSize() && !noMoreJob; i++) {
       noMoreJob =
           !createJobsOnChronosIteratively(deployment, deploymentMessage.getChronosJobGraph(),
@@ -234,7 +241,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     Deployment deployment = getDeployment(deploymentMessage);
     deploymentMessage.setSkipPollInterval(false);
 
-    Chronos client = getChronosClient();
+    Chronos client = getChronosClient(deployment);
 
     // Follow the Job graph and poll Chronos (higher -less dependent- jobs first) and
     // fail-fast
@@ -435,7 +442,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     LOG.debug("Deleting <{}> jobs for deployment <{}> on Chronos",
         orchestratorProperties.getJobChunkSize(),
         deployment.getId());
-    Chronos client = getChronosClient();
+    Chronos client = getChronosClient(deployment);
     boolean noMoreJob = templateTopologicalOrderIterator.getCurrent() == null;
     for (int i = 0; i < orchestratorProperties.getJobChunkSize() && !noMoreJob; i++) {
       deleteJobsOnChronosIteratively(deployment, deploymentMessage.getChronosJobGraph(),
@@ -624,6 +631,8 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
             ToscaConstants.Nodes.CHRONOS))
         .collect(Collectors.toMap(Resource::getToscaNodeName, Function.identity()));
 
+    ChronosProperties chronosProperties = getChronosProperties(deployment);
+    
     LinkedHashMap<String, ChronosJob> jobs = new LinkedHashMap<>();
     LinkedHashMap<String, IndigoJob> indigoJobs = new LinkedHashMap<>();
     for (NodeTemplate chronosNode : orderedChronosJobs) {

@@ -19,5 +19,9 @@ package it.reply.orchestrator.enums;
 public enum DeploymentType {
   CHRONOS,
   MARATHON,
-  TOSCA
+  TOSCA;
+
+  public static boolean isMesosDeployment(DeploymentType deploymentType) {
+    return deploymentType == CHRONOS || deploymentType == DeploymentType.MARATHON;
+  }
 }

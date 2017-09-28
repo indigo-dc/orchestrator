@@ -22,7 +22,6 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
 
 import java.util.ArrayList;
@@ -34,9 +33,8 @@ import javax.validation.constraints.NotNull;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-@ConfigurationProperties(prefix = "marathon")
 @NoArgsConstructor
-public class MarathonProperties extends MesosProperties {
+public class MarathonProperties extends MesosFrameworkProperties {
 
   @NotNull
   @NonNull

@@ -16,73 +16,65 @@
 
 package it.reply.orchestrator.config.properties;
 
-import it.reply.orchestrator.exception.service.ToscaException;
-
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
-import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.NestedConfigurationProperty;
+import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
 
-import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
-import javax.validation.ValidationException;
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 @Validated
 @Data
-@ToString(exclude = "password")
+@ConfigurationProperties(prefix = "mesos")
 @NoArgsConstructor
-public abstract class MesosProperties implements InitializingBean {
+@Component
+public class MesosProperties implements InitializingBean {
 
   @NotNull
   @NonNull
-  private URI url;
+  @Valid
+  @NestedConfigurationProperty
+  private Map<String, MesosInstanceProperties> instances = new HashMap<>();
 
-  @NotNull
-  @NonNull
-  private String username;
+  public Optional<MesosInstanceProperties> getInstance(String cloudProvidername) {
+    return Optional.ofNullable(instances.get(cloudProvidername));
+  }
 
-  @NotNull
-  @NonNull
-  private String password;
+  @Data
+  @Validated
+  @NoArgsConstructor
+  public static class MesosInstanceProperties {
 
-  @NotNull
-  @NonNull
-  private String localVolumesHostBasePath = "";
+    @NotNull
+    @NonNull
+    @Valid
+    @NestedConfigurationProperty
+    private MarathonProperties marathon;
 
-  /**
-   * Generates a localVolumesHostPath appending the groupId to the base path.
-   * 
-   * @param groupId
-   *          the groupId
-   * @return the localVolumesHostPath
-   */
-  public String generateLocalVolumesHostPath(String groupId) {
-    if (localVolumesHostBasePath.trim().isEmpty()) {
-      throw new ToscaException("Error generating host path: no base host path has been provided");
-    } else {
-      return localVolumesHostBasePath.concat(groupId);
-    }
+    @NotNull
+    @NonNull
+    @Valid
+    @NestedConfigurationProperty
+    private ChronosProperties chronos;
+
   }
 
   @Override
-  public void afterPropertiesSet() {
-    localVolumesHostBasePath = StringUtils
-        .defaultIfBlank(localVolumesHostBasePath, "")
-        .trim();
-    if (!localVolumesHostBasePath.isEmpty()) {
-      if (!localVolumesHostBasePath.startsWith("/")) {
-        throw new ValidationException(String.format(
-            "Invalid local volume base path %s; it must start with a /", localVolumesHostBasePath));
-      }
-      if (!localVolumesHostBasePath.endsWith("/")) {
-        localVolumesHostBasePath = localVolumesHostBasePath + "/";
-      }
-    }
-  }
+  public void afterPropertiesSet() throws Exception {
+    instances.forEach((key, value) -> {
+      value.marathon.afterPropertiesSet();
+      value.chronos.afterPropertiesSet();
+    });
 
+  }
 }
