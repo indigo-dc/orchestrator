@@ -63,6 +63,9 @@ public class CloudProviderEndpoint extends AdditionalPropertiesAwareDto implemen
   private IaaSType iaasType;
 
   @Nullable
+  private String region;
+
+  @Nullable
   private String username;
 
   @Nullable
@@ -81,7 +84,13 @@ public class CloudProviderEndpoint extends AdditionalPropertiesAwareDto implemen
   public Optional<String> getIaasHeaderId() {
     return Optional.ofNullable(iaasHeaderId);
   }
+  
+  @JsonIgnore
+  public Optional<String> getRegion() {
+    return Optional.ofNullable(region);
+  }
 
+  
   /**
    * Generates a list with all the CloudProviderEndpoint of the deployments.
    * 

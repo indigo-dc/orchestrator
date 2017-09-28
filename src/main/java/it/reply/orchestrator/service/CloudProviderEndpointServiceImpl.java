@@ -134,6 +134,7 @@ public class CloudProviderEndpointServiceImpl {
 
     cpe.setCpEndpoint(computeService.getData().getEndpoint());
     cpe.setCpComputeServiceId(computeService.getId());
+    cpe.setRegion(computeService.getData().getRegion());
     cpe.setIaasType(iaasType);
 
     if (isHybrid) {
