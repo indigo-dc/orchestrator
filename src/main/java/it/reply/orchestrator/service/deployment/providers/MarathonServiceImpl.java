@@ -26,6 +26,7 @@ import alien4cloud.tosca.model.ArchiveRoot;
 
 import it.reply.orchestrator.annotation.DeploymentProviderQualifier;
 import it.reply.orchestrator.config.properties.MarathonProperties;
+import it.reply.orchestrator.config.properties.MesosProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
@@ -61,7 +62,6 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jgrapht.graph.DirectedMultigraph;
 import org.jgrapht.traverse.TopologicalOrderIterator;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -83,7 +83,6 @@ import java.util.stream.Stream;
 
 @Service
 @DeploymentProviderQualifier(DeploymentProvider.MARATHON)
-@EnableConfigurationProperties(MarathonProperties.class)
 @Slf4j
 @AllArgsConstructor
 public class MarathonServiceImpl extends AbstractMesosDeploymentService<MarathonApp, App> {
@@ -96,14 +95,23 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
 
   private final ToscaService toscaService;
 
-  private final MarathonProperties marathonProperties;
+  private final MesosProperties mesosProperties;
 
   private final ResourceRepository resourceRepository;
 
   private final IndigoInputsPreProcessorService indigoInputsPreProcessorService;
 
-  protected Marathon getMarathonClient() {
-    return MarathonClientFactory.build(marathonProperties);
+  protected MarathonProperties getMarathonProperties(Deployment deployment) {
+    String cloudProviderName = deployment.getCloudProviderName();
+    return mesosProperties
+        .getInstance(cloudProviderName)
+        .orElseThrow(() -> new DeploymentException(String
+            .format("No Marathon instance available for cloud provider %s", cloudProviderName)))
+        .getMarathon();
+  }
+
+  protected Marathon getMarathonClient(Deployment deployment) {
+    return MarathonClientFactory.build(getMarathonProperties(deployment));
   }
 
   protected Group createGroup(Deployment deployment) {
@@ -153,6 +161,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
 
     String groupId = deployment.getId();
 
+    MarathonProperties marathonProperties = getMarathonProperties(deployment);
     CommonUtils
         .nullableCollectionToStream(group.getApps())
         .filter(Objects::nonNull)
@@ -184,7 +193,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
 
     LOG.info("Creating Marathon App Group for deployment {} with definition:\n{}",
         deployment.getId(), group);
-    getMarathonClient().createGroup(group);
+    getMarathonClient(deployment).createGroup(group);
     return true;
 
   }
@@ -194,7 +203,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     Deployment deployment = getDeployment(deploymentMessage);
     String groupId = deployment.getId();
 
-    Group group = getPolulatedGroup(groupId);
+    Group group = getPolulatedGroup(deployment, groupId);
     ///////////////////////////////////////////////////////////////
     Collection<App> apps = Optional.ofNullable(group.getApps()).orElseGet(ArrayList::new);
     LOG.debug("Marathon App Group for deployment {} current status:\n{}", deployment.getId(),
@@ -210,8 +219,8 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   @Deprecated
   // TODO remove it and use just getGroup with embed params (requires marathon client version >
   // 6.0.0)
-  private Group getPolulatedGroup(String groupId) throws MarathonException {
-    final Marathon client = getMarathonClient();
+  private Group getPolulatedGroup(Deployment deployment, String groupId) throws MarathonException {
+    final Marathon client = getMarathonClient(deployment);
     Group group = client.getGroup(groupId);
 
     Collection<App> apps = Optional.ofNullable(group.getApps()).orElseGet(Collections::emptyList);
@@ -253,7 +262,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     String groupId = deployment.getId();
 
     try {
-      getMarathonClient().deleteGroup(groupId, true);
+      getMarathonClient(deployment).deleteGroup(groupId, true);
     } catch (MarathonException ex) {
       if (HttpStatus.NOT_FOUND.value() != ex.getStatus()) {
         throw ex;
@@ -268,7 +277,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     Deployment deployment = getDeployment(deploymentMessage);
     String groupId = deployment.getId();
     try {
-      getMarathonClient().getGroup(groupId);
+      getMarathonClient(deployment).getGroup(groupId);
     } catch (MarathonException ex) {
       if (HttpStatus.NOT_FOUND.value() == ex.getStatus()) {
         isUndeployed = true;
@@ -393,7 +402,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     Deployment deployment = getDeployment(deploymentMessage);
     String groupId = deployment.getId();
 
-    Group group = getPolulatedGroup(groupId);
+    Group group = getPolulatedGroup(deployment, groupId);
 
     Stream<App> failedApps = Optional
         .ofNullable(group.getApps())
@@ -427,7 +436,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
         .orElseGet(HashMap::new);
     if (!outputs.isEmpty()) {
       String groupId = deployment.getId();
-      Group group = getMarathonClient().getGroup(groupId);
+      Group group = getMarathonClient(deployment).getGroup(groupId);
 
       Map<String, NodeTemplate> nodes = Optional
           .ofNullable(ar.getTopology())
@@ -445,6 +454,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
           .filter(node -> toscaService.isOfToscaType(node, ToscaConstants.Nodes.MARATHON))
           .collect(Collectors.toList());
 
+      MarathonProperties marathonProperties = getMarathonProperties(deployment);
       RuntimeProperties runtimeProperties = new RuntimeProperties();
       for (NodeTemplate marathonNode : orderedMarathonApps) {
 
