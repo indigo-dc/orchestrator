@@ -78,6 +78,9 @@ public class ImClientFactory {
           .withUsername("indigo-dc")
           .withPassword(accessToken)
           .withHost(endpoint);
+      cloudProviderEndpoint
+          .getRegion()
+          .ifPresent(cred::withServiceRegion);
       if ("v2".equals(matcher.group(2))) {
         throw new DeploymentException("Openstack keystone v2 not supported");
       } else {

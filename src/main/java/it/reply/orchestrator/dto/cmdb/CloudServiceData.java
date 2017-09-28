@@ -63,4 +63,8 @@ public class CloudServiceData extends AdditionalPropertiesAwareDto implements Se
   @JsonProperty("is_public_service")
   private boolean publicService;
 
+  @JsonProperty("region")
+  @Nullable
+  private String region;
+
 }
