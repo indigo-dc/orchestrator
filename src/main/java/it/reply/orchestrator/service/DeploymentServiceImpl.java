@@ -44,6 +44,7 @@ import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.http.BadRequestException;
 import it.reply.orchestrator.exception.http.ConflictException;
+import it.reply.orchestrator.exception.http.ForbiddenException;
 import it.reply.orchestrator.exception.http.NotFoundException;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
@@ -106,7 +107,12 @@ public class DeploymentServiceImpl implements DeploymentService {
   @Transactional(readOnly = true)
   public Page<Deployment> getDeployments(Pageable pageable, String owner) {
     if (owner == null) {
-      return deploymentRepository.findAll(pageable);
+      if (oidcProperties.isEnabled()) {
+        OidcEntity requester = oauth2TokenService.generateOidcEntityFromCurrentAuth();
+        return deploymentRepository.findAll(requester, pageable);
+      } else {
+        return deploymentRepository.findAll(pageable);
+      }
     } else {
       OidcEntityId ownerId;
       if ("me".equals(owner)) {
@@ -121,7 +127,12 @@ public class DeploymentServiceImpl implements DeploymentService {
           throw new BadRequestException("Value " + owner + " for param createdBy is illegal");
         }
       }
-      return deploymentRepository.findByOwner_oidcEntityId(ownerId, pageable);
+      if (oidcProperties.isEnabled()) {
+        OidcEntity requester = oauth2TokenService.generateOidcEntityFromCurrentAuth();
+        return deploymentRepository.findAllByOwner(requester, ownerId, pageable);
+      } else {
+        return deploymentRepository.findAllByOwner(ownerId, pageable);
+      }
     }
   }
 
@@ -129,11 +140,28 @@ public class DeploymentServiceImpl implements DeploymentService {
   @Transactional(readOnly = true)
   public Deployment getDeployment(String uuid) {
 
-    Deployment deployment = deploymentRepository.findOne(uuid);
+    Deployment deployment = null;
+    if (oidcProperties.isEnabled()) {
+      OidcEntity requester = oauth2TokenService.generateOidcEntityFromCurrentAuth();
+      deployment = deploymentRepository.findOne(requester, uuid);
+    } else {
+      deployment = deploymentRepository.findOne(uuid);
+    }
     if (deployment != null) {
       return deployment;
     } else {
       throw new NotFoundException("The deployment <" + uuid + "> doesn't exist");
+    }
+  }
+
+  private void throwIfNotOwned(Deployment deployment) {
+    if (oidcProperties.isEnabled()) {
+      OidcEntityId requesterId = oauth2TokenService.generateOidcEntityIdFromCurrentAuth();
+      OidcEntity owner = deployment.getOwner();
+      if (owner != null && !requesterId.equals(owner.getOidcEntityId())) {
+        throw new ForbiddenException(
+            "Only the owner of the deployment can perform this operation");
+      }
     }
   }
 
@@ -272,6 +300,7 @@ public class DeploymentServiceImpl implements DeploymentService {
   @Transactional
   public void deleteDeployment(String uuid) {
     Deployment deployment = getDeployment(uuid);
+    throwIfNotOwned(deployment);
 
     if (deployment.getStatus() == Status.DELETE_COMPLETE
         || deployment.getStatus() == Status.DELETE_IN_PROGRESS) {
@@ -326,6 +355,7 @@ public class DeploymentServiceImpl implements DeploymentService {
   @Transactional
   public void updateDeployment(String id, DeploymentRequest request) {
     Deployment deployment = getDeployment(id);
+    throwIfNotOwned(deployment);
 
     if (deployment.getDeploymentProvider() == DeploymentProvider.CHRONOS
         || deployment.getDeploymentProvider() == DeploymentProvider.MARATHON) {
