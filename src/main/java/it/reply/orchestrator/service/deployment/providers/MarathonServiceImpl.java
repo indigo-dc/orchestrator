@@ -26,7 +26,6 @@ import alien4cloud.tosca.model.ArchiveRoot;
 
 import it.reply.orchestrator.annotation.DeploymentProviderQualifier;
 import it.reply.orchestrator.config.properties.MarathonProperties;
-import it.reply.orchestrator.config.properties.MesosProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
@@ -43,7 +42,6 @@ import it.reply.orchestrator.service.deployment.providers.factory.MarathonClient
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import mesosphere.marathon.client.Marathon;
@@ -62,6 +60,7 @@ import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.jgrapht.graph.DirectedMultigraph;
 import org.jgrapht.traverse.TopologicalOrderIterator;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -84,7 +83,6 @@ import java.util.stream.Stream;
 @Service
 @DeploymentProviderQualifier(DeploymentProvider.MARATHON)
 @Slf4j
-@AllArgsConstructor
 public class MarathonServiceImpl extends AbstractMesosDeploymentService<MarathonApp, App> {
 
   private static final int MAX_EXTERNAL_VOLUME_NAME_LENGHT = 255; // OST cinder volume name limit
@@ -93,25 +91,20 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
       "^(([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9])\\.)*"
           + "([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9])|(\\.|\\.\\.)$");
 
-  private final ToscaService toscaService;
+  @Autowired
+  private ToscaService toscaService;
 
-  private final MesosProperties mesosProperties;
+  @Autowired
+  private ResourceRepository resourceRepository;
 
-  private final ResourceRepository resourceRepository;
+  @Autowired
+  private IndigoInputsPreProcessorService indigoInputsPreProcessorService;
 
-  private final IndigoInputsPreProcessorService indigoInputsPreProcessorService;
-
-  protected MarathonProperties getMarathonProperties(Deployment deployment) {
-    String cloudProviderName = deployment.getCloudProviderName();
-    return mesosProperties
-        .getInstance(cloudProviderName)
-        .orElseThrow(() -> new DeploymentException(String
-            .format("No Marathon instance available for cloud provider %s", cloudProviderName)))
-        .getMarathon();
-  }
+  @Autowired
+  private MarathonClientFactory marathonClientFactory;
 
   protected Marathon getMarathonClient(Deployment deployment) {
-    return MarathonClientFactory.build(getMarathonProperties(deployment));
+    return marathonClientFactory.build(deployment);
   }
 
   protected Group createGroup(Deployment deployment) {
@@ -161,7 +154,8 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
 
     String groupId = deployment.getId();
 
-    MarathonProperties marathonProperties = getMarathonProperties(deployment);
+    MarathonProperties marathonProperties =
+        marathonClientFactory.getFrameworkProperties(deployment);
     CommonUtils
         .nullableCollectionToStream(group.getApps())
         .filter(Objects::nonNull)
@@ -454,7 +448,8 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
           .filter(node -> toscaService.isOfToscaType(node, ToscaConstants.Nodes.MARATHON))
           .collect(Collectors.toList());
 
-      MarathonProperties marathonProperties = getMarathonProperties(deployment);
+      MarathonProperties marathonProperties =
+          marathonClientFactory.getFrameworkProperties(deployment);
       RuntimeProperties runtimeProperties = new RuntimeProperties();
       for (NodeTemplate marathonNode : orderedMarathonApps) {
 
