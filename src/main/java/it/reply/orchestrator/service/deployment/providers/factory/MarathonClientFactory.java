@@ -29,10 +29,11 @@ import feign.gson.GsonEncoder;
 import feign.slf4j.Slf4jLogger;
 
 import it.reply.orchestrator.config.properties.MarathonProperties;
+import it.reply.orchestrator.config.properties.MesosProperties;
+import it.reply.orchestrator.dal.entity.Deployment;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
 
 import mesosphere.client.common.ModelUtils;
@@ -42,6 +43,7 @@ import mesosphere.marathon.client.MarathonException;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.http.HttpHeaders;
+import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -51,9 +53,10 @@ import java.util.Optional;
 
 import javax.validation.constraints.NotNull;
 
-@UtilityClass
 @Slf4j
-public class MarathonClientFactory {
+@Service
+public class MarathonClientFactory
+    extends MesosFrameworkClientFactory<MarathonProperties, Marathon> {
 
   private static class DeserializingMarathonErrorDecoder implements ErrorDecoder {
 
@@ -119,6 +122,26 @@ public class MarathonClientFactory {
     }
   }
 
+  public MarathonClientFactory(MesosProperties mesosProperties) {
+    super(mesosProperties);
+  }
+
+  @Override
+  public MarathonProperties getFrameworkProperties(Deployment deployment) {
+    return getInstanceProperties(deployment).getMarathon();
+  }
+
+  @Override
+  protected String getFrameworkName() {
+    return "Marathon";
+  }
+
+  @Override
+  public Marathon build(Deployment deployment) {
+    MarathonProperties marathonProperties = getFrameworkProperties(deployment);
+    return build(marathonProperties);
+  }
+
   /**
    * Generate a new Marathon client.
    * 
@@ -126,7 +149,8 @@ public class MarathonClientFactory {
    *          the properties containing the client information
    * @return the new client
    */
-  public static Marathon build(MarathonProperties marathonProperties) {
+  @Override
+  public Marathon build(MarathonProperties marathonProperties) {
     LOG.info("Generating Marathon client with parameters: {}", marathonProperties);
 
     return Feign

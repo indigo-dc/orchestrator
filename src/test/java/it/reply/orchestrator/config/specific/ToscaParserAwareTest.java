@@ -26,7 +26,8 @@ import it.reply.orchestrator.config.Alien4CloudConfig;
 import it.reply.orchestrator.service.ToscaServiceImpl;
 
 import org.junit.Before;
-import org.junit.runner.RunWith;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,16 +35,22 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.test.context.junit4.rules.SpringClassRule;
+import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
 
-@RunWith(SpringRunner.class)
 @ActiveProfiles(SpringTestProfile.PROFILE_QUALIFIER)
 @ContextConfiguration(classes = Alien4CloudConfig.class)
 @SpringBootTest
 public abstract class ToscaParserAwareTest {
+
+  @ClassRule
+  public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
+
+  @Rule
+  public final SpringMethodRule springMethodRule = new SpringMethodRule();
 
   @Autowired
   @Spy

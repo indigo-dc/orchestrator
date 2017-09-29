@@ -29,6 +29,8 @@ import alien4cloud.tosca.model.ArchiveRoot;
 
 import it.infn.ba.indigo.chronos.client.Chronos;
 import it.infn.ba.indigo.chronos.client.model.v1.Job;
+import it.reply.orchestrator.config.properties.ChronosProperties;
+import it.reply.orchestrator.config.properties.MesosProperties;
 import it.reply.orchestrator.config.properties.OrchestratorProperties;
 import it.reply.orchestrator.config.specific.ToscaParserAwareTest;
 import it.reply.orchestrator.controller.ControllerTestUtils;
@@ -43,6 +45,7 @@ import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl;
 import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl.IndigoJob;
 import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl.JobState;
 import it.reply.orchestrator.service.deployment.providers.DeploymentStatusHelper;
+import it.reply.orchestrator.service.deployment.providers.factory.ChronosClientFactory;
 import it.reply.orchestrator.util.TestUtil;
 import it.reply.orchestrator.utils.CommonUtils;
 
@@ -64,7 +67,6 @@ import java.util.stream.Collectors;
 public class ChronosServiceTest extends ToscaParserAwareTest {
 
   @InjectMocks
-  @Spy
   private ChronosServiceImpl chronosService;
   
   @Spy
@@ -88,11 +90,16 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
   
   @Mock
   private Chronos chronos;
-
+  
+  @Mock
+  private ChronosClientFactory chronosClientFactory;
+  
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
-    Mockito.doReturn(chronos).when(chronosService).getChronosClient();
+    Mockito
+        .when(chronosClientFactory.build(Mockito.any(Deployment.class)))
+        .thenReturn(chronos);
   }
 
   @Override

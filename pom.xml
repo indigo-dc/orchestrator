@@ -548,6 +548,7 @@
 					<version>${cobertura-maven-plugin.version}</version>
 					<configuration>
 						<instrumentation>
+							<ignoreTrivial>true</ignoreTrivial>
 							<ignoreMethodAnnotations>
 								<ignoreMethodAnnotation>lombok.Generated</ignoreMethodAnnotation>
 							</ignoreMethodAnnotations>

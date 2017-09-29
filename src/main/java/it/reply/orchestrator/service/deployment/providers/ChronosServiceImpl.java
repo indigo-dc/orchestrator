@@ -26,7 +26,6 @@ import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.normative.IntegerType;
 
 import it.infn.ba.indigo.chronos.client.Chronos;
-import it.infn.ba.indigo.chronos.client.ChronosClient;
 import it.infn.ba.indigo.chronos.client.model.v1.Container;
 import it.infn.ba.indigo.chronos.client.model.v1.EnvironmentVariable;
 import it.infn.ba.indigo.chronos.client.model.v1.Job;
@@ -35,8 +34,6 @@ import it.infn.ba.indigo.chronos.client.model.v1.Volume;
 import it.infn.ba.indigo.chronos.client.utils.ChronosException;
 import it.reply.orchestrator.annotation.DeploymentProviderQualifier;
 import it.reply.orchestrator.config.properties.ChronosProperties;
-import it.reply.orchestrator.config.properties.MarathonProperties;
-import it.reply.orchestrator.config.properties.MesosProperties;
 import it.reply.orchestrator.config.properties.OrchestratorProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
@@ -52,13 +49,11 @@ import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.service.ToscaService;
-import it.reply.orchestrator.service.deployment.providers.factory.MarathonClientFactory;
+import it.reply.orchestrator.service.deployment.providers.factory.ChronosClientFactory;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 
 import lombok.extern.slf4j.Slf4j;
-
-import mesosphere.marathon.client.Marathon;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -92,25 +87,13 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
   private ResourceRepository resourceRepository;
 
   @Autowired
-  private MesosProperties mesosProperties;
-
-  @Autowired
   private OrchestratorProperties orchestratorProperties;
-
-  protected ChronosProperties getChronosProperties(Deployment deployment) {
-    String cloudProviderName = deployment.getCloudProviderName();
-    return mesosProperties
-        .getInstance(cloudProviderName)
-        .orElseThrow(() -> new DeploymentException(String
-            .format("No Marathon instance available for cloud provider %s", cloudProviderName)))
-        .getChronos();
-  }
+  
+  @Autowired
+  private ChronosClientFactory chronosClientFactory;
 
   protected Chronos getChronosClient(Deployment deployment) {
-    ChronosProperties chronosProperties = getChronosProperties(deployment);
-    LOG.info("Generating Chronos client with parameters: {}", chronosProperties);
-    return ChronosClient.getInstanceWithBasicAuth(chronosProperties.getUrl().toString(),
-        chronosProperties.getUsername(), chronosProperties.getPassword());
+    return chronosClientFactory.build(deployment);
   }
 
   @Override
@@ -631,7 +614,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
             ToscaConstants.Nodes.CHRONOS))
         .collect(Collectors.toMap(Resource::getToscaNodeName, Function.identity()));
 
-    ChronosProperties chronosProperties = getChronosProperties(deployment);
+    ChronosProperties chronosProperties = chronosClientFactory.getFrameworkProperties(deployment);
     
     LinkedHashMap<String, ChronosJob> jobs = new LinkedHashMap<>();
     LinkedHashMap<String, IndigoJob> indigoJobs = new LinkedHashMap<>();

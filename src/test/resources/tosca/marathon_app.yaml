@@ -1,0 +1,37 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+imports:
+  - indigo_custom_types: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/custom_types.yaml
+
+topology_template:
+
+  node_templates:
+
+    marathon-app:
+      type: tosca.nodes.indigo.Container.Application.Docker.Marathon
+      properties:
+        uris: []
+        labels:
+          HAPROXY_GROUP: external
+      artifacts:
+        image:
+          file: hello-world
+          type: tosca.artifacts.Deployment.Image.Container.Docker
+      requirements:
+        - host: docker_runtime
+
+    docker_runtime:
+      type: tosca.nodes.indigo.Container.Runtime.Docker
+      capabilities:
+        host:
+          properties:
+            num_cpus: 1.0
+            mem_size: 1 GB
+            publish_ports:
+               - protocol: tcp
+                 source: 8080
+            volumes: [ 'marathon:/data:rw:dvdi:rexray', '/data:rw' ]
+
+  outputs:
+    endpoint: 
+      value:  { concat: [ { get_attribute : [ marathon-app, load_balancer_ips, 0 ] }, ':', { get_attribute : [ docker_runtime, host, publish_ports, 0, target ] } ] }

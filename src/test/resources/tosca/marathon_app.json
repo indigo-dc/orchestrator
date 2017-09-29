@@ -1,0 +1,49 @@
+{
+  "apps": [
+    {
+      "id": "marathon-app",
+      "instances": 1,
+      "cpus": 1.0,
+      "mem": 1000.0,
+      "uris": [],
+      "constraints": [],
+      "container": {
+        "type": "DOCKER",
+        "docker": {
+          "image": "hello-world",
+          "network": "BRIDGE",
+          "forcePullImage": true,
+          "portMappings": [
+            {
+              "containerPort": 8080,
+              "protocol": "tcp",
+              "labels": {}
+            }
+          ],
+          "privileged": false
+        },
+        "volumes": [
+          {
+            "external": {
+              "name": "marathon",
+              "provider": "dvdi",
+              "options": {
+                "dvdi/driver": "rexray"
+              }
+            },
+            "containerPath": "/data",
+            "mode": "RW"
+          },
+          {
+            "containerPath": "/data",
+            "mode": "RW"
+          }
+        ]
+      },
+      "env": {},
+      "labels": {
+        "HAPROXY_GROUP": "external"
+      }
+    }
+  ]
+}
