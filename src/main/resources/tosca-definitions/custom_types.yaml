@@ -338,6 +338,9 @@ node_types:
         node: tosca.nodes.indigo.LRMS.FrontEnd
         relationship: tosca.relationships.HostedOn
     artifacts:
+      nfs_role:
+        file: indigo-dc.nfs
+        type: tosca.artifacts.AnsibleGalaxy.role
       galaxy_role:
         file: indigo-dc.galaxycloud
         type: tosca.artifacts.AnsibleGalaxy.role
@@ -380,6 +383,9 @@ node_types:
         default: "galaxy"
         required: false
     artifacts:
+      nfs_role:
+        file: indigo-dc.nfs
+        type: tosca.artifacts.AnsibleGalaxy.role
       indigorepo_role:
         file: indigo-dc.galaxycloud-indigorepo
         type: tosca.artifacts.AnsibleGalaxy.role
@@ -413,33 +419,13 @@ node_types:
 
   tosca.nodes.indigo.GalaxyPortalFastConfig:
     derived_from: tosca.nodes.indigo.GalaxyPortalAndStorage
-    properties:
-      flavor:
-        type: string
-        description: name of the Galaxy flavor
-        required: true
-        default: galaxy-no-tools
-      os_storage:
-        type: string
-        description: Storage type (Iaas Block Storage (default), Onedaata, Filesystem encryption)
-        default: "IaaS"
-        required: true
-      token:
-        type: string
-        description: Access token for onedata space
-        default: "not_a_token"
-        required: false
-      provider:
-        type: string
-        description: default OneProvider
-        default: "not_a_provider_url"
-        required: false
-      space:
-        type: string
-        description: Onedata space
-        default: "galaxy"
-        required: false
     artifacts:
+      nfs_role:
+        file: indigo-dc.nfs
+        type: tosca.artifacts.AnsibleGalaxy.role
+      indigorepo_role:
+        file: indigo-dc.galaxycloud-indigorepo
+        type: tosca.artifacts.AnsibleGalaxy.role
       oneclient_role:
         file: indigo-dc.oneclient
         type: tosca.artifacts.AnsibleGalaxy.role
