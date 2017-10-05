@@ -63,6 +63,7 @@ public class CloudProviderEndpoint extends AdditionalPropertiesAwareDto implemen
   private IaaSType iaasType;
 
   @Nullable
+  @JsonProperty
   private String region;
 
   @Nullable
