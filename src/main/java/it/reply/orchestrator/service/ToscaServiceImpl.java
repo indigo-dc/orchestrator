@@ -207,7 +207,13 @@ public class ToscaServiceImpl implements ToscaService {
     try (ByteArrayInputStream is = new ByteArrayInputStream(toscaTemplate.getBytes());) {
       Path zipPath = Files.createTempFile("csar", ".zip");
       zip(is, zipPath);
-      return parser.parse(zipPath);   
+      ParsingResult<ArchiveRoot> result = parser.parse(zipPath);
+      try {
+        Files.delete(zipPath);
+      } catch (Exception ioe) {
+        LOG.warn("Error deleting tmp csar {} from FS", zipPath, ioe);
+      }
+      return result;
     } catch (InvalidArgumentException iae) {
       // FIXME NOTE that InvalidArgumentException should not be thrown by the parse method, but it
       // is...
