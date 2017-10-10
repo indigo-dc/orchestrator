@@ -62,3 +62,8 @@ In this release the IAM integration has undergone a major rework, thus some chan
 ### UPGRADING TO v1.4.x
 #### Upgrading to v1.4.0-FINAL
 No action required.
+### UPGRADING TO v1.5.x
+#### Upgrading to v1.5.0-FINAL
+The way to configure the service has been completely revised, making it more coherent and expressive. Please refer to the [deployment guide](./how_to_deploy.md) to properly update the service configuration
+#### Upgrading to v1.5.1-FINAL
+No action required.
