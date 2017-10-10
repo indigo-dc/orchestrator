@@ -89,36 +89,34 @@ By default the REST APIs are not authenticated; if you want to enable the IAM in
      5. Expiration time for the id token must be set to 1800 seconds
      6. Expiration info for the exchanged token must not be disabled
  2. Retrieve the _**client id**_ and the _**client secret**_
- 3. Retrieve the _**issuer**_ value of the IAM from its WebFinger endpoint:
- https://{iam-url}/.well-known/openid-configuration
- 4. Configure the following parameters:
-To configure the IAM integration, you need to provide a file called `application.yml` and mount it (via docker bind-mounting) on `/orchestrator/application.yml`
-Inside the file you need to provide the following configuration:
-  ```yaml
-  oidc:
-    enabled: true
-    iam-properties:
-      "[{issuer}]":
-        orchestrator:
-          client-id: '{client-id}'
-          client-secret: '{client-secret}'
-        clues:
-          client-id: '{client-id}'
-          client-secret: '{client-secret}'
-  ```
-with as parameters
-    * `oidc.enabled`
-      * **Description**: Determines if the OAuth2 authentication and authorization is enabled
-      * **Format**: `true` or `false`
-      * **Default value**: `false`
-    * `{issuer}`
-      * **Description**: The issuer value of the IAM to which the orchestrator has been registered
-      * **Default value**: `https://iam-test.indigo-datacloud.eu/`
-    * `orchestrator.client-id`
-      * **Description**: The Orchestrator OAuth2 client ID
-    * `orchestrator.client-secret`
-      * **Description**: The Orchestrator OAuth2 client secret
+ 3. Retrieve the _**issuer**_ value of the IAM from its WebFinger endpoint: https://{iam-url}/.well-known/openid-configuration
+ 4. Provide a file called `application.yml` and mount it (via docker bind-mounting) on `/orchestrator/application.yml`.
+ Inside the file you need to provide the following configuration:
 
+     ```yaml
+      oidc:
+       enabled: true
+       iam-properties:
+         "[{issuer}]":
+           orchestrator:
+             client-id: '{client-id}'
+             client-secret: '{client-secret}'
+           clues:
+             client-id: '{client-id}'
+             client-secret: '{client-secret}'
+     ```
+    with, as parameters
+      * `oidc.enabled`
+        * **Description**: Determines if the OAuth2 authentication and authorization is enabled
+        * **Format**: `true` or `false`
+        * **Default value**: `false`
+    * `{issuer}`
+        * **Description**: The issuer value of the IAM to which the orchestrator has been registered
+        * **Default value**: `https://iam-test.indigo-datacloud.eu/`	
+    * `orchestrator.client-id`
+        * **Description**: The Orchestrator OAuth2 client ID	
+    * `orchestrator.client-secret`
+       * **Description**: The Orchestrator OAuth2 client secret
  5. Additionally, if you have a Clues client registered in the IAM, you can configure the following parameters:
     * `clues.client-id`
        * **Description**: The CLUES OAuth2 client ID
