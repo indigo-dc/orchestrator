@@ -23,9 +23,14 @@ import java.util.Optional;
 import javax.sql.DataSource;
 import javax.sql.XADataSource;
 
+import net.ttddyy.dsproxy.listener.logging.SLF4JLogLevel;
+import net.ttddyy.dsproxy.support.ProxyDataSourceBuilder;
+
 import org.springframework.beans.BeanUtils;
+import org.springframework.beans.BeansException;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.BeanClassLoaderAware;
+import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties.Xa;
@@ -38,6 +43,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.stereotype.Component;
 import org.springframework.transaction.jta.JtaTransactionManager;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -79,6 +85,28 @@ public class DatasourceConfig implements BeanClassLoaderAware {
   public DataSource workflowDataSource(XADataSourceWrapper wrapper) throws Exception {
     XADataSource xaDataSource = createXaDataSource(workflowDataSourceProperties());
     return wrapper.wrapDataSource(xaDataSource);
+  }
+
+  @Component
+  public static class DatasourceProxyBeanPostProcessor implements BeanPostProcessor {
+    @Override
+    public Object postProcessBeforeInitialization(final Object bean, final String beanName)
+        throws BeansException {
+      return bean;
+    }
+
+    @Override
+    public Object postProcessAfterInitialization(final Object bean, final String beanName)
+        throws BeansException {
+      if (bean instanceof DataSource) {
+        DataSource dataSourceBean = (DataSource) bean;
+        return ProxyDataSourceBuilder
+            .create(dataSourceBean)
+            .logQueryBySlf4j(SLF4JLogLevel.TRACE, "it.reply.orchestrator.datasources." + beanName)
+            .build();
+      }
+      return bean;
+    }
   }
 
   private XADataSource createXaDataSource(DataSourceProperties properties)
