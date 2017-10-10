@@ -89,7 +89,7 @@ By default the REST APIs are not authenticated; if you want to enable the IAM in
      5. Expiration time for the id token must be set to 1800 seconds
      6. Expiration info for the exchanged token must not be disabled
  2. Retrieve the _**client id**_ and the _**client secret**_
- 3. Retrieve the _**issuer**_ value of the IAM from its WebFinger endpoint: https://{iam-url}/.well-known/openid-configuration
+ 3. Retrieve the _**issuer**_ value of the IAM from its WebFinger endpoint `https://{iam-url}/.well-known/openid-configuration`
  4. Provide a file called `application.yml` and mount it (via docker bind-mounting) on `/orchestrator/application.yml`.
  Inside the file you need to provide the following configuration:
 
@@ -127,36 +127,48 @@ Please make reference to the [IAM guide](https://indigo-dc.gitbooks.io/iam/conte
 
 :warning: Even if the authentication is optional and disabled by default, you are highly encouraged to enable it, otherwise you will not be able to create deployments neither on OpenStack nor on OpenNebula.
 
-### Configure Chronos (optional)
-The orchestrator allows to run jobs on Chronos; to do that you need to configure the following parameters
+### Configure Chronos and Marathon (optional)
+The orchestrator can both run jobs on Chronos and managed applications on Marathon; to do that you need to provide a file called `application.yml` and mount it (via docker bind-mounting) on `/orchestrator/application.yml`. Inside the file you need to provide the following configuration:
+```yaml
+mesos:
+  instances:
+    "{cloud-provider-id}":
+      chronos:
+        url: '{chronos-endpoint}'
+        username: '{chronos-username}'
+        password: '{chronos-password}'
+        local-volumes-host-base-path: '{base-path}'
+      marathon:
+        url: '{marathon-endpoint}'
+        username: '{marathon-username}'
+        password: '{marathon-password}'
+        local-volumes-host-base-path: '{base-path}'
+        load-balancer-ips: {marathon-lb-ips}
+```
 
- * `CHRONOS_URL`
+with, as parameters
+ * `{cloud-provider-id}`
+    * **Description**: The Cloud Provider that hosts the Mesos cluster on which it runs Chronos; it should be the same id that's returned from the CMDB service
+ * `chronos.url`
     * **Description**: The Chronos REST endpoint
     * **Format**: http://{host}:{port}
- * `CHRONOS_USERNAME`
+ * `chronos.username`
     * **Description**: The Chronos username
- * `CHRONOS_PASSWORD`
+ * `chronos.password`
     * **Description**: The Chronos password
- * `CHRONOS_PROVIDER`
-    * **Description**: The Cloud Provider that hosts the Mesos cluster on which it runs Chronos; it should be the same id that's returned from the CMDB service
-    * **Default value**: `provider-RECAS-BARI`
- * `CHRONOS_LOCAL_VOLUMES_HOST_BASE_PATH`
-    * **Description**: (Optional) The host path on which the local volumes will be mounted. If not provided support for local volumes will be disabled
-
-### Configure Marathon (optional)
-The orchestrator allows to run applications on Marathon; to do that you need to configure the following parameters
-
- * `MARATHON_URL`
+ * `chronos.local-volumes-host-base-path`
+    * **Description**: (Optional) The host path on which the jobs' local volumes will be mounted. If not provided support for local volumes will be disabled
+ * `marathon.url`
     * **Description**: The Marathon REST endpoint
     * **Format**: http://{host}:{port}
- * `MARATHON_USERNAME`
+ * `marathon.username`
     * **Description**: The Marathon username
- * `MARATHON_PASSWORD`
+ * `marathon.password`
     * **Description**: The Marathon password
- * `MARATHON_LOAD_BALANCER_IPS`
+ * `marathon.local-volumes-host-base-path`
+    * **Description**: (Optional) The host path on which the applications' local volumes will be mounted. If not provided support for local volumes will be disabled
+ * `marathon.load-balancer-ips`
     * **Description**: The list of Marathon LB IPs
- * `MARATHON_LOCAL_VOLUMES_HOST_BASE_PATH`
-    * **Description**: (Optional) The host path on which the local volumes will be mounted. If not provided support for local volumes will be disabled
 
 ### Configure OneData (optional)
 The Orchestrator, when the Chronos parameters are set, allows to exploit a [OneData](https://onedata.org/) service space. This enables the users to execute tasks on Chronos that use temporary files hosted on a shared OneData space.
