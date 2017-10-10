@@ -106,15 +106,15 @@ By default the REST APIs are not authenticated; if you want to enable the IAM in
              client-secret: '{client-secret}'
      ```
     with, as parameters
-      * `oidc.enabled`
-        * **Description**: Determines if the OAuth2 authentication and authorization is enabled
-        * **Format**: `true` or `false`
-        * **Default value**: `false`
+    * `oidc.enabled`
+       * **Description**: Determines if the OAuth2 authentication and authorization is enabled
+       * **Format**: `true` or `false`
+       * **Default value**: `false`
     * `{issuer}`
-        * **Description**: The issuer value of the IAM to which the orchestrator has been registered
-        * **Default value**: `https://iam-test.indigo-datacloud.eu/`	
+       * **Description**: The issuer value of the IAM to which the orchestrator has been registered
+       * **Default value**: `https://iam-test.indigo-datacloud.eu/`	
     * `orchestrator.client-id`
-        * **Description**: The Orchestrator OAuth2 client ID	
+       * **Description**: The Orchestrator OAuth2 client ID	
     * `orchestrator.client-secret`
        * **Description**: The Orchestrator OAuth2 client secret
  5. Additionally, if you have a Clues client registered in the IAM, you can configure the following parameters:
