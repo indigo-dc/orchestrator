@@ -157,7 +157,7 @@ with, as parameters
  * `chronos.password`
     * **Description**: The Chronos password
  * `chronos.local-volumes-host-base-path`
-    * **Description**: (Optional) The host path on which the jobs' local volumes will be mounted. If not provided support for local volumes will be disabled
+    * **Description**: (Optional) The host path on which the jobs' local volumes will be mounted. If not provided support for local volumes will be disabled. If provided, it must start with `/`
  * `marathon.url`
     * **Description**: The Marathon REST endpoint
     * **Format**: http://{host}:{port}
@@ -166,7 +166,7 @@ with, as parameters
  * `marathon.password`
     * **Description**: The Marathon password
  * `marathon.local-volumes-host-base-path`
-    * **Description**: (Optional) The host path on which the applications' local volumes will be mounted. If not provided support for local volumes will be disabled
+    * **Description**: (Optional) The host path on which the applications' local volumes will be mounted. If not provided support for local volumes will be disabled. If provided, it must start with `/`
  * `marathon.load-balancer-ips`
     * **Description**: The list of Marathon LB IPs
 
