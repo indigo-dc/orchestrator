@@ -2,7 +2,7 @@
 
 ## REQUISITES
 
-To run the Orchestrator you need Docker and at least a MySQL Server instance (which may be local, remote, or in a docker container). 
+To run the Orchestrator you need Docker and at least a MySQL Server instance (which may be local, remote, or in a docker container).
 
 You can either run the image built accordingly to the [previous chapter](how_to_build.md) or run the image already pushed on Docker Hub [indigodatacloud/orchestrator](https://hub.docker.com/r/indigodatacloud/orchestrator/).
 
@@ -86,63 +86,90 @@ By default the REST APIs are not authenticated; if you want to enable the IAM in
      2. `openid`, `profile` and `offline_access` as scopes
      3. `urn:ietf:params:oauth:grant-type:token-exchange` as additional grant type
      4. Expiration time for the authorization token must be set to 3600 seconds
-     5. Expiration time for the id token must be set to 1800 seconds 
+     5. Expiration time for the id token must be set to 1800 seconds
      6. Expiration info for the exchanged token must not be disabled
  2. Retrieve the _**client id**_ and the _**client secret**_
- 3. Retrieve the _**issuer**_ value of the IAM from its WebFinger endpoint: 
- https://{iam-url}/.well-known/openid-configuration
- 4. Configure the following parameters:
+ 3. Retrieve the _**issuer**_ value of the IAM from its WebFinger endpoint `https://{iam-url}/.well-known/openid-configuration`
+ 4. Provide a file called `application.yml` and mount it (via docker bind-mounting) on `/orchestrator/application.yml`.
+ Inside the file you need to provide the following configuration:
 
-    * `OIDC_ENABLED`
+     ```yaml
+      oidc:
+       enabled: true
+       iam-properties:
+         "[{issuer}]":
+           orchestrator:
+             client-id: '{client-id}'
+             client-secret: '{client-secret}'
+           clues:
+             client-id: '{client-id}'
+             client-secret: '{client-secret}'
+     ```
+    with, as parameters
+    * `oidc.enabled`
        * **Description**: Determines if the OAuth2 authentication and authorization is enabled
        * **Format**: `true` or `false`
        * **Default value**: `false`
-    * `OIDC_IAM-PROPERTIES[{issuer}]_ORCHESTRATOR_CLIENT-ID`
-       * **Description**: The OAuth2 client ID, with as `issuer` the issuer value of the IAM to which the orchestrator has been registered
-    * `OIDC_IAM-PROPERTIES[{issuer}]_ORCHESTRATOR_CLIENT-SECRET`
-       * **Description**: The OAuth2 client secret, with as `issuer` the issuer value of the IAM to which the orchestrator has been registered
-      
- 5. Addittionally, if you have a Clues client registered in the IAM, you can configure the following paramenters:
-    * `OIDC_IAM-PROPERTIES[{issuer}]_CLUES_CLIENT-ID`
-       * **Description**: The CLUES OAuth2 client ID, with as `issuer` the issuer value of the IAM to which CLUES has been registered
-    * ``OIDC_IAM-PROPERTIES[{issuer}]_ORCHESTRATOR_CLIENT-SECRET``
-       * **Description**: The CLUES OAuth2 client secret, with as `issuer` the issuer value of the IAM to which CLUES has been registered
+    * `{issuer}`
+       * **Description**: The issuer value of the IAM to which the orchestrator has been registered
+       * **Default value**: `https://iam-test.indigo-datacloud.eu/`	
+    * `orchestrator.client-id`
+       * **Description**: The Orchestrator OAuth2 client ID	
+    * `orchestrator.client-secret`
+       * **Description**: The Orchestrator OAuth2 client secret
+ 5. Additionally, if you have a Clues client registered in the IAM, you can configure the following parameters:
+    * `clues.client-id`
+       * **Description**: The CLUES OAuth2 client ID
+    * `clues.client-secret`
+       * **Description**: The CLUES OAuth2 client secret
 
 Please make reference to the [IAM guide](https://indigo-dc.gitbooks.io/iam/content) for further information on how to register the Orchestrator as protected resource server.
 
 :warning: Even if the authentication is optional and disabled by default, you are highly encouraged to enable it, otherwise you will not be able to create deployments neither on OpenStack nor on OpenNebula.
- 
-### Configure Chronos (optional)
-The orchestrator allows to run jobs on Chronos; to do that you need to configure the following parameters 
 
- * `CHRONOS_URL`
+### Configure Chronos and Marathon (optional)
+The orchestrator can both run jobs on Chronos and managed applications on Marathon; to do that you need to provide a file called `application.yml` and mount it (via docker bind-mounting) on `/orchestrator/application.yml`. Inside the file you need to provide the following configuration:
+```yaml
+mesos:
+  instances:
+    "{cloud-provider-id}":
+      chronos:
+        url: '{chronos-endpoint}'
+        username: '{chronos-username}'
+        password: '{chronos-password}'
+        local-volumes-host-base-path: '{base-path}'
+      marathon:
+        url: '{marathon-endpoint}'
+        username: '{marathon-username}'
+        password: '{marathon-password}'
+        local-volumes-host-base-path: '{base-path}'
+        load-balancer-ips: {marathon-lb-ips}
+```
+
+with, as parameters
+ * `{cloud-provider-id}`
+    * **Description**: The Cloud Provider that hosts the Mesos cluster on which it runs Chronos; it should be the same id that's returned from the CMDB service
+ * `chronos.url`
     * **Description**: The Chronos REST endpoint
     * **Format**: http://{host}:{port}
- * `CHRONOS_USERNAME`
+ * `chronos.username`
     * **Description**: The Chronos username
- * `CHRONOS_PASSWORD`
+ * `chronos.password`
     * **Description**: The Chronos password
- * `CHRONOS_PROVIDER`
-    * **Description**: The Cloud Provider that hosts the Mesos cluster on which it runs Chronos; it should be the same id that's returned from the CMDB service
-    * **Default value**: `provider-RECAS-BARI`
- * `CHRONOS_LOCAL_VOLUMES_HOST_BASE_PATH`
-    * **Description**: (Optional) The host path on which the local volumes will be mounted. If not provided support for local volumes will be disabled
-
-### Configure Marathon (optional)
-The orchestrator allows to run applications on Marathon; to do that you need to configure the following parameters 
-
- * `MARATHON_URL`
+ * `chronos.local-volumes-host-base-path`
+    * **Description**: (Optional) The host path on which the jobs' local volumes will be mounted. If not provided support for local volumes will be disabled. If provided, it must start with `/`
+ * `marathon.url`
     * **Description**: The Marathon REST endpoint
     * **Format**: http://{host}:{port}
- * `MARATHON_USERNAME`
+ * `marathon.username`
     * **Description**: The Marathon username
- * `MARATHON_PASSWORD`
+ * `marathon.password`
     * **Description**: The Marathon password
- * `MARATHON_LOAD_BALANCER_IPS`
+ * `marathon.local-volumes-host-base-path`
+    * **Description**: (Optional) The host path on which the applications' local volumes will be mounted. If not provided support for local volumes will be disabled. If provided, it must start with `/`
+ * `marathon.load-balancer-ips`
     * **Description**: The list of Marathon LB IPs
- * `MARATHON_LOCAL_VOLUMES_HOST_BASE_PATH`
-    * **Description**: (Optional) The host path on which the local volumes will be mounted. If not provided support for local volumes will be disabled
- 
+
 ### Configure OneData (optional)
 The Orchestrator, when the Chronos parameters are set, allows to exploit a [OneData](https://onedata.org/) service space. This enables the users to execute tasks on Chronos that use temporary files hosted on a shared OneData space.
 
@@ -163,5 +190,4 @@ To enable this functionality you need to configure the following parameters:
     * **Default value**: `INDIGO Service Space`
  * `ONEDATA_SERVICE_SPACE_BASE_FOLDER_PATH`
     * **Description**: The path (relative to the space one) to the folder that will host the files
-    * **Default value**: Empty (files will be hosted directly in the space folder) 
-
+    * **Default value**: Empty (files will be hosted directly in the space folder)
