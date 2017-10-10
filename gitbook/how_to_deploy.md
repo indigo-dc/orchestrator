@@ -92,21 +92,38 @@ By default the REST APIs are not authenticated; if you want to enable the IAM in
  3. Retrieve the _**issuer**_ value of the IAM from its WebFinger endpoint: 
  https://{iam-url}/.well-known/openid-configuration
  4. Configure the following parameters:
-
-    * `OIDC_ENABLED`
-       * **Description**: Determines if the OAuth2 authentication and authorization is enabled
-       * **Format**: `true` or `false`
-       * **Default value**: `false`
-    * `OIDC_IAM-PROPERTIES[{issuer}]_ORCHESTRATOR_CLIENT-ID`
-       * **Description**: The OAuth2 client ID, with as `issuer` the issuer value of the IAM to which the orchestrator has been registered
-    * `OIDC_IAM-PROPERTIES[{issuer}]_ORCHESTRATOR_CLIENT-SECRET`
-       * **Description**: The OAuth2 client secret, with as `issuer` the issuer value of the IAM to which the orchestrator has been registered
+To configure the IAM integration, you need to provide a file called `application.yml` and mount it (via docker bind-mounting) on `/orchestrator/application.yml`
+Inside the file you need to provide the following configuration:
+  ```yaml
+  oidc:
+    enabled: true
+    iam-properties:
+      "[{issuer}]":
+        orchestrator:
+          client-id: '{client-id}'
+          client-secret: '{client-secret}'
+        clues:
+          client-id: '{client-id}'
+          client-secret: '{client-secret}'
+  ```
+with
+    * `oidc.enabled`
+      * **Description**: Determines if the OAuth2 authentication and authorization is enabled
+      * **Format**: `true` or `false`
+      * **Default value**: `false`
+    * `{issuer}`
+      * **Description**: The issuer value of the IAM to which the orchestrator has been registered
+      * **Default value**: `https://iam-test.indigo-datacloud.eu/`
+    * `orchestrator.client-id`
+      * **Description**: The Orchestrator OAuth2 client ID
+    * `orchestrator.client-secret`
+      * **Description**: The Orchestrator OAuth2 client secret
       
- 5. Addittionally, if you have a Clues client registered in the IAM, you can configure the following paramenters:
-    * `OIDC_IAM-PROPERTIES[{issuer}]_CLUES_CLIENT-ID`
-       * **Description**: The CLUES OAuth2 client ID, with as `issuer` the issuer value of the IAM to which CLUES has been registered
-    * ``OIDC_IAM-PROPERTIES[{issuer}]_ORCHESTRATOR_CLIENT-SECRET``
-       * **Description**: The CLUES OAuth2 client secret, with as `issuer` the issuer value of the IAM to which CLUES has been registered
+ 5. Additionally, if you have a Clues client registered in the IAM, you can configure the following parameters:
+    * `clues.client-id`
+       * **Description**: The CLUES OAuth2 client ID
+    * `clues.client-secret`
+       * **Description**: The CLUES OAuth2 client secret
 
 Please make reference to the [IAM guide](https://indigo-dc.gitbooks.io/iam/content) for further information on how to register the Orchestrator as protected resource server.
 
