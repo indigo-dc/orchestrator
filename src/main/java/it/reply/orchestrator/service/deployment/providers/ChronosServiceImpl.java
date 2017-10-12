@@ -53,10 +53,13 @@ import it.reply.orchestrator.service.deployment.providers.factory.ChronosClientF
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jgrapht.graph.DirectedMultigraph;
 import org.jgrapht.traverse.TopologicalOrderIterator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,6 +77,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import javax.validation.constraints.NotNull;
 
 @Service
 @DeploymentProviderQualifier(DeploymentProvider.CHRONOS)
@@ -519,6 +524,8 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     return !failed;
   }
 
+  @Data
+  @RequiredArgsConstructor
   public static class IndigoJob implements Serializable {
 
     private static final long serialVersionUID = -1037947811308004122L;
@@ -529,44 +536,17 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
       END
     }
 
+    @NonNull
+    @NotNull
     private Job chronosJob;
-    private String toscaNodeName;
-    private Collection<IndigoJob> parents = new ArrayList<>();
-
-    /**
-     * Generates a new IndigoJob representation.
-     * 
-     * @param toscaNodeName
-     *          the name of the TOSCA node associated to the job
-     * @param chronosJob
-     *          the {@link Job Chronos job} associated to the job
-     */
-    public IndigoJob(String toscaNodeName, Job chronosJob) {
-      super();
-      this.toscaNodeName = toscaNodeName;
-      this.chronosJob = chronosJob;
-    }
-
-    public String getToscaNodeName() {
-      return toscaNodeName;
-    }
-
-    public Job getChronosJob() {
-      return chronosJob;
-    }
-
-    public Collection<IndigoJob> getParents() {
-      return parents;
-    }
     
-    public void setParents(Collection<IndigoJob> parents) {
-      this.parents = parents;
-    }
-
-    @Override
-    public String toString() {
-      return "IndigoJob [toscaNodeName=" + toscaNodeName + ", chronosJob=" + chronosJob.getName();
-    }
+    @NonNull
+    @NotNull
+    private String toscaNodeName;
+    
+    @NonNull
+    @NotNull
+    private Collection<IndigoJob> parents = new ArrayList<>();
 
   }
 
@@ -644,7 +624,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
             // set as /basePath/groupId
             volume.setHostPath(chronosProperties.generateLocalVolumesHostPath(id));
           });
-      IndigoJob indigoJob = new IndigoJob(chronosNode.getName(), chronosJob);
+      IndigoJob indigoJob = new IndigoJob(chronosJob, chronosNode.getName());
       indigoJob.setParents(parentNodes
           .stream()
           .map(parentNode -> indigoJobs.get(parentNode.getName()))
