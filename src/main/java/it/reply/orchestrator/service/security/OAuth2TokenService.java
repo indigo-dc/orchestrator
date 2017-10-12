@@ -71,7 +71,7 @@ public class OAuth2TokenService {
   public IndigoOAuth2Authentication getCurrentAuthentication() {
     handleSecurityDisabled();
     return Optional
-        .of(SecurityContextHolder.getContext().getAuthentication())
+        .ofNullable(SecurityContextHolder.getContext().getAuthentication())
         .filter(IndigoOAuth2Authentication.class::isInstance)
         .map(IndigoOAuth2Authentication.class::cast)
         .orElseThrow(() -> new IllegalStateException("User is not authenticated"));

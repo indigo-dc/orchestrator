@@ -16,58 +16,55 @@
 
 package it.reply.orchestrator.service.security;
 
-import org.junit.Assert;
+import static org.assertj.core.api.Assertions.*;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.mitre.jwt.signer.service.impl.JWKSetCacheService;
 import org.mitre.openid.connect.client.UserInfoFetcher;
-import org.mitre.openid.connect.client.service.ServerConfigurationService;
 import org.mitre.openid.connect.config.ServerConfiguration;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-
-
 public class UserInfoIntrospectingTokenServiceTest {
 
-  String invalidToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6I";
-
-  UserInfoIntrospectingTokenService iserInfoIntrospectingTokenService;
-
-  @Mock
-  OAuth2ConfigurationsService oauth2ConfigurationsService;
+  @InjectMocks
+  private UserInfoIntrospectingTokenService userInfoIntrospectingTokenService;
 
   @Mock
-  UserInfoFetcher userInfoFetcher;
-  
+  private OAuth2ConfigurationsService oauth2ConfigurationsService;
+
   @Mock
-  JWKSetCacheService validationServices;
+  private UserInfoFetcher userInfoFetcher;
+
+  @Mock
+  private JWKSetCacheService validationServices;
 
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
-    iserInfoIntrospectingTokenService =
-        new UserInfoIntrospectingTokenService(oauth2ConfigurationsService, null, validationServices);
   }
 
   @Test
   public void loadAuthenticationFailInvalidToken() {
-    Assert.assertEquals(iserInfoIntrospectingTokenService.loadAuthentication(invalidToken), null);
+    String stringToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6I";
+    assertThat(userInfoIntrospectingTokenService.loadAuthentication(stringToken)).isNull();
   }
 
   @Test
   public void loadAuthenticationFailgetServerConfiguration() throws Exception {
     String stringToken =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbGljZSIsImlzcyI6Imh0dHBzOi8vYzJpZC5jb20iLCJleHAiOjE0ODg1NTIyNzIxOTV9.3c7wkuOXGjXxVLJXcsaZ259HK07jtwVCQZcwN_fhF3M";
-    Assert.assertEquals(iserInfoIntrospectingTokenService.loadAuthentication(stringToken), null);
+    assertThat(userInfoIntrospectingTokenService.loadAuthentication(stringToken)).isNull();
   }
 
   @Test
   public void loadAuthenticationFailExpiredToken() throws Exception {
     String stringToken =
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbGljZSIsImlzcyI6Imh0dHBzOi8vYzJpZC5jb20iLCJleHAiOjB9.weKzty6VmVhigzJDhEc_tMMTk2QyDoSO6w0JWHE041Q";
-    Assert.assertEquals(iserInfoIntrospectingTokenService.loadAuthentication(stringToken), null);
+    assertThat(userInfoIntrospectingTokenService.loadAuthentication(stringToken)).isNull();
   }
 
   @Test
@@ -76,11 +73,11 @@ public class UserInfoIntrospectingTokenServiceTest {
         "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJhbGljZSIsImlzcyI6Imh0dHBzOi8vYzJpZC5jb20iLCJleHAiOjE0ODg1NTIyNzIxOTV9.3c7wkuOXGjXxVLJXcsaZ259HK07jtwVCQZcwN_fhF3M";
 
     ServerConfiguration serverConfiguration = new ServerConfiguration();
-    Mockito.when(oauth2ConfigurationsService.getServerConfiguration("https://c2id.com"))
+    Mockito
+        .when(oauth2ConfigurationsService.getServerConfiguration("https://c2id.com"))
         .thenReturn(serverConfiguration);
 
-    Mockito.when(validationServices.getValidator(null)).thenReturn(null);
-    Assert.assertEquals(iserInfoIntrospectingTokenService.loadAuthentication(stringToken), null);
+    assertThat(userInfoIntrospectingTokenService.loadAuthentication(stringToken)).isNull();
   }
 
 }
