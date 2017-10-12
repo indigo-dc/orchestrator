@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.service;
+package it.reply.orchestrator.service.deployment.providers;
 
 import static org.junit.Assert.*;
 import static org.mockito.Matchers.*;
@@ -29,8 +29,6 @@ import alien4cloud.tosca.model.ArchiveRoot;
 
 import it.infn.ba.indigo.chronos.client.Chronos;
 import it.infn.ba.indigo.chronos.client.model.v1.Job;
-import it.reply.orchestrator.config.properties.ChronosProperties;
-import it.reply.orchestrator.config.properties.MesosProperties;
 import it.reply.orchestrator.config.properties.OrchestratorProperties;
 import it.reply.orchestrator.config.specific.ToscaParserAwareTest;
 import it.reply.orchestrator.controller.ControllerTestUtils;
@@ -41,6 +39,9 @@ import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage.TemplateTopologicalOrderIterator;
 import it.reply.orchestrator.dto.onedata.OneData;
+import it.reply.orchestrator.service.IndigoInputsPreProcessorService;
+import it.reply.orchestrator.service.ToscaServiceImpl;
+import it.reply.orchestrator.service.ToscaServiceTest;
 import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl;
 import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl.IndigoJob;
 import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl.JobState;
