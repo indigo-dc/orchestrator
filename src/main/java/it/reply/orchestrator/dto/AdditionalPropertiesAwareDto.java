@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.AccessLevel;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -33,6 +34,7 @@ import java.util.HashMap;
 
 @Data
 @ToString(exclude = "log")
+@EqualsAndHashCode(exclude = "log")
 public abstract class AdditionalPropertiesAwareDto {
 
   @Getter(AccessLevel.NONE)
