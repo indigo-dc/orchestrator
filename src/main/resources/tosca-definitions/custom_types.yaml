@@ -592,7 +592,7 @@ node_types:
         relationship: tosca.relationships.HostedOn
     artifacts:
       galaxy_role:
-        file: indigo-dc.galaxy-tools,master
+        file: indigo-dc.galaxycloud-tools
         type: tosca.artifacts.AnsibleGalaxy.role
       tooldeps_role:
         file: indigo-dc.galaxycloud-tooldeps
