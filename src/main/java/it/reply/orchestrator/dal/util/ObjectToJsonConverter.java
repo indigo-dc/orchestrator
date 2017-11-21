@@ -18,12 +18,10 @@ package it.reply.orchestrator.dal.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 
 @Converter
-public class ObjectToJsonConverter extends AbstractToJsonConverter<Object>
-    implements AttributeConverter<Object, String> {
+public class ObjectToJsonConverter extends AbstractToJsonConverter<Object> {
 
   private static final TypeReference<Object> REFERENCE = new TypeReference<Object>() {
   };
