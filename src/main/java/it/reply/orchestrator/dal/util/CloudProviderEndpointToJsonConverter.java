@@ -20,13 +20,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 
-import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 
 @Converter
 public class CloudProviderEndpointToJsonConverter
-    extends AbstractToJsonConverter<CloudProviderEndpoint>
-    implements AttributeConverter<CloudProviderEndpoint, String> {
+    extends AbstractToJsonConverter<CloudProviderEndpoint> {
 
   private static final TypeReference<CloudProviderEndpoint> REFERENCE =
       new TypeReference<CloudProviderEndpoint>() {
