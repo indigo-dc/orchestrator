@@ -20,12 +20,10 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import java.util.List;
 
-import javax.persistence.AttributeConverter;
 import javax.persistence.Converter;
 
 @Converter
-public class ListStringToJsonConverter extends AbstractToJsonConverter<List<String>>
-    implements AttributeConverter<List<String>, String> {
+public class ListStringToJsonConverter extends AbstractToJsonConverter<List<String>> {
 
   private static final TypeReference<List<String>> REFERENCE = new TypeReference<List<String>>() {
   };
