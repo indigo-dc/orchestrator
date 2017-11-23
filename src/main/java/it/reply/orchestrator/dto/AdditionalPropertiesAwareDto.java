@@ -35,6 +35,7 @@ import java.util.HashMap;
 @Data
 @ToString(exclude = "log")
 @EqualsAndHashCode(exclude = "log")
+@Deprecated
 public abstract class AdditionalPropertiesAwareDto {
 
   @Getter(AccessLevel.NONE)
