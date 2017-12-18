@@ -22,7 +22,6 @@ import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.resource.DeploymentResource;
 import it.reply.orchestrator.resource.DeploymentResourceAssembler;
 import it.reply.orchestrator.service.DeploymentService;
-import it.reply.orchestrator.validator.DeploymentRequestValidator;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -39,8 +38,6 @@ import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -63,11 +60,6 @@ public class DeploymentController {
 
   @Autowired
   private DeploymentResourceAssembler deploymentResourceAssembler;
-
-  @InitBinder
-  protected void initBinder(WebDataBinder binder) {
-    binder.setValidator(new DeploymentRequestValidator());
-  }
 
   /**
    * Get all deployments.

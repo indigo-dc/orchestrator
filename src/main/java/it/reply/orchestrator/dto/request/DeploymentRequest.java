@@ -19,6 +19,7 @@ package it.reply.orchestrator.dto.request;
 import lombok.Data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.validator.constraints.URL;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,6 +36,7 @@ public class DeploymentRequest {
   private Map<String, Object> parameters = new HashMap<>();
 
   @Nullable
+  @URL(message = "The callback value must be a valid HTTP or HTTPS URL", regexp = "^https?\\:.*")
   private String callback;
 
   @Nullable
