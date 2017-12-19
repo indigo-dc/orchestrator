@@ -24,32 +24,59 @@ import com.google.common.util.concurrent.Futures;
 import com.google.common.util.concurrent.ListenableFuture;
 
 import it.reply.orchestrator.config.properties.OidcProperties;
+import it.reply.orchestrator.dal.entity.OidcRefreshToken;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
+import it.reply.orchestrator.dal.repository.OidcTokenRepository;
+import it.reply.orchestrator.dto.security.AccessGrant;
+import it.reply.orchestrator.dto.security.TokenIntrospectionResponse;
 import it.reply.orchestrator.exception.OrchestratorException;
+import it.reply.orchestrator.utils.JwtUtils;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.social.oauth2.AccessGrant;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Duration;
-import java.time.Instant;
 import java.util.Optional;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
 public class OAuth2TokenCacheService {
 
-  @Autowired
-  private OAuth2TokenService oauth2TokenService;
+  private CustomOAuth2TemplateFactory customOAuth2TemplateFactory;
 
-  private LoadingCache<OidcTokenId, AccessGrant> oauth2TokensCache = CacheBuilder.newBuilder()
+  private OidcTokenRepository oidcTokenRepository;
+
+  private final TransactionTemplate transactionTemplate;
+
+  /**
+   * Creates a new OAuth2TokenCacheService.
+   * 
+   * @param customOAuth2TemplateFactory
+   *          the customOAuth2TemplateFactory
+   * @param oidcTokenRepository
+   *          the oidcTokenRepository.
+   * @param transactionManager
+   *          the transactionManager.
+   */
+  public OAuth2TokenCacheService(CustomOAuth2TemplateFactory customOAuth2TemplateFactory,
+      OidcTokenRepository oidcTokenRepository, PlatformTransactionManager transactionManager) {
+    this.customOAuth2TemplateFactory = customOAuth2TemplateFactory;
+    this.oidcTokenRepository = oidcTokenRepository;
+    this.transactionTemplate = new TransactionTemplate(transactionManager);
+    transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+    transactionTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
+
+  }
+
+  private LoadingCache<OidcTokenId, AccessGrant> oauth2TokensCache = CacheBuilder
+      .newBuilder()
       .maximumWeight(0)
-      .<OidcTokenId, AccessGrant>weigher((key, value) -> isGrantExpired(value) ? 1 : 0)
+      .<OidcTokenId, AccessGrant>weigher((key, grant) -> grant.isExpired() ? 1 : 0)
       .refreshAfterWrite(1, TimeUnit.MINUTES)
       .removalListener(
           removalEvent -> LOG.trace("Access token {} evicted from cache.%nEviction cause {}",
@@ -57,51 +84,84 @@ public class OAuth2TokenCacheService {
       .build(new CacheLoader<OidcTokenId, AccessGrant>() {
 
         @Override
-        public ListenableFuture<AccessGrant> reload(OidcTokenId key, AccessGrant oldValue)
-            throws Exception {
-          if (isGrantExpired(oldValue, 2)) {
+        public ListenableFuture<AccessGrant> reload(OidcTokenId key, AccessGrant oldGrant) {
+          if (oldGrant.isExpiringIn(Duration.ofMinutes(2))) {
             // reload if expiring in 2 mins
-            // TODO should it be made configurable?
-            return super.reload(key, oldValue);
+            // TODO should the timing be configurable?
+            return Futures.immediateFuture(load(key));
           } else {
-            return Futures.immediateFuture(oldValue);
+            return Futures.immediateFuture(oldGrant);
           }
         }
 
         @Override
-        public AccessGrant load(OidcTokenId key) throws Exception {
-          LOG.debug("Loading and putting new access token for {} into cache", key);
-          AccessGrant grant = oauth2TokenService.refreshAccessToken(key,
-              OidcProperties.REQUIRED_SCOPES);
-          LOG.trace("New access token for {}={}", key, grant.getAccessToken());
-          return grant;
+        public AccessGrant load(OidcTokenId key) {
+          return refreshAccessToken(key);
         }
 
       });
 
   /**
-   * Check if a grant is expired.
+   * Refresh an access token.
    * 
-   * @param grant
-   *          the grant to check
-   * @param leeway
-   *          the leeway for the expiration evaluation
-   * @return true if expired, false otherwise
+   * @param id
+   *          the id of the token
+   * @param scopes
+   *          the scopes to request
+   * @return the exchanged grant
    */
-  public static boolean isGrantExpired(AccessGrant grant, long leeway) {
-    Preconditions.checkNotNull(grant);
-    Preconditions.checkArgument(leeway >= 0, "leeway must be >= 0");
-
-    return Optional.ofNullable(grant.getExpireTime())
-        .map(expireTime -> Instant.ofEpochMilli(expireTime)
-            // if expiring in ${skew} mins -> return true
-            .minus(Duration.ofMinutes(leeway)))
-        .filter(Instant.now()::isAfter)
-        .isPresent();
+  protected AccessGrant refreshAccessToken(OidcTokenId id) {
+    CustomOAuth2Template template = customOAuth2TemplateFactory.generateOAuth2Template(id);
+    return transactionTemplate.execute(transactionStatus -> {
+      OidcRefreshToken refreshToken =
+          oidcTokenRepository
+              .findByOidcTokenId(id)
+              .orElseThrow(() -> new OrchestratorException("No refresh token suitable found"));
+      AccessGrant newGrant =
+          template.refreshToken(refreshToken.getVaule(), OidcProperties.REQUIRED_SCOPES);
+      LOG.info("Access token for {} refreshed", id);
+      if (newGrant.getRefreshToken() != null
+          && !newGrant.getRefreshToken().equals(refreshToken.getVaule())) {
+        LOG.info("New refesh token received for {}", id);
+        refreshToken.updateFromAccessGrant(newGrant);
+      }
+      return newGrant;
+    });
   }
 
-  public static boolean isGrantExpired(AccessGrant grant) {
-    return isGrantExpired(grant, 0);
+  protected AccessGrant exchangeAccessToken(OidcTokenId id, String accessToken) {
+    CustomOAuth2Template template = customOAuth2TemplateFactory.generateOAuth2Template(id);
+    transactionTemplate.execute(transactionStatus -> {
+      return oauth2TokensCache.asMap().compute(id, (tokenId, oldGrant) -> {
+        Optional<OidcRefreshToken> refreshToken = oidcTokenRepository
+            .findByOidcTokenId(id);
+        if (refreshToken.isPresent()) {
+          boolean isActive = refreshToken
+              .map(token -> template.introspectToken(token.getVaule()))
+              .filter(TokenIntrospectionResponse::isActive)
+              .isPresent();
+          if (!isActive) {
+            LOG.info(
+                "Refresh token for {} isn't active anymore."
+                    + " Getting a new one exchanging access token with jti={}",
+                id, JwtUtils.getJti(JwtUtils.parseJwt(accessToken)));
+            AccessGrant grant = template.exchangeToken(accessToken, OidcProperties.REQUIRED_SCOPES);
+            refreshToken.get().updateFromAccessGrant(grant);
+            return grant;
+          } else {
+            return oldGrant;
+          }
+        } else {
+          LOG.info("No refresh token found for {}. Exchanging access token with jti={}",
+              id, JwtUtils.getJti(JwtUtils.parseJwt(accessToken)));
+          AccessGrant grant = template.exchangeToken(accessToken, OidcProperties.REQUIRED_SCOPES);
+          OidcRefreshToken token = OidcRefreshToken.createFromAccessGrant(grant, id);
+          oidcTokenRepository.save(token);
+          return grant;
+        }
+      });
+    });
+    return oauth2TokensCache.getUnchecked(id);
   }
 
   /**
@@ -119,26 +179,6 @@ public class OAuth2TokenCacheService {
     oauth2TokensCache.put(id, accessToken);
   }
 
-  protected AccessGrant get(OidcTokenId id, Callable<AccessGrant> grantLoader) {
-    // it should be only used to put the exchanged token,
-    // the refresh should be handled by the CacheLoader
-    // Don't make it public
-    Preconditions.checkNotNull(id);
-    Preconditions.checkNotNull(grantLoader);
-    Callable<? extends AccessGrant> loggingGrantLoader = () -> {
-      LOG.debug("Loading and putting new access token for {} into cache", id);
-      AccessGrant grant = grantLoader.call();
-      LOG.trace("New access token for {}={}", id, grant.getAccessToken());
-      return grant;
-    };
-
-    try {
-      return oauth2TokensCache.get(id, loggingGrantLoader);
-    } catch (ExecutionException ex) {
-      throw new OrchestratorException(ex.getCause());
-    }
-  }
-
   /**
    * Get a grant from the cache.
    * 
@@ -148,11 +188,22 @@ public class OAuth2TokenCacheService {
    */
   public AccessGrant get(OidcTokenId id) {
     Preconditions.checkNotNull(id);
-    try {
-      return oauth2TokensCache.get(id);
-    } catch (ExecutionException ex) {
-      throw new OrchestratorException(ex.getCause());
-    }
+    LOG.debug("Retrieving access token for {} from cache", id);
+    return oauth2TokensCache.getUnchecked(id);
+  }
+
+  /**
+   * Get a refreshed grant from the cache.
+   * 
+   * @param id
+   *          the id of token from which the grant must originates.
+   * @return the grant
+   */
+  public AccessGrant getNew(OidcTokenId id) {
+    Preconditions.checkNotNull(id);
+    // TODO make it atomic
+    evict(id);
+    return get(id);
   }
 
   /**
