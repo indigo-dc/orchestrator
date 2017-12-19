@@ -134,6 +134,7 @@ public class OneDataServiceImpl implements OneDataService {
   }
 
   private HttpEntity<?> withToken(String oneDataToken) {
+    // TODO use a request interceptor (restTemplate must not be singleton)
     HttpHeaders headers = new HttpHeaders();
     headers.set("macaroon", oneDataToken);
     return new HttpEntity<>(headers);

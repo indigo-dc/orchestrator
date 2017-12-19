@@ -16,102 +16,112 @@
 
 package it.reply.orchestrator.dal.entity;
 
-import com.google.common.collect.Lists;
-
-import it.reply.orchestrator.dal.util.ListStringToJsonConverter;
-import it.reply.orchestrator.utils.CommonUtils;
+import it.reply.orchestrator.dal.util.SetStringToJsonConverter;
+import it.reply.orchestrator.dto.security.AccessGrant;
 import it.reply.orchestrator.utils.JwtUtils;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.Getter;
+import lombok.Setter;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.annotations.GenericGenerator;
 import org.springframework.hateoas.Identifiable;
-import org.springframework.social.oauth2.AccessGrant;
 
-import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.HashSet;
+import java.util.Set;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Convert;
+import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.Index;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 
-@Data
-@NoArgsConstructor
-@EqualsAndHashCode(of = { "vaule" })
 @Entity
-@Table(indexes = { @Index(name = "indexOriginalJtiAndEntity",
-    columnList = "ORIGINAL_TOKEN_ID" + "," + "OIDC_ENTITY_ID") })
-public class OidcRefreshToken implements Identifiable<String>, Serializable {
-
-  private static final long serialVersionUID = 2472751784540925184L;
+@Getter
+@Setter
+@Table(name = "oidc_refresh_token",
+    uniqueConstraints = { @UniqueConstraint(name = "uq_issuer_subject_clients_id",
+        columnNames = { "issuer", "subject", "clients_id" }) })
+@SuppressWarnings("null")
+public class OidcRefreshToken implements Identifiable<Long> {
 
   /**
    * Generate a OidcRefreshToken from a token id and a grant.
    * 
-   * @param currentTokenId
-   *          the token id
    * @param grant
    *          the grant
-   * @return the OidcRefreshToken
+   * @param id
+   *          the token identifier
+   * @return the new OidcRefreshToken
    */
-  public static OidcRefreshToken fromAccessGrant(OidcTokenId currentTokenId, AccessGrant grant) {
+  public static OidcRefreshToken createFromAccessGrant(AccessGrant grant, OidcTokenId id) {
     OidcRefreshToken token = new OidcRefreshToken();
-    token.setOriginalTokenId(currentTokenId.getJti());
     token.setVaule(grant.getRefreshToken());
     token.setCreationDate(new Date());
+    token.setScopes(grant.getScope());
+    token.setOidcTokenId(id);
 
-    Optional.ofNullable(grant.getScope())
-        .map(scopeAsString -> scopeAsString.split("\\s+"))
-        .map(scopes -> Lists.newArrayList(scopes))
-        .ifPresent(scopes -> token.setScopes(CommonUtils.checkNotNull(scopes)));
-
-    JwtUtils.getExpirationTime(JwtUtils.parseJwt(token.getVaule()))
+    JwtUtils
+        .getExpirationTime(JwtUtils.parseJwt(grant.getRefreshToken()))
         .ifPresent(expirationDate -> token.setExpirationDate(expirationDate));
 
     return token;
   }
 
+  /**
+   * Updates the refresh token using the information contained in the access grant.
+   * 
+   * @param grant
+   *          the access grant
+   */
+  public void updateFromAccessGrant(AccessGrant grant) {
+    setVaule(grant.getRefreshToken());
+    setCreationDate(new Date());
+    JwtUtils
+        .getExpirationTime(JwtUtils.parseJwt(grant.getRefreshToken()))
+        .ifPresent(newExpirationDate -> setExpirationDate(newExpirationDate));
+  }
+
   @Id
-  @GeneratedValue(generator = "uuid")
-  @GenericGenerator(name = "uuid", strategy = "uuid2")
-  @Column(name = AbstractResourceEntity.ID_COLUMN_NAME, unique = true)
-  private String id;
+  @GeneratedValue(
+      strategy = GenerationType.AUTO,
+      generator = "native")
+  @GenericGenerator(
+      name = "native",
+      strategy = "native")
+  @Column(name = "id", unique = true, nullable = false, updatable = false)
+  private Long id;
 
-  @Column(name = "REFRESH_TOKEN_VALUE")
-  private String vaule;
-
-  @Column(name = "ORIGINAL_TOKEN_ID")
-  private String originalTokenId;
-
-  @Column(name = "EXPIRATION")
-  private Date expirationDate;
-
-  @Column(name = "ISSUED_AT")
-  private Date creationDate;
-
-  @Column(name = "SCOPES")
-  @Convert(converter = ListStringToJsonConverter.class)
+  @Column(name = "refresh_token_value", nullable = false, updatable = true)
   @NotNull
   @NonNull
-  private List<String> scopes = new ArrayList<>();
+  private String vaule;
 
-  @OneToOne(
-      cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
-  @JoinColumn(name = "OIDC_ENTITY_ID", unique = true, nullable = true)
-  private OidcEntity entity;
+  @Column(name = "expires_at", nullable = true, updatable = true)
+  @Nullable
+  private Date expirationDate;
+
+  @Column(name = "issued_at", nullable = false, updatable = true)
+  @NotNull
+  @NonNull
+  private Date creationDate;
+
+  @Column(name = "scopes", nullable = false, updatable = false)
+  @Convert(converter = SetStringToJsonConverter.class)
+  @NotNull
+  @NonNull
+  private Set<String> scopes = new HashSet<>();
+
+  @NotNull
+  @NonNull
+  @Embedded
+  private OidcTokenId oidcTokenId;
 
 }
