@@ -26,6 +26,7 @@ import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.BeanClassLoaderAware;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties.Xa;
+import org.springframework.boot.autoconfigure.transaction.PlatformTransactionManagerCustomizer;
 import org.springframework.boot.bind.RelaxedDataBinder;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.jdbc.DatabaseDriver;
@@ -33,6 +34,7 @@ import org.springframework.boot.jta.XADataSourceWrapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.transaction.jta.JtaTransactionManager;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
@@ -116,5 +118,11 @@ public class DatasourceConfig implements BeanClassLoaderAware {
         .ofNullable(properties.getXa())
         .ifPresent(xa -> values.addPropertyValues(xa.getProperties()));
     new RelaxedDataBinder(target).withAlias("user", "username").bind(values);
+  }
+
+  @Bean
+  public PlatformTransactionManagerCustomizer<JtaTransactionManager>
+      jtaTransactionManagerCustomizer() {
+    return transactionManager -> transactionManager.setAllowCustomIsolationLevels(true);
   }
 }

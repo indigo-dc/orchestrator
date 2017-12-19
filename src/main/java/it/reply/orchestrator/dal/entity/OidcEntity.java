@@ -20,49 +20,42 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.annotations.GenericGenerator;
 import org.springframework.hateoas.Identifiable;
 
-import java.io.Serializable;
-
-import javax.persistence.CascadeType;
+import javax.annotation.Nonnull;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
-import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(of = "oidcEntityId")
-@Table(uniqueConstraints = {
-    @UniqueConstraint(name = "uniqueIssuerAndSubject", columnNames = { "ISSUER", "SUBJECT" }) })
+@Table(name = "oidc_entity", uniqueConstraints = {
+    @UniqueConstraint(name = "uq_issuer_subject", columnNames = { "issuer", "subject" }) })
 @Entity
-public class OidcEntity implements Identifiable<String>, Serializable {
-
-  private static final long serialVersionUID = 2472751784540925184L;
+public class OidcEntity implements Identifiable<String> {
 
   @Id
   @GeneratedValue(generator = "uuid")
   @GenericGenerator(name = "uuid", strategy = "uuid2")
-  @Column(name = AbstractResourceEntity.ID_COLUMN_NAME, unique = true)
+  @Column(name = AbstractResourceEntity.ID_COLUMN_NAME, unique = true, nullable = false,
+      updatable = false)
   private String id;
 
+  @NonNull
+  @Nonnull
   @Embedded
   private OidcEntityId oidcEntityId;
 
-  @Column(name = "ORGANIZATION")
+  @NonNull
+  @Nonnull
+  @Column(name = "organization", nullable = false, updatable = false)
   private String organization;
-
-  @OneToOne(mappedBy = "entity", cascade = { CascadeType.ALL })
-  private OidcRefreshToken refreshToken;
-
-  public void setRefreshToken(OidcRefreshToken refreshToken) {
-    refreshToken.setEntity(this);
-    this.refreshToken = refreshToken;
-  }
 
 }

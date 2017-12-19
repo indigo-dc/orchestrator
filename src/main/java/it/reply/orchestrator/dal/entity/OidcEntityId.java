@@ -16,15 +16,20 @@
 
 package it.reply.orchestrator.dal.entity;
 
+import com.nimbusds.jwt.JWT;
+
+import it.reply.orchestrator.utils.JwtUtils;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.io.Serializable;
 
+import javax.annotation.Nonnull;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 
@@ -37,8 +42,22 @@ public class OidcEntityId extends OidcIssuerAwareId implements Serializable {
 
   private static final long serialVersionUID = -8303859464474981940L;
 
-  @Nullable
-  @Column(name = "SUBJECT")
+  @NonNull
+  @Nonnull
+  @Column(name = "subject", nullable = false, updatable = false)
   private String subject;
+
+  /**
+   * Generate a OidcEntityId from an access token.
+   *
+   * @return the OidcEntityId
+   */
+  public static OidcEntityId fromAccesToken(String accessToken) {
+    JWT jwt = JwtUtils.parseJwt(accessToken);
+    OidcEntityId id = new OidcEntityId();
+    id.setIssuer(JwtUtils.getIssuer(jwt));
+    id.setSubject(JwtUtils.getSubject(jwt));
+    return id;
+  }
 
 }

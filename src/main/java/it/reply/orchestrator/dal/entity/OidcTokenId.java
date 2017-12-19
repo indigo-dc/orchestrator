@@ -16,29 +16,40 @@
 
 package it.reply.orchestrator.dal.entity;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.ToString;
+import it.reply.orchestrator.dal.util.ListStringToJsonConverter;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.persistence.Column;
+import javax.persistence.Convert;
 import javax.persistence.Embeddable;
+import javax.persistence.Embedded;
+import javax.validation.constraints.NotNull;
 
 @Data
-@NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
 @Embeddable
-public class OidcTokenId extends OidcIssuerAwareId implements Serializable {
+@NoArgsConstructor
+public class OidcTokenId implements Serializable {
 
   private static final long serialVersionUID = -8303859464474981940L;
 
-  @Nullable
-  @Column(name = "JTI")
-  private String jti;
+  @Column(name = "clients_id", nullable = false, updatable = false)
+  @NotNull
+  @NonNull
+  // Hibernate is not handling the converter correctly in JPA queries
+  @Convert(converter = ListStringToJsonConverter.class)
+  private List<String> clientsId = new ArrayList<>();
+  // private String clientsId;
 
+  @NotNull
+  @NonNull
+  @Embedded
+  private OidcEntityId oidcEntityId;
 }

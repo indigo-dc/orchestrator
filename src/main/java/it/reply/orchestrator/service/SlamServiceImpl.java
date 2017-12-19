@@ -19,9 +19,8 @@ package it.reply.orchestrator.service;
 import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.config.properties.SlamProperties;
 import it.reply.orchestrator.dal.entity.OidcEntity;
-import it.reply.orchestrator.dal.entity.OidcRefreshToken;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
-import it.reply.orchestrator.dal.repository.OidcTokenRepository;
+import it.reply.orchestrator.dal.repository.OidcEntityRepository;
 import it.reply.orchestrator.dto.slam.SlamPreferences;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
@@ -53,7 +52,7 @@ public class SlamServiceImpl implements SlamService {
   private RestTemplate restTemplate;
 
   @Autowired
-  private OidcTokenRepository tokenRepository;
+  private OidcEntityRepository oidcEntityRepository;
 
   @Autowired
   private OidcProperties oidcProperties;
@@ -87,8 +86,8 @@ public class SlamServiceImpl implements SlamService {
 
     String slamCustomer = Optional
         .ofNullable(tokenId)
-        .flatMap(tokenRepository::findByOidcTokenId)
-        .map(OidcRefreshToken::getEntity)
+        .map(OidcTokenId::getOidcEntityId)
+        .flatMap(oidcEntityRepository::findByOidcEntityId)
         .map(OidcEntity::getOrganization)
         .orElse("indigo-dc");
 
