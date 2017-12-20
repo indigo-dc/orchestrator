@@ -38,6 +38,7 @@ import lombok.Data;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.lang.reflect.Type;
 import java.time.Duration;
 import java.time.Instant;
@@ -54,7 +55,9 @@ import javax.validation.constraints.NotNull;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class AccessGrant {
+public class AccessGrant implements Serializable {
+
+  private static final long serialVersionUID = -5524147116057860572L;
 
   @JsonProperty("access_token")
   @NonNull
