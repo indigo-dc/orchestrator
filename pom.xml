@@ -74,6 +74,7 @@
 		<alien4cloud.version>1.1.0-INDIGO2-SNAPSHOT</alien4cloud.version>
 		<chronos-client.version>0.0.1-BETA.2</chronos-client.version>
 		<marathon-client.version>0.6.0</marathon-client.version>
+		<ignite.version>2.3.0</ignite.version>
 	</properties>
 
 	<distributionManagement>
@@ -214,6 +215,25 @@
 			</exclusions>
 		</dependency>
 		
+		<!-- Ignite -->
+        <dependency>
+            <groupId>org.apache.ignite</groupId>
+            <artifactId>ignite-spring</artifactId>
+            <version>${ignite.version}</version>
+            <exclusions>
+            	<exclusion>
+            		<groupId>org.apache.ignite</groupId>
+            		<artifactId>ignite-indexing</artifactId>
+            	</exclusion>
+            </exclusions>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.apache.ignite</groupId>
+            <artifactId>ignite-slf4j</artifactId>
+            <version>${ignite.version}</version>
+        </dependency>
+        
 		<dependency>
 			<groupId>es.upv.i3m.grycap</groupId>
 			<artifactId>im-java-api</artifactId>
