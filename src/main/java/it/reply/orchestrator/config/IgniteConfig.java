@@ -30,8 +30,13 @@ import org.springframework.transaction.jta.JtaTransactionManager;
 @Configuration
 public class IgniteConfig {
 
+  /**
+   * Generates a new IgniteConfiguration.
+   * 
+   * @return the generated IgniteConfiguration
+   */
   @Bean
-  IgniteConfiguration igniteConfiguration(JtaTransactionManager transactionManager) {
+  public IgniteConfiguration igniteConfiguration(JtaTransactionManager transactionManager) {
 
     TransactionConfiguration txCfg = new TransactionConfiguration()
         .setTxManagerFactory(() -> transactionManager.getTransactionManager());
@@ -44,8 +49,13 @@ public class IgniteConfig {
         .setMetricsLogFrequency(0);
   }
 
+  /**
+   * Generates a new Ignite instance.
+   * 
+   * @return the generated Ignite instance
+   */
   @Bean(destroyMethod = "close")
-  Ignite ignite(ApplicationContext applicationContext,
+  public Ignite ignite(ApplicationContext applicationContext,
       IgniteConfiguration igniteConfiguration) throws IgniteCheckedException {
     Ignite ignite = null;
     try {

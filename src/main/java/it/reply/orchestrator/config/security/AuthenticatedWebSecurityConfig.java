@@ -58,16 +58,26 @@ public class AuthenticatedWebSecurityConfig extends BaseWebSecurityConfig {
   @Lazy // TODO Ugly
   private OAuth2ConfigurationsService oauth2ConfigurationsService;
 
+  /**
+   * Generates a new ServerConfigurationService.
+   * 
+   * @return the generated ServerConfigurationService
+   */
   @Bean
-  protected ServerConfigurationService serverConfigurationService() {
+  public ServerConfigurationService serverConfigurationService() {
     DynamicServerConfigurationService serverConfigurationService =
         new DynamicServerConfigurationService();
     serverConfigurationService.setWhitelist(oidcProperties.getIamProperties().keySet());
     return serverConfigurationService;
   }
 
+  /**
+   * Generates a new ClientConfigurationService.
+   * 
+   * @return the generated ClientConfigurationService
+   */
   @Bean
-  protected ClientConfigurationService clientConfigurationService() {
+  public ClientConfigurationService clientConfigurationService() {
     Map<String, RegisteredClient> clients = new HashMap<>();
     oidcProperties
         .getIamProperties()
@@ -88,12 +98,17 @@ public class AuthenticatedWebSecurityConfig extends BaseWebSecurityConfig {
   }
 
   @Bean
-  protected UserInfoFetcher userInfoFetcher() {
+  public UserInfoFetcher userInfoFetcher() {
     return new IndigoUserInfoFetcher();
   }
 
+  /**
+   * Generates a new IntrospectionConfigurationService.
+   * 
+   * @return the generated IntrospectionConfigurationService
+   */
   @Bean
-  protected IntrospectionConfigurationService introspectionConfigurationService() {
+  public IntrospectionConfigurationService introspectionConfigurationService() {
     JWTParsingIntrospectionConfigurationService introspectionConfigurationService =
         new JWTParsingIntrospectionConfigurationService();
     introspectionConfigurationService
@@ -104,12 +119,17 @@ public class AuthenticatedWebSecurityConfig extends BaseWebSecurityConfig {
   }
 
   @Bean
-  protected JWKSetCacheService validationServices() {
+  public JWKSetCacheService validationServices() {
     return new JWKSetCacheService();
   }
 
+  /**
+   * Generates a new ResourceServerTokenServices.
+   * 
+   * @return the generated ResourceServerTokenServices
+   */
   @Bean
-  protected ResourceServerTokenServices introspectingTokenService() {
+  public ResourceServerTokenServices introspectingTokenService() {
 
     UserInfoIntrospectingTokenService introspectingTokenService =
         new UserInfoIntrospectingTokenService(oauth2ConfigurationsService,
