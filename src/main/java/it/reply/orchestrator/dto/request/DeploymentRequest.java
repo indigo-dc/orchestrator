@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2017 Santer Reply S.p.A.
+ * Copyright © 2015-2018 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package it.reply.orchestrator.dto.request;
 import lombok.Data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.validator.constraints.URL;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,6 +36,7 @@ public class DeploymentRequest {
   private Map<String, Object> parameters = new HashMap<>();
 
   @Nullable
+  @URL(message = "The callback value must be a valid HTTP or HTTPS URL", regexp = "^https?\\:.*")
   private String callback;
 
   @Nullable

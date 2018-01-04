@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2017 Santer Reply S.p.A.
+ * Copyright © 2015-2018 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package it.reply.orchestrator.dal.repository;
 import it.reply.orchestrator.dal.entity.OidcRefreshToken;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,13 +27,8 @@ import java.util.Optional;
 
 @Repository
 @Transactional(readOnly = true)
-public interface OidcTokenRepository extends CrudRepository<OidcRefreshToken, String> {
+public interface OidcTokenRepository extends JpaRepository<OidcRefreshToken, Long> {
 
-  public Optional<OidcRefreshToken> findByEntity_OidcEntityId_IssuerAndOriginalTokenId(
-      String issuer, String id);
-
-  public default Optional<OidcRefreshToken> findByOidcTokenId(OidcTokenId id) {
-    return findByEntity_OidcEntityId_IssuerAndOriginalTokenId(id.getIssuer(), id.getJti());
-  }
+  public Optional<OidcRefreshToken> findByOidcTokenId(OidcTokenId oidcTokenId);
 
 }

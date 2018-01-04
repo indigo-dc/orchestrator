@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2017 Santer Reply S.p.A.
+ * Copyright © 2015-2018 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,6 +51,7 @@ import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.service.DeploymentException;
+import it.reply.orchestrator.function.ThrowingConsumer;
 import it.reply.orchestrator.function.ThrowingFunction;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.deployment.providers.factory.ImClientFactory;
@@ -99,7 +100,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   @Autowired
   private ImClientFactory imClientFactory;
 
-  protected <R> R executeWithClient(List<CloudProviderEndpoint> cloudProviderEndpoints,
+  protected <R> R executeWithClientForResult(List<CloudProviderEndpoint> cloudProviderEndpoints,
       @Nullable OidcTokenId requestedWithToken,
       ThrowingFunction<InfrastructureManager, R, ImClientException> function)
       throws ImClientException {
@@ -124,6 +125,13 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         }
       }
     }
+  }
+
+  protected void executeWithClient(List<CloudProviderEndpoint> cloudProviderEndpoints,
+      @Nullable OidcTokenId requestedWithToken,
+      ThrowingConsumer<InfrastructureManager, ImClientException> consumer)
+      throws ImClientException {
+    executeWithClientForResult(cloudProviderEndpoints, requestedWithToken, consumer.asFunction());
   }
 
   private static boolean isUnauthorized(ResponseError error) {
@@ -169,7 +177,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     // Deploy on IM
     try {
       String infrastructureId =
-          executeWithClient(cloudProviderEndpoints, requestedWithToken,
+          executeWithClientForResult(cloudProviderEndpoints, requestedWithToken,
               client -> client.createInfrastructure(imCustomizedTemplate, BodyContentType.TOSCA))
                   .getInfrastructureId();
       LOG.info("InfrastructureId for deployment <{}> is: {}", deploymentMessage.getDeploymentId(),
@@ -192,7 +200,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
     try {
 
-      InfrastructureState infrastructureState = executeWithClient(cloudProviderEndpoints,
+      InfrastructureState infrastructureState = executeWithClientForResult(cloudProviderEndpoints,
           requestedWithToken, client -> client.getInfrastructureState(deployment.getEndpoint()));
 
       LOG.debug(infrastructureState.getFormattedInfrastructureStateString());
@@ -233,7 +241,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
     // Try to get the logs of the virtual infrastructure for debug purposes.
     try {
-      Property contMsg = executeWithClient(cloudProviderEndpoints, requestedWithToken,
+      Property contMsg = executeWithClientForResult(cloudProviderEndpoints, requestedWithToken,
           client -> client.getInfrastructureContMsg(deployment.getEndpoint()));
       if (!Strings.isNullOrEmpty(contMsg.getValue())) {
         return Optional.of(String.format("Contextualization Message is:%n%s", contMsg.getValue()));
@@ -256,7 +264,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
     try {
       deployment
-          .setOutputs(executeWithClient(cloudProviderEndpoints, requestedWithToken,
+          .setOutputs(executeWithClientForResult(cloudProviderEndpoints, requestedWithToken,
               client -> client.getInfrastructureOutputs(deployment.getEndpoint()))
                   .getOutputs());
     } catch (ImClientException exception) {
@@ -289,7 +297,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     try {
       List<CloudProviderEndpoint> cloudProviderEndpoints =
           deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
-      InfrastructureState infrastructureState = executeWithClient(cloudProviderEndpoints,
+      InfrastructureState infrastructureState = executeWithClientForResult(cloudProviderEndpoints,
           requestedWithToken, client -> client.getInfrastructureState(deployment.getEndpoint()));
       Set<String> exsistingVms =
           Optional
@@ -437,10 +445,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
         LOG.debug("Deleting VMs {}", vmsToRemove);
 
-        executeWithClient(cloudProviderEndpoints, requestedWithToken, client -> {
-          client.removeResource(deployment.getEndpoint(), new ArrayList<>(vmsToRemove));
-          return true;
-        });
+        executeWithClient(cloudProviderEndpoints, requestedWithToken, client -> client
+            .removeResource(deployment.getEndpoint(), new ArrayList<>(vmsToRemove)));
       } else {
         LOG.debug("No VMs to delete");
       }
@@ -452,7 +458,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
       cloudProviderEndpoints.add(0, chosenCloudProviderEndpoint);
 
-      executeWithClient(cloudProviderEndpoints,
+      executeWithClientForResult(cloudProviderEndpoints,
           requestedWithToken, client -> client.addResource(deployment.getEndpoint(),
               templateToDeploy, BodyContentType.TOSCA));
     } catch (ImClientException exception) {
@@ -502,10 +508,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
 
       try {
-        executeWithClient(cloudProviderEndpoints, requestedWithToken, client -> {
-          client.destroyInfrastructure(deploymentEndpoint);
-          return true;
-        });
+        executeWithClient(cloudProviderEndpoints, requestedWithToken,
+            client -> client.destroyInfrastructure(deploymentEndpoint));
 
       } catch (ImClientErrorException exception) {
         if (!getImResponseError(exception).is404Error()) {
@@ -533,7 +537,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
     try {
       InfrastructureState infrastructureState =
-          executeWithClient(cloudProviderEndpoints, requestedWithToken,
+          executeWithClientForResult(cloudProviderEndpoints, requestedWithToken,
               client -> client.getInfrastructureState(deploymentEndpoint));
 
       LOG.debug(infrastructureState.getFormattedInfrastructureStateString());
@@ -571,7 +575,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     Multimap<String, String> vmMap = HashMultimap.create();
     for (String vmId : infrastructureState.getVmStates().keySet()) {
       VirtualMachineInfo vmInfo =
-          executeWithClient(cloudProviderEndpoints, requestedWithToken,
+          executeWithClientForResult(cloudProviderEndpoints, requestedWithToken,
               client -> client.getVmInfo(infrastructureId, vmId));
       vmInfo
           .getVmProperties()

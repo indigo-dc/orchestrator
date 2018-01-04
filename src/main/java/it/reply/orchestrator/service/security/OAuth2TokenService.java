@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2017 Santer Reply S.p.A.
+ * Copyright © 2015-2018 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,30 +17,24 @@
 package it.reply.orchestrator.service.security;
 
 import com.google.common.base.Preconditions;
-
-import com.nimbusds.jwt.JWT;
+import com.google.common.collect.Lists;
 
 import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.config.properties.OidcProperties.IamProperties;
 import it.reply.orchestrator.config.properties.OidcProperties.OidcClientProperties;
 import it.reply.orchestrator.dal.entity.OidcEntity;
 import it.reply.orchestrator.dal.entity.OidcEntityId;
-import it.reply.orchestrator.dal.entity.OidcRefreshToken;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
-import it.reply.orchestrator.dal.repository.OidcTokenRepository;
+import it.reply.orchestrator.dal.repository.OidcEntityRepository;
 import it.reply.orchestrator.dto.security.IndigoOAuth2Authentication;
 import it.reply.orchestrator.dto.security.IndigoUserInfo;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.utils.JwtUtils;
 
-import org.mitre.oauth2.model.RegisteredClient;
-import org.mitre.openid.connect.config.ServerConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.social.oauth2.AccessGrant;
 import org.springframework.stereotype.Service;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,13 +45,10 @@ public class OAuth2TokenService {
   private OidcProperties oidcProperties;
 
   @Autowired
-  private OAuth2ConfigurationsService oauth2ConfigurationsService;
-
-  @Autowired
-  private OidcTokenRepository oidcTokenRepository;
-
-  @Autowired
   private OAuth2TokenCacheService oauth2TokenCacheService;
+
+  @Autowired
+  private OidcEntityRepository oidcEntityRepository;
 
   private void handleSecurityDisabled() {
     oidcProperties.throwIfSecurityDisabled();
@@ -65,7 +56,7 @@ public class OAuth2TokenService {
 
   /**
    * Get the current authentication.
-   * 
+   *
    * @return the current authentication
    */
   public IndigoOAuth2Authentication getCurrentAuthentication() {
@@ -93,6 +84,15 @@ public class OAuth2TokenService {
     return getOAuth2TokenFromAutentication(getCurrentAuthentication());
   }
 
+  public static List<String>
+      getOAuth2ClientsFromAutentication(IndigoOAuth2Authentication authentication) {
+    return Lists.newArrayList(authentication.getOAuth2Request().getClientId());
+  }
+
+  public List<String> getOAuth2ClientsFromCurrentAutentication() {
+    return getOAuth2ClientsFromAutentication(getCurrentAuthentication());
+  }
+
   /**
    * Retrieve the CLUES IAM information from the OAuth2 access token.
    * 
@@ -101,55 +101,41 @@ public class OAuth2TokenService {
    * @return the CLUES IAM information
    */
   public Optional<OidcClientProperties> getCluesInfo(String accessToken) {
-    handleSecurityDisabled();
     String iss = JwtUtils.getIssuer(JwtUtils.parseJwt(accessToken));
-    return oidcProperties.getIamConfiguration(iss).flatMap(IamProperties::getClues);
+    return oidcProperties
+        .getIamConfiguration(iss)
+        .flatMap(IamProperties::getClues);
   }
 
   /**
    * Generate a OidcTokenId from the current authentication.
-   * 
+   *
    * @return the OidcTokenId
    */
   public OidcTokenId generateTokenIdFromCurrentAuth() {
-    handleSecurityDisabled();
-    JWT jwt = JwtUtils.parseJwt(getOAuth2TokenFromCurrentAuth());
+    OidcEntityId entityId = generateOidcEntityIdFromCurrentAuth();
+    List<String> clientsId = getOAuth2ClientsFromCurrentAutentication();
     OidcTokenId tokenId = new OidcTokenId();
-    tokenId.setIssuer(JwtUtils.getIssuer(jwt));
-    tokenId.setJti(JwtUtils.getJti(jwt));
+    tokenId.setClientsId(clientsId);
+    tokenId.setOidcEntityId(entityId);
     return tokenId;
   }
 
   /**
-   * Generate a OidcEntityId from an access token.
-   * 
-   * @return the OidcEntityId
-   */
-  public static OidcEntityId generateOidcEntityIdFromToken(String accessToken) {
-    JWT jwt = JwtUtils.parseJwt(accessToken);
-    OidcEntityId id = new OidcEntityId();
-    id.setIssuer(JwtUtils.getIssuer(jwt));
-    id.setSubject(JwtUtils.getSubject(jwt));
-    return id;
-  }
-
-  /**
    * Generate a OidcEntityId from he current authentication.
-   * 
+   *
    * @return the OidcEntityId
    */
   public OidcEntityId generateOidcEntityIdFromCurrentAuth() {
-    handleSecurityDisabled();
-    return generateOidcEntityIdFromToken(getOAuth2TokenFromCurrentAuth());
+    return OidcEntityId.fromAccesToken(getOAuth2TokenFromCurrentAuth());
   }
 
   /**
    * Generate a OidcEntity from he current authentication.
-   * 
+   *
    * @return the OidcEntity
    */
   public OidcEntity generateOidcEntityFromCurrentAuth() {
-    handleSecurityDisabled();
     OidcEntity newEntity = new OidcEntity();
 
     OidcEntityId id = generateOidcEntityIdFromCurrentAuth();
@@ -168,42 +154,26 @@ public class OAuth2TokenService {
   }
 
   /**
-   * Exchange an access token and put it in the cache.
+   * Gets the current OidcEntity if already exists or generates a new one.
    * 
-   * @param id
-   *          the id of the token
-   * @param accessToken
-   *          the access token
-   * @param scopes
-   *          the scopes to request
-   * @return the exchanged grant
+   * @return the current OidcEntity
    */
-  public AccessGrant exchangeAccessToken(OidcTokenId id, String accessToken, List<String> scopes) {
-    handleSecurityDisabled();
-    CustomOAuth2Template template = generateOAuth2Template(id.getIssuer());
-    // only exchanged if not already present
-    // concurrency is handled by the cache
-    return oauth2TokenCacheService.get(id, () -> template.exchangeToken(accessToken, scopes));
+  public OidcEntity getOrGenerateOidcEntityFromCurrentAuth() {
+    return oidcEntityRepository
+        .findByOidcEntityId(generateOidcEntityIdFromCurrentAuth())
+        // TODO update organization relationship?
+        .orElseGet(this::generateOidcEntityFromCurrentAuth);
   }
 
   /**
-   * Refresh an access token.
+   * Exchange an access token and put it in the cache.
    * 
-   * @param id
-   *          the id of the token
-   * @param scopes
-   *          the scopes to request
    * @return the exchanged grant
    */
-  protected AccessGrant refreshAccessToken(OidcTokenId id, List<String> scopes) {
-    handleSecurityDisabled();
-    CustomOAuth2Template template = generateOAuth2Template(id.getIssuer());
-    String refreshToken =
-        oidcTokenRepository
-            .findByOidcTokenId(id)
-            .map(OidcRefreshToken::getVaule)
-            .orElseThrow(() -> new OrchestratorException("No refresh token suitable found"));
-    return template.refreshToken(refreshToken, scopes);
+  public OidcTokenId exchangeCurrentAccessToken() {
+    OidcTokenId id = generateTokenIdFromCurrentAuth();
+    oauth2TokenCacheService.exchangeAccessToken(id, getOAuth2TokenFromCurrentAuth());
+    return id;
   }
 
   /**
@@ -215,8 +185,7 @@ public class OAuth2TokenService {
    */
   public String getRefreshedAccessToken(OidcTokenId id) {
     handleSecurityDisabled();
-    oauth2TokenCacheService.evict(id);
-    return getAccessToken(id);
+    return oauth2TokenCacheService.getNew(id).getAccessToken();
   }
 
   public String getAccessToken(OidcTokenId id) {
@@ -224,28 +193,4 @@ public class OAuth2TokenService {
     return oauth2TokenCacheService.get(id).getAccessToken();
   }
 
-  private CustomOAuth2Template generateOAuth2Template(String issuer) {
-    handleSecurityDisabled();
-
-    ServerConfiguration serverConfiguration =
-        oauth2ConfigurationsService.getServerConfiguration(issuer);
-
-    RegisteredClient clientConfiguration =
-        oauth2ConfigurationsService.getClientConfiguration(serverConfiguration);
-
-    boolean headerAuthSupported =
-        Optional
-            .ofNullable(serverConfiguration.getTokenEndpointAuthMethodsSupported())
-            .orElseGet(Collections::emptyList)
-            .contains("client_secret_basic");
-
-    CustomOAuth2Template template = new CustomOAuth2Template(clientConfiguration.getClientId(),
-        clientConfiguration.getClientSecret(), serverConfiguration.getAuthorizationEndpointUri(),
-        serverConfiguration.getTokenEndpointUri());
-
-    // use post sectret only if header auth is not supported
-    template.setUseParametersForClientAuthentication(!headerAuthSupported);
-
-    return template;
-  }
 }

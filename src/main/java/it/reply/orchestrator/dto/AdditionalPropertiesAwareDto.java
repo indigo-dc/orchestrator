@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2017 Santer Reply S.p.A.
+ * Copyright © 2015-2018 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lombok.AccessLevel;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 
@@ -33,6 +34,8 @@ import java.util.HashMap;
 
 @Data
 @ToString(exclude = "log")
+@EqualsAndHashCode(exclude = "log")
+@Deprecated
 public abstract class AdditionalPropertiesAwareDto {
 
   @Getter(AccessLevel.NONE)

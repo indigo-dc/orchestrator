@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2017 Santer Reply S.p.A.
+ * Copyright © 2015-2018 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package it.reply.orchestrator.config.properties;
 
-import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -34,11 +34,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 import org.springframework.validation.annotation.Validated;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -51,8 +53,8 @@ import javax.validation.constraints.NotNull;
 @Component
 public class OidcProperties implements SecurityPrerequisite, InitializingBean {
 
-  public static final List<String> REQUIRED_SCOPES =
-      ImmutableList.of("openid", "profile", "offline_access");
+  public static final Set<String> REQUIRED_SCOPES =
+      ImmutableSet.of("openid", "profile", "offline_access");
 
   protected static final String PROPERTIES_PREFIX = "oidc";
 
@@ -178,7 +180,7 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
 
     @NotNull
     @NonNull
-    private List<String> scopes = REQUIRED_SCOPES;
+    private List<String> scopes = new ArrayList<>(REQUIRED_SCOPES);
 
   }
 }

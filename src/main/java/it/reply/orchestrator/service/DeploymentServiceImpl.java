@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2017 Santer Reply S.p.A.
+ * Copyright © 2015-2018 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,12 +25,9 @@ import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.OidcEntity;
 import it.reply.orchestrator.dal.entity.OidcEntityId;
-import it.reply.orchestrator.dal.entity.OidcRefreshToken;
-import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.entity.WorkflowReference;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
-import it.reply.orchestrator.dal.repository.OidcEntityRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.deployment.PlacementPolicy;
@@ -61,7 +58,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.social.oauth2.AccessGrant;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -70,7 +66,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -87,9 +82,6 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   @Autowired
   private ResourceRepository resourceRepository;
-
-  @Autowired
-  private OidcEntityRepository oidcEntityRepository;
 
   @Autowired
   private ToscaService toscaService;
@@ -165,30 +157,6 @@ public class DeploymentServiceImpl implements DeploymentService {
     }
   }
 
-  private Optional<OidcEntity> getOrGenerateRequester() {
-    if (oidcProperties.isEnabled()) {
-      OidcEntityId requesterId = oauth2TokenService.generateOidcEntityIdFromCurrentAuth();
-
-      OidcEntity requester = oidcEntityRepository
-          .findByOidcEntityId(requesterId)
-          .orElseGet(oauth2TokenService::generateOidcEntityFromCurrentAuth);
-      // exchange token if a refresh token is not yet associated with the user
-      if (requester.getRefreshToken() == null) {
-        OidcTokenId currentTokenId = oauth2TokenService.generateTokenIdFromCurrentAuth();
-        AccessGrant grant = oauth2TokenService.exchangeAccessToken(currentTokenId,
-            oauth2TokenService.getOAuth2TokenFromCurrentAuth(), OidcProperties.REQUIRED_SCOPES);
-
-        OidcRefreshToken token = OidcRefreshToken.fromAccessGrant(currentTokenId, grant);
-
-        requester.setRefreshToken(token);
-
-      }
-      return Optional.of(requester);
-    } else {
-      return Optional.empty();
-    }
-  }
-
   @Override
   @Transactional
   public Deployment createDeployment(DeploymentRequest request) {
@@ -197,11 +165,8 @@ public class DeploymentServiceImpl implements DeploymentService {
     deployment.setTask(Task.NONE);
     deployment.setTemplate(request.getTemplate());
     deployment.setParameters(request.getParameters());
+    deployment.setCallback(request.getCallback());
     deployment = deploymentRepository.save(deployment);
-
-    if (request.getCallback() != null) {
-      deployment.setCallback(request.getCallback());
-    }
 
     // Parse once, validate structure and user's inputs, replace user's input
     ArchiveRoot parsingResult =
@@ -211,11 +176,12 @@ public class DeploymentServiceImpl implements DeploymentService {
     // Create internal resources representation (to store in DB)
     createResources(deployment, nodes);
 
-    Optional<OidcEntity> requester = this.getOrGenerateRequester();
-    requester.ifPresent(deployment::setOwner);
+    if (oidcProperties.isEnabled()) {
+      deployment.setOwner(oauth2TokenService.getOrGenerateOidcEntityFromCurrentAuth());
+    }
 
     // Build deployment message
-    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, requester);
+    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment);
 
     DeploymentType deploymentType = inferDeploymentType(nodes);
     Map<String, OneData> odRequirements = new HashMap<>();
@@ -256,20 +222,15 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   }
 
-  protected DeploymentMessage buildDeploymentMessage(Deployment deployment,
-      Optional<OidcEntity> requester) {
+  protected DeploymentMessage buildDeploymentMessage(Deployment deployment) {
     DeploymentMessage deploymentMessage = new DeploymentMessage();
-    requester.ifPresent(req -> {
-      OidcTokenId tokenId = new OidcTokenId();
-      tokenId.setIssuer(req.getOidcEntityId().getIssuer());
-      tokenId.setJti(req.getRefreshToken().getOriginalTokenId());
-      deploymentMessage.setRequestedWithToken(tokenId);
-    });
+    if (oidcProperties.isEnabled()) {
+      deploymentMessage.setRequestedWithToken(oauth2TokenService.exchangeCurrentAccessToken());
+    }
     deploymentMessage.setDeploymentId(deployment.getId());
     deploymentMessage.setChosenCloudProviderEndpoint(deployment.getCloudProviderEndpoint());
 
     return deploymentMessage;
-
   }
 
   private DeploymentType inferDeploymentType(Map<String, NodeTemplate> nodes) {
@@ -321,10 +282,9 @@ public class DeploymentServiceImpl implements DeploymentService {
       wrIt.remove();
     }
 
-    Optional<OidcEntity> requester = this.getOrGenerateRequester();
-
     // Build deployment message
-    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, requester);
+    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment);
+
     if (deployment.getDeploymentProvider() == null) {
       // no deployment provider -> no resources created
       // TODO handle it in a better way (e.g. a stub provider)
@@ -374,12 +334,13 @@ public class DeploymentServiceImpl implements DeploymentService {
     deployment.setStatusReason(null);
     deployment.setTask(Task.NONE);
     deployment.getParameters().putAll(request.getParameters());
+    if (request.getCallback() != null) {
+      deployment.setCallback(request.getCallback());
+    }
     deployment = deploymentRepository.save(deployment);
 
-    Optional<OidcEntity> requester = this.getOrGenerateRequester();
-
     // Build deployment message
-    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, requester);
+    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment);
 
     DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
     deploymentMessage.setDeploymentType(deploymentType);
