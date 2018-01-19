@@ -37,6 +37,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
+import org.springframework.util.StopWatch;
 
 import java.text.ParseException;
 import java.util.Optional;
@@ -52,6 +53,8 @@ public class UserInfoIntrospectingTokenService extends IntrospectingTokenService
   @Override
   public OAuth2Authentication loadAuthentication(String accessToken)
       throws AuthenticationException {
+    StopWatch stopWatch = new StopWatch();
+    stopWatch.start();
     try {
       // check if a JWT and signed
       SignedJWT jwtToken = SignedJWT.parse(accessToken);
@@ -72,6 +75,10 @@ public class UserInfoIntrospectingTokenService extends IntrospectingTokenService
       // (this will translate to an "invalid_token" response)
       LOG.info("Error validating access token", ex);
       return null;
+    } finally {
+      stopWatch.stop();
+      LOG.debug("Validation of received access token performed in {}ms",
+          stopWatch.getTotalTimeMillis());
     }
   }
 
