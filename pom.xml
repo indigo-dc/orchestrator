@@ -65,7 +65,7 @@
 		<checkstyle-plugin.version>2.17</checkstyle-plugin.version>
 
 		<!-- Dependencies -->
-		<org.springframework.boot.version>1.5.9.RELEASE</org.springframework.boot.version>
+		<org.springframework.boot.version>1.5.10.RELEASE</org.springframework.boot.version>
 		<openid-connect.version>1.3.1</openid-connect.version>
 		<im-java-api.version>0.4.10</im-java-api.version>
 		<reply-commons.version>1.3.0-BETA.1</reply-commons.version>
