@@ -332,6 +332,16 @@ node_types:
         type: string
         description: galaxy instance ssh public key
         default: your_ssh_public_key
+      flavor:
+        type: string
+        description: name of the Galaxy flavor
+        required: false
+        default: galaxy-no-tools
+      reference_data:
+        type: boolean
+        description: Install Reference data
+        default: true
+        required: false
     requirements:
       lrms:
         type: tosca.capabilities.indigo.LRMS
@@ -358,6 +368,8 @@ node_types:
             galaxy_instance_description: { get_property: [ SELF, instance_description ] }
             galaxy_instance_key_pub:  { get_property: [ SELF, instance_key_pub ] }
             export_dir: { get_property: [ SELF, export_dir ] }
+            galaxy_flavor: { get_property: [ SELF, flavor ] }
+            get_refdata: { get_property: [ SELF, reference_data ] }
 
   tosca.nodes.indigo.GalaxyPortalAndStorage:
     derived_from: tosca.nodes.indigo.GalaxyPortal
@@ -416,6 +428,8 @@ node_types:
             galaxy_instance_description: { get_property: [ SELF, instance_description ] }
             galaxy_instance_key_pub:  { get_property: [ SELF, instance_key_pub ] }
             export_dir: { get_property: [ SELF, export_dir ] }
+            galaxy_flavor: { get_property: [ SELF, flavor ] }
+            get_refdata: { get_property: [ SELF, reference_data ] }
 
   tosca.nodes.indigo.GalaxyPortalFastConfig:
     derived_from: tosca.nodes.indigo.GalaxyPortalAndStorage
@@ -453,6 +467,8 @@ node_types:
             galaxy_instance_description: { get_property: [ SELF, instance_description ] }
             galaxy_instance_key_pub:  { get_property: [ SELF, instance_key_pub ] }
             export_dir: { get_property: [ SELF, export_dir ] }
+            galaxy_flavor: { get_property: [ SELF, flavor ] }
+            get_refdata: { get_property: [ SELF, reference_data ] }
  
   tosca.nodes.indigo.GalaxyWN:
     derived_from: tosca.nodes.SoftwareComponent
@@ -585,6 +601,11 @@ node_types:
         description: galaxy version installed
         default: master
         required: false
+      reference_data:
+        type: boolean
+        description: Install Reference data
+        default: true
+        required: false
     requirements:
       host:
         type: tosca.capabilities.Container
@@ -606,6 +627,8 @@ node_types:
             galaxy_admin_api_key: { get_property: [ HOST, admin_api_key ] }
             instance_public_ip: { get_attribute: [ HOST, public_address, 0 ] }
             galaxy_version: { get_property: [ SELF, version ] }
+            galaxy_flavor: { get_property: [ SELF, flavor ] }
+            get_refdata: { get_property: [ SELF, reference_data ] }
 
   tosca.nodes.indigo.GalaxyReferenceData:
     derived_from: tosca.nodes.WebApplication
@@ -1277,6 +1300,14 @@ node_types:
       marathon_password:
         type: string
         required: yes
+      cms_proxycache_token_manager:
+        type: string
+        required: yes
+      master_ips:
+        required: yes
+        type: list
+        entry_schema:
+          type: string
       onedatatoken:
         type: string
         required: no
@@ -1294,7 +1325,7 @@ node_types:
           inputs:
             cms_config_mysquid_host: { get_property: [ SELF, mysquid_host ] }
             cms_config_proxycache_host: { get_property: [ SELF, proxycache_host ] }
-            cms_config_iamtoken: { get_property: [ SELF, iam_access_token ] }
+            cms_config_iam_token: { get_property: [ SELF, iam_access_token ] }
             cms_config_iam_client_id: { get_property: [ SELF, iam_client_id ] }
             cms_config_iam_client_secret: { get_property: [ SELF, iam_client_secret ] }
             cms_config_cms_local_site: { get_property: [ SELF, cms_local_site ] }
@@ -1305,6 +1336,8 @@ node_types:
             cms_config_onedatatoken: { get_property: [ SELF, onedatatoken ] }
             marathon_user: { get_property: [ SELF, marathon_username ] }
             marathon_pass: { get_property: [ SELF, marathon_password ] }
+            zookeeper_host_list: { get_property: [ SELF, master_ips ] }            
+            proxy_cache_manager: { get_property: [ SELF, cms_proxycache_token_manager ] }
     requirements:
       host:
         type: tosca.capabilities.indigo.MesosMaster
