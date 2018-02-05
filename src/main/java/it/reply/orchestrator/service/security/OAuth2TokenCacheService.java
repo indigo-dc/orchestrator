@@ -16,7 +16,6 @@
 
 package it.reply.orchestrator.service.security;
 
-import it.reply.orchestrator.config.filters.CustomRequestLoggingFilter;
 import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.dal.entity.OidcRefreshToken;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
@@ -25,6 +24,8 @@ import it.reply.orchestrator.dto.security.AccessGrant;
 import it.reply.orchestrator.dto.security.TokenIntrospectionResponse;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.utils.JwtUtils;
+import it.reply.orchestrator.utils.MdcUtils;
+import it.reply.orchestrator.utils.MdcUtils.MdcCloseable;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -34,8 +35,6 @@ import org.apache.ignite.cache.CacheMode;
 import org.apache.ignite.cache.eviction.lru.LruEvictionPolicy;
 import org.apache.ignite.configuration.CacheConfiguration;
 import org.apache.ignite.resources.SpringApplicationContextResource;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -46,6 +45,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.Serializable;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -83,16 +83,19 @@ public class OAuth2TokenCacheService {
   }
 
   public AccessGrant exchangeAccessToken(OidcTokenId id, String accessToken) {
-    oauth2TokensCache.invoke(id, exchangeEntryProcessor(), accessToken);
+    oauth2TokensCache.invoke(id, exchangeEntryProcessor(), MdcUtils.getRequestId(),
+        MdcUtils.getDeploymentId(), accessToken);
     return get(id);
   }
 
   public AccessGrant get(OidcTokenId id) {
-    return oauth2TokensCache.invoke(id, getEntryProcessor());
+    return oauth2TokensCache.invoke(id, getEntryProcessor(), MdcUtils.getRequestId(),
+        MdcUtils.getDeploymentId());
   }
 
   public AccessGrant getNew(OidcTokenId id) {
-    return oauth2TokensCache.invoke(id, getNewEntryProcessor());
+    return oauth2TokensCache.invoke(id, getNewEntryProcessor(), MdcUtils.getRequestId(),
+        MdcUtils.getDeploymentId());
   }
 
   protected EntryProcessor<OidcTokenId, AccessGrant, AccessGrant> exchangeEntryProcessor() {
@@ -247,27 +250,19 @@ public class OAuth2TokenCacheService {
   }
 
   // TODO transform in aspect
+  @Deprecated
   public static class EntryProcessorMdcDecorator<E extends EntryProcessor<K, V, T>, K, V, T>
       implements EntryProcessor<K, V, T>, Serializable {
 
     private static final long serialVersionUID = 1L;
-
-    @Nullable
-    private final String requestId;
 
     private final Class<E> delegateClass;
 
     @SpringApplicationContextResource
     private transient ApplicationContext springCtx;
 
-    public EntryProcessorMdcDecorator(String requestId,
-        Class<E> delegateClass) {
-      this.requestId = requestId;
+    public EntryProcessorMdcDecorator(Class<E> delegateClass) {
       this.delegateClass = Objects.requireNonNull(delegateClass);
-    }
-
-    public EntryProcessorMdcDecorator(Class<E> classDelegate) {
-      this(MDC.get(CustomRequestLoggingFilter.REQUEST_ID_MDC_KEY), classDelegate);
     }
 
     private E getDelegate() {
@@ -276,19 +271,12 @@ public class OAuth2TokenCacheService {
 
     @Override
     public T process(MutableEntry<K, V> entry, Object... arguments) throws EntryProcessorException {
-      String oldValue = MDC.get(CustomRequestLoggingFilter.REQUEST_ID_MDC_KEY);
-      try {
-        if (requestId != null) {
-          MDC.put(CustomRequestLoggingFilter.REQUEST_ID_MDC_KEY, requestId);
-        }
-        return getDelegate().process(entry, arguments);
-      } finally {
-        if (oldValue == null) {
-          MDC.remove(CustomRequestLoggingFilter.REQUEST_ID_MDC_KEY);
-        } else {
-          if (!oldValue.equals(requestId)) {
-            MDC.put(CustomRequestLoggingFilter.REQUEST_ID_MDC_KEY, oldValue);
-          }
+      String requestId = (String) arguments[0];
+      String deploymentId = (String) arguments[1];
+
+      try (MdcCloseable oldDeploymentId = MdcUtils.setDeploymentIdCloseable(deploymentId)) {
+        try (MdcCloseable oldRequestId = MdcUtils.setRequestIdCloseable(requestId)) {
+          return getDelegate().process(entry, Arrays.copyOfRange(arguments, 2, arguments.length));
         }
       }
     }

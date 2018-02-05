@@ -21,6 +21,7 @@ import com.google.common.base.Strings;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import it.reply.orchestrator.utils.MdcUtils;
 import it.reply.utils.json.JsonUtility;
 
 import lombok.Data;
@@ -32,7 +33,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.slf4j.MDC;
 import org.springframework.http.server.ServletServerHttpRequest;
 import org.springframework.util.StopWatch;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -57,7 +57,7 @@ import javax.servlet.http.HttpSession;
 public class CustomRequestLoggingFilter extends OncePerRequestFilter {
 
   public static final String X_REQUEST_ID = "X-Request-ID";
-  public static final String REQUEST_ID_MDC_KEY = "request_id";
+
   public static final String ATTRIBUTE_REQUEST_ID = CustomRequestLoggingFilter.class.getName()
       + ".RequestId";
 
@@ -284,7 +284,7 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
 
     try {
       if (isFirstRequest) {
-        MDC.put(REQUEST_ID_MDC_KEY, requestId);
+        MdcUtils.setRequestId(requestId);
         response.addHeader(X_REQUEST_ID, requestId);
       }
 
@@ -311,7 +311,7 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
       }
     } finally {
       if (isFirstRequest) {
-        MDC.remove(REQUEST_ID_MDC_KEY);
+        MdcUtils.clean();
       }
     }
   }

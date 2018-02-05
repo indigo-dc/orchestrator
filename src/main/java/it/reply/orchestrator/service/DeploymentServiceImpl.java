@@ -45,11 +45,14 @@ import it.reply.orchestrator.exception.http.ForbiddenException;
 import it.reply.orchestrator.exception.http.NotFoundException;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
+import it.reply.orchestrator.utils.MdcUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 import it.reply.orchestrator.utils.WorkflowConstants;
 import it.reply.workflowmanager.exceptions.WorkflowException;
 import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager;
 import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager.RUNTIME_STRATEGY;
+
+import lombok.extern.slf4j.Slf4j;
 
 import org.jgrapht.graph.DirectedMultigraph;
 import org.jgrapht.traverse.TopologicalOrderIterator;
@@ -73,6 +76,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 @Service
+@Slf4j
 public class DeploymentServiceImpl implements DeploymentService {
 
   private static final Pattern OWNER_PATTERN = Pattern.compile("([^@]+)@([^@]+)");
@@ -140,6 +144,7 @@ public class DeploymentServiceImpl implements DeploymentService {
       deployment = deploymentRepository.findOne(uuid);
     }
     if (deployment != null) {
+      MdcUtils.setDeploymentId(deployment.getId());
       return deployment;
     } else {
       throw new NotFoundException("The deployment <" + uuid + "> doesn't exist");
@@ -167,7 +172,8 @@ public class DeploymentServiceImpl implements DeploymentService {
     deployment.setParameters(request.getParameters());
     deployment.setCallback(request.getCallback());
     deployment = deploymentRepository.save(deployment);
-
+    MdcUtils.setDeploymentId(deployment.getId());
+    LOG.debug("Creating deployment with template\n{}", request.getTemplate());
     // Parse once, validate structure and user's inputs, replace user's input
     ArchiveRoot parsingResult =
         toscaService.prepareTemplate(request.getTemplate(), request.getParameters());
@@ -261,6 +267,7 @@ public class DeploymentServiceImpl implements DeploymentService {
   @Transactional
   public void deleteDeployment(String uuid) {
     Deployment deployment = getDeployment(uuid);
+    MdcUtils.setDeploymentId(deployment.getId());
     throwIfNotOwned(deployment);
 
     if (deployment.getStatus() == Status.DELETE_COMPLETE
@@ -315,6 +322,8 @@ public class DeploymentServiceImpl implements DeploymentService {
   @Transactional
   public void updateDeployment(String id, DeploymentRequest request) {
     Deployment deployment = getDeployment(id);
+    MdcUtils.setDeploymentId(deployment.getId());
+    LOG.debug("Updating deployment with template\n{}", id, request.getTemplate());
     throwIfNotOwned(deployment);
 
     if (deployment.getDeploymentProvider() == DeploymentProvider.CHRONOS
