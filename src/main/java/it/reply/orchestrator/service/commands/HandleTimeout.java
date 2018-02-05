@@ -16,29 +16,34 @@
 
 package it.reply.orchestrator.service.commands;
 
-import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
+import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import org.flowable.engine.delegate.BpmnError;
 import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.stereotype.Component;
 
-@Component(WorkflowConstants.Delegate.UPDATE)
-public class Update extends BaseDeployCommand {
+import java.util.concurrent.TimeoutException;
+
+@Component(WorkflowConstants.Delegate.HANDLE_TIMEOUT)
+@AllArgsConstructor
+@Slf4j
+public class HandleTimeout extends BaseJavaDelegate {
 
   @Override
-  protected String getErrorMessagePrefix() {
-    return "Error updating deployment";
+  public void customExecute(DelegateExecution execution) {
+    Exception ex = new TimeoutException("Timeout: Maximum execution time exceeded.");
+
+    execution.setVariable(WorkflowConstants.Param.EXCEPTION, ex, false);
+    LOG.warn(ex.getMessage());
+    throw new BpmnError(BaseJavaDelegate.BUSINESS_ERROR_CODE);
   }
 
   @Override
-  public void execute(DelegateExecution execution, DeploymentMessage deploymentMessage) {
-    String template = getRequiredParameter(execution, WorkflowConstants.Param.TOSCA_TEMPLATE);
-
-    boolean updateComplete =
-        getDeploymentProviderService(deploymentMessage).doUpdate(deploymentMessage, template);
-
-    deploymentMessage.setCreateComplete(updateComplete);
-
+  protected String getErrorMessagePrefix() {
+    return "Error handling process timeout";
   }
 
 }

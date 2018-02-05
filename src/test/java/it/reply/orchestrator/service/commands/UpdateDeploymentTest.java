@@ -16,22 +16,6 @@
 
 package it.reply.orchestrator.service.commands;
 
-import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
-import org.drools.core.process.instance.impl.WorkItemImpl;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.kie.api.executor.CommandContext;
-import org.kie.api.executor.ExecutionResults;
-import org.kie.api.runtime.process.WorkItem;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
-
 import it.reply.orchestrator.config.properties.OneDataProperties;
 import it.reply.orchestrator.config.properties.OneDataProperties.ServiceSpaceProperties;
 import it.reply.orchestrator.controller.ControllerTestUtils;
@@ -42,12 +26,26 @@ import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
+import it.reply.orchestrator.exception.service.WorkflowException;
 import it.reply.orchestrator.service.CloudProviderEndpointServiceImpl;
 import it.reply.orchestrator.service.OneDataService;
 import it.reply.orchestrator.service.deployment.providers.DeploymentStatusHelper;
 import it.reply.orchestrator.util.TestUtil;
 import it.reply.orchestrator.utils.WorkflowConstants;
-import it.reply.workflowmanager.utils.Constants;
+
+import org.assertj.core.api.Assertions;
+import org.flowable.engine.impl.persistence.entity.ExecutionEntity;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 
 public class UpdateDeploymentTest {
 
@@ -63,10 +61,10 @@ public class UpdateDeploymentTest {
 
   @Mock
   OneDataService oneDataService;
-  
+
   @Spy
   private OneDataProperties oneDataProperties;
-  
+
   @Spy
   private ServiceSpaceProperties serviceSpaceProperties;
 
@@ -79,21 +77,19 @@ public class UpdateDeploymentTest {
     oneDataProperties.setServiceSpace(serviceSpaceProperties);
   }
 
-  @Test(expected = IllegalArgumentException.class)
+  @Test
   public void testCustomExecuteFail() throws Exception {
-    CommandContext commandContext = new CommandContext();
-    WorkItem workItem = new WorkItemImpl();
-    commandContext.setData(Constants.WORKITEM, workItem);
-    updateDeployment.customExecute(commandContext);
+    ExecutionEntity execution = new ExecutionEntityBuilder().build();
+    Assertions
+        .assertThatExceptionOfType(WorkflowException.class)
+        .isThrownBy(() -> updateDeployment.execute(execution))
+        .withCauseInstanceOf(IllegalArgumentException.class);
   }
 
-
-  @Test
-  public void testCustomExecuteSuccess() throws Exception {
+  public void baseTestCustomExecuteSuccess(Map<String, OneData> oneDataRequirements)
+      throws Exception {
     Deployment deployment = ControllerTestUtils.createDeployment();
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
-    CommandContext commandContext = new CommandContext();
-    WorkItemImpl workItem = new WorkItemImpl();
 
     RankCloudProvidersMessage rankCloudProvidersMessage = new RankCloudProvidersMessage();
     rankCloudProvidersMessage.setDeploymentId(deployment.getId());
@@ -106,7 +102,10 @@ public class UpdateDeploymentTest {
     RankedCloudProvider chosenCp = new RankedCloudProvider();
     chosenCp.setName("name");
     dm.setChosenCloudProvider(cp);
-    
+
+    dm.setOneDataRequirements(oneDataRequirements);
+    rankCloudProvidersMessage.setOneDataRequirements(oneDataRequirements);
+
     Mockito.when(cloudProviderEndpointServiceImpl.chooseCloudProvider(Mockito.any(Deployment.class),
         Mockito.any(RankCloudProvidersMessage.class))).thenReturn(chosenCp);
     Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
@@ -117,114 +116,61 @@ public class UpdateDeploymentTest {
         .when(cloudProviderEndpointServiceImpl.getCloudProviderEndpoint(cp,
             rankCloudProvidersMessage.getPlacementPolicies(), false))
         .thenReturn(dm.getChosenCloudProviderEndpoint());
-    workItem.setParameter(WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE,
-        rankCloudProvidersMessage);
-    workItem.setParameter(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, dm);
 
-    commandContext.setData(Constants.WORKITEM, workItem);
+    ExecutionEntity execution = new ExecutionEntityBuilder()
+        .withMockedVariable(WorkflowConstants.Param.RANK_CLOUD_PROVIDERS_MESSAGE,
+            rankCloudProvidersMessage)
+        .withMockedVariable(WorkflowConstants.Param.DEPLOYMENT_MESSAGE, dm)
+        .build();
 
-    ExecutionResults expectedResult = new ExecutionResults();
-    expectedResult.setData(Constants.RESULT_STATUS, "OK");
-    expectedResult.setData(Constants.OK_RESULT, true);
-    expectedResult.setData(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, dm);
-    
-    serviceSpaceProperties.setOneproviderUrl(URI.create("http://endpoint.com"));
-    
+    serviceSpaceProperties.setOneproviderUrl(URI.create("http://example.com"));
+
     updateDeployment.generateOneDataParameters(rankCloudProvidersMessage, dm);
-    Assert.assertEquals(expectedResult.toString(),
-        updateDeployment.customExecute(commandContext).toString());
 
+    Assertions
+        .assertThatCode(() -> updateDeployment.execute(execution))
+        .doesNotThrowAnyException();
+    // TODO do some real test here
+  }
+
+  @Test
+  public void testCustomExecuteSuccess() throws Exception {
+    Map<String, OneData> oneDataRequirements = new HashMap<>();
+    this.baseTestCustomExecuteSuccess(oneDataRequirements);
   }
 
   @Test
   public void testCustomExecuteSuccessWithInputData() throws Exception {
-    Deployment deployment = ControllerTestUtils.createDeployment();
-    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
-    CommandContext commandContext = new CommandContext();
-    WorkItemImpl workItem = new WorkItemImpl();
-
-    RankCloudProvidersMessage rankCloudProvidersMessage = new RankCloudProvidersMessage();
-    rankCloudProvidersMessage.setDeploymentId(deployment.getId());
-
-    CloudProvider cp = new CloudProvider("provider-RECAS-BARI");
-    Map<String, CloudProvider> map = new HashMap<>();
-    map.put("name", cp);
-    rankCloudProvidersMessage.setCloudProviders(map);
-
-    RankedCloudProvider chosenCp = new RankedCloudProvider();
-    chosenCp.setName("name");
-    dm.setChosenCloudProvider(cp);
-
-    commandContext.setData(Constants.WORKITEM, workItem);
-
     Map<String, OneData> oneDataRequirements = new HashMap<>();
     OneData onedata =
         OneData.builder().token("token").space("space").path("path").providers("providers").build();
     onedata.setSmartScheduling(true);
     oneDataRequirements.put("input", onedata);
-    dm.setOneDataRequirements(oneDataRequirements);
-    rankCloudProvidersMessage.setOneDataRequirements(oneDataRequirements);
-
-    workItem.setParameter(WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE,
-        rankCloudProvidersMessage);
-    workItem.setParameter(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, dm);
-    
-    ExecutionResults expectedResult = new ExecutionResults();
-
-    expectedResult = new ExecutionResults();
-    expectedResult.setData(Constants.RESULT_STATUS, "OK");
-    expectedResult.setData(Constants.OK_RESULT, false);
-    expectedResult.setData(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, dm);
-    updateDeployment.generateOneDataParameters(rankCloudProvidersMessage, dm);
-    Assert.assertEquals(expectedResult.toString(),
-        updateDeployment.customExecute(commandContext).toString());
-
+    this.baseTestCustomExecuteSuccess(oneDataRequirements);
   }
 
   @Test
   public void testCustomExecuteSuccessWithOutputData() throws Exception {
-    Deployment deployment = ControllerTestUtils.createDeployment();
-    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
-    CommandContext commandContext = new CommandContext();
-    WorkItemImpl workItem = new WorkItemImpl();
-
-    RankCloudProvidersMessage rankCloudProvidersMessage = new RankCloudProvidersMessage();
-    rankCloudProvidersMessage.setDeploymentId(deployment.getId());
-
-    CloudProvider cp = new CloudProvider("provider-RECAS-BARI");
-    Map<String, CloudProvider> map = new HashMap<>();
-    map.put("name", cp);
-    rankCloudProvidersMessage.setCloudProviders(map);
-
-    RankedCloudProvider chosenCp = new RankedCloudProvider();
-    chosenCp.setName("name");
-    dm.setChosenCloudProvider(cp);
-
-    commandContext.setData(Constants.WORKITEM, workItem);
-
     Map<String, OneData> oneDataRequirements = new HashMap<>();
     OneData onedata =
         OneData.builder().token("token").space("space").path("path").providers("providers").build();
     onedata.setSmartScheduling(true);
     oneDataRequirements.put("output", onedata);
-    dm.setOneDataRequirements(oneDataRequirements);
-    rankCloudProvidersMessage.setOneDataRequirements(oneDataRequirements);
-
-    workItem.setParameter(WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE,
-        rankCloudProvidersMessage);
-    workItem.setParameter(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, dm);
-    
-    ExecutionResults expectedResult = new ExecutionResults();
-
-    expectedResult = new ExecutionResults();
-    expectedResult.setData(Constants.RESULT_STATUS, "OK");
-    expectedResult.setData(Constants.OK_RESULT, false);
-    expectedResult.setData(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, dm);
-    updateDeployment.generateOneDataParameters(rankCloudProvidersMessage, dm);
-    Assert.assertEquals(expectedResult.toString(),
-        updateDeployment.customExecute(commandContext).toString());
-
+    this.baseTestCustomExecuteSuccess(oneDataRequirements);
   }
 
+  @Test
+  public void testExecuteSuccessWithInputAndOutputData() throws Exception {
+    Map<String, OneData> oneDataRequirements = new HashMap<>();
+    OneData onedata =
+        OneData.builder().token("token").space("space").path("path").providers("providers").build();
+    onedata.setSmartScheduling(true);
+    oneDataRequirements.put("input", onedata);
+    onedata =
+        OneData.builder().token("token").space("space").path("path").providers("providers").build();
+    onedata.setSmartScheduling(true);
+    oneDataRequirements.put("output", onedata);
+    this.baseTestCustomExecuteSuccess(oneDataRequirements);
+  }
 
 }

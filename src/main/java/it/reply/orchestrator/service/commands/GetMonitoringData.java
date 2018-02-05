@@ -21,24 +21,22 @@ import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.service.MonitoringService;
+import it.reply.orchestrator.utils.WorkflowConstants;
 
-import org.kie.api.executor.CommandContext;
-import org.kie.api.executor.ExecutionResults;
+import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
-@Component
-public class GetMonitoringData extends BaseRankCloudProvidersCommand<GetMonitoringData> {
+@Component(WorkflowConstants.Delegate.GET_MONITORING_DATA)
+public class GetMonitoringData extends BaseRankCloudProvidersCommand {
 
   @Autowired
   private MonitoringService monitoringService;
 
   @Override
-  @Transactional
-  public ExecutionResults customExecute(CommandContext ctx,
+  public void execute(DelegateExecution execution,
       RankCloudProvidersMessage rankCloudProvidersMessage) {
 
     // Get monitoring data for each Cloud Provider
@@ -61,7 +59,6 @@ public class GetMonitoringData extends BaseRankCloudProvidersCommand<GetMonitori
                 .put(cloudProviderId, metrics);
           }
         });
-    return resultOccurred(rankCloudProvidersMessage.getCloudProvidersMonitoringData());
   }
 
   @Override

@@ -20,9 +20,8 @@ import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
 import org.assertj.core.api.Assertions;
+import org.flowable.engine.impl.persistence.entity.ExecutionEntity;
 import org.junit.Test;
-import org.kie.api.executor.CommandContext;
-import org.kie.api.executor.ExecutionResults;
 import org.mockito.Mockito;
 
 public class UpdateTest extends BaseDeployCommandTest<Update> {
@@ -44,17 +43,15 @@ public class UpdateTest extends BaseDeployCommandTest<Update> {
   public void testUpdate(boolean complete) throws Exception {
     DeploymentMessage dm = new DeploymentMessage();
     String updateTemplate = "template";
-    CommandContext commandContext = TestCommandHelper
-        .buildCommandContext()
-        .withParam(WorkflowConstants.WF_PARAM_TOSCA_TEMPLATE, updateTemplate)
-        .withParam(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, dm)
-        .get();
+    ExecutionEntity execution = new ExecutionEntityBuilder()
+        .withMockedVariable(WorkflowConstants.Param.TOSCA_TEMPLATE, updateTemplate)
+        .withMockedVariable(WorkflowConstants.Param.DEPLOYMENT_MESSAGE, dm)
+        .build();
 
     Mockito.when(deploymentProviderService.doUpdate(dm, updateTemplate)).thenReturn(complete);
 
-    ExecutionResults result = command.customExecute(commandContext);
+    command.execute(execution);
 
-    TestCommandHelper.assertBaseResults(true, result);
     Assertions.assertThat(dm.isCreateComplete()).isEqualTo(complete);
   }
 

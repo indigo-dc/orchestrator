@@ -17,26 +17,21 @@
 package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
-import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
+import it.reply.orchestrator.utils.WorkflowConstants;
 
-import org.kie.api.executor.CommandContext;
-import org.kie.api.executor.ExecutionResults;
+import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
-@Component
-public class Deploy extends BaseDeployCommand<Deploy> {
+@Component(WorkflowConstants.Delegate.DEPLOY)
+public class Deploy extends BaseDeployCommand {
 
   @Override
-  @Transactional
-  public ExecutionResults customExecute(CommandContext ctx,
-      DeploymentMessage deploymentMessage) {
+  public void execute(DelegateExecution execution, DeploymentMessage deploymentMessage) {
 
-    DeploymentProviderService deploymentProviderService =
-        getDeploymentProviderService(deploymentMessage);
+    boolean createComplete =
+        getDeploymentProviderService(deploymentMessage).doDeploy(deploymentMessage);
 
-    deploymentMessage.setCreateComplete(deploymentProviderService.doDeploy(deploymentMessage));
-    return resultOccurred(true);
+    deploymentMessage.setCreateComplete(createComplete);
   }
 
   @Override

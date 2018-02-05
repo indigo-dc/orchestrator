@@ -23,23 +23,14 @@ import it.reply.orchestrator.utils.WorkflowConstants;
 
 import org.springframework.beans.factory.annotation.Autowired;
 
-/**
- * Base behavior for all Deploy WF tasks. <br/>
- * This checks input parameters and manages output and errors (specifically, in case of errors, it
- * also updates directly the deployment status on DB).
- * 
- * @author l.biava
- *
- */
-public abstract class BaseDeployCommand<T extends BaseDeployCommand<T>>
-    extends BaseWorkflowCommand<DeploymentMessage, T> {
+public abstract class BaseDeployCommand extends BaseWorkflowCommand<DeploymentMessage> {
 
   @Autowired
   private DeploymentProviderServiceRegistry deploymentProviderServiceRegistry;
 
   @Override
   protected String getMessageParameterName() {
-    return WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE;
+    return WorkflowConstants.Param.DEPLOYMENT_MESSAGE;
   }
 
   protected DeploymentProviderService getDeploymentProviderService(

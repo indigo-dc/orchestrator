@@ -17,13 +17,13 @@
 package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
-import it.reply.orchestrator.function.SerializableBiPredicate;
-import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
+import it.reply.orchestrator.utils.WorkflowConstants;
 
+import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.stereotype.Component;
 
-@Component
-public class PollDeploy extends AbstractPollingCommand<PollDeploy> {
+@Component(WorkflowConstants.Delegate.POLL_DEPLOY)
+public class PollDeploy extends BaseDeployCommand {
 
   @Override
   protected String getErrorMessagePrefix() {
@@ -31,10 +31,10 @@ public class PollDeploy extends AbstractPollingCommand<PollDeploy> {
   }
 
   @Override
-  protected SerializableBiPredicate<DeploymentMessage, DeploymentProviderService>
-      getPollingFunction() {
-    return (DeploymentMessage deploymentMessage, DeploymentProviderService service) -> service
+  public void execute(DelegateExecution execution, DeploymentMessage deploymentMessage) {
+    boolean pollComplete = getDeploymentProviderService(deploymentMessage)
         .isDeployed(deploymentMessage);
+    deploymentMessage.setPollComplete(pollComplete);
   }
 
 }

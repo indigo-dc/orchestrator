@@ -17,15 +17,13 @@
 package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
-import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
+import it.reply.orchestrator.utils.WorkflowConstants;
 
-import org.kie.api.executor.CommandContext;
-import org.kie.api.executor.ExecutionResults;
+import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
-@Component
-public class Undeploy extends BaseDeployCommand<Undeploy> {
+@Component(WorkflowConstants.Delegate.UNDEPLOY)
+public class Undeploy extends BaseDeployCommand {
 
   @Override
   protected String getErrorMessagePrefix() {
@@ -33,15 +31,12 @@ public class Undeploy extends BaseDeployCommand<Undeploy> {
   }
 
   @Override
-  @Transactional
-  public ExecutionResults customExecute(CommandContext ctx,
-      DeploymentMessage deploymentMessage) {
-    DeploymentProviderService deploymentProviderService =
-        getDeploymentProviderService(deploymentMessage);
+  public void execute(DelegateExecution execution, DeploymentMessage deploymentMessage) {
 
-    deploymentMessage.setDeleteComplete(deploymentProviderService.doUndeploy(deploymentMessage));
+    boolean deleteComplete =
+        getDeploymentProviderService(deploymentMessage).doUndeploy(deploymentMessage);
 
-    return resultOccurred(true);
+    deploymentMessage.setDeleteComplete(deleteComplete);
   }
 
 }

@@ -30,7 +30,6 @@ import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
-import it.reply.orchestrator.dal.entity.WorkflowReference;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
@@ -41,10 +40,13 @@ import it.reply.orchestrator.exception.http.BadRequestException;
 import it.reply.orchestrator.exception.http.ConflictException;
 import it.reply.orchestrator.exception.http.NotFoundException;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
-import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager;
-import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager.RUNTIME_STRATEGY;
 
-import org.jbpm.ruleflow.instance.RuleFlowProcessInstance;
+import org.assertj.core.util.Lists;
+import org.flowable.engine.impl.ExecutionQueryImpl;
+import org.flowable.engine.impl.RuntimeServiceImpl;
+import org.flowable.engine.impl.runtime.ProcessInstanceBuilderImpl;
+import org.flowable.engine.runtime.ProcessInstance;
+import org.flowable.engine.runtime.ProcessInstanceBuilder;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -81,7 +83,7 @@ public class DeploymentServiceTest {
   private ToscaServiceImpl toscaService = new ToscaServiceImpl();
 
   @Mock
-  private BusinessProcessManager wfService;
+  private RuntimeServiceImpl wfService;
 
   @Mock
   private OAuth2TokenService oauth2TokenService;
@@ -169,9 +171,11 @@ public class DeploymentServiceTest {
       return res;
     });
 
+    ProcessInstanceBuilder builder = Mockito.spy(new ProcessInstanceBuilderImpl(wfService));
     Mockito
-        .when(wfService.startProcess(Mockito.any(), Mockito.any(), Mockito.any()))
-        .thenReturn(new RuleFlowProcessInstance());
+        .when(wfService.createProcessInstanceBuilder())
+        .thenReturn(builder);
+    Mockito.when(builder.start()).thenReturn(Mockito.mock(ProcessInstance.class));
 
     return deploymentService.createDeployment(deploymentRequest);
   }
@@ -356,32 +360,20 @@ public class DeploymentServiceTest {
       "UPDATE_FAILED",
       "DELETE_FAILED",
       "UNKNOWN" })
-  public void deleteDeploymentSuccesfulWithReferences(Status status) throws Exception {
+  public void deleteDeploymentSuccesfulNoProvider(Status status) throws Exception {
+
     Deployment deployment = ControllerTestUtils.createDeployment();
     deployment.setStatus(status);
-    deployment.setDeploymentProvider(DeploymentProvider.IM);
-    deployment.setEndpoint("endpoint");
-    WorkflowReference wr1 = new WorkflowReference(0, RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
-    deployment.getWorkflowReferences().add(wr1);
-    WorkflowReference wr2 = new WorkflowReference(1, RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
-    deployment.getWorkflowReferences().add(wr2);
-
     Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
-    Mockito.when(deploymentRepository.save(deployment)).thenReturn(deployment);
-    Mockito.doNothing().when(wfService).abortProcess(Mockito.anyLong(),
-        Mockito.any(RUNTIME_STRATEGY.class));
 
-    Mockito
-        .when(wfService.startProcess(Mockito.any(), Mockito.any(), Mockito.any()))
-        .thenReturn(new RuleFlowProcessInstance());
+    ExecutionQueryImpl executionQueryImpl = Mockito.spy(new ExecutionQueryImpl());
+    Mockito.when(wfService.createExecutionQuery()).thenReturn(executionQueryImpl);
+    Mockito.doReturn(Lists.emptyList()).when(executionQueryImpl).list();
 
     deploymentService.deleteDeployment(deployment.getId());
 
-    assertThat(deployment.getStatus()).isEqualTo(Status.DELETE_IN_PROGRESS);
-    assertThat(deployment.getWorkflowReferences()).hasSize(1);
-    Mockito.verify(deploymentRepository, Mockito.never()).delete(deployment);
-    Mockito.verify(wfService).abortProcess(wr1.getId(), wr1.getRuntimeStrategy());
-    Mockito.verify(wfService).abortProcess(wr2.getId(), wr2.getRuntimeStrategy());
+    Mockito.verify(wfService, Mockito.never()).startProcessInstance(Mockito.any());
+    Mockito.verify(deploymentRepository, Mockito.times(1)).delete(deployment);
   }
 
   @Test
@@ -394,23 +386,27 @@ public class DeploymentServiceTest {
       "UPDATE_FAILED",
       "DELETE_FAILED",
       "UNKNOWN" })
-  public void deleteDeploymentSuccesfulNoReferences(Status status) throws Exception {
+  public void deleteDeploymentSuccesfulWithProvider(Status status) throws Exception {
 
     Deployment deployment = ControllerTestUtils.createDeployment();
     deployment.setStatus(status);
-
+    deployment.setDeploymentProvider(DeploymentProvider.IM);
     Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
 
+    ProcessInstanceBuilderImpl builder = Mockito.spy(new ProcessInstanceBuilderImpl(wfService));
     Mockito
-        .when(wfService.startProcess(Mockito.any(), Mockito.any(), Mockito.any()))
-        .thenReturn(new RuleFlowProcessInstance());
+        .when(wfService.createProcessInstanceBuilder())
+        .thenReturn(builder);
+    Mockito.when(builder.start()).thenReturn(Mockito.mock(ProcessInstance.class));
+
+    ExecutionQueryImpl executionQueryImpl = Mockito.spy(new ExecutionQueryImpl());
+    Mockito.when(wfService.createExecutionQuery()).thenReturn(executionQueryImpl);
+    Mockito.doReturn(Lists.emptyList()).when(executionQueryImpl).list();
 
     deploymentService.deleteDeployment(deployment.getId());
 
-    Mockito.verify(wfService, Mockito.never()).abortProcess(Mockito.anyLong(),
-        Mockito.any(RUNTIME_STRATEGY.class));
-    Mockito.verify(deploymentRepository, Mockito.never()).save(deployment);
-    Mockito.verify(deploymentRepository, Mockito.times(1)).delete(deployment);
+    Mockito.verify(wfService, Mockito.times(1)).startProcessInstance(Mockito.eq(builder));
+    Mockito.verify(deploymentRepository, Mockito.times(0)).delete(deployment);
   }
 
   // test fail with chrono

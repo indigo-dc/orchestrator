@@ -84,7 +84,7 @@ public class OneDataServiceTest {
     return oneZoneEndpoint != null ? oneZoneEndpoint : defaultOneZoneEndpoint;
   }
 
-  @Parameters({ "null", "http://endpoint.com" })
+  @Parameters({ "null", "http://example.com" })
   @Test
   public void testSuccessGetUserSpaceId(@Nullable String oneZoneEndpoint) throws IOException {
     UserSpaces userSpace = generateUserSpaces();
@@ -102,7 +102,7 @@ public class OneDataServiceTest {
     mockServer.verify();
   }
 
-  @Parameters({ "null", "http://endpoint.com" })
+  @Parameters({ "null", "http://example.com" })
   @Test
   public void testFailGetUserSpaceId(@Nullable String oneZoneEndpoint) {
     String endpoint = generateExpectedOneZoneEndpoint(oneZoneEndpoint);
@@ -117,7 +117,7 @@ public class OneDataServiceTest {
     mockServer.verify();
   }
 
-  @Parameters({ "null", "http://endpoint.com" })
+  @Parameters({ "null", "http://example.com" })
   @Test
   public void testSuccessGetSpaceDetailsFromId(@Nullable String oneZoneEndpoint)
       throws IOException {
@@ -138,7 +138,7 @@ public class OneDataServiceTest {
     mockServer.verify();
   }
 
-  @Parameters({ "null", "http://endpoint.com" })
+  @Parameters({ "null", "http://example.com" })
   @Test
   public void testFailGetSpaceDetailsFromId(@Nullable String oneZoneEndpoint) {
     String endpoint = generateExpectedOneZoneEndpoint(oneZoneEndpoint);
@@ -154,7 +154,7 @@ public class OneDataServiceTest {
     mockServer.verify();
   }
 
-  @Parameters({ "null", "http://endpoint.com" })
+  @Parameters({ "null", "http://example.com" })
   @Test
   public void testSuccessGetProviderDetailsFromId(@Nullable String oneZoneEndpoint)
       throws IOException {
@@ -178,7 +178,7 @@ public class OneDataServiceTest {
     mockServer.verify();
   }
 
-  @Parameters({ "null", "http://endpoint.com" })
+  @Parameters({ "null", "http://example.com" })
   @Test
   public void testFailGetProviderDetailsFromId(@Nullable String oneZoneEndpoint) {
 
@@ -200,7 +200,7 @@ public class OneDataServiceTest {
     mockServer.verify();
   }
 
-  @Parameters({ "null", "http://endpoint.com" })
+  @Parameters({ "null", "http://example.com" })
   @Test
   public void testEmptyPopulateProviderInfo(@Nullable String oneZoneEndpoint) throws IOException {
 
@@ -238,7 +238,7 @@ public class OneDataServiceTest {
     mockServer.verify();
   }
 
-  @Parameters({ "null", "http://endpoint.com" })
+  @Parameters({ "null", "http://example.com" })
   @Test
   public void testFailEmptyPopulateProviderInfo(@Nullable String oneZoneEndpoint)
       throws IOException {
@@ -280,7 +280,7 @@ public class OneDataServiceTest {
     mockServer.verify();
   }
 
-  @Parameters({ "null", "http://endpoint.com" })
+  @Parameters({ "null", "http://example.com" })
   @Test
   public void testAddProviderInfoToOneData(@Nullable String oneZoneEndpoint) throws IOException {
 

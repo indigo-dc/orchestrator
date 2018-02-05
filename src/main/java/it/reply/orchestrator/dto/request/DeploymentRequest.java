@@ -24,22 +24,25 @@ import org.hibernate.validator.constraints.URL;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 @Data
 public class DeploymentRequest {
 
-  @NotNull
+  @NotNull(message = "A TOSCA template must be provided")
   private String template;
 
   @NotNull
   private Map<String, Object> parameters = new HashMap<>();
 
   @Nullable
-  @URL(message = "The callback value must be a valid HTTP or HTTPS URL", regexp = "^https?\\:.*")
+  @URL(message = "Callback value, if provided, must be a valid HTTP or HTTPS URL",
+      regexp = "^https?\\:.*")
   private String callback;
 
   @Nullable
+  @Min(value = 1, message = "Timeout value, if provided, must be at least of 1 minute")
   private Integer timeoutMins;
 
 }

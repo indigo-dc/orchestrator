@@ -16,9 +16,37 @@
 
 package it.reply.orchestrator.service.commands;
 
-public class PollDeployTest extends BasePollCommandTest<PollDeploy> {
+import it.reply.orchestrator.dto.deployment.DeploymentMessage;
+import it.reply.orchestrator.utils.WorkflowConstants;
+
+import org.assertj.core.api.Assertions;
+import org.flowable.engine.impl.persistence.entity.ExecutionEntity;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mockito;
+
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+
+@RunWith(JUnitParamsRunner.class)
+public class PollDeployTest extends BaseDeployCommandTest<PollDeploy> {
 
   public PollDeployTest() {
     super(new PollDeploy());
+  }
+
+  @Test
+  @Parameters({ "true", "false" })
+  public void testPollingSuccessful(boolean pollingComplete) {
+    DeploymentMessage dm = new DeploymentMessage();
+    ExecutionEntity execution = new ExecutionEntityBuilder()
+        .withMockedVariable(WorkflowConstants.Param.DEPLOYMENT_MESSAGE, dm)
+        .build();
+
+    Mockito.when(deploymentProviderService.isDeployed(dm)).thenReturn(pollingComplete);
+
+    command.execute(execution);
+
+    Assertions.assertThat(dm.isPollComplete()).isEqualTo(pollingComplete);
   }
 }

@@ -542,7 +542,7 @@ public class ImServiceTest {
     deployment.setDeploymentProvider(DeploymentProvider.IM);
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
     
-    deployment.setEndpoint("www.endpoint.com");
+    deployment.setEndpoint("www.example.com");
     String infrastructureId = UUID.randomUUID().toString();
     InfrastructureUri infrastructureUri =
         new InfrastructureUri("http://localhost:8080/infrastructures/" + infrastructureId);
@@ -570,7 +570,7 @@ public class ImServiceTest {
     deployment.setDeploymentProvider(DeploymentProvider.IM);
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
     
-    deployment.setEndpoint("www.endpoint.com");
+    deployment.setEndpoint("www.example.com");
     String infrastructureId = UUID.randomUUID().toString();
     InfrastructureUri infrastructureUri =
         new InfrastructureUri("http://localhost:8080/infrastructures/" + infrastructureId);
@@ -600,7 +600,7 @@ public class ImServiceTest {
     deployment.setDeploymentProvider(DeploymentProvider.IM);
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
     
-    deployment.setEndpoint("www.endpoint.com");
+    deployment.setEndpoint("www.example.com");
     String infrastructureId = UUID.randomUUID().toString();
     InfrastructureUri infrastructureUri =
         new InfrastructureUri("http://localhost:8080/infrastructures/" + infrastructureId);

@@ -19,6 +19,7 @@ package it.reply.orchestrator.utils;
 import com.google.common.collect.ImmutableList;
 
 import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -26,12 +27,17 @@ import org.slf4j.MDC;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @UtilityClass
+@Slf4j
 public class MdcUtils {
 
   private static final String REQUEST_ID = "request_id";
   private static final String DEPLOYMENT_ID = "deployment_id";
+
+  private static final Pattern BUSINESS_KEY_PATTERN = Pattern.compile("^([^:]+):([^:]+)$");
 
   private static final List<String> MDC_KEYS = ImmutableList.of(REQUEST_ID, DEPLOYMENT_ID);
 
@@ -61,6 +67,24 @@ public class MdcUtils {
 
   public static @Nullable String getRequestId() {
     return MDC.get(REQUEST_ID);
+  }
+
+  public static void fromBusinessKey(String businessKey) {
+    if (businessKey != null) {
+      Matcher matcher = BUSINESS_KEY_PATTERN.matcher(businessKey);
+      if (matcher.matches()) {
+        setDeploymentId(matcher.group(1));
+        setRequestId(matcher.group(2));
+      } else {
+        LOG.warn("Provided business key is not matching the expected pattern");
+      }
+    } else {
+      LOG.warn("Provided business key was null");
+    }
+  }
+
+  public static String toBusinessKey() {
+    return getDeploymentId() + ":" + getRequestId();
   }
 
   public static class MdcCloseable implements AutoCloseable {

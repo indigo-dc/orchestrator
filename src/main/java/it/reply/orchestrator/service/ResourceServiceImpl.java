@@ -16,9 +16,11 @@
 
 package it.reply.orchestrator.service;
 
+import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.exception.http.NotFoundException;
+import it.reply.orchestrator.utils.MdcUtils;
 
 import lombok.AllArgsConstructor;
 
@@ -39,7 +41,8 @@ public class ResourceServiceImpl implements ResourceService {
   @Transactional(readOnly = true)
   public Page<Resource> getResources(String deploymentId, Pageable pageable) {
     // check if deploymentExists
-    deploymentservice.getDeployment(deploymentId);
+    Deployment deployment = deploymentservice.getDeployment(deploymentId);
+    MdcUtils.setDeploymentId(deployment.getId());
     return resourceRepository.findByDeployment_id(deploymentId, pageable);
   }
 
@@ -47,7 +50,8 @@ public class ResourceServiceImpl implements ResourceService {
   @Transactional(readOnly = true)
   public Resource getResource(String uuid, String deploymentId) {
     // check if deploymentExists
-    deploymentservice.getDeployment(deploymentId);
+    Deployment deployment = deploymentservice.getDeployment(deploymentId);
+    MdcUtils.setDeploymentId(deployment.getId());
     return resourceRepository.findByIdAndDeployment_id(uuid, deploymentId)
         .orElseThrow(() -> new NotFoundException(String
             .format("The resource <%s> in deployment <%s> doesn't exist", uuid, deploymentId)));
