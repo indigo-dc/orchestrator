@@ -325,7 +325,7 @@ public class DeploymentServiceTest {
   }
 
   @Test
-  public void deleteDeploymentNotFoud() throws Exception {
+  public void deleteDeploymentNotFound() throws Exception {
     Mockito.when(deploymentRepository.findOne("id")).thenReturn(null);
 
     assertThatThrownBy(() -> deploymentService.deleteDeployment("id"))
@@ -427,7 +427,7 @@ public class DeploymentServiceTest {
     deployment.setDeploymentProvider(provider);
     Mockito.when(deploymentRepository.findOne(id)).thenReturn(deployment);
 
-    assertThatThrownBy(() -> deploymentService.updateDeployment(id, null))
+    assertThatThrownBy(() -> deploymentService.updateDeployment(id, new DeploymentRequest()))
         .isInstanceOf(BadRequestException.class);
 
   }
@@ -456,7 +456,7 @@ public class DeploymentServiceTest {
     deployment.setStatus(status);
     Mockito.when(deploymentRepository.findOne(id)).thenReturn(deployment);
 
-    assertThatThrownBy(() -> deploymentService.updateDeployment(id, null))
+    assertThatThrownBy(() -> deploymentService.updateDeployment(id, new DeploymentRequest()))
         .isInstanceOf(ConflictException.class);
   }
 

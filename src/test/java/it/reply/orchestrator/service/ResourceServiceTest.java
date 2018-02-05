@@ -102,6 +102,7 @@ public class ResourceServiceTest {
   public void getResource() throws Exception {
     Deployment deployment = ControllerTestUtils.createDeployment();
     Resource expectedResource = ControllerTestUtils.createResource(deployment);
+    Mockito.when(deploymentService.getDeployment(deployment.getId())).thenReturn(deployment);
     Mockito.when(
         resourceRepository.findByIdAndDeployment_id(expectedResource.getId(), deployment.getId()))
         .thenReturn(Optional.of(expectedResource));

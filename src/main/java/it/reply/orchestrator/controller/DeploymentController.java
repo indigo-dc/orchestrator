@@ -22,8 +22,7 @@ import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.resource.DeploymentResource;
 import it.reply.orchestrator.resource.DeploymentResourceAssembler;
 import it.reply.orchestrator.service.DeploymentService;
-
-import lombok.extern.slf4j.Slf4j;
+import it.reply.orchestrator.utils.MdcUtils;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,7 +48,6 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.validation.Valid;
 
 @RestController
-@Slf4j
 public class DeploymentController {
 
   private static final String OFFLINE_ACCESS_REQUIRED_CONDITION =
@@ -103,8 +101,6 @@ public class DeploymentController {
       produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize(OFFLINE_ACCESS_REQUIRED_CONDITION)
   public DeploymentResource createDeployment(@Valid @RequestBody DeploymentRequest request) {
-
-    LOG.info("Creating deployment with template\n{}", request.getTemplate());
     Deployment deployment = deploymentService.createDeployment(request);
     return deploymentResourceAssembler.toResource(deployment);
 
@@ -124,8 +120,6 @@ public class DeploymentController {
   @PreAuthorize(OFFLINE_ACCESS_REQUIRED_CONDITION)
   public void updateDeployment(@PathVariable("deploymentId") String id,
       @Valid @RequestBody DeploymentRequest request) {
-
-    LOG.info("Updating deployment {} with template\n{}", id, request.getTemplate());
     deploymentService.updateDeployment(id, request);
   }
 
@@ -142,6 +136,7 @@ public class DeploymentController {
   public DeploymentResource getDeployment(@PathVariable("deploymentId") String id) {
 
     Deployment deployment = deploymentService.getDeployment(id);
+    MdcUtils.setDeploymentId(deployment.getId());
     return deploymentResourceAssembler.toResource(deployment);
   }
 
