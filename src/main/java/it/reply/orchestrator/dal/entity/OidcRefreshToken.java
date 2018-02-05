@@ -21,6 +21,7 @@ import it.reply.orchestrator.dto.security.AccessGrant;
 import it.reply.orchestrator.utils.JwtUtils;
 
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -49,6 +50,7 @@ import javax.validation.constraints.NotNull;
 @Table(name = "oidc_refresh_token",
     uniqueConstraints = { @UniqueConstraint(name = "uq_issuer_subject_clients_id",
         columnNames = { "issuer", "subject", "clients_id" }) })
+@NoArgsConstructor
 @SuppressWarnings("null")
 public class OidcRefreshToken implements Identifiable<Long> {
 
