@@ -14,16 +14,14 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.config.persistence;
+package it.reply.orchestrator.config;
 
 import com.google.common.base.Strings;
-
-import it.reply.orchestrator.annotation.OrchestratorPersistenceUnit;
-import it.reply.workflowmanager.spring.orchestrator.annotations.WorkflowPersistenceUnit;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.BeanClassLoaderAware;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties.Xa;
 import org.springframework.boot.autoconfigure.transaction.PlatformTransactionManagerCustomizer;
@@ -34,6 +32,7 @@ import org.springframework.boot.jta.XADataSourceWrapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
+import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.transaction.jta.JtaTransactionManager;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
@@ -45,6 +44,8 @@ import javax.sql.DataSource;
 import javax.sql.XADataSource;
 
 @Configuration
+@EnableJpaRepositories("it.reply.orchestrator.dal.repository")
+@EntityScan("it.reply.orchestrator.dal.entity")
 public class DatasourceConfig implements BeanClassLoaderAware {
 
   private ClassLoader classLoader;
@@ -55,7 +56,6 @@ public class DatasourceConfig implements BeanClassLoaderAware {
   }
 
   @Bean
-  @OrchestratorPersistenceUnit
   @Primary
   @ConfigurationProperties("datasource.orchestrator")
   public DataSourceProperties orchestratorDataSourceProperties() {
@@ -63,14 +63,12 @@ public class DatasourceConfig implements BeanClassLoaderAware {
   }
 
   @Bean
-  @WorkflowPersistenceUnit
   @ConfigurationProperties("datasource.workflow")
   public DataSourceProperties workflowDataSourceProperties() {
     return new DataSourceProperties();
   }
 
   @Bean
-  @OrchestratorPersistenceUnit
   @Primary
   public DataSource dataSource(XADataSourceWrapper wrapper) throws Exception {
     XADataSource xaDataSource = createXaDataSource(orchestratorDataSourceProperties());
@@ -78,7 +76,6 @@ public class DatasourceConfig implements BeanClassLoaderAware {
   }
 
   @Bean
-  @WorkflowPersistenceUnit
   public DataSource workflowDataSource(XADataSourceWrapper wrapper) throws Exception {
     XADataSource xaDataSource = createXaDataSource(workflowDataSourceProperties());
     return wrapper.wrapDataSource(xaDataSource);
@@ -125,4 +122,5 @@ public class DatasourceConfig implements BeanClassLoaderAware {
       jtaTransactionManagerCustomizer() {
     return transactionManager -> transactionManager.setAllowCustomIsolationLevels(true);
   }
+
 }

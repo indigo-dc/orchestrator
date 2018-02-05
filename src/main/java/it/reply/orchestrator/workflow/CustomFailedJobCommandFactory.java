@@ -14,22 +14,16 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.annotation;
+package it.reply.orchestrator.workflow;
 
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.flowable.engine.common.impl.interceptor.Command;
+import org.flowable.engine.impl.jobexecutor.DefaultFailedJobCommandFactory;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+public class CustomFailedJobCommandFactory extends DefaultFailedJobCommandFactory {
 
-/**
- * Qualifier for Orchestrator Persistence Unit {@link EntityManager}.
- *
- */
-@Qualifier
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ ElementType.TYPE, ElementType.FIELD, ElementType.METHOD, ElementType.PARAMETER })
-public @interface OrchestratorPersistenceUnit {
+  @Override
+  public Command<Object> getCommand(String jobId, Throwable exception) {
+    return new CustomJobRetryCmd(jobId, exception);
+  }
 
 }

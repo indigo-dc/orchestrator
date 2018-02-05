@@ -16,9 +16,6 @@
 
 package it.reply.orchestrator.dal.entity;
 
-import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager;
-import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager.RUNTIME_STRATEGY;
-
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,8 +28,6 @@ import java.io.Serializable;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
@@ -42,41 +37,31 @@ import javax.persistence.Transient;
 @Getter
 @Setter
 @NoArgsConstructor
-@EqualsAndHashCode(of = { "processId" })
-@ToString(of = { "processId", "runtimeStrategy" })
-public class WorkflowReference implements Identifiable<Long>, Serializable {
+@EqualsAndHashCode(of = { "processId", "requestId" })
+@ToString(of = { "processId", "requestId" })
+public class WorkflowReference implements Identifiable<String>, Serializable {
 
   private static final long serialVersionUID = -610233480056664663L;
 
   @Id
-  @Column(name = "process_id", unique = true, nullable = false)
-  private long processId;
+  @Column(name = "process_id", unique = true, nullable = false, updatable = false)
+  private String processId;
 
-  @Enumerated(EnumType.STRING)
-  @Column(name = "runtime_strategy", length = 100, nullable = false)
-  private BusinessProcessManager.RUNTIME_STRATEGY runtimeStrategy;
+  @Column(name = "request_id", unique = true, nullable = false, updatable = false)
+  private String requestId;
 
   @ManyToOne
-  @JoinColumn(name = "deployment_uuid")
+  @JoinColumn(name = "deployment_id")
   private Deployment deployment;
 
-  /**
-   * Constructor with fields.
-   * 
-   * @param processId
-   *          the process id
-   * @param runtimeStrategy
-   *          the strategy {@Link RUNTIME_STRATEGY}
-   */
-  public WorkflowReference(long processId, RUNTIME_STRATEGY runtimeStrategy) {
-    super();
+  public WorkflowReference(String processId, String requestId) {
     this.processId = processId;
-    this.runtimeStrategy = runtimeStrategy;
+    this.requestId = requestId;
   }
 
   @Override
   @Transient
-  public Long getId() {
+  public String getId() {
     return this.getProcessId();
   }
 

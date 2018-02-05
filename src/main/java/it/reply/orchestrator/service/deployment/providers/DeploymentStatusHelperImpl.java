@@ -27,8 +27,6 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Iterator;
 
@@ -40,19 +38,16 @@ public class DeploymentStatusHelperImpl implements DeploymentStatusHelper {
   private DeploymentRepository deploymentRepository;
 
   @Override
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void updateOnError(String deploymentUuid, String message, Throwable throwable) {
     updateOnError(deploymentUuid, String.format("%s: %s", message, throwable.getMessage()));
   }
 
   @Override
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void updateOnError(String deploymentUuid, Throwable throwable) {
     updateOnError(deploymentUuid, throwable.getMessage());
   }
 
   @Override
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void updateOnError(String deploymentUuid, String message) {
     Deployment deployment = deploymentRepository.findOne(deploymentUuid);
     if (deployment == null) {

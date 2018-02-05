@@ -19,22 +19,20 @@ package it.reply.orchestrator.service.commands;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.service.SlamService;
+import it.reply.orchestrator.utils.WorkflowConstants;
 
-import org.kie.api.executor.CommandContext;
-import org.kie.api.executor.ExecutionResults;
+import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
-@Component
-public class GetSlam extends BaseRankCloudProvidersCommand<GetSlam> {
+@Component(WorkflowConstants.Delegate.GET_SLAM)
+public class GetSlam extends BaseRankCloudProvidersCommand {
 
   @Autowired
   private SlamService slamService;
 
   @Override
-  @Transactional
-  public ExecutionResults customExecute(CommandContext ctx,
+  public void execute(DelegateExecution execution,
       RankCloudProvidersMessage rankCloudProvidersMessage) {
     rankCloudProvidersMessage.setSlamPreferences(
         slamService.getCustomerPreferences(rankCloudProvidersMessage.getRequestedWithToken()));
@@ -58,8 +56,6 @@ public class GetSlam extends BaseRankCloudProvidersCommand<GetSlam> {
                       .getCmdbProviderServices()
                       .put(service.getServiceId(), null));
         });
-
-    return resultOccurred(rankCloudProvidersMessage.getSlamPreferences());
   }
 
   @Override

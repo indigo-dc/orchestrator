@@ -16,29 +16,31 @@
 
 package it.reply.orchestrator.service.commands;
 
-import it.reply.orchestrator.dto.deployment.DeploymentMessage;
+import it.reply.orchestrator.service.deployment.providers.DeploymentStatusHelper;
 import it.reply.orchestrator.utils.WorkflowConstants;
+
+import lombok.AllArgsConstructor;
 
 import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.stereotype.Component;
 
-@Component(WorkflowConstants.Delegate.UPDATE)
-public class Update extends BaseDeployCommand {
+@Component(WorkflowConstants.Delegate.HANDLE_ERROR)
+@AllArgsConstructor
+public class HandleError extends BaseJavaDelegate {
+
+  private DeploymentStatusHelper deploymentStatusHelper;
 
   @Override
-  protected String getErrorMessagePrefix() {
-    return "Error updating deployment";
+  public void customExecute(DelegateExecution execution) {
+    String deploymentId = getRequiredParameter(execution, WorkflowConstants.Param.DEPLOYMENT_ID);
+    Exception exception = getRequiredParameter(execution, WorkflowConstants.Param.EXCEPTION);
+
+    deploymentStatusHelper.updateOnError(deploymentId, exception.getMessage());
   }
 
   @Override
-  public void execute(DelegateExecution execution, DeploymentMessage deploymentMessage) {
-    String template = getRequiredParameter(execution, WorkflowConstants.Param.TOSCA_TEMPLATE);
-
-    boolean updateComplete =
-        getDeploymentProviderService(deploymentMessage).doUpdate(deploymentMessage, template);
-
-    deploymentMessage.setCreateComplete(updateComplete);
-
+  protected String getErrorMessagePrefix() {
+    return "Error handling error";
   }
 
 }

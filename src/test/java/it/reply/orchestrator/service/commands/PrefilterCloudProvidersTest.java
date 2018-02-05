@@ -22,12 +22,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.assertj.core.api.Assertions;
 import org.assertj.core.util.Maps;
-import org.junit.Assert;
+import org.flowable.engine.impl.persistence.entity.ExecutionEntity;
 import org.junit.Before;
 import org.junit.Test;
-import org.kie.api.executor.CommandContext;
-import org.kie.api.executor.ExecutionResults;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -57,6 +56,7 @@ import it.reply.orchestrator.dto.slam.Sla;
 import it.reply.orchestrator.dto.slam.SlamPreferences;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.OrchestratorException;
+import it.reply.orchestrator.exception.service.WorkflowException;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.util.TestUtil;
 import it.reply.orchestrator.utils.WorkflowConstants;
@@ -88,9 +88,13 @@ public class PrefilterCloudProvidersTest {
     Mockito.when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
         .thenReturn(deployment);
     
-    ExecutionResults result = prefilterCloudProviders.customExecute(new CommandContext(), rankCloudProvidersMessage);
-   
-    TestCommandHelper.assertBaseResults(true, result);
+    ExecutionEntity execution = new ExecutionEntityBuilder()
+        .withMockedVariable(WorkflowConstants.Param.RANK_CLOUD_PROVIDERS_MESSAGE, rankCloudProvidersMessage)
+        .build();
+       
+    Assertions
+        .assertThatCode(() -> prefilterCloudProviders.execute(execution))
+        .doesNotThrowAnyException();
   }
 
 
@@ -129,12 +133,16 @@ public class PrefilterCloudProvidersTest {
             Mockito.anyObject()))
         .thenReturn(Maps.newHashMap(Boolean.FALSE, new HashMap<>()));
 
-    ExecutionResults result = prefilterCloudProviders.customExecute(new CommandContext(), rankCloudProvidersMessage);
-   
-    TestCommandHelper.assertBaseResults(true, result);
+    ExecutionEntity execution = new ExecutionEntityBuilder()
+        .withMockedVariable(WorkflowConstants.Param.RANK_CLOUD_PROVIDERS_MESSAGE, rankCloudProvidersMessage)
+        .build();
+       
+    Assertions
+        .assertThatCode(() -> prefilterCloudProviders.execute(execution))
+        .doesNotThrowAnyException();
   }
 
-  @Test(expected = OrchestratorException.class)
+  @Test
   public void testCustomExecuteOrchestratorExceptionNoSinglePlacement() throws Exception {
     String id = UUID.randomUUID().toString();
     Deployment deployment = ControllerTestUtils.createDeployment();
@@ -163,12 +171,18 @@ public class PrefilterCloudProvidersTest {
             Mockito.anyObject()))
         .thenReturn(new HashMap<>());
 
-    ExecutionResults result = prefilterCloudProviders.customExecute(new CommandContext(), rankCloudProvidersMessage);
- 
-    TestCommandHelper.assertBaseResults(true, result);
+    ExecutionEntity execution = new ExecutionEntityBuilder()
+        .withMockedVariable(WorkflowConstants.Param.RANK_CLOUD_PROVIDERS_MESSAGE, rankCloudProvidersMessage)
+        .build();
+       
+    Assertions
+        .assertThatThrownBy(() -> prefilterCloudProviders.execute(execution))
+        .isInstanceOf(WorkflowException.class)
+        .hasCauseInstanceOf(OrchestratorException.class)
+        .hasMessage("Error filtering Cloud Providers: Only a single placement policy is supported");
   }
 
-  @Test(expected = OrchestratorException.class)
+  @Test
   public void testCustomExecuteOrchestratorExceptioNoSLAWithId() throws Exception {
     String id = UUID.randomUUID().toString();
     Deployment deployment = ControllerTestUtils.createDeployment();
@@ -183,8 +197,9 @@ public class PrefilterCloudProvidersTest {
     // set placement policies
     List<PlacementPolicy> placementPolicies = new ArrayList<>();
     // use another id for launch exception
+    String slaId = UUID.randomUUID().toString();
     placementPolicies
-        .add(new SlaPlacementPolicy(new ArrayList<String>(), UUID.randomUUID().toString()));
+        .add(new SlaPlacementPolicy(new ArrayList<String>(), slaId));
 
     rankCloudProvidersMessage.setPlacementPolicies(placementPolicies);
     ArchiveRoot ar = new ArchiveRoot();
@@ -196,12 +211,18 @@ public class PrefilterCloudProvidersTest {
             Mockito.anyObject()))
         .thenReturn(new HashMap<>());
 
-    ExecutionResults result = prefilterCloudProviders.customExecute(new CommandContext(), rankCloudProvidersMessage);
-
-    TestCommandHelper.assertBaseResults(true, result);
+    ExecutionEntity execution = new ExecutionEntityBuilder()
+        .withMockedVariable(WorkflowConstants.Param.RANK_CLOUD_PROVIDERS_MESSAGE, rankCloudProvidersMessage)
+        .build();
+       
+    Assertions
+        .assertThatThrownBy(() -> prefilterCloudProviders.execute(execution))
+        .isInstanceOf(WorkflowException.class)
+        .hasCauseInstanceOf(OrchestratorException.class)
+        .hasMessage("Error filtering Cloud Providers: No SLA with id " + slaId + " available");
   }
 
-  @Test(expected = OrchestratorException.class)
+  @Test
   public void testCustomExecuteOrchestratorExceptioNoSLAPlacement() throws Exception {
     String id = UUID.randomUUID().toString();
     Deployment deployment = ControllerTestUtils.createDeployment();
@@ -215,7 +236,7 @@ public class PrefilterCloudProvidersTest {
 
     // set placement policies
     List<PlacementPolicy> placementPolicies = new ArrayList<>();
-    placementPolicies.add(getPlacementePolicies());
+    placementPolicies.add(Mockito.mock(PlacementPolicy.class));
     rankCloudProvidersMessage.setPlacementPolicies(placementPolicies);
 
     ArchiveRoot ar = new ArchiveRoot();
@@ -227,9 +248,15 @@ public class PrefilterCloudProvidersTest {
             Mockito.anyObject()))
         .thenReturn(new HashMap<>());
 
-    ExecutionResults result = prefilterCloudProviders.customExecute(new CommandContext(), rankCloudProvidersMessage);
- 
-    TestCommandHelper.assertBaseResults(true, result);
+    ExecutionEntity execution = new ExecutionEntityBuilder()
+        .withMockedVariable(WorkflowConstants.Param.RANK_CLOUD_PROVIDERS_MESSAGE, rankCloudProvidersMessage)
+        .build();
+       
+    Assertions
+        .assertThatThrownBy(() -> prefilterCloudProviders.execute(execution))
+        .isInstanceOf(WorkflowException.class)
+        .hasCauseInstanceOf(OrchestratorException.class)
+        .hasMessage("Error filtering Cloud Providers: Only SLA placement policies are supported");
   }
 
   @Test
@@ -258,9 +285,13 @@ public class PrefilterCloudProvidersTest {
         .thenReturn(
             Maps.newHashMap(Boolean.FALSE, Maps.newHashMap(new NodeTemplate(), new ImageData())));
 
-    ExecutionResults result = prefilterCloudProviders.customExecute(new CommandContext(), rankCloudProvidersMessage);
- 
-    TestCommandHelper.assertBaseResults(true, result);
+    ExecutionEntity execution = new ExecutionEntityBuilder()
+        .withMockedVariable(WorkflowConstants.Param.RANK_CLOUD_PROVIDERS_MESSAGE, rankCloudProvidersMessage)
+        .build();
+       
+    Assertions
+        .assertThatCode(() -> prefilterCloudProviders.execute(execution))
+        .doesNotThrowAnyException();
   }
 
 
@@ -350,26 +381,4 @@ public class PrefilterCloudProvidersTest {
     return oneDataRequirements;
   }
 
-
-  // Used for generate excpetion
-  private PlacementPolicy getPlacementePolicies() {
-    return new PlacementPolicy() {
-
-      private static final long serialVersionUID = -3043392471995029378L;
-
-      @Override
-      public List<String> getNodes() {
-        // TODO Auto-generated method stub
-        return null;
-      }
-
-      @Override
-      public void setNodes(List<String> nodes) {
-        // TODO Auto-generated method stub
-
-      }
-
-    };
-
-  }
 }

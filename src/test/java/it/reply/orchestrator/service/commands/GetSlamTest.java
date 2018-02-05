@@ -22,9 +22,9 @@ import it.reply.orchestrator.dal.repository.OidcEntityRepository;
 import it.reply.orchestrator.service.SlamServiceImpl;
 import it.reply.orchestrator.workflow.RankCloudProvidersWorkflowIT;
 
+import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
-import org.kie.api.executor.ExecutionResults;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
@@ -49,7 +49,7 @@ public class GetSlamTest extends BaseRankCloudProvidersCommandTest<GetSlam> {
   @Mock
   private OidcEntityRepository entityRepository;
 
-  private final String endpoint = "https://www.endpoint.com";
+  private final String endpoint = "https://www.example.com";
 
   public GetSlamTest() {
     super(new GetSlam());
@@ -65,10 +65,13 @@ public class GetSlamTest extends BaseRankCloudProvidersCommandTest<GetSlam> {
 
     RankCloudProvidersWorkflowIT.mockSlam(mockServer, slamProperties.getUrl());
 
-    ExecutionResults result =
-        executeCommand("{\"deploymentId\":\"mmd34483-d937-4578-bfdb-ebe196bf82dd\"}");
+    String serializedRankCloudProvidersMessage =
+        "{\"deploymentId\":\"mmd34483-d937-4578-bfdb-ebe196bf82dd\"}";
 
-    TestCommandHelper.assertBaseResults(true, result);
+    Assertions
+        .assertThatCode(() -> execute(serializedRankCloudProvidersMessage))
+        .doesNotThrowAnyException();
+
   }
 
 }

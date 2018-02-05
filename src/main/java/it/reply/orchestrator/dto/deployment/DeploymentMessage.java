@@ -19,6 +19,7 @@ package it.reply.orchestrator.dto.deployment;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
+import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl.IndigoJob;
 
@@ -29,6 +30,8 @@ import lombok.ToString;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.io.Serializable;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,12 +44,19 @@ public class DeploymentMessage extends BaseWorkflowMessage implements Serializab
 
   private static final long serialVersionUID = 8003907220093782923L;
 
-  // in ms
-  private Long timeoutTime;
+  // Max value allowed by SQL
+  // private static final Instant MAX_TIMEOUT = Instant.parse("9999-12-31T23:59:59.999Z");
+  private static final Instant MAX_TIMEOUT = Instant.parse("2038-01-19T03:14:07.999Z");
 
-  public void setTimeoutTimeInMins(Integer timeoutMins) {
-    this.timeoutTime =
-        Optional.ofNullable(timeoutMins).map(value -> value * 60 * 1000L).orElse(null);
+  private String timeout;
+
+  public void setTimeoutInMins(Integer timeoutMins) {
+    this.timeout = Optional
+        .ofNullable(timeoutMins)
+        .map(value -> Instant.now().plus(Duration.ofMinutes(value)))
+        .filter(value -> value.isBefore(MAX_TIMEOUT))
+        .orElse(MAX_TIMEOUT)
+        .toString();
   }
 
   private TemplateTopologicalOrderIterator templateTopologicalOrderIterator;
@@ -132,5 +142,14 @@ public class DeploymentMessage extends BaseWorkflowMessage implements Serializab
       position = 0;
     }
 
+  }
+
+  public DeploymentMessage() {
+    timeout = MAX_TIMEOUT.toString();
+  }
+
+  @Deprecated
+  public RankCloudProvidersMessage toRankCloudProvidersMessage() {
+    return new RankCloudProvidersMessage(this);
   }
 }

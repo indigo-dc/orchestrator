@@ -20,24 +20,22 @@ import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.service.OneDataService;
 import it.reply.orchestrator.utils.CommonUtils;
+import it.reply.orchestrator.utils.WorkflowConstants;
 
-import org.kie.api.executor.CommandContext;
-import org.kie.api.executor.ExecutionResults;
+import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 
-@Component
-public class GetOneDataData extends BaseRankCloudProvidersCommand<GetOneDataData> {
+@Component(WorkflowConstants.Delegate.GET_ONEDATA_DATA)
+public class GetOneDataData extends BaseRankCloudProvidersCommand {
 
   @Autowired
   private OneDataService oneDataService;
 
   @Override
-  @Transactional
-  public ExecutionResults customExecute(CommandContext ctx,
+  public void execute(DelegateExecution execution,
       RankCloudProvidersMessage rankCloudProvidersMessage) {
 
     Map<String, OneData> oneDataRequirements = rankCloudProvidersMessage.getOneDataRequirements();
@@ -49,8 +47,6 @@ public class GetOneDataData extends BaseRankCloudProvidersCommand<GetOneDataData
     CommonUtils
         .getFromOptionalMap(oneDataRequirements, "output")
         .ifPresent(oneDataService::populateProviderInfo);
-
-    return resultOccurred(oneDataRequirements);
   }
 
   @Override

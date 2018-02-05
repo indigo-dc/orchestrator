@@ -20,7 +20,6 @@ import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.model.topology.RelationshipTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 
-import it.reply.orchestrator.config.WorkflowConfigProducerBean;
 import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.OidcEntity;
@@ -38,7 +37,6 @@ import it.reply.orchestrator.enums.DeploymentType;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
-import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.http.BadRequestException;
 import it.reply.orchestrator.exception.http.ConflictException;
 import it.reply.orchestrator.exception.http.ForbiddenException;
@@ -48,16 +46,13 @@ import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.MdcUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 import it.reply.orchestrator.utils.WorkflowConstants;
-import it.reply.workflowmanager.exceptions.WorkflowException;
-import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager;
-import it.reply.workflowmanager.orchestrator.bpm.BusinessProcessManager.RUNTIME_STRATEGY;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.flowable.engine.RuntimeService;
+import org.flowable.engine.runtime.ProcessInstance;
 import org.jgrapht.graph.DirectedMultigraph;
 import org.jgrapht.traverse.TopologicalOrderIterator;
-import org.kie.api.runtime.process.ProcessInstance;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -66,7 +61,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -91,7 +85,7 @@ public class DeploymentServiceImpl implements DeploymentService {
   private ToscaService toscaService;
 
   @Autowired
-  private BusinessProcessManager wfService;
+  private RuntimeService wfService;
 
   @Autowired
   private OAuth2TokenService oauth2TokenService;
@@ -199,7 +193,7 @@ public class DeploymentServiceImpl implements DeploymentService {
     deploymentMessage
         .setOneDataRequirements(CommonUtils.notNullOrDefaultValue(odRequirements, HashMap::new));
 
-    deploymentMessage.setTimeoutTimeInMins(request.getTimeoutMins());
+    deploymentMessage.setTimeoutInMins(request.getTimeoutMins());
     List<PlacementPolicy> placementPolicies = toscaService.extractPlacementPolicies(parsingResult);
     deploymentMessage
         .setPlacementPolicies(CommonUtils.notNullOrDefaultValue(placementPolicies, ArrayList::new));
@@ -208,21 +202,16 @@ public class DeploymentServiceImpl implements DeploymentService {
     boolean isHybrid = toscaService.isHybridDeployment(parsingResult);
     deploymentMessage.setHybrid(isHybrid);
 
-    Map<String, Object> params = new HashMap<>();
-    params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_ID, deployment.getId());
-    params.put(WorkflowConstants.WF_PARAM_LOGGER,
-        LoggerFactory.getLogger(WorkflowConfigProducerBean.DEPLOY.getProcessId()));
-    params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
+    ProcessInstance pi = wfService
+        .createProcessInstanceBuilder()
+        .variable(WorkflowConstants.Param.DEPLOYMENT_ID, deployment.getId())
+        .variable(WorkflowConstants.Param.REQUEST_ID, MdcUtils.getRequestId())
+        .variable(WorkflowConstants.Param.DEPLOYMENT_MESSAGE, deploymentMessage)
+        .processDefinitionKey(WorkflowConstants.Process.DEPLOY)
+        .businessKey(MdcUtils.toBusinessKey())
+        .start();
 
-    try {
-      ProcessInstance pi =
-          wfService.startProcess(WorkflowConfigProducerBean.DEPLOY.getProcessId(), params,
-              RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
-      deployment.addWorkflowReferences(
-          new WorkflowReference(pi.getId(), RUNTIME_STRATEGY.PER_PROCESS_INSTANCE));
-    } catch (WorkflowException ex) {
-      throw new OrchestratorException(ex);
-    }
+    deployment.addWorkflowReferences(new WorkflowReference(pi.getId(), MdcUtils.getRequestId()));
     deployment = deploymentRepository.save(deployment);
     return deployment;
 
@@ -281,13 +270,13 @@ public class DeploymentServiceImpl implements DeploymentService {
     deployment.setStatusReason(null);
     deployment.setTask(Task.NONE);
 
-    // Abort all WF currently active on this deployment
-    Iterator<WorkflowReference> wrIt = deployment.getWorkflowReferences().iterator();
-    while (wrIt.hasNext()) {
-      WorkflowReference wr = wrIt.next();
-      wfService.abortProcess(wr.getProcessId(), wr.getRuntimeStrategy());
-      wrIt.remove();
-    }
+    wfService
+        .createExecutionQuery()
+        .onlyProcessInstanceExecutions()
+        .variableValueEquals(WorkflowConstants.Param.DEPLOYMENT_ID, deployment.getId())
+        .list()
+        .forEach(execution -> wfService.deleteProcessInstance(execution.getProcessInstanceId(),
+            "Process deleted by user with request " + MdcUtils.getRequestId()));
 
     // Build deployment message
     DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment);
@@ -301,21 +290,16 @@ public class DeploymentServiceImpl implements DeploymentService {
     DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
     deploymentMessage.setDeploymentType(deploymentType);
 
-    Map<String, Object> params = new HashMap<>();
-    params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_ID, deployment.getId());
-    params.put(WorkflowConstants.WF_PARAM_LOGGER,
-        LoggerFactory.getLogger(WorkflowConfigProducerBean.UNDEPLOY.getProcessId()));
-    params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
+    ProcessInstance pi = wfService
+        .createProcessInstanceBuilder()
+        .variable(WorkflowConstants.Param.DEPLOYMENT_ID, deployment.getId())
+        .variable(WorkflowConstants.Param.REQUEST_ID, MdcUtils.getRequestId())
+        .variable(WorkflowConstants.Param.DEPLOYMENT_MESSAGE, deploymentMessage)
+        .processDefinitionKey(WorkflowConstants.Process.UNDEPLOY)
+        .businessKey(MdcUtils.toBusinessKey())
+        .start();
 
-    try {
-      ProcessInstance pi =
-          wfService.startProcess(WorkflowConfigProducerBean.UNDEPLOY.getProcessId(), params,
-              RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
-      deployment.addWorkflowReferences(
-          new WorkflowReference(pi.getId(), RUNTIME_STRATEGY.PER_PROCESS_INSTANCE));
-    } catch (WorkflowException ex) {
-      throw new OrchestratorException(ex);
-    }
+    deployment.addWorkflowReferences(new WorkflowReference(pi.getId(), MdcUtils.getRequestId()));
   }
 
   @Override
@@ -366,25 +350,20 @@ public class DeploymentServiceImpl implements DeploymentService {
         toscaService.extractPlacementPolicies(parsingResult);
     deploymentMessage.setPlacementPolicies(placementPolicies);
 
-    deploymentMessage.setTimeoutTimeInMins(request.getTimeoutMins());
+    deploymentMessage.setTimeoutInMins(request.getTimeoutMins());
 
-    Map<String, Object> params = new HashMap<>();
-    params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_ID, deployment.getId());
-    params.put(WorkflowConstants.WF_PARAM_TOSCA_TEMPLATE, request.getTemplate());
-    params.put(WorkflowConstants.WF_PARAM_LOGGER,
-        LoggerFactory.getLogger(WorkflowConfigProducerBean.UPDATE.getProcessId()));
-    params.put(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, deploymentMessage);
+    ProcessInstance pi = wfService
+        .createProcessInstanceBuilder()
+        .variable(WorkflowConstants.Param.DEPLOYMENT_ID, deployment.getId())
+        .variable(WorkflowConstants.Param.REQUEST_ID, MdcUtils.getRequestId())
+        .variable(WorkflowConstants.Param.TOSCA_TEMPLATE, request.getTemplate())
+        .variable(WorkflowConstants.Param.DEPLOYMENT_MESSAGE, deploymentMessage)
+        .processDefinitionKey(WorkflowConstants.Process.UPDATE)
+        .businessKey(MdcUtils.toBusinessKey())
+        .start();
 
-    try {
-      ProcessInstance pi =
-          wfService.startProcess(WorkflowConfigProducerBean.UPDATE.getProcessId(), params,
-              RUNTIME_STRATEGY.PER_PROCESS_INSTANCE);
+    deployment.addWorkflowReferences(new WorkflowReference(pi.getId(), MdcUtils.getRequestId()));
 
-      deployment.addWorkflowReferences(
-          new WorkflowReference(pi.getId(), RUNTIME_STRATEGY.PER_PROCESS_INSTANCE));
-    } catch (WorkflowException ex) {
-      throw new OrchestratorException(ex);
-    }
   }
 
   private void createResources(Deployment deployment, Map<String, NodeTemplate> nodes) {

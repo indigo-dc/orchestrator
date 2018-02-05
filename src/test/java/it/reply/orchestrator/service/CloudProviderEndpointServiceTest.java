@@ -101,7 +101,7 @@ public class CloudProviderEndpointServiceTest {
 
     CloudServiceData cloudServiceDataOCC = new CloudServiceData();
     cloudServiceDataOCC.setServiceType("eu.egi.cloud.vm-management.occi");
-    cloudServiceDataOCC.setEndpoint("www.endpoint.com");
+    cloudServiceDataOCC.setEndpoint("www.example.com");
 
     CloudService cloudService = new CloudService();
     cloudService.setId(UUID.randomUUID().toString());
@@ -226,7 +226,7 @@ public class CloudProviderEndpointServiceTest {
 
     CloudServiceData cloudServiceDataOCC = new CloudServiceData();
     cloudServiceDataOCC.setServiceType("com.amazonaws.lorem.ipsum");
-    cloudServiceDataOCC.setEndpoint("www.endpoint.com");
+    cloudServiceDataOCC.setEndpoint("www.example.com");
 
     CloudService cloudService = new CloudService();
     cloudService.setId(UUID.randomUUID().toString());

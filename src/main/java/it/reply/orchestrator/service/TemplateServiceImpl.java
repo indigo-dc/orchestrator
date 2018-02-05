@@ -17,6 +17,7 @@
 package it.reply.orchestrator.service;
 
 import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.utils.MdcUtils;
 
 import lombok.AllArgsConstructor;
 
@@ -34,6 +35,7 @@ public class TemplateServiceImpl implements TemplateService {
   public String getTemplate(String uuid) {
     // check if deploymentExists
     Deployment deployment = deploymentservice.getDeployment(uuid);
+    MdcUtils.setDeploymentId(deployment.getId());
     return deployment.getTemplate();
   }
 

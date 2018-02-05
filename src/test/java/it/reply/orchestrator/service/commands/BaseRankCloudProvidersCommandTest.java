@@ -20,14 +20,15 @@ import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.utils.WorkflowConstants;
 import it.reply.utils.json.JsonUtility;
 
+import org.flowable.engine.impl.persistence.entity.ExecutionEntity;
 import org.junit.Before;
-import org.kie.api.executor.CommandContext;
-import org.kie.api.executor.ExecutionResults;
 import org.mockito.Spy;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 
-public abstract class BaseRankCloudProvidersCommandTest<T extends BaseRankCloudProvidersCommand<T>>
+import java.io.IOException;
+
+public abstract class BaseRankCloudProvidersCommandTest<T extends BaseRankCloudProvidersCommand>
     extends BaseWorkflowCommandTest<RankCloudProvidersMessage, T> {
 
   protected MockRestServiceServer mockServer;
@@ -44,24 +45,25 @@ public abstract class BaseRankCloudProvidersCommandTest<T extends BaseRankCloudP
     mockServer = MockRestServiceServer.createServer(restTemplate);
   }
 
-  protected ExecutionResults executeCommand(RankCloudProvidersMessage rankCloudProvidersMessage)
-      throws Exception {
+  protected ExecutionEntity execute(RankCloudProvidersMessage rankCloudProvidersMessage) {
 
-    CommandContext commandContext = TestCommandHelper
-        .buildCommandContext()
-        .withParam(WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE,
+    ExecutionEntity execution = new ExecutionEntityBuilder()
+        .withMockedVariable(WorkflowConstants.Param.RANK_CLOUD_PROVIDERS_MESSAGE,
             rankCloudProvidersMessage)
-        .get();
+        .build();
 
-    ExecutionResults er = command.customExecute(commandContext);
+    command.execute(execution);
     mockServer.verify();
-    return er;
+    return execution;
   }
 
-  protected ExecutionResults executeCommand(String rankCloudProvidersMessage)
-      throws Exception {
-    return executeCommand(
-        JsonUtility.deserializeJson(rankCloudProvidersMessage, RankCloudProvidersMessage.class));
+  protected ExecutionEntity execute(String rankCloudProvidersMessage) {
+    try {
+      return execute(
+          JsonUtility.deserializeJson(rankCloudProvidersMessage, RankCloudProvidersMessage.class));
+    } catch (IOException ex) {
+      throw new RuntimeException(ex);
+    }
   }
 
 }

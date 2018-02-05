@@ -18,30 +18,26 @@ package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.service.CmdbService;
+import it.reply.orchestrator.utils.WorkflowConstants;
 
-import org.kie.api.executor.CommandContext;
-import org.kie.api.executor.ExecutionResults;
+import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
-@Component
-public class GetCmdbDataDeploy extends BaseRankCloudProvidersCommand<GetCmdbDataDeploy> {
+@Component(WorkflowConstants.Delegate.GET_CMDB_DATA_DEPLOY)
+public class GetCmdbDataDeploy extends BaseRankCloudProvidersCommand {
 
   @Autowired
   private CmdbService cmdbService;
 
   @Override
-  @Transactional
-  public ExecutionResults customExecute(CommandContext ctx,
+  public void execute(DelegateExecution execution,
       RankCloudProvidersMessage rankCloudProvidersMessage) {
 
     // Get CMDB data for each Cloud Provider
     rankCloudProvidersMessage
         .getCloudProviders()
         .forEach((key, cloudProvider) -> cmdbService.fillCloudProviderInfo(cloudProvider));
-
-    return resultOccurred(rankCloudProvidersMessage.getCloudProviders());
   }
 
   @Override

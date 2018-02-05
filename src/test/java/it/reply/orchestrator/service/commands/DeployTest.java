@@ -20,9 +20,8 @@ import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
 import org.assertj.core.api.Assertions;
+import org.flowable.engine.impl.persistence.entity.ExecutionEntity;
 import org.junit.Test;
-import org.kie.api.executor.CommandContext;
-import org.kie.api.executor.ExecutionResults;
 import org.mockito.Mockito;
 
 public class DeployTest extends BaseDeployCommandTest<Deploy> {
@@ -43,16 +42,14 @@ public class DeployTest extends BaseDeployCommandTest<Deploy> {
 
   public void testDeploy(boolean complete) throws Exception {
     DeploymentMessage dm = new DeploymentMessage();
-    CommandContext commandContext = TestCommandHelper
-        .buildCommandContext()
-        .withParam(WorkflowConstants.WF_PARAM_DEPLOYMENT_MESSAGE, dm)
-        .get();
+    ExecutionEntity execution = new ExecutionEntityBuilder()
+        .withMockedVariable(WorkflowConstants.Param.DEPLOYMENT_MESSAGE, dm)
+        .build();
 
     Mockito.when(deploymentProviderService.doDeploy(dm)).thenReturn(complete);
 
-    ExecutionResults result = command.customExecute(commandContext);
+    command.execute(execution);
 
-    TestCommandHelper.assertBaseResults(true, result);
     Assertions.assertThat(dm.isCreateComplete()).isEqualTo(complete);
   }
 

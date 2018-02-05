@@ -16,16 +16,16 @@
 
 package it.reply.orchestrator.service.commands;
 
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import it.reply.orchestrator.service.CallbackService;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
+import org.flowable.engine.delegate.DelegateExecution;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.kie.api.executor.CommandContext;
-import org.kie.api.executor.ExecutionResults;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnit;
@@ -53,16 +53,14 @@ public class NotifyTest {
   public void doExecuteSuccesfully(boolean serviceResult) throws Exception {
     String deploymentId = UUID.randomUUID().toString();
 
-    CommandContext ctx = TestCommandHelper
-        .buildCommandContext()
-        .withParam(WorkflowConstants.WF_PARAM_DEPLOYMENT_ID, deploymentId)
-        .get();
+    DelegateExecution delegateExecution = new ExecutionEntityBuilder()
+        .withMockedVariable(WorkflowConstants.Param.DEPLOYMENT_ID, deploymentId)
+        .build();
 
     when(callbackService.doCallback(deploymentId)).thenReturn(serviceResult);
 
-    ExecutionResults result = notifyCommand.customExecute(ctx);
-
-    TestCommandHelper.assertBaseResults(serviceResult, result);
+    assertThatCode(() -> notifyCommand.execute(delegateExecution))
+        .doesNotThrowAnyException();
 
   }
 
@@ -70,17 +68,24 @@ public class NotifyTest {
   public void doExecuteWithRuntimeException() throws Exception {
     String deploymentId = UUID.randomUUID().toString();
 
-    CommandContext ctx = TestCommandHelper
-        .buildCommandContext()
-        .withParam(WorkflowConstants.WF_PARAM_DEPLOYMENT_ID, deploymentId)
-        .get();
+    DelegateExecution delegateExecution = new ExecutionEntityBuilder()
+        .withMockedVariable(WorkflowConstants.Param.DEPLOYMENT_ID, deploymentId)
+        .build();
 
     when(callbackService.doCallback(deploymentId)).thenThrow(new RuntimeException("some error"));
 
-    ExecutionResults result = notifyCommand.customExecute(ctx);
-
-    TestCommandHelper.assertBaseResults(false, result);
+    assertThatCode(() -> notifyCommand.execute(delegateExecution))
+        .doesNotThrowAnyException();
 
   }
 
+  @Test
+  public void doExecuteWithMissingParam() throws Exception {
+
+    DelegateExecution delegateExecution = new ExecutionEntityBuilder().build();
+
+    assertThatCode(() -> notifyCommand.execute(delegateExecution))
+        .doesNotThrowAnyException();
+
+  }
 }

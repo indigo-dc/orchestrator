@@ -35,16 +35,15 @@ import it.reply.orchestrator.dto.slam.Sla;
 import it.reply.orchestrator.enums.DeploymentType;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.service.ToscaService;
+import it.reply.orchestrator.utils.WorkflowConstants;
 
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
-import org.kie.api.executor.CommandContext;
-import org.kie.api.executor.ExecutionResults;
+import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.HashSet;
@@ -54,10 +53,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Component
+@Component(WorkflowConstants.Delegate.PREFILTER_CLOUD_PROVIDERS)
 @Slf4j
-public class PrefilterCloudProviders
-    extends BaseRankCloudProvidersCommand<PrefilterCloudProviders> {
+public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
 
   @Autowired
   private MesosProperties mesosProperties;
@@ -66,8 +64,7 @@ public class PrefilterCloudProviders
   private ToscaService toscaService;
 
   @Override
-  @Transactional
-  public ExecutionResults customExecute(CommandContext ctx,
+  public void execute(DelegateExecution execution,
       RankCloudProvidersMessage rankCloudProvidersMessage) {
     // TODO Filter cloud providers (i.e. based on OneData)
 
@@ -134,8 +131,6 @@ public class PrefilterCloudProviders
     });
 
     discardProvidersAndServices(providersToDiscard, servicesToDiscard, rankCloudProvidersMessage);
-
-    return resultOccurred(true);
   }
 
   private void discardOnPlacementPolicies(List<PlacementPolicy> placementPolicies,

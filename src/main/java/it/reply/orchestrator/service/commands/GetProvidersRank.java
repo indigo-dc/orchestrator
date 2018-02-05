@@ -23,26 +23,24 @@ import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
 import it.reply.orchestrator.dto.slam.Preference;
 import it.reply.orchestrator.dto.slam.PreferenceCustomer;
 import it.reply.orchestrator.service.CloudProviderRankerService;
+import it.reply.orchestrator.utils.WorkflowConstants;
 
-import org.kie.api.executor.CommandContext;
-import org.kie.api.executor.ExecutionResults;
+import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@Component
-public class GetProvidersRank extends BaseRankCloudProvidersCommand<GetProvidersRank> {
+@Component(WorkflowConstants.Delegate.GET_PROVIDERS_RANK)
+public class GetProvidersRank extends BaseRankCloudProvidersCommand {
 
   @Autowired
   private CloudProviderRankerService cloudProviderRankerService;
 
   @Override
-  @Transactional
-  public ExecutionResults customExecute(CommandContext ctx,
+  public void execute(DelegateExecution execution,
       RankCloudProvidersMessage rankCloudProvidersMessage) {
 
     // Prepare Ranker's request
@@ -72,8 +70,6 @@ public class GetProvidersRank extends BaseRankCloudProvidersCommand<GetProviders
     // Get provider rank and save in message
     List<RankedCloudProvider> ranking = cloudProviderRankerService.getProviderRanking(cprr);
     rankCloudProvidersMessage.setRankedCloudProviders(ranking);
-
-    return resultOccurred(ranking);
   }
 
   @Override

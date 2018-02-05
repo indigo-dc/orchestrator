@@ -34,11 +34,9 @@ import it.reply.orchestrator.utils.WorkflowConstants;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.collections4.MapUtils;
-import org.kie.api.executor.CommandContext;
-import org.kie.api.executor.ExecutionResults;
+import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 import java.util.Objects;
@@ -51,9 +49,9 @@ import java.util.stream.Collectors;
  * @author l.biava
  *
  */
-@Component
+@Component(WorkflowConstants.Delegate.UPDATE_DEPLOYMENT)
 @Slf4j
-public class UpdateDeployment extends BaseDeployCommand<UpdateDeployment> {
+public class UpdateDeployment extends BaseDeployCommand {
 
   @Autowired
   private OneDataProperties oneDataProperties;
@@ -62,12 +60,10 @@ public class UpdateDeployment extends BaseDeployCommand<UpdateDeployment> {
   private CloudProviderEndpointServiceImpl cloudProviderEndpointServiceImpl;
 
   @Override
-  @Transactional
-  public ExecutionResults customExecute(CommandContext ctx,
-      DeploymentMessage deploymentMessage) {
+  public void execute(DelegateExecution execution, DeploymentMessage deploymentMessage) {
 
     RankCloudProvidersMessage rankCloudProvidersMessage =
-        getRequiredParameter(ctx, WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE);
+        getRequiredParameter(execution, WorkflowConstants.Param.RANK_CLOUD_PROVIDERS_MESSAGE);
 
     Deployment deployment = getDeployment(deploymentMessage);
 
@@ -116,8 +112,6 @@ public class UpdateDeployment extends BaseDeployCommand<UpdateDeployment> {
 
     // FIXME Implement OneData scheduling properly and move in a dedicated command
     generateOneDataParameters(rankCloudProvidersMessage, deploymentMessage);
-
-    return resultOccurred(true);
   }
 
   protected void generateOneDataParameters(RankCloudProvidersMessage rankCloudProvidersMessage,

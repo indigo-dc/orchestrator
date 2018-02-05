@@ -20,30 +20,26 @@ import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.service.CmdbService;
+import it.reply.orchestrator.utils.WorkflowConstants;
 
-import org.kie.api.executor.CommandContext;
-import org.kie.api.executor.ExecutionResults;
+import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
-@Component
-public class GetCmdbDataUpdate extends BaseDeployCommand<GetCmdbDataUpdate> {
+@Component(WorkflowConstants.Delegate.GET_CMDB_DATA_UPDATE)
+public class GetCmdbDataUpdate extends BaseDeployCommand {
 
   @Autowired
   private CmdbService cmdbService;
 
   @Override
-  @Transactional
-  public ExecutionResults customExecute(CommandContext ctx,
-      DeploymentMessage deploymentMessage) {
+  public void execute(DelegateExecution execution, DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
     CloudProvider cp = new CloudProvider(deployment.getCloudProviderName());
     cp.getCmdbProviderServices().put(deployment.getCloudProviderEndpoint().getCpComputeServiceId(),
         null);
     cmdbService.fillCloudProviderInfo(cp);
     deploymentMessage.setChosenCloudProvider(cp);
-    return resultOccurred(cp);
   }
 
   @Override

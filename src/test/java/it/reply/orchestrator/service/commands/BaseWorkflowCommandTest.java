@@ -26,7 +26,7 @@ import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-public abstract class BaseWorkflowCommandTest<M extends BaseWorkflowMessage, T extends BaseWorkflowCommand<M, T>> {
+public abstract class BaseWorkflowCommandTest<M extends BaseWorkflowMessage, T extends BaseWorkflowCommand<M>> {
 
   @Rule
   public MockitoRule rule = MockitoJUnit.rule();

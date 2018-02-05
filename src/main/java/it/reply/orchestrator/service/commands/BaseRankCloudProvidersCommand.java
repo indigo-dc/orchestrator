@@ -19,19 +19,11 @@ package it.reply.orchestrator.service.commands;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
-/**
- * Base behavior for all RankCloudProvider WF tasks. <br/>
- * This checks input parameters and manages output and errors (specifically, in case of errors, it
- * also updates directly the deployment status on DB).
- * 
- * @author l.biava
- *
- */
-public abstract class BaseRankCloudProvidersCommand<T extends BaseRankCloudProvidersCommand<T>>
-    extends BaseWorkflowCommand<RankCloudProvidersMessage, T> {
+public abstract class BaseRankCloudProvidersCommand
+    extends BaseWorkflowCommand<RankCloudProvidersMessage> {
 
   @Override
   protected String getMessageParameterName() {
-    return WorkflowConstants.WF_PARAM_RANK_CLOUD_PROVIDERS_MESSAGE;
+    return WorkflowConstants.Param.RANK_CLOUD_PROVIDERS_MESSAGE;
   }
 }

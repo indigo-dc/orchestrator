@@ -26,7 +26,7 @@ import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServ
 import org.junit.Before;
 import org.mockito.Mock;
 
-public abstract class BaseDeployCommandTest<T extends BaseDeployCommand<T>>
+public abstract class BaseDeployCommandTest<T extends BaseDeployCommand>
     extends BaseWorkflowCommandTest<DeploymentMessage, T> {
 
   @Mock
