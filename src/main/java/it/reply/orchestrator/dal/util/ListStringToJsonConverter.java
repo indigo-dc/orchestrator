@@ -18,15 +18,18 @@ package it.reply.orchestrator.dal.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.util.List;
 
 import javax.persistence.Converter;
 
 @Converter
-public class ListStringToJsonConverter extends AbstractToJsonConverter<List<String>> {
+public class ListStringToJsonConverter extends AbstractToJsonConverter<@Nullable List<String>> {
 
-  private static final TypeReference<List<String>> REFERENCE = new TypeReference<List<String>>() {
-  };
+  private static final TypeReference<@Nullable List<String>> REFERENCE =
+      new TypeReference<@Nullable List<String>>() {
+      };
 
   public ListStringToJsonConverter() {
     super(REFERENCE);

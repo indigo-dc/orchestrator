@@ -31,8 +31,8 @@ import java.util.Optional;
 import javax.persistence.AttributeConverter;
 
 @Slf4j
-public abstract class AbstractToJsonConverter<T>
-    implements AttributeConverter<@Nullable T, String> {
+public abstract class AbstractToJsonConverter<@Nullable T>
+    implements AttributeConverter<T, @Nullable String> {
 
   private final TypeReference<T> typeReference;
 
@@ -59,10 +59,7 @@ public abstract class AbstractToJsonConverter<T>
   }
 
   @Override
-  @Nullable
   public T convertToEntityAttribute(String optionalDbData) {
-    @SuppressWarnings("null")
-    @Nullable
     T convertedValue = Optional
         .ofNullable(optionalDbData)
         .map(dbData -> {
@@ -73,7 +70,7 @@ public abstract class AbstractToJsonConverter<T>
                 + optionalDbData + "> to object of type " + typeReference, ex);
           }
         })
-        .orElse(null);
+        .orElseGet(null);
     LOG.trace("Converted JSON DB value <{}> to attribute {} of type {}", optionalDbData,
         convertedValue, typeReference);
     return convertedValue;
