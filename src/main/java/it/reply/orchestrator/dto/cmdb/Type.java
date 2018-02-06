@@ -16,34 +16,13 @@
 
 package it.reply.orchestrator.dto.cmdb;
 
-import com.google.common.base.Preconditions;
+import com.fasterxml.jackson.annotation.JsonEnumDefaultValue;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonValue;
+public enum Type {
 
-import it.reply.orchestrator.utils.EnumUtils;
-import it.reply.orchestrator.utils.Named;
+  @JsonProperty("compute") COMPUTE,
+  @JsonProperty("storage") STORAGE,
+  @JsonEnumDefaultValue @JsonProperty("unknown") UNKNOWN;
 
-public enum Type implements Named {
-
-  COMPUTE("compute"),
-  STORAGE("storage"),
-  UNKNOWN("unknown");
-
-  private final String name;
-
-  Type(String name) {
-    this.name = Preconditions.checkNotNull(name);
-  }
-
-  @JsonCreator
-  public static Type forValue(String value) {
-    return EnumUtils.fromNameOrDefault(Type.class, value, UNKNOWN);
-  }
-
-  @JsonValue
-  @Override
-  public String getName() {
-    return this.name;
-  }
 }
