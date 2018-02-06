@@ -16,51 +16,70 @@
 
 package it.reply.orchestrator.enums;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * Normative nodes states. For more details see @see <a href=
+ * Normative nodes states. For more details see <a href=
  * "http://docs.oasis-open.org/tosca/TOSCA-Simple-Profile-YAML/v1.0/csprd02/TOSCA-Simple-Profile-YAML-v1.0-csprd02.html#_Toc445238244">
- * Tosca Simple Profile</a>
- * 
+ * Tosca Simple Profile YAML v1.0</a>
  */
+@AllArgsConstructor(access = AccessLevel.PACKAGE)
 public enum NodeStates {
 
-  // Node is not yet created. Node only exists as a template definition.
+  /**
+   * Node is not yet created. Node only exists as a template definition.
+   */
   INITIAL(false),
 
-  // Node is transitioning from initial state to created state.
+  /**
+   * Node is transitioning from initial state to created state.
+   */
   CREATING(true),
 
-  // Node software has been installed.
+  /**
+   * Node software has been installed.
+   */
   CREATED(false),
 
-  // Node is transitioning from created state to configured state.
+  /**
+   * Node is transitioning from created state to configured state.
+   */
   CONFIGURING(true),
 
-  // Node has been configured prior to being started.
+  /**
+   * Node has been configured prior to being started.
+   */
   CONFIGURED(false),
 
-  // Node is transitioning from configured state to started state.
+  /**
+   * Node is transitioning from configured state to started state.
+   */
   STARTING(true),
 
-  // Node is started.
+  /**
+   * Node is started.
+   */
   STARTED(false),
 
-  // Node is transitioning from its current state to a configured state.
+  /**
+   * Node is transitioning from its current state to a configured state.
+   */
   STOPPING(true),
 
-  // Node is transitioning from its current state to one where it is deleted and its state is no
-  // longer tracked by the instance model.
+  /**
+   * Node is transitioning from its current state to one where it is deleted and its state is no
+   * longer tracked by the instance model.
+   */
   DELETING(true),
 
-  // Node is in an error state.
+  /**
+   * Node is in an error state.
+   */
   ERROR(false);
 
   @Getter
-  private final boolean transtional;
+  private final boolean transitional;
 
-  NodeStates(boolean transtional) {
-    this.transtional = transtional;
-  }
 }
