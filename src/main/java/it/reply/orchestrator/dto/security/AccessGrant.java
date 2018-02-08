@@ -17,7 +17,6 @@
 package it.reply.orchestrator.dto.security;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -33,6 +32,9 @@ import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonFormatVisitorWrapper;
 import com.fasterxml.jackson.databind.ser.std.StdScalarSerializer;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -53,7 +55,8 @@ import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 
 @Data
-@JsonIgnoreProperties(ignoreUnknown = true)
+@Builder
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class AccessGrant implements Serializable {
 
@@ -84,7 +87,14 @@ public class AccessGrant implements Serializable {
   @NotNull
   @JsonSerialize(using = Jackson2ScopeSerializer.class)
   @JsonDeserialize(using = Jackson2ScopeDeserializer.class)
-  private Set<String> scope = new HashSet<>();
+  @Builder.Default
+  private Set<String> scopes = new HashSet<>();
+
+  @SuppressWarnings("null")
+  @Deprecated
+  protected AccessGrant() {
+    scopes = new HashSet<>();
+  }
 
   @JsonIgnore
   public boolean isExpired() {

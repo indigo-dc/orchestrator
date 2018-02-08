@@ -67,7 +67,7 @@ public class OidcRefreshToken implements Identifiable<Long> {
     OidcRefreshToken token = new OidcRefreshToken();
     token.setVaule(grant.getRefreshToken());
     token.setCreationDate(new Date());
-    token.setScopes(grant.getScope());
+    token.setScopes(grant.getScopes());
     token.setOidcTokenId(id);
 
     JwtUtils

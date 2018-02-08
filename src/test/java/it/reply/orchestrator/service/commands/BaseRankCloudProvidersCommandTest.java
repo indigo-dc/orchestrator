@@ -17,19 +17,31 @@
 package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
+import it.reply.orchestrator.utils.JsonUtils;
 import it.reply.orchestrator.utils.WorkflowConstants;
-import it.reply.utils.json.JsonUtility;
 
 import org.flowable.engine.impl.persistence.entity.ExecutionEntity;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.mockito.Spy;
+import org.springframework.boot.test.autoconfigure.json.JsonTest;
+import org.springframework.test.context.junit4.rules.SpringClassRule;
+import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.IOException;
 
+@JsonTest
 public abstract class BaseRankCloudProvidersCommandTest<T extends BaseRankCloudProvidersCommand>
     extends BaseWorkflowCommandTest<RankCloudProvidersMessage, T> {
+
+  @ClassRule
+  public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
+
+  @Rule
+  public final SpringMethodRule springMethodRule = new SpringMethodRule();
 
   protected MockRestServiceServer mockServer;
 
@@ -60,7 +72,7 @@ public abstract class BaseRankCloudProvidersCommandTest<T extends BaseRankCloudP
   protected ExecutionEntity execute(String rankCloudProvidersMessage) {
     try {
       return execute(
-          JsonUtility.deserializeJson(rankCloudProvidersMessage, RankCloudProvidersMessage.class));
+          JsonUtils.deserialize(rankCloudProvidersMessage, RankCloudProvidersMessage.class));
     } catch (IOException ex) {
       throw new RuntimeException(ex);
     }

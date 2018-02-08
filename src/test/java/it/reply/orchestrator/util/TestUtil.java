@@ -16,9 +16,6 @@
 
 package it.reply.orchestrator.util;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
@@ -31,17 +28,6 @@ import java.io.IOException;
 import java.util.UUID;
 
 public class TestUtil {
-
-  /**
-   * Convert Object To a Json byte array.
-   * 
-   * @return byte[]
-   */
-  public static byte[] convertObjectToJsonBytes(Object object) throws IOException {
-    ObjectMapper mapper = new ObjectMapper();
-    mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-    return mapper.writeValueAsBytes(object);
-  }
 
   public static String getFileContentAsString(String fileUri) throws IOException {
     return FileUtils.readFileToString(new File(fileUri), Charsets.UTF_8);

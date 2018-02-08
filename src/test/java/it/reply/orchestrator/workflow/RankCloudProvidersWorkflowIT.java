@@ -36,7 +36,6 @@ import it.reply.orchestrator.service.CmdbService;
 import it.reply.orchestrator.service.MonitoringService;
 import it.reply.orchestrator.service.SlamService;
 import it.reply.orchestrator.utils.WorkflowConstants;
-import it.reply.utils.json.JsonUtility;
 
 import org.junit.Ignore;
 import org.junit.Test;

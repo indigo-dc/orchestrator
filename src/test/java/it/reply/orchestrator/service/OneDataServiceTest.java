@@ -28,7 +28,7 @@ import it.reply.orchestrator.dto.onedata.ProviderDetails;
 import it.reply.orchestrator.dto.onedata.SpaceDetails;
 import it.reply.orchestrator.dto.onedata.UserSpaces;
 import it.reply.orchestrator.exception.service.DeploymentException;
-import it.reply.utils.json.JsonUtility;
+import it.reply.orchestrator.utils.JsonUtils;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -95,7 +95,7 @@ public class OneDataServiceTest {
         .andExpect(method(HttpMethod.GET))
         .andExpect(header("macaroon", onedataToken))
         .andRespond(
-            withSuccess(JsonUtility.serializeJson(userSpace), MediaType.APPLICATION_JSON_UTF8));
+            withSuccess(JsonUtils.serialize(userSpace), MediaType.APPLICATION_JSON_UTF8));
 
     assertThat(oneDataService.getUserSpacesId(endpoint, onedataToken))
         .isEqualTo(userSpace);
@@ -131,7 +131,7 @@ public class OneDataServiceTest {
         .andExpect(method(HttpMethod.GET))
         .andExpect(header("macaroon", onedataToken))
         .andRespond(
-            withSuccess(JsonUtility.serializeJson(details), MediaType.APPLICATION_JSON_UTF8));
+            withSuccess(JsonUtils.serialize(details), MediaType.APPLICATION_JSON_UTF8));
 
     assertThat(oneDataService.getSpaceDetailsFromId(endpoint, onedataToken, spaceId))
         .isEqualTo(details);
@@ -170,7 +170,7 @@ public class OneDataServiceTest {
             endpoint + onezoneBasePath + "spaces/" + spaceId + "/providers/" + providerId))
         .andExpect(method(HttpMethod.GET))
         .andExpect(header("macaroon", onedataToken))
-        .andRespond(MockRestResponseCreators.withSuccess(JsonUtility.serializeJson(providerDetail),
+        .andRespond(MockRestResponseCreators.withSuccess(JsonUtils.serialize(providerDetail),
             MediaType.APPLICATION_JSON_UTF8));
 
     assertThat(oneDataService.getProviderDetailsFromId(endpoint, onedataToken, spaceId, providerId))
@@ -224,14 +224,14 @@ public class OneDataServiceTest {
         .expect(requestTo(endpoint + onezoneBasePath + "user/spaces"))
         .andExpect(method(HttpMethod.GET))
         .andExpect(header("macaroon", onedataToken))
-        .andRespond(MockRestResponseCreators.withSuccess(JsonUtility.serializeJson(userSpace),
+        .andRespond(MockRestResponseCreators.withSuccess(JsonUtils.serialize(userSpace),
             MediaType.APPLICATION_JSON_UTF8));
 
     mockServer
         .expect(requestTo(endpoint + onezoneBasePath + "user/spaces/" + spaceId))
         .andExpect(method(HttpMethod.GET))
         .andExpect(header("macaroon", onedataToken))
-        .andRespond(MockRestResponseCreators.withSuccess(JsonUtility.serializeJson(spaceDetails),
+        .andRespond(MockRestResponseCreators.withSuccess(JsonUtils.serialize(spaceDetails),
             MediaType.APPLICATION_JSON_UTF8));
 
     assertThat(oneDataService.populateProviderInfo(oneData).getProviders()).isEmpty();
@@ -265,14 +265,14 @@ public class OneDataServiceTest {
         .expect(requestTo(endpoint + onezoneBasePath + "user/spaces"))
         .andExpect(method(HttpMethod.GET))
         .andExpect(header("macaroon", onedataToken))
-        .andRespond(MockRestResponseCreators.withSuccess(JsonUtility.serializeJson(userSpace),
+        .andRespond(MockRestResponseCreators.withSuccess(JsonUtils.serialize(userSpace),
             MediaType.APPLICATION_JSON_UTF8));
 
     mockServer
         .expect(requestTo(endpoint + onezoneBasePath + "user/spaces/" + spaceId))
         .andExpect(method(HttpMethod.GET))
         .andExpect(header("macaroon", onedataToken))
-        .andRespond(MockRestResponseCreators.withSuccess(JsonUtility.serializeJson(spaceDetails),
+        .andRespond(MockRestResponseCreators.withSuccess(JsonUtils.serialize(spaceDetails),
             MediaType.APPLICATION_JSON_UTF8));
 
     assertThatThrownBy(() -> oneDataService.populateProviderInfo(oneData))
@@ -301,14 +301,14 @@ public class OneDataServiceTest {
         .expect(requestTo(endpoint + onezoneBasePath + "user/spaces"))
         .andExpect(method(HttpMethod.GET))
         .andExpect(header("macaroon", onedataToken))
-        .andRespond(MockRestResponseCreators.withSuccess(JsonUtility.serializeJson(userSpace),
+        .andRespond(MockRestResponseCreators.withSuccess(JsonUtils.serialize(userSpace),
             MediaType.APPLICATION_JSON_UTF8));
 
     mockServer
         .expect(requestTo(endpoint + onezoneBasePath + "user/spaces/" + spaceId))
         .andExpect(method(HttpMethod.GET))
         .andExpect(header("macaroon", onedataToken))
-        .andRespond(MockRestResponseCreators.withSuccess(JsonUtility.serializeJson(spaceDetails),
+        .andRespond(MockRestResponseCreators.withSuccess(JsonUtils.serialize(spaceDetails),
             MediaType.APPLICATION_JSON_UTF8));
 
     mockServer
@@ -316,7 +316,7 @@ public class OneDataServiceTest {
             endpoint + onezoneBasePath + "spaces/" + spaceId + "/providers/" + providerId))
         .andExpect(method(HttpMethod.GET))
         .andExpect(header("macaroon", onedataToken))
-        .andRespond(MockRestResponseCreators.withSuccess(JsonUtility.serializeJson(providerDetails),
+        .andRespond(MockRestResponseCreators.withSuccess(JsonUtils.serialize(providerDetails),
             MediaType.APPLICATION_JSON_UTF8));
 
     OneData oneData = OneData
