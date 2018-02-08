@@ -30,10 +30,13 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+
+import javax.validation.constraints.NotNull;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -41,25 +44,34 @@ import java.util.Map;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class DeploymentResource extends AbstractResource {
 
+  @Nullable
   private Status status;
 
+  @Nullable
   private String statusReason;
 
+  @NotNull
   @NonNull
   private Map<String, Object> outputs = new HashMap<>();
 
+  @Nullable
   private Task task;
 
+  @Nullable
   private String callback;
 
+  @Nullable
   private String cloudProviderName;
 
+  @Nullable
   private OidcEntityId createdBy;
 
   @Builder
-  protected DeploymentResource(String uuid, Date creationTime, Date updateTime, String physicalId,
-      Status status, String statusReason, Map<String, Object> outputs, Task task, String callback,
-      String cloudProviderName, OidcEntityId createdBy) {
+  protected DeploymentResource(@NonNull String uuid, @Nullable Date creationTime,
+      @Nullable Date updateTime, @Nullable String physicalId, @Nullable Status status,
+      @Nullable String statusReason, @Nullable Map<String, Object> outputs, @Nullable Task task,
+      @Nullable String callback, @Nullable String cloudProviderName,
+      @Nullable OidcEntityId createdBy) {
     super(uuid, creationTime, updateTime, physicalId);
     this.status = status;
     this.statusReason = statusReason;

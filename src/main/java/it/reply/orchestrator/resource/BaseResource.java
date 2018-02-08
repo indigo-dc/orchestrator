@@ -28,10 +28,13 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+
+import javax.validation.constraints.NotNull;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -39,16 +42,24 @@ import java.util.List;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class BaseResource extends AbstractResource {
 
+  @Nullable
   private NodeStates state;
+
+  @Nullable
   private String toscaNodeType;
+
+  @Nullable
   private String toscaNodeName;
 
+  @NotNull
   @NonNull
   private List<String> requiredBy = new ArrayList<>();
 
   @Builder
-  protected BaseResource(String uuid, Date creationTime, Date updateTime, String physicalId,
-      NodeStates state, String toscaNodeType, String toscaNodeName, List<String> requiredBy) {
+  protected BaseResource(@NonNull String uuid, @Nullable Date creationTime,
+      @Nullable Date updateTime, @Nullable String physicalId,
+      @Nullable NodeStates state, @Nullable String toscaNodeType, @Nullable String toscaNodeName,
+      @Nullable List<String> requiredBy) {
     super(uuid, creationTime, updateTime, physicalId);
     this.state = state;
     this.toscaNodeType = toscaNodeType;

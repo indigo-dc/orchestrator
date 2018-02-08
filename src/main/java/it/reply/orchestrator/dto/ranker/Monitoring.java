@@ -16,7 +16,6 @@
 
 package it.reply.orchestrator.dto.ranker;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.PaaSMetric;
@@ -25,26 +24,34 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
+import javax.validation.constraints.NotNull;
+
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class Monitoring implements Serializable {
 
   private static final long serialVersionUID = 6559999818418491070L;
 
   @JsonProperty("provider")
+  @NonNull
+  @NotNull
   private String provider;
 
   @JsonProperty("metrics")
   @Builder.Default
   private List<PaaSMetric> metrics = new ArrayList<>();
 
+  @SuppressWarnings("null")
+  @Deprecated
+  protected Monitoring() {
+    metrics = new ArrayList<>();
+  }
 }

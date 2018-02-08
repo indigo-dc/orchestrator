@@ -16,228 +16,192 @@
 
 package it.reply.orchestrator.service;
 
-import static org.junit.Assert.assertEquals;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-import org.assertj.core.api.Assertions;
-import org.junit.Assert;
-import org.junit.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mockito;
+import static org.assertj.core.api.Assertions.*;
 
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
-import it.reply.orchestrator.dto.RankCloudProvidersMessage;
+import it.reply.orchestrator.dto.CloudProviderEndpoint.CloudProviderEndpointBuilder;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
+import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.CloudServiceData;
 import it.reply.orchestrator.dto.cmdb.Type;
-import it.reply.orchestrator.dto.deployment.CredentialsAwareSlaPlacementPolicy;
 import it.reply.orchestrator.dto.deployment.PlacementPolicy;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
-import it.reply.orchestrator.exception.OrchestratorException;
+import it.reply.orchestrator.enums.DeploymentProvider;
+import it.reply.orchestrator.enums.DeploymentType;
 import it.reply.orchestrator.exception.service.DeploymentException;
 
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+
+@RunWith(JUnitParamsRunner.class)
 public class CloudProviderEndpointServiceTest {
 
-  @InjectMocks
-  CloudProviderEndpointServiceImpl cloudProviderEndpointServiceImpl =
-      new CloudProviderEndpointServiceImpl();
+  CloudProviderEndpointServiceImpl cloudProviderEndpointServiceImpl;
+
+  @Before
+  public void init() {
+    cloudProviderEndpointServiceImpl = new CloudProviderEndpointServiceImpl();
+  }
 
   @Test
-  public void chooseCloudProvider() throws Exception {
+  public void chooseCloudProviderSuccesful() {
     Deployment deployment = ControllerTestUtils.createDeployment();
     RankCloudProvidersMessage rcpm = new RankCloudProvidersMessage();
 
-    List<RankedCloudProvider> listRankedCloudProvider = new ArrayList<>();
+    rcpm.getRankedCloudProviders().add(RankedCloudProvider
+        .builder()
+        .name("provider1")
+        .rank(100)
+        .ranked(true)
+        .build());
+    rcpm.getRankedCloudProviders().add(RankedCloudProvider
+        .builder()
+        .name("provider2") // the good one
+        .rank(400)
+        .ranked(true)
+        .build());
+    rcpm.getRankedCloudProviders().add(RankedCloudProvider
+        .builder()
+        .name("provider3")
+        .rank(800)
+        .ranked(false)
+        .build());
 
-    RankedCloudProvider rankedCloudProvider1 = new RankedCloudProvider();
-    rankedCloudProvider1.setRank(100);
-    rankedCloudProvider1.setRanked(true);
-    RankedCloudProvider rankedCloudProvider2 = new RankedCloudProvider();
-    rankedCloudProvider2.setRank(400);
-    rankedCloudProvider2.setRanked(true);
-    RankedCloudProvider rankedCloudProvider3 = new RankedCloudProvider();
-    rankedCloudProvider3.setRank(800);
-
-    listRankedCloudProvider.add(rankedCloudProvider1);
-    listRankedCloudProvider.add(rankedCloudProvider2);
-    listRankedCloudProvider.add(rankedCloudProvider3);
-
-    rcpm.setRankedCloudProviders(listRankedCloudProvider);
-
-    assertEquals(cloudProviderEndpointServiceImpl.chooseCloudProvider(deployment, rcpm),
-        rankedCloudProvider2);
+    RankedCloudProvider chosedProvider =
+        cloudProviderEndpointServiceImpl.chooseCloudProvider(deployment, rcpm);
+    assertThat(chosedProvider).isNotNull();
+    assertThat(chosedProvider.getName()).isEqualTo("provider2");
   }
 
-  @Test(expected = DeploymentException.class)
-  public void failChooseCloudProvider() throws Exception {
+  @Test
+  public void chooseCloudProviderNoneRanked() {
     Deployment deployment = ControllerTestUtils.createDeployment();
     RankCloudProvidersMessage rcpm = new RankCloudProvidersMessage();
-    cloudProviderEndpointServiceImpl.chooseCloudProvider(deployment, rcpm);
-  }
 
-  @Test(expected = IllegalArgumentException.class)
-  public void failGetCloudProviderEndpoint() {
-    CloudProvider chosenCloudProvider = new CloudProvider("provider-RECAS-BARI");
-    List<PlacementPolicy> placementPolicies = new ArrayList<>();
+    rcpm.getRankedCloudProviders().add(RankedCloudProvider
+        .builder()
+        .name("provider1")
+        .rank(100)
+        .ranked(false)
+        .build());
 
-    cloudProviderEndpointServiceImpl.getCloudProviderEndpoint(chosenCloudProvider,
-        placementPolicies, false);
+    assertThatCode(
+        () -> cloudProviderEndpointServiceImpl.chooseCloudProvider(deployment, rcpm))
+            .isInstanceOf(DeploymentException.class)
+            .hasMessage("No Cloud Provider suitable for deploy found");
   }
 
   @Test
-  public void getCloudProviderEndpointOcci() {
-
+  public void getCloudProviderEndpointFailBecauseOfNoComputeService() {
+    CloudProvider chosenCloudProvider = CloudProvider.builder().id("provider-RECAS-BARI").build();
     List<PlacementPolicy> placementPolicies = new ArrayList<>();
-    List<CloudService> cmbdProviderServicesByType = new ArrayList<>();
 
-    CloudProvider chosenCloudProvider = Mockito.mock(CloudProvider.class);
-
-    CloudServiceData cloudServiceDataOCC = new CloudServiceData();
-    cloudServiceDataOCC.setServiceType("eu.egi.cloud.vm-management.occi");
-    cloudServiceDataOCC.setEndpoint("www.example.com");
-
-    CloudService cloudService = new CloudService();
-    cloudService.setId(UUID.randomUUID().toString());
-    cloudService.setData(cloudServiceDataOCC);
-    cmbdProviderServicesByType.add(cloudService);
-
-    Mockito.when(chosenCloudProvider.getCmbdProviderServicesByType(Type.COMPUTE))
-        .thenReturn(cmbdProviderServicesByType);
-
-    
-    CloudProviderEndpoint result = new CloudProviderEndpoint();
-    result.setCpEndpoint(cloudService.getData().getEndpoint());
-    result.setCpComputeServiceId(cloudService.getId());
-    result.setIaasType(IaaSType.OCCI);
-
-    Assert.assertEquals(cloudProviderEndpointServiceImpl
-        .getCloudProviderEndpoint(chosenCloudProvider, placementPolicies, false), result);
+    assertThatCode(
+        () -> cloudProviderEndpointServiceImpl.getCloudProviderEndpoint(chosenCloudProvider,
+            placementPolicies, false))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage(
+                    "No compute Service Available for Cloud Provider : " + chosenCloudProvider);
   }
-  
+
   @Test
-  public void getCloudProviderEndpointOpenStack() {
+  @Parameters(method = "getCloudProviderEndpointSuccesfulParams")
+  public void getCloudProviderEndpointSuccesful(String serviceType, boolean hybrid,
+      IaaSType expectedIaaSType, boolean expectedWithImEndpoint) {
 
-    List<PlacementPolicy> placementPolicies = new ArrayList<>();
-    List<CloudService> cmbdProviderServicesByType = new ArrayList<>();
+    CloudService cloudService = CloudService
+        .builder()
+        .id(UUID.randomUUID().toString())
+        .data(CloudServiceData
+            .builder()
+            .serviceType(serviceType)
+            .endpoint("www.example.com")
+            .type(Type.COMPUTE)
+            .build())
+        .build();
 
-    CloudProvider chosenCloudProvider = Mockito.mock(CloudProvider.class);
+    CloudProvider chosenCloudProvider = CloudProvider.builder().id("provider-RECAS-BARI").build();
+    chosenCloudProvider.getCmdbProviderServices().put(cloudService.getId(), cloudService);
 
-    CloudServiceData cloudServiceDataOCC = new CloudServiceData();
-    CloudService cloudService = new CloudService();
-    
-    cloudServiceDataOCC.setServiceType("eu.egi.cloud.vm-management.openstack");
-    cloudService.setData(cloudServiceDataOCC);
-    cmbdProviderServicesByType.clear();
-    cmbdProviderServicesByType.add(cloudService);
-    Mockito.when(chosenCloudProvider.getCmbdProviderServicesByType(Type.COMPUTE))
-        .thenReturn(cmbdProviderServicesByType);
-    
-    CloudProviderEndpoint result = new CloudProviderEndpoint();
-    result.setCpEndpoint(cloudService.getData().getEndpoint());
-    result.setCpComputeServiceId(cloudService.getId());
-    result.setIaasType(IaaSType.OPENSTACK);
+    CloudProviderEndpointBuilder expected = CloudProviderEndpoint.builder();
+    expected
+        .cpEndpoint(cloudService.getData().getEndpoint())
+        .cpComputeServiceId(cloudService.getId())
+        .iaasType(expectedIaaSType);
+    if (hybrid) {
+      expected.iaasHeaderId(cloudService.getId());
+    } else {
+      expected.iaasHeaderId(null);
+    }
+    if (expectedWithImEndpoint) {
+      expected.imEndpoint(cloudService.getData().getEndpoint());
+    } else {
+      expected.imEndpoint(null);
+    }
 
-    Assert.assertEquals(cloudProviderEndpointServiceImpl
-        .getCloudProviderEndpoint(chosenCloudProvider, placementPolicies, false), result);
-
+    CloudProviderEndpoint actual = cloudProviderEndpointServiceImpl
+        .getCloudProviderEndpoint(chosenCloudProvider, new ArrayList<>(), hybrid);
+    assertThat(expected.build()).isEqualTo(actual);
   }
-  
+
+  public Object[] getCloudProviderEndpointSuccesfulParams() {
+    return new Object[] {
+        new Object[] { "com.amazonaws.ec2", false, IaaSType.AWS, false },
+        new Object[] { "com.amazonaws.ec2", true, IaaSType.AWS, false },
+        new Object[] { "com.microsoft.azure", false, IaaSType.AZURE, false },
+        new Object[] { "com.microsoft.azure", true, IaaSType.AZURE, false },
+        new Object[] { "eu.egi.cloud.vm-management.occi", false, IaaSType.OCCI, false },
+        new Object[] { "eu.egi.cloud.vm-management.occi", true, IaaSType.OCCI, false },
+        new Object[] { "eu.egi.cloud.vm-management.opennebula", false, IaaSType.OPENNEBULA, false },
+        new Object[] { "eu.egi.cloud.vm-management.opennebula", true, IaaSType.OPENNEBULA, false },
+        new Object[] { "eu.indigo-datacloud.im-tosca.opennebula", false, IaaSType.OPENNEBULA,
+            true },
+        new Object[] { "eu.indigo-datacloud.im-tosca.opennebula", true, IaaSType.OPENNEBULA,
+            false },
+        new Object[] { "eu.egi.cloud.vm-management.openstack", false, IaaSType.OPENSTACK, false },
+        new Object[] { "eu.egi.cloud.vm-management.openstack", true, IaaSType.OPENSTACK, false }
+    };
+  }
+
   @Test
-  public void getCloudProviderEndpointOpenNebula() {
+  public void getCloudProviderEndpointUnknownServiceType() {
+    CloudService cloudService = CloudService
+        .builder()
+        .id(UUID.randomUUID().toString())
+        .data(CloudServiceData
+            .builder()
+            .serviceType("unknownType")
+            .endpoint("www.example.com")
+            .type(Type.COMPUTE)
+            .build())
+        .build();
 
-    List<PlacementPolicy> placementPolicies = new ArrayList<>();
-    List<CloudService> cmbdProviderServicesByType = new ArrayList<>();
+    CloudProvider chosenCloudProvider = CloudProvider.builder().id("provider-RECAS-BARI").build();
+    chosenCloudProvider.getCmdbProviderServices().put(cloudService.getId(), cloudService);
 
-    CloudProvider chosenCloudProvider = Mockito.mock(CloudProvider.class);
-
-    CloudServiceData cloudServiceDataOCC = new CloudServiceData();
-    CloudService cloudService = new CloudService();
-    
-    cloudServiceDataOCC.setServiceType("eu.egi.cloud.vm-management.opennebula");
-    cloudService.setData(cloudServiceDataOCC);
-    cmbdProviderServicesByType.clear();
-    cmbdProviderServicesByType.add(cloudService);
-    Mockito.when(chosenCloudProvider.getCmbdProviderServicesByType(Type.COMPUTE))
-        .thenReturn(cmbdProviderServicesByType);
-    
-    CloudProviderEndpoint result = new CloudProviderEndpoint();
-    result.setCpEndpoint(cloudService.getData().getEndpoint());
-    result.setCpComputeServiceId(cloudService.getId());
-    result.setIaasType(IaaSType.OPENNEBULA);
-
-    Assert.assertEquals(cloudProviderEndpointServiceImpl
-        .getCloudProviderEndpoint(chosenCloudProvider, placementPolicies, false), result);
+    assertThatCode(() -> cloudProviderEndpointServiceImpl
+        .getCloudProviderEndpoint(chosenCloudProvider, new ArrayList<>(), false))
+            .isInstanceOf(IllegalArgumentException.class)
+            .hasMessage("Unknown Cloud Provider type: " + cloudService);
   }
-  
+
   @Test
-  public void getCloudProviderEndpointAWS() {
-
-    List<PlacementPolicy> placementPolicies = new ArrayList<>();
-    List<CloudService> cmbdProviderServicesByType = new ArrayList<>();
-
-    CloudProvider chosenCloudProvider = Mockito.mock(CloudProvider.class);
-
-    CloudServiceData cloudServiceDataOCC = new CloudServiceData();
-    CloudService cloudService = new CloudService();
-    cloudService.setId("aws.id");
-    
-    cloudServiceDataOCC.setServiceType("com.amazonaws.ec2");
-    cloudService.setData(cloudServiceDataOCC);
-    cmbdProviderServicesByType.clear();
-    cmbdProviderServicesByType.add(cloudService);
-    Mockito.when(chosenCloudProvider.getCmbdProviderServicesByType(Type.COMPUTE))
-        .thenReturn(cmbdProviderServicesByType);
-    CredentialsAwareSlaPlacementPolicy awsSlaPlacementPolicy =
-        new CredentialsAwareSlaPlacementPolicy(new ArrayList<>(),
-            UUID.randomUUID().toString(), "accessKey", "secretKey", null);
-    awsSlaPlacementPolicy.getServiceIds().add("random.id");
-    awsSlaPlacementPolicy.getServiceIds().add("aws.id");
-    placementPolicies.add(awsSlaPlacementPolicy);
- 
-    
-    CloudProviderEndpoint result = new CloudProviderEndpoint();
-    result.setCpEndpoint(cloudService.getData().getEndpoint());
-    result.setCpComputeServiceId(cloudService.getId());
-
-    result.setIaasType(IaaSType.AWS);
-    result.setUsername(awsSlaPlacementPolicy.getUsername());
-    result.setPassword(awsSlaPlacementPolicy.getPassword());
-    Assertions
-        .assertThat(cloudProviderEndpointServiceImpl
-            .getCloudProviderEndpoint(chosenCloudProvider, placementPolicies, false))
-        .isEqualTo(result);
-
+  @Parameters({ "CHRONOS|CHRONOS", "MARATHON|MARATHON", "TOSCA|IM" })
+  public void getDeploymentProviderSuccesful(DeploymentType deploymentType,
+      DeploymentProvider expectedDeploymentProvider) {
+    assertThat(cloudProviderEndpointServiceImpl.getDeploymentProvider(deploymentType, null))
+        .isEqualTo(expectedDeploymentProvider);
   }
-
-  @Test(expected = IllegalArgumentException.class)
-  public void failGetCloudProviderEndpointIllegalArgument() {
-    List<PlacementPolicy> placementPolicies = new ArrayList<>();
-
-    List<CloudService> cmbdProviderServicesByType = new ArrayList<>();
-
-    CloudProvider chosenCloudProvider = Mockito.mock(CloudProvider.class);
-
-    CloudServiceData cloudServiceDataOCC = new CloudServiceData();
-    cloudServiceDataOCC.setServiceType("com.amazonaws.lorem.ipsum");
-    cloudServiceDataOCC.setEndpoint("www.example.com");
-
-    CloudService cloudService = new CloudService();
-    cloudService.setId(UUID.randomUUID().toString());
-    cloudService.setData(cloudServiceDataOCC);
-    cmbdProviderServicesByType.add(cloudService);
-
-    Mockito.when(chosenCloudProvider.getCmbdProviderServicesByType(Type.COMPUTE))
-        .thenReturn(cmbdProviderServicesByType);
-
-    cloudProviderEndpointServiceImpl.getCloudProviderEndpoint(chosenCloudProvider,
-        placementPolicies, false);
-  }
-
 }

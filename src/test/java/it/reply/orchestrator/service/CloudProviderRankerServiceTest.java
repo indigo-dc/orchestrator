@@ -69,8 +69,20 @@ public class CloudProviderRankerServiceTest {
   }
 
   public static List<RankedCloudProvider> generateMockedRankedProviders() {
-    return Lists.newArrayList(new RankedCloudProvider("provider-RECAS-BARI", 2.0f, true, ""),
-        new RankedCloudProvider("provider-UPV-GRyCAP", 1.0f, false, "Some error reason"));
+    return Lists.newArrayList(
+        RankedCloudProvider
+            .builder()
+            .name("provider-RECAS-BARI")
+            .rank(2.0f)
+            .ranked(true)
+            .build(),
+        RankedCloudProvider
+            .builder()
+            .name("provider-UPV-GRyCAP")
+            .rank(1.0f)
+            .ranked(false)
+            .errorReason("Some error reason")
+            .build());
   }
 
   @Test

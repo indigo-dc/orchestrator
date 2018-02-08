@@ -36,17 +36,20 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import javax.validation.constraints.NotNull;
+
 @Data
 @ToString(exclude = "token")
 @Builder
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class OneData implements Serializable {
 
   private static final long serialVersionUID = 8590316308119399053L;
 
   @Data
   @Builder
-  @NoArgsConstructor(access = AccessLevel.PRIVATE)
-  @AllArgsConstructor(access = AccessLevel.PRIVATE)
+  @NoArgsConstructor(access = AccessLevel.PROTECTED)
+  @AllArgsConstructor(access = AccessLevel.PROTECTED)
   public static class OneDataProviderInfo implements Serializable {
 
     private static final long serialVersionUID = -4904767929269221557L;
@@ -78,10 +81,16 @@ public class OneData implements Serializable {
   private String zone;
 
   @NonNull
+  @NotNull
   @Builder.Default
   private List<OneDataProviderInfo> providers = new ArrayList<>();
 
   private boolean smartScheduling;
+
+  @Deprecated
+  protected OneData() {
+    providers = new ArrayList<>();
+  }
 
   /**
    * Generate a List of {@link OneDataProviderInfo} from a csv of providers endpoint.
@@ -91,7 +100,8 @@ public class OneData implements Serializable {
    * @return the List of {@link OneDataProviderInfo}
    */
   public static List<OneDataProviderInfo> providersListFromString(@Nullable String providers) {
-    return Optional.ofNullable(providers)
+    return Optional
+        .ofNullable(providers)
         .map(value -> CommonUtils.checkNotNull(value).split(","))
         .map(Stream::of)
         .orElseGet(Stream::empty)

@@ -16,24 +16,23 @@
 
 package it.reply.orchestrator.dto.cmdb;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import it.reply.orchestrator.dto.AdditionalPropertiesAwareDto;
-
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.NoArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.Serializable;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
 @Data
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
-public class ImageData extends AdditionalPropertiesAwareDto implements Serializable {
+@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+public class ImageData implements Serializable {
 
   private static final long serialVersionUID = 6029586902515892534L;
 

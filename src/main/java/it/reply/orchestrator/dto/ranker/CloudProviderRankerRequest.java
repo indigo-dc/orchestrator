@@ -16,7 +16,6 @@
 
 package it.reply.orchestrator.dto.ranker;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import it.reply.orchestrator.dto.slam.PreferenceCustomer;
@@ -26,17 +25,14 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
 @Data
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class CloudProviderRankerRequest implements Serializable {
 
   private static final long serialVersionUID = 6559999818418491070L;
@@ -53,4 +49,10 @@ public class CloudProviderRankerRequest implements Serializable {
   @Builder.Default
   private List<Monitoring> monitoring = new ArrayList<>();
 
+  @Deprecated
+  protected CloudProviderRankerRequest() {
+    preferences = new ArrayList<>();
+    sla = new ArrayList<>();
+    monitoring = new ArrayList<>();
+  }
 }

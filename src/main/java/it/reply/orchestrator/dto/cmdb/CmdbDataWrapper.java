@@ -16,30 +16,25 @@
 
 package it.reply.orchestrator.dto.cmdb;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import it.reply.orchestrator.dto.AdditionalPropertiesAwareDto;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.Serializable;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
+import javax.validation.constraints.NotNull;
+
 @Data
-@EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-@ToString(callSuper = true)
 public abstract class CmdbDataWrapper<U extends CmdbDataWrapper<U, T>, T extends Serializable>
-    extends AdditionalPropertiesAwareDto implements Serializable {
+    implements Serializable {
 
   private static final long serialVersionUID = -7442528095759086603L;
 
@@ -47,16 +42,13 @@ public abstract class CmdbDataWrapper<U extends CmdbDataWrapper<U, T>, T extends
   @Nullable
   private String id;
 
-  @JsonProperty("_rev")
-  @Nullable
-  private String rev;
-
   @JsonProperty("type")
   @Nullable
   private String type;
 
   @JsonProperty("data")
-  @Nullable
+  @NonNull
+  @NotNull
   private T data;
 
 }

@@ -35,7 +35,10 @@ public class GetCmdbDataUpdate extends BaseDeployCommand {
   @Override
   public void execute(DelegateExecution execution, DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
-    CloudProvider cp = new CloudProvider(deployment.getCloudProviderName());
+    CloudProvider cp = CloudProvider
+        .builder()
+        .id(deployment.getCloudProviderName())
+        .build();
     cp.getCmdbProviderServices().put(deployment.getCloudProviderEndpoint().getCpComputeServiceId(),
         null);
     cmdbService.fillCloudProviderInfo(cp);

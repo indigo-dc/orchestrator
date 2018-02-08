@@ -16,53 +16,36 @@
 
 package it.reply.orchestrator.dto.ranker;
 
-import it.reply.orchestrator.dto.AdditionalPropertiesAwareDto;
-
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.NoArgsConstructor;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.Serializable;
 
-/**
- * Temporary response mapping - use imported library from CloudProviderRanker project when
- * available.
- * 
- * @author l.biava
- *
- */
+import javax.validation.constraints.NotNull;
+
 @Data
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
-public class RankedCloudProvider extends AdditionalPropertiesAwareDto implements Serializable {
+@Builder
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class RankedCloudProvider implements Serializable {
 
   private static final long serialVersionUID = 6559999818418491070L;
 
+  @NonNull
+  @NotNull
   private String name;
+
   private float rank;
+
   private boolean ranked;
+
+  @Nullable
   private String errorReason;
-
-  public RankedCloudProvider() {
-  }
-
-  /**
-   * Generates a new RankedCloudProvider representation.
-   * 
-   * @param name
-   *          the name of the cloud provider
-   * @param rank
-   *          the rank of the clou provider
-   * @param ranked
-   *          the ranking status of the cloud provider
-   * @param error
-   *          the error generated during the ranking, if any
-   */
-  public RankedCloudProvider(String name, float rank, boolean ranked, String error) {
-    this.name = name;
-    this.rank = rank;
-    this.errorReason = error;
-    this.ranked = ranked;
-  }
 
 }

@@ -18,8 +18,10 @@ package it.reply.orchestrator.dto.common;
 
 import it.reply.orchestrator.utils.CommonUtils;
 
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.http.HttpStatus;
@@ -28,6 +30,7 @@ import java.io.Serializable;
 import java.util.Optional;
 
 @Data
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Error implements Serializable {
 
   private static final long serialVersionUID = 6559999818418491070L;
@@ -50,7 +53,7 @@ public class Error implements Serializable {
    *          the HttpStatus
    */
   @Builder
-  private Error(@Nullable Exception exception, @Nullable String message,
+  protected Error(@Nullable Exception exception, @Nullable String message,
       @Nullable HttpStatus status) {
     Optional.ofNullable(status).map(CommonUtils::checkNotNull).ifPresent(safeStatus -> {
       code = safeStatus.value();

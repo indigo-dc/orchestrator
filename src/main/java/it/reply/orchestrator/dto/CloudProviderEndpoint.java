@@ -20,8 +20,10 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -34,17 +36,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-/**
- * This class holds information to connect (and authenticate) to a CloudProvider.
- * 
- * @author l.biava
- *
- */
+import javax.validation.constraints.NotNull;
+
 @Data
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@EqualsAndHashCode(callSuper = false)
-@ToString(exclude = "password", callSuper = false)
-public class CloudProviderEndpoint extends AdditionalPropertiesAwareDto implements Serializable {
+@ToString(exclude = "password")
+@Builder
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+public class CloudProviderEndpoint implements Serializable {
 
   private static final long serialVersionUID = -2585914648218602033L;
 
@@ -57,9 +56,19 @@ public class CloudProviderEndpoint extends AdditionalPropertiesAwareDto implemen
     AZURE;
   }
 
+  @Nullable
   private String imEndpoint;
+
+  @NonNull
+  @NotNull
   private String cpEndpoint;
+
+  @NonNull
+  @NotNull
   private String cpComputeServiceId;
+
+  @NonNull
+  @NotNull
   private IaaSType iaasType;
 
   @Nullable
@@ -79,19 +88,26 @@ public class CloudProviderEndpoint extends AdditionalPropertiesAwareDto implemen
   private String iaasHeaderId;
 
   @NonNull
+  @NotNull
+  @Builder.Default
   private Map<String, CloudProviderEndpoint> hybridCloudProviderEndpoints = new HashMap<>();
+
+  @SuppressWarnings("null")
+  @Deprecated
+  protected CloudProviderEndpoint() {
+    hybridCloudProviderEndpoints = new HashMap<>();
+  }
 
   @JsonIgnore
   public Optional<String> getIaasHeaderId() {
     return Optional.ofNullable(iaasHeaderId);
   }
-  
+
   @JsonIgnore
   public Optional<String> getRegion() {
     return Optional.ofNullable(region);
   }
 
-  
   /**
    * Generates a list with all the CloudProviderEndpoint of the deployments.
    * 

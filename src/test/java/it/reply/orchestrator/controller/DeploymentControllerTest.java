@@ -23,7 +23,6 @@ import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.at
 import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.linkWithRel;
 import static org.springframework.restdocs.hypermedia.HypermediaDocumentation.links;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessRequest;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
@@ -40,14 +39,12 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import it.reply.orchestrator.config.filters.CustomRequestLoggingFilter;
 import it.reply.orchestrator.dal.entity.AbstractResourceEntity;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.OidcEntity;
 import it.reply.orchestrator.dal.entity.OidcEntityId;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.enums.Status;
-import it.reply.orchestrator.exception.GlobalControllerExceptionHandler;
 import it.reply.orchestrator.exception.http.ConflictException;
 import it.reply.orchestrator.exception.http.NotFoundException;
 import it.reply.orchestrator.resource.DeploymentResourceAssembler;
@@ -56,39 +53,35 @@ import it.reply.orchestrator.service.DeploymentService;
 import it.reply.orchestrator.utils.JsonUtils;
 
 import org.hamcrest.Matchers;
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.json.JsonTest;
+import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
-import org.springframework.data.web.HateoasPageableHandlerMethodArgumentResolver;
-import org.springframework.data.web.PagedResourcesAssemblerArgumentResolver;
+import org.springframework.data.web.config.HateoasAwareSpringDataWebConfiguration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.restdocs.RestDocumentation;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-@JsonTest
+@WebMvcTest(controllers = DeploymentController.class, secure = false)
+@AutoConfigureRestDocs("target/generated-snippets")
+@Import({ DeploymentResourceAssembler.class, HateoasAwareSpringDataWebConfiguration.class })
 public class DeploymentControllerTest {
 
   @ClassRule
@@ -97,50 +90,11 @@ public class DeploymentControllerTest {
   @Rule
   public final SpringMethodRule springMethodRule = new SpringMethodRule();
   
+  @Autowired
   private MockMvc mockMvc;
 
-  @InjectMocks
-  private DeploymentController deploymentController = new DeploymentController();
-
-  @Mock
+  @MockBean
   private DeploymentService deploymentService;
-
-  @Spy
-  private HateoasPageableHandlerMethodArgumentResolver pageableArgumentResolver;
-
-  @Spy
-  private DeploymentResourceAssembler deploymentResourceAssembler;
-
-  @Spy
-  private PagedResourcesAssemblerArgumentResolver pagedResourcesAssemblerArgumentResolver =
-      new PagedResourcesAssemblerArgumentResolver(pageableArgumentResolver, null);
-
-  @Spy
-  private GlobalControllerExceptionHandler globalControllerExceptionHandler;
-
-  @Spy
-  private CustomRequestLoggingFilter customRequestLoggingFilter = new CustomRequestLoggingFilter();
-
-  @Rule
-  public RestDocumentation restDocumentation = new RestDocumentation("target/generated-snippets");
-
-  /**
-   * Set up test context.
-   */
-  @Before
-  public void setup() {
-    customRequestLoggingFilter.setMaxPayloadLength(Integer.MAX_VALUE);
-    Mockito.when(customRequestLoggingFilter.shouldLog(Mockito.any())).thenReturn(true);
-    MockitoAnnotations.initMocks(this);
-    mockMvc = MockMvcBuilders.standaloneSetup(deploymentController)
-        .addFilters(customRequestLoggingFilter)
-        .setControllerAdvice(globalControllerExceptionHandler)
-        .setCustomArgumentResolvers(pageableArgumentResolver,
-            pagedResourcesAssemblerArgumentResolver)
-        .apply(documentationConfiguration(this.restDocumentation))
-        .dispatchOptions(true)
-        .build();
-  }
 
   @Test
   public void getDeployments() throws Exception {
@@ -356,12 +310,14 @@ public class DeploymentControllerTest {
 
   @Test
   public void createDeploymentUnsupportedMediaType() throws Exception {
-    DeploymentRequest request = new DeploymentRequest();
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("cpus", 1);
-    request.setParameters(parameters);
-    request.setTemplate("template");
-    request.setCallback("http://localhost:8080/callback");
+    DeploymentRequest request = DeploymentRequest
+        .builder()
+        .parameters(parameters)
+        .template("template")
+        .callback("http://localhost:8080/callback")
+        .build();
     mockMvc
         .perform(post("/deployments").contentType(MediaType.TEXT_PLAIN)
             .content(JsonUtils.serialize(request)))
@@ -371,13 +327,14 @@ public class DeploymentControllerTest {
 
   @Test
   public void createDeploymentSuccessfully() throws Exception {
-
-    DeploymentRequest request = new DeploymentRequest();
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("cpus", 1);
-    request.setParameters(parameters);
-    request.setTemplate("template");
-    request.setCallback("http://localhost:8080/callback");
+    DeploymentRequest request = DeploymentRequest
+        .builder()
+        .parameters(parameters)
+        .template("template")
+        .callback("http://localhost:8080/callback")
+        .build();
 
     Deployment deployment = ControllerTestUtils.createDeployment();
     deployment.setCallback(request.getCallback());
@@ -415,12 +372,14 @@ public class DeploymentControllerTest {
 
   @Test
   public void updateDeploymentNotExists() throws Exception {
-    DeploymentRequest request = new DeploymentRequest();
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("cpus", 1);
-    request.setParameters(parameters);
-    request.setTemplate("template");
-    request.setCallback("http://localhost:8080/callback");
+    DeploymentRequest request = DeploymentRequest
+        .builder()
+        .parameters(parameters)
+        .template("template")
+        .callback("http://localhost:8080/callback")
+        .build();
 
     String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
     Mockito.doThrow(new NotFoundException("Message"))
@@ -437,8 +396,10 @@ public class DeploymentControllerTest {
 
   @Test
   public void updateDeploymentDeleteInProgress() throws Exception {
-    DeploymentRequest request = new DeploymentRequest();
-    request.setTemplate("template");
+    DeploymentRequest request = DeploymentRequest
+        .builder()
+        .template("template")
+        .build();
 
     String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
     Mockito.doThrow(new ConflictException("Cannot update a deployment in DELETE_IN_PROGRESS state"))
@@ -457,12 +418,14 @@ public class DeploymentControllerTest {
   @Test
   public void updateDeploymentSuccessfully() throws Exception {
 
-    DeploymentRequest request = new DeploymentRequest();
     Map<String, Object> parameters = new HashMap<>();
     parameters.put("cpus", 1);
-    request.setParameters(parameters);
-    request.setTemplate("template");
-    request.setCallback("http://localhost:8080/callback");
+    DeploymentRequest request = DeploymentRequest
+        .builder()
+        .parameters(parameters)
+        .template("template")
+        .callback("http://localhost:8080/callback")
+        .build();
 
     String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
     Mockito.doNothing().when(deploymentService).updateDeployment(deploymentId, request);
@@ -485,8 +448,10 @@ public class DeploymentControllerTest {
   @Test
   public void createDeploymentWithoutCallbackSuccessfully() throws Exception {
 
-    DeploymentRequest request = new DeploymentRequest();
-    request.setTemplate("template");
+    DeploymentRequest request = DeploymentRequest
+        .builder()
+        .template("template")
+        .build();
 
     Mockito.when(deploymentService.createDeployment(request))
         .thenReturn(ControllerTestUtils.createDeployment());
@@ -501,10 +466,11 @@ public class DeploymentControllerTest {
 
   @Test
   public void createDeploymentWithCallbackUnsuccessfully() throws Exception {
-    DeploymentRequest request = new DeploymentRequest();
-    String callback = "httptest.com";
-    request.setCallback(callback);
-    request.setTemplate("template");
+    DeploymentRequest request = DeploymentRequest
+        .builder()
+        .callback("httptest.com")
+        .template("template")
+        .build();
     mockMvc
         .perform(post("/deployments").contentType(MediaType.APPLICATION_JSON)
             .content(JsonUtils.serialize(request)))

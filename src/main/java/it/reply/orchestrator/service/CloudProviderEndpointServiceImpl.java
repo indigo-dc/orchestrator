@@ -19,6 +19,7 @@ package it.reply.orchestrator.service;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
+import it.reply.orchestrator.dto.CloudProviderEndpoint.CloudProviderEndpointBuilder;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.cmdb.CloudService;
@@ -86,16 +87,15 @@ public class CloudProviderEndpointServiceImpl {
   public CloudProviderEndpoint getCloudProviderEndpoint(CloudProvider chosenCloudProvider,
       List<PlacementPolicy> placementPolicies, boolean isHybrid) {
 
-    if (chosenCloudProvider.getCmbdProviderServicesByType(Type.COMPUTE).isEmpty()) {
-      throw new IllegalArgumentException(
-          "No compute Service Available for Cloud Provider : " + chosenCloudProvider);
-    }
-
-    CloudService computeService =
-        chosenCloudProvider.getCmbdProviderServicesByType(Type.COMPUTE).get(0);
+    CloudService computeService = chosenCloudProvider
+        .getCmbdProviderServicesByType(Type.COMPUTE)
+        .stream()
+        .findFirst()
+        .orElseThrow(() -> new IllegalArgumentException(
+            "No compute Service Available for Cloud Provider : " + chosenCloudProvider));
 
     String imEndpoint = null;
-    CloudProviderEndpoint cpe = new CloudProviderEndpoint();
+    CloudProviderEndpointBuilder cpe = CloudProviderEndpoint.builder();
 
     ///////////////////////////////
     // TODO Improve and move somewhere else
@@ -106,9 +106,9 @@ public class CloudProviderEndpointServiceImpl {
         .filter(policy -> policy.getServiceIds().contains(computeService.getId()))
         .findFirst()
         .ifPresent(policy -> {
-          cpe.setUsername(policy.getUsername());
-          cpe.setPassword(policy.getPassword());
-          cpe.setTenant(policy.getTenant());
+          cpe.username(policy.getUsername());
+          cpe.password(policy.getPassword());
+          cpe.tenant(policy.getTenant());
         });
     ///////////////////////////////
 
@@ -132,20 +132,20 @@ public class CloudProviderEndpointServiceImpl {
       throw new IllegalArgumentException("Unknown Cloud Provider type: " + computeService);
     }
 
-    cpe.setCpEndpoint(computeService.getData().getEndpoint());
-    cpe.setCpComputeServiceId(computeService.getId());
-    cpe.setRegion(computeService.getData().getRegion());
-    cpe.setIaasType(iaasType);
+    cpe.cpEndpoint(computeService.getData().getEndpoint());
+    cpe.cpComputeServiceId(computeService.getId());
+    cpe.region(computeService.getData().getRegion());
+    cpe.iaasType(iaasType);
 
     if (isHybrid) {
       // generate and set IM iaasHeaderId
-      cpe.setIaasHeaderId(computeService.getId());
+      cpe.iaasHeaderId(computeService.getId());
       // default to PaaS Level IM
-      cpe.setImEndpoint(null);
+      cpe.imEndpoint(null);
     } else {
-      cpe.setImEndpoint(imEndpoint);
+      cpe.imEndpoint(imEndpoint);
     }
-    return cpe;
+    return cpe.build();
   }
 
   /**
