@@ -16,7 +16,6 @@
 
 package it.reply.orchestrator.dto.monitoring;
 
-import it.reply.domain.dsl.prisma.restprotocol.Meta;
 import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.MonitoringWrappedResponsePaas;
 import it.reply.orchestrator.dto.AdditionalPropertiesAwareDto;
 
@@ -34,9 +33,6 @@ import java.io.Serializable;
 public class MonitoringResponse extends AdditionalPropertiesAwareDto implements Serializable {
 
   private static final long serialVersionUID = 6559999818418491070L;
-
-  @Nullable
-  private Meta meta;
 
   @Nullable
   private MonitoringWrappedResponsePaas result;

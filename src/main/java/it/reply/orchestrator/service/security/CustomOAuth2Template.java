@@ -153,7 +153,7 @@ public class CustomOAuth2Template {
   }
 
   private AccessGrant validateAccessGrantScopes(AccessGrant grant, Set<String> scopes) {
-    if (!scopes.isEmpty() && !grant.getScope().containsAll(scopes)) {
+    if (!scopes.isEmpty() && !grant.getScopes().containsAll(scopes)) {
       throw new RuntimeException("Not all the required scopes have been granted");
     } else {
       return grant;

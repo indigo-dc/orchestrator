@@ -20,9 +20,10 @@ import com.google.common.base.Strings;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
+import it.reply.orchestrator.utils.JsonUtils;
 import it.reply.orchestrator.utils.MdcUtils;
-import it.reply.utils.json.JsonUtility;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -364,9 +365,8 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
    */
   protected void beforeRequest(HttpServletRequest request) {
     try {
-      LOG.debug(JsonUtility.serializeJson(new RequestWrapper(request, getMaxPayloadLength())));
-    } catch (IOException ex) {
-      // shouldn't happen
+      LOG.debug(JsonUtils.serialize(new RequestWrapper(request, getMaxPayloadLength())));
+    } catch (JsonProcessingException ex) {
       LOG.error("Error logging request {}", request, ex);
     }
   }
@@ -377,10 +377,9 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
   protected void afterRequest(HttpServletRequest request, HttpServletResponse response,
       double responseTime) {
     try {
-      LOG.debug(JsonUtility.serializeJson(
+      LOG.debug(JsonUtils.serialize(
           new ResponseWrapper(request, response, getMaxPayloadLength(), responseTime)));
-    } catch (IOException ex) {
-      // shouldn't happen
+    } catch (JsonProcessingException ex) {
       LOG.error("Error logging response {} for request {}", response, request, ex);
     }
   }

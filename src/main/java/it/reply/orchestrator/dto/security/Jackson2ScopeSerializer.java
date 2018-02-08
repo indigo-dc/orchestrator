@@ -17,15 +17,12 @@
 package it.reply.orchestrator.dto.security;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.NonTypedScalarSerializerBase;
 
 import org.springframework.util.StringUtils;
 
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -35,12 +32,6 @@ public class Jackson2ScopeSerializer extends NonTypedScalarSerializerBase<Set<St
 
   protected Jackson2ScopeSerializer() {
     super(Set.class, false);
-  }
-
-  @Override
-  public JsonNode getSchema(SerializerProvider provider, Type typeHint)
-      throws JsonMappingException {
-    return createSchemaNode("string", true);
   }
 
   @Override

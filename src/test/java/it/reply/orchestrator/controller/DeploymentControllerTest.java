@@ -52,19 +52,21 @@ import it.reply.orchestrator.exception.http.ConflictException;
 import it.reply.orchestrator.exception.http.NotFoundException;
 import it.reply.orchestrator.resource.DeploymentResourceAssembler;
 import it.reply.orchestrator.service.DeploymentService;
-import it.reply.orchestrator.util.TestUtil;
+
+import it.reply.orchestrator.utils.JsonUtils;
 
 import org.hamcrest.Matchers;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
-import org.mockito.runners.MockitoJUnitRunner;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.json.JsonTest;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -76,6 +78,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.restdocs.RestDocumentation;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
+import org.springframework.test.context.junit4.rules.SpringClassRule;
+import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -84,11 +88,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import jersey.repackaged.com.google.common.collect.Maps;
-
-@RunWith(MockitoJUnitRunner.class)
+@JsonTest
 public class DeploymentControllerTest {
 
+  @ClassRule
+  public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
+
+  @Rule
+  public final SpringMethodRule springMethodRule = new SpringMethodRule();
+  
   private MockMvc mockMvc;
 
   @InjectMocks
@@ -289,7 +297,7 @@ public class DeploymentControllerTest {
 
     String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
     Deployment deployment = ControllerTestUtils.createDeployment(deploymentId);
-    Map<String, Object> outputs = Maps.newHashMap();
+    Map<String, Object> outputs = new HashMap<>();
     String key = "server_ip";
     String value = "10.0.0.1";
     outputs.put(key, value);
@@ -356,7 +364,7 @@ public class DeploymentControllerTest {
     request.setCallback("http://localhost:8080/callback");
     mockMvc
         .perform(post("/deployments").contentType(MediaType.TEXT_PLAIN)
-            .content(TestUtil.convertObjectToJsonBytes(request)))
+            .content(JsonUtils.serialize(request)))
         .andExpect(status().isUnsupportedMediaType());
 
   }
@@ -377,7 +385,7 @@ public class DeploymentControllerTest {
     Mockito.when(deploymentService.createDeployment(request)).thenReturn(deployment);
 
     mockMvc.perform(post("/deployments").contentType(MediaType.APPLICATION_JSON)
-        .content(TestUtil.convertObjectToJsonBytes(request))
+        .content(JsonUtils.serialize(request))
         .header(HttpHeaders.AUTHORIZATION, OAuth2AccessToken.BEARER_TYPE + " <access token>"))
 
         .andDo(document("create-deployment", preprocessRequest(prettyPrint()),
@@ -421,7 +429,7 @@ public class DeploymentControllerTest {
 
     mockMvc
         .perform(put("/deployments/" + deploymentId).contentType(MediaType.APPLICATION_JSON)
-            .content(TestUtil.convertObjectToJsonBytes(request)))
+            .content(JsonUtils.serialize(request)))
         .andExpect(jsonPath("$.code", is(404)))
         .andExpect(jsonPath("$.title", is("Not Found")))
         .andExpect(jsonPath("$.message", is("Message")));
@@ -439,7 +447,7 @@ public class DeploymentControllerTest {
 
     mockMvc
         .perform(put("/deployments/" + deploymentId).contentType(MediaType.APPLICATION_JSON)
-            .content(TestUtil.convertObjectToJsonBytes(request)))
+            .content(JsonUtils.serialize(request)))
         .andExpect(jsonPath("$.code", is(409)))
         .andExpect(jsonPath("$.title", is("Conflict")))
         .andExpect(
@@ -460,7 +468,7 @@ public class DeploymentControllerTest {
     Mockito.doNothing().when(deploymentService).updateDeployment(deploymentId, request);
 
     mockMvc.perform(put("/deployments/" + deploymentId).contentType(MediaType.APPLICATION_JSON)
-        .content(TestUtil.convertObjectToJsonBytes(request))
+        .content(JsonUtils.serialize(request))
         .header(HttpHeaders.AUTHORIZATION, OAuth2AccessToken.BEARER_TYPE + " <access token>"))
 
         .andDo(document("update-deployment", preprocessRequest(prettyPrint()),
@@ -485,7 +493,7 @@ public class DeploymentControllerTest {
 
     mockMvc
         .perform(post("/deployments").contentType(MediaType.APPLICATION_JSON)
-            .content(TestUtil.convertObjectToJsonBytes(request)))
+            .content(JsonUtils.serialize(request)))
         .andExpect(status().isCreated())
         .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.links[0].rel", is("self")));
@@ -499,7 +507,7 @@ public class DeploymentControllerTest {
     request.setTemplate("template");
     mockMvc
         .perform(post("/deployments").contentType(MediaType.APPLICATION_JSON)
-            .content(TestUtil.convertObjectToJsonBytes(request)))
+            .content(JsonUtils.serialize(request)))
         .andExpect(status().isBadRequest());
   }
 

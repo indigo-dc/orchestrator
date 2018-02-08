@@ -16,64 +16,94 @@
 
 package it.reply.orchestrator.dto.security;
 
+import static org.assertj.core.api.Assertions.*;
+
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 
-import it.reply.utils.json.JsonUtility;
+import it.reply.orchestrator.utils.JsonUtils;
 
-import org.assertj.core.api.Assertions;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
+import org.springframework.boot.test.autoconfigure.json.JsonTest;
+import org.springframework.test.context.junit4.rules.SpringClassRule;
+import org.springframework.test.context.junit4.rules.SpringMethodRule;
 
 import java.io.IOException;
 import java.util.Date;
 
+@JsonTest
 public class AccessGrantTest {
+
+  @ClassRule
+  public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
+
+  @Rule
+  public final SpringMethodRule springMethodRule = new SpringMethodRule();
 
   @Test
   public void testNoExpireAndNoScope()
       throws JsonParseException, JsonMappingException, IOException {
-    AccessGrant grant = new AccessGrant("token", "Bearer");
-    AccessGrant actual =
-        JsonUtility.deserializeJson(JsonUtility.serializeJson(grant), AccessGrant.class);
-    Assertions.assertThat(grant).isEqualTo(actual);
-    Assertions.assertThat(actual.getScope()).isNotNull().isEmpty();
-    Assertions.assertThat(actual.getExpiration()).isNull();
-    Assertions.assertThat(actual.isExpired()).isFalse();
+    AccessGrant grant = AccessGrant
+        .builder()
+        .accessToken("token")
+        .tokenType("Bearer")
+        .build();
+
+    AccessGrant actual = JsonUtils.deserialize(JsonUtils.serialize(grant), AccessGrant.class);
+
+    assertThat(actual).isEqualToComparingOnlyGivenFields(grant, "accessToken", "tokenType",
+        "refreshToken");
+
+    // checking if value gets trimmed
+    assertThat(actual.getScopes()).isNotNull().isEmpty();
+    assertThat(actual.getExpiration()).isNull();
+    assertThat(actual.isExpired()).isFalse();
   }
 
   @Test
   public void testExpiredAndNoScope() throws JsonParseException, JsonMappingException, IOException {
-    AccessGrant grant = new AccessGrant("token", "Bearer");
-    grant.setExpiration(new Date(0));
-    AccessGrant actual =
-        JsonUtility.deserializeJson(JsonUtility.serializeJson(grant), AccessGrant.class);
-    Assertions.assertThat(actual).isEqualToIgnoringGivenFields(
-        JsonUtility.deserializeJson(JsonUtility.serializeJson(grant), AccessGrant.class),
-        // real value is lost between conversion for expired grant
-        // see https://tools.ietf.org/html/rfc6749#section-3.3
-        "expiration");
-    Assertions.assertThat(actual.getScope()).isNotNull().isEmpty();
-    Assertions.assertThat(actual.getExpiration()).isBefore(new Date());
-    Assertions.assertThat(actual.isExpired()).isTrue();
+    AccessGrant grant = AccessGrant
+        .builder()
+        .accessToken("token")
+        .tokenType("Bearer")
+        .expiration(new Date(0))
+        .build();
+
+    AccessGrant actual = JsonUtils.deserialize(JsonUtils.serialize(grant), AccessGrant.class);
+
+    assertThat(actual).isEqualToComparingOnlyGivenFields(grant, "accessToken", "tokenType",
+        "refreshToken");
+
+    // check scopes and expiration separately
+    assertThat(actual.getScopes()).isNotNull().isEmpty();
+    assertThat(actual.getExpiration()).isBefore(new Date());
+    assertThat(actual.isExpired()).isTrue();
   }
 
   @Test
   public void testNotExpiredAndWithScope()
       throws JsonParseException, JsonMappingException, IOException {
-    AccessGrant grant = new AccessGrant("token", "Bearer");
-    grant.setExpiration(new Date(Long.MAX_VALUE));
-    grant.getScope().add("  openid  ");
-    grant.getScope().add("profile");
-    AccessGrant actual =
-        JsonUtility.deserializeJson(JsonUtility.serializeJson(grant), AccessGrant.class);
-    Assertions.assertThat(actual).isEqualToIgnoringGivenFields(
-        JsonUtility.deserializeJson(JsonUtility.serializeJson(grant), AccessGrant.class),
-        // real value is lost between conversion for expired grant
-        // see https://tools.ietf.org/html/rfc6749#section-3.3
-        "expiration");
-    Assertions.assertThat(actual.getExpiration()).isAfter((new Date()));
-    Assertions.assertThat(actual.isExpired()).isFalse();
-    Assertions.assertThat(actual.getScope()).contains("profile", "openid");
+    AccessGrant grant = AccessGrant
+        .builder()
+        .accessToken("token")
+        .tokenType("Bearer")
+        .expiration(new Date(Long.MAX_VALUE))
+        .build();
+    grant.getScopes().add("  openid  "); // checking if value gets trimmed
+    grant.getScopes().add("profile");
+
+    AccessGrant actual = JsonUtils.deserialize(JsonUtils.serialize(grant), AccessGrant.class);
+
+    assertThat(actual).isEqualToComparingOnlyGivenFields(grant, "accessToken", "tokenType",
+        "refreshToken");
+
+    // check scopes and expiration separately
+    assertThat(actual.getScopes()).containsOnly("profile", "openid");
+    assertThat(actual.getExpiration()).isCloseTo(grant.getExpiration(), 2_000L);
+    assertThat(actual.getExpiration()).isAfter(new Date());
+    assertThat(actual.isExpired()).isFalse();
   }
 
 }
