@@ -16,14 +16,12 @@
 
 package it.reply.orchestrator.dto.slam;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import it.reply.orchestrator.dto.AdditionalPropertiesAwareDto;
-
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
@@ -31,20 +29,31 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
+import javax.validation.constraints.NotNull;
+
 @Data
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
-public class SlamPreferences extends AdditionalPropertiesAwareDto implements Serializable {
+@Builder
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+public class SlamPreferences implements Serializable {
 
   private static final long serialVersionUID = 6559999818418491070L;
 
   @JsonProperty("preferences")
   @NonNull
+  @NotNull
+  @Builder.Default
   private List<Preference> preferences = new ArrayList<>();
 
   @JsonProperty("sla")
   @NonNull
+  @NotNull
+  @Builder.Default
   private List<Sla> sla = new ArrayList<>();
+
+  @Deprecated
+  protected SlamPreferences() {
+    preferences = new ArrayList<>();
+    sla = new ArrayList<>();
+  }
 
 }

@@ -16,63 +16,28 @@
 
 package it.reply.orchestrator.dto.cmdb;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import it.reply.orchestrator.dto.AdditionalPropertiesAwareDto;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.Serializable;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
 @Data
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
 @Builder
-@NoArgsConstructor
-@AllArgsConstructor(access = AccessLevel.PRIVATE)
-public class ProviderData extends AdditionalPropertiesAwareDto implements Serializable {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+public class ProviderData implements Serializable {
 
   private static final long serialVersionUID = 6559999818418491070L;
-
-  @JsonProperty("id")
-  @Nullable
-  private String id;
-
-  @JsonProperty("primary_key")
-  @Nullable
-  private String primaryKey;
 
   @JsonProperty("name")
   @Nullable
   private String name;
 
-  @JsonProperty("country")
-  @Nullable
-  private String country;
-
-  @JsonProperty("country_code")
-  @Nullable
-  private String countryCode;
-
-  @JsonProperty("roc")
-  @Nullable
-  private String roc;
-
-  @JsonProperty("subgrid")
-  @Nullable
-  private String subgrid;
-
-  @JsonProperty("giis_url")
-  @Nullable
-  private String giisUrl;
 }

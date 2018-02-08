@@ -16,8 +16,14 @@
 
 package it.reply.orchestrator.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hibernate.validator.constraints.URL;
 
@@ -28,12 +34,18 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 @Data
+@Builder
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+@JsonIgnoreProperties(ignoreUnknown = false)
 public class DeploymentRequest {
 
   @NotNull(message = "A TOSCA template must be provided")
+  @NonNull
   private String template;
 
   @NotNull
+  @NonNull
+  @Builder.Default
   private Map<String, Object> parameters = new HashMap<>();
 
   @Nullable
@@ -44,5 +56,11 @@ public class DeploymentRequest {
   @Nullable
   @Min(value = 1, message = "Timeout value, if provided, must be at least of 1 minute")
   private Integer timeoutMins;
+
+  @SuppressWarnings("null")
+  @Deprecated
+  protected DeploymentRequest() {
+    parameters = new HashMap<>();
+  }
 
 }

@@ -94,13 +94,15 @@ public class UpdateDeploymentTest {
     RankCloudProvidersMessage rankCloudProvidersMessage = new RankCloudProvidersMessage();
     rankCloudProvidersMessage.setDeploymentId(deployment.getId());
 
-    CloudProvider cp = new CloudProvider("provider-RECAS-BARI");
+    CloudProvider cp = CloudProvider.builder().id("provider-RECAS-BARI").build();
     Map<String, CloudProvider> map = new HashMap<>();
     map.put("name", cp);
     rankCloudProvidersMessage.setCloudProviders(map);
 
-    RankedCloudProvider chosenCp = new RankedCloudProvider();
-    chosenCp.setName("name");
+    RankedCloudProvider chosenCp = RankedCloudProvider
+        .builder()
+        .name("name")
+        .build();
     dm.setChosenCloudProvider(cp);
 
     dm.setOneDataRequirements(oneDataRequirements);

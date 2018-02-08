@@ -16,14 +16,12 @@
 
 package it.reply.orchestrator.dto.slam;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import it.reply.orchestrator.dto.AdditionalPropertiesAwareDto;
-
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -32,11 +30,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
+import javax.validation.constraints.NotNull;
+
 @Data
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
-public class Service extends AdditionalPropertiesAwareDto implements Serializable {
+@Builder
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+public class Service implements Serializable {
 
   private static final long serialVersionUID = 6559999818418491070L;
 
@@ -50,6 +49,13 @@ public class Service extends AdditionalPropertiesAwareDto implements Serializabl
 
   @JsonProperty("targets")
   @NonNull
+  @NotNull
+  @Builder.Default
   private List<Target> targets = new ArrayList<>();
+
+  @Deprecated
+  protected Service() {
+    targets = new ArrayList<>();
+  }
 
 }

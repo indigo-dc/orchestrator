@@ -17,14 +17,14 @@
 package it.reply.orchestrator.dto;
 
 import it.reply.orchestrator.dto.cmdb.CloudService;
-import it.reply.orchestrator.dto.cmdb.CloudServiceData;
 import it.reply.orchestrator.dto.cmdb.ImageData;
 import it.reply.orchestrator.dto.cmdb.Provider;
 import it.reply.orchestrator.dto.cmdb.Type;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -37,6 +37,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.validation.constraints.NotNull;
+
 /**
  * Internal CloudProvider representation (to contain joined data about the provider - from
  * SLAM/CMDB/etc)
@@ -45,23 +47,35 @@ import java.util.stream.Collectors;
  *
  */
 @Data
-@NoArgsConstructor
-@RequiredArgsConstructor
+@Builder
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class CloudProvider implements Serializable {
 
   private static final long serialVersionUID = 6559999818418491070L;
 
   @NonNull
+  @NotNull
   private String id;
 
   @Nullable
   private Provider cmdbProviderData;
 
   @NonNull
+  @NotNull
+  @Builder.Default
   private Map<String, CloudService> cmdbProviderServices = new HashMap<>();
 
   @NonNull
+  @NotNull
+  @Builder.Default
   private Map<String, List<ImageData>> cmdbProviderImages = new HashMap<>();
+
+  @SuppressWarnings("null")
+  @Deprecated
+  protected CloudProvider() {
+    cmdbProviderServices = new HashMap<>();
+    cmdbProviderImages = new HashMap<>();
+  }
 
   /**
    * Add the images of the cloud service.
@@ -73,7 +87,8 @@ public class CloudProvider implements Serializable {
    */
   public void addCmdbCloudServiceImages(String cloudServiceId,
       Collection<ImageData> cmdbServiceImages) {
-    cmdbProviderImages.computeIfAbsent(cloudServiceId, key -> new ArrayList<>())
+    cmdbProviderImages
+        .computeIfAbsent(cloudServiceId, key -> new ArrayList<>())
         .addAll(cmdbServiceImages);
   }
 
@@ -85,10 +100,11 @@ public class CloudProvider implements Serializable {
    * @return the Service if found, <tt>null</tt> otherwise.
    */
   public List<CloudService> getCmbdProviderServicesByType(Type type) {
-    return cmdbProviderServices.values().stream().filter(service -> {
-      CloudServiceData data = service.getData();
-      return data != null && type == data.getType();
-    }).collect(Collectors.toList());
+    return cmdbProviderServices
+        .values()
+        .stream()
+        .filter(service -> type == service.getData().getType())
+        .collect(Collectors.toList());
   }
 
 }

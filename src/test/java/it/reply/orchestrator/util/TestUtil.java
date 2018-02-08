@@ -18,6 +18,7 @@ package it.reply.orchestrator.util;
 
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
+import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 
 import org.apache.commons.io.Charsets;
@@ -36,8 +37,12 @@ public class TestUtil {
   public static DeploymentMessage generateDeployDm(Deployment deployment) {
     DeploymentMessage dm = new DeploymentMessage();
     dm.setDeploymentId(deployment.getId());
-    CloudProviderEndpoint chosenCloudProviderEndpoint = new CloudProviderEndpoint();
-    chosenCloudProviderEndpoint.setCpComputeServiceId(UUID.randomUUID().toString());
+    CloudProviderEndpoint chosenCloudProviderEndpoint = CloudProviderEndpoint
+        .builder()
+        .cpComputeServiceId(UUID.randomUUID().toString())
+        .cpEndpoint("http://example.com")
+        .iaasType(IaaSType.OPENSTACK)
+        .build();
     dm.setChosenCloudProviderEndpoint(chosenCloudProviderEndpoint);
     deployment.setCloudProviderEndpoint(chosenCloudProviderEndpoint);
     return dm;

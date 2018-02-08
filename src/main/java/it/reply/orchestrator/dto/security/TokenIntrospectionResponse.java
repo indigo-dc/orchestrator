@@ -17,13 +17,14 @@
 package it.reply.orchestrator.dto.security;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.Getter;
 
@@ -37,7 +38,8 @@ import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 
 @Data
-@JsonIgnoreProperties(ignoreUnknown = true)
+@Builder
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class TokenIntrospectionResponse {
 
@@ -52,7 +54,8 @@ public class TokenIntrospectionResponse {
   @NotNull
   @JsonSerialize(using = Jackson2ScopeSerializer.class)
   @JsonDeserialize(using = Jackson2ScopeDeserializer.class)
-  private final Set<String> scope = new HashSet<>();
+  @Builder.Default
+  private Set<String> scope = new HashSet<>();
 
   @JsonProperty("sub")
   @Nullable
@@ -66,6 +69,12 @@ public class TokenIntrospectionResponse {
   @JsonFormat(shape = JsonFormat.Shape.NUMBER)
   @Nullable
   private Date expiration;
+
+  @SuppressWarnings("null")
+  @Deprecated
+  protected TokenIntrospectionResponse() {
+    scope = new HashSet<>();
+  }
 
   public boolean isActive() {
     // Let it throw if null (because it shouldn't be)

@@ -17,20 +17,22 @@
 package it.reply.orchestrator.dto.monitoring;
 
 import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.MonitoringWrappedResponsePaas;
-import it.reply.orchestrator.dto.AdditionalPropertiesAwareDto;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.NoArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.Serializable;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
-public class MonitoringResponse extends AdditionalPropertiesAwareDto implements Serializable {
+@Builder
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class MonitoringResponse implements Serializable {
 
   private static final long serialVersionUID = 6559999818418491070L;
 

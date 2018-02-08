@@ -16,28 +16,42 @@
 
 package it.reply.orchestrator.dto.onedata;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.validation.constraints.NotNull;
+
 @Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
 @Builder
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class UserSpaces implements Serializable {
 
   private static final long serialVersionUID = 2242273425591647283L;
 
   @JsonProperty("spaces")
+  @NonNull
+  @NotNull
   @Builder.Default
   private List<String> spaces = new ArrayList<>();
 
   @JsonProperty("defaultSpace")
+  @Nullable
   private String defaultSpace;
+
+  @Deprecated
+  protected UserSpaces() {
+    spaces = new ArrayList<>();
+  }
 
 }

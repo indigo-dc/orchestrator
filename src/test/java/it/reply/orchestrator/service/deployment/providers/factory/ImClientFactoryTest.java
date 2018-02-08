@@ -77,11 +77,14 @@ public class ImClientFactoryTest {
   @Test
   @Parameters({ "custom_id", "null" })
   public void testGetClientOst(@Nullable String headerId) {
-    CloudProviderEndpoint cloudProviderEndpoint = new CloudProviderEndpoint();
-    cloudProviderEndpoint.setIaasType(IaaSType.OPENSTACK);
-    cloudProviderEndpoint.setCpEndpoint("https://host:5000/v3");
-    cloudProviderEndpoint.setCpComputeServiceId(UUID.randomUUID().toString());
-    cloudProviderEndpoint.setIaasHeaderId(headerId);
+    CloudProviderEndpoint cloudProviderEndpoint =
+        CloudProviderEndpoint
+            .builder()
+            .iaasType(IaaSType.OPENSTACK)
+            .cpEndpoint("https://host:5000/v3")
+            .cpComputeServiceId(UUID.randomUUID().toString())
+            .iaasHeaderId(headerId)
+            .build();
 
     String iaasAuthHeader =
         "id = " + (headerId != null ? headerId : "ost")
@@ -97,12 +100,14 @@ public class ImClientFactoryTest {
       "null, https://local.im",
       "null, null" })
   public void testGetClientOne(@Nullable String headerId, @Nullable String localImEndpoint) {
-    CloudProviderEndpoint cloudProviderEndpoint = new CloudProviderEndpoint();
-    cloudProviderEndpoint.setIaasType(IaaSType.OPENNEBULA);
-    cloudProviderEndpoint.setCpEndpoint("https://host");
-    cloudProviderEndpoint.setCpComputeServiceId(UUID.randomUUID().toString());
-    cloudProviderEndpoint.setIaasHeaderId(headerId);
-    cloudProviderEndpoint.setImEndpoint(localImEndpoint);
+    CloudProviderEndpoint cloudProviderEndpoint = CloudProviderEndpoint
+        .builder()
+        .iaasType(IaaSType.OPENNEBULA)
+        .cpEndpoint("https://host")
+        .cpComputeServiceId(UUID.randomUUID().toString())
+        .iaasHeaderId(headerId)
+        .imEndpoint(localImEndpoint)
+        .build();
 
     String iaasAuthHeader =
         "id = " + (headerId != null ? headerId : "one")
@@ -113,19 +118,23 @@ public class ImClientFactoryTest {
 
   @Test
   public void testMultipleOneWithLocalIm() {
-    CloudProviderEndpoint cloudProviderEndpoint1 = new CloudProviderEndpoint();
-    cloudProviderEndpoint1.setIaasType(IaaSType.OPENNEBULA);
-    cloudProviderEndpoint1.setCpEndpoint("https://host1");
-    cloudProviderEndpoint1.setCpComputeServiceId(UUID.randomUUID().toString());
-    cloudProviderEndpoint1.setIaasHeaderId("one1");
-    cloudProviderEndpoint1.setImEndpoint("https://local.im1");
+    CloudProviderEndpoint cloudProviderEndpoint1 = CloudProviderEndpoint
+        .builder()
+        .iaasType(IaaSType.OPENNEBULA)
+        .cpEndpoint("https://host1")
+        .cpComputeServiceId(UUID.randomUUID().toString())
+        .iaasHeaderId("one1")
+        .imEndpoint("https://local.im1")
+        .build();
 
-    CloudProviderEndpoint cloudProviderEndpoint2 = new CloudProviderEndpoint();
-    cloudProviderEndpoint2.setIaasType(IaaSType.OPENNEBULA);
-    cloudProviderEndpoint2.setCpEndpoint("https://host2");
-    cloudProviderEndpoint2.setCpComputeServiceId(UUID.randomUUID().toString());
-    cloudProviderEndpoint2.setIaasHeaderId("one2");
-    cloudProviderEndpoint2.setImEndpoint("https://local.im2");
+    CloudProviderEndpoint cloudProviderEndpoint2 = CloudProviderEndpoint
+        .builder()
+        .iaasType(IaaSType.OPENNEBULA)
+        .cpEndpoint("https://host2")
+        .cpComputeServiceId(UUID.randomUUID().toString())
+        .iaasHeaderId("one2")
+        .imEndpoint("https://local.im2")
+        .build();
 
     String iaasAuthHeader =
         "id = one1 ; type = OpenNebula ; host = https://host1 ; token = " + iamToken +
@@ -137,13 +146,15 @@ public class ImClientFactoryTest {
   @Test
   @Parameters({ "custom_id", "null" })
   public void testGetClientAws(@Nullable String headerId) {
-    CloudProviderEndpoint cloudProviderEndpoint = new CloudProviderEndpoint();
-    cloudProviderEndpoint.setIaasType(IaaSType.AWS);
-    cloudProviderEndpoint.setUsername("username");
-    cloudProviderEndpoint.setPassword("password");
-    cloudProviderEndpoint.setCpEndpoint("https://host/");
-    cloudProviderEndpoint.setCpComputeServiceId(UUID.randomUUID().toString());
-    cloudProviderEndpoint.setIaasHeaderId(headerId);
+    CloudProviderEndpoint cloudProviderEndpoint = CloudProviderEndpoint
+        .builder()
+        .iaasType(IaaSType.AWS)
+        .username("username")
+        .password("password")
+        .cpEndpoint("https://host/")
+        .cpComputeServiceId(UUID.randomUUID().toString())
+        .iaasHeaderId(headerId)
+        .build();
 
     String iaasAuthHeader =
         "id = " + (headerId != null ? headerId : "ec2")
@@ -154,14 +165,16 @@ public class ImClientFactoryTest {
   @Test
   @Parameters({ "custom_id", "null" })
   public void testGetClientAzure(@Nullable String headerId) {
-    CloudProviderEndpoint cloudProviderEndpoint = new CloudProviderEndpoint();
-    cloudProviderEndpoint.setIaasType(IaaSType.AZURE);
-    cloudProviderEndpoint.setUsername("username");
-    cloudProviderEndpoint.setPassword("password");
-    cloudProviderEndpoint.setTenant("subscription_id");
-    cloudProviderEndpoint.setCpEndpoint("https://host/");
-    cloudProviderEndpoint.setCpComputeServiceId(UUID.randomUUID().toString());
-    cloudProviderEndpoint.setIaasHeaderId(headerId);
+    CloudProviderEndpoint cloudProviderEndpoint = CloudProviderEndpoint
+        .builder()
+        .iaasType(IaaSType.AZURE)
+        .username("username")
+        .password("password")
+        .tenant("subscription_id")
+        .cpEndpoint("https://host/")
+        .cpComputeServiceId(UUID.randomUUID().toString())
+        .iaasHeaderId(headerId)
+        .build();
 
     String iaasAuthHeader =
         "id = " + (headerId != null ? headerId : "azure")
@@ -172,13 +185,15 @@ public class ImClientFactoryTest {
   @Test
   @Parameters({ "custom_id", "null" })
   public void testGetClientOtcOldUsername(@Nullable String headerId) {
-    CloudProviderEndpoint cloudProviderEndpoint = new CloudProviderEndpoint();
-    cloudProviderEndpoint.setIaasType(IaaSType.OTC);
-    cloudProviderEndpoint.setUsername("034 domainInfo");
-    cloudProviderEndpoint.setPassword("password");
-    cloudProviderEndpoint.setCpEndpoint("https://host/");
-    cloudProviderEndpoint.setCpComputeServiceId(UUID.randomUUID().toString());
-    cloudProviderEndpoint.setIaasHeaderId(headerId);
+    CloudProviderEndpoint cloudProviderEndpoint = CloudProviderEndpoint
+        .builder()
+        .iaasType(IaaSType.OTC)
+        .username("034 domainInfo")
+        .password("password")
+        .cpEndpoint("https://host/")
+        .cpComputeServiceId(UUID.randomUUID().toString())
+        .iaasHeaderId(headerId)
+        .build();
 
     String iaasAuthHeader = "id = " + (headerId != null ? headerId : "ost")
         + " ; type = OpenStack ; domain = domainInfo ; username = 034 domainInfo ; password = password ; tenant = eu-de ; "
@@ -190,13 +205,15 @@ public class ImClientFactoryTest {
   @Test
   @Parameters({ "custom_id", "null" })
   public void testGetClientOtcNewUsername(@Nullable String headerId) {
-    CloudProviderEndpoint cloudProviderEndpoint = new CloudProviderEndpoint();
-    cloudProviderEndpoint.setIaasType(IaaSType.OTC);
-    cloudProviderEndpoint.setUsername("username domainInfo");
-    cloudProviderEndpoint.setPassword("password");
-    cloudProviderEndpoint.setCpEndpoint("https://host/");
-    cloudProviderEndpoint.setCpComputeServiceId(UUID.randomUUID().toString());
-    cloudProviderEndpoint.setIaasHeaderId(headerId);
+    CloudProviderEndpoint cloudProviderEndpoint = CloudProviderEndpoint
+        .builder()
+        .iaasType(IaaSType.OTC)
+        .username("username domainInfo")
+        .password("password")
+        .cpEndpoint("https://host/")
+        .cpComputeServiceId(UUID.randomUUID().toString())
+        .iaasHeaderId(headerId)
+        .build();
 
     String iaasAuthHeader = "id = " + (headerId != null ? headerId : "ost")
         + " ; type = OpenStack ; domain = domainInfo ; username = username ; password = password ; tenant = eu-de ; "
@@ -208,14 +225,16 @@ public class ImClientFactoryTest {
   @Test
   @Parameters({ "custom_id", "null" })
   public void testGetClientOtcNewUsernameAndTenantInfo(@Nullable String headerId) {
-    CloudProviderEndpoint cloudProviderEndpoint = new CloudProviderEndpoint();
-    cloudProviderEndpoint.setIaasType(IaaSType.OTC);
-    cloudProviderEndpoint.setUsername("username");
-    cloudProviderEndpoint.setPassword("password");
-    cloudProviderEndpoint.setCpEndpoint("https://host/");
-    cloudProviderEndpoint.setTenant("domainInfo");
-    cloudProviderEndpoint.setCpComputeServiceId(UUID.randomUUID().toString());
-    cloudProviderEndpoint.setIaasHeaderId(headerId);
+    CloudProviderEndpoint cloudProviderEndpoint = CloudProviderEndpoint
+        .builder()
+        .iaasType(IaaSType.OTC)
+        .username("username")
+        .password("password")
+        .cpEndpoint("https://host/")
+        .tenant("domainInfo")
+        .cpComputeServiceId(UUID.randomUUID().toString())
+        .iaasHeaderId(headerId)
+        .build();
 
     String iaasAuthHeader = "id = " + (headerId != null ? headerId : "ost")
         + " ; type = OpenStack ; domain = domainInfo ; username = username ; password = password ; tenant = eu-de ; "
@@ -251,10 +270,12 @@ public class ImClientFactoryTest {
   @Test
   @Parameters({ "OPENSTACK", "OTC" })
   public void testOstWrongEndpointFormat(IaaSType iaasType) throws Exception {
-    CloudProviderEndpoint cloudProviderEndpoint = new CloudProviderEndpoint();
-    cloudProviderEndpoint.setIaasType(iaasType);
-    cloudProviderEndpoint.setCpComputeServiceId(UUID.randomUUID().toString());
-    cloudProviderEndpoint.setCpEndpoint("lorem.ipsum");
+    CloudProviderEndpoint cloudProviderEndpoint = CloudProviderEndpoint
+        .builder()
+        .iaasType(iaasType)
+        .cpComputeServiceId(UUID.randomUUID().toString())
+        .cpEndpoint("lorem.ipsum")
+        .build();
     oidcProperties.setEnabled(true);
     Assertions
         .assertThatCode(

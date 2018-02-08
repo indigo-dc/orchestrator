@@ -20,7 +20,6 @@ import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
 import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
 import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
@@ -32,67 +31,46 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
-import it.reply.orchestrator.exception.GlobalControllerExceptionHandler;
 import it.reply.orchestrator.exception.http.NotFoundException;
 import it.reply.orchestrator.resource.BaseResourceAssembler;
 import it.reply.orchestrator.service.ResourceService;
 
-import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.HateoasPageableHandlerMethodArgumentResolver;
-import org.springframework.data.web.PagedResourcesAssemblerArgumentResolver;
+import org.springframework.data.web.config.HateoasAwareSpringDataWebConfiguration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.restdocs.RestDocumentation;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
+import org.springframework.test.context.junit4.rules.SpringClassRule;
+import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-
 import java.util.List;
 
+@WebMvcTest(controllers = ResourceController.class, secure = false)
+@AutoConfigureRestDocs("target/generated-snippets")
+@Import({ BaseResourceAssembler.class, HateoasAwareSpringDataWebConfiguration.class })
 public class ResourceControllerTest {
 
-  private MockMvc mockMvc;
-
-  @InjectMocks
-  private ResourceController resourceController = new ResourceController();
-
-  @Mock
-  private ResourceService resourceService;
-
-  @Spy
-  private HateoasPageableHandlerMethodArgumentResolver pageableArgumentResolver;
-
-  @Spy
-  private BaseResourceAssembler baseResourceAssembler;
-
-  @Spy
-  private PagedResourcesAssemblerArgumentResolver pagedResourcesAssemblerArgumentResolver =
-      new PagedResourcesAssemblerArgumentResolver(pageableArgumentResolver, null);
-
-  @Spy
-  private GlobalControllerExceptionHandler globalControllerExceptionHandler;
+  @ClassRule
+  public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
 
   @Rule
-  public RestDocumentation restDocumentation = new RestDocumentation("target/generated-snippets");
+  public final SpringMethodRule springMethodRule = new SpringMethodRule();
+  
+  @Autowired
+  private MockMvc mockMvc;
 
-  @Before
-  public void setup() {
-    MockitoAnnotations.initMocks(this);
-    mockMvc = MockMvcBuilders.standaloneSetup(resourceController)
-        .setControllerAdvice(globalControllerExceptionHandler)
-        .setCustomArgumentResolvers(pageableArgumentResolver,
-            pagedResourcesAssemblerArgumentResolver)
-        .apply(documentationConfiguration(this.restDocumentation)).dispatchOptions(true).build();
-  }
+  @MockBean
+  private ResourceService resourceService;
 
   @Test
   public void getResources() throws Exception {

@@ -58,7 +58,6 @@ public class CmdbServiceIT extends WebAppConfigurationAwareIT {
 
     CloudService service = CloudService.builder()
         .id(recasId)
-        .rev("1-256d36283315ea9bb045e6d5038657b6")
         .type("service")
         .data(data)
         .build();
@@ -69,22 +68,14 @@ public class CmdbServiceIT extends WebAppConfigurationAwareIT {
   @Test
   public void getProviderTest() throws Exception {
     Provider providerRecas = service.getProviderById(recasProviderName);
-    ProviderData data = ProviderData.builder()
-        .id("476")
-        .primaryKey("83757G0")
-        .name("RECAS-BARI")
-        .country("Italy")
-        .countryCode("IT")
-        .roc("NGI_IT")
-        .subgrid("")
-        .giisUrl("ldap://cloud-bdii.recas.ba.infn.it:2170/GLUE2DomainID=RECAS-BARI,o=glue")
-        .build();
-
-    Provider provider = Provider.builder()
+    Provider provider = Provider
+        .builder()
         .id(recasProviderName)
-        .rev("1-c7dbe4d8be30aa4c0f14d3ad0411d962")
         .type("provider")
-        .data(data)
+        .data(ProviderData
+            .builder()
+            .name("RECAS-BARI")
+            .build())
         .build();
 
     assertEquals(provider, providerRecas);

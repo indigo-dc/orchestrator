@@ -16,43 +16,64 @@
 
 package it.reply.orchestrator.dto.onedata;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.validation.constraints.NotNull;
+
 @Data
-@JsonInclude(JsonInclude.Include.NON_NULL)
 @Builder
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class ProviderDetails implements Serializable {
 
   private static final long serialVersionUID = -368387049626457198L;
 
   @JsonProperty("csr")
+  @Nullable
   private String csr;
 
   @JsonProperty("providerId")
+  @NonNull
+  @NotNull
   private String providerId;
 
   @JsonProperty("clientName")
+  @Nullable
   private String clientName;
 
   @JsonProperty("redirectionPoint")
+  @Nullable
   private String redirectionPoint;
 
   @JsonProperty("urls")
+  @NonNull
+  @NotNull
   @Builder.Default
   private List<String> urls = new ArrayList<>();
 
   @JsonProperty("latitude")
+  @Nullable
   private Double latitude;
 
   @JsonProperty("longitude")
+  @Nullable
   private Double longitude;
+
+  @SuppressWarnings("null")
+  @Deprecated
+  protected ProviderDetails() {
+    urls = new ArrayList<>();
+  }
 
 }

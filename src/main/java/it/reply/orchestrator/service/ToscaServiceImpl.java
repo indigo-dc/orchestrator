@@ -53,6 +53,7 @@ import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.ImageData;
+import it.reply.orchestrator.dto.cmdb.ImageData.ImageDataBuilder;
 import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.dto.deployment.PlacementPolicy;
 import it.reply.orchestrator.dto.onedata.OneData;
@@ -356,27 +357,27 @@ public class ToscaServiceImpl implements ToscaService {
   public Map<NodeTemplate, ImageData> extractImageRequirements(ArchiveRoot parsingResult) {
     // Only indigo.Compute nodes are relevant
     return getNodesOfType(parsingResult, ToscaConstants.Nodes.COMPUTE).stream().map(node -> {
-      ImageData imageMetadata = new ImageData();
+      ImageDataBuilder imageMetadataBuilder = ImageData.builder();
       Optional.ofNullable(node.getCapabilities())
           .map(capabilities -> capabilities.get(OS_CAPABILITY_NAME))
           .ifPresent(osCapability -> {
             // We've got an OS capability -> Check the attributes to find best match for the image
             this.<ScalarPropertyValue>getTypedCapabilityPropertyByName(osCapability, "image")
-                .ifPresent(property -> imageMetadata.setImageName(property.getValue()));
+                .ifPresent(property -> imageMetadataBuilder.imageName(property.getValue()));
 
             this.<ScalarPropertyValue>getTypedCapabilityPropertyByName(osCapability, "architecture")
-                .ifPresent(property -> imageMetadata.setArchitecture(property.getValue()));
+                .ifPresent(property -> imageMetadataBuilder.architecture(property.getValue()));
 
             this.<ScalarPropertyValue>getTypedCapabilityPropertyByName(osCapability, "type")
-                .ifPresent(property -> imageMetadata.setType(property.getValue()));
+                .ifPresent(property -> imageMetadataBuilder.type(property.getValue()));
 
             this.<ScalarPropertyValue>getTypedCapabilityPropertyByName(osCapability, "distribution")
-                .ifPresent(property -> imageMetadata.setDistribution(property.getValue()));
+                .ifPresent(property -> imageMetadataBuilder.distribution(property.getValue()));
 
             this.<ScalarPropertyValue>getTypedCapabilityPropertyByName(osCapability, "version")
-                .ifPresent(property -> imageMetadata.setVersion(property.getValue()));
+                .ifPresent(property -> imageMetadataBuilder.version(property.getValue()));
           });
-      return new SimpleEntry<>(node, imageMetadata);
+      return new SimpleEntry<>(node, imageMetadataBuilder.build());
     }).collect(Collectors.toMap(Entry::getKey, Entry::getValue));
   }
 

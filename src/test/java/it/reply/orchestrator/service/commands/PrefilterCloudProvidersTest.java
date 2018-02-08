@@ -32,6 +32,8 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import com.google.common.collect.Lists;
+
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 
@@ -283,7 +285,8 @@ public class PrefilterCloudProvidersTest {
         .when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
             Mockito.anyObject()))
         .thenReturn(
-            Maps.newHashMap(Boolean.FALSE, Maps.newHashMap(new NodeTemplate(), new ImageData())));
+            Maps.newHashMap(Boolean.FALSE,
+                Maps.newHashMap(new NodeTemplate(), ImageData.builder().build())));
 
     ExecutionEntity execution = new ExecutionEntityBuilder()
         .withMockedVariable(WorkflowConstants.Param.RANK_CLOUD_PROVIDERS_MESSAGE, rankCloudProvidersMessage)
@@ -305,58 +308,57 @@ public class PrefilterCloudProvidersTest {
   }
 
   private SlamPreferences getSlamPreferences(String id) {
-    SlamPreferences slamPreferences = new SlamPreferences();
-    List<Sla> arrayList = new ArrayList<>();
-    Sla sla = new Sla();
-    sla.setId(id);
-    List<Service> services = new ArrayList<Service>();
-    Service service = new Service();
-    service.setServiceId(UUID.randomUUID().toString());
-    services.add(service);
-    sla.setServices(services);
-    arrayList.add(sla);
-    slamPreferences.setSla(arrayList);
-    List<Priority> priorities = getPriorities();
-    Preference extPreference = new Preference();
-    extPreference.setPreferences(getPreferencesCustomer(priorities));
-    List<Preference> preferences = new ArrayList<Preference>();
-    preferences.add(extPreference);
-    slamPreferences.setPreferences(preferences);
-    return slamPreferences;
-  }
-
-  private List<Priority> getPriorities() {
-    List<Priority> priorities = new ArrayList<Priority>();
-    Priority priority = new Priority();
-    priority.setServiceId(UUID.randomUUID().toString());
-    priorities.add(priority);
-    return priorities;
-  }
-
-  private List<PreferenceCustomer> getPreferencesCustomer(List<Priority> priorities) {
-    PreferenceCustomer preferenceCustomer = new PreferenceCustomer();
-    preferenceCustomer.setPriority(priorities);
-    List<PreferenceCustomer> preferencesCustomer = new ArrayList<PreferenceCustomer>();
-    preferencesCustomer.add(preferenceCustomer);
-    return preferencesCustomer;
+    return SlamPreferences
+        .builder()
+        .preferences(Lists
+            .newArrayList(Preference
+                .builder()
+                .preferences(Lists
+                    .newArrayList(PreferenceCustomer
+                        .builder()
+                        .priority(Lists
+                            .newArrayList(Priority
+                                .builder()
+                                .serviceId(UUID.randomUUID().toString())
+                                .build()))
+                        .build()))
+                .build()))
+        .sla(Lists
+            .newArrayList(Sla
+                .builder()
+                .id(id)
+                .services(Lists
+                    .newArrayList(Service
+                        .builder()
+                        .serviceId(UUID.randomUUID().toString())
+                        .build()))
+                .build()))
+        .build();
   }
 
   private Map<String, CloudProvider> getCloudProviders(Map<String, CloudService> cloudServices) {
-    CloudProvider cloudProvider = new CloudProvider("provider-RECAS-BARI");
-    cloudProvider.setCmdbProviderServices(cloudServices);
+    CloudProvider cloudProvider = CloudProvider
+        .builder()
+        .id("provider-RECAS-BARI")
+        .cmdbProviderServices(cloudServices)
+        .build();
     Map<String, CloudProvider> cloudProviders = new HashMap<>();
-    cloudProviders.put("key", cloudProvider);
+    cloudProviders.put(cloudProvider.getId(), cloudProvider);
     return cloudProviders;
   }
 
   private Map<String, CloudService> getCloudServices() {
-    CloudService cloudService = new CloudService();
-    CloudServiceData csd = new CloudServiceData();
-    csd.setType(Type.COMPUTE);
-    csd.setServiceType("eu.egi.cloud.storage-management.oneprovider");
-    cloudService.setData(csd);
+    CloudService cloudService = CloudService
+        .builder()
+        .id("provider-RECAS-BARI")
+        .data(CloudServiceData
+            .builder()
+            .type(Type.COMPUTE)
+            .serviceType(CloudService.ONEPROVIDER_STORAGE_SERVICE)
+            .build())
+        .build();
     Map<String, CloudService> cloudServices = new HashMap<>();
-    cloudServices.put("key", cloudService);
+    cloudServices.put(cloudService.getId(), cloudService);
     return cloudServices;
   }
 

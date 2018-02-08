@@ -187,7 +187,10 @@ public class DeploymentServiceTest {
     String nodeName2 = "server2";
     String nodeType = "tosca.nodes.indigo.Compute";
 
-    DeploymentRequest deploymentRequest = new DeploymentRequest();
+    DeploymentRequest deploymentRequest = DeploymentRequest
+        .builder()
+        .template("template")
+        .build();
 
     Map<String, Capability> capabilities = Maps.newHashMap();
 
@@ -226,7 +229,10 @@ public class DeploymentServiceTest {
 
   @Test
   public void createComputeScalableDeploymentSuccessful() throws Exception {
-    DeploymentRequest deploymentRequest = new DeploymentRequest();
+    DeploymentRequest deploymentRequest = DeploymentRequest
+        .builder()
+        .template("template")
+        .build();
 
     Capability capability = new Capability();
     capability.setProperties(Maps.newHashMap());
@@ -248,7 +254,10 @@ public class DeploymentServiceTest {
 
   @Test
   public void createComputeScalableWithCountDeploymentSuccessful() throws Exception {
-    DeploymentRequest deploymentRequest = new DeploymentRequest();
+    DeploymentRequest deploymentRequest = DeploymentRequest
+        .builder()
+        .template("template")
+        .build();
 
     String nodeName = "server";
     String nodeType = "tosca.nodes.indigo.Compute";
@@ -286,9 +295,12 @@ public class DeploymentServiceTest {
 
   @Test
   public void createDeploymentWithCallbackSuccessful() throws Exception {
-    DeploymentRequest deploymentRequest = new DeploymentRequest();
     String callback = "http://localhost:8080";
-    deploymentRequest.setCallback(callback);
+    DeploymentRequest deploymentRequest = DeploymentRequest
+        .builder()
+        .template("template")
+        .callback(callback)
+        .build();
 
     Deployment returneDeployment = basecreateDeploymentSuccessful(deploymentRequest, null);
 
@@ -297,7 +309,10 @@ public class DeploymentServiceTest {
 
   @Test
   public void createChronosDeploymentSuccessful() throws Exception {
-    DeploymentRequest deploymentRequest = new DeploymentRequest();
+    DeploymentRequest deploymentRequest = DeploymentRequest
+        .builder()
+        .template("template")
+        .build();
 
     String nodeName1 = "job1";
     String nodeName2 = "job2";
@@ -422,8 +437,11 @@ public class DeploymentServiceTest {
     Deployment deployment = ControllerTestUtils.createDeployment(id);
     deployment.setDeploymentProvider(provider);
     Mockito.when(deploymentRepository.findOne(id)).thenReturn(deployment);
-
-    assertThatThrownBy(() -> deploymentService.updateDeployment(id, new DeploymentRequest()))
+    DeploymentRequest deploymentRequest = DeploymentRequest
+        .builder()
+        .template("template")
+        .build();
+    assertThatThrownBy(() -> deploymentService.updateDeployment(id, deploymentRequest))
         .isInstanceOf(BadRequestException.class);
 
   }
@@ -451,8 +469,12 @@ public class DeploymentServiceTest {
     deployment.setDeploymentProvider(DeploymentProvider.HEAT);
     deployment.setStatus(status);
     Mockito.when(deploymentRepository.findOne(id)).thenReturn(deployment);
-
-    assertThatThrownBy(() -> deploymentService.updateDeployment(id, new DeploymentRequest()))
+    DeploymentRequest deploymentRequest = DeploymentRequest
+        .builder()
+        .template("template")
+        .build();
+    
+    assertThatThrownBy(() -> deploymentService.updateDeployment(id, deploymentRequest))
         .isInstanceOf(ConflictException.class);
   }
 
@@ -462,7 +484,10 @@ public class DeploymentServiceTest {
       "UPDATE_FAILED",
       "UPDATE_COMPLETE" })
   public void updateDeploymentSuccess(Status status) throws Exception {
-    DeploymentRequest deploymentRequest = new DeploymentRequest();
+    DeploymentRequest deploymentRequest = DeploymentRequest
+        .builder()
+        .template("template")
+        .build();
     Map<String, NodeTemplate> nts = getNodeTemplates();
 
     // case create complete

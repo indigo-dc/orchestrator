@@ -16,41 +16,36 @@
 
 package it.reply.orchestrator.dto.cmdb;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import it.reply.orchestrator.dto.AdditionalPropertiesAwareDto;
-
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.NoArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
+import javax.validation.constraints.NotNull;
+
 @Data
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
-public class CmdbRow<T extends Serializable> extends AdditionalPropertiesAwareDto
-    implements Serializable {
+@Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+public class CmdbRow<T extends Serializable> implements Serializable {
 
   private static final long serialVersionUID = 559476054523810413L;
 
   @JsonProperty("id")
-  @Nullable
+  @NonNull
+  @NotNull
   private String id;
 
-  @JsonProperty("key")
-  @NonNull
-  private List<String> key = new ArrayList<>();
-
   @JsonProperty("doc")
-  @Nullable
+  @NonNull
+  @NotNull
   private T doc;
 
 }
