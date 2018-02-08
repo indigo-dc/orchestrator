@@ -18,6 +18,7 @@ package it.reply.orchestrator.service;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
 import com.google.common.io.ByteStreams;
 
 import alien4cloud.component.repository.exception.CSARVersionAlreadyExistsException;
@@ -68,6 +69,7 @@ import it.reply.orchestrator.utils.ToscaConstants;
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jgrapht.alg.CycleDetector;
 import org.jgrapht.graph.DirectedMultigraph;
@@ -106,6 +108,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -355,30 +358,49 @@ public class ToscaServiceImpl implements ToscaService {
 
   @Override
   public Map<NodeTemplate, ImageData> extractImageRequirements(ArchiveRoot parsingResult) {
+
+    Map<String, Function<ImageDataBuilder, Function<String, ImageDataBuilder>>> capabilityPropertiesMapping =
+        new HashMap<>();
+
+    capabilityPropertiesMapping.put("image",
+        imageMetadataBuilder -> imageMetadataBuilder::imageName);
+
+    capabilityPropertiesMapping.put("architecture",
+        imageMetadataBuilder -> imageMetadataBuilder::architecture);
+
+    capabilityPropertiesMapping.put("type",
+        imageMetadataBuilder -> imageMetadataBuilder::type);
+
+    capabilityPropertiesMapping.put("distribution",
+        imageMetadataBuilder -> imageMetadataBuilder::distribution);
+
+    capabilityPropertiesMapping.put("version",
+        imageMetadataBuilder -> imageMetadataBuilder::version);
+
     // Only indigo.Compute nodes are relevant
-    return getNodesOfType(parsingResult, ToscaConstants.Nodes.COMPUTE).stream().map(node -> {
-      ImageDataBuilder imageMetadataBuilder = ImageData.builder();
-      Optional.ofNullable(node.getCapabilities())
-          .map(capabilities -> capabilities.get(OS_CAPABILITY_NAME))
-          .ifPresent(osCapability -> {
-            // We've got an OS capability -> Check the attributes to find best match for the image
-            this.<ScalarPropertyValue>getTypedCapabilityPropertyByName(osCapability, "image")
-                .ifPresent(property -> imageMetadataBuilder.imageName(property.getValue()));
-
-            this.<ScalarPropertyValue>getTypedCapabilityPropertyByName(osCapability, "architecture")
-                .ifPresent(property -> imageMetadataBuilder.architecture(property.getValue()));
-
-            this.<ScalarPropertyValue>getTypedCapabilityPropertyByName(osCapability, "type")
-                .ifPresent(property -> imageMetadataBuilder.type(property.getValue()));
-
-            this.<ScalarPropertyValue>getTypedCapabilityPropertyByName(osCapability, "distribution")
-                .ifPresent(property -> imageMetadataBuilder.distribution(property.getValue()));
-
-            this.<ScalarPropertyValue>getTypedCapabilityPropertyByName(osCapability, "version")
-                .ifPresent(property -> imageMetadataBuilder.version(property.getValue()));
-          });
-      return new SimpleEntry<>(node, imageMetadataBuilder.build());
-    }).collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+    return getNodesOfType(parsingResult, ToscaConstants.Nodes.COMPUTE)
+        .stream()
+        .map(node -> {
+          ImageDataBuilder imageMetadataBuilder = ImageData.builder();
+          Optional
+              .ofNullable(node.getCapabilities())
+              .map(capabilities -> capabilities.get(OS_CAPABILITY_NAME))
+              .ifPresent(osCapability -> {
+                // We've got an OS capability -> Check the attributes to find best match for the
+                // image
+                capabilityPropertiesMapping.forEach((capabilityPropertyName, mappingFunction) -> {
+                  this
+                      .<ScalarPropertyValue>getTypedCapabilityPropertyByName(osCapability,
+                          capabilityPropertyName)
+                      .map(ScalarPropertyValue::getValue)
+                      .filter(Objects::nonNull)
+                      .ifPresent(
+                          property -> mappingFunction.apply(imageMetadataBuilder).apply(property));
+                });
+              });
+          return new SimpleEntry<>(node, imageMetadataBuilder.build());
+        })
+        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
   }
 
   @Override
@@ -530,66 +552,38 @@ public class ToscaServiceImpl implements ToscaService {
     // specified name it means that a base image + Ansible configuration have to be used -> the
     // base image will be chosen with the other filters and image metadata - architecture, type,
     // distro, version)
-    if (imageMetadata.getImageName() != null) {
-      Optional<ImageData> imageWithName =
-          findImageWithNameOnCloudProvider(imageMetadata.getImageName(), images);
+    Optional<ImageData> imageFoundByName = findImageByName(imageMetadata, images);
+    if (imageFoundByName.isPresent()) {
+      return imageFoundByName;
+    } else {
+      return findImageByFallbackFields(imageMetadata, images);
+    }
+  }
+
+  protected Optional<ImageData> findImageByName(ImageData requiredImageMetadata,
+      Collection<ImageData> cloudProviderServiceImages) {
+    String requiredImageName = requiredImageMetadata.getImageName();
+    if (requiredImageName != null) {
+      LOG.debug("Looking up images by name <{}>", requiredImageName);
+      Optional<ImageData> imageWithName = cloudProviderServiceImages
+          .stream()
+          .filter(image -> requiredImageMetadata(requiredImageName, image.getImageName()))
+          .findFirst();
 
       if (imageWithName.isPresent()) {
         LOG.debug("Image <{}> found with name <{}>", imageWithName.get().getImageId(),
-            imageMetadata.getImageName());
+            requiredImageName);
         return imageWithName;
-      } else {
-        if (imageMetadata.getType() == null && imageMetadata.getArchitecture() == null
-            && imageMetadata.getDistribution() == null && imageMetadata.getVersion() == null) {
-          return Optional.empty();
-        }
-        LOG.debug("Image not found with name <{}>, trying with other fields: <{}>",
-            imageMetadata.getImageName(), imageMetadata);
       }
-    }
-
-    for (ImageData image : images) {
-      // Match or skip image based on each additional optional attribute
-      if (imageMetadata.getType() != null) {
-        if (!imageMetadata.getType().equalsIgnoreCase(image.getType())) {
-          continue;
-        }
-      }
-
-      if (imageMetadata.getArchitecture() != null) {
-        if (!imageMetadata.getArchitecture().equalsIgnoreCase(image.getArchitecture())) {
-          continue;
-        }
-      }
-
-      if (imageMetadata.getDistribution() != null) {
-        if (!imageMetadata.getDistribution().equalsIgnoreCase(image.getDistribution())) {
-          continue;
-        }
-      }
-
-      if (imageMetadata.getVersion() != null) {
-        if (!imageMetadata.getVersion().equalsIgnoreCase(image.getVersion())) {
-          continue;
-        }
-      }
-
-      LOG.debug("Image <{}> found with fields: <{}>", imageMetadata.getImageId(), imageMetadata);
-      return Optional.of(image);
     }
     return Optional.empty();
-
   }
 
-  protected Optional<ImageData> findImageWithNameOnCloudProvider(String requiredImageName,
-      Collection<ImageData> images) {
-    return images.stream()
-        .filter(image -> matchImageNameAndTag(requiredImageName, image.getImageName()))
-        .findFirst();
-
-  }
-
-  protected boolean matchImageNameAndTag(String requiredImageName, String availableImageName) {
+  protected boolean requiredImageMetadata(@NonNull String requiredImageName,
+      @Nullable String availableImageName) {
+    if (availableImageName == null) {
+      return false;
+    }
     // Extract Docker tag if available
     String[] requiredImageNameSplit = requiredImageName.split(":");
     String requiredImageBaseName = requiredImageNameSplit[0];
@@ -608,6 +602,29 @@ public class ToscaServiceImpl implements ToscaService {
         (requiredImageTag != null ? requiredImageTag.equals(availableImageTag) : true);
 
     return nameMatch && tagMatch;
+  }
+
+  protected Optional<ImageData> findImageByFallbackFields(ImageData requiredImageMetadata,
+      Collection<ImageData> cloudProviderServiceImages) {
+    LOG.debug("Looking up images by fallback metatada");
+    List<Function<ImageData, String>> fallbackFieldExtractors = Lists.newArrayList(
+        ImageData::getType,
+        ImageData::getArchitecture,
+        ImageData::getDistribution,
+        ImageData::getVersion);
+
+    Stream<ImageData> imageStream = cloudProviderServiceImages.stream();
+    
+    for (Function<ImageData, String> fieldExtractor : fallbackFieldExtractors) {
+      String metadataField = fieldExtractor.apply(requiredImageMetadata);
+      if (metadataField != null) {
+        // if the field is populated for requiredImageMetadata, filter on it
+        imageStream = imageStream
+            .filter(image -> !metadataField.equalsIgnoreCase(fieldExtractor.apply(image)));
+      }
+    }
+    return imageStream.findFirst();
+
   }
 
   private Collection<NodeTemplate> getNodesFromArchiveRoot(ArchiveRoot archiveRoot) {
