@@ -21,7 +21,7 @@ import it.reply.orchestrator.utils.Named;
 import lombok.Data;
 import lombok.Getter;
 
-import javax.annotation.Nonnull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 @Data
 public class MesosPortMapping {
@@ -41,12 +41,12 @@ public class MesosPortMapping {
 
   }
 
-  @Nonnull
+  @NonNull
   private Integer containerPort;
 
   private Integer servicePort;
 
-  @Nonnull
+  @NonNull
   private Protocol protocol = Protocol.TCP;
 
 }

@@ -23,10 +23,10 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.io.Serializable;
 
-import javax.annotation.Nonnull;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.MappedSuperclass;
+import javax.validation.constraints.NotNull;
 
 @Data
 @NoArgsConstructor
@@ -37,7 +37,7 @@ public abstract class OidcIssuerAwareId implements Serializable {
   private static final long serialVersionUID = -8057514331507625686L;
 
   @NonNull
-  @Nonnull
+  @NotNull
   @Column(name = "issuer", nullable = false, updatable = false)
   private String issuer;
 

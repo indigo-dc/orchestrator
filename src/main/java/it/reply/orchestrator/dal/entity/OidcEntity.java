@@ -24,7 +24,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.hibernate.annotations.GenericGenerator;
 import org.springframework.hateoas.Identifiable;
 
-import javax.annotation.Nonnull;
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -32,6 +31,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
+import javax.validation.constraints.NotNull;
 
 @Data
 @NoArgsConstructor
@@ -49,12 +49,12 @@ public class OidcEntity implements Identifiable<String> {
   private String id;
 
   @NonNull
-  @Nonnull
+  @NotNull
   @Embedded
   private OidcEntityId oidcEntityId;
 
   @NonNull
-  @Nonnull
+  @NotNull
   @Column(name = "organization", nullable = false, updatable = false)
   private String organization;
 

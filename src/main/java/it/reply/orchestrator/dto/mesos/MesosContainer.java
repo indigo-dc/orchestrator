@@ -22,12 +22,11 @@ import com.google.common.collect.Multimap;
 import lombok.Data;
 import lombok.Getter;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.annotation.Nonnull;
 
 @Data
 public class MesosContainer {
@@ -46,7 +45,7 @@ public class MesosContainer {
     private final String toscaName;
   }
 
-  @Nonnull
+  @NonNull
   private Type type;
 
   @Nullable
@@ -54,10 +53,10 @@ public class MesosContainer {
 
   private String network;
 
-  @Nonnull
+  @NonNull
   private List<MesosPortMapping> portMappings = new ArrayList<>();
 
-  @Nonnull
+  @NonNull
   private Multimap<String, String> parameters = ArrayListMultimap.create();
 
   @Nullable
@@ -66,7 +65,7 @@ public class MesosContainer {
   @Nullable
   private Boolean priviliged;
 
-  @Nonnull
+  @NonNull
   private List<String> volumes = new ArrayList<>();
 
   public boolean isForcePullImage() {

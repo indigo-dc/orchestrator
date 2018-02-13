@@ -18,13 +18,13 @@ package it.reply.orchestrator.dto.mesos;
 
 import lombok.Data;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import javax.annotation.Nonnull;
 
 @Data
 public abstract class MesosTask<T extends MesosTask<T>> {
@@ -41,19 +41,19 @@ public abstract class MesosTask<T extends MesosTask<T>> {
 
   private Double memSize;
 
-  @Nonnull
+  @NonNull
   private List<T> parents = new ArrayList<>();
 
-  @Nonnull
+  @NonNull
   private List<List<String>> constraints = new ArrayList<>();
 
-  @Nonnull
+  @NonNull
   private List<String> uris = new ArrayList<>();
 
-  @Nonnull
+  @NonNull
   private Map<String, String> env = new HashMap<>();
 
-  @Nonnull
+  @NonNull
   private Map<String, String> labels = new HashMap<>();
 
   public Optional<MesosContainer> getContainer() {

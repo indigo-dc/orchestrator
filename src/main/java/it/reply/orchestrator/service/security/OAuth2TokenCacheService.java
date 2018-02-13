@@ -182,8 +182,8 @@ public class OAuth2TokenCacheService {
         AccessGrant grant =
             template.refreshToken(refreshToken.getVaule(), OidcProperties.REQUIRED_SCOPES);
         LOG.info("Access token for {} refreshed", id);
-        if (grant.getRefreshToken() != null
-            && !grant.getRefreshToken().equals(refreshToken.getVaule())) {
+        String newRefreshToken = grant.getRefreshToken();
+        if (newRefreshToken != null && !newRefreshToken.equals(refreshToken.getVaule())) {
           LOG.info("New refesh token received for {}", id);
           refreshToken.updateFromAccessGrant(grant);
         }
