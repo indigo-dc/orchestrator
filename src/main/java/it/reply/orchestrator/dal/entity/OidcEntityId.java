@@ -29,9 +29,9 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.io.Serializable;
 
-import javax.annotation.Nonnull;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
+import javax.validation.constraints.NotNull;
 
 @Data
 @NoArgsConstructor
@@ -43,7 +43,7 @@ public class OidcEntityId extends OidcIssuerAwareId implements Serializable {
   private static final long serialVersionUID = -8303859464474981940L;
 
   @NonNull
-  @Nonnull
+  @NotNull
   @Column(name = "subject", nullable = false, updatable = false)
   private String subject;
 
