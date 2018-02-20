@@ -89,6 +89,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
@@ -214,7 +215,7 @@ public class ToscaServiceImpl implements ToscaService {
       ParsingResult<ArchiveRoot> result = parser.parse(zipPath);
       try {
         Files.delete(zipPath);
-      } catch (Exception ioe) {
+      } catch (IOException ioe) {
         LOG.warn("Error deleting tmp csar {} from FS", zipPath, ioe);
       }
       return result;
@@ -437,7 +438,7 @@ public class ToscaServiceImpl implements ToscaService {
           // do not use the Collectors.toMap() because it doesn't play nice with null values
           // https://bugs.openjdk.java.net/browse/JDK-8148463
           CommonUtils.toMap(Entry::getKey, entry -> entry.getValue().orElse(null))));
-    } catch (Exception ex) {
+    } catch (RuntimeException ex) {
       throw new RuntimeException("Failed to contextualize images", ex);
     }
   }
@@ -539,7 +540,7 @@ public class ToscaServiceImpl implements ToscaService {
 
       sb.append(image.getImageId());
       return sb.toString();
-    } catch (Exception ex) {
+    } catch (RuntimeException | MalformedURLException ex) {
       LOG.error("Cannot retrieve Compute service host for IM image id generation", ex);
       return image.getImageId();
     }
@@ -907,7 +908,7 @@ public class ToscaServiceImpl implements ToscaService {
       }
 
       return result;
-    } catch (Exception ex) {
+    } catch (RuntimeException ex) {
       throw new RuntimeException("Failed to extract OneData requirements: " + ex.getMessage(), ex);
     }
   }

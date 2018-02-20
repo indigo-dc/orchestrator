@@ -355,7 +355,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
       }
 
       return jobList.iterator().next();
-    } catch (Exception ex) {
+    } catch (RuntimeException ex) {
       // TODO Use a custom exception
       throw new RuntimeException(
           String.format("Unable to retrieve job <%s> status on Chronos", name), ex);
@@ -503,7 +503,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
           // Attentions: Are we sure that graph dependency generation is stable?
         }
       }
-    } catch (Exception ex) {
+    } catch (RuntimeException ex) {
       // Just log the error
       String errorMsg =
           String.format("Failed to delete job <%s> on Chronos: %s", currentJob, ex.getMessage());
