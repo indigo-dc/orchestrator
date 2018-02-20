@@ -134,6 +134,10 @@ public class CustomJobRetryCmd extends JobRetryCmd {
         newJobEntity.setRetries(jobRetries - 1);
 
       } catch (Exception e) {
+        if (e instanceof InterruptedException) {
+        	// it shouldn't happen, but...
+          Thread.currentThread().interrupt();
+        }
         throw new FlowableException(
             "failedJobRetryTimeCycle has wrong format:" + failedJobRetryTimeCycleValue, exception);
       }
