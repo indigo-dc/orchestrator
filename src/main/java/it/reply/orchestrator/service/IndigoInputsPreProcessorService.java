@@ -358,10 +358,7 @@ public class IndigoInputsPreProcessorService {
       return Optional.of(toAbstractPropertyValue(inputValue));
 
     } catch (RuntimeException ex) {
-      throw new ToscaException(
-          String.format("Failed to replace input function on <%s>, caused by: %s",
-              propertyName, ex.getMessage()),
-          ex);
+      throw new ToscaException("Failed to replace input function on " + propertyName, ex);
     }
   }
 
