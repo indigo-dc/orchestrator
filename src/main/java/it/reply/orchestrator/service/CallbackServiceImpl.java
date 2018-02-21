@@ -21,16 +21,15 @@ import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.resource.DeploymentResource;
 import it.reply.orchestrator.resource.DeploymentResourceAssembler;
 
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
-@AllArgsConstructor
 @Slf4j
 public class CallbackServiceImpl implements CallbackService {
 
@@ -39,6 +38,14 @@ public class CallbackServiceImpl implements CallbackService {
   private DeploymentResourceAssembler deploymentResourceAssembler;
 
   private RestTemplate restTemplate;
+
+  public CallbackServiceImpl(DeploymentRepository deploymentRepository,
+      DeploymentResourceAssembler deploymentResourceAssembler,
+      RestTemplateBuilder restTemplateBuilder) {
+    this.deploymentRepository = deploymentRepository;
+    this.deploymentResourceAssembler = deploymentResourceAssembler;
+    this.restTemplate = restTemplateBuilder.build();
+  }
 
   @Override
   @Transactional(readOnly = true)
