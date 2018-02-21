@@ -21,7 +21,6 @@ import static org.springframework.test.web.client.match.MockRestRequestMatchers.
 import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
 
 import it.reply.orchestrator.config.properties.OneDataProperties;
-import it.reply.orchestrator.config.properties.OneDataProperties.ServiceSpaceProperties;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
 import it.reply.orchestrator.dto.onedata.ProviderDetails;
@@ -31,16 +30,18 @@ import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.utils.JsonUtils;
 
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.junit4.rules.SpringClassRule;
+import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.test.web.client.response.MockRestResponseCreators;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.client.HttpStatusCodeException;
 
 import java.io.IOException;
 import java.net.URI;
@@ -51,20 +52,22 @@ import junitparams.Parameters;
 import junitparams.converters.Nullable;
 
 @RunWith(JUnitParamsRunner.class)
+@RestClientTest(OneDataService.class)
 public class OneDataServiceTest {
 
-  @InjectMocks
-  private OneDataServiceImpl oneDataService;
+  @ClassRule
+  public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
 
-  @Spy
+  @Rule
+  public final SpringMethodRule springMethodRule = new SpringMethodRule();
+
+  @Autowired
+  private OneDataService oneDataService;
+
+  @Autowired
   private OneDataProperties oneDataProperties;
 
-  @Spy
-  private ServiceSpaceProperties serviceSpaceProperties;
-
-  @Spy
-  private RestTemplate restTemplate;
-
+  @Autowired
   private MockRestServiceServer mockServer;
 
   private String defaultOneZoneEndpoint = "http://localhost";
@@ -73,11 +76,8 @@ public class OneDataServiceTest {
 
   @Before
   public void setup() {
-    MockitoAnnotations.initMocks(this);
     oneDataProperties.setOnezoneUrl(URI.create(defaultOneZoneEndpoint));
-    oneDataProperties.setServiceSpace(serviceSpaceProperties);
-    serviceSpaceProperties.setToken(onedataToken);
-    mockServer = MockRestServiceServer.createServer(restTemplate);
+    oneDataProperties.getServiceSpace().setToken(onedataToken);
   }
 
   private String generateExpectedOneZoneEndpoint(String oneZoneEndpoint) {
@@ -113,7 +113,8 @@ public class OneDataServiceTest {
         .andRespond(withBadRequest());
 
     assertThatThrownBy(() -> oneDataService.getUserSpacesId(endpoint, onedataToken))
-        .isInstanceOf(DeploymentException.class);
+        .isInstanceOf(DeploymentException.class)
+        .hasCauseInstanceOf(HttpStatusCodeException.class);
     mockServer.verify();
   }
 
@@ -150,7 +151,8 @@ public class OneDataServiceTest {
         .andRespond(withBadRequest());
 
     assertThatThrownBy(() -> oneDataService.getSpaceDetailsFromId(endpoint, onedataToken, spaceId))
-        .isInstanceOf(DeploymentException.class);
+        .isInstanceOf(DeploymentException.class)
+        .hasCauseInstanceOf(HttpStatusCodeException.class);
     mockServer.verify();
   }
 
@@ -170,8 +172,8 @@ public class OneDataServiceTest {
             endpoint + onezoneBasePath + "spaces/" + spaceId + "/providers/" + providerId))
         .andExpect(method(HttpMethod.GET))
         .andExpect(header("macaroon", onedataToken))
-        .andRespond(MockRestResponseCreators.withSuccess(JsonUtils.serialize(providerDetail),
-            MediaType.APPLICATION_JSON_UTF8));
+        .andRespond(
+            withSuccess(JsonUtils.serialize(providerDetail), MediaType.APPLICATION_JSON_UTF8));
 
     assertThat(oneDataService.getProviderDetailsFromId(endpoint, onedataToken, spaceId, providerId))
         .isEqualTo(providerDetail);
@@ -192,11 +194,12 @@ public class OneDataServiceTest {
             endpoint + onezoneBasePath + "spaces/" + spaceId + "/providers/" + providerId))
         .andExpect(method(HttpMethod.GET))
         .andExpect(header("macaroon", onedataToken))
-        .andRespond(MockRestResponseCreators.withBadRequest());
+        .andRespond(withBadRequest());
 
     assertThatThrownBy(
         () -> oneDataService.getProviderDetailsFromId(endpoint, onedataToken, spaceId, providerId))
-            .isInstanceOf(DeploymentException.class);
+            .isInstanceOf(DeploymentException.class)
+            .hasCauseInstanceOf(HttpStatusCodeException.class);
     mockServer.verify();
   }
 
@@ -224,15 +227,14 @@ public class OneDataServiceTest {
         .expect(requestTo(endpoint + onezoneBasePath + "user/spaces"))
         .andExpect(method(HttpMethod.GET))
         .andExpect(header("macaroon", onedataToken))
-        .andRespond(MockRestResponseCreators.withSuccess(JsonUtils.serialize(userSpace),
-            MediaType.APPLICATION_JSON_UTF8));
+        .andRespond(withSuccess(JsonUtils.serialize(userSpace), MediaType.APPLICATION_JSON_UTF8));
 
     mockServer
         .expect(requestTo(endpoint + onezoneBasePath + "user/spaces/" + spaceId))
         .andExpect(method(HttpMethod.GET))
         .andExpect(header("macaroon", onedataToken))
-        .andRespond(MockRestResponseCreators.withSuccess(JsonUtils.serialize(spaceDetails),
-            MediaType.APPLICATION_JSON_UTF8));
+        .andRespond(
+            withSuccess(JsonUtils.serialize(spaceDetails), MediaType.APPLICATION_JSON_UTF8));
 
     assertThat(oneDataService.populateProviderInfo(oneData).getProviders()).isEmpty();
     mockServer.verify();
@@ -265,15 +267,14 @@ public class OneDataServiceTest {
         .expect(requestTo(endpoint + onezoneBasePath + "user/spaces"))
         .andExpect(method(HttpMethod.GET))
         .andExpect(header("macaroon", onedataToken))
-        .andRespond(MockRestResponseCreators.withSuccess(JsonUtils.serialize(userSpace),
-            MediaType.APPLICATION_JSON_UTF8));
+        .andRespond(withSuccess(JsonUtils.serialize(userSpace), MediaType.APPLICATION_JSON_UTF8));
 
     mockServer
         .expect(requestTo(endpoint + onezoneBasePath + "user/spaces/" + spaceId))
         .andExpect(method(HttpMethod.GET))
         .andExpect(header("macaroon", onedataToken))
-        .andRespond(MockRestResponseCreators.withSuccess(JsonUtils.serialize(spaceDetails),
-            MediaType.APPLICATION_JSON_UTF8));
+        .andRespond(
+            withSuccess(JsonUtils.serialize(spaceDetails), MediaType.APPLICATION_JSON_UTF8));
 
     assertThatThrownBy(() -> oneDataService.populateProviderInfo(oneData))
         .isInstanceOf(DeploymentException.class);
@@ -301,23 +302,22 @@ public class OneDataServiceTest {
         .expect(requestTo(endpoint + onezoneBasePath + "user/spaces"))
         .andExpect(method(HttpMethod.GET))
         .andExpect(header("macaroon", onedataToken))
-        .andRespond(MockRestResponseCreators.withSuccess(JsonUtils.serialize(userSpace),
-            MediaType.APPLICATION_JSON_UTF8));
+        .andRespond(withSuccess(JsonUtils.serialize(userSpace), MediaType.APPLICATION_JSON_UTF8));
 
     mockServer
         .expect(requestTo(endpoint + onezoneBasePath + "user/spaces/" + spaceId))
         .andExpect(method(HttpMethod.GET))
         .andExpect(header("macaroon", onedataToken))
-        .andRespond(MockRestResponseCreators.withSuccess(JsonUtils.serialize(spaceDetails),
-            MediaType.APPLICATION_JSON_UTF8));
+        .andRespond(
+            withSuccess(JsonUtils.serialize(spaceDetails), MediaType.APPLICATION_JSON_UTF8));
 
     mockServer
         .expect(requestTo(
             endpoint + onezoneBasePath + "spaces/" + spaceId + "/providers/" + providerId))
         .andExpect(method(HttpMethod.GET))
         .andExpect(header("macaroon", onedataToken))
-        .andRespond(MockRestResponseCreators.withSuccess(JsonUtils.serialize(providerDetails),
-            MediaType.APPLICATION_JSON_UTF8));
+        .andRespond(
+            withSuccess(JsonUtils.serialize(providerDetails), MediaType.APPLICATION_JSON_UTF8));
 
     OneData oneData = OneData
         .builder()
@@ -362,7 +362,7 @@ public class OneDataServiceTest {
         .latitude(41.25)
         .longitude(-120.9762)
         .providerId(UUID.randomUUID().toString())
-        .redirectionPoint("http://www.redirection.example")
+        .redirectionPoint("http://example.com/redirection")
         .build();
   }
 

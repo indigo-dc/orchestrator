@@ -20,11 +20,9 @@ import it.reply.orchestrator.config.filters.CustomRequestLoggingFilter;
 import it.reply.orchestrator.config.properties.OrchestratorProperties;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.client.RestTemplate;
 
 @Configuration
 @EnableConfigurationProperties(OrchestratorProperties.class)
@@ -48,11 +46,6 @@ public class WebAppInitializer {
   @Bean
   public CustomRequestLoggingFilter customRequestLoggingFilter() {
     return new CustomRequestLoggingFilter();
-  }
-
-  @Bean
-  public RestTemplate restTemplate(RestTemplateBuilder restTemplateBuilder) {
-    return restTemplateBuilder.build();
   }
 
 }

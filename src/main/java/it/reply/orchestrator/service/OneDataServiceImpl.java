@@ -27,15 +27,15 @@ import it.reply.orchestrator.dto.onedata.UserSpaces;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.utils.CommonUtils;
 
-import lombok.AllArgsConstructor;
-
 import org.apache.commons.collections4.CollectionUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import java.net.URI;
@@ -46,12 +46,17 @@ import javax.ws.rs.core.UriBuilder;
 
 @Service
 @EnableConfigurationProperties(OneDataProperties.class)
-@AllArgsConstructor
 public class OneDataServiceImpl implements OneDataService {
+
+  private OneDataProperties oneDataProperties;
 
   private RestTemplate restTemplate;
 
-  private OneDataProperties oneDataProperties;
+  public OneDataServiceImpl(OneDataProperties oneDataProperties,
+      RestTemplateBuilder restTemplateBuilder) {
+    this.oneDataProperties = oneDataProperties;
+    this.restTemplate = restTemplateBuilder.build();
+  }
 
   @Override
   public UserSpaces getUserSpacesId(@Nullable String oneZoneEndpoint, String oneDataToken) {
@@ -65,7 +70,7 @@ public class OneDataServiceImpl implements OneDataService {
       return restTemplate
           .exchange(requestUri, HttpMethod.GET, withToken(oneDataToken), UserSpaces.class)
           .getBody();
-    } catch (RuntimeException ex) {
+    } catch (RestClientException ex) {
       throw new DeploymentException("Error retrieving OneData spaces", ex);
     }
   }
@@ -88,9 +93,8 @@ public class OneDataServiceImpl implements OneDataService {
       return restTemplate
           .exchange(requestUri, HttpMethod.GET, withToken(oneDataToken), SpaceDetails.class)
           .getBody();
-    } catch (RuntimeException ex) {
-      throw new DeploymentException(
-          String.format("Error retrieving details for OneData space %s", oneSpaceId), ex);
+    } catch (RestClientException ex) {
+      throw new DeploymentException("Error retrieving details for OneData space " + oneSpaceId, ex);
     }
   }
 
@@ -113,11 +117,9 @@ public class OneDataServiceImpl implements OneDataService {
       return restTemplate
           .exchange(requestUri, HttpMethod.GET, withToken(oneDataToken), ProviderDetails.class)
           .getBody();
-    } catch (RuntimeException ex) {
-      throw new DeploymentException(
-          String.format("Error retrieving details for OneData provider %s (space %s)",
-              oneProviderId, oneSpaceId),
-          ex);
+    } catch (RestClientException ex) {
+      throw new DeploymentException("Error retrieving details of OneData space " + oneSpaceId
+          + " on provider " + oneProviderId, ex);
     }
   }
 
