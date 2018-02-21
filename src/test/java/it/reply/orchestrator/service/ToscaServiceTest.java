@@ -198,7 +198,7 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
   @Test
   public void checkUserInputNotRequiredNoDefaultValueNotGiven() throws Exception {
     checkUserInputGeneric("tosca_inputs_not_required_no_default_not_given.yaml",
-        "Failed to replace input function on <node_templates[my_server][capabilities][host][properties][num_cpus]>, caused by: No input provided for <cpus> and no default value provided in the definition");
+        "Failed to replace input function on node_templates[my_server][capabilities][host][properties][num_cpus]; nested exception is java.lang.IllegalArgumentException: No input provided for <cpus> and no default value provided in the definition");
   }
 
   private void checkUserInputGeneric(String templateName, String expectedMessage) throws Exception {

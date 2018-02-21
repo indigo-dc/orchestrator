@@ -181,7 +181,7 @@ public class PrefilterCloudProvidersTest {
         .assertThatThrownBy(() -> prefilterCloudProviders.execute(execution))
         .isInstanceOf(WorkflowException.class)
         .hasCauseInstanceOf(OrchestratorException.class)
-        .hasMessage("Error filtering Cloud Providers: Only a single placement policy is supported");
+        .hasMessage("Error filtering Cloud Providers; nested exception is it.reply.orchestrator.exception.OrchestratorException: Only a single placement policy is supported");
   }
 
   @Test
@@ -221,7 +221,7 @@ public class PrefilterCloudProvidersTest {
         .assertThatThrownBy(() -> prefilterCloudProviders.execute(execution))
         .isInstanceOf(WorkflowException.class)
         .hasCauseInstanceOf(OrchestratorException.class)
-        .hasMessage("Error filtering Cloud Providers: No SLA with id " + slaId + " available");
+        .hasMessage("Error filtering Cloud Providers; nested exception is it.reply.orchestrator.exception.OrchestratorException: No SLA with id " + slaId + " available");
   }
 
   @Test
@@ -258,7 +258,7 @@ public class PrefilterCloudProvidersTest {
         .assertThatThrownBy(() -> prefilterCloudProviders.execute(execution))
         .isInstanceOf(WorkflowException.class)
         .hasCauseInstanceOf(OrchestratorException.class)
-        .hasMessage("Error filtering Cloud Providers: Only SLA placement policies are supported");
+        .hasMessage("Error filtering Cloud Providers; nested exception is it.reply.orchestrator.exception.OrchestratorException: Only SLA placement policies are supported");
   }
 
   @Test

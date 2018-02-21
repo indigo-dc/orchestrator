@@ -631,9 +631,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   private RuntimeException handleImClientException(ImClientException ex) {
     if (ex instanceof ImClientErrorException) {
       ResponseError responseError = getImResponseError((ImClientErrorException) ex);
-      return new DeploymentException(responseError.getFormattedErrorMessage(), ex);
+      return new DeploymentException(
+          "Error executing request to IM\n" + responseError.getFormattedErrorMessage(), ex);
     } else {
-      return new DeploymentException(ex);
+      return new DeploymentException("Error executing request to IM", ex);
     }
   }
 

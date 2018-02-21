@@ -16,22 +16,14 @@
 
 package it.reply.orchestrator.exception;
 
-/**
- * Base orchestrator exception
- * 
- * @author m.bassi
- *
- */
-public class OrchestratorException extends RuntimeException {
+import org.springframework.core.NestedRuntimeException;
+
+public class OrchestratorException extends NestedRuntimeException {
 
   private static final long serialVersionUID = -8879317682949851699L;
 
   public OrchestratorException(String message) {
     super(message);
-  }
-
-  public OrchestratorException(Throwable cause) {
-    super(cause);
   }
 
   public OrchestratorException(String message, Throwable cause) {

@@ -37,19 +37,4 @@ public class WorkflowException extends OrchestratorException {
     this.errorCode = errorCode;
   }
 
-  @Override
-  public String getMessage() {
-    String thisMessage = super.getMessage();
-    String causeMessage = getCause() != null ? getCause().getMessage() : null;
-    if (causeMessage == null) {
-      return thisMessage;
-    } else {
-      if (thisMessage == null) {
-        return causeMessage;
-      } else {
-        return String.format("%s: %s", thisMessage, causeMessage);
-      }
-    }
-  }
-
 }

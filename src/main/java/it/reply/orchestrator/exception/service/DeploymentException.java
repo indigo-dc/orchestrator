@@ -18,12 +18,6 @@ package it.reply.orchestrator.exception.service;
 
 import it.reply.orchestrator.exception.OrchestratorException;
 
-/**
- * Exception thrown when error occurred during the process deployment.
- * 
- * @author m.bassi
- *
- */
 public class DeploymentException extends OrchestratorException {
 
   private static final long serialVersionUID = 1L;
@@ -34,10 +28,6 @@ public class DeploymentException extends OrchestratorException {
 
   public DeploymentException(String message, Throwable cause) {
     super(message, cause);
-  }
-
-  public DeploymentException(Throwable cause) {
-    super(cause);
   }
 
 }
