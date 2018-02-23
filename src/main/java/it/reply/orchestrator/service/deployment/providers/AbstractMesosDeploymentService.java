@@ -16,9 +16,6 @@
 
 package it.reply.orchestrator.service.deployment.providers;
 
-import com.google.common.collect.MoreCollectors;
-import com.google.common.primitives.Ints;
-
 import alien4cloud.model.components.ComplexPropertyValue;
 import alien4cloud.model.components.DeploymentArtifact;
 import alien4cloud.model.components.ListPropertyValue;
@@ -34,6 +31,9 @@ import alien4cloud.tosca.normative.Size;
 import alien4cloud.tosca.normative.SizeType;
 import alien4cloud.tosca.normative.StringType;
 
+import com.google.common.collect.MoreCollectors;
+import com.google.common.primitives.Ints;
+
 import it.reply.orchestrator.dto.mesos.MesosContainer;
 import it.reply.orchestrator.dto.mesos.MesosPortMapping;
 import it.reply.orchestrator.dto.mesos.MesosPortMapping.Protocol;
@@ -43,14 +43,14 @@ import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.EnumUtils;
 
-import org.jgrapht.graph.DirectedMultigraph;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import org.jgrapht.graph.DirectedMultigraph;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class AbstractMesosDeploymentService<T extends MesosTask<T>, S extends Object>
     extends AbstractDeploymentProviderService {

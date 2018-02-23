@@ -16,6 +16,10 @@
 
 package it.reply.orchestrator.dto.ranker;
 
+import java.io.Serializable;
+
+import javax.validation.constraints.NotNull;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,10 +28,6 @@ import lombok.NoArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-
-import java.io.Serializable;
-
-import javax.validation.constraints.NotNull;
 
 @Data
 @Builder

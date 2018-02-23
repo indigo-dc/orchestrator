@@ -19,13 +19,13 @@ package it.reply.orchestrator.dto.deployment;
 import alien4cloud.model.components.AbstractPropertyValue;
 import alien4cloud.model.components.ScalarPropertyValue;
 
-import lombok.Getter;
-
-import org.springframework.util.Assert;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import lombok.Getter;
+
+import org.springframework.util.Assert;
 
 @Getter
 public class SlaPlacementPolicy implements PlacementPolicy {

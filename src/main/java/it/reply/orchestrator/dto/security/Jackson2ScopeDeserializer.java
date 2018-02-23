@@ -19,11 +19,11 @@ package it.reply.orchestrator.dto.security;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.deser.std.FromStringDeserializer;
 
-import org.springframework.util.StringUtils;
-
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
+import org.springframework.util.StringUtils;
 
 public class Jackson2ScopeDeserializer extends FromStringDeserializer<Set<String>> {
 

@@ -20,15 +20,6 @@ import it.reply.orchestrator.dal.util.SetStringToJsonConverter;
 import it.reply.orchestrator.dto.security.AccessGrant;
 import it.reply.orchestrator.utils.JwtUtils;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.annotations.GenericGenerator;
-import org.springframework.hateoas.Identifiable;
-
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -43,6 +34,15 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.annotations.GenericGenerator;
+import org.springframework.hateoas.Identifiable;
 
 @Entity
 @Getter

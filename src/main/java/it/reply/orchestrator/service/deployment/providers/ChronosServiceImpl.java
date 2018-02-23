@@ -16,14 +16,14 @@
 
 package it.reply.orchestrator.service.deployment.providers;
 
-import com.google.common.primitives.Ints;
-
 import alien4cloud.model.components.ScalarPropertyValue;
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.model.topology.RelationshipTemplate;
 import alien4cloud.model.topology.Topology;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.normative.IntegerType;
+
+import com.google.common.primitives.Ints;
 
 import it.infn.ba.indigo.chronos.client.Chronos;
 import it.infn.ba.indigo.chronos.client.model.v1.Container;
@@ -53,18 +53,6 @@ import it.reply.orchestrator.service.deployment.providers.factory.ChronosClientF
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.jgrapht.graph.DirectedMultigraph;
-import org.jgrapht.traverse.TopologicalOrderIterator;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -79,6 +67,18 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.validation.constraints.NotNull;
+
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.jgrapht.graph.DirectedMultigraph;
+import org.jgrapht.traverse.TopologicalOrderIterator;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 @DeploymentProviderQualifier(DeploymentProvider.CHRONOS)
@@ -163,7 +163,8 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
   }
 
   /**
-   * 
+   *  Creates Jobs on Chronos iteratively.
+   *  
    * @param deployment
    *          the deployment from which create the jobs
    * @param jobgraph
@@ -269,6 +270,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
   }
 
   /**
+   * Checks Jobs on Chronos iteratively.
    * 
    * @param deployment
    *          the deployment from which create the jobs
@@ -338,6 +340,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
   }
 
   /**
+   * Gets the Job status.
    * 
    * @param client
    *          the Chronos client to use

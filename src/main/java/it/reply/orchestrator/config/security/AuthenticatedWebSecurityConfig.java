@@ -23,6 +23,10 @@ import it.reply.orchestrator.service.security.IndigoUserInfoFetcher;
 import it.reply.orchestrator.service.security.OAuth2ConfigurationsService;
 import it.reply.orchestrator.service.security.UserInfoIntrospectingTokenService;
 
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+
 import org.mitre.jwt.signer.service.impl.JWKSetCacheService;
 import org.mitre.oauth2.introspectingfilter.service.IntrospectionConfigurationService;
 import org.mitre.oauth2.introspectingfilter.service.impl.JWTParsingIntrospectionConfigurationService;
@@ -44,10 +48,6 @@ import org.springframework.security.oauth2.config.annotation.web.configurers.Res
 import org.springframework.security.oauth2.provider.error.OAuth2AccessDeniedHandler;
 import org.springframework.security.oauth2.provider.error.OAuth2AuthenticationEntryPoint;
 import org.springframework.security.oauth2.provider.token.ResourceServerTokenServices;
-
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
 
 @Configuration
 @EnableGlobalMethodSecurity(securedEnabled = true, prePostEnabled = true)

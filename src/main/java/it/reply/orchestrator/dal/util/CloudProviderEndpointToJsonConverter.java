@@ -20,9 +20,9 @@ import com.fasterxml.jackson.core.type.TypeReference;
 
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-
 import javax.persistence.Converter;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Converter
 public class CloudProviderEndpointToJsonConverter

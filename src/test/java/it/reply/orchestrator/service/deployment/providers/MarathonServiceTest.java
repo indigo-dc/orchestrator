@@ -30,8 +30,7 @@ import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.exception.service.DeploymentException;
-import it.reply.orchestrator.service.IndigoInputsPreProcessorService;
-import it.reply.orchestrator.service.ToscaServiceImpl;
+import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.ToscaServiceTest;
 import it.reply.orchestrator.service.deployment.providers.factory.MarathonClientFactory;
 import it.reply.orchestrator.util.TestUtil;
@@ -51,10 +50,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -70,26 +70,23 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
   @InjectMocks
   private MarathonServiceImpl marathonServiceImpl;
 
-  @Spy
-  @InjectMocks
-  private ToscaServiceImpl toscaService;
+  @SpyBean
+  @Autowired
+  protected ToscaService toscaService;
 
-  @Spy
-  private IndigoInputsPreProcessorService indigoInputsPreProcessorService;
-
-  @Spy
+  @SpyBean
   private MarathonProperties marathonProperties;
 
-  @Mock
+  @MockBean
   private ResourceRepository resourceRepository;
 
-  @Mock
+  @MockBean
   private DeploymentRepository deploymentRepository;
 
-  @Mock
+  @MockBean
   private MarathonClientFactory marathonClientFactory;
 
-  @Mock
+  @MockBean
   private Marathon marathonClient;
 
   @Before
@@ -243,11 +240,6 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
     Assertions
         .assertThat(marathonServiceImpl.isDeployed(dm))
         .isEqualTo(expected);
-  }
-
-  @Override
-  protected ToscaServiceImpl getToscaService() {
-    return toscaService;
   }
 
 }

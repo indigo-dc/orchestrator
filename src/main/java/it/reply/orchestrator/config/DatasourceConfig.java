@@ -18,6 +18,11 @@ package it.reply.orchestrator.config;
 
 import com.google.common.base.Strings;
 
+import java.util.Optional;
+
+import javax.sql.DataSource;
+import javax.sql.XADataSource;
+
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.BeanClassLoaderAware;
@@ -37,11 +42,6 @@ import org.springframework.transaction.jta.JtaTransactionManager;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
-
-import java.util.Optional;
-
-import javax.sql.DataSource;
-import javax.sql.XADataSource;
 
 @Configuration
 @EnableJpaRepositories("it.reply.orchestrator.dal.repository")

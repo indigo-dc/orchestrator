@@ -25,9 +25,14 @@ import it.reply.orchestrator.dto.slam.SlamPreferences;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 
+import java.net.URI;
+import java.util.Optional;
+
+import javax.ws.rs.core.UriBuilder;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
@@ -36,49 +41,71 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-
-import java.net.URI;
-import java.util.Optional;
-import java.util.function.BiFunction;
-
-import javax.ws.rs.core.UriBuilder;
 
 @Service
 @EnableConfigurationProperties(SlamProperties.class)
 public class SlamServiceImpl implements SlamService {
 
-  @Autowired
-  private RestTemplate restTemplate;
-
-  @Autowired
   private OidcEntityRepository oidcEntityRepository;
 
-  @Autowired
   private OidcProperties oidcProperties;
 
-  @Autowired
   private SlamProperties slamProperties;
 
-  @Autowired
   private OAuth2TokenService oauth2TokenService;
 
-  protected <R> R executeWithClient(URI requestUri, OidcTokenId tokenId,
-      BiFunction<URI, @Nullable String, R> function) {
+  private RestTemplate restTemplate;
+
+  /**
+   * Creates a new SlamServiceImpl.
+   * 
+   * @param oidcEntityRepository
+   *          the OidcEntityRepository to use
+   * @param oidcProperties
+   *          the OidcProperties to use
+   * @param slamProperties
+   *          the SlamProperties to use
+   * @param oauth2TokenService
+   *          the OAuth2TokenService to use
+   * @param restTemplateBuilder
+   *          the RestTemplateBuilder to use
+   */
+  public SlamServiceImpl(OidcEntityRepository oidcEntityRepository, OidcProperties oidcProperties,
+      SlamProperties slamProperties, OAuth2TokenService oauth2TokenService,
+      RestTemplateBuilder restTemplateBuilder) {
+    this.oidcEntityRepository = oidcEntityRepository;
+    this.oidcProperties = oidcProperties;
+    this.slamProperties = slamProperties;
+    this.oauth2TokenService = oauth2TokenService;
+    this.restTemplate = restTemplateBuilder.build();
+  }
+
+  protected ResponseEntity<SlamPreferences> get(URI requestUri, OidcTokenId tokenId) {
     if (!oidcProperties.isEnabled()) {
-      return function.apply(requestUri, null);
+      return executeGet(requestUri, null);
     }
     try {
       String accessToken = oauth2TokenService.getAccessToken(tokenId);
-      return function.apply(requestUri, accessToken);
+      return executeGet(requestUri, accessToken);
     } catch (HttpClientErrorException ex) {
       if (HttpStatus.UNAUTHORIZED == ex.getStatusCode()) {
         String refreshedAccessToken = oauth2TokenService.getRefreshedAccessToken(tokenId);
-        return function.apply(requestUri, refreshedAccessToken);
+        return executeGet(requestUri, refreshedAccessToken);
       } else {
         throw ex;
       }
     }
+  }
+
+  private ResponseEntity<SlamPreferences> executeGet(URI requestUri, @Nullable String accessToken) {
+    HeadersBuilder<?> requestBuilder = RequestEntity.get(requestUri);
+    if (accessToken != null) {
+      requestBuilder.header(HttpHeaders.AUTHORIZATION,
+          String.format("%s %s", OAuth2AccessToken.BEARER_TYPE, accessToken));
+    }
+    return restTemplate.exchange(requestBuilder.build(), SlamPreferences.class);
   }
 
   @Override
@@ -96,21 +123,12 @@ public class SlamServiceImpl implements SlamService {
         .build(slamCustomer)
         .normalize();
 
-    ResponseEntity<SlamPreferences> response = this.executeWithClient(requestUri, tokenId,
-        (uri, accessToken) -> {
-          HeadersBuilder<?> requestBuilder = RequestEntity.get(uri);
-          if (accessToken != null) {
-            requestBuilder.header(HttpHeaders.AUTHORIZATION,
-                String.format("%s %s", OAuth2AccessToken.BEARER_TYPE, accessToken));
-          }
-          return restTemplate.exchange(requestBuilder.build(), SlamPreferences.class);
-        });
-
-    if (response.getStatusCode().is2xxSuccessful()) {
-      return response.getBody();
+    try {
+      return get(requestUri, tokenId).getBody();
+    } catch (RestClientException ex) {
+      throw new DeploymentException(
+          "Error fetching SLA for customer <" + slamCustomer + "> from SLAM.", ex);
     }
-    throw new DeploymentException("Unable to find SLAM preferences. "
-        + response.getStatusCode().toString() + " " + response.getStatusCode().getReasonPhrase());
   }
 
 }

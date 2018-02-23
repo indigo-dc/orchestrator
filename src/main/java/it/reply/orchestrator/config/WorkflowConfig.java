@@ -18,6 +18,11 @@ package it.reply.orchestrator.config;
 
 import it.reply.orchestrator.workflow.CustomFailedJobCommandFactory;
 
+import java.io.IOException;
+
+import javax.persistence.EntityManagerFactory;
+import javax.sql.DataSource;
+
 import org.flowable.job.service.impl.asyncexecutor.AsyncExecutor;
 import org.flowable.spring.SpringProcessEngineConfiguration;
 import org.flowable.spring.boot.FlowableMailProperties;
@@ -32,11 +37,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import java.io.IOException;
-
-import javax.persistence.EntityManagerFactory;
-import javax.sql.DataSource;
-
 @Configuration
 public class WorkflowConfig extends ProcessEngineAutoConfiguration {
 
@@ -46,6 +46,21 @@ public class WorkflowConfig extends ProcessEngineAutoConfiguration {
     super(flowableProperties, processProperties, idmProperties, mailProperties);
   }
 
+  /**
+   * Generates a SpringProcessEngineConfiguration.
+   * 
+   * @param dataSource
+   *          the Datasource to use
+   * @param platformTransactionManager
+   *          the PlatformTransactionManager to use
+   * @param asyncExecutorProvider
+   *          the AsyncExecutor to use
+   * @param entityManagerFactory
+   *          the EntityManagerFactory to use
+   * @return the generated SpringProcessEngineConfiguration
+   * @throws IOException
+   *           when I/O exception of some sort has occurred during initialization
+   */
   @Bean
   public SpringProcessEngineConfiguration springProcessEngineConfiguration(
       @Qualifier("workflowDataSource") DataSource dataSource,

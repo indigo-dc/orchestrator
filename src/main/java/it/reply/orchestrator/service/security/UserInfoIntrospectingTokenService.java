@@ -22,6 +22,9 @@ import com.nimbusds.jwt.SignedJWT;
 import it.reply.orchestrator.dto.security.IndigoOAuth2Authentication;
 import it.reply.orchestrator.utils.JwtUtils;
 
+import java.text.ParseException;
+import java.util.Optional;
+
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -38,9 +41,6 @@ import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.security.oauth2.common.exceptions.InvalidTokenException;
 import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.util.StopWatch;
-
-import java.text.ParseException;
-import java.util.Optional;
 
 @Slf4j
 @AllArgsConstructor

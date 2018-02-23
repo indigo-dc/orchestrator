@@ -18,14 +18,14 @@ package it.reply.orchestrator.exception;
 
 import it.reply.orchestrator.dto.common.Error;
 
+import java.util.Optional;
+
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.oauth2.common.exceptions.OAuth2Exception;
 import org.springframework.security.oauth2.provider.error.DefaultOAuth2ExceptionRenderer;
 import org.springframework.web.context.request.ServletWebRequest;
-
-import java.util.Optional;
 
 public class CustomOAuth2ExceptionRenderer extends DefaultOAuth2ExceptionRenderer {
 

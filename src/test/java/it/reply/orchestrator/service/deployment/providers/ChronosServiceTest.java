@@ -39,7 +39,6 @@ import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage.TemplateTopologicalOrderIterator;
 import it.reply.orchestrator.dto.onedata.OneData;
-import it.reply.orchestrator.service.IndigoInputsPreProcessorService;
 import it.reply.orchestrator.service.ToscaServiceImpl;
 import it.reply.orchestrator.service.ToscaServiceTest;
 import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl.IndigoJob;
@@ -53,10 +52,11 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -71,29 +71,26 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
   @InjectMocks
   private ChronosServiceImpl chronosService;
 
-  @Spy
+  @Autowired
   private OrchestratorProperties orchestratorProperties;
-
-  @Spy
-  @InjectMocks
+  
+  @SpyBean
+  @Autowired
   private ToscaServiceImpl toscaService;
 
-  @Spy
-  private IndigoInputsPreProcessorService indigoInputsPreProcessorService;
-
-  @Mock
+  @MockBean
   private DeploymentStatusHelper deploymentStatusHelper;
 
-  @Mock
+  @MockBean
   private DeploymentRepository deploymentRepository;
 
-  @Mock
+  @MockBean
   private ResourceRepository resourceRepository;
 
-  @Mock
+  @MockBean
   private Chronos chronos;
 
-  @Mock
+  @MockBean
   private ChronosClientFactory chronosClientFactory;
 
   @Before
@@ -102,11 +99,6 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
     Mockito
         .when(chronosClientFactory.build(Mockito.any(Deployment.class)))
         .thenReturn(chronos);
-  }
-
-  @Override
-  protected ToscaServiceImpl getToscaService() {
-    return toscaService;
   }
 
   @Test

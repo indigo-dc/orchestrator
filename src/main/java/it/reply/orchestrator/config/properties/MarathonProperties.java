@@ -16,6 +16,11 @@
 
 package it.reply.orchestrator.config.properties;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.validation.constraints.NotNull;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -23,11 +28,6 @@ import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.validation.annotation.Validated;
-
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.validation.constraints.NotNull;
 
 @Validated
 @Data

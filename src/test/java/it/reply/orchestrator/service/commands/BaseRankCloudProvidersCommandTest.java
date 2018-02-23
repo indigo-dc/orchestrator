@@ -16,6 +16,8 @@
 
 package it.reply.orchestrator.service.commands;
 
+import static org.mockito.Mockito.*;
+
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.utils.JsonUtils;
 import it.reply.orchestrator.utils.WorkflowConstants;
@@ -24,8 +26,11 @@ import org.flowable.engine.impl.persistence.entity.ExecutionEntity;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.Spy;
 import org.springframework.boot.test.autoconfigure.json.JsonTest;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.test.web.client.MockRestServiceServer;
@@ -44,6 +49,9 @@ public abstract class BaseRankCloudProvidersCommandTest<T extends BaseRankCloudP
   public final SpringMethodRule springMethodRule = new SpringMethodRule();
 
   protected MockRestServiceServer mockServer;
+  
+  @Mock
+  protected RestTemplateBuilder restTemplateBuilder;
 
   @Spy
   protected RestTemplate restTemplate;
@@ -54,6 +62,8 @@ public abstract class BaseRankCloudProvidersCommandTest<T extends BaseRankCloudP
 
   @Before
   public void baseSetup() {
+    when(restTemplateBuilder.build())
+    .thenReturn(restTemplate);
     mockServer = MockRestServiceServer.createServer(restTemplate);
   }
 

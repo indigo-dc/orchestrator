@@ -16,10 +16,6 @@
 
 package it.reply.orchestrator.service;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.primitives.Primitives;
-
 import alien4cloud.deployment.InputsPreProcessorService;
 import alien4cloud.model.components.AbstractPropertyValue;
 import alien4cloud.model.components.ComplexPropertyValue;
@@ -36,15 +32,13 @@ import alien4cloud.model.topology.Topology;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.normative.ToscaFunctionConstants;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.primitives.Primitives;
+
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.function.ToscaFunction;
 import it.reply.orchestrator.utils.CommonUtils;
-
-import lombok.Data;
-import lombok.extern.slf4j.Slf4j;
-
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -56,6 +50,12 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.springframework.stereotype.Service;
 
 /**
  * Inputs pre-processor service manages pre-processing of inputs parameters in a Topology.

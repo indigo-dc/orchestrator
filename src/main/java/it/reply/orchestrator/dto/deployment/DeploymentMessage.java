@@ -23,12 +23,6 @@ import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl.IndigoJob;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
-
-import org.checkerframework.checker.nullness.qual.NonNull;
-
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
@@ -36,6 +30,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -50,6 +50,12 @@ public class DeploymentMessage extends BaseWorkflowMessage implements Serializab
 
   private String timeout;
 
+  /**
+   * Sets the Deployment timeout.
+   * 
+   * @param timeoutMins
+   *          the timeout in Minutes
+   */
   public void setTimeoutInMins(Integer timeoutMins) {
     this.timeout = Optional
         .ofNullable(timeoutMins)

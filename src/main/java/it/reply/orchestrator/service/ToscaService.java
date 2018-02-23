@@ -38,15 +38,15 @@ import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.service.ToscaException;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.jgrapht.graph.DirectedMultigraph;
-
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.jgrapht.graph.DirectedMultigraph;
 
 public interface ToscaService {
 

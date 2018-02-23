@@ -19,6 +19,8 @@ package it.reply.orchestrator.service.security;
 import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.exception.OrchestratorException;
 
+import java.util.Optional;
+
 import org.mitre.oauth2.model.RegisteredClient;
 import org.mitre.openid.connect.client.service.ClientConfigurationService;
 import org.mitre.openid.connect.client.service.ServerConfigurationService;
@@ -26,8 +28,6 @@ import org.mitre.openid.connect.config.ServerConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 @Service
 public class OAuth2ConfigurationsService {

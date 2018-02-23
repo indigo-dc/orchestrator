@@ -20,11 +20,11 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.ser.std.NonTypedScalarSerializerBase;
 
-import org.springframework.util.StringUtils;
-
 import java.io.IOException;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import org.springframework.util.StringUtils;
 
 public class Jackson2ScopeSerializer extends NonTypedScalarSerializerBase<Set<String>> {
 

@@ -56,11 +56,13 @@ import org.hamcrest.Matchers;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Answers;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
@@ -81,7 +83,7 @@ import java.util.UUID;
 
 @WebMvcTest(controllers = DeploymentController.class, secure = false)
 @AutoConfigureRestDocs("target/generated-snippets")
-@Import({ DeploymentResourceAssembler.class, HateoasAwareSpringDataWebConfiguration.class })
+@Import(HateoasAwareSpringDataWebConfiguration.class)
 public class DeploymentControllerTest {
 
   @ClassRule
@@ -96,6 +98,9 @@ public class DeploymentControllerTest {
   @MockBean
   private DeploymentService deploymentService;
 
+  @SpyBean
+  private DeploymentResourceAssembler deploymentResourceAssembler;
+  
   @Test
   public void getDeployments() throws Exception {
 

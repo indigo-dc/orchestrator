@@ -16,14 +16,6 @@
 
 package it.reply.orchestrator.dal.entity;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
-
-import org.hibernate.annotations.GenericGenerator;
-import org.springframework.hateoas.Identifiable;
-
 import java.io.Serializable;
 import java.util.Date;
 
@@ -34,6 +26,14 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import javax.persistence.Version;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
+import org.hibernate.annotations.GenericGenerator;
+import org.springframework.hateoas.Identifiable;
 
 @MappedSuperclass
 @Getter

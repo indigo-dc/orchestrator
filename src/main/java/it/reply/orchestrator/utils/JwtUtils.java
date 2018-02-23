@@ -17,16 +17,15 @@
 package it.reply.orchestrator.utils;
 
 import com.google.common.base.Preconditions;
-
 import com.nimbusds.jwt.JWT;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.JWTParser;
 
-import lombok.experimental.UtilityClass;
-
 import java.text.ParseException;
 import java.util.Date;
 import java.util.Optional;
+
+import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class JwtUtils {

@@ -19,13 +19,13 @@ package it.reply.orchestrator.dto.deployment;
 import alien4cloud.model.components.AbstractPropertyValue;
 import alien4cloud.model.components.ScalarPropertyValue;
 
+import java.util.List;
+import java.util.Objects;
+
 import lombok.Getter;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.util.Assert;
-
-import java.util.List;
-import java.util.Objects;
 
 @Getter
 public class CredentialsAwareSlaPlacementPolicy extends SlaPlacementPolicy {

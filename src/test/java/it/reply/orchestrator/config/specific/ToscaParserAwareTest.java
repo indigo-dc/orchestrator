@@ -16,34 +16,25 @@
 
 package it.reply.orchestrator.config.specific;
 
-import alien4cloud.component.repository.exception.CSARVersionAlreadyExistsException;
-import alien4cloud.tosca.ArchiveParser;
-import alien4cloud.tosca.ArchiveUploadService;
-import alien4cloud.tosca.parser.ParsingException;
-
 import it.reply.orchestrator.annotation.SpringTestProfile;
 import it.reply.orchestrator.config.Alien4CloudConfig;
+import it.reply.orchestrator.config.properties.OrchestratorProperties;
+import it.reply.orchestrator.service.IndigoInputsPreProcessorService;
 import it.reply.orchestrator.service.ToscaServiceImpl;
+import it.reply.orchestrator.service.security.OAuth2TokenService;
 
-import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
-import org.mockito.Spy;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationContext;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
-import org.springframework.test.util.ReflectionTestUtils;
-
-import java.io.IOException;
 
 @ActiveProfiles(SpringTestProfile.PROFILE_QUALIFIER)
-@ContextConfiguration(classes = Alien4CloudConfig.class)
-@SpringBootTest
+@SpringBootTest(classes = { Alien4CloudConfig.class, ToscaServiceImpl.class },
+    properties = "alien4cloud.elasticSearch.clusterName=es-cluster-test")
 public abstract class ToscaParserAwareTest {
 
   @ClassRule
@@ -52,40 +43,13 @@ public abstract class ToscaParserAwareTest {
   @Rule
   public final SpringMethodRule springMethodRule = new SpringMethodRule();
 
-  @Autowired
-  @Spy
-  private ApplicationContext ctx;
+  @MockBean
+  private OAuth2TokenService oauth2tokenService;
 
-  @Autowired
-  @Spy
-  private ArchiveParser parser;
+  @SpyBean
+  private IndigoInputsPreProcessorService indigoInputsPreProcessorService;
 
-  @Autowired
-  @Spy
-  private ArchiveUploadService archiveUploadService;
+  @SpyBean
+  private OrchestratorProperties orchestratorProperties;
 
-  @Value("${directories.alien}/${directories.csar_repository}")
-  private String alienRepoDir;
-
-  @Value("${tosca.definitions.normative}")
-  private String normativeLocalName;
-
-  @Value("${tosca.definitions.indigo}")
-  private String indigoLocalName;
-
-  private static boolean setUpIsDone = false;
-
-  @Before
-  public void init() throws CSARVersionAlreadyExistsException, ParsingException, IOException {
-    if (!setUpIsDone) {
-      ToscaServiceImpl toscaServiceImpl = getToscaService();
-      ReflectionTestUtils.setField(toscaServiceImpl, "alienRepoDir", alienRepoDir);
-      ReflectionTestUtils.setField(toscaServiceImpl, "normativeLocalName", normativeLocalName);
-      ReflectionTestUtils.setField(toscaServiceImpl, "indigoLocalName", indigoLocalName);
-      toscaServiceImpl.init();
-      setUpIsDone = true;
-    }
-  }
-
-  protected abstract ToscaServiceImpl getToscaService();
 }

@@ -27,6 +27,12 @@ import it.reply.orchestrator.dto.onedata.UserSpaces;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.utils.CommonUtils;
 
+import java.net.URI;
+import java.util.List;
+import java.util.Objects;
+
+import javax.ws.rs.core.UriBuilder;
+
 import org.apache.commons.collections4.CollectionUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -37,12 +43,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
-
-import java.net.URI;
-import java.util.List;
-import java.util.Objects;
-
-import javax.ws.rs.core.UriBuilder;
 
 @Service
 @EnableConfigurationProperties(OneDataProperties.class)

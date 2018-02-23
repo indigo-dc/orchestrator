@@ -16,6 +16,8 @@
 
 package it.reply.orchestrator.workflow;
 
+import java.util.UUID;
+
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.ignite.Ignite;
@@ -28,8 +30,6 @@ import org.flowable.job.service.impl.asyncexecutor.ExecuteAsyncRunnable;
 import org.flowable.job.service.impl.asyncexecutor.UnacquireAsyncHistoryJobExceptionHandler;
 import org.springframework.stereotype.Component;
 
-import java.util.UUID;
-
 @Slf4j
 @Component
 public class HistoryJobMessageListener implements IgniteBiPredicate<UUID, String> {
@@ -39,6 +39,14 @@ public class HistoryJobMessageListener implements IgniteBiPredicate<UUID, String
   private transient JobServiceConfiguration jobServiceConfiguration;
   private transient AsyncRunnableExecutionExceptionHandler exceptionHandler;
 
+  /**
+   * Creates a new HistoryJobMessageListener.
+   * 
+   * @param processEngineConfiguration
+   *          the ProcessEngineConfiguration to use
+   * @param ignite
+   *          the Ignite instance to use
+   */
   public HistoryJobMessageListener(ProcessEngineConfiguration processEngineConfiguration,
       Ignite ignite) {
     this.exceptionHandler = new UnacquireAsyncHistoryJobExceptionHandler();

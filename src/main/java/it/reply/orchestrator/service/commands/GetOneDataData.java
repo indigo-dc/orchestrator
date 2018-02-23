@@ -22,11 +22,11 @@ import it.reply.orchestrator.service.OneDataService;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
+import java.util.Map;
+
 import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.util.Map;
 
 @Component(WorkflowConstants.Delegate.GET_ONEDATA_DATA)
 public class GetOneDataData extends BaseRankCloudProvidersCommand {

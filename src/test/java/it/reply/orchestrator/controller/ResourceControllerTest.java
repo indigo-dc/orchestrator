@@ -16,18 +16,12 @@
 
 package it.reply.orchestrator.controller;
 
-import static org.hamcrest.Matchers.endsWith;
-import static org.hamcrest.Matchers.equalTo;
-import static org.hamcrest.Matchers.is;
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse;
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint;
-import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath;
-import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.hamcrest.Matchers.*;
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.*;
+import static org.springframework.restdocs.operation.preprocess.Preprocessors.*;
+import static org.springframework.restdocs.payload.PayloadDocumentation.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
@@ -43,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -57,7 +52,7 @@ import java.util.List;
 
 @WebMvcTest(controllers = ResourceController.class, secure = false)
 @AutoConfigureRestDocs("target/generated-snippets")
-@Import({ BaseResourceAssembler.class, HateoasAwareSpringDataWebConfiguration.class })
+@Import(HateoasAwareSpringDataWebConfiguration.class)
 public class ResourceControllerTest {
 
   @ClassRule
@@ -71,6 +66,9 @@ public class ResourceControllerTest {
 
   @MockBean
   private ResourceService resourceService;
+  
+  @SpyBean
+  private BaseResourceAssembler baseResourceAssembler;
 
   @Test
   public void getResources() throws Exception {
@@ -85,8 +83,8 @@ public class ResourceControllerTest {
             .accept(MediaType.APPLICATION_JSON).header(HttpHeaders.AUTHORIZATION,
                 OAuth2AccessToken.BEARER_TYPE + " <access token>"))
         .andExpect(status().isOk()).andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
-        .andExpect(jsonPath("$.content", org.hamcrest.Matchers.hasSize(2)))
-        .andExpect(jsonPath("$.content", org.hamcrest.Matchers.hasSize(2)))
+        .andExpect(jsonPath("$.content", hasSize(2)))
+        .andExpect(jsonPath("$.content", hasSize(2)))
         .andExpect(jsonPath("$.page.totalElements", equalTo(2)))
         .andExpect(jsonPath("$.links[0].rel", is("self"))).andExpect(jsonPath("$.links[0].href",
             endsWith("/deployments/" + deployment.getId() + "/resources?page=0&size=10&sort=created,desc")))

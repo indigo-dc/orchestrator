@@ -16,9 +16,6 @@
 
 package it.reply.orchestrator.utils;
 
-import lombok.experimental.UtilityClass;
-import lombok.extern.slf4j.Slf4j;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -27,6 +24,9 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import lombok.experimental.UtilityClass;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @UtilityClass

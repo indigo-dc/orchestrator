@@ -20,6 +20,12 @@ import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.resource.common.AbstractResource;
 import it.reply.orchestrator.utils.CommonUtils;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+import javax.validation.constraints.NotNull;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -29,12 +35,6 @@ import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-
-import javax.validation.constraints.NotNull;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

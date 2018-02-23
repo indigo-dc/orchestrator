@@ -23,11 +23,11 @@ import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.service.MonitoringService;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
+import java.util.List;
+
 import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 @Component(WorkflowConstants.Delegate.GET_MONITORING_DATA)
 public class GetMonitoringData extends BaseRankCloudProvidersCommand {

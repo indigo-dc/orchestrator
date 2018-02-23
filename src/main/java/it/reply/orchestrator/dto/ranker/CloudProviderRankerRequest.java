@@ -21,14 +21,14 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import it.reply.orchestrator.dto.slam.PreferenceCustomer;
 import it.reply.orchestrator.dto.slam.Sla;
 
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-
-import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.List;
 
 @Data
 @Builder
