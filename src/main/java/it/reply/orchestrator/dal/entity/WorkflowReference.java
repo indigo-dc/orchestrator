@@ -16,14 +16,6 @@
 
 package it.reply.orchestrator.dal.entity;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-import lombok.ToString;
-
-import org.springframework.hateoas.Identifiable;
-
 import java.io.Serializable;
 
 import javax.persistence.Column;
@@ -32,6 +24,14 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Transient;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
+
+import org.springframework.hateoas.Identifiable;
 
 @Entity
 @Getter

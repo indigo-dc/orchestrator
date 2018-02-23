@@ -16,6 +16,8 @@
 
 package it.reply.orchestrator.dto.cmdb;
 
+import java.io.Serializable;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -25,8 +27,6 @@ import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-
-import java.io.Serializable;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

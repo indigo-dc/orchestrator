@@ -51,9 +51,10 @@ public class CmdbServiceIT extends WebAppConfigurationAwareIT {
     CloudService serviceRecas = service.getServiceById(recasId);
     CloudServiceData data = CloudServiceData.builder()
         .serviceType("eu.egi.cloud.vm-management.openstack")
-        .endpoint("http://cloud.recas.ba.infn.it:5000/v2.0")
+        .endpoint("https://cloud.recas.ba.infn.it:5000/v3")
         .providerId("provider-RECAS-BARI")
         .type(Type.COMPUTE)
+        .region("recas-cloud")
         .build();
 
     CloudService service = CloudService.builder()

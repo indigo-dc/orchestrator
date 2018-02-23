@@ -63,6 +63,7 @@
 		<jacoco-maven-plugin.version>0.8.0</jacoco-maven-plugin.version>
 		<cobertura-maven-plugin.version>2.7</cobertura-maven-plugin.version>
 		<checkstyle-plugin.version>3.0.0</checkstyle-plugin.version>
+		<checkstyle.config.location>${project.basedir}/tools/maven-checkstyle-plugin/google_checks.xml</checkstyle.config.location>
 
 		<!-- Dependencies -->
 		<org.springframework.boot.version>1.5.10.RELEASE</org.springframework.boot.version>
@@ -455,16 +456,6 @@
 								</goals>
 							</execution>
 						</executions>
-						<configuration>
-							<excludes>
-								<!-- Prevent java.lang.RuntimeException: Method code too large! -->
-								<!-- We don't need to instrument this class anyway -->
-								<!-- As always, thanks JBPM -->
-								<exclude>
-									org/drools/compiler/lang/DRL6Lexer
-								</exclude>
-							</excludes>
-						</configuration>
 					</plugin>
 				</plugins>
 			</build>
@@ -664,6 +655,13 @@
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-checkstyle-plugin</artifactId>
 				<version>${checkstyle-plugin.version}</version>
+				<dependencies>
+					<dependency>
+						<groupId>com.puppycrawl.tools</groupId>
+						<artifactId>checkstyle</artifactId>
+						<version>8.10</version>
+					</dependency>
+				</dependencies>
 				<executions>
 					<execution>
 						<id>checkstyle</id>
@@ -676,7 +674,6 @@
 							<failsOnError>true</failsOnError>
 							<failOnViolation>true</failOnViolation>
 							<violationSeverity>warning</violationSeverity>
-							<configLocation>google_checks.xml</configLocation>
 						</configuration>
 					</execution>
 				</executions>

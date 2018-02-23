@@ -20,10 +20,6 @@ import it.reply.orchestrator.dal.util.CloudProviderEndpointToJsonConverter;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.enums.NodeStates;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
 import java.util.HashSet;
 import java.util.Set;
 
@@ -39,6 +35,10 @@ import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(indexes = { @Index(columnList = "toscaNodeName"), @Index(columnList = "deployment_uuid"),

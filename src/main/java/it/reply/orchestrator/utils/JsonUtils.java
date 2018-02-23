@@ -20,11 +20,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.springframework.boot.jackson.JsonComponent;
-
 import java.io.IOException;
 import java.util.concurrent.CountDownLatch;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.springframework.boot.jackson.JsonComponent;
 
 @JsonComponent
 public class JsonUtils {
@@ -51,6 +51,17 @@ public class JsonUtils {
     return getObjectMapper().writeValueAsString(object);
   }
 
+  /**
+   * Deserialize an object from a String.
+   * 
+   * @param serializedObject
+   *          the object serialized as String.
+   * @param typeReference
+   *          the TypeReference of the object
+   * @return the deserialized object
+   * @throws JsonProcessingException
+   *           in case of deserialization exceptions
+   */
   public static <T> @NonNull T deserialize(@NonNull String serializedObject,
       TypeReference<T> typeReference) throws JsonProcessingException {
     try {
@@ -61,6 +72,17 @@ public class JsonUtils {
     }
   }
 
+  /**
+   * Deserialize an object from a String.
+   * 
+   * @param serializedObject
+   *          the object serialized as String.
+   * @param typeReference
+   *          the Class of the object
+   * @return the deserialized object
+   * @throws JsonProcessingException
+   *           in case of deserialization exceptions
+   */
   public static <T> @NonNull T deserialize(@NonNull String serializedObject,
       Class<T> typeReference) throws JsonProcessingException {
     try {

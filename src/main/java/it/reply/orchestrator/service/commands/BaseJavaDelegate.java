@@ -19,14 +19,14 @@ package it.reply.orchestrator.service.commands;
 import it.reply.orchestrator.exception.service.WorkflowException;
 import it.reply.orchestrator.utils.MdcUtils;
 
+import java.util.Optional;
+
 import lombok.extern.slf4j.Slf4j;
 
 import org.flowable.bpmn.model.FlowElement;
 import org.flowable.engine.common.api.FlowableException;
 import org.flowable.engine.delegate.DelegateExecution;
 import org.flowable.engine.delegate.JavaDelegate;
-
-import java.util.Optional;
 
 @Slf4j
 public abstract class BaseJavaDelegate implements JavaDelegate {

@@ -18,6 +18,13 @@ package it.reply.orchestrator.config.properties;
 
 import com.google.common.base.Preconditions;
 
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
+
+import javax.validation.constraints.NotNull;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -26,13 +33,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
-
-import java.net.URI;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-
-import javax.validation.constraints.NotNull;
 
 @Validated
 @Data

@@ -16,6 +16,8 @@
 
 package it.reply.orchestrator.workflow;
 
+import java.util.UUID;
+
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.ignite.Ignite;
@@ -26,8 +28,6 @@ import org.flowable.job.service.JobServiceConfiguration;
 import org.flowable.job.service.impl.asyncexecutor.ExecuteAsyncRunnable;
 import org.springframework.stereotype.Component;
 
-import java.util.UUID;
-
 @Slf4j
 @Component
 public class JobMessageListener implements IgniteBiPredicate<UUID, String> {
@@ -36,6 +36,14 @@ public class JobMessageListener implements IgniteBiPredicate<UUID, String> {
 
   private transient JobServiceConfiguration jobServiceConfiguration;
 
+  /**
+   * Creates a new JobMessageListener.
+   * 
+   * @param processEngineConfiguration
+   *          the ProcessEngineConfiguration to use
+   * @param ignite
+   *          the Ignite instance to use
+   */
   public JobMessageListener(ProcessEngineConfiguration processEngineConfiguration, Ignite ignite) {
     this.jobServiceConfiguration = (JobServiceConfiguration) processEngineConfiguration
         .getServiceConfigurations()

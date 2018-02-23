@@ -16,18 +16,17 @@
 
 package it.reply.orchestrator.dal.util;
 
-import com.google.common.base.Preconditions;
-
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.google.common.base.Preconditions;
 
 import it.reply.orchestrator.utils.JsonUtils;
+
+import javax.persistence.AttributeConverter;
 
 import lombok.extern.slf4j.Slf4j;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-
-import javax.persistence.AttributeConverter;
 
 @Slf4j
 public abstract class AbstractToJsonConverter<@Nullable T>

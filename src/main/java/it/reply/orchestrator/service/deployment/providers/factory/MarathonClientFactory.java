@@ -32,6 +32,14 @@ import it.reply.orchestrator.config.properties.MarathonProperties;
 import it.reply.orchestrator.config.properties.MesosProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
 
+import java.io.IOException;
+import java.io.Reader;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import javax.validation.constraints.NotNull;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
@@ -44,14 +52,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
-
-import java.io.IOException;
-import java.io.Reader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-
-import javax.validation.constraints.NotNull;
 
 @Slf4j
 @Service

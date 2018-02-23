@@ -39,6 +39,16 @@ public class CallbackServiceImpl implements CallbackService {
 
   private RestTemplate restTemplate;
 
+  /**
+   * Creates a new CallbackServiceImpl.
+   * 
+   * @param deploymentRepository
+   *          the DeploymentRepository to use
+   * @param deploymentResourceAssembler
+   *          the DeploymentResourceAssembler to use
+   * @param restTemplateBuilder
+   *          the RestTemplateBuilder to use
+   */
   public CallbackServiceImpl(DeploymentRepository deploymentRepository,
       DeploymentResourceAssembler deploymentResourceAssembler,
       RestTemplateBuilder restTemplateBuilder) {

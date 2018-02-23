@@ -18,6 +18,11 @@ package it.reply.orchestrator.config.properties;
 
 import it.reply.orchestrator.exception.service.ToscaException;
 
+import java.net.URI;
+
+import javax.validation.ValidationException;
+import javax.validation.constraints.NotNull;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
@@ -26,11 +31,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.validation.annotation.Validated;
-
-import java.net.URI;
-
-import javax.validation.ValidationException;
-import javax.validation.constraints.NotNull;
 
 @Validated
 @Data

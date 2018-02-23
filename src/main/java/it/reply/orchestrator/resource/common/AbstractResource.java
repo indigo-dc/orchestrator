@@ -18,6 +18,10 @@ package it.reply.orchestrator.resource.common;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
+import java.util.Date;
+
+import javax.validation.constraints.NotNull;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -27,10 +31,6 @@ import lombok.NoArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.hateoas.ResourceSupport;
-
-import java.util.Date;
-
-import javax.validation.constraints.NotNull;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

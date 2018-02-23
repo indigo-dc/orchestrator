@@ -18,9 +18,9 @@ package it.reply.orchestrator.dal.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-
 import javax.persistence.Converter;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Converter
 public class ObjectToJsonConverter extends AbstractToJsonConverter<@Nullable Object> {

@@ -22,14 +22,14 @@ import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.OrchestratorException;
 
+import java.util.EnumMap;
+import java.util.Optional;
+import java.util.stream.Stream;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
-
-import java.util.EnumMap;
-import java.util.Optional;
-import java.util.stream.Stream;
 
 @Service
 public class DeploymentProviderServiceRegistry {

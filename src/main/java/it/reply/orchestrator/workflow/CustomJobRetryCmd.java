@@ -135,7 +135,7 @@ public class CustomJobRetryCmd extends JobRetryCmd {
 
       } catch (Exception e) {
         if (e instanceof InterruptedException) {
-        	// it shouldn't happen, but...
+          // it shouldn't happen, but...
           Thread.currentThread().interrupt();
         }
         throw new FlowableException(

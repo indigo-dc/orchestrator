@@ -21,11 +21,11 @@ import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.enums.Status;
 
+import java.util.Optional;
+
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.Optional;
 
 @Slf4j
 public abstract class AbstractDeploymentProviderService implements DeploymentProviderService {

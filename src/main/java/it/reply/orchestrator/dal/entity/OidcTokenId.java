@@ -18,11 +18,6 @@ package it.reply.orchestrator.dal.entity;
 
 import it.reply.orchestrator.dal.util.ListStringToJsonConverter;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import org.checkerframework.checker.nullness.qual.NonNull;
-
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,6 +27,11 @@ import javax.persistence.Convert;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
 import javax.validation.constraints.NotNull;
+
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 @Data
 @Embeddable

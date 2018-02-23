@@ -46,7 +46,10 @@ public class GetSlam extends BaseRankCloudProvidersCommand {
           CloudProvider cp = rankCloudProvidersMessage
               .getCloudProviders()
               .computeIfAbsent(sla.getCloudProviderId(),
-                  cloudProviderId -> CloudProvider.builder().id(cloudProviderId).build());
+                  cloudProviderId -> CloudProvider
+                      .builder()
+                      .id(cloudProviderId)
+                      .build());
 
           // Get provider's services
           sla

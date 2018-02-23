@@ -18,6 +18,9 @@ package it.reply.orchestrator.dto.common;
 
 import it.reply.orchestrator.utils.CommonUtils;
 
+import java.io.Serializable;
+import java.util.Optional;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -25,9 +28,6 @@ import lombok.NoArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.http.HttpStatus;
-
-import java.io.Serializable;
-import java.util.Optional;
 
 @Data
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

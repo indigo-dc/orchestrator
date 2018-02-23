@@ -20,27 +20,34 @@ import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.PaaSM
 import it.reply.orchestrator.config.properties.MonitoringProperties;
 import it.reply.orchestrator.dto.monitoring.MonitoringResponse;
 import it.reply.orchestrator.exception.service.DeploymentException;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import it.reply.orchestrator.utils.CommonUtils;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Optional;
 
 import javax.ws.rs.core.UriBuilder;
+
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.http.ResponseEntity;
+import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 @EnableConfigurationProperties(MonitoringProperties.class)
 public class MonitoringServiceImpl implements MonitoringService {
 
-  @Autowired
   private MonitoringProperties monitoringProperties;
 
-  @Autowired
   private RestTemplate restTemplate;
+
+  public MonitoringServiceImpl(MonitoringProperties monitoringProperties,
+      RestTemplateBuilder restTemplateBuilder) {
+    this.monitoringProperties = monitoringProperties;
+    this.restTemplate = restTemplateBuilder.build();
+  }
 
   @Override
   public List<PaaSMetric> getProviderData(String providerId) {
@@ -50,24 +57,25 @@ public class MonitoringServiceImpl implements MonitoringService {
         .build(providerId)
         .normalize();
 
-    ResponseEntity<MonitoringResponse> response = restTemplate
-        .getForEntity(requestUri, MonitoringResponse.class);
-    if (response.getStatusCode().is2xxSuccessful()) {
-      // FIXME remove this ugliness
-      return response
-          .getBody()
-          .getResult()
-          .getGroups()
-          .get(0)
-          .getPaasMachines()
-          .get(0)
-          .getServices()
-          .get(0)
-          .getPaasMetrics();
+    try {
+      ResponseEntity<MonitoringResponse> response =
+          restTemplate.getForEntity(requestUri, MonitoringResponse.class);
+      return Optional
+          .ofNullable(response.getBody().getResult())
+          .map(CommonUtils::checkNotNull)
+          .map(result -> result.getGroups())
+          .flatMap(groups -> groups.stream().findFirst())
+          .map(group -> group.getPaasMachines())
+          .flatMap(paasMachines -> paasMachines.stream().findFirst())
+          .map(paasMachine -> paasMachine.getServices())
+          .flatMap(services -> services.stream().findFirst())
+          .map(service -> service.getPaasMetrics())
+          .orElseThrow(() -> new DeploymentException(
+              "No metrics available for provider <" + providerId + ">"));
+    } catch (RestClientException ex) {
+      throw new DeploymentException(
+          "Error fetching monitoring data for provider <" + providerId + ">", ex);
     }
-
-    throw new DeploymentException(
-        "Error retrieving monitoring data for provider <" + providerId + ">");
   }
 
 }

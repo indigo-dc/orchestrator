@@ -18,11 +18,11 @@ package it.reply.orchestrator.dal.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-
 import java.util.Set;
 
 import javax.persistence.Converter;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Converter
 public class SetStringToJsonConverter extends AbstractToJsonConverter<@Nullable Set<String>> {

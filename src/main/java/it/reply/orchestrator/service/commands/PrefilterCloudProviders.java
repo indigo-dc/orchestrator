@@ -37,14 +37,6 @@ import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
-import lombok.extern.slf4j.Slf4j;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapUtils;
-import org.flowable.engine.delegate.DelegateExecution;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -52,6 +44,14 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import lombok.extern.slf4j.Slf4j;
+
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
+import org.flowable.engine.delegate.DelegateExecution;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 @Component(WorkflowConstants.Delegate.PREFILTER_CLOUD_PROVIDERS)
 @Slf4j
@@ -67,12 +67,6 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
   public void execute(DelegateExecution execution,
       RankCloudProvidersMessage rankCloudProvidersMessage) {
     // TODO Filter cloud providers (i.e. based on OneData)
-
-    Deployment deployment = getDeployment(rankCloudProvidersMessage);
-
-    // Filter out providers that do not support the requested images
-    ArchiveRoot ar =
-        toscaService.prepareTemplate(deployment.getTemplate(), deployment.getParameters());
 
     Set<CloudProvider> providersToDiscard = new HashSet<>();
     Set<CloudService> servicesToDiscard = new HashSet<>();
@@ -113,6 +107,12 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
 
     discardProvidersAndServices(providersToDiscard, servicesToDiscard, rankCloudProvidersMessage);
 
+    Deployment deployment = getDeployment(rankCloudProvidersMessage);
+    
+    // Filter out providers that do not support the requested images
+    ArchiveRoot ar =
+        toscaService.prepareTemplate(deployment.getTemplate(), deployment.getParameters());
+    
     // Filter provider by image contextualization check
     rankCloudProvidersMessage.getCloudProviders().values().forEach(cloudProvider -> {
       cloudProvider.getCmbdProviderServicesByType(Type.COMPUTE).forEach(cloudService -> {

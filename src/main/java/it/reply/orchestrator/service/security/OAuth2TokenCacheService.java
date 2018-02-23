@@ -27,6 +27,17 @@ import it.reply.orchestrator.utils.JwtUtils;
 import it.reply.orchestrator.utils.MdcUtils;
 import it.reply.orchestrator.utils.MdcUtils.MdcCloseable;
 
+import java.io.Serializable;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.Optional;
+
+import javax.cache.Cache;
+import javax.cache.processor.EntryProcessor;
+import javax.cache.processor.EntryProcessorException;
+import javax.cache.processor.MutableEntry;
+
 import lombok.extern.slf4j.Slf4j;
 
 import org.apache.ignite.Ignite;
@@ -42,17 +53,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
-
-import java.io.Serializable;
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.Optional;
-
-import javax.cache.Cache;
-import javax.cache.processor.EntryProcessor;
-import javax.cache.processor.EntryProcessorException;
-import javax.cache.processor.MutableEntry;
 
 @Service
 @Slf4j
@@ -82,6 +82,16 @@ public class OAuth2TokenCacheService {
     oauth2TokensCache = ignite.getOrCreateCache(oauth2CacheCfg);
   }
 
+  /**
+   * Exchanges an access token, puts the refresh token in DB and the exchanged access token in
+   * cache.
+   * 
+   * @param id
+   *          the ID of the access token in the cache
+   * @param accessToken
+   *          the access token to exchange
+   * @return the received access grant
+   */
   public AccessGrant exchangeAccessToken(OidcTokenId id, String accessToken) {
     oauth2TokensCache.invoke(id, exchangeEntryProcessor(), MdcUtils.getRequestId(),
         MdcUtils.getDeploymentId(), accessToken);

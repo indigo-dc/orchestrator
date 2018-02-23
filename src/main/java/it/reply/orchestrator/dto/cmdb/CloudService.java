@@ -18,6 +18,9 @@ package it.reply.orchestrator.dto.cmdb;
 
 import com.google.common.base.Preconditions;
 
+import java.io.Serializable;
+import java.util.Optional;
+
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -27,9 +30,6 @@ import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-
-import java.io.Serializable;
-import java.util.Optional;
 
 @Data
 @EqualsAndHashCode(callSuper = true)

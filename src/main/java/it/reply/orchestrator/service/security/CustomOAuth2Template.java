@@ -19,6 +19,12 @@ package it.reply.orchestrator.service.security;
 import it.reply.orchestrator.dto.security.AccessGrant;
 import it.reply.orchestrator.dto.security.TokenIntrospectionResponse;
 
+import java.net.URI;
+import java.nio.charset.Charset;
+import java.util.Collection;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.mitre.oauth2.model.ClientDetailsEntity.AuthMethod;
 import org.mitre.oauth2.model.RegisteredClient;
 import org.mitre.openid.connect.config.ServerConfiguration;
@@ -33,12 +39,6 @@ import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
-
-import java.net.URI;
-import java.nio.charset.Charset;
-import java.util.Collection;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 public class CustomOAuth2Template {
 

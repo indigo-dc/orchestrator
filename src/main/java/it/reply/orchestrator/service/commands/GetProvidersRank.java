@@ -25,13 +25,13 @@ import it.reply.orchestrator.dto.slam.PreferenceCustomer;
 import it.reply.orchestrator.service.CloudProviderRankerService;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
-import org.flowable.engine.delegate.DelegateExecution;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.flowable.engine.delegate.DelegateExecution;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 @Component(WorkflowConstants.Delegate.GET_PROVIDERS_RANK)
 public class GetProvidersRank extends BaseRankCloudProvidersCommand {

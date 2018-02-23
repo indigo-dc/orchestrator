@@ -17,11 +17,9 @@
 package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.dto.deployment.BaseWorkflowMessage;
-import it.reply.orchestrator.service.deployment.providers.DeploymentStatusHelper;
 
 import org.junit.Rule;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
@@ -34,9 +32,6 @@ public abstract class BaseWorkflowCommandTest<M extends BaseWorkflowMessage, T e
   @InjectMocks
   @Spy
   protected T command;
-
-  @Mock
-  protected DeploymentStatusHelper deploymentStatusHelper;
 
   public BaseWorkflowCommandTest(T command) {
     this.command = command;

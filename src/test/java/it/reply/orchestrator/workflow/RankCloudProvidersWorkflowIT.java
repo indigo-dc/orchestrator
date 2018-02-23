@@ -30,7 +30,6 @@ import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.service.CloudProviderRankerService;
-import it.reply.orchestrator.service.CloudProviderRankerServiceIT;
 import it.reply.orchestrator.service.CloudProviderRankerServiceTest;
 import it.reply.orchestrator.service.CmdbService;
 import it.reply.orchestrator.service.MonitoringService;
@@ -91,15 +90,15 @@ public class RankCloudProvidersWorkflowIT extends WebAppConfigurationAwareIT {
 //  @Autowired
 //  private BusinessProcessManager wfService;
 
-  private MockRestServiceServer mockServer;
+//  private MockRestServiceServer mockServer;
 
-  @Autowired
-  private RestTemplate restTemplate;
+//  @Autowired
+//  private RestTemplate restTemplate;
 
   // @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
-    mockServer = MockRestServiceServer.createServer(restTemplate);
+//    mockServer = MockRestServiceServer.createServer(restTemplate);
   }
 
 //  /**

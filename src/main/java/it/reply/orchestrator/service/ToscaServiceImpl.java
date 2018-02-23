@@ -16,11 +16,6 @@
 
 package it.reply.orchestrator.service;
 
-import com.google.common.base.Preconditions;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Lists;
-import com.google.common.io.ByteStreams;
-
 import alien4cloud.component.repository.exception.CSARVersionAlreadyExistsException;
 import alien4cloud.exception.InvalidArgumentException;
 import alien4cloud.model.components.AbstractPropertyValue;
@@ -48,6 +43,11 @@ import alien4cloud.tosca.parser.ParsingResult;
 import alien4cloud.tosca.serializer.VelocityUtil;
 import alien4cloud.utils.FileUtil;
 
+import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Lists;
+import com.google.common.io.ByteStreams;
+
 import it.reply.orchestrator.config.properties.OidcProperties.OidcClientProperties;
 import it.reply.orchestrator.config.properties.OrchestratorProperties;
 import it.reply.orchestrator.dal.entity.Resource;
@@ -65,23 +65,6 @@ import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
-
-import lombok.extern.slf4j.Slf4j;
-
-import org.apache.commons.lang3.StringUtils;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jgrapht.alg.CycleDetector;
-import org.jgrapht.graph.DirectedMultigraph;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.ApplicationContext;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.AuthorityUtils;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
-import org.springframework.stereotype.Service;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
@@ -115,6 +98,23 @@ import java.util.zip.ZipOutputStream;
 
 import javax.annotation.PostConstruct;
 import javax.validation.ValidationException;
+
+import lombok.extern.slf4j.Slf4j;
+
+import org.apache.commons.lang3.StringUtils;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jgrapht.alg.CycleDetector;
+import org.jgrapht.graph.DirectedMultigraph;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationContext;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
+import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
@@ -360,8 +360,8 @@ public class ToscaServiceImpl implements ToscaService {
   @Override
   public Map<NodeTemplate, ImageData> extractImageRequirements(ArchiveRoot parsingResult) {
 
-    Map<String, Function<ImageDataBuilder, Function<String, ImageDataBuilder>>> capabilityPropertiesMapping =
-        new HashMap<>();
+    Map<String, Function<ImageDataBuilder, Function<String, ImageDataBuilder>>> 
+        capabilityPropertiesMapping = new HashMap<>();
 
     capabilityPropertiesMapping.put("image",
         imageMetadataBuilder -> imageMetadataBuilder::imageName);

@@ -37,8 +37,7 @@ import it.reply.orchestrator.utils.CommonUtils;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Spy;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -49,16 +48,8 @@ import java.util.stream.Collectors;
 
 public class ToscaServiceTest extends ToscaParserAwareTest {
 
-  @InjectMocks
-  protected ToscaServiceImpl toscaService;
-
-  @Spy
-  private IndigoInputsPreProcessorService indigoInputsPreProcessorService;
-  
-  @Override
-  protected ToscaServiceImpl getToscaService() {
-    return toscaService;
-  }
+  @Autowired
+  protected ToscaService toscaService;
 
   public static final String TEMPLATES_BASE_DIR = "./src/test/resources/tosca/";
   public static final String TEMPLATES_INPUT_BASE_DIR = TEMPLATES_BASE_DIR + "inputs/";

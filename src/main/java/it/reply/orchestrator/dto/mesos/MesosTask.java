@@ -16,15 +16,15 @@
 
 package it.reply.orchestrator.dto.mesos;
 
-import lombok.Data;
-
-import org.checkerframework.checker.nullness.qual.NonNull;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
+import lombok.Data;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 @Data
 public abstract class MesosTask<T extends MesosTask<T>> {

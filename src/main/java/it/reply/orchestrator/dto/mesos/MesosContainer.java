@@ -19,14 +19,14 @@ package it.reply.orchestrator.dto.mesos;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import lombok.Data;
 import lombok.Getter;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Data
 public class MesosContainer {

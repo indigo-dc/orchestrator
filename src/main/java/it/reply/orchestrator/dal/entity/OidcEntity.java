@@ -16,14 +16,6 @@
 
 package it.reply.orchestrator.dal.entity;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.hibernate.annotations.GenericGenerator;
-import org.springframework.hateoas.Identifiable;
-
 import javax.persistence.Column;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
@@ -32,6 +24,14 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
+
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.hibernate.annotations.GenericGenerator;
+import org.springframework.hateoas.Identifiable;
 
 @Data
 @NoArgsConstructor
