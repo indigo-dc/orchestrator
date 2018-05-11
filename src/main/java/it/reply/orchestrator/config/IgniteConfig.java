@@ -57,15 +57,6 @@ public class IgniteConfig {
   @Bean(destroyMethod = "close")
   public Ignite ignite(ApplicationContext applicationContext,
       IgniteConfiguration igniteConfiguration) throws IgniteCheckedException {
-    Ignite ignite = null;
-    try {
-      ignite = IgniteSpring.start(igniteConfiguration, applicationContext);
-    } catch (Exception ex) {
-      if (ignite != null) {
-        ignite.close();
-      }
-      throw ex;
-    }
-    return ignite;
+    return IgniteSpring.start(igniteConfiguration, applicationContext);
   }
 }
