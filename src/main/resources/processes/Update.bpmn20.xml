@@ -11,9 +11,7 @@
           <flowable:failedJobRetryTimeCycle>R</flowable:failedJobRetryTimeCycle>
         </extensionElements>
       </serviceTask>
-      <intermediateThrowEvent id="sid-72E32115-652B-4A23-9577-FCD35FC58043">
-        <signalEventDefinition signalRef="deploymentUpdated"></signalEventDefinition>
-      </intermediateThrowEvent>
+      <serviceTask id="sid-72E32115-652B-4A23-9577-FCD35FC58043" name="Notify" flowable:async="true" flowable:delegateExpression="${notify}"></serviceTask>
       <endEvent id="sid-6A4BC039-403A-417E-B9A2-41E6A9C87D9F"></endEvent>
       <sequenceFlow id="sid-F769952B-6572-4DF6-A0F7-9CE925851290" sourceRef="sid-A02B51BB-2563-491F-9940-EDFC999314FC" targetRef="sid-A165FF62-D490-4C23-B755-4BAF7B7BF533"></sequenceFlow>
       <sequenceFlow id="sid-C88AC952-8797-4A2B-977D-FD46B337D7A0" sourceRef="sid-A165FF62-D490-4C23-B755-4BAF7B7BF533" targetRef="sid-72E32115-652B-4A23-9577-FCD35FC58043"></sequenceFlow>
