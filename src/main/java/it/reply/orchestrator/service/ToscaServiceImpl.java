@@ -621,7 +621,7 @@ public class ToscaServiceImpl implements ToscaService {
       if (metadataField != null) {
         // if the field is populated for requiredImageMetadata, filter on it
         imageStream = imageStream
-            .filter(image -> !metadataField.equalsIgnoreCase(fieldExtractor.apply(image)));
+            .filter(image -> metadataField.equalsIgnoreCase(fieldExtractor.apply(image)));
       }
     }
     return imageStream.findFirst();
