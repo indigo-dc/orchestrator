@@ -615,17 +615,25 @@ public class ToscaServiceImpl implements ToscaService {
         ImageData::getVersion);
 
     Stream<ImageData> imageStream = cloudProviderServiceImages.stream();
-    
+
+    boolean filteredOnSomeField = false;
     for (Function<ImageData, String> fieldExtractor : fallbackFieldExtractors) {
       String metadataField = fieldExtractor.apply(requiredImageMetadata);
       if (metadataField != null) {
+        filteredOnSomeField = true;
         // if the field is populated for requiredImageMetadata, filter on it
         imageStream = imageStream
             .filter(image -> metadataField.equalsIgnoreCase(fieldExtractor.apply(image)));
       }
     }
-    return imageStream.findFirst();
 
+    boolean imageNameIsPresent = requiredImageMetadata.getImageName() != null;
+    if (!filteredOnSomeField && imageNameIsPresent) {
+      return Optional.empty();
+    } else {
+      return imageStream.findFirst();
+    }
+    
   }
 
   private Collection<NodeTemplate> getNodesFromArchiveRoot(ArchiveRoot archiveRoot) {
