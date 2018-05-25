@@ -16,8 +16,6 @@
 
 package it.reply.orchestrator;
 
-import bitronix.tm.jndi.BitronixInitialContextFactory;
-
 import java.util.TimeZone;
 
 import org.springframework.boot.SpringApplication;
@@ -27,17 +25,9 @@ import org.springframework.boot.autoconfigure.web.ErrorMvcAutoConfiguration;
 @SpringBootApplication(exclude = ErrorMvcAutoConfiguration.class)
 public class Application {
 
-  public static final Class<Application> applicationClass = Application.class;
-
-  static {
-    // JBPM needs a JNDI context from which retrieve the UT and TSR
-    System.setProperty(javax.naming.Context.INITIAL_CONTEXT_FACTORY,
-        BitronixInitialContextFactory.class.getName());
-  }
-
   public static void main(String[] args) {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
-    SpringApplication.run(applicationClass, args);
+    SpringApplication.run(Application.class, args);
   }
 
 }
