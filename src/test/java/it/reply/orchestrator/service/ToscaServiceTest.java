@@ -30,26 +30,36 @@ import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingException;
 
 import it.reply.orchestrator.config.specific.ToscaParserAwareTest;
+import it.reply.orchestrator.dto.cmdb.ImageData;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.util.TestUtil;
 import it.reply.orchestrator.utils.CommonUtils;
 
-import org.assertj.core.api.Assertions;
-import org.junit.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.io.IOException;
+import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+import junitparams.converters.Nullable;
+
+import org.assertj.core.api.Assertions;
+import org.assertj.core.api.OptionalAssert;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.beans.factory.annotation.Autowired;
+
+@RunWith(JUnitParamsRunner.class)
 public class ToscaServiceTest extends ToscaParserAwareTest {
 
   @Autowired
-  protected ToscaService toscaService;
+  protected ToscaServiceImpl toscaService;
 
   public static final String TEMPLATES_BASE_DIR = "./src/test/resources/tosca/";
   public static final String TEMPLATES_INPUT_BASE_DIR = TEMPLATES_BASE_DIR + "inputs/";
@@ -231,6 +241,91 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
     ArchiveRoot ar = toscaService.prepareTemplate(template, inputs);
     Map<String, OneData> odr = toscaService.extractOneDataRequirements(ar, inputs);
     assertEquals(0, odr.size());
+  }
+
+  @Test
+  @Parameters({ "ubuntu, ubuntu, true",
+      "ubuntu, ubuntu:16.04, true",
+      "ubuntu:16.04, ubuntu:16.04, true",
+      "ubuntu:16.04, ubuntu, false",
+      "ubuntu, centos, false",
+      "ubuntu, centos:7, false",
+      "ubuntu:16.04, centos, false",
+      "ubuntu:16.04, centos:7, false",
+      "ubuntu, null, false",
+      "ubuntu:16.04, null, false" })
+  public void checkRequiredImageMetadata(String requiredImageName,
+      @Nullable String availableImageName, boolean expectedResult) {
+    Assertions.assertThat(toscaService.requiredImageMetadata(requiredImageName, availableImageName))
+        .isEqualTo(expectedResult);
+  }
+
+  @Test
+  @Parameters({
+      "type, 1, null, 1",
+      "type, 1, 1, 1",
+      "type, 1, 2, 1",
+      "type, 2, null, null",
+      "type, 2, 1, 1",
+      "type, 2, 2, null",
+      "architecture, 1, null, 1",
+      "architecture, 1, 1, 1",
+      "architecture, 1, 2, 1",
+      "architecture, 2, null, null",
+      "architecture, 2, 1, 1",
+      "architecture, 2, 2, null",
+      "distribution, 1, null, 1",
+      "distribution, 1, 1, 1",
+      "distribution, 1, 2, 1",
+      "distribution, 2, null, null",
+      "distribution, 2, 1, 1",
+      "distribution, 2, 2, null",
+      "version, 1, null, 1",
+      "version, 1, 1, 1",
+      "version, 1, 2, 1",
+      "version, 2, null, null",
+      "version, 2, 1, 1",
+      "version, 2, 2, null",
+      "null, 1, null, 0",
+      "null, 1, 1, 1",
+      "null, 1, 2, null"
+  })
+  public void checkRequiredImageMetadata(@Nullable String fieldname, String fieldValue,
+      @Nullable String imageName, @Nullable String expectedId)
+      throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException,
+      SecurityException {
+    List<ImageData> images = new ArrayList<>();
+
+    for (int i = 0; i < 2; ++i) {
+      images.add(ImageData
+          .builder()
+          .imageId(String.valueOf(i))
+          .imageName(String.valueOf(i))
+          .type(String.valueOf(i))
+          .architecture(String.valueOf(i))
+          .distribution(String.valueOf(i))
+          .version(String.valueOf(i))
+          .build());
+    }
+    ImageData imageMetadata = ImageData.builder().build();
+    if (imageName != null) {
+      imageMetadata.setImageName(imageName);
+    }
+    if (fieldname != null) {
+      Field field = ImageData.class.getDeclaredField(fieldname);
+      field.setAccessible(true);
+      field.set(imageMetadata, fieldValue);
+    }
+
+    OptionalAssert<ImageData> assertion =
+        Assertions.assertThat(toscaService.getBestImageForCloudProvider(imageMetadata, images));
+    if (expectedId != null) {
+      assertion.hasValueSatisfying(image -> {
+        image.getImageId().equals(expectedId);
+      });
+    } else {
+      assertion.isEmpty();
+    }
   }
 
 }
