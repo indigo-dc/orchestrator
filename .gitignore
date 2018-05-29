@@ -51,3 +51,10 @@ target/
 # Builded war file
 /docker/*.war
 /docker/*.war.original
+
+# IntelliJ IDEA config files
+tools/.idea/workspace.xml
+tools/.idea/dictionaries/
+tools/.idea/checkstyleidea-libs/
+tools/.idea/dataSources*
+tools/.idea/sonarlint*
