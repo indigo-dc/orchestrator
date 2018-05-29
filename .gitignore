@@ -42,9 +42,6 @@ target/
 # STS (Spring Tool Suite)
 .springBeans
 
-# CheckStyle
-.checkstyle
-
 # Jenkins local Maven repository folder
 .repository/
 

@@ -1,0 +1,14 @@
+#Organize Import Order
+#Tue May 29 14:20:35 CEST 2018
+9=mesosphere
+8=lombok
+7=javax
+6=java
+5=it
+4=feign
+3=es
+11=org
+2=com
+10=net
+1=bitronix
+0=alien4cloud
