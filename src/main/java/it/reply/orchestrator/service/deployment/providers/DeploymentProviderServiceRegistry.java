@@ -26,7 +26,6 @@ import java.util.EnumMap;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
@@ -34,11 +33,9 @@ import org.springframework.util.Assert;
 @Service
 public class DeploymentProviderServiceRegistry {
 
-  @Autowired
-  private DeploymentRepository deploymentRepository;
+  private final DeploymentRepository deploymentRepository;
 
-  private EnumMap<DeploymentProvider, DeploymentProviderService> providers =
-      new EnumMap<>(DeploymentProvider.class);
+  private final EnumMap<DeploymentProvider, DeploymentProviderService> providers;
 
   /**
    * Creates the DeploymentProviderServiceRegistry from all the DeploymentProviderServices
@@ -47,10 +44,11 @@ public class DeploymentProviderServiceRegistry {
    * @param services
    *          the registered DeploymentProviderServices
    */
-  @Autowired
-  public DeploymentProviderServiceRegistry(DeploymentProviderService[] services) {
+  public DeploymentProviderServiceRegistry(DeploymentRepository deploymentRepository,
+      DeploymentProviderService[] services) {
+    this.deploymentRepository = deploymentRepository;
+    this.providers = new EnumMap<>(DeploymentProvider.class);
     Stream.of(services).forEach(service -> {
-
       DeploymentProviderQualifier annotation =
           service.getClass().getAnnotation(DeploymentProviderQualifier.class);
       Assert.notNull(annotation,
@@ -58,7 +56,7 @@ public class DeploymentProviderServiceRegistry {
               service.getClass(), DeploymentProviderQualifier.class));
 
       DeploymentProvider deploymentProvider = annotation.value();
-      Assert.notNull(deploymentProvider);
+      Assert.notNull(deploymentProvider, "DeploymentProvider value must not be null");
 
       providers.put(deploymentProvider, service);
     });
