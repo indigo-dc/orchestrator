@@ -16,18 +16,28 @@
 
 package it.reply.orchestrator.service.deployment.providers.factory;
 
-import com.google.common.collect.Lists;
-
 import alien4cloud.tosca.parser.ParsingException;
+
+import com.google.common.collect.Lists;
+import com.nimbusds.jwt.JWTClaimsSet;
+import com.nimbusds.jwt.PlainJWT;
 
 import es.upv.i3m.grycap.im.InfrastructureManager;
 
 import it.reply.orchestrator.config.properties.ImProperties;
 import it.reply.orchestrator.config.properties.OidcProperties;
+import it.reply.orchestrator.dal.entity.OidcEntity;
+import it.reply.orchestrator.dal.entity.OidcEntityId;
+import it.reply.orchestrator.dal.repository.OidcEntityRepository;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.utils.CommonUtils;
+
+import java.net.URI;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
@@ -35,17 +45,16 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-import java.net.URI;
-import java.util.List;
-import java.util.UUID;
-
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import junitparams.converters.Nullable;
+
+import static org.mockito.Mockito.*;
 
 @RunWith(JUnitParamsRunner.class)
 public class ImClientFactoryTest {
@@ -55,7 +64,12 @@ public class ImClientFactoryTest {
 
   private static String paasImUrl = "https://im.url";
 
-  private static String iamToken = "J1qK1c18UUGJFAzz9xnH56584l4";
+  private static final String iamToken = new PlainJWT(new JWTClaimsSet
+      .Builder()
+      .subject("subject")
+      .issuer("https://example.com")
+      .build())
+      .serialize();
 
   private static String imTokenAuthHeader =
       "id = im ; type = InfrastructureManager ; token = " + iamToken;
@@ -68,6 +82,9 @@ public class ImClientFactoryTest {
 
   @Spy
   private OidcProperties oidcProperties;
+
+  @Mock
+  private OidcEntityRepository oidcEntityRepository;
 
   @Before
   public void setup() throws ParsingException {
@@ -88,9 +105,15 @@ public class ImClientFactoryTest {
 
     String iaasAuthHeader =
         "id = " + (headerId != null ? headerId : "ost")
-            + " ; type = OpenStack ; tenant = oidc ; username = indigo-dc ; password = "
+            + " ; type = OpenStack ; tenant = oidc ; username = oidc-organization ; password = "
             + iamToken
             + " ; host = https://host:5000 ; auth_version = 3.x_oidc_access_token";
+
+    OidcEntity entity = new OidcEntity();
+    entity.setOidcEntityId(OidcEntityId.fromAccesToken(iamToken));
+    entity.setOrganization("oidc-organization");
+    when(oidcEntityRepository.findByOidcEntityId(entity.getOidcEntityId()))
+        .thenReturn(Optional.of(entity));
     testGetClient(cloudProviderEndpoint, ImClientFactoryTest.paasImUrl, iaasAuthHeader);
   }
 

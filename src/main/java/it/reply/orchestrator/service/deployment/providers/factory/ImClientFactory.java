@@ -29,6 +29,8 @@ import es.upv.i3m.grycap.im.exceptions.ImClientException;
 
 import it.reply.orchestrator.config.properties.ImProperties;
 import it.reply.orchestrator.config.properties.OidcProperties;
+import it.reply.orchestrator.dal.entity.OidcEntityId;
+import it.reply.orchestrator.dal.repository.OidcEntityRepository;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.exception.OrchestratorException;
@@ -62,6 +64,8 @@ public class ImClientFactory {
 
   private ImProperties imProperties;
 
+  private OidcEntityRepository oidcEntityRepository;
+
   protected OpenStackCredentials getOpenStackAuthHeader(CloudProviderEndpoint cloudProviderEndpoint,
       @NonNull String accessToken) {
     String endpoint = cloudProviderEndpoint.getCpEndpoint();
@@ -69,13 +73,18 @@ public class ImClientFactory {
     if (!matcher.matches()) {
       throw new DeploymentException("Wrong OS endpoint format: " + endpoint);
     } else {
+      String organization = oidcEntityRepository
+          .findByOidcEntityId(OidcEntityId.fromAccesToken(accessToken))
+          .orElseThrow(
+              () -> new DeploymentException("No user associated to deployment token found"))
+          .getOrganization();
       endpoint = matcher.group(1);
       OpenStackCredentials cred = cloudProviderEndpoint
           .getIaasHeaderId()
           .map(OpenStackCredentials::buildCredentials)
           .orElseGet(OpenStackCredentials::buildCredentials)
           .withTenant("oidc")
-          .withUsername("indigo-dc")
+          .withUsername(organization)
           .withPassword(accessToken)
           .withHost(endpoint);
       cloudProviderEndpoint
