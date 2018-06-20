@@ -48,6 +48,7 @@ public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData
   public static final String OCCI_COMPUTE_SERVICE = COMPUTE_SERVICE_PREFIX + ".occi";
   public static final String AWS_COMPUTE_SERVICE = "com.amazonaws.ec2";
   public static final String AZURE_COMPUTE_SERVICE = "com.microsoft.azure";
+  public static final String OTC_COMPUTE_SERVICE = "eu.otc.compute";
 
   public static final String CDMI_STORAGE_SERVICE = STORAGE_SERVICE_PREFIX + ".cdmi";
   public static final String ONEPROVIDER_STORAGE_SERVICE = STORAGE_SERVICE_PREFIX + ".oneprovider";
@@ -82,7 +83,7 @@ public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData
    * @return true if the service is a OpenStack compute service
    */
   public boolean isOpenStackComputeProviderService() {
-    return isServiceOfType(OPENSTACK_COMPUTE_SERVICE) && !isOtcComputeProviderService();
+    return isServiceOfType(OPENSTACK_COMPUTE_SERVICE);
   }
 
   /**
@@ -91,11 +92,7 @@ public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData
    * @return true if the service is a OTC compute service
    */
   public boolean isOtcComputeProviderService() {
-    return isServiceOfType(OPENSTACK_COMPUTE_SERVICE) && Optional
-        .ofNullable(getData())
-        // the only OST public (for now)
-        .filter(CloudServiceData::isPublicService)
-        .isPresent();
+    return isServiceOfType(OTC_COMPUTE_SERVICE);
   }
 
   /**
