@@ -46,9 +46,11 @@ public class Error implements Serializable {
 
   /**
    * Generate an Error from an exception and a {@link HttpStatus}.
-   * 
-   * @param ex
+   *
+   * @param exception
    *          the exception
+   * @param message
+   *          the message
    * @param status
    *          the HttpStatus
    */

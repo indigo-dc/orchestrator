@@ -36,6 +36,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -49,14 +50,21 @@ import it.reply.orchestrator.exception.http.ConflictException;
 import it.reply.orchestrator.exception.http.NotFoundException;
 import it.reply.orchestrator.resource.DeploymentResourceAssembler;
 import it.reply.orchestrator.service.DeploymentService;
-
 import it.reply.orchestrator.utils.JsonUtils;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 
 import org.hamcrest.Matchers;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.Answers;
+import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.restdocs.AutoConfigureRestDocs;
@@ -76,12 +84,9 @@ import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.test.web.servlet.MockMvc;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 @WebMvcTest(controllers = DeploymentController.class, secure = false)
+@RunWith(JUnitParamsRunner.class)
 @AutoConfigureRestDocs("target/generated-snippets")
 @Import(HateoasAwareSpringDataWebConfiguration.class)
 public class DeploymentControllerTest {
@@ -418,6 +423,53 @@ public class DeploymentControllerTest {
         .andExpect(jsonPath("$.title", is("Conflict")))
         .andExpect(
             jsonPath("$.message", is("Cannot update a deployment in DELETE_IN_PROGRESS state")));
+  }
+
+  @Test
+  @Parameters({"org.springframework.dao.TransientDataAccessException",
+      "org.flowable.engine.common.api.FlowableOptimisticLockingException"})
+  public void updateDeploymentConcurrentTransientException(Class<Exception> clazz)
+      throws Exception {
+    DeploymentRequest request = DeploymentRequest
+        .builder()
+        .template("template")
+        .build();
+
+    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    Mockito.doThrow(Mockito.mock(clazz))
+        .when(deploymentService)
+        .updateDeployment(deploymentId, request);
+
+    mockMvc
+        .perform(put("/deployments/" + deploymentId).contentType(MediaType.APPLICATION_JSON)
+            .content(JsonUtils.serialize(request)))
+        .andExpect(header().string(HttpHeaders.RETRY_AFTER, "0"))
+        .andExpect(jsonPath("$.code", is(409)))
+        .andExpect(jsonPath("$.title", is("Conflict")))
+        .andExpect(
+            jsonPath("$.message",
+                is("The request couldn't be fulfilled because of a concurrent update. Please retry later")));
+  }
+
+  @Test
+  @Parameters({"org.springframework.dao.TransientDataAccessException",
+      "org.flowable.engine.common.api.FlowableOptimisticLockingException"})
+  public void deleteDeploymentConcurrentTransientException(Class<Exception> clazz)
+      throws Exception {
+
+    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    Mockito.doThrow(Mockito.mock(clazz))
+        .when(deploymentService)
+        .deleteDeployment(deploymentId);
+
+    mockMvc
+        .perform(delete("/deployments/" + deploymentId))
+        .andExpect(header().string(HttpHeaders.RETRY_AFTER, "0"))
+        .andExpect(jsonPath("$.code", is(409)))
+        .andExpect(jsonPath("$.title", is("Conflict")))
+        .andExpect(
+            jsonPath("$.message",
+                is("The request couldn't be fulfilled because of a concurrent update. Please retry later")));
   }
 
   @Test
