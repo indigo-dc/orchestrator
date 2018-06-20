@@ -158,7 +158,7 @@ public class ImClientFactory {
       String password = cloudProviderEndpoint.getPassword();
       String tenant = cloudProviderEndpoint.getTenant();
       // TODO REMOVE and use explicit cloudProviderEndpoint information
-      Pattern pattern = Pattern.compile("\\s*(\\w+)\\s+(\\w+)\\s*");
+      Pattern pattern = Pattern.compile("\\s*(\\w+)\\s+([\\w\\-]+)\\s*");
       Matcher credentialsMatcher = pattern.matcher(username);
       if (credentialsMatcher.matches()) {
         String otcUsername = Preconditions.checkNotNull(credentialsMatcher.group(1),

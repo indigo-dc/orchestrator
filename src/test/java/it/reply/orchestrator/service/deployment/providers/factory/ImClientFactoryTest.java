@@ -211,7 +211,7 @@ public class ImClientFactoryTest {
     CloudProviderEndpoint cloudProviderEndpoint = CloudProviderEndpoint
         .builder()
         .iaasType(IaaSType.OTC)
-        .username("034 domainInfo")
+        .username("034 domain-info")
         .password("password")
         .cpEndpoint("https://host/")
         .cpComputeServiceId(UUID.randomUUID().toString())
@@ -219,7 +219,7 @@ public class ImClientFactoryTest {
         .build();
 
     String iaasAuthHeader = "id = " + (headerId != null ? headerId : "ost")
-        + " ; type = OpenStack ; domain = domainInfo ; username = 034 domainInfo ; password = password ; tenant = eu-de ; "
+        + " ; type = OpenStack ; domain = domain-info ; username = 034 domain-info ; password = password ; tenant = eu-de ; "
         + "auth_version = 3.x_password ;"
         + " host = https://host ; service_name = None ; service_region = eu-de";
     testGetClient(cloudProviderEndpoint, ImClientFactoryTest.paasImUrl, iaasAuthHeader);
@@ -231,7 +231,7 @@ public class ImClientFactoryTest {
     CloudProviderEndpoint cloudProviderEndpoint = CloudProviderEndpoint
         .builder()
         .iaasType(IaaSType.OTC)
-        .username("username domainInfo")
+        .username("username domain-info")
         .password("password")
         .cpEndpoint("https://host/")
         .cpComputeServiceId(UUID.randomUUID().toString())
@@ -239,7 +239,7 @@ public class ImClientFactoryTest {
         .build();
 
     String iaasAuthHeader = "id = " + (headerId != null ? headerId : "ost")
-        + " ; type = OpenStack ; domain = domainInfo ; username = username ; password = password ; tenant = eu-de ; "
+        + " ; type = OpenStack ; domain = domain-info ; username = username ; password = password ; tenant = eu-de ; "
         + "auth_version = 3.x_password ;"
         + " host = https://host ; service_name = None ; service_region = eu-de";
     testGetClient(cloudProviderEndpoint, ImClientFactoryTest.paasImUrl, iaasAuthHeader);
@@ -254,13 +254,13 @@ public class ImClientFactoryTest {
         .username("username")
         .password("password")
         .cpEndpoint("https://host/")
-        .tenant("domainInfo")
+        .tenant("domain-info")
         .cpComputeServiceId(UUID.randomUUID().toString())
         .iaasHeaderId(headerId)
         .build();
 
     String iaasAuthHeader = "id = " + (headerId != null ? headerId : "ost")
-        + " ; type = OpenStack ; domain = domainInfo ; username = username ; password = password ; tenant = eu-de ; "
+        + " ; type = OpenStack ; domain = domain-info ; username = username ; password = password ; tenant = eu-de ; "
         + "auth_version = 3.x_password ;"
         + " host = https://host ; service_name = None ; service_region = eu-de";
     testGetClient(cloudProviderEndpoint, ImClientFactoryTest.paasImUrl, iaasAuthHeader);
