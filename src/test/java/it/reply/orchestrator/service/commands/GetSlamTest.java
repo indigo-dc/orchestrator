@@ -20,7 +20,9 @@ import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.config.properties.SlamProperties;
 import it.reply.orchestrator.dal.repository.OidcEntityRepository;
 import it.reply.orchestrator.service.SlamServiceImpl;
-import it.reply.orchestrator.workflow.RankCloudProvidersWorkflowIT;
+import it.reply.orchestrator.util.IntegrationTestUtil;
+
+import java.net.URI;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
@@ -28,8 +30,6 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-
-import java.net.URI;
 
 public class GetSlamTest extends BaseRankCloudProvidersCommandTest<GetSlam> {
 
@@ -63,7 +63,7 @@ public class GetSlamTest extends BaseRankCloudProvidersCommandTest<GetSlam> {
   @Test
   public void doexecuteSuccesfully() throws Exception {
 
-    RankCloudProvidersWorkflowIT.mockSlam(mockServer, slamProperties.getUrl());
+    IntegrationTestUtil.mockSlam(mockServer, slamProperties.getUrl());
 
     String serializedRankCloudProvidersMessage =
         "{\"deploymentId\":\"mmd34483-d937-4578-bfdb-ebe196bf82dd\"}";
