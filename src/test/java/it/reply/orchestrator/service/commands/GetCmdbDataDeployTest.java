@@ -18,15 +18,15 @@ package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.config.properties.CmdbProperties;
 import it.reply.orchestrator.service.CmdbServiceImpl;
-import it.reply.orchestrator.workflow.RankCloudProvidersWorkflowIT;
+import it.reply.orchestrator.util.IntegrationTestUtil;
+
+import java.net.URI;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Spy;
-
-import java.net.URI;
 
 public class GetCmdbDataDeployTest extends BaseRankCloudProvidersCommandTest<GetCmdbDataDeploy> {
 
@@ -54,7 +54,7 @@ public class GetCmdbDataDeployTest extends BaseRankCloudProvidersCommandTest<Get
   @Test
   public void doexecuteSuccesfully() throws Exception {
 
-    RankCloudProvidersWorkflowIT.mockCmdb(mockServer, cmdbProperties.getUrl());
+    IntegrationTestUtil.mockCmdb(mockServer, cmdbProperties.getUrl());
 
     String serializedRankCloudProvidersMessage =
         "{\"deploymentId\":\"mmd34483-d937-4578-bfdb-ebe196bf82dd\",\"slamPreferences\":{\"preferences\":[{\"customer\":\"indigo-dc\",\"preferences\":[{\"service_type\":\"compute\",\"priority\":[{\"sla_id\":\"4401ac5dc8cfbbb737b0a02575ee53f6\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e81d9b\",\"weight\":0.5},{\"sla_id\":\"4401ac5dc8cfbbb737b0a02575ee3b58\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"weight\":0.5}]}],\"id\":\"4401ac5dc8cfbbb737b0a02575ee0e55\"}],\"sla\":[{\"customer\":\"indigo-dc\",\"provider\":\"provider-UPV-GRyCAP\",\"start_date\":\"11.01.2016+15:50:00\",\"end_date\":\"11.02.2016+15:50:00\",\"services\":[{\"type\":\"compute\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e81d9b\",\"targets\":[{\"type\":\"public_ip\",\"unit\":\"none\",\"restrictions\":{\"total_guaranteed\":10}}]}],\"id\":\"4401ac5dc8cfbbb737b0a02575ee3b58\"},{\"customer\":\"indigo-dc\",\"provider\":\"provider-RECAS-BARI\",\"start_date\":\"11.01.2016+15:50:00\",\"end_date\":\"11.02.2016+15:50:00\",\"services\":[{\"type\":\"compute\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"targets\":[{\"type\":\"computing_time\",\"unit\":\"h\",\"restrictions\":{\"total_guaranteed\":200}}]}],\"id\":\"4401ac5dc8cfbbb737b0a02575ee53f6\"}]},\"cloudProviders\":{\"provider-RECAS-BARI\":{\"id\":\"provider-RECAS-BARI\",\"cmdbProviderData\":null,\"cmdbProviderServices\":{\"4401ac5dc8cfbbb737b0a02575e6f4bc\":null},\"cmdbProviderImages\":{}},\"provider-UPV-GRyCAP\":{\"id\":\"provider-UPV-GRyCAP\",\"cmdbProviderData\":null,\"cmdbProviderServices\":{\"4401ac5dc8cfbbb737b0a02575e81d9b\":null},\"cmdbProviderImages\":{}}},\"cloudProvidersMonitoringData\":{},\"rankedCloudProviders\":[]}";
