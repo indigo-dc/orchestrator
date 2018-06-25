@@ -53,7 +53,7 @@ public class HistoryJobMessageListener implements IgniteBiPredicate<UUID, String
     this.jobServiceConfiguration = (JobServiceConfiguration) processEngineConfiguration
         .getServiceConfigurations()
         .get(EngineConfigurationConstants.KEY_JOB_SERVICE_CONFIG);
-    ignite.message().localListen(MessageBasedJobManager.JOBS_TOPIC, this);
+    ignite.message().localListen(MessageBasedJobManager.HISTORY_JOBS_TOPIC, this);
   }
 
   @Override
