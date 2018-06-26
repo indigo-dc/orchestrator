@@ -7,10 +7,10 @@ INDIGO PaaS Orchestrator
 [![GitHub license](https://img.shields.io/github/license/indigo-dc/orchestrator.svg?maxAge=2592000&style=flat-square)](https://github.com/indigo-dc/orchestrator/blob/master/LICENSE)
 [![GitHub release](https://img.shields.io/github/release/indigo-dc/orchestrator.svg?maxAge=3600&style=flat-square)](https://github.com/indigo-dc/orchestrator/releases/latest)
 
-[![Jenkins](https://img.shields.io/jenkins/s/https/ci.cloud.reply.eu/jenkins/job/INDIGO/job/orchestrator-publish.svg?maxAge=3600&style=flat-square)](https://ci.cloud.reply.eu/jenkins/job/INDIGO/job/orchestrator-publish/)
-[![Jenkins tests](https://img.shields.io/jenkins/t/https/ci.cloud.reply.eu/jenkins/job/INDIGO/job/orchestrator-publish.svg?maxAge=3600&style=flat-square)](https://ci.cloud.reply.eu/jenkins/job/INDIGO/job/orchestrator-publish/)
-[![SonarQube Coverage](https://img.shields.io/sonar/https/sonarcloud.io/it.reply%3Aorchestrator/coverage.svg?maxAge=3600&style=flat-square)](https://sonarcloud.io/dashboard?id=it.reply%3Aorchestrator)
+[![Travis](https://img.shields.io/travis/indigo-dc/orchestrator/master.svg?maxAge=3600&style=flat-square)](https://travis-ci.org/indigo-dc/orchestrator)
+[![Codecov](https://img.shields.io/codecov/c/github/indigo-dc/orchestrator.svg?maxAge=3600&style=flat-square)](https://codecov.io/gh/indigo-dc/orchestrator)
 [![SonarQube Tech Debt](https://img.shields.io/sonar/https/sonarcloud.io/it.reply%3Aorchestrator/tech_debt.svg?maxAge=3600&style=flat-square)](https://sonarcloud.io/dashboard?id=it.reply%3Aorchestrator)
+[![Known Vulnerabilities](https://snyk.io/test/github/indigo-dc/orchestrator/badge.svg?style=flat-square)](https://snyk.io/test/github/indigo-dc/orchestrator)
 
 
 The INDIGO PaaS Orchestrator is a component of the PaaS layer that allows to instantiate resources on Cloud Management Frameworks (like [OpenStack](https://www.openstack.org/) and [OpenNebula](http://opennebula.org/)) and [Mesos](http://mesos.apache.org/) clusters.

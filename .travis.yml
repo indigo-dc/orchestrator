@@ -1,0 +1,21 @@
+language: java
+git:
+  depth: false
+
+jdk:
+  - openjdk8
+
+cache:
+  directories:
+    - '$HOME/.m2/repository'
+    - '$HOME/.sonar/cache'
+
+addons:
+  sonarcloud:
+    organization: ${SONAR_ORGANIZATION}
+
+script:
+  - ./mvnw clean verify -U sonar:sonar -P test-with-jacoco
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)
