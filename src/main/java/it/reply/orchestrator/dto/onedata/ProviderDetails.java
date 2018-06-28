@@ -39,10 +39,6 @@ public class ProviderDetails implements Serializable {
 
   private static final long serialVersionUID = -368387049626457198L;
 
-  @JsonProperty("csr")
-  @Nullable
-  private String csr;
-
   @JsonProperty("providerId")
   @NonNull
   @NotNull

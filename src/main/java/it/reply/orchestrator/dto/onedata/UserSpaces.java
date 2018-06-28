@@ -45,7 +45,7 @@ public class UserSpaces implements Serializable {
   @Builder.Default
   private List<String> spaces = new ArrayList<>();
 
-  @JsonProperty("defaultSpace")
+  @JsonProperty("default")
   @Nullable
   private String defaultSpace;
 

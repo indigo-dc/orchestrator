@@ -105,12 +105,12 @@ public class OneDataServiceImpl implements OneDataService {
 
   @Override
   public ProviderDetails getProviderDetailsFromId(@Nullable String oneZoneEndpoint,
-      String oneDataToken, String oneSpaceId, String oneProviderId) {
+      String oneDataToken, String oneProviderId) {
 
     URI requestUri = UriBuilder
         .fromUri(getOneZoneBaseEndpoint(oneZoneEndpoint)
-            + "/spaces/{oneSpaceId}/providers/{oneProviderId}")
-        .build(oneSpaceId, oneProviderId)
+            + "/providers/{oneProviderId}")
+        .build(oneProviderId)
         .normalize();
 
     try {
@@ -118,15 +118,13 @@ public class OneDataServiceImpl implements OneDataService {
           .exchange(requestUri, HttpMethod.GET, withToken(oneDataToken), ProviderDetails.class)
           .getBody();
     } catch (RestClientException ex) {
-      throw new DeploymentException("Error retrieving details of OneData space " + oneSpaceId
-          + " on provider " + oneProviderId, ex);
+      throw new DeploymentException("Error retrieving details of provider " + oneProviderId, ex);
     }
   }
 
   @Override
-  public ProviderDetails getProviderDetailsFromId(String oneDataToken, String oneSpaceId,
-      String oneProviderId) {
-    return getProviderDetailsFromId(null, oneDataToken, oneSpaceId, oneProviderId);
+  public ProviderDetails getProviderDetailsFromId(String oneDataToken, String oneProviderId) {
+    return getProviderDetailsFromId(null, oneDataToken, oneProviderId);
   }
 
   private String getOneZoneBaseEndpoint(@Nullable String oneZoneEndpoint) {
@@ -138,7 +136,7 @@ public class OneDataServiceImpl implements OneDataService {
   private HttpEntity<?> withToken(String oneDataToken) {
     // TODO use a request interceptor (restTemplate must not be singleton)
     HttpHeaders headers = new HttpHeaders();
-    headers.set("macaroon", oneDataToken);
+    headers.set("X-Auth-Token", oneDataToken);
     return new HttpEntity<>(headers);
   }
 
@@ -158,7 +156,7 @@ public class OneDataServiceImpl implements OneDataService {
     for (String spaceId : spaces.getSpaces()) {
       SpaceDetails tmpSpaceDetail =
           getSpaceDetailsFromId(onedataParameter.getZone(), onedataParameter.getToken(), spaceId);
-      if (Objects.equals(onedataParameter.getSpace(), tmpSpaceDetail.getCanonicalName())) {
+      if (Objects.equals(onedataParameter.getSpace(), tmpSpaceDetail.getName())) {
         spaceDetail = tmpSpaceDetail;
         providersId.addAll(spaceDetail.getProvidersSupports().keySet());
         break;
@@ -173,7 +171,7 @@ public class OneDataServiceImpl implements OneDataService {
 
     for (String providerId : providersId) {
       ProviderDetails providerDetails = getProviderDetailsFromId(onedataParameter.getZone(),
-          onedataParameter.getToken(), spaceDetail.getSpaceId(), providerId);
+          onedataParameter.getToken(), providerId);
       if (addAllProvidersinfo) {
         OneDataProviderInfo providerInfo = OneDataProviderInfo.builder()
             .id(providerId)

@@ -48,10 +48,6 @@ public class SpaceDetails implements Serializable {
   @Nullable
   private String name;
 
-  @JsonProperty("canonicalName")
-  @Nullable
-  private String canonicalName;
-
   @JsonProperty("providersSupports")
   @NonNull
   @NotNull

@@ -35,11 +35,9 @@ public interface OneDataService {
   public SpaceDetails getSpaceDetailsFromId(String oneDataToken, String oneSpaceId);
 
   public ProviderDetails getProviderDetailsFromId(@Nullable String oneZoneEndpoint,
-      String oneDataToken,
-      String oneSpaceId, String oneProviderId);
+      String oneDataToken, String oneProviderId);
 
-  public ProviderDetails getProviderDetailsFromId(String oneDataToken, String oneSpaceId,
-      String oneProviderId);
+  public ProviderDetails getProviderDetailsFromId(String oneDataToken, String oneProviderId);
 
   public OneData populateProviderInfo(OneData oneDataParameter);
 
