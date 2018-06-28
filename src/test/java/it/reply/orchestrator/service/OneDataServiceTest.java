@@ -16,9 +16,13 @@
 
 package it.reply.orchestrator.service;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.*;
-import static org.springframework.test.web.client.response.MockRestResponseCreators.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withBadRequest;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
 import it.reply.orchestrator.config.properties.OneDataProperties;
 import it.reply.orchestrator.dto.onedata.OneData;
@@ -28,6 +32,14 @@ import it.reply.orchestrator.dto.onedata.SpaceDetails;
 import it.reply.orchestrator.dto.onedata.UserSpaces;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.utils.JsonUtils;
+
+import java.io.IOException;
+import java.net.URI;
+import java.util.UUID;
+
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+import junitparams.converters.Nullable;
 
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -42,14 +54,6 @@ import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.HttpStatusCodeException;
-
-import java.io.IOException;
-import java.net.URI;
-import java.util.UUID;
-
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-import junitparams.converters.Nullable;
 
 @RunWith(JUnitParamsRunner.class)
 @RestClientTest(OneDataService.class)
@@ -93,7 +97,7 @@ public class OneDataServiceTest {
     mockServer
         .expect(requestTo(endpoint + onezoneBasePath + "user/spaces"))
         .andExpect(method(HttpMethod.GET))
-        .andExpect(header("macaroon", onedataToken))
+        .andExpect(header("X-Auth-Token", onedataToken))
         .andRespond(
             withSuccess(JsonUtils.serialize(userSpace), MediaType.APPLICATION_JSON_UTF8));
 
@@ -109,7 +113,7 @@ public class OneDataServiceTest {
     mockServer
         .expect(requestTo(endpoint + onezoneBasePath + "user/spaces"))
         .andExpect(method(HttpMethod.GET))
-        .andExpect(header("macaroon", onedataToken))
+        .andExpect(header("X-Auth-Token", onedataToken))
         .andRespond(withBadRequest());
 
     assertThatThrownBy(() -> oneDataService.getUserSpacesId(endpoint, onedataToken))
@@ -130,7 +134,7 @@ public class OneDataServiceTest {
     mockServer
         .expect(requestTo(endpoint + onezoneBasePath + "user/spaces/" + spaceId))
         .andExpect(method(HttpMethod.GET))
-        .andExpect(header("macaroon", onedataToken))
+        .andExpect(header("X-Auth-Token", onedataToken))
         .andRespond(
             withSuccess(JsonUtils.serialize(details), MediaType.APPLICATION_JSON_UTF8));
 
@@ -147,7 +151,7 @@ public class OneDataServiceTest {
     mockServer
         .expect(requestTo(endpoint + onezoneBasePath + "user/spaces/" + spaceId))
         .andExpect(method(HttpMethod.GET))
-        .andExpect(header("macaroon", onedataToken))
+        .andExpect(header("X-Auth-Token", onedataToken))
         .andRespond(withBadRequest());
 
     assertThatThrownBy(() -> oneDataService.getSpaceDetailsFromId(endpoint, onedataToken, spaceId))
@@ -161,21 +165,18 @@ public class OneDataServiceTest {
   public void testSuccessGetProviderDetailsFromId(@Nullable String oneZoneEndpoint)
       throws IOException {
 
-    String spaceId = UUID.randomUUID().toString();
-
     ProviderDetails providerDetail = generateProviderDetails();
     String providerId = providerDetail.getProviderId();
 
     String endpoint = generateExpectedOneZoneEndpoint(oneZoneEndpoint);
     mockServer
-        .expect(requestTo(
-            endpoint + onezoneBasePath + "spaces/" + spaceId + "/providers/" + providerId))
+        .expect(requestTo(endpoint + onezoneBasePath + "providers/" + providerId))
         .andExpect(method(HttpMethod.GET))
-        .andExpect(header("macaroon", onedataToken))
+        .andExpect(header("X-Auth-Token", onedataToken))
         .andRespond(
             withSuccess(JsonUtils.serialize(providerDetail), MediaType.APPLICATION_JSON_UTF8));
 
-    assertThat(oneDataService.getProviderDetailsFromId(endpoint, onedataToken, spaceId, providerId))
+    assertThat(oneDataService.getProviderDetailsFromId(endpoint, onedataToken, providerId))
         .isEqualTo(providerDetail);
     mockServer.verify();
   }
@@ -184,20 +185,18 @@ public class OneDataServiceTest {
   @Test
   public void testFailGetProviderDetailsFromId(@Nullable String oneZoneEndpoint) {
 
-    String spaceId = UUID.randomUUID().toString();
     String providerId = UUID.randomUUID().toString();
 
     String endpoint = generateExpectedOneZoneEndpoint(oneZoneEndpoint);
 
     mockServer
-        .expect(requestTo(
-            endpoint + onezoneBasePath + "spaces/" + spaceId + "/providers/" + providerId))
+        .expect(requestTo(endpoint + onezoneBasePath + "providers/" + providerId))
         .andExpect(method(HttpMethod.GET))
-        .andExpect(header("macaroon", onedataToken))
+        .andExpect(header("X-Auth-Token", onedataToken))
         .andRespond(withBadRequest());
 
     assertThatThrownBy(
-        () -> oneDataService.getProviderDetailsFromId(endpoint, onedataToken, spaceId, providerId))
+        () -> oneDataService.getProviderDetailsFromId(endpoint, onedataToken, providerId))
             .isInstanceOf(DeploymentException.class)
             .hasCauseInstanceOf(HttpStatusCodeException.class);
     mockServer.verify();
@@ -209,7 +208,7 @@ public class OneDataServiceTest {
 
     SpaceDetails spaceDetails = generateSpaceDetails();
     String spaceId = spaceDetails.getSpaceId();
-    String canonicalName = spaceDetails.getCanonicalName();
+    String spaceName = spaceDetails.getName();
 
     UserSpaces userSpace = generateUserSpaces();
     userSpace.getSpaces().add(spaceId);
@@ -219,20 +218,20 @@ public class OneDataServiceTest {
     OneData oneData = OneData
         .builder()
         .token(onedataToken)
-        .space(canonicalName)
+        .space(spaceName)
         .zone(endpoint)
         .build();
 
     mockServer
         .expect(requestTo(endpoint + onezoneBasePath + "user/spaces"))
         .andExpect(method(HttpMethod.GET))
-        .andExpect(header("macaroon", onedataToken))
+        .andExpect(header("X-Auth-Token", onedataToken))
         .andRespond(withSuccess(JsonUtils.serialize(userSpace), MediaType.APPLICATION_JSON_UTF8));
 
     mockServer
         .expect(requestTo(endpoint + onezoneBasePath + "user/spaces/" + spaceId))
         .andExpect(method(HttpMethod.GET))
-        .andExpect(header("macaroon", onedataToken))
+        .andExpect(header("X-Auth-Token", onedataToken))
         .andRespond(
             withSuccess(JsonUtils.serialize(spaceDetails), MediaType.APPLICATION_JSON_UTF8));
 
@@ -247,7 +246,7 @@ public class OneDataServiceTest {
 
     SpaceDetails spaceDetails = generateSpaceDetails();
     String spaceId = spaceDetails.getSpaceId();
-    String canonicalName = spaceDetails.getCanonicalName();
+    String spaceName = spaceDetails.getName();
 
     UserSpaces userSpace = generateUserSpaces();
     userSpace.getSpaces().add(spaceId);
@@ -261,18 +260,18 @@ public class OneDataServiceTest {
         .zone(endpoint)
         .build();
 
-    assertThat(canonicalName).isNotEqualTo(oneData.getSpace());
+    assertThat(spaceName).isNotEqualTo(oneData.getSpace());
 
     mockServer
         .expect(requestTo(endpoint + onezoneBasePath + "user/spaces"))
         .andExpect(method(HttpMethod.GET))
-        .andExpect(header("macaroon", onedataToken))
+        .andExpect(header("X-Auth-Token", onedataToken))
         .andRespond(withSuccess(JsonUtils.serialize(userSpace), MediaType.APPLICATION_JSON_UTF8));
 
     mockServer
         .expect(requestTo(endpoint + onezoneBasePath + "user/spaces/" + spaceId))
         .andExpect(method(HttpMethod.GET))
-        .andExpect(header("macaroon", onedataToken))
+        .andExpect(header("X-Auth-Token", onedataToken))
         .andRespond(
             withSuccess(JsonUtils.serialize(spaceDetails), MediaType.APPLICATION_JSON_UTF8));
 
@@ -291,7 +290,7 @@ public class OneDataServiceTest {
     SpaceDetails spaceDetails = generateSpaceDetails();
     spaceDetails.getProvidersSupports().put(providerId, 1L);
     String spaceId = spaceDetails.getSpaceId();
-    String canonicalName = spaceDetails.getCanonicalName();
+    String spaceName = spaceDetails.getName();
 
     UserSpaces userSpace = generateUserSpaces();
     userSpace.getSpaces().add(spaceId);
@@ -301,28 +300,27 @@ public class OneDataServiceTest {
     mockServer
         .expect(requestTo(endpoint + onezoneBasePath + "user/spaces"))
         .andExpect(method(HttpMethod.GET))
-        .andExpect(header("macaroon", onedataToken))
+        .andExpect(header("X-Auth-Token", onedataToken))
         .andRespond(withSuccess(JsonUtils.serialize(userSpace), MediaType.APPLICATION_JSON_UTF8));
 
     mockServer
         .expect(requestTo(endpoint + onezoneBasePath + "user/spaces/" + spaceId))
         .andExpect(method(HttpMethod.GET))
-        .andExpect(header("macaroon", onedataToken))
+        .andExpect(header("X-Auth-Token", onedataToken))
         .andRespond(
             withSuccess(JsonUtils.serialize(spaceDetails), MediaType.APPLICATION_JSON_UTF8));
 
     mockServer
-        .expect(requestTo(
-            endpoint + onezoneBasePath + "spaces/" + spaceId + "/providers/" + providerId))
+        .expect(requestTo(endpoint + onezoneBasePath + "providers/" + providerId))
         .andExpect(method(HttpMethod.GET))
-        .andExpect(header("macaroon", onedataToken))
+        .andExpect(header("X-Auth-Token", onedataToken))
         .andRespond(
             withSuccess(JsonUtils.serialize(providerDetails), MediaType.APPLICATION_JSON_UTF8));
 
     OneData oneData = OneData
         .builder()
         .token(onedataToken)
-        .space(canonicalName)
+        .space(spaceName)
         .zone(endpoint)
         .build();
 
@@ -348,7 +346,6 @@ public class OneDataServiceTest {
   private SpaceDetails generateSpaceDetails() {
     return SpaceDetails
         .builder()
-        .canonicalName("cname")
         .name("name")
         .spaceId(UUID.randomUUID().toString())
         .build();
@@ -358,7 +355,6 @@ public class OneDataServiceTest {
     return ProviderDetails
         .builder()
         .clientName("clientName")
-        .csr("csr")
         .latitude(41.25)
         .longitude(-120.9762)
         .providerId(UUID.randomUUID().toString())
