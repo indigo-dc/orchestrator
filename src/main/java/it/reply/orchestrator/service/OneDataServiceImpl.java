@@ -109,7 +109,7 @@ public class OneDataServiceImpl implements OneDataService {
 
     URI requestUri = UriBuilder
         .fromUri(getOneZoneBaseEndpoint(oneZoneEndpoint)
-            + "/spaces/{oneSpaceId}/providers/{oneProviderId}")
+            + "/providers/{oneProviderId}")
         .build(oneSpaceId, oneProviderId)
         .normalize();
 
@@ -138,7 +138,7 @@ public class OneDataServiceImpl implements OneDataService {
   private HttpEntity<?> withToken(String oneDataToken) {
     // TODO use a request interceptor (restTemplate must not be singleton)
     HttpHeaders headers = new HttpHeaders();
-    headers.set("macaroon", oneDataToken);
+    headers.set("X-Auth-Token", oneDataToken);
     return new HttpEntity<>(headers);
   }
 
@@ -158,7 +158,7 @@ public class OneDataServiceImpl implements OneDataService {
     for (String spaceId : spaces.getSpaces()) {
       SpaceDetails tmpSpaceDetail =
           getSpaceDetailsFromId(onedataParameter.getZone(), onedataParameter.getToken(), spaceId);
-      if (Objects.equals(onedataParameter.getSpace(), tmpSpaceDetail.getCanonicalName())) {
+      if (Objects.equals(onedataParameter.getSpace(), tmpSpaceDetail.getName())) {
         spaceDetail = tmpSpaceDetail;
         providersId.addAll(spaceDetail.getProvidersSupports().keySet());
         break;
