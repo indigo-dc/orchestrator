@@ -18,7 +18,6 @@ package it.reply.orchestrator.dto.common;
 
 import it.reply.orchestrator.utils.CommonUtils;
 
-import java.io.Serializable;
 import java.util.Optional;
 
 import lombok.AccessLevel;
@@ -31,9 +30,7 @@ import org.springframework.http.HttpStatus;
 
 @Data
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Error implements Serializable {
-
-  private static final long serialVersionUID = 6559999818418491070L;
+public class Error {
 
   @Nullable
   private Integer code;

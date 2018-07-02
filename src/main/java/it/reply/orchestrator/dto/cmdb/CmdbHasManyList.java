@@ -18,7 +18,6 @@ package it.reply.orchestrator.dto.cmdb;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,9 +33,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 @Data
 @Builder
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class CmdbHasManyList<R extends Serializable> implements Serializable {
-
-  private static final long serialVersionUID = -7214527741922419947L;
+public class CmdbHasManyList<R> {
 
   @JsonProperty("rows")
   @NonNull

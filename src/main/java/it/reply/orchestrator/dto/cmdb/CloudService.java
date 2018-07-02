@@ -16,9 +16,9 @@
 
 package it.reply.orchestrator.dto.cmdb;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
 
-import java.io.Serializable;
 import java.util.Optional;
 
 import lombok.AccessLevel;
@@ -35,10 +35,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData>
-    implements Serializable {
-
-  private static final long serialVersionUID = 6559999818418491070L;
+public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData> {
 
   private static final String COMPUTE_SERVICE_PREFIX = "eu.egi.cloud.vm-management";
   private static final String STORAGE_SERVICE_PREFIX = "eu.egi.cloud.storage-management";
@@ -82,6 +79,7 @@ public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData
    * 
    * @return true if the service is a OpenStack compute service
    */
+  @JsonIgnore
   public boolean isOpenStackComputeProviderService() {
     return isServiceOfType(OPENSTACK_COMPUTE_SERVICE);
   }
@@ -91,6 +89,7 @@ public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData
    * 
    * @return true if the service is a OTC compute service
    */
+  @JsonIgnore
   public boolean isOtcComputeProviderService() {
     return isServiceOfType(OTC_COMPUTE_SERVICE);
   }
@@ -100,6 +99,7 @@ public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData
    * 
    * @return true if the service is a OpenNebula compute service
    */
+  @JsonIgnore
   public boolean isOpenNebulaComputeProviderService() {
     return isServiceOfType(OPENNEBULA_COMPUTE_SERVICE);
   }
@@ -109,6 +109,7 @@ public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData
    * 
    * @return true if the service is a OCCI compute service
    */
+  @JsonIgnore
   public boolean isOcciComputeProviderService() {
     return isServiceOfType(OCCI_COMPUTE_SERVICE);
   }
@@ -118,6 +119,7 @@ public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData
    * 
    * @return true if the service is a AWS compute service
    */
+  @JsonIgnore
   public boolean isAwsComputeProviderService() {
     return isServiceOfType(AWS_COMPUTE_SERVICE);
   }
@@ -127,6 +129,7 @@ public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData
    * 
    * @return true if the service is a OneProvider storage service
    */
+  @JsonIgnore
   public boolean isOneProviderStorageService() {
     return isServiceOfType(ONEPROVIDER_STORAGE_SERVICE);
   }
@@ -136,6 +139,7 @@ public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData
    * 
    * @return true if the service is a CDMI storage service
    */
+  @JsonIgnore
   public boolean isCdmiStorageProviderService() {
     return isServiceOfType(CDMI_STORAGE_SERVICE);
   }
@@ -145,6 +149,7 @@ public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData
    * 
    * @return true if the service is a OpenNebula TOSCA service
    */
+  @JsonIgnore
   public boolean isOpenNebulaToscaProviderService() {
     return isServiceOfType(OPENNEBULA_TOSCA_SERVICE);
   }
@@ -154,6 +159,7 @@ public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData
    * 
    * @return true if the service is a Azure compute service
    */
+  @JsonIgnore
   public boolean isAzureComputeProviderService() {
     return isServiceOfType(AZURE_COMPUTE_SERVICE);
   }

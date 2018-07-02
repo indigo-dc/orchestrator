@@ -16,12 +16,14 @@
 
 package it.reply.orchestrator.service.commands;
 
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
-
-import org.flowable.engine.impl.persistence.entity.ExecutionEntity;
+import static org.mockito.Matchers.anyBoolean;
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.util.UUID;
+
+import org.flowable.engine.impl.persistence.entity.ExecutionEntity;
 
 public class ExecutionEntityBuilder {
 
@@ -34,25 +36,32 @@ public class ExecutionEntityBuilder {
   }
 
   public ExecutionEntityBuilder withMockedVariable(String key, Object value) {
-    when(execution.getVariable(eq(key), anyBoolean())).thenReturn(value);
+    when(execution.getVariable(eq(key), anyBoolean())).thenReturn(handleMessages(value));
     return this;
   }
 
   public ExecutionEntityBuilder withMockedVariableLocal(String key, Object value) {
-    when(execution.getVariableLocal(eq(key), anyBoolean())).thenReturn(value);
+    when(execution.getVariableLocal(eq(key), anyBoolean())).thenReturn(handleMessages(value));
     return this;
   }
 
   public ExecutionEntityBuilder withMockedTransientVariable(String key, Object value) {
-    when(execution.getTransientVariable(eq(key))).thenReturn(value);
+    when(execution.getTransientVariable(eq(key))).thenReturn(handleMessages(value));
     return this;
   }
 
   public ExecutionEntityBuilder withMockedTransientVariableLocal(String key, Object value) {
-    when(execution.getTransientVariableLocal(eq(key))).thenReturn(value);
+    when(execution.getTransientVariableLocal(eq(key))).thenReturn(handleMessages(value));
     return this;
   }
 
+  private Object handleMessages(Object value) {
+//    if (value instanceof BaseWorkflowMessage) {
+//      return JsonUtils.toJsonNode(value);
+//    } else {
+    return value;
+//    }
+  }
   public ExecutionEntity build() {
     return execution;
   }

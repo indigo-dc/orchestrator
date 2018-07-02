@@ -18,7 +18,6 @@ package it.reply.orchestrator.dto.onedata;
 
 import it.reply.orchestrator.utils.CommonUtils;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -42,17 +41,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @ToString(exclude = "token")
 @Builder
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class OneData implements Serializable {
-
-  private static final long serialVersionUID = 8590316308119399053L;
+public class OneData {
 
   @Data
   @Builder
   @NoArgsConstructor(access = AccessLevel.PROTECTED)
   @AllArgsConstructor(access = AccessLevel.PROTECTED)
-  public static class OneDataProviderInfo implements Serializable {
-
-    private static final long serialVersionUID = -4904767929269221557L;
+  public static class OneDataProviderInfo {
 
     @Nullable
     private String id;

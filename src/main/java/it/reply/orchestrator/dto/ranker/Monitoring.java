@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.PaaSMetric;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,9 +35,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 @Data
 @Builder
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class Monitoring implements Serializable {
-
-  private static final long serialVersionUID = 6559999818418491070L;
+public class Monitoring {
 
   @JsonProperty("provider")
   @NonNull

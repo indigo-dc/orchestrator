@@ -16,26 +16,14 @@
 
 package it.reply.orchestrator.service.commands;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-
-import org.assertj.core.api.Assertions;
-import org.assertj.core.util.Maps;
-import org.flowable.engine.impl.persistence.entity.ExecutionEntity;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-
-import com.google.common.collect.Lists;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.when;
 
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
+
+import com.google.common.collect.Lists;
 
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
@@ -63,16 +51,32 @@ import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.util.TestUtil;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
-public class PrefilterCloudProvidersTest {
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
-  @InjectMocks
-  private PrefilterCloudProviders prefilterCloudProviders;
+import org.assertj.core.util.Maps;
+import org.flowable.engine.impl.persistence.entity.ExecutionEntity;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+
+public class PrefilterCloudProvidersTest extends
+    BaseRankCloudProvidersCommandTest<PrefilterCloudProviders> {
 
   @Mock
   private DeploymentRepository deploymentRepository;
 
   @Mock
   private ToscaService toscaService;
+
+  public PrefilterCloudProvidersTest() {
+    super(new PrefilterCloudProviders());
+  }
 
   @Before
   public void setup() {
@@ -87,15 +91,14 @@ public class PrefilterCloudProvidersTest {
     RankCloudProvidersMessage rankCloudProvidersMessage = new RankCloudProvidersMessage();
     rankCloudProvidersMessage.setDeploymentId(generateDeployDm.getDeploymentId());
 
-    Mockito.when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
+    when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
         .thenReturn(deployment);
     
     ExecutionEntity execution = new ExecutionEntityBuilder()
         .withMockedVariable(WorkflowConstants.Param.RANK_CLOUD_PROVIDERS_MESSAGE, rankCloudProvidersMessage)
         .build();
-       
-    Assertions
-        .assertThatCode(() -> prefilterCloudProviders.execute(execution))
+
+    assertThatCode(() -> command.execute(execution))
         .doesNotThrowAnyException();
   }
 
@@ -127,20 +130,18 @@ public class PrefilterCloudProvidersTest {
     rankCloudProvidersMessage.setOneDataRequirements(oneDataRequirements);
 
     ArchiveRoot ar = new ArchiveRoot();
-    Mockito.when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
+    when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
         .thenReturn(deployment);
-    Mockito.when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
-    Mockito
-        .when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
+    when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
+    when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
             Mockito.anyObject()))
         .thenReturn(Maps.newHashMap(Boolean.FALSE, new HashMap<>()));
 
     ExecutionEntity execution = new ExecutionEntityBuilder()
         .withMockedVariable(WorkflowConstants.Param.RANK_CLOUD_PROVIDERS_MESSAGE, rankCloudProvidersMessage)
         .build();
-       
-    Assertions
-        .assertThatCode(() -> prefilterCloudProviders.execute(execution))
+
+    assertThatCode(() -> command.execute(execution))
         .doesNotThrowAnyException();
   }
 
@@ -165,20 +166,18 @@ public class PrefilterCloudProvidersTest {
 
     rankCloudProvidersMessage.setPlacementPolicies(placementPolicies);
     ArchiveRoot ar = new ArchiveRoot();
-    Mockito.when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
+    when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
         .thenReturn(deployment);
-    Mockito.when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
-    Mockito
-        .when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
+    when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
+    when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
             Mockito.anyObject()))
         .thenReturn(new HashMap<>());
 
     ExecutionEntity execution = new ExecutionEntityBuilder()
         .withMockedVariable(WorkflowConstants.Param.RANK_CLOUD_PROVIDERS_MESSAGE, rankCloudProvidersMessage)
         .build();
-       
-    Assertions
-        .assertThatThrownBy(() -> prefilterCloudProviders.execute(execution))
+
+    assertThatThrownBy(() -> command.execute(execution))
         .isInstanceOf(WorkflowException.class)
         .hasCauseInstanceOf(OrchestratorException.class)
         .hasMessage("Error filtering Cloud Providers; nested exception is it.reply.orchestrator.exception.OrchestratorException: Only a single placement policy is supported");
@@ -205,20 +204,18 @@ public class PrefilterCloudProvidersTest {
 
     rankCloudProvidersMessage.setPlacementPolicies(placementPolicies);
     ArchiveRoot ar = new ArchiveRoot();
-    Mockito.when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
+    when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
         .thenReturn(deployment);
-    Mockito.when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
-    Mockito
-        .when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
+    when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
+    when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
             Mockito.anyObject()))
         .thenReturn(new HashMap<>());
 
     ExecutionEntity execution = new ExecutionEntityBuilder()
         .withMockedVariable(WorkflowConstants.Param.RANK_CLOUD_PROVIDERS_MESSAGE, rankCloudProvidersMessage)
         .build();
-       
-    Assertions
-        .assertThatThrownBy(() -> prefilterCloudProviders.execute(execution))
+
+    assertThatThrownBy(() -> command.execute(execution))
         .isInstanceOf(WorkflowException.class)
         .hasCauseInstanceOf(OrchestratorException.class)
         .hasMessage("Error filtering Cloud Providers; nested exception is it.reply.orchestrator.exception.OrchestratorException: No SLA with id " + slaId + " available");
@@ -242,20 +239,18 @@ public class PrefilterCloudProvidersTest {
     rankCloudProvidersMessage.setPlacementPolicies(placementPolicies);
 
     ArchiveRoot ar = new ArchiveRoot();
-    Mockito.when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
+    when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
         .thenReturn(deployment);
-    Mockito.when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
-    Mockito
-        .when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
+    when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
+    when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
             Mockito.anyObject()))
         .thenReturn(new HashMap<>());
 
     ExecutionEntity execution = new ExecutionEntityBuilder()
         .withMockedVariable(WorkflowConstants.Param.RANK_CLOUD_PROVIDERS_MESSAGE, rankCloudProvidersMessage)
         .build();
-       
-    Assertions
-        .assertThatThrownBy(() -> prefilterCloudProviders.execute(execution))
+
+    assertThatThrownBy(() -> command.execute(execution))
         .isInstanceOf(WorkflowException.class)
         .hasCauseInstanceOf(OrchestratorException.class)
         .hasMessage("Error filtering Cloud Providers; nested exception is it.reply.orchestrator.exception.OrchestratorException: Only SLA placement policies are supported");
@@ -278,11 +273,10 @@ public class PrefilterCloudProvidersTest {
     Map<String, CloudProvider> cloudProviders = getCloudProviders(cloudServices);
     rankCloudProvidersMessage.setCloudProviders(cloudProviders);
 
-    Mockito.when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
+    when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
         .thenReturn(deployment);
 
-    Mockito
-        .when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
+    when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
             Mockito.anyObject()))
         .thenReturn(
             Maps.newHashMap(Boolean.FALSE,
@@ -291,9 +285,8 @@ public class PrefilterCloudProvidersTest {
     ExecutionEntity execution = new ExecutionEntityBuilder()
         .withMockedVariable(WorkflowConstants.Param.RANK_CLOUD_PROVIDERS_MESSAGE, rankCloudProvidersMessage)
         .build();
-       
-    Assertions
-        .assertThatCode(() -> prefilterCloudProviders.execute(execution))
+
+    assertThatCode(() -> command.execute(execution))
         .doesNotThrowAnyException();
   }
 

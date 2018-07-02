@@ -43,7 +43,7 @@ import org.mitre.openid.connect.model.UserInfo;
 @ToString(callSuper = true)
 public class IndigoUserInfo extends DefaultUserInfo {
 
-  private static final long serialVersionUID = -6165120150633146681L;
+  private static final long serialVersionUID = 1L;
 
   private static final String GROUPS_KEY = "groups";
   private static final String ORGANIZATION_NAME_KEY = "organisation_name";

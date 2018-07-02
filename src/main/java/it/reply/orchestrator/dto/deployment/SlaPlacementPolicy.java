@@ -23,14 +23,15 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import org.springframework.util.Assert;
 
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class SlaPlacementPolicy implements PlacementPolicy {
-
-  private static final long serialVersionUID = 2712997001319905444L;
 
   private List<String> nodes = new ArrayList<>();
 

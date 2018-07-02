@@ -20,7 +20,6 @@ import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.enums.DeploymentType;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -35,9 +34,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Data
 @ToString
-public class BaseWorkflowMessage implements Serializable {
-
-  private static final long serialVersionUID = 5420906673933278828L;
+public class BaseWorkflowMessage {
 
   @Nullable
   private OidcTokenId requestedWithToken;

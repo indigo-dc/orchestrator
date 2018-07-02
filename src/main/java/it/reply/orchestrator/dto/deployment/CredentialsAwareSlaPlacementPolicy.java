@@ -22,15 +22,16 @@ import alien4cloud.model.components.ScalarPropertyValue;
 import java.util.List;
 import java.util.Objects;
 
+import lombok.AccessLevel;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.util.Assert;
 
 @Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CredentialsAwareSlaPlacementPolicy extends SlaPlacementPolicy {
-
-  private static final long serialVersionUID = -7100234156400910682L;
 
   private String username;
   private String password;

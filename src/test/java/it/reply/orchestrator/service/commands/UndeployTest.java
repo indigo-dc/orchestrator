@@ -16,41 +16,42 @@
 
 package it.reply.orchestrator.service.commands;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
-import org.assertj.core.api.Assertions;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+
 import org.flowable.engine.impl.persistence.entity.ExecutionEntity;
 import org.junit.Test;
-import org.mockito.Mockito;
+import org.junit.runner.RunWith;
 
+@RunWith(JUnitParamsRunner.class)
 public class UndeployTest extends BaseDeployCommandTest<Undeploy> {
 
   public UndeployTest() {
     super(new Undeploy());
   }
 
-  @Test
-  public void testUndeployComplete() throws Exception {
-    testUndeploy(true);
-  }
 
   @Test
-  public void testUndeployNotComplete() throws Exception {
-    testUndeploy(false);
-  }
-
+  @Parameters({"true", "false"})
   public void testUndeploy(boolean complete) throws Exception {
     DeploymentMessage dm = new DeploymentMessage();
     ExecutionEntity execution = new ExecutionEntityBuilder()
         .withMockedVariable(WorkflowConstants.Param.DEPLOYMENT_MESSAGE, dm)
         .build();
 
-    Mockito.when(deploymentProviderService.doUndeploy(dm)).thenReturn(complete);
+    when(deploymentProviderService.doUndeploy(dm))
+        .thenReturn(complete);
 
     command.execute(execution);
 
-    Assertions.assertThat(dm.isDeleteComplete()).isEqualTo(complete);
+    assertThat(dm.isDeleteComplete())
+        .isEqualTo(complete);
   }
 
 }

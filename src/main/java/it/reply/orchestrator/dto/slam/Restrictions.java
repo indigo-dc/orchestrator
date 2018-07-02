@@ -18,8 +18,6 @@ package it.reply.orchestrator.dto.slam;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.io.Serializable;
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,9 +30,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @Builder
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Restrictions implements Serializable {
-
-  private static final long serialVersionUID = 6559999818418491070L;
+public class Restrictions {
 
   @JsonProperty("total_guaranteed")
   @Nullable

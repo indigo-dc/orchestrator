@@ -28,7 +28,7 @@ import org.springframework.util.StringUtils;
 
 public class Jackson2ScopeSerializer extends NonTypedScalarSerializerBase<Set<String>> {
 
-  private static final long serialVersionUID = -7305899584227755802L;
+  private static final long serialVersionUID = 1L;
 
   protected Jackson2ScopeSerializer() {
     super(Set.class, false);

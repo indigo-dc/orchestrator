@@ -32,7 +32,8 @@ public class Update extends BaseDeployCommand {
 
   @Override
   public void execute(DelegateExecution execution, DeploymentMessage deploymentMessage) {
-    String template = getRequiredParameter(execution, WorkflowConstants.Param.TOSCA_TEMPLATE);
+    String template = getRequiredParameter(execution, WorkflowConstants.Param.TOSCA_TEMPLATE,
+        String.class);
 
     boolean updateComplete =
         getDeploymentProviderService(deploymentMessage).doUpdate(deploymentMessage, template);

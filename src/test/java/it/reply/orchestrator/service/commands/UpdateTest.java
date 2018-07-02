@@ -16,14 +16,20 @@
 
 package it.reply.orchestrator.service.commands;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
+
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
-import org.assertj.core.api.Assertions;
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+
 import org.flowable.engine.impl.persistence.entity.ExecutionEntity;
 import org.junit.Test;
-import org.mockito.Mockito;
+import org.junit.runner.RunWith;
 
+@RunWith(JUnitParamsRunner.class)
 public class UpdateTest extends BaseDeployCommandTest<Update> {
 
   public UpdateTest() {
@@ -31,15 +37,7 @@ public class UpdateTest extends BaseDeployCommandTest<Update> {
   }
 
   @Test
-  public void testUpdateComplete() throws Exception {
-    testUpdate(true);
-  }
-
-  @Test
-  public void testUpdateNotComplete() throws Exception {
-    testUpdate(false);
-  }
-
+  @Parameters({"true", "false"})
   public void testUpdate(boolean complete) throws Exception {
     DeploymentMessage dm = new DeploymentMessage();
     String updateTemplate = "template";
@@ -48,11 +46,13 @@ public class UpdateTest extends BaseDeployCommandTest<Update> {
         .withMockedVariable(WorkflowConstants.Param.DEPLOYMENT_MESSAGE, dm)
         .build();
 
-    Mockito.when(deploymentProviderService.doUpdate(dm, updateTemplate)).thenReturn(complete);
+    when(deploymentProviderService.doUpdate(dm, updateTemplate))
+        .thenReturn(complete);
 
     command.execute(execution);
 
-    Assertions.assertThat(dm.isCreateComplete()).isEqualTo(complete);
+    assertThat(dm.isCreateComplete())
+        .isEqualTo(complete);
   }
 
 }

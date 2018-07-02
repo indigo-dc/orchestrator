@@ -20,7 +20,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,9 +42,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @ToString(exclude = "password")
 @Builder
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class CloudProviderEndpoint implements Serializable {
-
-  private static final long serialVersionUID = -2585914648218602033L;
+public class CloudProviderEndpoint {
 
   public enum IaaSType {
     OPENSTACK,

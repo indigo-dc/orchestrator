@@ -33,9 +33,6 @@ import org.mockito.Spy;
 
 public class GetSlamTest extends BaseRankCloudProvidersCommandTest<GetSlam> {
 
-  @InjectMocks
-  private GetSlam getSLAMCommand;
-
   @Spy
   @InjectMocks
   private SlamServiceImpl slamService;
@@ -49,15 +46,13 @@ public class GetSlamTest extends BaseRankCloudProvidersCommandTest<GetSlam> {
   @Mock
   private OidcEntityRepository entityRepository;
 
-  private final String endpoint = "https://www.example.com";
-
   public GetSlamTest() {
     super(new GetSlam());
   }
 
   @Before
   public void setup() {
-    slamProperties.setUrl(URI.create(endpoint));
+    slamProperties.setUrl(URI.create("https://www.example.com"));
   }
 
   @Test

@@ -17,6 +17,7 @@
 package it.reply.orchestrator.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -93,4 +94,11 @@ public class JsonUtils {
     }
   }
 
+  public static TreeNode toJsonNode(Object value) {
+    return objectMapper.valueToTree(value);
+  }
+
+  public static <T> T fromTreeNode(TreeNode node, Class<T> clazz) throws JsonProcessingException {
+    return objectMapper.treeToValue(node, clazz);
+  }
 }

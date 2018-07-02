@@ -32,7 +32,7 @@
       <startEvent id="sid-89A8E88A-AD17-422E-A5FF-01B1DF9C3FED"></startEvent>
       <callActivity id="sid-88E0A5F6-C020-4DE2-929C-9631F799B057" name="Rank cloud Providers" calledElement="RankCloudProviders" flowable:inheritBusinessKey="true">
         <extensionElements>
-          <flowable:in sourceExpression="#{DeploymentMessage.toRankCloudProvidersMessage()}" target="RankCloudProvidersMessage"></flowable:in>
+          <flowable:in sourceExpression="#{WorkflowUtil.generateRankCloudProvidersMessage(DeploymentMessage)}" target="RankCloudProvidersMessage"></flowable:in>
           <flowable:out source="RankCloudProvidersMessage" target="RankCloudProvidersMessage"></flowable:out>
         </extensionElements>
       </callActivity>
@@ -62,10 +62,10 @@
       <sequenceFlow id="sid-EF2C73B0-785B-40A4-80D6-E30144CD6D5A" sourceRef="sid-6D02247E-CDC4-45A8-97E5-74E9D3BBAB35" targetRef="sid-1B3C3D08-B6AD-43FE-A8D3-FF0782162E0F"></sequenceFlow>
       <sequenceFlow id="sid-EFDC3AA5-05FE-4912-BD93-3CB4B0976301" sourceRef="sid-1B3C3D08-B6AD-43FE-A8D3-FF0782162E0F" targetRef="sid-BBCE4005-F3AD-44F2-AFFE-1A6A7573483E"></sequenceFlow>
       <sequenceFlow id="sid-425E2241-78EC-4306-A5DA-8E39238742AF" sourceRef="sid-72912041-A8CC-44CA-8D23-3CFE32EB67D8" targetRef="sid-9F3F1FD1-0CA2-4AA3-B410-5A250F826E2C">
-        <conditionExpression xsi:type="tFormalExpression"><![CDATA[#{!DeploymentMessage.isPollComplete()}]]></conditionExpression>
+        <conditionExpression xsi:type="tFormalExpression"><![CDATA[${!DeploymentMessage.pollComplete}]]></conditionExpression>
       </sequenceFlow>
       <sequenceFlow id="sid-0462977F-83C5-4E56-A2CC-621B148A3D92" sourceRef="sid-72912041-A8CC-44CA-8D23-3CFE32EB67D8" targetRef="sid-6D02247E-CDC4-45A8-97E5-74E9D3BBAB35">
-        <conditionExpression xsi:type="tFormalExpression"><![CDATA[#{DeploymentMessage.isPollComplete()}]]></conditionExpression>
+        <conditionExpression xsi:type="tFormalExpression"><![CDATA[${DeploymentMessage.pollComplete}]]></conditionExpression>
       </sequenceFlow>
       <sequenceFlow id="sid-5977D5C0-4712-43CA-9AD2-808D31A5E3ED" sourceRef="sid-BAB45984-339D-403D-8483-D0820D2DB555" targetRef="sid-FCE983E6-FAD5-4380-BADB-DFA48951BBF4"></sequenceFlow>
       <sequenceFlow id="sid-53D0E270-9F32-4985-9A16-B42497319330" sourceRef="sid-89A8E88A-AD17-422E-A5FF-01B1DF9C3FED" targetRef="sid-88E0A5F6-C020-4DE2-929C-9631F799B057"></sequenceFlow>
@@ -73,18 +73,18 @@
       <sequenceFlow id="sid-B9525071-80D8-427A-9F34-B2A65234499A" sourceRef="sid-FCE983E6-FAD5-4380-BADB-DFA48951BBF4" targetRef="sid-F655133C-4E05-4F7B-B9FC-AD7888B7F642"></sequenceFlow>
       <sequenceFlow id="sid-34CBD2C7-830F-479A-A809-E514C862AA74" sourceRef="sid-BF6180BF-BA38-4B04-AFD1-8BE7CD7919C9" targetRef="sid-F1881A1B-015F-4213-B82C-F45F21FDA343"></sequenceFlow>
       <sequenceFlow id="sid-09E8C1C0-FD2E-421B-A7B0-D96F5EB930D8" sourceRef="sid-F655133C-4E05-4F7B-B9FC-AD7888B7F642" targetRef="sid-BAB45984-339D-403D-8483-D0820D2DB555">
-        <conditionExpression xsi:type="tFormalExpression"><![CDATA[#{!DeploymentMessage.isCreateComplete()}]]></conditionExpression>
+        <conditionExpression xsi:type="tFormalExpression"><![CDATA[${!DeploymentMessage.createComplete}]]></conditionExpression>
       </sequenceFlow>
       <sequenceFlow id="sid-938A0987-DCD5-4201-BC5F-5A8920DA248F" sourceRef="sid-08D2FB4A-FCEE-49C4-A741-2A135D37094B" targetRef="sid-F1881A1B-015F-4213-B82C-F45F21FDA343"></sequenceFlow>
       <sequenceFlow id="sid-17B71B77-0C02-4F1C-A709-76B50ACA9CF7" sourceRef="sid-9F3F1FD1-0CA2-4AA3-B410-5A250F826E2C" targetRef="sid-F1881A1B-015F-4213-B82C-F45F21FDA343">
-        <conditionExpression xsi:type="tFormalExpression"><![CDATA[#{DeploymentMessage.isSkipPollInterval()}]]></conditionExpression>
+        <conditionExpression xsi:type="tFormalExpression"><![CDATA[${DeploymentMessage.skipPollInterval}]]></conditionExpression>
       </sequenceFlow>
       <sequenceFlow id="sid-AF020F53-C5BB-4D0B-9818-D73526D55283" sourceRef="sid-9F3F1FD1-0CA2-4AA3-B410-5A250F826E2C" targetRef="sid-08D2FB4A-FCEE-49C4-A741-2A135D37094B">
-        <conditionExpression xsi:type="tFormalExpression"><![CDATA[#{!DeploymentMessage.isSkipPollInterval()}]]></conditionExpression>
+        <conditionExpression xsi:type="tFormalExpression"><![CDATA[${!DeploymentMessage.skipPollInterval}]]></conditionExpression>
       </sequenceFlow>
       <sequenceFlow id="sid-A45E726E-AF37-4C27-9E6A-98A7BF6B99A6" sourceRef="sid-F1881A1B-015F-4213-B82C-F45F21FDA343" targetRef="sid-53917C81-E850-4E53-9A25-1EBC18C94416"></sequenceFlow>
       <sequenceFlow id="sid-75E455F0-39EC-4473-82F8-DA73D34007D6" sourceRef="sid-F655133C-4E05-4F7B-B9FC-AD7888B7F642" targetRef="sid-BF6180BF-BA38-4B04-AFD1-8BE7CD7919C9">
-        <conditionExpression xsi:type="tFormalExpression"><![CDATA[#{DeploymentMessage.isCreateComplete()}]]></conditionExpression>
+        <conditionExpression xsi:type="tFormalExpression"><![CDATA[${DeploymentMessage.createComplete}]]></conditionExpression>
       </sequenceFlow>
     </subProcess>
     <endEvent id="sid-47E5988A-031E-42A9-B53D-ED59319E23D9"></endEvent>
@@ -93,7 +93,7 @@
     <serviceTask id="sid-B0ED112B-1F18-44A8-BA0E-621A4FEEB644" name="Handle Timeout" flowable:async="true" flowable:delegateExpression="${handleTimeout}"></serviceTask>
     <boundaryEvent id="sid-B0E706AA-A1DA-4761-9E8C-12F8D9FE3D11" attachedToRef="sid-9E851AC1-6AF5-4833-B618-307A3EA26F36" cancelActivity="true">
       <timerEventDefinition>
-        <timeDate>#{DeploymentMessage.getTimeout()}</timeDate>
+        <timeDate>${DeploymentMessage.timeout}</timeDate>
       </timerEventDefinition>
     </boundaryEvent>
     <endEvent id="sid-E72F3C53-FECB-44DE-9820-28E119D7ADB9"></endEvent>

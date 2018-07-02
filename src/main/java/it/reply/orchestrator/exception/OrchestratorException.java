@@ -20,7 +20,7 @@ import org.springframework.core.NestedRuntimeException;
 
 public class OrchestratorException extends NestedRuntimeException {
 
-  private static final long serialVersionUID = -8879317682949851699L;
+  private static final long serialVersionUID = 1L;
 
   public OrchestratorException(String message) {
     super(message);

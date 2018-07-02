@@ -16,15 +16,17 @@
 
 package it.reply.orchestrator.service;
 
-import static org.assertj.core.api.Assertions.*;
-
-import com.google.common.collect.Maps;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import alien4cloud.model.components.ScalarPropertyValue;
 import alien4cloud.model.topology.Capability;
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.model.topology.Topology;
 import alien4cloud.tosca.model.ArchiveRoot;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.collect.Maps;
 
 import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.controller.ControllerTestUtils;
@@ -41,25 +43,6 @@ import it.reply.orchestrator.exception.http.ConflictException;
 import it.reply.orchestrator.exception.http.NotFoundException;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 
-import org.assertj.core.util.Lists;
-import org.flowable.engine.impl.ExecutionQueryImpl;
-import org.flowable.engine.impl.RuntimeServiceImpl;
-import org.flowable.engine.impl.runtime.ProcessInstanceBuilderImpl;
-import org.flowable.engine.runtime.ProcessInstance;
-import org.flowable.engine.runtime.ProcessInstanceBuilder;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -67,8 +50,38 @@ import java.util.UUID;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
+import org.assertj.core.util.Lists;
+import org.flowable.engine.impl.ExecutionQueryImpl;
+import org.flowable.engine.impl.RuntimeServiceImpl;
+import org.flowable.engine.impl.runtime.ProcessInstanceBuilderImpl;
+import org.flowable.engine.runtime.ProcessInstance;
+import org.flowable.engine.runtime.ProcessInstanceBuilder;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.Spy;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.json.JsonTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.test.context.junit4.rules.SpringClassRule;
+import org.springframework.test.context.junit4.rules.SpringMethodRule;
+
+@JsonTest
 @RunWith(JUnitParamsRunner.class)
 public class DeploymentServiceTest {
+
+  @ClassRule
+  public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
+
+  @Rule
+  public final SpringMethodRule springMethodRule = new SpringMethodRule();
 
   @InjectMocks
   private DeploymentService deploymentService = new DeploymentServiceImpl();
@@ -91,10 +104,9 @@ public class DeploymentServiceTest {
   @Mock
   private OidcProperties oidcProperties;
 
-  @Before
-  public void setup() {
-    MockitoAnnotations.initMocks(this);
-  }
+  @Spy
+  @Autowired
+  private ObjectMapper objectMapper;
 
   @Test
   public void getDeploymentsSuccessful() throws Exception {
@@ -473,7 +485,7 @@ public class DeploymentServiceTest {
         .builder()
         .template("template")
         .build();
-    
+
     assertThatThrownBy(() -> deploymentService.updateDeployment(id, deploymentRequest))
         .isInstanceOf(ConflictException.class);
   }

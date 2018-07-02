@@ -16,6 +16,10 @@
 
 package it.reply.orchestrator.service.commands;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import it.reply.orchestrator.exception.service.WorkflowException;
 import it.reply.orchestrator.utils.MdcUtils;
 
@@ -27,11 +31,15 @@ import org.flowable.bpmn.model.FlowElement;
 import org.flowable.engine.common.api.FlowableException;
 import org.flowable.engine.delegate.DelegateExecution;
 import org.flowable.engine.delegate.JavaDelegate;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @Slf4j
 public abstract class BaseJavaDelegate implements JavaDelegate {
 
   public static final String BUSINESS_ERROR_CODE = "BusinessException";
+
+  @Autowired
+  private ObjectMapper objectMapper;
 
   @Override
   public final void execute(DelegateExecution execution) {
@@ -62,19 +70,31 @@ public abstract class BaseJavaDelegate implements JavaDelegate {
 
   @SuppressWarnings("unchecked")
   protected <C> Optional<C> getOptionalParameter(DelegateExecution execution,
-      String parameterName) {
-    try {
-      return Optional.ofNullable((C) execution.getVariable(parameterName, false));
-    } catch (ClassCastException ex) {
-      LOG.error("WF parameter with name <{}> not an instance of the required class", parameterName,
-          ex);
+      String parameterName, Class<C> clazz) {
+    Object variable = execution.getVariable(parameterName, false);
+    if (variable == null) {
+      LOG.warn("Parameter with name {} is null", parameterName);
+      return Optional.empty();
+    } else if (clazz.isInstance(variable)) {
+      return Optional.of(clazz.cast(variable));
+    } else if (JsonNode.class.isInstance(variable)) {
+      try {
+        return Optional.of(objectMapper.treeToValue(JsonNode.class.cast(variable), clazz));
+      } catch (JsonProcessingException ex) {
+        LOG.error("JSON parameter with name  {} couldn't be de-serialized", parameterName, ex);
+        return Optional.empty();
+      }
+    } else {
+      LOG.warn("Parameter with name {} of type {} can't be de-serialized", parameterName,
+          variable.getClass());
       return Optional.empty();
     }
   }
 
-  protected <C> C getRequiredParameter(DelegateExecution execution, String parameterName) {
+  protected <C> C getRequiredParameter(DelegateExecution execution, String parameterName,
+      Class<C> clazz) {
     return this
-        .<C>getOptionalParameter(execution, parameterName)
+        .<C>getOptionalParameter(execution, parameterName, clazz)
         .orElseThrow(() -> new IllegalArgumentException(
             "WF parameter with name <" + parameterName + "> not found"));
 

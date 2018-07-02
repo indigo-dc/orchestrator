@@ -60,7 +60,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class AccessGrant implements Serializable {
 
-  private static final long serialVersionUID = -5524147116057860572L;
+  private static final long serialVersionUID = 1L;
 
   @JsonProperty("access_token")
   @NonNull
@@ -103,9 +103,9 @@ public class AccessGrant implements Serializable {
 
   /**
    * Check if the grant is expiring in the specified {@link TemporalAmount}.
-   * 
+   *
    * @param temporalAmount
-   *          the temporalAmount for the expiration evaluation
+   *     the temporalAmount for the expiration evaluation
    * @return true if expired, false otherwise
    */
   @JsonIgnore
@@ -122,7 +122,7 @@ public class AccessGrant implements Serializable {
 
   public static class ExpireInDeserializer extends StdDeserializer<Date> {
 
-    private static final long serialVersionUID = -2350223668141131768L;
+    private static final long serialVersionUID = 1L;
 
     protected ExpireInDeserializer() {
       super(Date.class);
@@ -140,7 +140,7 @@ public class AccessGrant implements Serializable {
 
   public static class ExpireInSerializer extends StdScalarSerializer<Date> {
 
-    private static final long serialVersionUID = 2355247133832376623L;
+    private static final long serialVersionUID = 1L;
 
     protected ExpireInSerializer() {
       super(Date.class);

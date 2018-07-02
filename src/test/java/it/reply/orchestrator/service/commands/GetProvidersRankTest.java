@@ -16,9 +16,10 @@
 
 package it.reply.orchestrator.service.commands;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Matchers.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.when;
 
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.ranker.CloudProviderRankerRequest;
@@ -27,17 +28,12 @@ import it.reply.orchestrator.service.CloudProviderRankerService;
 import it.reply.orchestrator.service.CloudProviderRankerServiceTest;
 import it.reply.orchestrator.utils.JsonUtils;
 
-import org.junit.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-
 import java.util.List;
 
-public class GetProvidersRankTest
-    extends BaseRankCloudProvidersCommandTest<GetProvidersRank> {
+import org.junit.Test;
+import org.mockito.Mock;
 
-  @InjectMocks
-  private GetProvidersRank getProvidersRankCommand;
+public class GetProvidersRankTest extends BaseRankCloudProvidersCommandTest<GetProvidersRank> {
 
   @Mock
   private CloudProviderRankerService cloudProviderRankerService;

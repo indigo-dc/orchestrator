@@ -20,12 +20,11 @@ import alien4cloud.model.components.AbstractPropertyValue;
 
 import it.reply.orchestrator.utils.CommonUtils;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public interface PlacementPolicy extends Serializable {
+public interface PlacementPolicy {
 
   public static final String PLACEMENT_ID_PROPERTY_NAME =
       alien4cloud.model.topology.PlacementPolicy.PLACEMENT_ID_PROPERTY;

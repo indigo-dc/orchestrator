@@ -16,7 +16,9 @@
 
 package it.reply.orchestrator.service.commands;
 
-import static org.mockito.Mockito.*;
+import static org.mockito.Mockito.when;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.utils.JsonUtils;
@@ -24,29 +26,14 @@ import it.reply.orchestrator.utils.WorkflowConstants;
 
 import org.flowable.engine.impl.persistence.entity.ExecutionEntity;
 import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.Spy;
-import org.springframework.boot.test.autoconfigure.json.JsonTest;
 import org.springframework.boot.web.client.RestTemplateBuilder;
-import org.springframework.test.context.junit4.rules.SpringClassRule;
-import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
-
-@JsonTest
 public abstract class BaseRankCloudProvidersCommandTest<T extends BaseRankCloudProvidersCommand>
     extends BaseWorkflowCommandTest<RankCloudProvidersMessage, T> {
-
-  @ClassRule
-  public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
-
-  @Rule
-  public final SpringMethodRule springMethodRule = new SpringMethodRule();
 
   protected MockRestServiceServer mockServer;
   
@@ -63,7 +50,7 @@ public abstract class BaseRankCloudProvidersCommandTest<T extends BaseRankCloudP
   @Before
   public void baseSetup() {
     when(restTemplateBuilder.build())
-    .thenReturn(restTemplate);
+        .thenReturn(restTemplate);
     mockServer = MockRestServiceServer.createServer(restTemplate);
   }
 
@@ -79,13 +66,10 @@ public abstract class BaseRankCloudProvidersCommandTest<T extends BaseRankCloudP
     return execution;
   }
 
-  protected ExecutionEntity execute(String rankCloudProvidersMessage) {
-    try {
-      return execute(
-          JsonUtils.deserialize(rankCloudProvidersMessage, RankCloudProvidersMessage.class));
-    } catch (IOException ex) {
-      throw new RuntimeException(ex);
-    }
+  protected ExecutionEntity execute(String rankCloudProvidersMessage)
+      throws JsonProcessingException {
+    return execute(
+        JsonUtils.deserialize(rankCloudProvidersMessage, RankCloudProvidersMessage.class));
   }
 
 }

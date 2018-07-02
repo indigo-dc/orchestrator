@@ -53,7 +53,6 @@ import it.reply.orchestrator.service.deployment.providers.factory.ChronosClientF
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -68,7 +67,9 @@ import java.util.stream.Collectors;
 
 import javax.validation.constraints.NotNull;
 
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -132,12 +133,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
       deploymentMessage.setTemplateTopologicalOrderIterator(
           new TemplateTopologicalOrderIterator(topoOrder
               .stream()
-              .map(e -> {
-                Resource res = new Resource();
-                res.setToscaNodeName(e.getToscaNodeName());
-                res.setState(NodeStates.INITIAL);
-                return res;
-              })
+              .map(e -> e.getToscaNodeName())
               .collect(Collectors.toList())));
     }
 
@@ -180,17 +176,17 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
       TemplateTopologicalOrderIterator templateTopologicalOrderIterator, Chronos client) {
 
     // Create Jobs in the required order on Chronos
-    Resource currentNode = templateTopologicalOrderIterator.getCurrent();
+    String currentNode = templateTopologicalOrderIterator.getCurrent();
     if (currentNode == null) {
       return false;
     }
 
-    IndigoJob currentJob = jobgraph.get(currentNode.getToscaNodeName());
+    IndigoJob currentJob = jobgraph.get(currentNode);
 
     // Create jobs based on the topological order
     try {
       String nodeTypeMsg;
-      if (currentJob.getParents().isEmpty()) {
+      if (CollectionUtils.isEmpty(currentJob.getChronosJob().getParents())) {
         // Scheduled job (not dependent)
         nodeTypeMsg = "scheduled";
         LOG.debug("creating scheduled Chronos job {}", currentJob.getChronosJob());
@@ -209,12 +205,10 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
       // Update job status
       updateResource(deployment, currentJob, NodeStates.CREATED);
       // The node in the iterator is not actually an entity (serialization issues)
-      currentNode.setState(NodeStates.CREATED);
 
     } catch (ChronosException exception) { // Chronos job launch error
       // Update job status
       updateResource(deployment, currentJob, NodeStates.ERROR);
-      currentNode.setState(NodeStates.ERROR);
       // TODO use a custom exception ?
       throw new RuntimeException(
           String.format("Failed to launch job <%s> on Chronos. Status Code: <%s>",
@@ -291,8 +285,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
       throws DeploymentException {
 
     // Get current job
-    Resource currentNode = templateTopologicalOrderIterator.getCurrent();
-    IndigoJob job = jobgraph.get(currentNode.getToscaNodeName());
+    IndigoJob job = jobgraph.get(templateTopologicalOrderIterator.getCurrent());
 
     String jobName = job.getChronosJob().getName();
     Job updatedJob = getJobStatus(client, jobName);
@@ -322,13 +315,11 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
         String errorMsg = String.format("Chronos job <%s> failed to execute", jobName);
         // Update job status
         updateResource(deployment, job, NodeStates.ERROR);
-        currentNode.setState(NodeStates.ERROR);
         throw new DeploymentException(errorMsg);
       }
     } else {
       // Job finished -> Update job status
       updateResource(deployment, job, NodeStates.STARTED);
-      currentNode.setState(NodeStates.STARTED);
       return true;
     }
   }
@@ -408,12 +399,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
         deploymentMessage.setTemplateTopologicalOrderIterator(
             new TemplateTopologicalOrderIterator(topoOrder
                 .stream()
-                .map(e -> {
-                  Resource res = new Resource();
-                  res.setToscaNodeName(e.getToscaNodeName());
-                  res.setState(NodeStates.INITIAL);
-                  return res;
-                })
+                .map(e -> e.getToscaNodeName())
                 .collect(Collectors.toList())));
       }
     } catch (RuntimeException ex) {
@@ -476,19 +462,18 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
       TemplateTopologicalOrderIterator templateTopologicalOrderIterator, Chronos client,
       boolean failAtFirst) {
 
-    Resource currentNode = templateTopologicalOrderIterator.getCurrent();
+    String currentNode = templateTopologicalOrderIterator.getCurrent();
     if (currentNode == null) {
       return false;
     }
 
-    IndigoJob currentJob = jobgraph.get(currentNode.getToscaNodeName());
+    IndigoJob currentJob = jobgraph.get(currentNode);
     boolean failed = false;
 
     // Delete current job (all jobs iteratively)
     try {
       try {
         updateResource(deployment, currentJob, NodeStates.DELETING);
-        currentNode.setState(NodeStates.DELETING);
 
         String jobName = currentJob.getChronosJob().getName();
 
@@ -515,7 +500,6 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
       failed = true;
       // Update job status
       updateResource(deployment, currentJob, NodeStates.ERROR);
-      currentNode.setState(NodeStates.ERROR);
 
       // Only throw exception if required
       if (failAtFirst) {
@@ -528,10 +512,9 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
   }
 
   @Data
+  @NoArgsConstructor(access = AccessLevel.PROTECTED)
   @RequiredArgsConstructor
-  public static class IndigoJob implements Serializable {
-
-    private static final long serialVersionUID = -1037947811308004122L;
+  public static class IndigoJob {
 
     public enum JobDependencyType {
       START,
@@ -542,21 +525,17 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     @NonNull
     @NotNull
     private Job chronosJob;
-    
+
     @NonNull
     @NotNull
     private String toscaNodeName;
-    
-    @NonNull
-    @NotNull
-    private Collection<IndigoJob> parents = new ArrayList<>();
 
   }
 
   /**
-   * Creates the {@link INDIGOJob} graph based on the given {@link Deployment} (the TOSCA template
+   * Creates the {@link IndigoJob} graph based on the given {@link Deployment} (the TOSCA template
    * is parsed).
-   * 
+   *
    * @param deployment
    *          the input deployment.
    * @return the job graph.
@@ -628,10 +607,6 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
             volume.setHostPath(chronosProperties.generateLocalVolumesHostPath(id));
           });
       IndigoJob indigoJob = new IndigoJob(chronosJob, chronosNode.getName());
-      indigoJob.setParents(parentNodes
-          .stream()
-          .map(parentNode -> indigoJobs.get(parentNode.getName()))
-          .collect(Collectors.toList()));
       indigoJobs.put(chronosNode.getName(), indigoJob);
     }
 

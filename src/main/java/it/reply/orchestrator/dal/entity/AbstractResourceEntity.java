@@ -16,7 +16,6 @@
 
 package it.reply.orchestrator.dal.entity;
 
-import java.io.Serializable;
 import java.util.Date;
 
 import javax.persistence.Column;
@@ -40,9 +39,7 @@ import org.springframework.hateoas.Identifiable;
 @Setter
 @NoArgsConstructor
 @ToString
-public abstract class AbstractResourceEntity implements Identifiable<String>, Serializable {
-
-  private static final long serialVersionUID = 3797345592958668261L;
+public abstract class AbstractResourceEntity implements Identifiable<String> {
 
   public static final String ID_COLUMN_NAME = "uuid";
   public static final String CREATED_COLUMN_NAME = "created";
