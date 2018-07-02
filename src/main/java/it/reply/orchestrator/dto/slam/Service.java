@@ -18,7 +18,6 @@ package it.reply.orchestrator.dto.slam;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,9 +34,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @Data
 @Builder
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class Service implements Serializable {
-
-  private static final long serialVersionUID = 6559999818418491070L;
+public class Service {
 
   @JsonProperty("type")
   @Nullable

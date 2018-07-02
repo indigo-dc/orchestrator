@@ -16,6 +16,11 @@
 
 package it.reply.orchestrator.service.commands;
 
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyString;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.when;
+
 import it.reply.orchestrator.config.properties.OneDataProperties;
 import it.reply.orchestrator.config.properties.OneDataProperties.ServiceSpaceProperties;
 import it.reply.orchestrator.controller.ControllerTestUtils;
@@ -33,34 +38,28 @@ import it.reply.orchestrator.service.deployment.providers.DeploymentStatusHelper
 import it.reply.orchestrator.util.TestUtil;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
-import org.assertj.core.api.Assertions;
-import org.flowable.engine.impl.persistence.entity.ExecutionEntity;
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.Spy;
-
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 
-public class UpdateDeploymentTest {
+import org.assertj.core.api.Assertions;
+import org.flowable.engine.impl.persistence.entity.ExecutionEntity;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 
-  @InjectMocks
-  @Spy
-  UpdateDeployment updateDeployment;
-
-  @Mock
-  DeploymentRepository deploymentRepository;
-
-  @Mock
-  CloudProviderEndpointServiceImpl cloudProviderEndpointServiceImpl;
+public class UpdateDeploymentTest extends BaseDeployCommandTest<UpdateDeployment> {
 
   @Mock
-  OneDataService oneDataService;
+  private DeploymentRepository deploymentRepository;
+
+  @Mock
+  private CloudProviderEndpointServiceImpl cloudProviderEndpointServiceImpl;
+
+  @Mock
+  private OneDataService oneDataService;
 
   @Spy
   private OneDataProperties oneDataProperties;
@@ -69,12 +68,17 @@ public class UpdateDeploymentTest {
   private ServiceSpaceProperties serviceSpaceProperties;
 
   @Mock
-  DeploymentStatusHelper deploymentStatusHelper;
+  private DeploymentStatusHelper deploymentStatusHelper;
+
+  public UpdateDeploymentTest() {
+    super(new UpdateDeployment());
+  }
 
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
     oneDataProperties.setServiceSpace(serviceSpaceProperties);
+    serviceSpaceProperties.setOneproviderUrl(URI.create("http://example.com"));
   }
 
   @Test
@@ -82,7 +86,7 @@ public class UpdateDeploymentTest {
     ExecutionEntity execution = new ExecutionEntityBuilder().build();
     Assertions
         .assertThatExceptionOfType(WorkflowException.class)
-        .isThrownBy(() -> updateDeployment.execute(execution))
+        .isThrownBy(() -> command.execute(execution))
         .withCauseInstanceOf(IllegalArgumentException.class);
   }
 
@@ -108,14 +112,16 @@ public class UpdateDeploymentTest {
     dm.setOneDataRequirements(oneDataRequirements);
     rankCloudProvidersMessage.setOneDataRequirements(oneDataRequirements);
 
-    Mockito.when(cloudProviderEndpointServiceImpl.chooseCloudProvider(Mockito.any(Deployment.class),
-        Mockito.any(RankCloudProvidersMessage.class))).thenReturn(chosenCp);
-    Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
-    Mockito.doNothing().when(deploymentStatusHelper).updateOnError(Mockito.anyString(),
-        Mockito.any(Exception.class));
+    when(cloudProviderEndpointServiceImpl.
+        chooseCloudProvider(any(Deployment.class), any(RankCloudProvidersMessage.class)))
+        .thenReturn(chosenCp);
+    when(deploymentRepository.findOne(deployment.getId()))
+        .thenReturn(deployment);
+    doNothing()
+        .when(deploymentStatusHelper)
+        .updateOnError(anyString(), any(Exception.class));
 
-    Mockito
-        .when(cloudProviderEndpointServiceImpl.getCloudProviderEndpoint(cp,
+    when(cloudProviderEndpointServiceImpl.getCloudProviderEndpoint(cp,
             rankCloudProvidersMessage.getPlacementPolicies(), false))
         .thenReturn(dm.getChosenCloudProviderEndpoint());
 
@@ -125,12 +131,8 @@ public class UpdateDeploymentTest {
         .withMockedVariable(WorkflowConstants.Param.DEPLOYMENT_MESSAGE, dm)
         .build();
 
-    serviceSpaceProperties.setOneproviderUrl(URI.create("http://example.com"));
-
-    updateDeployment.generateOneDataParameters(rankCloudProvidersMessage, dm);
-
     Assertions
-        .assertThatCode(() -> updateDeployment.execute(execution))
+        .assertThatCode(() -> command.execute(execution))
         .doesNotThrowAnyException();
     // TODO do some real test here
   }
@@ -144,9 +146,14 @@ public class UpdateDeploymentTest {
   @Test
   public void testCustomExecuteSuccessWithInputData() throws Exception {
     Map<String, OneData> oneDataRequirements = new HashMap<>();
-    OneData onedata =
-        OneData.builder().token("token").space("space").path("path").providers("providers").build();
-    onedata.setSmartScheduling(true);
+    OneData onedata = OneData
+        .builder()
+        .token("token")
+        .space("space")
+        .path("path")
+        .providers("providers")
+        .smartScheduling(true)
+        .build();
     oneDataRequirements.put("input", onedata);
     this.baseTestCustomExecuteSuccess(oneDataRequirements);
   }
@@ -154,9 +161,14 @@ public class UpdateDeploymentTest {
   @Test
   public void testCustomExecuteSuccessWithOutputData() throws Exception {
     Map<String, OneData> oneDataRequirements = new HashMap<>();
-    OneData onedata =
-        OneData.builder().token("token").space("space").path("path").providers("providers").build();
-    onedata.setSmartScheduling(true);
+    OneData onedata = OneData
+        .builder()
+        .token("token")
+        .space("space")
+        .path("path")
+        .providers("providers")
+        .smartScheduling(true)
+        .build();
     oneDataRequirements.put("output", onedata);
     this.baseTestCustomExecuteSuccess(oneDataRequirements);
   }
@@ -164,13 +176,24 @@ public class UpdateDeploymentTest {
   @Test
   public void testExecuteSuccessWithInputAndOutputData() throws Exception {
     Map<String, OneData> oneDataRequirements = new HashMap<>();
-    OneData onedata =
-        OneData.builder().token("token").space("space").path("path").providers("providers").build();
-    onedata.setSmartScheduling(true);
+    OneData onedata = OneData
+        .builder()
+        .token("token")
+        .space("space")
+        .path("path")
+        .providers("providers")
+        .smartScheduling(true)
+        .build();
     oneDataRequirements.put("input", onedata);
-    onedata =
-        OneData.builder().token("token").space("space").path("path").providers("providers").build();
-    onedata.setSmartScheduling(true);
+
+    onedata = OneData
+        .builder()
+        .token("token")
+        .space("space")
+        .path("path")
+        .providers("providers")
+        .smartScheduling(true)
+        .build();
     oneDataRequirements.put("output", onedata);
     this.baseTestCustomExecuteSuccess(oneDataRequirements);
   }

@@ -19,23 +19,24 @@ package it.reply.orchestrator.service.commands;
 import it.reply.orchestrator.service.CallbackService;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.flowable.engine.delegate.DelegateExecution;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component(WorkflowConstants.Delegate.NOTIFY)
-@AllArgsConstructor
 @Slf4j
 public class Notify extends BaseJavaDelegate {
 
+  @Autowired
   private CallbackService callbackService;
 
   @Override
   public void customExecute(DelegateExecution execution) {
     try {
-      String deploymentId = getRequiredParameter(execution, WorkflowConstants.Param.DEPLOYMENT_ID);
+      String deploymentId = getRequiredParameter(execution, WorkflowConstants.Param.DEPLOYMENT_ID,
+          String.class);
       callbackService.doCallback(deploymentId);
     } catch (RuntimeException ex) {
       // swallow it, do not put the whole process in error

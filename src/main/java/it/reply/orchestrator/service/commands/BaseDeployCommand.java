@@ -16,11 +16,14 @@
 
 package it.reply.orchestrator.service.commands;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
 import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
+import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class BaseDeployCommand extends BaseWorkflowCommand<DeploymentMessage> {
@@ -28,9 +31,20 @@ public abstract class BaseDeployCommand extends BaseWorkflowCommand<DeploymentMe
   @Autowired
   private DeploymentProviderServiceRegistry deploymentProviderServiceRegistry;
 
+  @Autowired
+  private ObjectMapper objectMapper;
+
   @Override
-  protected String getMessageParameterName() {
-    return WorkflowConstants.Param.DEPLOYMENT_MESSAGE;
+  protected DeploymentMessage getMessage(DelegateExecution execution) {
+    return getRequiredParameter(execution, WorkflowConstants.Param.DEPLOYMENT_MESSAGE,
+        DeploymentMessage.class);
+  }
+
+  @Override
+  protected void setMessage(DeploymentMessage message, DelegateExecution execution) {
+    execution
+        .setVariable(WorkflowConstants.Param.DEPLOYMENT_MESSAGE, objectMapper.valueToTree(message),
+            false);
   }
 
   protected DeploymentProviderService getDeploymentProviderService(

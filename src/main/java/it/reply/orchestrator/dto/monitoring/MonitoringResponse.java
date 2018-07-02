@@ -18,8 +18,6 @@ package it.reply.orchestrator.dto.monitoring;
 
 import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.MonitoringWrappedResponsePaas;
 
-import java.io.Serializable;
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,9 +30,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @Builder
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class MonitoringResponse implements Serializable {
-
-  private static final long serialVersionUID = 6559999818418491070L;
+public class MonitoringResponse {
 
   @Nullable
   private MonitoringWrappedResponsePaas result;

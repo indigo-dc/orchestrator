@@ -32,8 +32,10 @@ public class HandleError extends BaseJavaDelegate {
 
   @Override
   public void customExecute(DelegateExecution execution) {
-    String deploymentId = getRequiredParameter(execution, WorkflowConstants.Param.DEPLOYMENT_ID);
-    Exception exception = getRequiredParameter(execution, WorkflowConstants.Param.EXCEPTION);
+    String deploymentId = getRequiredParameter(execution, WorkflowConstants.Param.DEPLOYMENT_ID,
+        String.class);
+    Exception exception = getRequiredParameter(execution, WorkflowConstants.Param.EXCEPTION,
+        Exception.class);
 
     deploymentStatusHelper.updateOnError(deploymentId, exception.getMessage());
   }

@@ -16,8 +16,6 @@
 
 package it.reply.orchestrator.dto.cmdb;
 
-import java.io.Serializable;
-
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -32,9 +30,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Provider extends CmdbDataWrapper<Provider, ProviderData> implements Serializable {
-
-  private static final long serialVersionUID = 6559999818418491070L;
+public class Provider extends CmdbDataWrapper<Provider, ProviderData> {
 
   @Builder
   protected Provider(@Nullable String id, @Nullable String type, @NonNull ProviderData data) {

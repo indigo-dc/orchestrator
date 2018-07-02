@@ -48,8 +48,6 @@ import lombok.Setter;
 @NoArgsConstructor
 public class Resource extends AbstractResourceEntity {
 
-  private static final long serialVersionUID = -4916577635363604624L;
-
   @Enumerated(EnumType.STRING)
   @Column(name = "state", length = 500)
   private NodeStates state;

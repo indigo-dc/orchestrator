@@ -16,8 +16,6 @@
 
 package it.reply.orchestrator.dal.entity;
 
-import java.io.Serializable;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
@@ -39,9 +37,7 @@ import org.springframework.hateoas.Identifiable;
 @NoArgsConstructor
 @EqualsAndHashCode(of = { "processId", "requestId" })
 @ToString(of = { "processId", "requestId" })
-public class WorkflowReference implements Identifiable<String>, Serializable {
-
-  private static final long serialVersionUID = -610233480056664663L;
+public class WorkflowReference implements Identifiable<String> {
 
   @Id
   @Column(name = "process_id", unique = true, nullable = false, updatable = false)

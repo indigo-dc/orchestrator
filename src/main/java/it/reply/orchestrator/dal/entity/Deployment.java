@@ -55,8 +55,6 @@ import lombok.Setter;
 @NoArgsConstructor
 public class Deployment extends AbstractResourceEntity {
 
-  private static final long serialVersionUID = 3866893436735377053L;
-
   @Enumerated(EnumType.STRING)
   @Column(name = "status", length = 500)
   private Status status;

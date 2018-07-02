@@ -16,14 +16,31 @@
 
 package it.reply.orchestrator.service.commands;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.utils.WorkflowConstants;
+
+import org.flowable.engine.delegate.DelegateExecution;
+import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class BaseRankCloudProvidersCommand
     extends BaseWorkflowCommand<RankCloudProvidersMessage> {
 
+  @Autowired
+  private ObjectMapper objectMapper;
+
   @Override
-  protected String getMessageParameterName() {
-    return WorkflowConstants.Param.RANK_CLOUD_PROVIDERS_MESSAGE;
+  protected RankCloudProvidersMessage getMessage(DelegateExecution execution) {
+    return getRequiredParameter(execution, WorkflowConstants.Param.RANK_CLOUD_PROVIDERS_MESSAGE,
+        RankCloudProvidersMessage.class);
+  }
+
+  @Override
+  protected void setMessage(RankCloudProvidersMessage message, DelegateExecution execution) {
+    execution
+        .setVariable(WorkflowConstants.Param.RANK_CLOUD_PROVIDERS_MESSAGE,
+            objectMapper.valueToTree(message),
+            false);
   }
 }

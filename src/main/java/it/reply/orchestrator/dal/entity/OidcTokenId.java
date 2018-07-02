@@ -38,7 +38,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 @NoArgsConstructor
 public class OidcTokenId implements Serializable {
 
-  private static final long serialVersionUID = -8303859464474981940L;
+  private static final long serialVersionUID = 1L;
 
   @Column(name = "clients_id", nullable = false, updatable = false)
   @NotNull

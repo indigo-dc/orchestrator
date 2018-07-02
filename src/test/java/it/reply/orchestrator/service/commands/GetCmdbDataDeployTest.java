@@ -30,9 +30,6 @@ import org.mockito.Spy;
 
 public class GetCmdbDataDeployTest extends BaseRankCloudProvidersCommandTest<GetCmdbDataDeploy> {
 
-  @InjectMocks
-  private GetCmdbDataDeploy getCMDBDataCommand;
-
   @Spy
   @InjectMocks
   private CmdbServiceImpl cmdbService;
@@ -40,15 +37,13 @@ public class GetCmdbDataDeployTest extends BaseRankCloudProvidersCommandTest<Get
   @Spy
   private CmdbProperties cmdbProperties;
 
-  private final String endpoint = "https://www.example.com";
-
   public GetCmdbDataDeployTest() {
     super(new GetCmdbDataDeploy());
   }
 
   @Before
   public void setup() {
-    cmdbProperties.setUrl(URI.create(endpoint));
+    cmdbProperties.setUrl(URI.create("https://www.example.com"));
   }
 
   @Test

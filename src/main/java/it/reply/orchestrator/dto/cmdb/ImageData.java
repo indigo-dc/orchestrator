@@ -18,8 +18,6 @@ package it.reply.orchestrator.dto.cmdb;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.io.Serializable;
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,9 +30,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class ImageData implements Serializable {
-
-  private static final long serialVersionUID = 6029586902515892534L;
+public class ImageData {
 
   @JsonProperty("image_id")
   @Nullable

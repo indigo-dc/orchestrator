@@ -34,7 +34,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 @Embeddable
 public abstract class OidcIssuerAwareId implements Serializable {
 
-  private static final long serialVersionUID = -8057514331507625686L;
+  private static final long serialVersionUID = 1L;
 
   @NonNull
   @NotNull

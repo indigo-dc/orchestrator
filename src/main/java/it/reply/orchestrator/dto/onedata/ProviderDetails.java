@@ -18,7 +18,6 @@ package it.reply.orchestrator.dto.onedata;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -35,9 +34,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @Data
 @Builder
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class ProviderDetails implements Serializable {
-
-  private static final long serialVersionUID = -368387049626457198L;
+public class ProviderDetails {
 
   @JsonProperty("providerId")
   @NonNull

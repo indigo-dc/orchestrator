@@ -18,8 +18,6 @@ package it.reply.orchestrator.dto.cmdb;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.io.Serializable;
-
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,9 +30,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class ProviderData implements Serializable {
-
-  private static final long serialVersionUID = 6559999818418491070L;
+public class ProviderData {
 
   @JsonProperty("name")
   @Nullable

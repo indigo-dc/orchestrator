@@ -16,8 +16,6 @@
 
 package it.reply.orchestrator.dto.ranker;
 
-import java.io.Serializable;
-
 import javax.validation.constraints.NotNull;
 
 import lombok.AccessLevel;
@@ -33,9 +31,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @Builder
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class RankedCloudProvider implements Serializable {
-
-  private static final long serialVersionUID = 6559999818418491070L;
+public class RankedCloudProvider {
 
   @NonNull
   @NotNull

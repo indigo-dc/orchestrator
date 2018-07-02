@@ -21,7 +21,6 @@ import it.reply.orchestrator.dto.cmdb.ImageData;
 import it.reply.orchestrator.dto.cmdb.Provider;
 import it.reply.orchestrator.dto.cmdb.Type;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -49,9 +48,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @Data
 @Builder
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class CloudProvider implements Serializable {
-
-  private static final long serialVersionUID = 6559999818418491070L;
+public class CloudProvider {
 
   @NonNull
   @NotNull

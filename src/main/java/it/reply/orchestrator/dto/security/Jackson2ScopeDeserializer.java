@@ -27,7 +27,7 @@ import org.springframework.util.StringUtils;
 
 public class Jackson2ScopeDeserializer extends FromStringDeserializer<Set<String>> {
 
-  private static final long serialVersionUID = 3457325186733406722L;
+  private static final long serialVersionUID = 1L;
 
   private static final Pattern SPLITTER = Pattern.compile("[\\s+]");
 

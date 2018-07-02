@@ -18,8 +18,6 @@ package it.reply.orchestrator.dto.cmdb;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.io.Serializable;
-
 import javax.validation.constraints.NotNull;
 
 import lombok.AccessLevel;
@@ -33,10 +31,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @Data
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public abstract class CmdbDataWrapper<U extends CmdbDataWrapper<U, T>, T extends Serializable>
-    implements Serializable {
-
-  private static final long serialVersionUID = -7442528095759086603L;
+public abstract class CmdbDataWrapper<U extends CmdbDataWrapper<U, T>, T> {
 
   @JsonProperty("_id")
   @Nullable

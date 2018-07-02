@@ -21,7 +21,6 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import it.reply.orchestrator.dto.slam.PreferenceCustomer;
 import it.reply.orchestrator.dto.slam.Sla;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -33,9 +32,7 @@ import lombok.Data;
 @Data
 @Builder
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class CloudProviderRankerRequest implements Serializable {
-
-  private static final long serialVersionUID = 6559999818418491070L;
+public class CloudProviderRankerRequest {
 
   @JsonProperty("preferences")
   @Builder.Default

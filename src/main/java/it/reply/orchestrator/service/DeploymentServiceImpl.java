@@ -20,6 +20,8 @@ import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.model.topology.RelationshipTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.OidcEntity;
@@ -92,6 +94,9 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   @Autowired
   private OidcProperties oidcProperties;
+
+  @Autowired
+  private ObjectMapper objectMapper;
 
   @Override
   @Transactional(readOnly = true)
@@ -206,7 +211,8 @@ public class DeploymentServiceImpl implements DeploymentService {
         .createProcessInstanceBuilder()
         .variable(WorkflowConstants.Param.DEPLOYMENT_ID, deployment.getId())
         .variable(WorkflowConstants.Param.REQUEST_ID, MdcUtils.getRequestId())
-        .variable(WorkflowConstants.Param.DEPLOYMENT_MESSAGE, deploymentMessage)
+        .variable(WorkflowConstants.Param.DEPLOYMENT_MESSAGE,
+            objectMapper.valueToTree(deploymentMessage))
         .processDefinitionKey(WorkflowConstants.Process.DEPLOY)
         .businessKey(MdcUtils.toBusinessKey())
         .start();
@@ -294,7 +300,8 @@ public class DeploymentServiceImpl implements DeploymentService {
         .createProcessInstanceBuilder()
         .variable(WorkflowConstants.Param.DEPLOYMENT_ID, deployment.getId())
         .variable(WorkflowConstants.Param.REQUEST_ID, MdcUtils.getRequestId())
-        .variable(WorkflowConstants.Param.DEPLOYMENT_MESSAGE, deploymentMessage)
+        .variable(WorkflowConstants.Param.DEPLOYMENT_MESSAGE,
+            objectMapper.valueToTree(deploymentMessage))
         .processDefinitionKey(WorkflowConstants.Process.UNDEPLOY)
         .businessKey(MdcUtils.toBusinessKey())
         .start();
@@ -357,7 +364,8 @@ public class DeploymentServiceImpl implements DeploymentService {
         .variable(WorkflowConstants.Param.DEPLOYMENT_ID, deployment.getId())
         .variable(WorkflowConstants.Param.REQUEST_ID, MdcUtils.getRequestId())
         .variable(WorkflowConstants.Param.TOSCA_TEMPLATE, request.getTemplate())
-        .variable(WorkflowConstants.Param.DEPLOYMENT_MESSAGE, deploymentMessage)
+        .variable(WorkflowConstants.Param.DEPLOYMENT_MESSAGE,
+            objectMapper.valueToTree(deploymentMessage))
         .processDefinitionKey(WorkflowConstants.Process.UPDATE)
         .businessKey(MdcUtils.toBusinessKey())
         .start();

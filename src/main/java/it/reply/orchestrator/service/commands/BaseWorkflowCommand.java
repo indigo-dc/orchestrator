@@ -28,13 +28,15 @@ public abstract class BaseWorkflowCommand<M extends BaseWorkflowMessage> extends
   @Autowired
   private DeploymentRepository deploymentRepository;
 
-  protected abstract String getMessageParameterName();
+  protected abstract M getMessage(DelegateExecution execution);
+
+  protected abstract void setMessage(M message, DelegateExecution execution);
 
   @Override
   public void customExecute(DelegateExecution execution) {
-    M message = getRequiredParameter(execution, getMessageParameterName());
+    M message = getMessage(execution);
     execute(execution, message);
-    execution.setVariable(getMessageParameterName(), message, false);
+    setMessage(message, execution);
   }
 
   protected abstract void execute(DelegateExecution execution, M message);

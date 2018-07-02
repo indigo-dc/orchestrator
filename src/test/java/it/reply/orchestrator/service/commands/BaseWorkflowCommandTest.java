@@ -18,23 +18,11 @@ package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.dto.deployment.BaseWorkflowMessage;
 
-import org.junit.Rule;
-import org.mockito.InjectMocks;
-import org.mockito.Spy;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
-
-public abstract class BaseWorkflowCommandTest<M extends BaseWorkflowMessage, T extends BaseWorkflowCommand<M>> {
-
-  @Rule
-  public MockitoRule rule = MockitoJUnit.rule();
-
-  @InjectMocks
-  @Spy
-  protected T command;
+public abstract class BaseWorkflowCommandTest<M extends BaseWorkflowMessage, T extends BaseWorkflowCommand<M>> extends
+    BaseJavaDelegateTest<T> {
 
   public BaseWorkflowCommandTest(T command) {
-    this.command = command;
+    super(command);
   }
 
 }

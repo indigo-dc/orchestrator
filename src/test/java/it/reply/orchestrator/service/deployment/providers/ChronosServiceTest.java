@@ -16,10 +16,10 @@
 
 package it.reply.orchestrator.service.deployment.providers;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Matchers.*;
-
-import com.google.common.collect.ImmutableMap;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+import static org.mockito.Matchers.anyMapOf;
+import static org.mockito.Matchers.anyString;
 
 import alien4cloud.model.components.ComplexPropertyValue;
 import alien4cloud.model.components.ScalarPropertyValue;
@@ -27,13 +27,14 @@ import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.model.topology.Topology;
 import alien4cloud.tosca.model.ArchiveRoot;
 
+import com.google.common.collect.ImmutableMap;
+
 import it.infn.ba.indigo.chronos.client.Chronos;
 import it.infn.ba.indigo.chronos.client.model.v1.Job;
 import it.reply.orchestrator.config.properties.OrchestratorProperties;
 import it.reply.orchestrator.config.specific.ToscaParserAwareTest;
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
-import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
@@ -47,6 +48,13 @@ import it.reply.orchestrator.service.deployment.providers.factory.ChronosClientF
 import it.reply.orchestrator.util.TestUtil;
 import it.reply.orchestrator.utils.CommonUtils;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -57,13 +65,6 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
-
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
 
 @RunWith(JUnitParamsRunner.class)
 public class ChronosServiceTest extends ToscaParserAwareTest {
@@ -287,10 +288,7 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
     dm.setTemplateTopologicalOrderIterator(templateTopologicalOrderIterator);
     orchestratorProperties.setJobChunkSize(1);
 
-    Resource currentNode = new Resource();
-    currentNode.setToscaNodeName("toscaNodeName");
-
-    Mockito.when(templateTopologicalOrderIterator.getCurrent()).thenReturn(currentNode);
+    Mockito.when(templateTopologicalOrderIterator.getCurrent()).thenReturn("toscaNodeName");
 
     // crash in getJobStatus because client.getJob exec async request. can i mock this?
     chronosService.isDeployed(dm);

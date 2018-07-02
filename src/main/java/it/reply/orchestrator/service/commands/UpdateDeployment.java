@@ -63,7 +63,8 @@ public class UpdateDeployment extends BaseDeployCommand {
   public void execute(DelegateExecution execution, DeploymentMessage deploymentMessage) {
 
     RankCloudProvidersMessage rankCloudProvidersMessage =
-        getRequiredParameter(execution, WorkflowConstants.Param.RANK_CLOUD_PROVIDERS_MESSAGE);
+        getRequiredParameter(execution, WorkflowConstants.Param.RANK_CLOUD_PROVIDERS_MESSAGE,
+            RankCloudProvidersMessage.class);
 
     Deployment deployment = getDeployment(deploymentMessage);
 

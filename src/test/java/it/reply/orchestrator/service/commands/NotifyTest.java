@@ -16,37 +16,31 @@
 
 package it.reply.orchestrator.service.commands;
 
-import static org.assertj.core.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.Mockito.when;
 
 import it.reply.orchestrator.service.CallbackService;
 import it.reply.orchestrator.utils.WorkflowConstants;
-
-import org.flowable.engine.delegate.DelegateExecution;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.MockitoJUnit;
-import org.mockito.junit.MockitoRule;
 
 import java.util.UUID;
 
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
+import org.flowable.engine.delegate.DelegateExecution;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.Mock;
+
 @RunWith(JUnitParamsRunner.class)
-public class NotifyTest {
-
-  @Rule
-  public MockitoRule rule = MockitoJUnit.rule();
-
-  @InjectMocks
-  private Notify notifyCommand;
+public class NotifyTest extends BaseJavaDelegateTest<Notify> {
 
   @Mock
   private CallbackService callbackService;
+
+  public NotifyTest() {
+    super(new Notify());
+  }
 
   @Test
   @Parameters({ "true", "false" })
@@ -57,9 +51,10 @@ public class NotifyTest {
         .withMockedVariable(WorkflowConstants.Param.DEPLOYMENT_ID, deploymentId)
         .build();
 
-    when(callbackService.doCallback(deploymentId)).thenReturn(serviceResult);
+    when(callbackService.doCallback(deploymentId))
+        .thenReturn(serviceResult);
 
-    assertThatCode(() -> notifyCommand.execute(delegateExecution))
+    assertThatCode(() -> command.execute(delegateExecution))
         .doesNotThrowAnyException();
 
   }
@@ -72,9 +67,10 @@ public class NotifyTest {
         .withMockedVariable(WorkflowConstants.Param.DEPLOYMENT_ID, deploymentId)
         .build();
 
-    when(callbackService.doCallback(deploymentId)).thenThrow(new RuntimeException("some error"));
+    when(callbackService.doCallback(deploymentId))
+        .thenThrow(new RuntimeException("some error"));
 
-    assertThatCode(() -> notifyCommand.execute(delegateExecution))
+    assertThatCode(() -> command.execute(delegateExecution))
         .doesNotThrowAnyException();
 
   }
@@ -84,7 +80,7 @@ public class NotifyTest {
 
     DelegateExecution delegateExecution = new ExecutionEntityBuilder().build();
 
-    assertThatCode(() -> notifyCommand.execute(delegateExecution))
+    assertThatCode(() -> command.execute(delegateExecution))
         .doesNotThrowAnyException();
 
   }

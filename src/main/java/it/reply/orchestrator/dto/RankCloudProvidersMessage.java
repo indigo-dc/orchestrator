@@ -21,7 +21,6 @@ import it.reply.orchestrator.dto.deployment.BaseWorkflowMessage;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
 import it.reply.orchestrator.dto.slam.SlamPreferences;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -37,9 +36,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class RankCloudProvidersMessage extends BaseWorkflowMessage implements Serializable {
-
-  private static final long serialVersionUID = 6559999818418491070L;
+public class RankCloudProvidersMessage extends BaseWorkflowMessage {
 
   private SlamPreferences slamPreferences;
 

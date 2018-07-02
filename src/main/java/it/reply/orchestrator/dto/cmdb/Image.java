@@ -16,8 +16,6 @@
 
 package it.reply.orchestrator.dto.cmdb;
 
-import java.io.Serializable;
-
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -32,9 +30,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Image extends CmdbDataWrapper<Image, ImageData> implements Serializable {
-
-  private static final long serialVersionUID = -6026989231866013667L;
+public class Image extends CmdbDataWrapper<Image, ImageData> {
 
   @Builder
   protected Image(@Nullable String id, @Nullable String type, @NonNull ImageData data) {

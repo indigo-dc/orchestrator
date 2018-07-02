@@ -32,7 +32,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class JobMessageListener implements IgniteBiPredicate<UUID, String> {
 
-  private static final long serialVersionUID = -4399331241269448854L;
+  private static final long serialVersionUID = 1L;
 
   private transient JobServiceConfiguration jobServiceConfiguration;
 

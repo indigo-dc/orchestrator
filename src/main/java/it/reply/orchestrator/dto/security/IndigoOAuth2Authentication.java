@@ -34,7 +34,7 @@ import org.springframework.security.oauth2.provider.OAuth2Authentication;
 @ToString(callSuper = true)
 public class IndigoOAuth2Authentication extends OAuth2Authentication {
 
-  private static final long serialVersionUID = -1868480964470168415L;
+  private static final long serialVersionUID = 1L;
 
   @NonNull
   @NotNull

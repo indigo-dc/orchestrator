@@ -16,14 +16,11 @@
 
 package it.reply.orchestrator.dto.deployment;
 
-import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
-import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl.IndigoJob;
 
-import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
@@ -31,8 +28,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import lombok.AccessLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -40,9 +39,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class DeploymentMessage extends BaseWorkflowMessage implements Serializable {
-
-  private static final long serialVersionUID = 8003907220093782923L;
+public class DeploymentMessage extends BaseWorkflowMessage {
 
   // Max value allowed by SQL
   // private static final Instant MAX_TIMEOUT = Instant.parse("9999-12-31T23:59:59.999Z");
@@ -93,18 +90,17 @@ public class DeploymentMessage extends BaseWorkflowMessage implements Serializab
    *
    */
   @Data
-  public static class TemplateTopologicalOrderIterator implements Serializable {
-
-    private static final long serialVersionUID = 1557615023166610397L;
+  @NoArgsConstructor(access = AccessLevel.PROTECTED)
+  public static class TemplateTopologicalOrderIterator {
 
     /**
      * Template's nodes, topologically ordered.
      */
-    private List<Resource> topologicalOrder;
+    private List<String> topologicalOrder;
 
     private int position = 0;
 
-    public TemplateTopologicalOrderIterator(List<Resource> topologicalOrder) {
+    public TemplateTopologicalOrderIterator(List<String> topologicalOrder) {
       this.topologicalOrder = topologicalOrder;
     }
 
@@ -123,7 +119,7 @@ public class DeploymentMessage extends BaseWorkflowMessage implements Serializab
      * 
      * @return the current node, or <tt>null</tt> if the list is empty.
      */
-    public synchronized Resource getCurrent() {
+    public synchronized String getCurrent() {
       if (position >= topologicalOrder.size()) {
         return null;
       }
@@ -135,7 +131,7 @@ public class DeploymentMessage extends BaseWorkflowMessage implements Serializab
      * 
      * @return the next node, or <tt>null</tt> if there aren't any others.
      */
-    public synchronized Resource getNext() {
+    public synchronized String getNext() {
       if (!hasNext()) {
         position++;
         return null;
@@ -154,8 +150,4 @@ public class DeploymentMessage extends BaseWorkflowMessage implements Serializab
     timeout = MAX_TIMEOUT.toString();
   }
 
-  @Deprecated
-  public RankCloudProvidersMessage toRankCloudProvidersMessage() {
-    return new RankCloudProvidersMessage(this);
-  }
 }
