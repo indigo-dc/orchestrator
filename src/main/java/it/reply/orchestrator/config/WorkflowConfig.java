@@ -35,6 +35,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
@@ -62,6 +63,7 @@ public class WorkflowConfig extends ProcessEngineAutoConfiguration {
    *           when I/O exception of some sort has occurred during initialization
    */
   @Bean
+  @DependsOn("workflowLiquibase")
   public SpringProcessEngineConfiguration springProcessEngineConfiguration(
       @Qualifier("workflowDataSource") DataSource dataSource,
       PlatformTransactionManager platformTransactionManager,
