@@ -23,6 +23,8 @@ import java.util.Optional;
 import javax.sql.DataSource;
 import javax.sql.XADataSource;
 
+import liquibase.integration.spring.SpringLiquibase;
+
 import net.ttddyy.dsproxy.listener.logging.SLF4JLogLevel;
 import net.ttddyy.dsproxy.support.ProxyDataSourceBuilder;
 
@@ -34,6 +36,7 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties.Xa;
+import org.springframework.boot.autoconfigure.liquibase.LiquibaseProperties;
 import org.springframework.boot.autoconfigure.transaction.PlatformTransactionManagerCustomizer;
 import org.springframework.boot.bind.RelaxedDataBinder;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -76,15 +79,58 @@ public class DatasourceConfig implements BeanClassLoaderAware {
 
   @Bean
   @Primary
+  @ConfigurationProperties("datasource.orchestrator")
   public DataSource dataSource(XADataSourceWrapper wrapper) throws Exception {
     XADataSource xaDataSource = createXaDataSource(orchestratorDataSourceProperties());
     return wrapper.wrapDataSource(xaDataSource);
   }
 
   @Bean
+  @ConfigurationProperties("datasource.workflow")
   public DataSource workflowDataSource(XADataSourceWrapper wrapper) throws Exception {
     XADataSource xaDataSource = createXaDataSource(workflowDataSourceProperties());
     return wrapper.wrapDataSource(xaDataSource);
+  }
+
+  @Bean
+  @Primary
+  @ConfigurationProperties("datasource.orchestrator.liquibase")
+  public LiquibaseProperties orchestratorLiquibaseProperties() {
+    return new LiquibaseProperties();
+  }
+
+  @Bean
+  @ConfigurationProperties("datasource.workflow.liquibase")
+  public LiquibaseProperties workflowLiquibaseProperties() {
+    return new LiquibaseProperties();
+  }
+
+  @Bean
+  @Primary
+  @ConfigurationProperties("datasource.orchestrator.liquibase")
+  public SpringLiquibase liquibase(XADataSourceWrapper wrapper) throws Exception {
+    return springLiquibase(dataSource(wrapper), orchestratorLiquibaseProperties());
+  }
+
+  @Bean
+  @ConfigurationProperties("datasource.workflow.liquibase")
+  public SpringLiquibase workflowLiquibase(XADataSourceWrapper wrapper) throws Exception {
+    return springLiquibase(workflowDataSource(wrapper), workflowLiquibaseProperties());
+  }
+
+  private static SpringLiquibase springLiquibase(DataSource dataSource,
+      LiquibaseProperties properties) {
+    SpringLiquibase liquibase = new SpringLiquibase();
+    liquibase.setDataSource(dataSource);
+    liquibase.setChangeLog(properties.getChangeLog());
+    liquibase.setContexts(properties.getContexts());
+    liquibase.setDefaultSchema(properties.getDefaultSchema());
+    liquibase.setDropFirst(properties.isDropFirst());
+    liquibase.setShouldRun(properties.isEnabled());
+    liquibase.setLabels(properties.getLabels());
+    liquibase.setChangeLogParameters(properties.getParameters());
+    liquibase.setRollbackFile(properties.getRollbackFile());
+    return liquibase;
   }
 
   @Component

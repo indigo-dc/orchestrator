@@ -251,6 +251,11 @@
 		</dependency>
 	
 		<dependency>
+			<groupId>org.liquibase</groupId>
+			<artifactId>liquibase-core</artifactId>
+		</dependency>
+	
+		<dependency>
 			<groupId>alien4cloud</groupId>
 			<artifactId>alien4cloud-core</artifactId>
 			<version>${alien4cloud.version}</version>
@@ -333,6 +338,11 @@
 		<dependency>
 			<groupId>mysql</groupId>
 			<artifactId>mysql-connector-java</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
 		</dependency>
 
 		<dependency>

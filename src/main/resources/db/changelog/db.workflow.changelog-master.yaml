@@ -1,0 +1,4 @@
+databaseChangeLog:
+  - include:
+    - file: 0001_workflow-create-all-6301.yaml
+      relativeToChangelogFile: true

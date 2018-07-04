@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0001_workflow-create-all-6301
+      author: a.brigandi
+      comment: Initialize Flowable DB at version 6.3.0.1
+      changes:
+      - sqlFile:
+          dbms: h2
+          encoding: utf8
+          path: sql/h2/0001_workflow-create-all-6301.sql
+          relativeToChangelogFile: true
+      - sqlFile:
+          dbms: mysql
+          encoding: utf8
+          path: sql/mysql/0001_workflow-create-all-6301.sql
+          relativeToChangelogFile: true
+      - sqlFile:
+          dbms: postgresql
+          encoding: utf8
+          path: sql/postgresql/0001_workflow-create-all-6301.sql
+          relativeToChangelogFile: true

@@ -1,0 +1,366 @@
+databaseChangeLog:
+- changeSet:
+    id: 0002_orchestrator-create-2001
+    author: a.brigandi
+    comment: Initialize Orchestrator DB at version 2.0.0.1
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: uuid
+            type: VARCHAR(255)
+        - column:
+            name: created
+            type: datetime(6)
+        - column:
+            name: updated
+            type: datetime(6)
+        - column:
+            name: version
+            type: BIGINT
+        - column:
+            name: callback
+            type: VARCHAR(255)
+        - column:
+            name: cloud_provider_endpoint
+            type: TEXT
+        - column:
+            name: cloud_provider_name
+            type: VARCHAR(128)
+        - column:
+            name: deployment_provider
+            type: VARCHAR(255)
+        - column:
+            name: endpoint
+            type: VARCHAR(255)
+        - column:
+            name: status
+            type: VARCHAR(500)
+        - column:
+            name: status_reason
+            type: LONGTEXT
+        - column:
+            name: task
+            type: VARCHAR(255)
+        - column:
+            name: template
+            type: LONGTEXT
+        - column:
+            name: owner_id
+            type: VARCHAR(255)
+        tableName: deployment
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: deployment_uuid
+            type: VARCHAR(255)
+        - column:
+            name: value
+            type: TEXT
+        - column:
+            constraints:
+              nullable: false
+            name: name
+            type: VARCHAR(255)
+        tableName: deployment_outputs
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: deployment_uuid
+            type: VARCHAR(255)
+        - column:
+            name: value
+            type: TEXT
+        - column:
+            constraints:
+              nullable: false
+            name: name
+            type: VARCHAR(255)
+        tableName: deployment_parameters
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: uuid
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: subject
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: issuer
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: organization
+            type: VARCHAR(255)
+        tableName: oidc_entity
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              primaryKey: true
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: issued_at
+            type: datetime(6)
+        - column:
+            name: expires_at
+            type: datetime(6)
+        - column:
+            constraints:
+              nullable: false
+            name: clients_id
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: subject
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: issuer
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: scopes
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: refresh_token_value
+            type: VARCHAR(255)
+        tableName: oidc_refresh_token
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: uuid
+            type: VARCHAR(255)
+        - column:
+            name: created
+            type: datetime(6)
+        - column:
+            name: updated
+            type: datetime(6)
+        - column:
+            name: version
+            type: BIGINT
+        - column:
+            name: cloud_provider_endpoint
+            type: TEXT
+        - column:
+            name: iaas_id
+            type: VARCHAR(500)
+        - column:
+            name: state
+            type: VARCHAR(500)
+        - column:
+            name: tosca_node_name
+            type: VARCHAR(255)
+        - column:
+            name: tosca_node_type
+            type: VARCHAR(255)
+        - column:
+            name: deployment_uuid
+            type: VARCHAR(255)
+        tableName: resource
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: resource_uuid
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: required_by
+            type: VARCHAR(255)
+        tableName: resource_required_by
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: process_id
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: request_id
+            type: VARCHAR(255)
+        - column:
+            name: deployment_id
+            type: VARCHAR(255)
+        tableName: workflow_reference
+    - addPrimaryKey:
+        columnNames: uuid
+        constraintName: PRIMARY
+        tableName: deployment
+    - addPrimaryKey:
+        columnNames: deployment_uuid, name
+        constraintName: PRIMARY
+        tableName: deployment_outputs
+    - addPrimaryKey:
+        columnNames: deployment_uuid, name
+        constraintName: PRIMARY
+        tableName: deployment_parameters
+    - addPrimaryKey:
+        columnNames: uuid
+        constraintName: PRIMARY
+        tableName: oidc_entity
+    - addPrimaryKey:
+        columnNames: uuid
+        constraintName: PRIMARY
+        tableName: resource
+    - addPrimaryKey:
+        columnNames: resource_uuid, required_by
+        constraintName: PRIMARY
+        tableName: resource_required_by
+    - addPrimaryKey:
+        columnNames: process_id
+        constraintName: PRIMARY
+        tableName: workflow_reference
+    - addUniqueConstraint:
+        columnNames: request_id
+        constraintName: UK_sc7y9a2nof7bpvoxrdjxudtr2
+        tableName: workflow_reference
+    - addUniqueConstraint:
+        columnNames: issuer, subject
+        constraintName: uq_issuer_subject
+        tableName: oidc_entity
+    - addUniqueConstraint:
+        columnNames: issuer, subject, clients_id
+        constraintName: uq_issuer_subject_clients_id
+        tableName: oidc_refresh_token
+    - createIndex:
+        columns:
+        - column:
+            name: required_by
+        indexName: FK3yc2220a0gf6t6wmklhexvw4g
+        tableName: resource_required_by
+    - createIndex:
+        columns:
+        - column:
+            name: deployment_id
+        indexName: FKir8ga7xwcxtwgy9d6ew43wjm6
+        tableName: workflow_reference
+    - createIndex:
+        columns:
+        - column:
+            name: owner_id
+        indexName: FKpr7so1dkj1eus1pe86lwr0w9e
+        tableName: deployment
+    - createIndex:
+        columns:
+        - column:
+            name: created
+        indexName: IDX9877cui3abccm3ggxvnmj9hpn
+        tableName: deployment
+    - createIndex:
+        columns:
+        - column:
+            name: tosca_node_name
+        indexName: IDXhqs86c3ouc38jkltddg18ke8a
+        tableName: resource
+    - createIndex:
+        columns:
+        - column:
+            name: created
+        indexName: IDXmxa5v69rnm7felj0726iqdnpd
+        tableName: resource
+    - createIndex:
+        columns:
+        - column:
+            name: deployment_uuid
+        indexName: IDXtnbg97nxgcywp19nxho6x89tw
+        tableName: resource
+    - addForeignKeyConstraint:
+        baseColumnNames: resource_uuid
+        baseTableName: resource_required_by
+        constraintName: FK18a8soqgk3kif56bkmc4obno
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: uuid
+        referencedTableName: resource
+    - addForeignKeyConstraint:
+        baseColumnNames: required_by
+        baseTableName: resource_required_by
+        constraintName: FK3yc2220a0gf6t6wmklhexvw4g
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: uuid
+        referencedTableName: resource
+    - addForeignKeyConstraint:
+        baseColumnNames: deployment_uuid
+        baseTableName: resource
+        constraintName: FK6oqrqq0jwj4gc67r7we7hkt5f
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: uuid
+        referencedTableName: deployment
+    - addForeignKeyConstraint:
+        baseColumnNames: deployment_uuid
+        baseTableName: deployment_outputs
+        constraintName: FKhgt5mhrt3hbuyy2vjd1tm0qe6
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: uuid
+        referencedTableName: deployment
+    - addForeignKeyConstraint:
+        baseColumnNames: deployment_id
+        baseTableName: workflow_reference
+        constraintName: FKir8ga7xwcxtwgy9d6ew43wjm6
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: uuid
+        referencedTableName: deployment
+    - addForeignKeyConstraint:
+        baseColumnNames: deployment_uuid
+        baseTableName: deployment_parameters
+        constraintName: FKnyk2r46i5bbw0pi2dfggyvubk
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: uuid
+        referencedTableName: deployment
+    - addForeignKeyConstraint:
+        baseColumnNames: owner_id
+        baseTableName: deployment
+        constraintName: FKpr7so1dkj1eus1pe86lwr0w9e
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: uuid
+        referencedTableName: oidc_entity
