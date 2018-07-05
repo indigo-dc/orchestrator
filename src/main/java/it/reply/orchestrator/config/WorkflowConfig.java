@@ -16,6 +16,7 @@
 
 package it.reply.orchestrator.config;
 
+import it.reply.orchestrator.dal.util.StrongSequentialUuidGenerator;
 import it.reply.orchestrator.workflow.CustomFailedJobCommandFactory;
 
 import java.io.IOException;
@@ -23,6 +24,7 @@ import java.io.IOException;
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
+import org.flowable.engine.common.impl.cfg.IdGenerator;
 import org.flowable.job.service.impl.asyncexecutor.AsyncExecutor;
 import org.flowable.spring.SpringProcessEngineConfiguration;
 import org.flowable.spring.boot.FlowableMailProperties;
@@ -83,4 +85,8 @@ public class WorkflowConfig extends ProcessEngineAutoConfiguration {
     return configuration;
   }
 
+  @Bean
+  public IdGenerator idGenerator() {
+    return new StrongSequentialUuidGenerator();
+  }
 }

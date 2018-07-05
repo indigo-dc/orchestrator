@@ -256,6 +256,12 @@
 		</dependency>
 	
 		<dependency>
+			<groupId>com.fasterxml.uuid</groupId>
+			<artifactId>java-uuid-generator</artifactId>
+			<version>3.1.3</version>
+		</dependency>
+	
+		<dependency>
 			<groupId>alien4cloud</groupId>
 			<artifactId>alien4cloud-core</artifactId>
 			<version>${alien4cloud.version}</version>
