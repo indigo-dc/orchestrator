@@ -38,7 +38,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/deployments/{deploymentId}")
+@RequestMapping(path = "/deployments/{deploymentId}")
 public class ResourceController {
 
   @Autowired
