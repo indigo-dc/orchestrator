@@ -17,33 +17,31 @@
 package it.reply.orchestrator.dal.entity;
 
 import javax.persistence.Column;
-import javax.persistence.Embedded;
-import javax.persistence.Entity;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
-import javax.validation.constraints.NotNull;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.MappedSuperclass;
 
-import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import org.hibernate.annotations.GenericGenerator;
+import org.springframework.hateoas.Identifiable;
 
-@Data
+@MappedSuperclass
+@Getter
+@Setter
 @NoArgsConstructor
-@EqualsAndHashCode(of = "oidcEntityId", callSuper = false)
-@Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"issuer", "subject"})})
-@Entity
-public class OidcEntity extends UuidIdentifiable {
+@ToString
+public abstract class UuidIdentifiable implements Identifiable<String> {
 
-  @NonNull
-  @NotNull
-  @Embedded
-  private OidcEntityId oidcEntityId;
-
-  @NonNull
-  @NotNull
-  @Column(name = "organization", nullable = false, updatable = false)
-  private String organization;
+  @Id
+  @GenericGenerator(
+      name = "sequential-uuid",
+      strategy = "it.reply.orchestrator.dal.util.StrongSequentialUuidGenerator")
+  @GeneratedValue(generator = "sequential-uuid")
+  @Column(unique = true, nullable = false, updatable = false, length = 36)
+  private String id;
 
 }

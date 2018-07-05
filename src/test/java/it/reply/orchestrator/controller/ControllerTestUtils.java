@@ -16,7 +16,6 @@
 
 package it.reply.orchestrator.controller;
 
-import it.reply.orchestrator.dal.entity.AbstractResourceEntity;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.enums.NodeStates;
@@ -38,14 +37,14 @@ public class ControllerTestUtils {
 
   public static Pageable createDefaultPageable() {
     return new PageRequest(0, 10,
-        new Sort(Direction.DESC, AbstractResourceEntity.CREATED_COLUMN_NAME));
+        new Sort(Direction.DESC, "createdAt"));
   }
 
   public static Deployment createDeployment(String id, int resourceNumber) {
     Deployment deployment = new Deployment();
     deployment.setId(id);
-    deployment.setCreated(new Date());
-    deployment.setUpdated(new Date());
+    deployment.setCreatedAt(new Date());
+    deployment.setUpdatedAt(new Date());
     deployment.setVersion(0L);
     deployment.setTask(Task.NONE);
     deployment.setStatus(Status.CREATE_IN_PROGRESS);
@@ -77,8 +76,8 @@ public class ControllerTestUtils {
   public static Resource createResource(String id, Deployment deployment) {
     Resource resource = new Resource();
     resource.setId(UUID.randomUUID().toString());
-    resource.setCreated(new Date());
-    resource.setUpdated(new Date());
+    resource.setCreatedAt(new Date());
+    resource.setUpdatedAt(new Date());
     resource.setState(NodeStates.CREATING);
     resource.setToscaNodeType("tosca.nodes.Compute");
     resource.setToscaNodeName("node_" + id);

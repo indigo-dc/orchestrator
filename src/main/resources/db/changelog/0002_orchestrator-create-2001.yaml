@@ -1,4 +1,12 @@
 databaseChangeLog:
+- property:
+    name: TEXT.type
+    value: TEXT
+    dbms: mysql,postgresql
+- property:
+    name: TEXT.type
+    value: VARCHAR(65535)
+    dbms: h2
 - changeSet:
     id: 0002_orchestrator-create-2001
     author: a.brigandi
@@ -9,15 +17,19 @@ databaseChangeLog:
         - column:
             constraints:
               nullable: false
-            name: uuid
-            type: VARCHAR(255)
+            name: id
+            type: VARCHAR(36)
         - column:
-            name: created
-            type: datetime(6)
+            constraints:
+              nullable: false
+            name: created_at
+            type: TIMESTAMP(6)
         - column:
-            name: updated
-            type: datetime(6)
+            name: updated_at
+            type: TIMESTAMP(6)
         - column:
+            constraints:
+              nullable: false
             name: version
             type: BIGINT
         - column:
@@ -25,10 +37,10 @@ databaseChangeLog:
             type: VARCHAR(255)
         - column:
             name: cloud_provider_endpoint
-            type: TEXT
+            type: ${TEXT.type}
         - column:
             name: cloud_provider_name
-            type: VARCHAR(128)
+            type: VARCHAR(255)
         - column:
             name: deployment_provider
             type: VARCHAR(255)
@@ -36,31 +48,39 @@ databaseChangeLog:
             name: endpoint
             type: VARCHAR(255)
         - column:
+            constraints:
+              nullable: false
             name: status
-            type: VARCHAR(500)
+            type: VARCHAR(255)
         - column:
             name: status_reason
-            type: LONGTEXT
+            type: CLOB
         - column:
+            constraints:
+              nullable: false
             name: task
             type: VARCHAR(255)
         - column:
+            constraints:
+              nullable: false
             name: template
-            type: LONGTEXT
+            type: CLOB
         - column:
             name: owner_id
-            type: VARCHAR(255)
+            type: VARCHAR(36)
         tableName: deployment
     - createTable:
         columns:
         - column:
             constraints:
               nullable: false
-            name: deployment_uuid
-            type: VARCHAR(255)
+            name: deployment_id
+            type: VARCHAR(36)
         - column:
+            constraints:
+              nullable: false
             name: value
-            type: TEXT
+            type: ${TEXT.type}
         - column:
             constraints:
               nullable: false
@@ -72,11 +92,13 @@ databaseChangeLog:
         - column:
             constraints:
               nullable: false
-            name: deployment_uuid
-            type: VARCHAR(255)
+            name: deployment_id
+            type: VARCHAR(36)
         - column:
+            constraints:
+              nullable: false
             name: value
-            type: TEXT
+            type: ${TEXT.type}
         - column:
             constraints:
               nullable: false
@@ -88,8 +110,8 @@ databaseChangeLog:
         - column:
             constraints:
               nullable: false
-            name: uuid
-            type: VARCHAR(255)
+            name: id
+            type: VARCHAR(36)
         - column:
             constraints:
               nullable: false
@@ -109,19 +131,18 @@ databaseChangeLog:
     - createTable:
         columns:
         - column:
-            autoIncrement: true
             constraints:
-              primaryKey: true
+              nullable: false
             name: id
-            type: BIGINT
+            type: VARCHAR(36)
         - column:
             constraints:
               nullable: false
             name: issued_at
-            type: datetime(6)
+            type: TIMESTAMP(6)
         - column:
             name: expires_at
-            type: datetime(6)
+            type: TIMESTAMP(6)
         - column:
             constraints:
               nullable: false
@@ -153,51 +174,73 @@ databaseChangeLog:
         - column:
             constraints:
               nullable: false
-            name: uuid
-            type: VARCHAR(255)
+            name: id
+            type: VARCHAR(36)
         - column:
-            name: created
-            type: datetime(6)
+            constraints:
+              nullable: false
+            name: created_at
+            type: TIMESTAMP(6)
         - column:
-            name: updated
-            type: datetime(6)
+            name: updated_at
+            type: TIMESTAMP(6)
         - column:
+            constraints:
+              nullable: false
             name: version
             type: BIGINT
         - column:
             name: cloud_provider_endpoint
-            type: TEXT
+            type: ${TEXT.type}
         - column:
             name: iaas_id
-            type: VARCHAR(500)
+            type: VARCHAR(255)
         - column:
+            constraints:
+              nullable: false
             name: state
-            type: VARCHAR(500)
+            type: VARCHAR(255)
         - column:
+            constraints:
+              nullable: false
             name: tosca_node_name
             type: VARCHAR(255)
         - column:
+            constraints:
+              nullable: false
             name: tosca_node_type
             type: VARCHAR(255)
         - column:
-            name: deployment_uuid
-            type: VARCHAR(255)
+            constraints:
+              nullable: false
+            name: deployment_id
+            type: VARCHAR(36)
         tableName: resource
     - createTable:
         columns:
         - column:
             constraints:
               nullable: false
-            name: resource_uuid
-            type: VARCHAR(255)
+            name: resource_id
+            type: VARCHAR(36)
         - column:
             constraints:
               nullable: false
             name: required_by
-            type: VARCHAR(255)
+            type: VARCHAR(36)
         tableName: resource_required_by
     - createTable:
         columns:
+        - column:
+            constraints:
+              nullable: false
+            name: id
+            type: VARCHAR(36)
+        - column:
+            constraints:
+              nullable: false
+            name: action
+            type: VARCHAR(255)
         - column:
             constraints:
               nullable: false
@@ -209,49 +252,59 @@ databaseChangeLog:
             name: request_id
             type: VARCHAR(255)
         - column:
+            constraints:
+              nullable: false
             name: deployment_id
-            type: VARCHAR(255)
+            type: VARCHAR(36)
         tableName: workflow_reference
     - addPrimaryKey:
-        columnNames: uuid
-        constraintName: PRIMARY
+        columnNames: id
+        constraintName: pk__deployment
         tableName: deployment
     - addPrimaryKey:
-        columnNames: deployment_uuid, name
-        constraintName: PRIMARY
+        columnNames: deployment_id, name
+        constraintName: pk__deployment_outputs
         tableName: deployment_outputs
     - addPrimaryKey:
-        columnNames: deployment_uuid, name
-        constraintName: PRIMARY
+        columnNames: deployment_id, name
+        constraintName: pk__deployment_parameters
         tableName: deployment_parameters
     - addPrimaryKey:
-        columnNames: uuid
-        constraintName: PRIMARY
+        columnNames: id
+        constraintName: pk__oidc_entity
         tableName: oidc_entity
     - addPrimaryKey:
-        columnNames: uuid
-        constraintName: PRIMARY
+        columnNames: id
+        constraintName: pk__oidc_refresh_token
+        tableName: oidc_refresh_token
+    - addPrimaryKey:
+        columnNames: id
+        constraintName: pk__resource
         tableName: resource
     - addPrimaryKey:
-        columnNames: resource_uuid, required_by
-        constraintName: PRIMARY
+        columnNames: resource_id, required_by
+        constraintName: pk__resource_required_by
         tableName: resource_required_by
     - addPrimaryKey:
+        columnNames: id
+        constraintName: pk__workflow_reference
+        tableName: workflow_reference
+    - addUniqueConstraint:
         columnNames: process_id
-        constraintName: PRIMARY
+        constraintName: UK_cc87ex1p4fkje6a5emfcieeq6
         tableName: workflow_reference
     - addUniqueConstraint:
         columnNames: request_id
         constraintName: UK_sc7y9a2nof7bpvoxrdjxudtr2
         tableName: workflow_reference
     - addUniqueConstraint:
-        columnNames: issuer, subject
-        constraintName: uq_issuer_subject
-        tableName: oidc_entity
-    - addUniqueConstraint:
         columnNames: issuer, subject, clients_id
-        constraintName: uq_issuer_subject_clients_id
+        constraintName: UKmvmlpju28y84xre60lqo44ew1
         tableName: oidc_refresh_token
+    - addUniqueConstraint:
+        columnNames: issuer, subject
+        constraintName: UKtm4vmxbypvshv3dp36wep6ydq
+        tableName: oidc_entity
     - createIndex:
         columns:
         - column:
@@ -267,14 +320,20 @@ databaseChangeLog:
     - createIndex:
         columns:
         - column:
-            name: owner_id
-        indexName: FKpr7so1dkj1eus1pe86lwr0w9e
-        tableName: deployment
+            name: created_at
+        indexName: IDXa1umll6uk2wk1s2vt9l2ej8o5
+        tableName: resource
     - createIndex:
         columns:
         - column:
-            name: created
-        indexName: IDX9877cui3abccm3ggxvnmj9hpn
+            name: deployment_id
+        indexName: IDXa2l6uh2byhwhpt8x0a5g9nath
+        tableName: resource
+    - createIndex:
+        columns:
+        - column:
+            name: created_at
+        indexName: IDXas7g1o2m837r4gs4lgxl5tjav
         tableName: deployment
     - createIndex:
         columns:
@@ -285,25 +344,19 @@ databaseChangeLog:
     - createIndex:
         columns:
         - column:
-            name: created
-        indexName: IDXmxa5v69rnm7felj0726iqdnpd
-        tableName: resource
-    - createIndex:
-        columns:
-        - column:
-            name: deployment_uuid
-        indexName: IDXtnbg97nxgcywp19nxho6x89tw
-        tableName: resource
+            name: owner_id
+        indexName: IDXl4r46kamf2ob1uwggncocejfs
+        tableName: deployment
     - addForeignKeyConstraint:
-        baseColumnNames: resource_uuid
-        baseTableName: resource_required_by
-        constraintName: FK18a8soqgk3kif56bkmc4obno
+        baseColumnNames: deployment_id
+        baseTableName: deployment_parameters
+        constraintName: FK2vyn3ynsf079veefugayxkov9
         deferrable: false
         initiallyDeferred: false
         onDelete: NO ACTION
         onUpdate: NO ACTION
-        referencedColumnNames: uuid
-        referencedTableName: resource
+        referencedColumnNames: id
+        referencedTableName: deployment
     - addForeignKeyConstraint:
         baseColumnNames: required_by
         baseTableName: resource_required_by
@@ -312,28 +365,18 @@ databaseChangeLog:
         initiallyDeferred: false
         onDelete: NO ACTION
         onUpdate: NO ACTION
-        referencedColumnNames: uuid
+        referencedColumnNames: id
         referencedTableName: resource
     - addForeignKeyConstraint:
-        baseColumnNames: deployment_uuid
-        baseTableName: resource
-        constraintName: FK6oqrqq0jwj4gc67r7we7hkt5f
+        baseColumnNames: resource_id
+        baseTableName: resource_required_by
+        constraintName: FK5xs8ad7x7bafyl8pxs3q745sp
         deferrable: false
         initiallyDeferred: false
         onDelete: NO ACTION
         onUpdate: NO ACTION
-        referencedColumnNames: uuid
-        referencedTableName: deployment
-    - addForeignKeyConstraint:
-        baseColumnNames: deployment_uuid
-        baseTableName: deployment_outputs
-        constraintName: FKhgt5mhrt3hbuyy2vjd1tm0qe6
-        deferrable: false
-        initiallyDeferred: false
-        onDelete: NO ACTION
-        onUpdate: NO ACTION
-        referencedColumnNames: uuid
-        referencedTableName: deployment
+        referencedColumnNames: id
+        referencedTableName: resource
     - addForeignKeyConstraint:
         baseColumnNames: deployment_id
         baseTableName: workflow_reference
@@ -342,17 +385,27 @@ databaseChangeLog:
         initiallyDeferred: false
         onDelete: NO ACTION
         onUpdate: NO ACTION
-        referencedColumnNames: uuid
+        referencedColumnNames: id
         referencedTableName: deployment
     - addForeignKeyConstraint:
-        baseColumnNames: deployment_uuid
-        baseTableName: deployment_parameters
-        constraintName: FKnyk2r46i5bbw0pi2dfggyvubk
+        baseColumnNames: deployment_id
+        baseTableName: deployment_outputs
+        constraintName: FKjx55iygq0v9fda9c1wqajbyod
         deferrable: false
         initiallyDeferred: false
         onDelete: NO ACTION
         onUpdate: NO ACTION
-        referencedColumnNames: uuid
+        referencedColumnNames: id
+        referencedTableName: deployment
+    - addForeignKeyConstraint:
+        baseColumnNames: deployment_id
+        baseTableName: resource
+        constraintName: FKpen5j2nfr1sege4xxlqwn0m6q
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
         referencedTableName: deployment
     - addForeignKeyConstraint:
         baseColumnNames: owner_id
@@ -362,5 +415,5 @@ databaseChangeLog:
         initiallyDeferred: false
         onDelete: NO ACTION
         onUpdate: NO ACTION
-        referencedColumnNames: uuid
+        referencedColumnNames: id
         referencedTableName: oidc_entity

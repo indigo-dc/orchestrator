@@ -87,7 +87,7 @@ public class ResourceControllerTest {
         .andExpect(jsonPath("$.content", hasSize(2)))
         .andExpect(jsonPath("$.page.totalElements", equalTo(2)))
         .andExpect(jsonPath("$.links[0].rel", is("self"))).andExpect(jsonPath("$.links[0].href",
-            endsWith("/deployments/" + deployment.getId() + "/resources?page=0&size=10&sort=created,desc")))
+            endsWith("/deployments/" + deployment.getId() + "/resources?page=0&size=10&sort=createdAt,desc")))
 
         .andDo(document("resources", preprocessResponse(prettyPrint()),
             responseFields(fieldWithPath("links[]").ignored(),

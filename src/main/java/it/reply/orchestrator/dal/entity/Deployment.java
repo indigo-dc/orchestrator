@@ -28,6 +28,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import javax.persistence.Basic;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Convert;
@@ -38,6 +39,7 @@ import javax.persistence.Enumerated;
 import javax.persistence.FetchType;
 import javax.persistence.Index;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
@@ -48,65 +50,81 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 @Entity
-@Table(indexes = { @Index(columnList = AbstractResourceEntity.CREATED_COLUMN_NAME) })
+@Table(indexes = {
+    @Index(columnList = "createdAt"),
+    @Index(columnList = "owner_id")
+})
 @Getter
 @Setter
 @NoArgsConstructor
 public class Deployment extends AbstractResourceEntity {
 
   @Enumerated(EnumType.STRING)
-  @Column(name = "status", length = 500)
+  @Column(nullable = false)
   private Status status;
 
-  @Column(name = "statusReason", columnDefinition = "LONGTEXT")
+  @Lob
+  @Basic
+  @Nullable
   private String statusReason;
 
   @Enumerated(EnumType.STRING)
-  @Column(name = "task")
+  @Column(nullable = false)
   private Task task;
 
   @Enumerated(EnumType.STRING)
-  @Column(name = "deploymentProvider")
+  @Nullable
   private DeploymentProvider deploymentProvider;
 
-  @Column(name = "endpoint")
+  @Nullable
   private String endpoint;
 
-  @Column(name = "callback")
+  @Nullable
   private String callback;
 
-  @Column(name = "template", columnDefinition = "LONGTEXT")
+  @Lob
+  @Basic
+  @Column(nullable = false)
   private String template;
 
-  @Column(name = "cloudProviderEndpoint", columnDefinition = "TEXT")
+  @Column(columnDefinition = "TEXT")
   @Convert(converter = CloudProviderEndpointToJsonConverter.class)
+  @Nullable
   private CloudProviderEndpoint cloudProviderEndpoint;
 
   @ElementCollection(fetch = FetchType.EAGER, targetClass = String.class)
   @MapKeyColumn(name = "name")
-  @Column(name = "value", columnDefinition = "TEXT")
+  @Column(name = "value", table = "deployment_parameter", nullable = false,
+      columnDefinition = "TEXT")
   @Convert(attributeName = "value.", converter = ObjectToJsonConverter.class)
   private Map<String, Object> parameters = new HashMap<>();
 
   @ElementCollection(fetch = FetchType.EAGER, targetClass = String.class)
   @MapKeyColumn(name = "name")
-  @Column(name = "value", columnDefinition = "TEXT")
+  @Column(name = "value", table = "deployment_output", nullable = false, columnDefinition = "TEXT")
   @Convert(attributeName = "value.", converter = ObjectToJsonConverter.class)
   private Map<String, Object> outputs = new HashMap<>();
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "deployment", orphanRemoval = true)
   private Set<Resource> resources = new HashSet<>();
 
-  @Column(name = "cloudProviderName", length = 128)
+  @Nullable
   private String cloudProviderName;
 
   @OneToMany(cascade = CascadeType.ALL, mappedBy = "deployment", orphanRemoval = true)
   private Set<WorkflowReference> workflowReferences = new HashSet<>();
 
-  @ManyToOne(
-      cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
-  @JoinColumn(name = "OWNER_ID")
+  @ManyToOne(cascade = {
+      CascadeType.DETACH,
+      CascadeType.MERGE,
+      CascadeType.PERSIST,
+      CascadeType.REFRESH
+  })
+  @JoinColumn(name = "owner_id")
+  @Nullable
   private OidcEntity owner;
 
   @Transient

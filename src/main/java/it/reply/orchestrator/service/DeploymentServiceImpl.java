@@ -28,6 +28,7 @@ import it.reply.orchestrator.dal.entity.OidcEntity;
 import it.reply.orchestrator.dal.entity.OidcEntityId;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.entity.WorkflowReference;
+import it.reply.orchestrator.dal.entity.WorkflowReference.Action;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
@@ -217,7 +218,8 @@ public class DeploymentServiceImpl implements DeploymentService {
         .businessKey(MdcUtils.toBusinessKey())
         .start();
 
-    deployment.addWorkflowReferences(new WorkflowReference(pi.getId(), MdcUtils.getRequestId()));
+    deployment.addWorkflowReferences(
+        new WorkflowReference(pi.getId(), MdcUtils.getRequestId(), Action.CREATE));
     deployment = deploymentRepository.save(deployment);
     return deployment;
 
@@ -306,7 +308,8 @@ public class DeploymentServiceImpl implements DeploymentService {
         .businessKey(MdcUtils.toBusinessKey())
         .start();
 
-    deployment.addWorkflowReferences(new WorkflowReference(pi.getId(), MdcUtils.getRequestId()));
+    deployment.addWorkflowReferences(
+        new WorkflowReference(pi.getId(), MdcUtils.getRequestId(), Action.DELETE));
   }
 
   @Override
@@ -370,7 +373,8 @@ public class DeploymentServiceImpl implements DeploymentService {
         .businessKey(MdcUtils.toBusinessKey())
         .start();
 
-    deployment.addWorkflowReferences(new WorkflowReference(pi.getId(), MdcUtils.getRequestId()));
+    deployment.addWorkflowReferences(
+        new WorkflowReference(pi.getId(), MdcUtils.getRequestId(), Action.UPDATE));
 
   }
 

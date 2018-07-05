@@ -190,10 +190,10 @@ public class OAuth2TokenCacheService {
                 .orElseThrow(
                     () -> new OrchestratorException("No refresh token found for " + id));
         AccessGrant grant =
-            template.refreshToken(refreshToken.getVaule(), OidcProperties.REQUIRED_SCOPES);
+            template.refreshToken(refreshToken.getValue(), OidcProperties.REQUIRED_SCOPES);
         LOG.info("Access token for {} refreshed", id);
         String newRefreshToken = grant.getRefreshToken();
-        if (newRefreshToken != null && !newRefreshToken.equals(refreshToken.getVaule())) {
+        if (newRefreshToken != null && !newRefreshToken.equals(refreshToken.getValue())) {
           LOG.info("New refesh token received for {}", id);
           refreshToken.updateFromAccessGrant(grant);
         }
@@ -212,7 +212,7 @@ public class OAuth2TokenCacheService {
         Optional<OidcRefreshToken> refreshToken = oidcTokenRepository.findByOidcTokenId(id);
         if (refreshToken.isPresent()) {
           boolean isActive = refreshToken
-              .map(token -> template.introspectToken(token.getVaule()))
+              .map(token -> template.introspectToken(token.getValue()))
               .filter(TokenIntrospectionResponse::isActive)
               .isPresent();
           if (!isActive) {

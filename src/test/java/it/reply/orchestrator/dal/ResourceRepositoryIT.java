@@ -30,11 +30,11 @@ import org.springframework.data.domain.Page;
 
 import java.util.Optional;
 
-@DatabaseSetup("/data/database-resource-init.xml")
+@DatabaseSetup("/data/database-init.xml")
 public class ResourceRepositoryIT extends WebAppConfigurationAwareIT {
 
-  final String deploymentId = "0748fbe9-6c1d-4298-b88f-06188734ab42";
-  final String resourceId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+  final String deploymentId = "961bd666-e0e3-c3b8-88b8-051cdcde3c2c";
+  final String resourceId = "b45f728d-34f0-9028-20d0-64eaaff38861";
 
   @Autowired
   private ResourceRepository resourceRepository;
