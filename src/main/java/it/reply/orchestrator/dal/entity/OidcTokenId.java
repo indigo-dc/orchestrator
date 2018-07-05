@@ -43,10 +43,8 @@ public class OidcTokenId implements Serializable {
   @Column(name = "clients_id", nullable = false, updatable = false)
   @NotNull
   @NonNull
-  // Hibernate is not handling the converter correctly in JPA queries
   @Convert(converter = ListStringToJsonConverter.class)
   private List<String> clientsId = new ArrayList<>();
-  // private String clientsId;
 
   @NotNull
   @NonNull

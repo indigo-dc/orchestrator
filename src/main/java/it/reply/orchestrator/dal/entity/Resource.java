@@ -40,41 +40,47 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 @Entity
-@Table(indexes = { @Index(columnList = "toscaNodeName"), @Index(columnList = "deployment_uuid"),
-    @Index(columnList = AbstractResourceEntity.CREATED_COLUMN_NAME) })
+@Table(indexes = {
+    @Index(columnList = "toscaNodeName"),
+    @Index(columnList = "deployment_id"),
+    @Index(columnList = "createdAt")
+})
 @Getter
 @Setter
 @NoArgsConstructor
 public class Resource extends AbstractResourceEntity {
 
   @Enumerated(EnumType.STRING)
-  @Column(name = "state", length = 500)
+  @Column(nullable = false)
   private NodeStates state;
 
-  @Column(name = "iaasId", length = 500)
+  @Nullable
   private String iaasId;
 
-  @Column(name = "toscaNodeType")
+  @Column(nullable = false)
   private String toscaNodeType;
 
-  @Column(name = "toscaNodeName")
+  @Column(nullable = false)
   private String toscaNodeName;
 
   @ManyToMany(cascade = { CascadeType.PERSIST, CascadeType.MERGE })
-  @JoinTable(name = "Resource_requiredBy", joinColumns = @JoinColumn(name = "Resource_uuid"),
-      inverseJoinColumns = @JoinColumn(name = "requiredBy"))
+  @JoinTable(name = "resource_required_by", joinColumns = @JoinColumn(name = "resource_id"),
+      inverseJoinColumns = @JoinColumn(name = "required_by", nullable = false))
   private Set<Resource> requiredBy = new HashSet<>();
 
   @ManyToMany(mappedBy = "requiredBy")
   private Set<Resource> requires = new HashSet<>();
 
   @ManyToOne
-  @JoinColumn(name = "deployment_uuid")
+  @JoinColumn(name = "deployment_id", nullable = false)
   private Deployment deployment;
 
-  @Column(name = "cloudProviderEndpoint", columnDefinition = "TEXT")
   @Convert(converter = CloudProviderEndpointToJsonConverter.class)
+  @Nullable
+  @Column(columnDefinition = "TEXT")
   private CloudProviderEndpoint cloudProviderEndpoint;
 
   public void addRequiredResource(Resource resource) {

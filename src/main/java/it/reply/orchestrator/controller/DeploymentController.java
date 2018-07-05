@@ -16,7 +16,6 @@
 
 package it.reply.orchestrator.controller;
 
-import it.reply.orchestrator.dal.entity.AbstractResourceEntity;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.resource.DeploymentResource;
@@ -73,7 +72,7 @@ public class DeploymentController {
       produces = MediaType.APPLICATION_JSON_VALUE)
   public PagedResources<DeploymentResource> getDeployments(
       @RequestParam(name = "createdBy", required = false) @Nullable String createdBy,
-      @PageableDefault(sort = AbstractResourceEntity.CREATED_COLUMN_NAME,
+      @PageableDefault(sort = "createdAt",
           direction = Direction.DESC) Pageable pageable,
       PagedResourcesAssembler<Deployment> pagedAssembler) {
 

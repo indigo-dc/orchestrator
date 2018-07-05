@@ -18,10 +18,10 @@ package it.reply.orchestrator.dal.entity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.Id;
+import javax.persistence.EnumType;
+import javax.persistence.Enumerated;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.Transient;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -29,36 +29,48 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-import org.springframework.hateoas.Identifiable;
-
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
-@EqualsAndHashCode(of = { "processId", "requestId" })
-@ToString(of = { "processId", "requestId" })
-public class WorkflowReference implements Identifiable<String> {
+@EqualsAndHashCode(of = {"processId", "requestId"}, callSuper = true)
+@ToString(of = {"processId", "requestId"}, callSuper = true)
+public class WorkflowReference extends UuidIdentifiable {
 
-  @Id
+  public enum Action {
+    CREATE,
+    UPDATE,
+    DELETE
+  }
+
   @Column(name = "process_id", unique = true, nullable = false, updatable = false)
   private String processId;
 
   @Column(name = "request_id", unique = true, nullable = false, updatable = false)
   private String requestId;
 
+  @Enumerated(EnumType.STRING)
+  @Column(nullable = false)
+  private Action action;
+
   @ManyToOne
-  @JoinColumn(name = "deployment_id")
+  @JoinColumn(name = "deployment_id", nullable = false, updatable = false)
   private Deployment deployment;
 
-  public WorkflowReference(String processId, String requestId) {
+  /**
+   * Generate a WorkflowReference.
+   *
+   * @param processId
+   *     the processId
+   * @param requestId
+   *     the requestId
+   * @param action
+   *     the action
+   */
+  public WorkflowReference(String processId, String requestId, Action action) {
     this.processId = processId;
     this.requestId = requestId;
-  }
-
-  @Override
-  @Transient
-  public String getId() {
-    return this.getProcessId();
+    this.action = action;
   }
 
 }

@@ -19,11 +19,11 @@ package it.reply.orchestrator.dal.entity;
 import java.util.Date;
 
 import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.persistence.Version;
 
 import lombok.Getter;
@@ -31,41 +31,34 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-import org.hibernate.annotations.GenericGenerator;
-import org.springframework.hateoas.Identifiable;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 @MappedSuperclass
 @Getter
 @Setter
 @NoArgsConstructor
 @ToString
-public abstract class AbstractResourceEntity implements Identifiable<String> {
+public abstract class AbstractResourceEntity extends UuidIdentifiable {
 
-  public static final String ID_COLUMN_NAME = "uuid";
-  public static final String CREATED_COLUMN_NAME = "created";
+  @Column(nullable = false, updatable = false)
+  @Temporal(TemporalType.TIMESTAMP)
+  private Date createdAt;
 
-  @Id
-  @GeneratedValue(generator = "uuid")
-  @GenericGenerator(name = "uuid", strategy = "uuid2")
-  @Column(name = ID_COLUMN_NAME, unique = true)
-  private String id;
-
-  @Column(name = CREATED_COLUMN_NAME)
-  private Date created;
-
-  @Column(name = "updated")
-  private Date updated;
+  @Nullable
+  @Temporal(TemporalType.TIMESTAMP)
+  private Date updatedAt;
 
   @Version
+  @Column(nullable = false)
   private Long version;
 
   @PrePersist
   protected void onCreate() {
-    this.created = new Date();
+    this.createdAt = new Date();
   }
 
   @PreUpdate
   protected void onUpdate() {
-    this.updated = new Date();
+    this.updatedAt = new Date();
   }
 }

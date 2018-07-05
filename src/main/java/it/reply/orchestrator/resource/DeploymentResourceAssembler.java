@@ -47,8 +47,8 @@ public class DeploymentResourceAssembler
 
     DeploymentResource resource = DeploymentResource.builder()
         .uuid(entity.getId())
-        .creationTime(entity.getCreated())
-        .updateTime(entity.getUpdated())
+        .creationTime(entity.getCreatedAt())
+        .updateTime(entity.getUpdatedAt())
         .physicalId(entity.getEndpoint())
         .status(entity.getStatus())
         .statusReason(entity.getStatusReason())

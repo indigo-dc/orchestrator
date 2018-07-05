@@ -40,7 +40,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import it.reply.orchestrator.dal.entity.AbstractResourceEntity;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.OidcEntity;
 import it.reply.orchestrator.dal.entity.OidcEntityId;
@@ -160,7 +159,7 @@ public class DeploymentControllerTest {
 
     List<Deployment> deployments = ControllerTestUtils.createDeployments(5);
     Pageable pageable =
-        new PageRequest(1, 2, new Sort(Direction.DESC, AbstractResourceEntity.CREATED_COLUMN_NAME));
+        new PageRequest(1, 2, new Sort(Direction.DESC, "createdAt"));
     Mockito.when(deploymentService.getDeployments(pageable, null))
         .thenReturn(new PageImpl<Deployment>(deployments, pageable, deployments.size()));
 

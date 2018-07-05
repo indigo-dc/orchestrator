@@ -38,7 +38,7 @@ public abstract class OidcIssuerAwareId implements Serializable {
 
   @NonNull
   @NotNull
-  @Column(name = "issuer", nullable = false, updatable = false)
+  @Column(nullable = false, updatable = false)
   private String issuer;
 
 }

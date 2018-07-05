@@ -28,10 +28,9 @@ import javax.persistence.Column;
 import javax.persistence.Convert;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
 
@@ -41,18 +40,14 @@ import lombok.Setter;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.annotations.GenericGenerator;
-import org.springframework.hateoas.Identifiable;
 
 @Entity
 @Getter
 @Setter
-@Table(name = "oidc_refresh_token",
-    uniqueConstraints = { @UniqueConstraint(name = "uq_issuer_subject_clients_id",
-        columnNames = { "issuer", "subject", "clients_id" }) })
+@Table(uniqueConstraints = {@UniqueConstraint(columnNames = {"issuer", "subject", "clients_id"})})
 @NoArgsConstructor
 @SuppressWarnings("null")
-public class OidcRefreshToken implements Identifiable<Long> {
+public class OidcRefreshToken extends UuidIdentifiable {
 
   /**
    * Generate a OidcRefreshToken from a token id and a grant.
@@ -65,7 +60,7 @@ public class OidcRefreshToken implements Identifiable<Long> {
    */
   public static OidcRefreshToken createFromAccessGrant(AccessGrant grant, OidcTokenId id) {
     OidcRefreshToken token = new OidcRefreshToken();
-    token.setVaule(grant.getRefreshToken());
+    token.setValue(grant.getRefreshToken());
     token.setCreationDate(new Date());
     token.setScopes(grant.getScopes());
     token.setOidcTokenId(id);
@@ -84,35 +79,27 @@ public class OidcRefreshToken implements Identifiable<Long> {
    *          the access grant
    */
   public void updateFromAccessGrant(AccessGrant grant) {
-    setVaule(grant.getRefreshToken());
+    setValue(grant.getRefreshToken());
     setCreationDate(new Date());
     JwtUtils
         .getExpirationTime(JwtUtils.parseJwt(grant.getRefreshToken()))
         .ifPresent(newExpirationDate -> setExpirationDate(newExpirationDate));
   }
 
-  @Id
-  @GeneratedValue(
-      strategy = GenerationType.AUTO,
-      generator = "native")
-  @GenericGenerator(
-      name = "native",
-      strategy = "native")
-  @Column(name = "id", unique = true, nullable = false, updatable = false)
-  private Long id;
-
-  @Column(name = "refresh_token_value", nullable = false, updatable = true)
+  @Column(name = "refresh_token_value", nullable = false)
   @NotNull
   @NonNull
-  private String vaule;
+  private String value;
 
-  @Column(name = "expires_at", nullable = true, updatable = true)
+  @Column(name = "expires_at")
   @Nullable
+  @Temporal(TemporalType.TIMESTAMP)
   private Date expirationDate;
 
-  @Column(name = "issued_at", nullable = false, updatable = true)
+  @Column(name = "issued_at", nullable = false)
   @NotNull
   @NonNull
+  @Temporal(TemporalType.TIMESTAMP)
   private Date creationDate;
 
   @Column(name = "scopes", nullable = false, updatable = false)

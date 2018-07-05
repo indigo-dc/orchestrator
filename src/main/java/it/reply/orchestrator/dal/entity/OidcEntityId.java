@@ -44,7 +44,7 @@ public class OidcEntityId extends OidcIssuerAwareId implements Serializable {
 
   @NonNull
   @NotNull
-  @Column(name = "subject", nullable = false, updatable = false)
+  @Column(nullable = false, updatable = false)
   private String subject;
 
   /**

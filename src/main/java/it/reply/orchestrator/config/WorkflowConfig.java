@@ -24,7 +24,6 @@ import java.io.IOException;
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
-import org.flowable.engine.common.impl.cfg.IdGenerator;
 import org.flowable.job.service.impl.asyncexecutor.AsyncExecutor;
 import org.flowable.spring.SpringProcessEngineConfiguration;
 import org.flowable.spring.boot.FlowableMailProperties;
@@ -81,12 +80,9 @@ public class WorkflowConfig extends ProcessEngineAutoConfiguration {
     configuration.setFailedJobCommandFactory(new CustomFailedJobCommandFactory());
     configuration.setAsyncExecutorMessageQueueMode(true);
     configuration.setAsyncHistoryExecutorMessageQueueMode(true);
+    configuration.setIdGenerator(new StrongSequentialUuidGenerator());
 
     return configuration;
   }
 
-  @Bean
-  public IdGenerator idGenerator() {
-    return new StrongSequentialUuidGenerator();
-  }
 }
