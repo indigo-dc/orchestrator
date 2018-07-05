@@ -25,8 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.client.HttpStatusCodeException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
@@ -58,7 +57,6 @@ public class CallbackServiceImpl implements CallbackService {
   }
 
   @Override
-  @Transactional(readOnly = true)
   public boolean doCallback(String deploymentId) {
     Deployment deployment = deploymentRepository.findOne(deploymentId);
     return doCallback(deployment);
@@ -70,7 +68,7 @@ public class CallbackServiceImpl implements CallbackService {
       try {
         restTemplate.postForEntity(deployment.getCallback(), deploymentResource, Object.class);
         return true;
-      } catch (HttpStatusCodeException ex) {
+      } catch (RestClientException ex) {
         LOG.error("Error executing callback for deployment {}", deployment.getId(), ex);
         return false;
       }
