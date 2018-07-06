@@ -15,8 +15,7 @@
     limitations under the License.
 
 -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>it.reply</groupId>
 	<artifactId>orchestrator</artifactId>
@@ -74,7 +73,7 @@
 		<im-java-api.version>0.4.10</im-java-api.version>
 		<monitoring-pillar-domain.version>1.8.1-FINAL</monitoring-pillar-domain.version>
 		<flowable.version>6.3.0</flowable.version>
-		<alien4cloud.version>1.1.0-INDIGO2-SNAPSHOT</alien4cloud.version>
+		<alien4cloud.version>1.1.0-INDIGO2-BETA.1</alien4cloud.version>
 		<chronos-client.version>0.0.1-BETA.2</chronos-client.version>
 		<marathon-client.version>0.6.0</marathon-client.version>
 		<ignite.version>2.3.0</ignite.version>
@@ -553,7 +552,7 @@
 										</goals>
 									</pluginExecutionFilter>
 									<action>
-										<ignore></ignore>
+										<ignore />
 									</action>
 								</pluginExecution>
 							</pluginExecutions>
@@ -626,6 +625,14 @@
 								<ignoreMethodAnnotation>lombok.Generated</ignoreMethodAnnotation>
 							</ignoreMethodAnnotations>
 						</instrumentation>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-release-plugin</artifactId>
+					<version>2.5.3</version>
+					<configuration>
+						<tagNameFormat>v@{project.version}</tagNameFormat>
 					</configuration>
 				</plugin>
 			</plugins>
