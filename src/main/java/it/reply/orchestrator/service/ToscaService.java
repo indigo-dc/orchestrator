@@ -75,8 +75,6 @@ public interface ToscaService {
    *          .
    * @param oauthToken
    *          .
-   * @throws ParseException
-   *           .
    */
   public void addElasticClusterParameters(ArchiveRoot parsingResult, String deploymentId,
       String oauthToken);
@@ -168,7 +166,7 @@ public interface ToscaService {
   public ArchiveRoot parseAndValidateTemplate(String toscaTemplate, Map<String, Object> inputs);
 
   /**
-   * As for {@link #parseAndValidateTemplate(String)} but also replaces the user's inputs.
+   * As for {@link #parseAndValidateTemplate(String, Map)} but also replaces the user's inputs.
    * 
    * @param toscaTemplate
    *          the TOSCA template as string.
@@ -259,7 +257,7 @@ public interface ToscaService {
    * @return the list of placementPolicies
    */
   @NonNull
-  public List<PlacementPolicy> extractPlacementPolicies(ArchiveRoot archiveRoot);
+  public Map<String, PlacementPolicy> extractPlacementPolicies(ArchiveRoot archiveRoot);
 
   public DirectedMultigraph<NodeTemplate, RelationshipTemplate> buildNodeGraph(
       Map<String, NodeTemplate> nodes, boolean checkForCycles);

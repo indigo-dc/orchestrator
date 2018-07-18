@@ -53,7 +53,6 @@ import it.reply.orchestrator.utils.WorkflowConstants;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -116,8 +115,8 @@ public class PrefilterCloudProvidersTest extends
     rankCloudProvidersMessage.setSlamPreferences(slamPreferences);
 
     // set placement policies
-    List<PlacementPolicy> placementPolicies = new ArrayList<>();
-    placementPolicies.add(new SlaPlacementPolicy(new ArrayList<String>(), id));
+    Map<String, PlacementPolicy> placementPolicies = new HashMap<>();
+    placementPolicies.put("policy", new SlaPlacementPolicy(new ArrayList<>(), id));
     rankCloudProvidersMessage.setPlacementPolicies(placementPolicies);
 
     // set cloud provider
@@ -159,10 +158,10 @@ public class PrefilterCloudProvidersTest extends
 
 
     // set placementPolicies
-    List<PlacementPolicy> placementPolicies = new ArrayList<>();
-    placementPolicies.add(new SlaPlacementPolicy(new ArrayList<String>(), id));
-    placementPolicies
-        .add(new SlaPlacementPolicy(new ArrayList<String>(), UUID.randomUUID().toString()));
+    Map<String, PlacementPolicy> placementPolicies = new HashMap<>();
+    placementPolicies.put("policy_1", new SlaPlacementPolicy(new ArrayList<String>(), id));
+    placementPolicies.put("policy_2",
+        new SlaPlacementPolicy(new ArrayList<String>(), UUID.randomUUID().toString()));
 
     rankCloudProvidersMessage.setPlacementPolicies(placementPolicies);
     ArchiveRoot ar = new ArchiveRoot();
@@ -196,11 +195,11 @@ public class PrefilterCloudProvidersTest extends
     rankCloudProvidersMessage.setSlamPreferences(slamPreferences);
 
     // set placement policies
-    List<PlacementPolicy> placementPolicies = new ArrayList<>();
+    Map<String, PlacementPolicy> placementPolicies = new HashMap<>();
     // use another id for launch exception
     String slaId = UUID.randomUUID().toString();
-    placementPolicies
-        .add(new SlaPlacementPolicy(new ArrayList<String>(), slaId));
+    placementPolicies.put("policy",
+        new SlaPlacementPolicy(new ArrayList<String>(), slaId));
 
     rankCloudProvidersMessage.setPlacementPolicies(placementPolicies);
     ArchiveRoot ar = new ArchiveRoot();
@@ -234,8 +233,8 @@ public class PrefilterCloudProvidersTest extends
     rankCloudProvidersMessage.setSlamPreferences(slamPreferences);
 
     // set placement policies
-    List<PlacementPolicy> placementPolicies = new ArrayList<>();
-    placementPolicies.add(Mockito.mock(PlacementPolicy.class));
+    Map<String, PlacementPolicy> placementPolicies = new HashMap<>();
+    placementPolicies.put("policy", Mockito.mock(PlacementPolicy.class));
     rankCloudProvidersMessage.setPlacementPolicies(placementPolicies);
 
     ArchiveRoot ar = new ArchiveRoot();

@@ -50,7 +50,6 @@ import it.reply.orchestrator.utils.MdcUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -200,9 +199,10 @@ public class DeploymentServiceImpl implements DeploymentService {
         .setOneDataRequirements(CommonUtils.notNullOrDefaultValue(odRequirements, HashMap::new));
 
     deploymentMessage.setTimeoutInMins(request.getTimeoutMins());
-    List<PlacementPolicy> placementPolicies = toscaService.extractPlacementPolicies(parsingResult);
+    Map<String, PlacementPolicy> placementPolicies = toscaService
+        .extractPlacementPolicies(parsingResult);
     deploymentMessage
-        .setPlacementPolicies(CommonUtils.notNullOrDefaultValue(placementPolicies, ArrayList::new));
+        .setPlacementPolicies(CommonUtils.notNullOrDefaultValue(placementPolicies, HashMap::new));
     deploymentMessage.setDeploymentType(deploymentType);
 
     boolean isHybrid = toscaService.isHybridDeployment(parsingResult);
@@ -356,7 +356,7 @@ public class DeploymentServiceImpl implements DeploymentService {
     boolean isHybrid = toscaService.isHybridDeployment(parsingResult);
     deploymentMessage.setHybrid(isHybrid);
 
-    List<PlacementPolicy> placementPolicies =
+    Map<String, PlacementPolicy> placementPolicies =
         toscaService.extractPlacementPolicies(parsingResult);
     deploymentMessage.setPlacementPolicies(placementPolicies);
 

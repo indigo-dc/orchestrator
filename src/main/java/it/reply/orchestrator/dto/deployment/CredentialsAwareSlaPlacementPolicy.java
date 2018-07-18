@@ -33,6 +33,8 @@ import org.springframework.util.Assert;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CredentialsAwareSlaPlacementPolicy extends SlaPlacementPolicy {
 
+  public static final String TOSCA_TYPE = "tosca.policies.indigo.CredentialsAwareSlaPlacement";
+
   private String username;
   private String password;
 
@@ -41,8 +43,8 @@ public class CredentialsAwareSlaPlacementPolicy extends SlaPlacementPolicy {
 
   /**
    * Create a CredentialsAwareSlaPlacementPolicy.
-   * 
-   * @param nodes
+   *
+   * @param targets
    *          a lis of nodes
    * @param slaId
    *          the slaId
@@ -53,9 +55,9 @@ public class CredentialsAwareSlaPlacementPolicy extends SlaPlacementPolicy {
    * @param tenant
    *          the tenant
    */
-  public CredentialsAwareSlaPlacementPolicy(List<String> nodes, String slaId, String username,
+  public CredentialsAwareSlaPlacementPolicy(List<String> targets, String slaId, String username,
       String password, String tenant) {
-    super(nodes, slaId);
+    super(targets, slaId);
     this.setUsername(username);
     this.setPassword(password);
     this.setTenant(tenant);
@@ -76,10 +78,15 @@ public class CredentialsAwareSlaPlacementPolicy extends SlaPlacementPolicy {
   public CredentialsAwareSlaPlacementPolicy(SlaPlacementPolicy slaPlacementPolicy,
       AbstractPropertyValue username, AbstractPropertyValue password,
       AbstractPropertyValue tenant) {
-    super(slaPlacementPolicy.getNodes(), slaPlacementPolicy.getSlaId());
+    super(slaPlacementPolicy.getTargets(), slaPlacementPolicy.getSlaId());
     this.setUsername(username);
     this.setPassword(password);
     this.setTenant(tenant);
+  }
+
+  @Override
+  public String getType() {
+    return TOSCA_TYPE;
   }
 
   public void setUsername(String username) {

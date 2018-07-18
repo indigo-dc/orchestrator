@@ -18,12 +18,29 @@ package it.reply.orchestrator.dto.deployment;
 
 import alien4cloud.model.components.AbstractPropertyValue;
 
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
 import it.reply.orchestrator.utils.CommonUtils;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    property = "type"
+)
+@JsonSubTypes({
+    @JsonSubTypes.Type(
+        value = SlaPlacementPolicy.class,
+        name = SlaPlacementPolicy.TOSCA_TYPE
+    ),
+    @JsonSubTypes.Type(
+        value = CredentialsAwareSlaPlacementPolicy.class,
+        name = CredentialsAwareSlaPlacementPolicy.TOSCA_TYPE
+    )
+})
 public interface PlacementPolicy {
 
   public static final String PLACEMENT_ID_PROPERTY_NAME =
@@ -32,14 +49,16 @@ public interface PlacementPolicy {
   public static final String PASSWORD_PROPERTY_NAME = "password";
   public static final String TENANT_PROPERTY_NAME = "subscription_id";
 
-  public List<String> getNodes();
+  public List<String> getTargets();
 
-  public void setNodes(List<String> nodes);
+  public void setTargets(List<String> targets);
+
+  public String getType();
 
   /**
    * Generate a Orchestrator PlacementPolicy from a TOSCA
    * {@link alien4cloud.model.topology.PlacementPolicy PlacementPolicy}.
-   * 
+   *
    * @param toscaPolicy
    *          the TOSCA placement policy
    * @return the new Orchestrator PlacementPolicy

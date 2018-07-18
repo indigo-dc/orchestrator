@@ -19,6 +19,8 @@ package it.reply.orchestrator.dto.deployment;
 import alien4cloud.model.components.AbstractPropertyValue;
 import alien4cloud.model.components.ScalarPropertyValue;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -33,26 +35,35 @@ import org.springframework.util.Assert;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class SlaPlacementPolicy implements PlacementPolicy {
 
-  private List<String> nodes = new ArrayList<>();
+  public static final String TOSCA_TYPE = "tosca.policies.indigo.SlaPlacement";
 
+  private List<String> targets = new ArrayList<>();
+
+  @JsonProperty("sla_id")
   private String slaId;
-  
-  private List<String> serviceIds = new ArrayList<>();
 
-  public SlaPlacementPolicy(List<String> nodes, String slaId) {
-    this.setNodes(nodes);
+  @JsonProperty("services_id")
+  private List<String> servicesId = new ArrayList<>();
+
+  public SlaPlacementPolicy(List<String> targets, String slaId) {
+    this.setTargets(targets);
     this.setSlaId(slaId);
   }
 
-  public SlaPlacementPolicy(List<String> nodes, AbstractPropertyValue slaId) {
-    this.setNodes(nodes);
+  public SlaPlacementPolicy(List<String> targets, AbstractPropertyValue slaId) {
+    this.setTargets(targets);
     this.setSlaId(slaId);
   }
 
   @Override
-  public void setNodes(List<String> nodes) {
-    Objects.requireNonNull(nodes, "nodes list must not be null");
-    this.nodes = nodes;
+  public void setTargets(List<String> targets) {
+    Objects.requireNonNull(targets, "targets list must not be null");
+    this.targets = targets;
+  }
+
+  @Override
+  public String getType() {
+    return TOSCA_TYPE;
   }
 
   public void setSlaId(String slaId) {
@@ -73,9 +84,9 @@ public class SlaPlacementPolicy implements PlacementPolicy {
     this.slaId = ((ScalarPropertyValue) slaId).getValue();
   }
 
-  public void setServiceIds(List<String> serviceIds) {
-    Objects.requireNonNull(serviceIds, "service IDs list must not be null");
-    this.serviceIds = serviceIds;
+  public void setServiceIds(List<String> servicesId) {
+    Objects.requireNonNull(servicesId, "services ID list must not be null");
+    this.servicesId = servicesId;
   }
 
 }
