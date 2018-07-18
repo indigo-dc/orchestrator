@@ -21,6 +21,8 @@ MAINTAINER Alberto Brigandì <a.brigandi@reply.com>
 # Fix https://github.com/docker-library/openjdk/issues/73
 RUN apk add --no-cache fontconfig ttf-dejavu
 
+RUN apk add --no-cache bash
+
 WORKDIR /orchestrator
 
 COPY launch.sh launch.sh
