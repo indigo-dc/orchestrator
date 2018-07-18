@@ -922,8 +922,8 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
-  public List<PlacementPolicy> extractPlacementPolicies(ArchiveRoot archiveRoot) {
-    List<PlacementPolicy> placementPolicies = new ArrayList<>();
+  public Map<String, PlacementPolicy> extractPlacementPolicies(ArchiveRoot archiveRoot) {
+    Map<String, PlacementPolicy> placementPolicies = new HashMap<>();
     Optional.ofNullable(archiveRoot.getTopology())
         .map(topology -> topology.getPolicies())
         .orElseGet(Collections::emptyList)
@@ -931,7 +931,7 @@ public class ToscaServiceImpl implements ToscaService {
           if (policy instanceof alien4cloud.model.topology.PlacementPolicy) {
             PlacementPolicy placementPolicy =
                 PlacementPolicy.fromToscaType((alien4cloud.model.topology.PlacementPolicy) policy);
-            placementPolicies.add(placementPolicy);
+            placementPolicies.put(policy.getName(), placementPolicy);
           } else {
             LOG.warn("Skipping unsupported Policy {}", policy);
           }
