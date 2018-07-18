@@ -18,6 +18,9 @@ FROM openjdk:8-jdk-alpine
 
 MAINTAINER Alberto Brigandì <a.brigandi@reply.com>
 
+# Fix https://github.com/docker-library/openjdk/issues/73
+RUN apk add --no-cache fontconfig ttf-dejavu
+
 WORKDIR /orchestrator
 
 COPY launch.sh launch.sh

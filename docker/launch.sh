@@ -41,4 +41,4 @@ wait_for() {
 wait_for "${ORCHESTRATOR_DB_ENDPOINT}"
 wait_for "${WORKFLOW_DB_ENDPOINT}"
 
-exec "${@}" ${JAVA_OPTS} -Djava.security.egd=file:/dev/./urandom -jar "${ARTIFACT_NAME}" --spring.config.name=application,security
+exec "${@}" ${JAVA_OPTS} -Djava.awt.headless=true -Djava.security.egd=file:/dev/./urandom -jar "${ARTIFACT_NAME}" --spring.config.name=application,security
