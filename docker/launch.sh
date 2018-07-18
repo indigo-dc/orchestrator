@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 #
 # Copyright © 2015-2018 Santer Reply S.p.A.
 #
