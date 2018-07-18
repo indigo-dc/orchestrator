@@ -16,7 +16,8 @@
 
 package it.reply.orchestrator.service;
 
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
@@ -34,16 +35,16 @@ import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.DeploymentType;
 import it.reply.orchestrator.exception.service.DeploymentException;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
+
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
 
 @RunWith(JUnitParamsRunner.class)
 public class CloudProviderEndpointServiceTest {
@@ -106,7 +107,7 @@ public class CloudProviderEndpointServiceTest {
   @Test
   public void getCloudProviderEndpointFailBecauseOfNoComputeService() {
     CloudProvider chosenCloudProvider = CloudProvider.builder().id("provider-RECAS-BARI").build();
-    List<PlacementPolicy> placementPolicies = new ArrayList<>();
+    Map<String, PlacementPolicy> placementPolicies = new HashMap<>();
 
     assertThatCode(
         () -> cloudProviderEndpointServiceImpl.getCloudProviderEndpoint(chosenCloudProvider,
@@ -152,7 +153,7 @@ public class CloudProviderEndpointServiceTest {
     }
 
     CloudProviderEndpoint actual = cloudProviderEndpointServiceImpl
-        .getCloudProviderEndpoint(chosenCloudProvider, new ArrayList<>(), hybrid);
+        .getCloudProviderEndpoint(chosenCloudProvider, new HashMap<>(), hybrid);
     assertThat(expected.build()).isEqualTo(actual);
   }
 
@@ -192,7 +193,7 @@ public class CloudProviderEndpointServiceTest {
     chosenCloudProvider.getCmdbProviderServices().put(cloudService.getId(), cloudService);
 
     assertThatCode(() -> cloudProviderEndpointServiceImpl
-        .getCloudProviderEndpoint(chosenCloudProvider, new ArrayList<>(), false))
+        .getCloudProviderEndpoint(chosenCloudProvider, new HashMap<>(), false))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessage("Unknown Cloud Provider type: " + cloudService);
   }

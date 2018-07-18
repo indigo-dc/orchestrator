@@ -20,9 +20,7 @@ import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.enums.DeploymentType;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import lombok.Data;
@@ -49,7 +47,7 @@ public class BaseWorkflowMessage {
   private Map<String, OneData> oneDataRequirements = new HashMap<>();
 
   @NonNull
-  private List<PlacementPolicy> placementPolicies = new ArrayList<>();
+  private Map<String, PlacementPolicy> placementPolicies = new HashMap<>();
 
   /**
    * Creates a new BaseWorkflowMessage coping the fields from another one.

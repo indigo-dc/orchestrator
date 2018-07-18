@@ -32,7 +32,7 @@ import it.reply.orchestrator.enums.DeploymentType;
 import it.reply.orchestrator.exception.service.DeploymentException;
 
 import java.util.Comparator;
-import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 import lombok.extern.slf4j.Slf4j;
@@ -85,7 +85,7 @@ public class CloudProviderEndpointServiceImpl {
    * @return .
    */
   public CloudProviderEndpoint getCloudProviderEndpoint(CloudProvider chosenCloudProvider,
-      List<PlacementPolicy> placementPolicies, boolean isHybrid) {
+      Map<String, PlacementPolicy> placementPolicies, boolean isHybrid) {
 
     CloudService computeService = chosenCloudProvider
         .getCmbdProviderServicesByType(Type.COMPUTE)
@@ -100,10 +100,11 @@ public class CloudProviderEndpointServiceImpl {
     ///////////////////////////////
     // TODO Improve and move somewhere else
     placementPolicies
+        .values()
         .stream()
         .filter(CredentialsAwareSlaPlacementPolicy.class::isInstance)
         .map(CredentialsAwareSlaPlacementPolicy.class::cast)
-        .filter(policy -> policy.getServiceIds().contains(computeService.getId()))
+        .filter(policy -> policy.getServicesId().contains(computeService.getId()))
         .findFirst()
         .ifPresent(policy -> {
           cpe.username(policy.getUsername());

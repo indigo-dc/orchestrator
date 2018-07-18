@@ -47,7 +47,6 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -71,7 +70,7 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
     Set<CloudProvider> providersToDiscard = new HashSet<>();
     Set<CloudService> servicesToDiscard = new HashSet<>();
 
-    if (!CollectionUtils.isEmpty(rankCloudProvidersMessage.getPlacementPolicies())) {
+    if (!rankCloudProvidersMessage.getPlacementPolicies().isEmpty()) {
       discardOnPlacementPolicies(rankCloudProvidersMessage.getPlacementPolicies(),
           rankCloudProvidersMessage.getCloudProviders().values(),
           rankCloudProvidersMessage.getSlamPreferences().getSla(), servicesToDiscard);
@@ -133,7 +132,7 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
     discardProvidersAndServices(providersToDiscard, servicesToDiscard, rankCloudProvidersMessage);
   }
 
-  private void discardOnPlacementPolicies(List<PlacementPolicy> placementPolicies,
+  private void discardOnPlacementPolicies(Map<String, PlacementPolicy> placementPolicies,
       Collection<CloudProvider> cloudProviders, List<Sla> slas,
       Set<CloudService> servicesToDiscard) {
     
@@ -141,8 +140,8 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
       //TODO relax this constraint
       throw new OrchestratorException("Only a single placement policy is supported");
     }
-    
-    placementPolicies.forEach(placementPolicy -> {
+
+    placementPolicies.forEach((name, placementPolicy) -> {
       if (placementPolicy instanceof SlaPlacementPolicy) {
         final SlaPlacementPolicy slaPlacementPolicy = (SlaPlacementPolicy) placementPolicy;
         Sla selectedSla = slas
@@ -164,7 +163,7 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
               .getCmbdProviderServicesByType(Type.COMPUTE)
               .forEach(cloudService -> {
                 boolean serviceIsInSlaPolicy = slaPlacementPolicy
-                    .getServiceIds()
+                    .getServicesId()
                     .stream()
                     .anyMatch(serviceId -> serviceId.equals(cloudService.getId()));
                 if (!serviceIsInSlaPolicy) {
