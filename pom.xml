@@ -23,6 +23,13 @@
 	<packaging>war</packaging>
 	<name>orchestrator</name>
 
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>1.5.13.RELEASE</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+
 	<licenses>
 		<license>
 			<name>Apache License, Version 2.0</name>
@@ -48,27 +55,22 @@
 	<properties>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
-		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-		<snippetsDirectory>${project.build.directory}\generated-snippets</snippetsDirectory>
 		<skipTests>false</skipTests>
 		<skipUnitTests>${skipTests}</skipUnitTests>
 		<skipItTests>${skipTests}</skipItTests>
 
 		<!-- Plugins -->
-		<maven-compiler-plugin.version>3.1</maven-compiler-plugin.version>
-		<maven-resources-plugin.version>2.6</maven-resources-plugin.version>
-		<maven-war-plugin.version>2.6</maven-war-plugin.version>
-		<maven-surefire-plugin.version>2.18.1</maven-surefire-plugin.version>
-		<maven-failsafe-plugin.version>2.18.1</maven-failsafe-plugin.version>
+		<asciidoctor-maven-plugin.version>1.5.2</asciidoctor-maven-plugin.version>
+		<maven-release-plugin.version>2.5.3</maven-release-plugin.version>
 		<license-maven-plugin.version>3.0</license-maven-plugin.version>
 		<jacoco-maven-plugin.version>0.8.0</jacoco-maven-plugin.version>
-		<cobertura-maven-plugin.version>2.7</cobertura-maven-plugin.version>
 		<checkstyle-plugin.version>3.0.0</checkstyle-plugin.version>
-		<checkstyle.config.location>${project.basedir}/tools/maven-checkstyle-plugin/google_checks.xml</checkstyle.config.location>
+		<puppycrawl-tools-checkstyle.version>8.10</puppycrawl-tools-checkstyle.version>
 
 		<!-- Dependencies -->
-		<org.springframework.boot.version>1.5.13.RELEASE</org.springframework.boot.version>
+		<guava.version>23.2-jre</guava.version>
+		<elasticsearch.version>1.7.5</elasticsearch.version>
+		<assertj.version>3.8.0</assertj.version>
 		<openid-connect.version>1.3.2</openid-connect.version>
 		<im-java-api.version>0.4.10</im-java-api.version>
 		<monitoring-pillar-domain.version>1.8.1-FINAL</monitoring-pillar-domain.version>
@@ -77,6 +79,14 @@
 		<chronos-client.version>0.0.1-BETA.2</chronos-client.version>
 		<marathon-client.version>0.6.0</marathon-client.version>
 		<ignite.version>2.3.0</ignite.version>
+		<java-uuid-generator.version>3.1.3</java-uuid-generator.version>
+		<jgrapht-core.version>1.0.1</jgrapht-core.version>
+		<datasource-proxy.version>1.4.9</datasource-proxy.version>
+		<checker-qual.version>2.1.14</checker-qual.version>
+		<logstash-logback-encoder.version>4.11</logstash-logback-encoder.version>
+		<spring-test-dbunit.version>1.3.0</spring-test-dbunit.version>
+		<dbunit.version>2.5.2</dbunit.version>
+		<junit-params.version>1.1.0</junit-params.version>
 	</properties>
 
 	<distributionManagement>
@@ -101,46 +111,16 @@
 			<name>Concept Reply Nexus</name>
 			<url>http://nexusconcept.cloud.reply.eu/content/groups/public</url>
 		</repository>
-		<repository>
-			<id>spring-milestones</id>
-			<name>Spring Milestones</name>
-			<url>https://repo.spring.io/libs-milestone</url>
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-		</repository>
 	</repositories>
 
-	<dependencyManagement>
-		<dependencies>
-			<dependency>
-				<groupId>com.google.guava</groupId>
-				<artifactId>guava</artifactId>
-				<version>23.2-jre</version>
-			</dependency>
-			<!-- Alien4Cloud requires v1.7.0 -->
-			<dependency>
-				<groupId>org.elasticsearch</groupId>
-				<artifactId>elasticsearch</artifactId>
-				<version>1.7.5</version>
-			</dependency>
-			<dependency>
-				<groupId>org.assertj</groupId>
-				<artifactId>assertj-core</artifactId>
-				<version>3.8.0</version>
-			</dependency>
-			<dependency>
-				<!-- Import dependency management from Spring Boot -->
-				<groupId>org.springframework.boot</groupId>
-				<artifactId>spring-boot-dependencies</artifactId>
-				<version>${org.springframework.boot.version}</version>
-				<type>pom</type>
-				<scope>import</scope>
-			</dependency>
-		</dependencies>
-	</dependencyManagement>
 
 	<dependencies>
+	
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>${guava.version}</version>
+		</dependency>
 	
 		<!-- Spring Boot Starters -->
 		<dependency>
@@ -257,7 +237,7 @@
 		<dependency>
 			<groupId>com.fasterxml.uuid</groupId>
 			<artifactId>java-uuid-generator</artifactId>
-			<version>3.1.3</version>
+			<version>${java-uuid-generator.version}</version>
 		</dependency>
 	
 		<dependency>
@@ -337,7 +317,7 @@
 		<dependency>
 			<groupId>org.jgrapht</groupId>
 			<artifactId>jgrapht-core</artifactId>
-			<version>1.0.1</version>
+			<version>${jgrapht-core.version}</version>
 		</dependency>
 
 		<dependency>
@@ -353,7 +333,7 @@
 		<dependency>
 			<groupId>net.ttddyy</groupId>
 			<artifactId>datasource-proxy</artifactId>
-			<version>1.4.9</version>
+			<version>${datasource-proxy.version}</version>
 		</dependency>
 		
 		<!-- annotations and static code analysis -->
@@ -365,7 +345,7 @@
 		<dependency>
 			<groupId>org.checkerframework</groupId>
 			<artifactId>checker-qual</artifactId>
-			<version>2.1.14</version>
+			<version>${checker-qual.version}</version>
 			<scope>compile</scope>
 		</dependency>
 
@@ -373,7 +353,7 @@
 		<dependency>
 		    <groupId>net.logstash.logback</groupId>
 		    <artifactId>logstash-logback-encoder</artifactId>
-		    <version>4.11</version>
+		    <version>${logstash-logback-encoder.version}</version>
 		    <scope>runtime</scope>
 		</dependency>
 		<!-- needed for conditionals in logback configuration -->
@@ -404,13 +384,13 @@
 		<dependency>
 			<groupId>com.github.springtestdbunit</groupId>
 			<artifactId>spring-test-dbunit</artifactId>
-			<version>1.3.0</version>
+			<version>${spring-test-dbunit.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.dbunit</groupId>
 			<artifactId>dbunit</artifactId>
-			<version>2.5.2</version>
+			<version>${dbunit.version}</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -418,7 +398,7 @@
 		<dependency>
 			<groupId>pl.pragmatists</groupId>
 			<artifactId>JUnitParams</artifactId>
-			<version>1.1.0</version>
+			<version>${junit-params.version}</version>
 			<scope>test</scope>
 		</dependency>
 
@@ -439,7 +419,7 @@
 					<plugin>
 						<groupId>org.asciidoctor</groupId>
 						<artifactId>asciidoctor-maven-plugin</artifactId>
-						<version>1.5.2</version>
+						<version>${asciidoctor-maven-plugin.version}</version>
 						<configuration>
 							<sourceDirectory>${basedir}/asciidoc</sourceDirectory>
 							<outputDirectory>${basedir}/restdocs</outputDirectory>
@@ -455,7 +435,7 @@
 									<backend>html</backend>
 									<doctype>book</doctype>
 									<attributes>
-										<snippets>${snippetsDirectory}</snippets>
+										<snippets>${project.build.directory}/generated-snippets</snippets>
 									</attributes>
 								</configuration>
 							</execution>
@@ -498,39 +478,6 @@
 				</plugins>
 			</build>
 		</profile>
-		<profile>
-			<id>compile-with-errorprone</id>
-			<activation>
-				<!-- <property> <name>!m2e.version</name> </property> -->
-			</activation>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-compiler-plugin</artifactId>
-						<version>${maven-compiler-plugin.version}</version>
-						<configuration>
-							<compilerId>javac-with-errorprone</compilerId>
-							<forceJavacCompilerUse>true</forceJavacCompilerUse>
-						</configuration>
-						<dependencies>
-							<dependency>
-								<groupId>org.codehaus.plexus</groupId>
-								<artifactId>plexus-compiler-javac-errorprone</artifactId>
-								<version>2.8</version>
-							</dependency>
-							<!-- override plexus-compiler-javac-errorprone's dependency on Error 
-								Prone with the latest version -->
-							<dependency>
-								<groupId>com.google.errorprone</groupId>
-								<artifactId>error_prone_core</artifactId>
-								<version>2.1.0</version>
-							</dependency>
-						</dependencies>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
 	</profiles>
 
 	<build>
@@ -566,23 +513,19 @@
 						</lifecycleMappingMetadata>
 					</configuration>
 				</plugin>
-				<!-- Build number plugin -->
 				<plugin>
-					<groupId>pl.project13.maven</groupId>
-					<artifactId>git-commit-id-plugin</artifactId>
-					<version>2.1.13</version>
-					<executions>
-						<execution>
-							<goals>
-								<goal>revision</goal>
-							</goals>
-						</execution>
-					</executions>
+					<artifactId>maven-clean-plugin</artifactId>
 					<configuration>
-						<verbose>true</verbose>
-						<dateFormat>yyyy-MM-dd'T'HH:mm:ssZ</dateFormat>
-						<generateGitPropertiesFile>true</generateGitPropertiesFile>
-						<generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
+						<filesets>
+							<fileset>
+								<directory>docker/</directory>
+								<includes>
+									<include>**/*.jar</include>
+									<include>**/*.war</include>
+								</includes>
+								<followSymlinks>false</followSymlinks>
+							</fileset>
+						</filesets>
 					</configuration>
 				</plugin>
 				<plugin>
@@ -598,9 +541,6 @@
 							<include>kubernetes/**</include>
 							<include>pom.xml</include>
 						</includes>
-						<excludes>
-							<exclude>**/*.war</exclude>
-						</excludes>
 						<useDefaultExcludes>true</useDefaultExcludes>
 						<useDefaultMapping>true</useDefaultMapping>
 						<strictCheck>true</strictCheck>
@@ -625,7 +565,7 @@
 				<plugin>
 					<groupId>org.codehaus.mojo</groupId>
 					<artifactId>cobertura-maven-plugin</artifactId>
-					<version>${cobertura-maven-plugin.version}</version>
+					<version>2.7</version>
 					<configuration>
 						<instrumentation>
 							<ignoreMethodAnnotations>
@@ -637,8 +577,8 @@
 				<plugin>
 					<groupId>org.apache.maven.plugins</groupId>
 					<artifactId>maven-release-plugin</artifactId>
-					<version>2.5.3</version>
-					<configuration>
+          <version>${maven-release-plugin.version}</version>
+          <configuration>
 						<tagNameFormat>v@{project.version}</tagNameFormat>
 					</configuration>
 				</plugin>
@@ -646,44 +586,19 @@
 		</pluginManagement>
 
 		<plugins>
-		<plugin>
-			<groupId>pl.project13.maven</groupId>
-			<artifactId>git-commit-id-plugin</artifactId>
-		</plugin>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>${maven-compiler-plugin.version}</version>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-resources-plugin</artifactId>
-				<version>${maven-resources-plugin.version}</version>
-				<configuration>
-					<delimiters>
-						<delimiter>@</delimiter>
-					</delimiters>
-					<useDefaultDelimiters>false</useDefaultDelimiters>
-				</configuration>
+				<groupId>pl.project13.maven</groupId>
+				<artifactId>git-commit-id-plugin</artifactId>
 			</plugin>
 			<plugin>
 				<artifactId>maven-war-plugin</artifactId>
-				<version>${maven-war-plugin.version}</version>
 				<configuration>
-					<outputDirectory>${basedir}/docker</outputDirectory>
 					<archiveClasses>true</archiveClasses>
-                	<failOnMissingWebXml>false</failOnMissingWebXml>
-					<archive>
-						<manifest>
-							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-						</manifest>
-					</archive>
 				</configuration>
 			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
-				<version>${org.springframework.boot.version}</version>
 				<configuration>
 					<mainClass>it.reply.orchestrator.Application</mainClass>
 					<outputDirectory>${basedir}/docker</outputDirectory>
@@ -691,7 +606,6 @@
 				<executions>
 					<execution>
 						<goals>
-							<goal>repackage</goal>
 							<goal>build-info</goal>
 						</goals>
 					</execution>
@@ -705,13 +619,11 @@
 					<dependency>
 						<groupId>com.puppycrawl.tools</groupId>
 						<artifactId>checkstyle</artifactId>
-						<version>8.10</version>
+						<version>${puppycrawl-tools-checkstyle.version}</version>
 					</dependency>
 				</dependencies>
 				<executions>
 					<execution>
-						<id>checkstyle</id>
-						<phase>verify</phase>
 						<goals>
 							<goal>check</goal>
 						</goals>
@@ -720,6 +632,7 @@
 							<failsOnError>true</failsOnError>
 							<failOnViolation>true</failOnViolation>
 							<violationSeverity>warning</violationSeverity>
+							<configLocation>${project.basedir}/tools/maven-checkstyle-plugin/google_checks.xml</configLocation>
 						</configuration>
 					</execution>
 				</executions>
@@ -740,7 +653,6 @@
 
 			<plugin>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>${maven-surefire-plugin.version}</version>
 				<configuration>
 					<skipTests>${skipUnitTests}</skipTests>
 					<excludedGroups>it.reply.orchestrator.IntegrationTest</excludedGroups>
@@ -748,7 +660,6 @@
 			</plugin>
 			<plugin>
 				<artifactId>maven-failsafe-plugin</artifactId>
-				<version>${maven-failsafe-plugin.version}</version>
 				<configuration>
 					<skipTests>${skipItTests}</skipTests>
 					<includes>
@@ -756,87 +667,18 @@
 					</includes>
 					<groups>it.reply.orchestrator.IntegrationTest</groups>
 				</configuration>
-				<executions>
-					<execution>
-						<goals>
-							<goal>integration-test</goal>
-							<goal>verify</goal>
-						</goals>
-					</execution>
-				</executions>
 			</plugin>
 		</plugins>
-
-		<resources>
-			<!-- Filter .properties and replace placeholders (using Maven properties 
-				or filtered properties - from the '<build> -> <filters'> section of the POM) -->
-			<resource>
-				<directory>${basedir}/src/main/resources</directory>
-				<filtering>true</filtering>
-				<includes>
-					<include>**/*.properties</include>
-				</includes>
-			</resource>
-			<!-- Also include in the final package the other resources, not being 
-				.properties, without filtering them -->
-			<resource>
-				<directory>${basedir}/src/main/resources</directory>
-				<filtering>false</filtering>
-				<excludes>
-					<exclude>**/*.properties</exclude>
-				</excludes>
-			</resource>
-		</resources>
 	</build>
 	<reporting>
 		<plugins>
-
-			<plugin>
-				<artifactId>maven-project-info-reports-plugin</artifactId>
-				<version>2.8</version>
-			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-checkstyle-plugin</artifactId>
-				<version>${checkstyle-plugin.version}</version>
-				<configuration>
-					<consoleOutput>true</consoleOutput>
-					<failsOnError>true</failsOnError>
-					<failOnViolation>true</failOnViolation>
-					<configLocation>google_checks.xml</configLocation>
-				</configuration>
-				<reportSets>
-					<reportSet>
-						<reports>
-							<report>checkstyle</report>
-						</reports>
-					</reportSet>
-				</reportSets>
-			</plugin>
-			
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>2.10.3</version>
 				<configuration>
 					<reportOutputDirectory>apidocs</reportOutputDirectory>
 				</configuration>
 			</plugin>
-			
-			<!-- Cobertura -->
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>cobertura-maven-plugin</artifactId>
-				<version>${cobertura-maven-plugin.version}</version>
-				<configuration>
-					<formats>
-						<format>html</format>
-						<format>xml</format>
-					</formats>
-				</configuration>
-			</plugin>
-			
 		</plugins>
 	</reporting>
 </project>
