@@ -1,0 +1,62 @@
+{
+  "items" : [ {
+    "chronosJob" : {
+      "name" : "2",
+      "description" : "Execute Application",
+      "command" : "/bin/bash run.sh",
+      "epsilon" : "PT12S",
+      "retries" : 3,
+      "cpus" : 1.0,
+      "mem" : 1024.0,
+      "uris" : [ "http://example.com" ],
+      "schedule" : "R0/2015-12-25T17:22:00Z/PT1M",
+      "container" : {
+        "type" : "DOCKER",
+        "image" : "indigodatacloud/job",
+        "forcePullImage" : false,
+        "volumes" : [ {
+          "containerPath" : "/tmp/folder",
+          "hostPath" : "/tmp/2",
+          "mode" : "RW"
+        } ]
+      },
+      "environmentVariables" : [ {
+        "name" : "ONEDATA_PROVIDERS",
+        "value" : "ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR"
+      }, {
+        "name" : "ONEDATA_SPACE",
+        "value" : "DATA_SPACE_TO_BE_SET_BY_THE_ORCHESTRATOR"
+      }, {
+        "name" : "ONEDATA_PATH",
+        "value" : "PATH_TO_BE_SET_BY_THE_ORCHESTRATOR"
+      }, {
+        "name" : "ONEDATA_SERVICE_TOKEN",
+        "value" : "TOKEN_TO_BE_SET_BY_THE_ORCHESTRATOR"
+      } ],
+      "constraints" : [ [ "hostname", "CLUSTER" ] ]
+    },
+    "toscaNodeName" : "chronos_job"
+  }, {
+    "chronosJob" : {
+      "name" : "4",
+      "command" : "/bin/bash command.sh",
+      "epsilon" : "PT10S",
+      "uris" : [ ],
+      "parents" : [ "2" ],
+      "container" : {
+        "type" : "DOCKER",
+        "image" : "indigodatacloud/jobuploader",
+        "forcePullImage" : true,
+        "volumes" : [ ],
+        "parameters" : [ {
+          "key" : "privileged",
+          "value" : "true"
+        } ]
+      },
+      "environmentVariables" : [ ],
+      "constraints" : [ ]
+    },
+    "toscaNodeName" : "chronos_job_upload"
+  } ],
+  "currentIndex" : 0
+}

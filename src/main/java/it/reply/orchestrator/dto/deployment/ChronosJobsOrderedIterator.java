@@ -14,27 +14,27 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.config.properties;
+package it.reply.orchestrator.dto.deployment;
 
-import java.net.URI;
+import it.reply.orchestrator.dto.workflow.WorkflowListIterator;
+import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl.IndigoJob;
 
-import javax.validation.constraints.NotNull;
+import java.util.List;
 
-import lombok.Data;
+import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.validation.annotation.Validated;
 
-@Validated
-@Data
-@ConfigurationProperties(prefix = "orchestrator")
-@NoArgsConstructor
-public class OrchestratorProperties {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
+public class ChronosJobsOrderedIterator extends WorkflowListIterator<IndigoJob> {
 
-  @NotNull
-  @NonNull
-  private URI url;
+  public ChronosJobsOrderedIterator(@NonNull List<IndigoJob> items) {
+    super(items);
+  }
 
 }
