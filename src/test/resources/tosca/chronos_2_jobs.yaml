@@ -1,0 +1,63 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+imports:
+  - indigo_custom_types: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/custom_types.yaml
+
+topology_template:
+  inputs:
+    cpus:
+      type: float
+      description: Amount of CPUs for this job
+      required: yes
+      default: 1.0
+
+  node_templates:
+    chronos_job:
+      type: tosca.nodes.indigo.Container.Application.Docker.Chronos
+      properties:
+        schedule: 'R0/2015-12-25T17:22:00Z/PT1M'
+        description: 'Execute Application'
+        command: "/bin/bash run.sh"
+        uris: ['http://example.com']
+        retries: 3
+        environment_variables:
+          ONEDATA_SERVICE_TOKEN: "TOKEN_TO_BE_SET_BY_THE_ORCHESTRATOR"
+          ONEDATA_SPACE: "DATA_SPACE_TO_BE_SET_BY_THE_ORCHESTRATOR"
+          ONEDATA_PATH: "PATH_TO_BE_SET_BY_THE_ORCHESTRATOR"
+          ONEDATA_PROVIDERS: "ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR"
+        priviliged: false
+        force_pull_image: false
+        epsilon: PT12S
+        labels:
+          SOME_KEY: some_value
+        constraints: [["hostname", "CLUSTER"]]
+      artifacts:
+        image:
+          file: indigodatacloud/job
+          type: tosca.artifacts.Deployment.Image.Container.Docker
+      requirements:
+        - host: docker_runtime1
+
+    chronos_job_upload:
+      type: tosca.nodes.indigo.Container.Application.Docker.Chronos
+      properties:
+        command: /bin/bash command.sh
+      artifacts:
+        image:
+          file: indigodatacloud/jobuploader
+          type: tosca.artifacts.Deployment.Image.Container.Docker
+      requirements:
+        - host: docker_runtime2
+        - parent_job: chronos_job
+
+    docker_runtime1:
+      type: tosca.nodes.indigo.Container.Runtime.Docker
+      capabilities:
+        host:
+          properties:
+            num_cpus: { get_input: cpus }
+            mem_size: 1024 MB
+            volumes: [ '/tmp/folder:rw' ]
+
+    docker_runtime2:
+      type: tosca.nodes.indigo.Container.Runtime.Docker

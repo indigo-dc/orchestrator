@@ -19,19 +19,15 @@ package it.reply.orchestrator.dto.deployment;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.onedata.OneData;
-import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl.IndigoJob;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import lombok.AccessLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -62,7 +58,7 @@ public class DeploymentMessage extends BaseWorkflowMessage {
         .toString();
   }
 
-  private TemplateTopologicalOrderIterator templateTopologicalOrderIterator;
+  private ChronosJobsOrderedIterator chronosJobsIterator;
 
   private boolean createComplete;
   private boolean deleteComplete;
@@ -77,74 +73,6 @@ public class DeploymentMessage extends BaseWorkflowMessage {
    */
   @NonNull
   private Map<String, OneData> oneDataParameters = new HashMap<>();
-
-  /**
-   * TEMPORARY Chronos Job Graph (to avoid regenerating the template representation each time).
-   */
-  private Map<String, IndigoJob> chronosJobGraph;
-
-  /**
-   * Class to contain template's nodes in topological order and to allow to iterate on the list.
-   * 
-   * @author l.biava
-   *
-   */
-  @Data
-  @NoArgsConstructor(access = AccessLevel.PROTECTED)
-  public static class TemplateTopologicalOrderIterator {
-
-    /**
-     * Template's nodes, topologically ordered.
-     */
-    private List<String> topologicalOrder;
-
-    private int position = 0;
-
-    public TemplateTopologicalOrderIterator(List<String> topologicalOrder) {
-      this.topologicalOrder = topologicalOrder;
-    }
-
-    public int getNodeSize() {
-      return topologicalOrder.size();
-    }
-
-    public synchronized boolean hasNext() {
-      return topologicalOrder.size() - 1 > position;
-    }
-
-    /**
-     * Get the node in the current position of the iterator. <br/>
-     * <b>Note that the first time this method is called it returns the first element of the list,
-     * or <tt>null</tt> if the list is empty</b>
-     * 
-     * @return the current node, or <tt>null</tt> if the list is empty.
-     */
-    public synchronized String getCurrent() {
-      if (position >= topologicalOrder.size()) {
-        return null;
-      }
-      return topologicalOrder.get(position);
-    }
-
-    /**
-     * Get the next element of the collection (after incrementing the position pointer).
-     * 
-     * @return the next node, or <tt>null</tt> if there aren't any others.
-     */
-    public synchronized String getNext() {
-      if (!hasNext()) {
-        position++;
-        return null;
-      }
-      position++;
-      return topologicalOrder.get(position);
-    }
-
-    public synchronized void reset() {
-      position = 0;
-    }
-
-  }
 
   public DeploymentMessage() {
     timeout = MAX_TIMEOUT.toString();
