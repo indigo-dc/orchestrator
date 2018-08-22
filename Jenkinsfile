@@ -57,6 +57,23 @@ pipeline {
                 }
             }
         }
+        
+        stage('Dependency check') {
+            agent {
+                label 'docker-build'
+            }
+            steps {
+                checkout scm
+                OWASPDependencyCheckRun("$WORKSPACE/orchestrator/src", project="Orchestrator")
+            }
+            post {
+                always {
+                    OWASPDependencyCheckPublish()
+                    HTMLReport('src', 'dependency-check-report.html', 'OWASP Dependency Report')
+                    deleteDir()
+                }
+            }
+        }
 
         stage('Metrics') {
             agent {
