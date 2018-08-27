@@ -154,7 +154,7 @@ public class ImClientFactory {
     if (!endpointMatcher.matches()) {
       throw new DeploymentException("Wrong OS endpoint format: " + endpoint);
     } else {
-      String username = cloudProviderEndpoint.getUsername();
+      String username = CommonUtils.notNullOrDefaultValue(cloudProviderEndpoint.getUsername(), "");
       String password = cloudProviderEndpoint.getPassword();
       String tenant = cloudProviderEndpoint.getTenant();
       // TODO REMOVE and use explicit cloudProviderEndpoint information

@@ -16,7 +16,6 @@
 
 package it.reply.orchestrator.service;
 
-import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.CloudProviderEndpointBuilder;
@@ -27,6 +26,7 @@ import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.dto.deployment.CredentialsAwareSlaPlacementPolicy;
 import it.reply.orchestrator.dto.deployment.PlacementPolicy;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
+import it.reply.orchestrator.dto.workflow.CloudProvidersOrderedIterator;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.DeploymentType;
 import it.reply.orchestrator.exception.service.DeploymentException;
@@ -34,6 +34,8 @@ import it.reply.orchestrator.exception.service.DeploymentException;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,16 +48,15 @@ public class CloudProviderEndpointServiceImpl {
   /**
    * Choose a Cloud Provider.
    * 
-   * @param deployment
-   *          .
    * @param rankCloudProvidersMessage
-   *          .
+   * @param maxProvidersRetry
    * @return .
    */
-  public RankedCloudProvider chooseCloudProvider(Deployment deployment,
-      RankCloudProvidersMessage rankCloudProvidersMessage) {
+  public CloudProvidersOrderedIterator generateCloudProvidersOrderedIterator(
+      RankCloudProvidersMessage rankCloudProvidersMessage, Integer maxProvidersRetry) {
+    Map<String, CloudProvider> cloudProviders = rankCloudProvidersMessage.getCloudProviders();
 
-    final RankedCloudProvider chosenCp =
+    Stream<CloudProvider> orderedCloudProviders =
         rankCloudProvidersMessage
             .getRankedCloudProviders()
             .stream()
@@ -64,17 +65,14 @@ public class CloudProviderEndpointServiceImpl {
             .filter(RankedCloudProvider::isRanked)
             // and with the highest rank
             .sorted(Comparator.comparing(RankedCloudProvider::getRank).reversed())
-            .findFirst()
-            .orElseThrow(() -> {
-              String errorMsg = "No Cloud Provider suitable for deploy found";
-              LOG.error("{}\n ranked providers list: {}", errorMsg,
-                  rankCloudProvidersMessage.getRankedCloudProviders());
-              return new DeploymentException(errorMsg);
-            });
-
-    LOG.debug("Selected Cloud Provider is: {}", chosenCp);
-    return chosenCp;
-
+            .map(RankedCloudProvider::getName)
+            .map(cloudProviders::get)
+            .filter(Objects::nonNull);
+    if (maxProvidersRetry != null) {
+      orderedCloudProviders = orderedCloudProviders.limit(maxProvidersRetry);
+    }
+    return new CloudProvidersOrderedIterator(orderedCloudProviders
+        .collect(Collectors.toList()));
   }
 
   /**
@@ -113,7 +111,7 @@ public class CloudProviderEndpointServiceImpl {
         });
     ///////////////////////////////
 
-    IaaSType iaasType;
+    final IaaSType iaasType;
     if (computeService.isOpenStackComputeProviderService()) {
       iaasType = IaaSType.OPENSTACK;
     } else if (computeService.isOpenNebulaComputeProviderService()) {
@@ -137,15 +135,15 @@ public class CloudProviderEndpointServiceImpl {
     cpe.cpComputeServiceId(computeService.getId());
     cpe.region(computeService.getData().getRegion());
     cpe.iaasType(iaasType);
+    cpe.imEndpoint(imEndpoint);
 
     if (isHybrid) {
       // generate and set IM iaasHeaderId
       cpe.iaasHeaderId(computeService.getId());
       // default to PaaS Level IM
       cpe.imEndpoint(null);
-    } else {
-      cpe.imEndpoint(imEndpoint);
     }
+
     return cpe.build();
   }
 

@@ -16,8 +16,6 @@
 
 package it.reply.orchestrator.dto.onedata;
 
-import it.reply.orchestrator.utils.CommonUtils;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -32,7 +30,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import lombok.experimental.Tolerate;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -41,13 +38,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @ToString(exclude = "token")
 @Builder
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class OneData {
+public class OneData implements Cloneable {
 
   @Data
   @Builder
   @NoArgsConstructor(access = AccessLevel.PROTECTED)
   @AllArgsConstructor(access = AccessLevel.PROTECTED)
-  public static class OneDataProviderInfo {
+  public static class OneDataProviderInfo implements Cloneable {
 
     @Nullable
     private String id;
@@ -61,6 +58,16 @@ public class OneData {
     @Nullable
     private String cloudServiceId;
 
+    @Override
+    public OneDataProviderInfo clone() {
+      return OneDataProviderInfo
+          .builder()
+          .id(this.id)
+          .endpoint(this.endpoint)
+          .cloudProviderId(this.cloudProviderId)
+          .cloudServiceId(this.cloudServiceId)
+          .build();
+    }
   }
 
   @Nullable
@@ -82,33 +89,36 @@ public class OneData {
 
   private boolean smartScheduling;
 
+  @Override
+  public OneData clone() {
+    return OneData
+        .builder()
+        .token(this.token)
+        .space(this.space)
+        .path(this.path)
+        .zone(this.zone)
+        .providers(providers
+            .stream()
+            .map(OneDataProviderInfo::clone)
+            .collect(Collectors.toList()))
+        .build();
+  }
+
   @Deprecated
   protected OneData() {
     providers = new ArrayList<>();
   }
 
-  /**
-   * Generate a List of {@link OneDataProviderInfo} from a csv of providers endpoint.
-   * 
-   * @param providers
-   *          the csv of providers endpoint
-   * @return the List of {@link OneDataProviderInfo}
-   */
-  public static List<OneDataProviderInfo> providersListFromString(@Nullable String providers) {
-    return Optional
-        .ofNullable(providers)
-        .map(value -> CommonUtils.checkNotNull(value).split(","))
-        .map(Stream::of)
-        .orElseGet(Stream::empty)
-        .map(endpoint -> OneDataProviderInfo.builder().endpoint(endpoint).build())
-        .collect(Collectors.toList());
-  }
-
   public static class OneDataBuilder {
 
-    @Tolerate
-    public OneDataBuilder providers(@Nullable String providers) {
-      return providers(providersListFromString(providers));
+    public OneDataBuilder providersAsString(@Nullable String providers) {
+      return providers(Optional
+          .ofNullable(providers)
+          .map(value -> value.split(","))
+          .map(Stream::of)
+          .orElseGet(Stream::empty)
+          .map(endpoint -> OneDataProviderInfo.builder().endpoint(endpoint).build())
+          .collect(Collectors.toList()));
     }
   }
 }

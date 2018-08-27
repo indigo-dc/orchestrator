@@ -62,7 +62,11 @@ public interface DeploymentProviderService {
 
   public void finalizeDeploy(DeploymentMessage deploymentMessage);
 
+  public void cleanFailedDeploy(DeploymentMessage deploymentMessage);
+
   public boolean doUpdate(DeploymentMessage deploymentMessage, String template);
+
+  public void cleanFailedUpdate(DeploymentMessage deploymentMessage);
 
   /**
    * Executes the undeployment of the given <code>deployment</code>, which typically means deleting

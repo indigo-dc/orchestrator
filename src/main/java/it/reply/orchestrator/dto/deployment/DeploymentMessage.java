@@ -16,15 +16,18 @@
 
 package it.reply.orchestrator.dto.deployment;
 
-import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.onedata.OneData;
+import it.reply.orchestrator.dto.workflow.CloudProvidersOrderedIterator;
 
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+
+import javax.annotation.Nullable;
+import javax.validation.constraints.NotNull;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -41,7 +44,9 @@ public class DeploymentMessage extends BaseWorkflowMessage {
   // private static final Instant MAX_TIMEOUT = Instant.parse("9999-12-31T23:59:59.999Z");
   private static final Instant MAX_TIMEOUT = Instant.parse("2038-01-19T03:14:07.999Z");
 
-  private String timeout;
+  @NonNull
+  @NotNull
+  private String timeout = MAX_TIMEOUT.toString();
 
   /**
    * Sets the Deployment timeout.
@@ -58,6 +63,7 @@ public class DeploymentMessage extends BaseWorkflowMessage {
         .toString();
   }
 
+  @Nullable
   private ChronosJobsOrderedIterator chronosJobsIterator;
 
   private boolean createComplete;
@@ -65,7 +71,10 @@ public class DeploymentMessage extends BaseWorkflowMessage {
   private boolean pollComplete;
   private boolean skipPollInterval;
 
-  private CloudProvider chosenCloudProvider;
+  @Nullable
+  private CloudProvidersOrderedIterator cloudProvidersOrderedIterator;
+
+  @Nullable
   private CloudProviderEndpoint chosenCloudProviderEndpoint;
 
   /**
@@ -74,8 +83,9 @@ public class DeploymentMessage extends BaseWorkflowMessage {
   @NonNull
   private Map<String, OneData> oneDataParameters = new HashMap<>();
 
-  public DeploymentMessage() {
-    timeout = MAX_TIMEOUT.toString();
-  }
+  @Nullable
+  private Integer maxProvidersRetry;
+
+  private boolean keepLastAttempt = false;
 
 }

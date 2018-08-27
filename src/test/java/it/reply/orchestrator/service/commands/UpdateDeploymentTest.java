@@ -113,7 +113,7 @@ public class UpdateDeploymentTest extends BaseDeployCommandTest<UpdateDeployment
     rankCloudProvidersMessage.setOneDataRequirements(oneDataRequirements);
 
     when(cloudProviderEndpointServiceImpl.
-        chooseCloudProvider(any(Deployment.class), any(RankCloudProvidersMessage.class)))
+        chooseCloudProvider(any(Deployment.class), null))
         .thenReturn(chosenCp);
     when(deploymentRepository.findOne(deployment.getId()))
         .thenReturn(deployment);

@@ -57,6 +57,12 @@ public class DeploymentRequest {
   @Min(value = 1, message = "Timeout value, if provided, must be at least of 1 minute")
   private Integer timeoutMins;
 
+  @Nullable
+  @Min(value = 1, message = "maxProvidersRetry value, if provided, must be at least of 1")
+  private Integer maxProvidersRetry;
+
+  private boolean keepLastAttempt = false;
+
   @SuppressWarnings("null")
   @Deprecated
   protected DeploymentRequest() {

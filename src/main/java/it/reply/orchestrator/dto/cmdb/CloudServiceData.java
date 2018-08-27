@@ -18,12 +18,15 @@ package it.reply.orchestrator.dto.cmdb;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import javax.validation.constraints.NotNull;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Data
@@ -33,19 +36,23 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class CloudServiceData {
 
   @JsonProperty("service_type")
-  @Nullable
+  @NonNull
+  @NotNull
   private String serviceType;
 
   @JsonProperty("endpoint")
-  @Nullable
+  @NonNull
+  @NotNull
   private String endpoint;
 
   @JsonProperty("provider_id")
-  @Nullable
+  @NonNull
+  @NotNull
   private String providerId;
 
   @JsonProperty("type")
-  @Nullable
+  @NonNull
+  @NotNull
   private Type type;
 
   @JsonProperty("is_public_service")

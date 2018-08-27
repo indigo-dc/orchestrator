@@ -17,9 +17,6 @@
 package it.reply.orchestrator.dto.cmdb;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.google.common.base.Preconditions;
-
-import java.util.Optional;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -29,7 +26,6 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -53,9 +49,8 @@ public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData
   public static final String OPENNEBULA_TOSCA_SERVICE = "eu.indigo-datacloud.im-tosca.opennebula";
 
   @Builder
-  protected CloudService(@Nullable String id, @Nullable String type,
-      @NonNull CloudServiceData data) {
-    super(id, type, data);
+  protected CloudService(@NonNull String id, @NonNull CloudServiceData data) {
+    super(id, data);
   }
 
   /**
@@ -65,13 +60,8 @@ public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData
    *          the requested type
    * @return true if the service type is the requested one, false otherwise
    */
-  public boolean isServiceOfType(String type) {
-    Preconditions.checkNotNull(type);
-    return Optional
-        .ofNullable(getData())
-        .map(CloudServiceData::getServiceType)
-        .filter(type::equals)
-        .isPresent();
+  public boolean isServiceOfType(@NonNull String type) {
+    return getData().getServiceType().equals(type);
   }
 
   /**

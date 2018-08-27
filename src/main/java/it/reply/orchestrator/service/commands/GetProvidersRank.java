@@ -25,7 +25,6 @@ import it.reply.orchestrator.dto.slam.PreferenceCustomer;
 import it.reply.orchestrator.service.CloudProviderRankerService;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -56,9 +55,8 @@ public class GetProvidersRank extends BaseRankCloudProvidersCommand {
         .getPreferences()
         .stream()
         .map(Preference::getPreferences)
-        // why why why is this a list?
-        .findFirst()
-        .orElseGet(ArrayList::new);
+        .flatMap(List::stream)
+        .collect(Collectors.toList());
 
     CloudProviderRankerRequest cprr = CloudProviderRankerRequest
         .builder()

@@ -61,7 +61,6 @@ public class CmdbServiceIT extends WebAppConfigurationAwareIT {
 
     CloudService service = CloudService.builder()
         .id(recasId)
-        .type("service")
         .data(data)
         .build();
 
@@ -75,7 +74,6 @@ public class CmdbServiceIT extends WebAppConfigurationAwareIT {
     Provider provider = Provider
         .builder()
         .id(recasProviderName)
-        .type("provider")
         .data(ProviderData
             .builder()
             .name("RECAS-BARI")

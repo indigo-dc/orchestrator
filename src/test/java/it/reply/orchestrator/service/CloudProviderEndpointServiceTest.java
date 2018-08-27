@@ -31,9 +31,9 @@ import it.reply.orchestrator.dto.cmdb.CloudServiceData;
 import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.dto.deployment.PlacementPolicy;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
+import it.reply.orchestrator.dto.workflow.CloudProvidersOrderedIterator;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.DeploymentType;
-import it.reply.orchestrator.exception.service.DeploymentException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -80,10 +80,11 @@ public class CloudProviderEndpointServiceTest {
         .ranked(false)
         .build());
 
-    RankedCloudProvider chosedProvider =
-        cloudProviderEndpointServiceImpl.chooseCloudProvider(deployment, rcpm);
-    assertThat(chosedProvider).isNotNull();
-    assertThat(chosedProvider.getName()).isEqualTo("provider2");
+    CloudProvidersOrderedIterator providersOrderedIterator =
+        cloudProviderEndpointServiceImpl.generateCloudProvidersOrderedIterator(rcpm, null);
+    assertThat(providersOrderedIterator.getSize()).isEqualTo(2);
+    assertThat(providersOrderedIterator.next().getId()).isEqualTo("provider2");
+    assertThat(providersOrderedIterator.next().getId()).isEqualTo("provider1");
   }
 
   @Test
@@ -97,11 +98,10 @@ public class CloudProviderEndpointServiceTest {
         .rank(100)
         .ranked(false)
         .build());
+    CloudProvidersOrderedIterator providersOrderedIterator =
+        cloudProviderEndpointServiceImpl.generateCloudProvidersOrderedIterator(rcpm, null);
+    assertThat(providersOrderedIterator.getSize()).isEqualTo(0);
 
-    assertThatCode(
-        () -> cloudProviderEndpointServiceImpl.chooseCloudProvider(deployment, rcpm))
-            .isInstanceOf(DeploymentException.class)
-            .hasMessage("No Cloud Provider suitable for deploy found");
   }
 
   @Test
@@ -129,6 +129,7 @@ public class CloudProviderEndpointServiceTest {
             .builder()
             .serviceType(serviceType)
             .endpoint("www.example.com")
+            .providerId("provider-RECAS-BARI")
             .type(Type.COMPUTE)
             .build())
         .build();
@@ -185,6 +186,7 @@ public class CloudProviderEndpointServiceTest {
             .builder()
             .serviceType("unknownType")
             .endpoint("www.example.com")
+            .providerId("provider-RECAS-BARI")
             .type(Type.COMPUTE)
             .build())
         .build();

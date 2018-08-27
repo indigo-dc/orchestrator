@@ -881,7 +881,7 @@ public class ToscaServiceImpl implements ToscaService {
             .token((String) inputs.get("input_onedata_token"))
             .space((String) inputs.get("input_onedata_space"))
             .path((String) inputs.get("input_path"))
-            .providers((String) inputs.get("input_onedata_providers"))
+            .providersAsString((String) inputs.get("input_onedata_providers"))
             .zone((String) inputs.get("input_onedata_zone"))
             .build();
         if (oneDataInput.getProviders().isEmpty()) {
@@ -896,7 +896,7 @@ public class ToscaServiceImpl implements ToscaService {
             .token((String) inputs.get("output_onedata_token"))
             .space((String) inputs.get("output_onedata_space"))
             .path((String) inputs.get("output_path"))
-            .providers((String) inputs.get("output_onedata_providers"))
+            .providersAsString((String) inputs.get("output_onedata_providers"))
             .zone((String) inputs.get("output_onedata_zone"))
             .build();
         if (oneDataOutput.getProviders().isEmpty()) {
