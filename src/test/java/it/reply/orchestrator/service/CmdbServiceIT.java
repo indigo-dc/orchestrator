@@ -26,10 +26,11 @@ import it.reply.orchestrator.dto.cmdb.Provider;
 import it.reply.orchestrator.dto.cmdb.ProviderData;
 import it.reply.orchestrator.dto.cmdb.Type;
 
+import java.util.List;
+
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.List;
 
 /**
  * This integration test makes real request to the CMDB APIs.
@@ -46,6 +47,7 @@ public class CmdbServiceIT extends WebAppConfigurationAwareIT {
   private CmdbService service;
 
   @Test
+  @Ignore
   public void getServiceTest() throws Exception {
 
     CloudService serviceRecas = service.getServiceById(recasId);
@@ -67,6 +69,7 @@ public class CmdbServiceIT extends WebAppConfigurationAwareIT {
   }
 
   @Test
+  @Ignore
   public void getProviderTest() throws Exception {
     Provider providerRecas = service.getProviderById(recasProviderName);
     Provider provider = Provider
@@ -83,6 +86,7 @@ public class CmdbServiceIT extends WebAppConfigurationAwareIT {
   }
 
   @Test
+  @Ignore
   public void getImageForServiceTest() throws Exception {
 
     List<Image> recasImages = service.getImagesByService(recasId);
