@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import it.reply.orchestrator.config.specific.WebAppConfigurationAwareIT;
 import it.reply.orchestrator.dto.slam.SlamPreferences;
 
+import org.junit.Ignore;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -36,6 +37,7 @@ public class SlamServiceIT extends WebAppConfigurationAwareIT {
   private SlamService service;
 
   @Test
+  @Ignore
   public void getPreferencesTest() throws Exception {
     SlamPreferences pref = service.getCustomerPreferences(null);
     assertEquals("4401ac5dc8cfbbb737b0a02575ee3b58", pref.getSla().get(0).getId());
