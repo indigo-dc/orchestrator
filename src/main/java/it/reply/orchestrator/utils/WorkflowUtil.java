@@ -22,7 +22,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
+import it.reply.orchestrator.exception.service.WorkflowException;
 
+import org.flowable.engine.delegate.DelegateExecution;
+import org.flowable.engine.impl.bpmn.helper.ErrorPropagation;
+import org.flowable.engine.impl.persistence.entity.ExecutionEntity;
+import org.flowable.engine.impl.util.CommandContextUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -36,5 +41,23 @@ public class WorkflowUtil {
       throws JsonProcessingException {
     DeploymentMessage dm = objectMapper.treeToValue(jsonDeploymentMessage, DeploymentMessage.class);
     return objectMapper.valueToTree(new RankCloudProvidersMessage(dm));
+  }
+
+  public static void persistAndPropagateError(DelegateExecution execution,
+      WorkflowException exception) {
+    ExecutionEntity parentExecution;
+    if (execution instanceof ExecutionEntity) {
+      parentExecution = (ExecutionEntity) execution;
+    } else {
+      parentExecution = CommandContextUtil
+          .getExecutionEntityManager()
+          .findById(execution.getProcessInstanceId());
+    }
+    while (parentExecution != null) {
+      parentExecution = parentExecution.getProcessInstance();
+      parentExecution.setVariable(WorkflowConstants.Param.EXCEPTION, exception, false);
+      parentExecution = parentExecution.getSuperExecution();
+    }
+    ErrorPropagation.propagateError(exception.getErrorCode(), execution);
   }
 }

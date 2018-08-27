@@ -24,7 +24,6 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -33,8 +32,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class Provider extends CmdbDataWrapper<Provider, ProviderData> {
 
   @Builder
-  protected Provider(@Nullable String id, @Nullable String type, @NonNull ProviderData data) {
-    super(id, type, data);
+  protected Provider(@NonNull String id, @NonNull ProviderData data) {
+    super(id, data);
   }
 
 }

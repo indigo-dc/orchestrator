@@ -24,7 +24,6 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -33,8 +32,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class Image extends CmdbDataWrapper<Image, ImageData> {
 
   @Builder
-  protected Image(@Nullable String id, @Nullable String type, @NonNull ImageData data) {
-    super(id, type, data);
+  protected Image(@NonNull String id, @NonNull ImageData data) {
+    super(id, data);
   }
 
 }

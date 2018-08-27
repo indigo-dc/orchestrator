@@ -17,7 +17,7 @@
 package it.reply.orchestrator.workflow;
 
 import it.reply.orchestrator.exception.service.WorkflowException;
-import it.reply.orchestrator.utils.WorkflowConstants;
+import it.reply.orchestrator.utils.WorkflowUtil;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.flowable.bpmn.model.FlowElement;
@@ -29,7 +29,6 @@ import org.flowable.engine.common.api.delegate.event.FlowableEventDispatcher;
 import org.flowable.engine.common.impl.calendar.DurationHelper;
 import org.flowable.engine.common.impl.interceptor.CommandContext;
 import org.flowable.engine.delegate.event.impl.FlowableEventBuilder;
-import org.flowable.engine.impl.bpmn.helper.ErrorPropagation;
 import org.flowable.engine.impl.cmd.JobRetryCmd;
 import org.flowable.engine.impl.persistence.entity.ExecutionEntity;
 import org.flowable.engine.impl.util.CommandContextUtil;
@@ -171,13 +170,7 @@ public class CustomJobRetryCmd extends JobRetryCmd {
             .createEntityEvent(FlowableEngineEventType.JOB_RETRIES_DECREMENTED, job));
       }
       jobService.deleteJob(job);
-      ExecutionEntity parentExecution = executionEntity;
-      while (parentExecution != null) {
-        parentExecution = parentExecution.getProcessInstance();
-        parentExecution.setVariable(WorkflowConstants.Param.EXCEPTION, wfException, false);
-        parentExecution = parentExecution.getSuperExecution();
-      }
-      ErrorPropagation.propagateError(wfException.getErrorCode(), executionEntity);
+      WorkflowUtil.persistAndPropagateError(executionEntity, wfException);
       return null;
     } else {
       return jobService.moveJobToDeadLetterJob(job);

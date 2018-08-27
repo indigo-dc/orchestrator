@@ -18,13 +18,15 @@ package it.reply.orchestrator.dto.cmdb;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import javax.validation.constraints.NotNull;
+
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 @Data
 @Builder
@@ -33,7 +35,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class ProviderData {
 
   @JsonProperty("name")
-  @Nullable
+  @NonNull
+  @NotNull
   private String name;
 
 }

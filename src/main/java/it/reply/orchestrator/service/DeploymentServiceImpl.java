@@ -185,24 +185,26 @@ public class DeploymentServiceImpl implements DeploymentService {
       deployment.setOwner(oauth2TokenService.getOrGenerateOidcEntityFromCurrentAuth());
     }
 
-    // Build deployment message
-    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment);
-
     DeploymentType deploymentType = inferDeploymentType(nodes);
-    Map<String, OneData> odRequirements = new HashMap<>();
+
+    // Build deployment message
+    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType);
+
     if (deploymentType == DeploymentType.CHRONOS) {
       // Extract OneData requirements from template
-      odRequirements =
-          toscaService.extractOneDataRequirements(parsingResult, request.getParameters());
+      Map<String, OneData> odRequirements = toscaService
+          .extractOneDataRequirements(parsingResult, request.getParameters());
+      deploymentMessage.setOneDataRequirements(odRequirements);
     }
-    deploymentMessage
-        .setOneDataRequirements(CommonUtils.notNullOrDefaultValue(odRequirements, HashMap::new));
 
     deploymentMessage.setTimeoutInMins(request.getTimeoutMins());
+
+    deploymentMessage.setMaxProvidersRetry(request.getMaxProvidersRetry());
+    deploymentMessage.setKeepLastAttempt(request.isKeepLastAttempt());
+
     Map<String, PlacementPolicy> placementPolicies = toscaService
         .extractPlacementPolicies(parsingResult);
-    deploymentMessage
-        .setPlacementPolicies(CommonUtils.notNullOrDefaultValue(placementPolicies, HashMap::new));
+    deploymentMessage.setPlacementPolicies(placementPolicies);
     deploymentMessage.setDeploymentType(deploymentType);
 
     boolean isHybrid = toscaService.isHybridDeployment(parsingResult);
@@ -225,14 +227,14 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   }
 
-  protected DeploymentMessage buildDeploymentMessage(Deployment deployment) {
+  protected DeploymentMessage buildDeploymentMessage(Deployment deployment,
+      DeploymentType deploymentType) {
     DeploymentMessage deploymentMessage = new DeploymentMessage();
     if (oidcProperties.isEnabled()) {
       deploymentMessage.setRequestedWithToken(oauth2TokenService.exchangeCurrentAccessToken());
     }
     deploymentMessage.setDeploymentId(deployment.getId());
-    deploymentMessage.setChosenCloudProviderEndpoint(deployment.getCloudProviderEndpoint());
-
+    deploymentMessage.setDeploymentType(deploymentType);
     return deploymentMessage;
   }
 
@@ -286,9 +288,6 @@ public class DeploymentServiceImpl implements DeploymentService {
         .forEach(execution -> wfService.deleteProcessInstance(execution.getProcessInstanceId(),
             "Process deleted by user with request " + MdcUtils.getRequestId()));
 
-    // Build deployment message
-    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment);
-
     if (deployment.getDeploymentProvider() == null) {
       // no deployment provider -> no resources created
       // TODO handle it in a better way (e.g. a stub provider)
@@ -296,7 +295,9 @@ public class DeploymentServiceImpl implements DeploymentService {
       return;
     }
     DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
-    deploymentMessage.setDeploymentType(deploymentType);
+
+    // Build deployment message
+    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType);
 
     ProcessInstance pi = wfService
         .createProcessInstanceBuilder()
@@ -342,11 +343,10 @@ public class DeploymentServiceImpl implements DeploymentService {
     }
     deployment = deploymentRepository.save(deployment);
 
-    // Build deployment message
-    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment);
-
     DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
-    deploymentMessage.setDeploymentType(deploymentType);
+
+    // Build deployment message
+    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType);
 
     // Check if the new template is valid: parse, validate structure and user's inputs,
     // replace user's inputs
@@ -361,6 +361,9 @@ public class DeploymentServiceImpl implements DeploymentService {
     deploymentMessage.setPlacementPolicies(placementPolicies);
 
     deploymentMessage.setTimeoutInMins(request.getTimeoutMins());
+
+    deploymentMessage.setMaxProvidersRetry(request.getMaxProvidersRetry());
+    deploymentMessage.setKeepLastAttempt(request.isKeepLastAttempt());
 
     ProcessInstance pi = wfService
         .createProcessInstanceBuilder()

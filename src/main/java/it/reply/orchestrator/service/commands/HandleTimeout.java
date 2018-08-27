@@ -16,14 +16,14 @@
 
 package it.reply.orchestrator.service.commands;
 
+import it.reply.orchestrator.exception.service.BusinessWorkflowException;
 import it.reply.orchestrator.utils.WorkflowConstants;
-
-import java.util.concurrent.TimeoutException;
+import it.reply.orchestrator.utils.WorkflowConstants.ErrorCode;
+import it.reply.orchestrator.utils.WorkflowUtil;
 
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import org.flowable.engine.delegate.BpmnError;
 import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.stereotype.Component;
 
@@ -34,11 +34,9 @@ public class HandleTimeout extends BaseJavaDelegate {
 
   @Override
   public void customExecute(DelegateExecution execution) {
-    Exception ex = new TimeoutException("Timeout: Maximum execution time exceeded.");
-
-    execution.setVariable(WorkflowConstants.Param.EXCEPTION, ex, false);
-    LOG.warn(ex.getMessage());
-    throw new BpmnError(BaseJavaDelegate.BUSINESS_ERROR_CODE);
+    WorkflowUtil.persistAndPropagateError(execution,
+        new BusinessWorkflowException(ErrorCode.RUNTIME_ERROR,
+            "Timeout: Maximum execution time exceeded."));
   }
 
   @Override

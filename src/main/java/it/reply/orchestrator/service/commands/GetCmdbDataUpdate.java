@@ -16,9 +16,13 @@
 
 package it.reply.orchestrator.service.commands;
 
+import com.google.common.collect.Lists;
+
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.CloudProvider;
+import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
+import it.reply.orchestrator.dto.workflow.CloudProvidersOrderedIterator;
 import it.reply.orchestrator.service.CmdbService;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
@@ -35,14 +39,21 @@ public class GetCmdbDataUpdate extends BaseDeployCommand {
   @Override
   public void execute(DelegateExecution execution, DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
-    CloudProvider cp = CloudProvider
+    CloudProviderEndpoint cloudProviderEndpoint = deployment.getCloudProviderEndpoint();
+    CloudProvider cloudProvider = CloudProvider
         .builder()
         .id(deployment.getCloudProviderName())
         .build();
-    cp.getCmdbProviderServices().put(deployment.getCloudProviderEndpoint().getCpComputeServiceId(),
-        null);
-    cmdbService.fillCloudProviderInfo(cp);
-    deploymentMessage.setChosenCloudProvider(cp);
+    cloudProvider
+        .getCmdbProviderServices()
+        .put(cloudProviderEndpoint.getCpComputeServiceId(), null);
+    cmdbService.fillCloudProviderInfo(cloudProvider);
+
+    CloudProvidersOrderedIterator cloudProvidersOrderedIterator =
+        new CloudProvidersOrderedIterator(Lists.newArrayList(cloudProvider));
+    cloudProvidersOrderedIterator.next();
+    deploymentMessage.setCloudProvidersOrderedIterator(cloudProvidersOrderedIterator);
+    deploymentMessage.setChosenCloudProviderEndpoint(cloudProviderEndpoint);
   }
 
   @Override

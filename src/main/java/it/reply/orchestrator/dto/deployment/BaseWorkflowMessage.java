@@ -23,7 +23,11 @@ import it.reply.orchestrator.enums.DeploymentType;
 import java.util.HashMap;
 import java.util.Map;
 
+import javax.validation.constraints.NotNull;
+
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.ToString;
 import lombok.experimental.Tolerate;
 
@@ -32,13 +36,18 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Data
 @ToString
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class BaseWorkflowMessage {
 
   @Nullable
   private OidcTokenId requestedWithToken;
 
+  @NonNull
+  @NotNull
   private String deploymentId;
 
+  @NonNull
+  @NotNull
   private DeploymentType deploymentType;
 
   private boolean hybrid;

@@ -346,6 +346,8 @@ public class PrefilterCloudProvidersTest extends
         .data(CloudServiceData
             .builder()
             .type(Type.COMPUTE)
+            .endpoint("http://example.com")
+            .providerId("providerId")
             .serviceType(CloudService.ONEPROVIDER_STORAGE_SERVICE)
             .build())
         .build();

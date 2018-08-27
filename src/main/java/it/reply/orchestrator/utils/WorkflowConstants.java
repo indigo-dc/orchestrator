@@ -32,6 +32,13 @@ public class WorkflowConstants {
   }
 
   @UtilityClass
+  public static class ErrorCode {
+
+    public static final String CLOUD_PROVIDER_ERROR = "CloudProviderError";
+    public static final String RUNTIME_ERROR = "RuntimeError";
+  }
+
+  @UtilityClass
   public static class Process {
     public static final String DEPLOY = "Deploy";
     public static final String UNDEPLOY = "Undeploy";
@@ -59,5 +66,7 @@ public class WorkflowConstants {
     public static final String FINALIZE_UNDEPLOY = "finalizeUndeploy";
     public static final String FINALIZE_DEPLOY = "finalizeDeploy";
     public static final String DEPLOY = "deploy";
+    public static final String CLEAN_FAILED_DEPLOY = "cleanFailedDeploy";
+    public static final String CLEAN_FAILED_UPDATE = "cleanFailedUpdate";
   }
 }

@@ -20,8 +20,11 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import it.reply.orchestrator.exception.service.BusinessWorkflowException;
 import it.reply.orchestrator.exception.service.WorkflowException;
 import it.reply.orchestrator.utils.MdcUtils;
+import it.reply.orchestrator.utils.WorkflowConstants.ErrorCode;
+import it.reply.orchestrator.utils.WorkflowUtil;
 
 import java.util.Optional;
 
@@ -36,29 +39,37 @@ import org.springframework.beans.factory.annotation.Autowired;
 @Slf4j
 public abstract class BaseJavaDelegate implements JavaDelegate {
 
-  public static final String BUSINESS_ERROR_CODE = "BusinessException";
-
   @Autowired
   private ObjectMapper objectMapper;
 
   @Override
   public final void execute(DelegateExecution execution) {
+    String businessKey = execution.getProcessInstanceBusinessKey();
+    MdcUtils.fromBusinessKey(businessKey);
+
     String taskName = Optional
         .ofNullable(execution.getCurrentFlowElement())
         .map(FlowElement::getName)
         .orElseGet(() -> getClass().getSimpleName());
-    String businessKey = execution.getProcessInstanceBusinessKey();
-    MdcUtils.fromBusinessKey(businessKey);
+
     try {
-      LOG.info("{} - STARTED", taskName);
+      LOG.info("Task {} - STARTED", taskName);
       customExecute(execution);
-      LOG.info("{} - ENDED", taskName);
+      LOG.info("Task {} - ENDED SUCCESSFULLY", taskName);
     } catch (FlowableException ex) {
+      LOG.error("Task {} - ENDED WITH ERROR:\n{}", taskName, getErrorMessagePrefix(), ex);
+      // Re-throw
+      throw ex;
+    } catch (BusinessWorkflowException ex) {
+      LOG.error("Task {} - ENDED WITH ERROR:\n{}", taskName, getErrorMessagePrefix(), ex);
+      WorkflowUtil.persistAndPropagateError(execution, ex);
+    } catch (WorkflowException ex) {
+      LOG.error("Task {} - ENDED WITH ERROR:\n{}", taskName, getErrorMessagePrefix(), ex);
       // Re-throw
       throw ex;
     } catch (RuntimeException ex) {
-      LOG.error("{} - ENDED WITH ERROR:\n{}", taskName, getErrorMessagePrefix(), ex);
-      throw new WorkflowException(BUSINESS_ERROR_CODE, getErrorMessagePrefix(), ex);
+      LOG.error("Task {} - ENDED WITH ERROR:\n{}", taskName, getErrorMessagePrefix(), ex);
+      throw new WorkflowException(ErrorCode.RUNTIME_ERROR, getErrorMessagePrefix(), ex);
     } finally {
       MdcUtils.clean();
     }

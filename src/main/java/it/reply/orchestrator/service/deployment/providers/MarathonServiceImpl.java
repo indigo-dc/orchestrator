@@ -250,6 +250,11 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   }
 
   @Override
+  public void cleanFailedUpdate(DeploymentMessage deploymentMessage) {
+    throw new UnsupportedOperationException("Marathon app deployments do not support update.");
+  }
+
+  @Override
   public boolean doUndeploy(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
 
@@ -475,6 +480,11 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
           deployment.getParameters(), runtimeProperties));
     }
     super.finalizeDeploy(deploymentMessage);
+  }
+
+  @Override
+  public void cleanFailedDeploy(DeploymentMessage deploymentMessage) {
+    // DO NOTHING
   }
 
 }

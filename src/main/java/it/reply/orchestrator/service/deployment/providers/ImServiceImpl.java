@@ -44,12 +44,15 @@ import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
+import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
+import it.reply.orchestrator.dto.workflow.CloudProvidersOrderedIterator;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
+import it.reply.orchestrator.exception.service.BusinessWorkflowException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.function.ThrowingConsumer;
 import it.reply.orchestrator.function.ThrowingFunction;
@@ -57,6 +60,7 @@ import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.deployment.providers.factory.ImClientFactory;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
+import it.reply.orchestrator.utils.WorkflowConstants.ErrorCode;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -167,7 +171,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       accessToken = oauth2TokenService.getAccessToken(requestedWithToken);
     }
     toscaService.addElasticClusterParameters(ar, deployment.getId(), accessToken);
-    toscaService.contextualizeAndReplaceImages(ar, deploymentMessage.getChosenCloudProvider(),
+    CloudProvider cloudProvider = deploymentMessage.getCloudProvidersOrderedIterator().current();
+    toscaService.contextualizeAndReplaceImages(ar, cloudProvider,
         chosenCloudProviderEndpoint.getCpComputeServiceId(), DeploymentProvider.IM);
     String imCustomizedTemplate = toscaService.getTemplateFromTopology(ar);
 
@@ -217,10 +222,11 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
               new StringBuilder(
                   "Some error occurred during the contextualization of the IM infrastructure\n")
                       .append(infrastructureState.getFormattedInfrastructureStateString());
-          if (additionalErrorInfo.isPresent()) {
-            sb.append("\n").append(additionalErrorInfo.get());
-          }
-          throw new DeploymentException(sb.toString());
+          additionalErrorInfo.ifPresent(s -> sb.append("\n").append(s));
+
+          throw new BusinessWorkflowException(ErrorCode.CLOUD_PROVIDER_ERROR,
+              "Error deploying the infrastructure",
+              new DeploymentException(sb.toString()));
         default:
           return false;
       }
@@ -271,6 +277,42 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       throw handleImClientException(exception);
     }
     updateOnSuccess(deployment.getId());
+  }
+
+  @Override
+  public void cleanFailedDeploy(DeploymentMessage deploymentMessage) {
+    CloudProvidersOrderedIterator iterator = deploymentMessage.getCloudProvidersOrderedIterator();
+    boolean isLastProvider = !iterator.hasNext();
+    boolean isKeepLastAttempt = deploymentMessage.isKeepLastAttempt();
+    LOG.info("isLastProvider: {} and isKeepLastAttempt: {}", isLastProvider, isKeepLastAttempt);
+
+    Deployment deployment = getDeployment(deploymentMessage);
+    String deploymentEndpoint = deployment.getEndpoint();
+
+    if (deploymentEndpoint == null) {
+      LOG.info("Nothing left to clean up from last deployment attempt");
+    } else if (isLastProvider && isKeepLastAttempt) {
+      LOG.info("Keeping the last deployment attempt");
+    } else {
+      LOG.info("Deleting the last deployment attempt");
+
+      OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
+
+      List<CloudProviderEndpoint> cloudProviderEndpoints =
+        deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
+
+      try {
+        executeWithClient(cloudProviderEndpoints, requestedWithToken,
+          client -> client.destroyInfrastructure(deploymentEndpoint));
+        deployment.setEndpoint(null);
+      } catch (ImClientErrorException exception) {
+        if (!getImResponseError(exception).is404Error()) {
+          throw handleImClientException(exception);
+        }
+      } catch (ImClientException exception) {
+        throw handleImClientException(exception);
+      }
+    }
   }
 
   @Override
@@ -425,8 +467,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       }
     });
 
-    toscaService.contextualizeAndReplaceImages(newAr,
-        deploymentMessage.getChosenCloudProvider(),
+    CloudProvider cloudProvider = deploymentMessage.getCloudProvidersOrderedIterator().current();
+
+    toscaService.contextualizeAndReplaceImages(newAr, cloudProvider,
         chosenCloudProviderEndpoint.getCpComputeServiceId(), DeploymentProvider.IM);
 
     // FIXME: There's not check if the Template actually changed!
@@ -465,6 +508,11 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       throw handleImClientException(exception);
     }
     return true;
+  }
+
+  @Override
+  public void cleanFailedUpdate(DeploymentMessage deploymentMessage) {
+    // DO NOTHING
   }
 
   private void setHybridNetworkingProperties(NodeTemplate node) {
@@ -631,8 +679,15 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   private RuntimeException handleImClientException(ImClientException ex) {
     if (ex instanceof ImClientErrorException) {
       ResponseError responseError = getImResponseError((ImClientErrorException) ex);
-      return new DeploymentException(
-          "Error executing request to IM\n" + responseError.getFormattedErrorMessage(), ex);
+      String errorMessage = responseError.getMessage();
+      if (Strings.nullToEmpty(errorMessage).startsWith("Error Creating Inf.")) {
+        throw new BusinessWorkflowException(ErrorCode.CLOUD_PROVIDER_ERROR,
+            responseError.getFormattedErrorMessage(),
+            ex);
+      } else {
+        return new DeploymentException(
+            "Error executing request to IM\n" + responseError.getFormattedErrorMessage(), ex);
+      }
     } else {
       return new DeploymentException("Error executing request to IM", ex);
     }

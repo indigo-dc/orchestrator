@@ -212,6 +212,11 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
 
   }
 
+  @Override
+  public void cleanFailedDeploy(DeploymentMessage deploymentMessage) {
+    // DO NOTHING
+  }
+
   /**
    * Checks a Jobs on Chronos.
    *
@@ -275,6 +280,11 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
 
   @Override
   public boolean doUpdate(DeploymentMessage deploymentMessage, String template) {
+    throw new UnsupportedOperationException("Chronos job deployments do not support update.");
+  }
+
+  @Override
+  public void cleanFailedUpdate(DeploymentMessage deploymentMessage) {
     throw new UnsupportedOperationException("Chronos job deployments do not support update.");
   }
 

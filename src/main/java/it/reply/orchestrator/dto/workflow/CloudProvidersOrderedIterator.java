@@ -14,32 +14,26 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.dto.cmdb;
+package it.reply.orchestrator.dto.workflow;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import it.reply.orchestrator.dto.CloudProvider;
 
-import javax.validation.constraints.NotNull;
+import java.util.List;
 
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-@Data
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@AllArgsConstructor(access = AccessLevel.PROTECTED)
-public abstract class CmdbDataWrapper<U extends CmdbDataWrapper<U, T>, T> {
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
+public class CloudProvidersOrderedIterator extends WorkflowListIterator<CloudProvider> {
 
-  @JsonProperty("_id")
-  @NonNull
-  @NotNull
-  private String id;
-
-  @JsonProperty("data")
-  @NonNull
-  @NotNull
-  private T data;
+  public CloudProvidersOrderedIterator(@NonNull List<CloudProvider> items) {
+    super(items);
+  }
 
 }
