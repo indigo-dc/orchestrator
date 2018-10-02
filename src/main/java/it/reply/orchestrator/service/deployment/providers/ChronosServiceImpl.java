@@ -35,10 +35,13 @@ import it.infn.ba.indigo.chronos.client.model.v1.Parameters;
 import it.infn.ba.indigo.chronos.client.model.v1.Volume;
 import it.infn.ba.indigo.chronos.client.utils.ChronosException;
 import it.reply.orchestrator.annotation.DeploymentProviderQualifier;
-import it.reply.orchestrator.config.properties.ChronosProperties;
+import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
+import it.reply.orchestrator.dto.CloudProviderEndpoint;
+import it.reply.orchestrator.dto.cmdb.ChronosServiceData.ChronosServiceProperties;
 import it.reply.orchestrator.dto.deployment.ChronosJobsOrderedIterator;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.mesos.MesosContainer;
@@ -49,8 +52,11 @@ import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.exception.service.ToscaException;
+import it.reply.orchestrator.function.ThrowingConsumer;
+import it.reply.orchestrator.function.ThrowingFunction;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.deployment.providers.factory.ChronosClientFactory;
+import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 
@@ -77,9 +83,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jgrapht.graph.DirectedMultigraph;
 import org.jgrapht.traverse.TopologicalOrderIterator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -96,8 +104,43 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
   @Autowired
   private ChronosClientFactory chronosClientFactory;
 
-  protected Chronos getChronosClient(Deployment deployment) {
-    return chronosClientFactory.build(deployment);
+  @Autowired
+  private OidcProperties oidcProperties;
+
+  @Autowired
+  private OAuth2TokenService oauth2TokenService;
+
+  protected <R> R executeWithClientForResult(CloudProviderEndpoint cloudProviderEndpoint,
+      @Nullable OidcTokenId requestedWithToken,
+      ThrowingFunction<Chronos, R, ChronosException> function) throws ChronosException {
+    if (!oidcProperties.isEnabled()) {
+      Chronos client = chronosClientFactory.build(cloudProviderEndpoint, null);
+      return function.apply(client);
+    } else {
+      String accessToken =
+          oauth2TokenService.getAccessToken(CommonUtils.checkNotNull(requestedWithToken));
+      try {
+        Chronos client = chronosClientFactory.build(cloudProviderEndpoint, accessToken);
+        return function.apply(client);
+      } catch (ChronosException ex) {
+        if (ex.getStatus() == HttpStatus.UNAUTHORIZED.value()) {
+          String refreshedAccessToken =
+              oauth2TokenService.getRefreshedAccessToken(requestedWithToken);
+          Chronos client =
+              chronosClientFactory.build(cloudProviderEndpoint, refreshedAccessToken);
+          return function.apply(client);
+        } else {
+          throw ex;
+        }
+      }
+    }
+  }
+
+  protected void executeWithClient(CloudProviderEndpoint cloudProviderEndpoint,
+      @Nullable OidcTokenId requestedWithToken,
+      ThrowingConsumer<Chronos, ChronosException> consumer) throws ChronosException {
+    executeWithClientForResult(cloudProviderEndpoint, requestedWithToken,
+        (client) -> consumer.asFunction().apply(client));
   }
 
   @Override
@@ -117,8 +160,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     ChronosJobsOrderedIterator topologyIterator = deploymentMessage.getChronosJobsIterator();
     // Create nodes iterator if not done yet
     if (topologyIterator == null) {
-      topologyIterator = getJobsTopologicalOrder(deployment,
-          deploymentMessage.getOneDataParameters());
+      topologyIterator = getJobsTopologicalOrder(deploymentMessage, deployment);
       // Create topological order
       deploymentMessage.setChronosJobsIterator(topologyIterator);
     }
@@ -129,8 +171,9 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
           currentJob.getChronosJob().getName(),
           topologyIterator.currentIndex() + 1,
           topologyIterator.getSize());
-      Chronos client = getChronosClient(deployment);
-      createJobOnChronos(client, currentJob);
+      final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
+      CloudProviderEndpoint cloudProviderEndpoint = deployment.getCloudProviderEndpoint();
+      createJobOnChronos(cloudProviderEndpoint, requestedWithToken, currentJob);
       updateResource(deployment, currentJob, NodeStates.CREATED);
     }
     boolean noMoreJob = !topologyIterator.hasNext();
@@ -152,21 +195,20 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
    * @param job
    *          the IndigoJob to be created
    */
-  protected void createJobOnChronos(Chronos client, IndigoJob job) {
-
+  protected void createJobOnChronos(CloudProviderEndpoint cloudProviderEndpoint,
+      OidcTokenId requestedWithToken, IndigoJob job) {
     // Create jobs based on the topological order
     try {
       if (CollectionUtils.isEmpty(job.getChronosJob().getParents())) {
         // No parents -> Scheduled job (not dependent)
-        client.createJob(job.getChronosJob());
-        LOG.debug("Scheduled Chronos job {} created", job.getChronosJob().getName());
+        LOG.debug("Creating scheduled Chronos job\n{}", job.getChronosJob());
+        executeWithClient(cloudProviderEndpoint, requestedWithToken,
+            client -> client.createJob(job.getChronosJob()));
       } else {
         // Dependent job
-        client.createDependentJob(job.getChronosJob());
-        LOG.debug("Dependent Chronos job {} created with parents:\\n{}",
-            job.getChronosJob().getName(),
-            job.getChronosJob().getParents()
-        );
+        LOG.debug("Creating dependent Chronos job\n{}", job.getChronosJob());
+        executeWithClient(cloudProviderEndpoint, requestedWithToken,
+            client -> client.createDependentJob(job.getChronosJob()));
       }
     } catch (ChronosException exception) { // Chronos job launch error
       throw new DeploymentException(
@@ -188,8 +230,10 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
           currentJob.getChronosJob().getName(),
           topologyIterator.currentIndex() + 1,
           topologyIterator.getSize());
-      Chronos client = getChronosClient(deployment);
-      boolean jobIsCompleted = checkJobsOnChronos(client, currentJob);
+      final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
+      CloudProviderEndpoint cloudProviderEndpoint = deployment.getCloudProviderEndpoint();
+      boolean jobIsCompleted = checkJobsOnChronos(cloudProviderEndpoint, requestedWithToken,
+          currentJob);
       if (!jobIsCompleted) {
         // Job still in progress
         // Wait before retrying to poll on the same node
@@ -229,12 +273,14 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
    * @throws DeploymentException
    *           if the currently node failed.
    */
-  protected boolean checkJobsOnChronos(Chronos client, IndigoJob job) {
+  protected boolean checkJobsOnChronos(CloudProviderEndpoint cloudProviderEndpoint,
+      OidcTokenId requestedWithToken, IndigoJob job) {
 
     String jobName = job.getChronosJob().getName();
-    Job updatedJob = findJobOnChronos(client, jobName)
+    Job updatedJob = findJobOnChronos(cloudProviderEndpoint, requestedWithToken, jobName)
         .orElseThrow(() -> new DeploymentException("Job " + jobName + " doesn't exist on Chronos"));
 
+    LOG.debug("Cronos job {} current status:\n{}", jobName, updatedJob);
     JobState jobState = getLastState(updatedJob);
     LOG.debug("Status of Chronos job {} is: {}", jobName, jobState);
 
@@ -267,13 +313,15 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
    *          the name of the Chronos job
    * @return the optional {@link Job}.
    */
-  protected Optional<Job> findJobOnChronos(Chronos client, String name) {
+  protected Optional<Job> findJobOnChronos(CloudProviderEndpoint cloudProviderEndpoint,
+      OidcTokenId requestedWithToken, String name) {
     try {
       return Optional
-        .ofNullable(client.getJob(name))
+          .ofNullable(executeWithClientForResult(cloudProviderEndpoint, requestedWithToken,
+              client -> client.getJob(name)))
         .map(Collection::stream)
         .flatMap(stream -> stream.collect(MoreCollectors.toOptional()));
-    } catch (RuntimeException ex) {
+    } catch (RuntimeException | ChronosException ex) {
       throw new DeploymentException("Unable to retrieve job " + name + " status on Chronos", ex);
     }
   }
@@ -312,8 +360,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
       topologyIterator = deploymentMessage.getChronosJobsIterator();
       // Create nodes iterator if not done yet
       if (topologyIterator == null) {
-        topologyIterator = getJobsTopologicalOrder(deployment,
-            deploymentMessage.getOneDataParameters());
+        topologyIterator = getJobsTopologicalOrder(deploymentMessage, deployment);
         // Create topological order
         deploymentMessage.setChronosJobsIterator(topologyIterator);
       }
@@ -333,11 +380,12 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
           currentJob.getChronosJob().getName(),
           topologyIterator.currentIndex() + 1,
           topologyIterator.getSize());
-      Chronos client = getChronosClient(deployment);
 
       // FIXME it should be DELETED, not DELETING
       updateResource(deployment, currentJob, NodeStates.DELETING);
-      deleteJobsOnChronos(client, currentJob);
+      final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
+      CloudProviderEndpoint cloudProviderEndpoint = deployment.getCloudProviderEndpoint();
+      deleteJobsOnChronos(cloudProviderEndpoint, requestedWithToken, currentJob);
     }
     boolean noMoreJob = !topologyIterator.hasNext();
     if (noMoreJob) {
@@ -358,10 +406,12 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
    * @param client
    *          the {@link Chronos} client.
    */
-  protected void deleteJobsOnChronos(Chronos client, IndigoJob job) {
+  protected void deleteJobsOnChronos(CloudProviderEndpoint cloudProviderEndpoint,
+      OidcTokenId requestedWithToken, IndigoJob job) {
     String jobName = job.getChronosJob().getName();
     try {
-      client.deleteJob(jobName);
+      executeWithClient(cloudProviderEndpoint, requestedWithToken,
+          client -> client.deleteJob(jobName));
     } catch (ChronosException ex) {
       // Chronos API hack (to avoid error 400 if the job to delete does not exist)
       if (ex.getStatus() != 400 && ex.getStatus() != 404) {
@@ -393,14 +443,15 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
    *          the input deployment.
    * @return the job graph.
    */
-  protected ChronosJobsOrderedIterator getJobsTopologicalOrder(Deployment deployment,
-      Map<String, OneData> odParameters) {
+  protected ChronosJobsOrderedIterator getJobsTopologicalOrder(DeploymentMessage deploymentMessage,
+      Deployment deployment) {
     LOG.debug("Generating job graph");
     /*
      * FIXME TEMPORARY - Replace hard-coded properties in nodes (WARNING: Cannot be done when
      * receiving the template because we still miss OneData settings that are obtained during the WF
      * after the site choice, which in turns depends on the template nodes and properties...)
      */
+    Map<String, OneData> odParameters = deploymentMessage.getOneDataParameters();
     String customizedTemplate = replaceHardCodedParams(deployment.getTemplate(), odParameters);
 
     ArchiveRoot ar = toscaService.prepareTemplate(customizedTemplate, deployment.getParameters());
@@ -429,7 +480,9 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
             ToscaConstants.Nodes.CHRONOS))
         .collect(Collectors.toMap(Resource::getToscaNodeName, Function.identity()));
 
-    ChronosProperties chronosProperties = chronosClientFactory.getFrameworkProperties(deployment);
+    ChronosServiceProperties chronosProperties = chronosClientFactory
+        .getFrameworkProperties(deploymentMessage)
+        .getProperties();
     
     LinkedHashMap<String, ChronosJob> jobs = new LinkedHashMap<>();
     List<IndigoJob> indigoJobs = new ArrayList<>();
@@ -613,6 +666,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
         .collect(Collectors.toList()));
     
     chronosJob.setCpus(mesosTask.getCpus());
+
     chronosJob.setMem(mesosTask.getMemSize());
     chronosJob.setConstraints(mesosTask.getConstraints());
     chronosJob.setEpsilon(mesosTask.getEpsilon());
@@ -629,8 +683,17 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     
     mesosTask
         .getContainer()
-        .ifPresent(mesosContainer -> chronosJob
-            .setContainer(generateContainer(mesosContainer)));
+        .ifPresent(mesosContainer -> {
+          Container container = generateContainer(mesosContainer);
+          Optional
+              .ofNullable(mesosTask.getGpus())
+              .filter(gpus -> gpus > 0)
+              .ifPresent(gpus -> {
+                chronosJob.setGpus(Ints.checkedCast(gpus));
+                container.setType("MESOS");
+              });
+          chronosJob.setContainer(container);
+        });
 
     return chronosJob;
   }

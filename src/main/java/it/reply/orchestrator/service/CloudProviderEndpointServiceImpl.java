@@ -56,20 +56,26 @@ public class CloudProviderEndpointServiceImpl {
       RankCloudProvidersMessage rankCloudProvidersMessage, Integer maxProvidersRetry) {
     Map<String, CloudProvider> cloudProviders = rankCloudProvidersMessage.getCloudProviders();
 
-    Stream<CloudProvider> orderedCloudProviders =
-        rankCloudProvidersMessage
-            .getRankedCloudProviders()
-            .stream()
-            .filter(Objects::nonNull)
-            // Choose the one ranked
-            .filter(RankedCloudProvider::isRanked)
-            // and with the highest rank
-            .sorted(Comparator.comparing(RankedCloudProvider::getRank).reversed())
-            .map(RankedCloudProvider::getName)
-            .map(cloudProviders::get)
-            .filter(Objects::nonNull);
-    if (maxProvidersRetry != null) {
-      orderedCloudProviders = orderedCloudProviders.limit(maxProvidersRetry);
+    Stream<CloudProvider> orderedCloudProviders;
+    if (DeploymentType.isMesosDeployment(rankCloudProvidersMessage.getDeploymentType())) {
+      orderedCloudProviders = rankCloudProvidersMessage.getCloudProviders().values().stream()
+          .limit(1);
+    } else {
+      orderedCloudProviders =
+          rankCloudProvidersMessage
+              .getRankedCloudProviders()
+              .stream()
+              .filter(Objects::nonNull)
+              // Choose the one ranked
+              .filter(RankedCloudProvider::isRanked)
+              // and with the highest rank
+              .sorted(Comparator.comparing(RankedCloudProvider::getRank).reversed())
+              .map(RankedCloudProvider::getName)
+              .map(cloudProviders::get)
+              .filter(Objects::nonNull);
+      if (maxProvidersRetry != null) {
+        orderedCloudProviders = orderedCloudProviders.limit(maxProvidersRetry);
+      }
     }
     return new CloudProvidersOrderedIterator(orderedCloudProviders
         .collect(Collectors.toList()));
@@ -127,6 +133,10 @@ public class CloudProviderEndpointServiceImpl {
       iaasType = IaaSType.OTC;
     } else if (computeService.isAzureComputeProviderService()) {
       iaasType = IaaSType.AZURE;
+    } else if (computeService.isChronosComputeProviderService()) {
+      iaasType = IaaSType.CHRONOS;
+    } else if (computeService.isMarathonComputeProviderService()) {
+      iaasType = IaaSType.MARATHON;
     } else {
       throw new IllegalArgumentException("Unknown Cloud Provider type: " + computeService);
     }

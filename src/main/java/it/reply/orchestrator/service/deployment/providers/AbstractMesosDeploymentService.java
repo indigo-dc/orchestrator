@@ -177,24 +177,31 @@ public abstract class AbstractMesosDeploymentService<T extends MesosTask<T>, S e
           container.setForcePullImage(forcePullImage);
         });
 
-    Capability dockerCapability = getHostCapability(graph, taskNode);
+    Capability containerCapability = getHostCapability(graph, taskNode);
 
     toscaService
-        .<ScalarPropertyValue>getTypedCapabilityPropertyByName(dockerCapability, "num_cpus")
+        .<ScalarPropertyValue>getTypedCapabilityPropertyByName(containerCapability, "num_cpus")
         .ifPresent(value -> {
           Double numCpus = toscaService.parseScalarPropertyValue(value, FloatType.class);
           task.setCpus(numCpus);
         });
 
     toscaService
-        .<ScalarPropertyValue>getTypedCapabilityPropertyByName(dockerCapability, "mem_size")
+        .<ScalarPropertyValue>getTypedCapabilityPropertyByName(containerCapability, "num_gpus")
+        .ifPresent(value -> {
+          Long numGpus = toscaService.parseScalarPropertyValue(value, IntegerType.class);
+          task.setGpus(numGpus);
+        });
+
+    toscaService
+        .<ScalarPropertyValue>getTypedCapabilityPropertyByName(containerCapability, "mem_size")
         .ifPresent(value -> {
           Size memSize = toscaService.parseScalarPropertyValue(value, SizeType.class);
           task.setMemSize(memSize.convert("MB")); // Mesos wants MB
         });
 
     Optional<ListPropertyValue> volumesProperty =
-        toscaService.getTypedCapabilityPropertyByName(dockerCapability, "volumes");
+        toscaService.getTypedCapabilityPropertyByName(containerCapability, "volumes");
 
     List<String> containerVolumes = volumesProperty
         .map(property -> toscaService
@@ -206,7 +213,7 @@ public abstract class AbstractMesosDeploymentService<T extends MesosTask<T>, S e
     container.setVolumes(containerVolumes);
 
     Optional<ListPropertyValue> publishPortsProperty =
-        toscaService.getTypedCapabilityPropertyByName(dockerCapability, "publish_ports");
+        toscaService.getTypedCapabilityPropertyByName(containerCapability, "publish_ports");
     if (publishPortsProperty.isPresent()) {
       List<MesosPortMapping> portMapping =
           toscaService

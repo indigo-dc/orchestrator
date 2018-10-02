@@ -34,6 +34,7 @@ import alien4cloud.tosca.ArchiveParser;
 import alien4cloud.tosca.ArchiveUploadService;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.normative.IPropertyType;
+import alien4cloud.tosca.normative.IntegerType;
 import alien4cloud.tosca.normative.InvalidPropertyValueException;
 import alien4cloud.tosca.parser.ParsingContext;
 import alien4cloud.tosca.parser.ParsingError;
@@ -65,6 +66,7 @@ import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
+import it.reply.orchestrator.utils.ToscaConstants.Nodes;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
@@ -686,6 +688,18 @@ public class ToscaServiceImpl implements ToscaService {
             .map(ScalarPropertyValue.class::cast)
             .map(ScalarPropertyValue::getValue)
             .filter(Boolean::valueOf)
+            .isPresent());
+  }
+
+  @Override
+  public boolean isMesosGpuRequired(ArchiveRoot archiveRoot) {
+    return this.getNodesOfType(archiveRoot, Nodes.DOCKER_RUNTIME)
+        .stream()
+        .anyMatch(node -> getNodeCapabilityByName(node, "host")
+            .flatMap(capability -> this
+                .<ScalarPropertyValue>getTypedCapabilityPropertyByName(capability, "num_gpus"))
+            .map(value -> parseScalarPropertyValue(value, IntegerType.class))
+            .filter(value -> value > 0)
             .isPresent());
   }
 

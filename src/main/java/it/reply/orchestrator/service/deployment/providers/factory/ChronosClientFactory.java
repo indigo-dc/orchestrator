@@ -16,45 +16,53 @@
 
 package it.reply.orchestrator.service.deployment.providers.factory;
 
+import feign.Feign;
+import feign.Logger.Level;
+import feign.RequestInterceptor;
+import feign.gson.GsonDecoder;
+import feign.gson.GsonEncoder;
+import feign.slf4j.Slf4jLogger;
+
 import it.infn.ba.indigo.chronos.client.Chronos;
-import it.infn.ba.indigo.chronos.client.ChronosClient;
-import it.reply.orchestrator.config.properties.ChronosProperties;
-import it.reply.orchestrator.config.properties.MesosProperties;
-import it.reply.orchestrator.dal.entity.Deployment;
+import it.infn.ba.indigo.chronos.client.utils.ChronosException;
+import it.reply.orchestrator.dto.cmdb.ChronosServiceData;
 
 import lombok.extern.slf4j.Slf4j;
 
+import mesosphere.client.common.ModelUtils;
+
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class ChronosClientFactory extends MesosFrameworkClientFactory<ChronosProperties, Chronos> {
+public class ChronosClientFactory extends MesosFrameworkClientFactory<ChronosServiceData, Chronos> {
 
-  public ChronosClientFactory(MesosProperties mesosProperties) {
-    super(mesosProperties);
-  }
-
-  @Override
-  public Chronos build(ChronosProperties chronosProperties) {
-    LOG.info("Generating Chronos client with parameters: {}", chronosProperties);
-    return ChronosClient.getInstanceWithBasicAuth(chronosProperties.getUrl().toString(),
-        chronosProperties.getUsername(), chronosProperties.getPassword());
-  }
-
-  @Override
-  public Chronos build(Deployment deployment) {
-    ChronosProperties chronosProperties = getFrameworkProperties(deployment);
-    return build(chronosProperties);
-  }
-
-  @Override
-  public ChronosProperties getFrameworkProperties(Deployment deployment) {
-    return getInstanceProperties(deployment).getChronos();
-  }
 
   @Override
   protected String getFrameworkName() {
     return "Chronos";
   }
+
+  @Override
+  public Chronos build(String chronosEndpoint, RequestInterceptor authInterceptor) {
+    LOG.info("Generating Chronos client with endpoint {}", chronosEndpoint);
+
+    return Feign
+        .builder()
+        .encoder(new GsonEncoder(ModelUtils.GSON))
+        .decoder(new GsonDecoder(ModelUtils.GSON))
+        .logger(new Slf4jLogger(Chronos.class))
+        .logLevel(Level.FULL)
+        .errorDecoder(
+            (methodKey, response) -> new ChronosException(response.status(), response.reason()))
+        .requestInterceptor(authInterceptor)
+        .requestInterceptor(template -> {
+          template.header(HttpHeaders.ACCEPT, "application/json");
+          template.header(HttpHeaders.CONTENT_TYPE, "application/json");
+        })
+        .target(Chronos.class, chronosEndpoint);
+  }
+
 
 }

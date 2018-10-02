@@ -20,17 +20,15 @@ import com.google.gson.annotations.SerializedName;
 
 import feign.Feign;
 import feign.Logger.Level;
+import feign.RequestInterceptor;
 import feign.Response;
 import feign.Util;
-import feign.auth.BasicAuthRequestInterceptor;
 import feign.codec.ErrorDecoder;
 import feign.gson.GsonDecoder;
 import feign.gson.GsonEncoder;
 import feign.slf4j.Slf4jLogger;
 
-import it.reply.orchestrator.config.properties.MarathonProperties;
-import it.reply.orchestrator.config.properties.MesosProperties;
-import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dto.cmdb.MarathonServiceData;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -55,8 +53,8 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class MarathonClientFactory
-    extends MesosFrameworkClientFactory<MarathonProperties, Marathon> {
+public class MarathonClientFactory extends
+    MesosFrameworkClientFactory<MarathonServiceData, Marathon> {
 
   private static class DeserializingMarathonErrorDecoder implements ErrorDecoder {
 
@@ -122,36 +120,20 @@ public class MarathonClientFactory
     }
   }
 
-  public MarathonClientFactory(MesosProperties mesosProperties) {
-    super(mesosProperties);
-  }
-
-  @Override
-  public MarathonProperties getFrameworkProperties(Deployment deployment) {
-    return getInstanceProperties(deployment).getMarathon();
-  }
-
   @Override
   protected String getFrameworkName() {
     return "Marathon";
   }
 
-  @Override
-  public Marathon build(Deployment deployment) {
-    MarathonProperties marathonProperties = getFrameworkProperties(deployment);
-    return build(marathonProperties);
-  }
-
   /**
    * Generate a new Marathon client.
-   * 
-   * @param marathonProperties
-   *          the properties containing the client information
+   *
+   * @param marathonEndpoint
    * @return the new client
    */
   @Override
-  public Marathon build(MarathonProperties marathonProperties) {
-    LOG.info("Generating Marathon client with parameters: {}", marathonProperties);
+  public Marathon build(String marathonEndpoint, RequestInterceptor authInterceptor) {
+    LOG.info("Generating Marathon client with endpoint {}", marathonEndpoint);
 
     return Feign
         .builder()
@@ -160,12 +142,11 @@ public class MarathonClientFactory
         .logger(new Slf4jLogger(Marathon.class))
         .logLevel(Level.FULL)
         .errorDecoder(new DeserializingMarathonErrorDecoder())
-        .requestInterceptor(new BasicAuthRequestInterceptor(
-            marathonProperties.getUsername(), marathonProperties.getPassword()))
+        .requestInterceptor(authInterceptor)
         .requestInterceptor(template -> {
           template.header(HttpHeaders.ACCEPT, "application/json");
           template.header(HttpHeaders.CONTENT_TYPE, "application/json");
         })
-        .target(Marathon.class, marathonProperties.getUrl().toString());
+        .target(Marathon.class, marathonEndpoint);
   }
 }

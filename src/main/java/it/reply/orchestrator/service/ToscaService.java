@@ -278,6 +278,8 @@ public interface ToscaService {
 
   public boolean isHybridDeployment(ArchiveRoot archiveRoot);
 
+  public boolean isMesosGpuRequired(ArchiveRoot archiveRoot);
+
   public Collection<NodeTemplate> getNodesOfType(ArchiveRoot archiveRoot, String type);
 
   public Map<NodeTemplate, ImageData> extractImageRequirements(ArchiveRoot parsingResult);

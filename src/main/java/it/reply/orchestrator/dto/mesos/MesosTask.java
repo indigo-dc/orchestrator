@@ -39,6 +39,8 @@ public abstract class MesosTask<T extends MesosTask<T>> {
 
   private Double cpus;
 
+  private Long gpus;
+
   private Double memSize;
 
   @NonNull

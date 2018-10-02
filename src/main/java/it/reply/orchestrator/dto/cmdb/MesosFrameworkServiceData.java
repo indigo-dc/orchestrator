@@ -14,20 +14,27 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.config.properties;
+package it.reply.orchestrator.dto.cmdb;
 
+import javax.validation.constraints.NotNull;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
-import org.springframework.validation.annotation.Validated;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
-@Validated
 @Data
 @EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
-@NoArgsConstructor
-public class ChronosProperties extends MesosFrameworkProperties {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+public class MesosFrameworkServiceData<T extends MesosFrameworkServiceProperties> extends
+    CloudServiceData {
+
+  @NonNull
+  @NotNull
+  private T properties;
 
 }

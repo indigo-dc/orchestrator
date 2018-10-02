@@ -50,7 +50,9 @@ public class CloudProviderEndpoint {
     OCCI,
     AWS,
     OTC,
-    AZURE;
+    AZURE,
+    CHRONOS,
+    MARATHON;
   }
 
   @Nullable

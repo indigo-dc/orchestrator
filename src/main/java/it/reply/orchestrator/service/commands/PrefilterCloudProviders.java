@@ -19,12 +19,14 @@ package it.reply.orchestrator.service.commands;
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 
-import it.reply.orchestrator.config.properties.MesosProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
+import it.reply.orchestrator.dto.cmdb.ChronosServiceData;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.ImageData;
+import it.reply.orchestrator.dto.cmdb.MarathonServiceData;
+import it.reply.orchestrator.dto.cmdb.MesosFrameworkServiceData;
 import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.dto.deployment.PlacementPolicy;
 import it.reply.orchestrator.dto.deployment.SlaPlacementPolicy;
@@ -32,7 +34,6 @@ import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
 import it.reply.orchestrator.dto.slam.Service;
 import it.reply.orchestrator.dto.slam.Sla;
-import it.reply.orchestrator.enums.DeploymentType;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.utils.WorkflowConstants;
@@ -57,9 +58,6 @@ import org.springframework.stereotype.Component;
 public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
 
   @Autowired
-  private MesosProperties mesosProperties;
-
-  @Autowired
   private ToscaService toscaService;
 
   @Override
@@ -70,11 +68,9 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
     Set<CloudProvider> providersToDiscard = new HashSet<>();
     Set<CloudService> servicesToDiscard = new HashSet<>();
 
-    if (!rankCloudProvidersMessage.getPlacementPolicies().isEmpty()) {
-      discardOnPlacementPolicies(rankCloudProvidersMessage.getPlacementPolicies(),
-          rankCloudProvidersMessage.getCloudProviders().values(),
-          rankCloudProvidersMessage.getSlamPreferences().getSla(), servicesToDiscard);
-    }
+    discardOnPlacementPolicies(rankCloudProvidersMessage.getPlacementPolicies(),
+        rankCloudProvidersMessage.getCloudProviders().values(),
+        rankCloudProvidersMessage.getSlamPreferences().getSla(), servicesToDiscard);
 
     discardProvidersAndServices(providersToDiscard, servicesToDiscard, rankCloudProvidersMessage);
 
@@ -91,27 +87,68 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
 
     discardProvidersAndServices(providersToDiscard, servicesToDiscard, rankCloudProvidersMessage);
 
-    if (DeploymentType.isMesosDeployment(rankCloudProvidersMessage.getDeploymentType())) {
-      rankCloudProvidersMessage
-          .getCloudProviders()
-          .values()
-          .stream()
-          .filter(cloudProvider -> !mesosProperties.getInstance(cloudProvider.getId()).isPresent())
-          .forEach(cloudProvider -> {
-            LOG.debug("Discarded provider {} because it doesn't have any registered Mesos instance",
-                cloudProvider.getId());
-            addProviderToDiscard(providersToDiscard, servicesToDiscard, cloudProvider);
-          });
+    Deployment deployment = getDeployment(rankCloudProvidersMessage);
+    ArchiveRoot ar = toscaService
+        .prepareTemplate(deployment.getTemplate(), deployment.getParameters());
+
+    switch (rankCloudProvidersMessage.getDeploymentType()) {
+      case CHRONOS:
+        rankCloudProvidersMessage
+            .getCloudProviders()
+            .forEach((name, cloudProvider) -> {
+              cloudProvider.getCmdbProviderServices().forEach((id, cloudProviderService) -> {
+                if (!(cloudProviderService.getData() instanceof ChronosServiceData)) {
+                  addServiceToDiscard(servicesToDiscard, cloudProviderService);
+                } else {
+                  boolean requiresGpu = toscaService.isMesosGpuRequired(ar);
+                  if (requiresGpu && !((ChronosServiceData) cloudProviderService.getData())
+                      .getProperties().isGpuSupport()) {
+                    LOG.debug(
+                        "Discarded Chronos service {} of provider {} because it doesn't support GPUs",
+                        cloudProviderService.getId(), cloudProvider.getId());
+                    addServiceToDiscard(servicesToDiscard, cloudProviderService);
+                  }
+                }
+              });
+            });
+        break;
+      case MARATHON:
+        rankCloudProvidersMessage
+            .getCloudProviders()
+            .forEach((name, cloudProvider) -> {
+              cloudProvider.getCmdbProviderServices().forEach((id, cloudProviderService) -> {
+                if (!(cloudProviderService.getData() instanceof MarathonServiceData)) {
+                  addServiceToDiscard(servicesToDiscard, cloudProviderService);
+                } else {
+                  boolean requiresGpu = toscaService.isMesosGpuRequired(ar);
+                  if (requiresGpu && !((MarathonServiceData) cloudProviderService.getData())
+                      .getProperties().isGpuSupport()) {
+                    LOG.debug(
+                        "Discarded Marathon service {} of provider {} because it doesn't support GPUs",
+                        cloudProviderService.getId(), cloudProvider.getId());
+                    addServiceToDiscard(servicesToDiscard, cloudProviderService);
+                  }
+                }
+              });
+            });
+        break;
+      case TOSCA:
+        rankCloudProvidersMessage
+            .getCloudProviders()
+            .forEach((name, cloudProvider) -> {
+              cloudProvider.getCmdbProviderServices().forEach((id, cloudProviderService) -> {
+                if (cloudProviderService.getData() instanceof MesosFrameworkServiceData) {
+                  addServiceToDiscard(servicesToDiscard, cloudProviderService);
+                }
+              });
+            });
+        break;
     }
 
     discardProvidersAndServices(providersToDiscard, servicesToDiscard, rankCloudProvidersMessage);
 
-    Deployment deployment = getDeployment(rankCloudProvidersMessage);
-    
     // Filter out providers that do not support the requested images
-    ArchiveRoot ar =
-        toscaService.prepareTemplate(deployment.getTemplate(), deployment.getParameters());
-    
+
     // Filter provider by image contextualization check
     rankCloudProvidersMessage.getCloudProviders().values().forEach(cloudProvider -> {
       cloudProvider.getCmbdProviderServicesByType(Type.COMPUTE).forEach(cloudService -> {
@@ -120,9 +157,8 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
         if (!contextualizedImages.get(Boolean.FALSE).isEmpty()) {
           // Failed to match all required images -> discard provider
           LOG.debug(
-              "Discarded service {} of provider {} because it doesn't match images requirements"
-                  + " for deployment {}",
-              cloudService.getId(), cloudProvider.getId(), deployment.getId());
+              "Discarded service {} of provider {} because it doesn't match images requirements",
+              cloudService.getId(), cloudProvider.getId());
           addServiceToDiscard(servicesToDiscard, cloudService);
           cloudProvider.getCmdbProviderImages().remove(cloudService.getId());
         }
@@ -132,49 +168,58 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
     discardProvidersAndServices(providersToDiscard, servicesToDiscard, rankCloudProvidersMessage);
   }
 
+
   private void discardOnPlacementPolicies(Map<String, PlacementPolicy> placementPolicies,
       Collection<CloudProvider> cloudProviders, List<Sla> slas,
       Set<CloudService> servicesToDiscard) {
-    
-    if (placementPolicies.size() != 1) {
+
+    if (placementPolicies.size() > 1) {
       //TODO relax this constraint
       throw new OrchestratorException("Only a single placement policy is supported");
     }
 
-    placementPolicies.forEach((name, placementPolicy) -> {
-      if (placementPolicy instanceof SlaPlacementPolicy) {
-        final SlaPlacementPolicy slaPlacementPolicy = (SlaPlacementPolicy) placementPolicy;
-        Sla selectedSla = slas
-            .stream()
-            .filter(sla -> Objects.equals(sla.getId(), slaPlacementPolicy.getSlaId()))
-            .findFirst()
-            .orElseThrow(() -> new OrchestratorException(
-                String.format("No SLA with id %s available", slaPlacementPolicy.getSlaId())));
+    List<SlaPlacementPolicy> slaPlacementPolicies = placementPolicies
+        .values()
+        .stream()
+        .map(placementPolicy -> {
+          if (placementPolicy instanceof SlaPlacementPolicy) {
+            final SlaPlacementPolicy slaPlacementPolicy = (SlaPlacementPolicy) placementPolicy;
+            Sla selectedSla = slas
+                .stream()
+                .filter(sla -> Objects.equals(sla.getId(), slaPlacementPolicy.getSlaId()))
+                .findFirst()
+                .orElseThrow(() -> new OrchestratorException(
+                    String.format("No SLA with id %s available", slaPlacementPolicy.getSlaId())));
 
-        slaPlacementPolicy.setServiceIds(selectedSla
-            .getServices()
-            .stream()
-            .map(Service::getServiceId)
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList()));
+            slaPlacementPolicy.setServiceIds(selectedSla
+                .getServices()
+                .stream()
+                .map(Service::getServiceId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList()));
+            return slaPlacementPolicy;
+          } else {
+            throw new OrchestratorException("Only SLA placement policies are supported");
+          }
+        }).collect(Collectors.toList());
 
-        cloudProviders.forEach(cloudProvider -> {
+    boolean slaPlacementRequired = !placementPolicies.isEmpty();
+
+    cloudProviders
+        .forEach(cloudProvider -> {
           cloudProvider
               .getCmbdProviderServicesByType(Type.COMPUTE)
               .forEach(cloudService -> {
-                boolean serviceIsInSlaPolicy = slaPlacementPolicy
-                    .getServicesId()
+                boolean serviceIsInSlaPolicy = slaPlacementPolicies
                     .stream()
+                    .flatMap(policy -> policy.getServicesId().stream())
                     .anyMatch(serviceId -> serviceId.equals(cloudService.getId()));
-                if (!serviceIsInSlaPolicy) {
+                boolean credentialsRequired = cloudService.isCredentialsRequired();
+                if (!serviceIsInSlaPolicy && (slaPlacementRequired || credentialsRequired)) {
                   addServiceToDiscard(servicesToDiscard, cloudService);
                 }
               });
         });
-      } else {
-        throw new OrchestratorException("Only SLA placement policies are supported");
-      }
-    });
   }
 
   private void discardOnOneDataRequirements(OneData requirement,

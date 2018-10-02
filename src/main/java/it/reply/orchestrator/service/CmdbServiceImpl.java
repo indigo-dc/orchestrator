@@ -182,10 +182,11 @@ public class CmdbServiceImpl implements CmdbService {
     allServices
         .values()
         .stream()
-        .filter(CloudService::isOneProviderStorageService)
-        .forEach(oneDataService -> cp
+        .filter(cloudService -> cloudService.isMarathonComputeProviderService() || cloudService
+            .isChronosComputeProviderService() || cloudService.isOneProviderStorageService())
+        .forEach(serviceWithoutSla -> cp
             .getCmdbProviderServices()
-            .put(oneDataService.getId(), oneDataService));
+            .put(serviceWithoutSla.getId(), serviceWithoutSla));
 
     // Get images for compute services
     cp

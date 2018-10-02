@@ -27,9 +27,10 @@ import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.workflow.CloudProvidersOrderedIterator;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.Status;
-import it.reply.orchestrator.exception.service.DeploymentException;
+import it.reply.orchestrator.exception.service.BusinessWorkflowException;
 import it.reply.orchestrator.service.CloudProviderEndpointServiceImpl;
 import it.reply.orchestrator.utils.WorkflowConstants;
+import it.reply.orchestrator.utils.WorkflowConstants.ErrorCode;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -77,9 +78,11 @@ public class UpdateDeployment extends BaseDeployCommand {
     }
     if (!cloudProvidersOrderedIterator.hasNext()) {
       if (cloudProvidersOrderedIterator.getSize() == 0) {
-        throw new DeploymentException("No cloud providers available to deploy");
+        throw new BusinessWorkflowException(ErrorCode.RUNTIME_ERROR,
+            "No cloud providers available to deploy");
       } else {
-        throw new DeploymentException("Retries on cloud providers exhausted");
+        throw new BusinessWorkflowException(ErrorCode.RUNTIME_ERROR,
+            "Retries on cloud providers exhausted");
       }
     }
     CloudProvider currentCloudProvider = cloudProvidersOrderedIterator.next();
