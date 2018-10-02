@@ -16,12 +16,14 @@
 
 package it.reply.orchestrator.service.deployment.providers.factory;
 
-import it.reply.orchestrator.config.properties.MarathonProperties;
-import it.reply.orchestrator.config.properties.MesosProperties;
-import it.reply.orchestrator.config.properties.MesosProperties.MesosInstanceProperties;
-import it.reply.orchestrator.controller.ControllerTestUtils;
-import it.reply.orchestrator.dal.entity.Deployment;
-import it.reply.orchestrator.exception.service.DeploymentException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+import it.reply.orchestrator.dto.CloudProviderEndpoint;
+import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
+
+import java.util.UUID;
+
+import junitparams.JUnitParamsRunner;
 
 import org.assertj.core.api.Assertions;
 import org.junit.Before;
@@ -31,54 +33,42 @@ import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
 
-import java.net.URI;
-
-import junitparams.JUnitParamsRunner;
-
 @RunWith(JUnitParamsRunner.class)
 public class MarathonClientFactoryTest {
 
   @Rule
   public MockitoRule rule = MockitoJUnit.rule();
 
-  private MesosProperties mesosProperties;
-
-  private MesosInstanceProperties mesosInstanceProperties;
-
-  private MarathonProperties marathonProperties;
-
-  private static String cloudProviderName = "cloud-provider";
-
   private MarathonClientFactory clientFactory;
 
   @Before
   public void setup() {
-    mesosProperties = new MesosProperties();
-    clientFactory = new MarathonClientFactory(mesosProperties);
+    clientFactory = new MarathonClientFactory();
   }
 
   @Test
   public void testgetClientSuccessful() {
-    marathonProperties = new MarathonProperties();
-    marathonProperties.setUrl(URI.create("http://endpoint"));
-    marathonProperties.setUsername("username");
-    marathonProperties.setPassword("password");
-    mesosInstanceProperties = new MesosInstanceProperties();
-    mesosInstanceProperties.setMarathon(marathonProperties);
-    mesosProperties.getInstances().put(cloudProviderName, mesosInstanceProperties);
-    Deployment deployment = ControllerTestUtils.createDeployment();
-    deployment.setCloudProviderName(cloudProviderName);
+    CloudProviderEndpoint cloudProviderEndpoint = CloudProviderEndpoint
+        .builder()
+        .cpEndpoint("http://example.com")
+        .cpComputeServiceId(UUID.randomUUID().toString())
+        .iaasType(IaaSType.MARATHON)
+        .build();
     Assertions
-        .assertThat(Assertions.catchThrowable(() -> clientFactory.build(deployment)))
+        .assertThat(
+            Assertions.catchThrowable(() -> clientFactory.build(cloudProviderEndpoint, "token")))
         .isNull();
   }
 
   @Test
   public void testgetClientError() {
-    marathonProperties = new MarathonProperties();
-    mesosProperties.getInstances().put(cloudProviderName, mesosInstanceProperties);
-    Deployment deployment = ControllerTestUtils.createDeployment();
-    Assertions.assertThatThrownBy(() -> clientFactory.build(deployment)).isInstanceOf(
-        DeploymentException.class);
+    CloudProviderEndpoint cloudProviderEndpoint = CloudProviderEndpoint
+        .builder()
+        .cpEndpoint("http://example.com")
+        .cpComputeServiceId(UUID.randomUUID().toString())
+        .iaasType(IaaSType.MARATHON)
+        .build();
+    assertThatThrownBy(() -> clientFactory.build(cloudProviderEndpoint, null))
+        .isInstanceOf(NullPointerException.class);
   }
 }

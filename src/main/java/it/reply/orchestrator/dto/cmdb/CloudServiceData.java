@@ -17,6 +17,8 @@
 package it.reply.orchestrator.dto.cmdb;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 
 import javax.validation.constraints.NotNull;
 
@@ -33,6 +35,22 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    property = "service_type",
+    defaultImpl = CloudServiceData.class,
+    visible = true
+)
+@JsonSubTypes({
+    @JsonSubTypes.Type(
+        value = MarathonServiceData.class,
+        name = CloudService.MARATHON_COMPUTE_SERVICE
+    ),
+    @JsonSubTypes.Type(
+        value = ChronosServiceData.class,
+        name = CloudService.CHRONOS_COMPUTE_SERVICE
+    )
+})
 public class CloudServiceData {
 
   @JsonProperty("service_type")

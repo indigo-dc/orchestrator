@@ -33,8 +33,11 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData> {
 
-  private static final String COMPUTE_SERVICE_PREFIX = "eu.egi.cloud.vm-management";
-  private static final String STORAGE_SERVICE_PREFIX = "eu.egi.cloud.storage-management";
+  private static final String INDIGO_SERVICE_PREFIX = "eu.indigo-datacloud";
+  private static final String EGI_SERVICE_PREFIX = "eu.egi.cloud";
+
+  private static final String COMPUTE_SERVICE_PREFIX = EGI_SERVICE_PREFIX + ".vm-management";
+  private static final String STORAGE_SERVICE_PREFIX = EGI_SERVICE_PREFIX + ".storage-management";
 
   public static final String OPENSTACK_COMPUTE_SERVICE = COMPUTE_SERVICE_PREFIX + ".openstack";
   public static final String OPENNEBULA_COMPUTE_SERVICE = COMPUTE_SERVICE_PREFIX + ".opennebula";
@@ -46,7 +49,11 @@ public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData
   public static final String CDMI_STORAGE_SERVICE = STORAGE_SERVICE_PREFIX + ".cdmi";
   public static final String ONEPROVIDER_STORAGE_SERVICE = STORAGE_SERVICE_PREFIX + ".oneprovider";
 
-  public static final String OPENNEBULA_TOSCA_SERVICE = "eu.indigo-datacloud.im-tosca.opennebula";
+  public static final String OPENNEBULA_TOSCA_SERVICE =
+      INDIGO_SERVICE_PREFIX + ".im-tosca.opennebula";
+
+  public static final String MARATHON_COMPUTE_SERVICE = INDIGO_SERVICE_PREFIX + ".marathon";
+  public static final String CHRONOS_COMPUTE_SERVICE = INDIGO_SERVICE_PREFIX + ".chronos";
 
   @Builder
   protected CloudService(@NonNull String id, @NonNull CloudServiceData data) {
@@ -154,4 +161,29 @@ public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData
     return isServiceOfType(AZURE_COMPUTE_SERVICE);
   }
 
+  /**
+   * Get if the the service is a Marathon compute service.
+   *
+   * @return true if the service is a Marathon compute service
+   */
+  @JsonIgnore
+  public boolean isMarathonComputeProviderService() {
+    return isServiceOfType(MARATHON_COMPUTE_SERVICE);
+  }
+
+  /**
+   * Get if the the service is a Chronos compute service.
+   *
+   * @return true if the service is a Chronos compute service
+   */
+  @JsonIgnore
+  public boolean isChronosComputeProviderService() {
+    return isServiceOfType(CHRONOS_COMPUTE_SERVICE);
+  }
+
+  @JsonIgnore
+  public boolean isCredentialsRequired() {
+    return isAwsComputeProviderService() || isAzureComputeProviderService()
+        || isOtcComputeProviderService();
+  }
 }

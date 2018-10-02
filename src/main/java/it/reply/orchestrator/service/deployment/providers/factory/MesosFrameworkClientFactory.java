@@ -16,37 +16,60 @@
 
 package it.reply.orchestrator.service.deployment.providers.factory;
 
-import it.reply.orchestrator.config.properties.MesosFrameworkProperties;
-import it.reply.orchestrator.config.properties.MesosProperties;
-import it.reply.orchestrator.config.properties.MesosProperties.MesosInstanceProperties;
-import it.reply.orchestrator.dal.entity.Deployment;
+import feign.RequestInterceptor;
+import feign.auth.BasicAuthRequestInterceptor;
+
+import it.reply.orchestrator.dto.CloudProviderEndpoint;
+import it.reply.orchestrator.dto.cmdb.CloudService;
+import it.reply.orchestrator.dto.cmdb.MesosFrameworkServiceData;
+import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.exception.service.DeploymentException;
+
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 
 import lombok.AllArgsConstructor;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor
-public abstract class MesosFrameworkClientFactory<V extends MesosFrameworkProperties, T> {
+public abstract class MesosFrameworkClientFactory<V extends MesosFrameworkServiceData, T> {
 
-  private MesosProperties mesosProperties;
-
-  protected MesosInstanceProperties getInstanceProperties(Deployment deployment) {
-    String cloudProviderName = deployment.getCloudProviderName();
-    return mesosProperties
-        .getInstance(cloudProviderName)
-        .orElseThrow(() -> new DeploymentException(String
-            .format("No %s instance available for cloud provider %s", getFrameworkName(),
-                cloudProviderName)));
+  public T build(CloudProviderEndpoint cloudProviderEndpoint, String accessToken) {
+    final RequestInterceptor requestInterceptor;
+    if (cloudProviderEndpoint.getUsername() != null
+        || cloudProviderEndpoint.getPassword() != null) {
+      Objects.requireNonNull(cloudProviderEndpoint.getUsername(), "Username must be provided");
+      Objects.requireNonNull(cloudProviderEndpoint.getPassword(), "Password must be provided");
+      requestInterceptor = new BasicAuthRequestInterceptor(cloudProviderEndpoint.getUsername(),
+          cloudProviderEndpoint.getPassword());
+    } else {
+      requestInterceptor = (requestTemplate) -> {
+        requestTemplate
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + Objects.requireNonNull(accessToken));
+      };
+    }
+    return build(cloudProviderEndpoint.getCpEndpoint(), requestInterceptor);
   }
 
-  public abstract V getFrameworkProperties(Deployment deployment);
+  public abstract T build(String endpoint, RequestInterceptor authInterceptor);
+
+  @NonNull
+  public V getFrameworkProperties(DeploymentMessage deploymentMessage) {
+    String computeServiceId = deploymentMessage.getChosenCloudProviderEndpoint()
+        .getCpComputeServiceId();
+    Map<String, CloudService> cmdbProviderServices = deploymentMessage
+        .getCloudProvidersOrderedIterator().current().getCmdbProviderServices();
+    return (V) Optional.ofNullable(cmdbProviderServices.get(computeServiceId))
+        .map(CloudService::getData)
+        .orElseThrow(() -> new DeploymentException(String
+            .format("No %s instance available for cloud provider service %s", getFrameworkName(),
+                computeServiceId)));
+  }
 
   protected abstract String getFrameworkName();
-
-  public abstract T build(V frameworkProperties);
-
-  public abstract T build(Deployment deployment);
-
 }
