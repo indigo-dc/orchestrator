@@ -9,6 +9,7 @@ pipeline {
 
     environment {
         dockerhub_repo = "indigodatacloud/orchestrator"
+        dockerhub_image_id = ""
     }
 
     stages {
@@ -104,13 +105,13 @@ pipeline {
                 checkout scm
                 dir("$WORKSPACE/docker") {
                     script {
-                        image_id = DockerBuild(dockerhub_repo, env.BRANCH_NAME)
+                        dockerhub_image_id = DockerBuild(dockerhub_repo, env.BRANCH_NAME)
                     }
                 }
             }
             post {
                 success {
-                    DockerPush(image_id)
+                    DockerPush(dockerhub_image_id)
                 }
                 failure {
                     DockerClean()
@@ -118,6 +119,24 @@ pipeline {
                 always {
                     cleanWs()
                 }
+            }
+        }
+
+        stage('Notifications') {
+            when {
+                buildingTag()
+            }
+	    steps {
+                JiraIssueNotification(
+                    'DEEP',
+                    'DPM',
+                    '10204',
+                    "[preview-testbed] New Orchestrator version ${env.BRANCH_NAME} available",
+                    'Check new artifacts at:\n\t- Docker image: ${dockerhub_image_id}',
+                    ['wp3', 'preview-testbed', "orchestrator-${env.BRANCH_NAME}"],
+                    'Task',
+                    'mariojmdavid'
+                )
             }
         }
     } // stages
