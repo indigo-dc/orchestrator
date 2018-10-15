@@ -183,8 +183,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     try {
       String infrastructureId =
           executeWithClientForResult(cloudProviderEndpoints, requestedWithToken,
-              client -> client.createInfrastructure(imCustomizedTemplate, BodyContentType.TOSCA))
-                  .getInfrastructureId();
+              client -> client.createInfrastructureAsync(imCustomizedTemplate,
+                BodyContentType.TOSCA)).getInfrastructureId();
       LOG.info("InfrastructureId for deployment <{}> is: {}", deploymentMessage.getDeploymentId(),
           infrastructureId);
       deployment.setEndpoint(infrastructureId);
