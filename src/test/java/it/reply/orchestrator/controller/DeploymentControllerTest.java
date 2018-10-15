@@ -51,6 +51,7 @@ import it.reply.orchestrator.resource.DeploymentResourceAssembler;
 import it.reply.orchestrator.service.DeploymentService;
 import it.reply.orchestrator.utils.JsonUtils;
 
+import java.sql.SQLTransientException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +60,8 @@ import java.util.UUID;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
+import org.apache.ibatis.exceptions.PersistenceException;
+import org.flowable.engine.common.api.FlowableOptimisticLockingException;
 import org.hamcrest.Matchers;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -71,6 +74,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.context.annotation.Import;
+import org.springframework.dao.TransientDataAccessException;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -424,10 +428,17 @@ public class DeploymentControllerTest {
             jsonPath("$.message", is("Cannot update a deployment in DELETE_IN_PROGRESS state")));
   }
 
+  public Object[] generateTransientPersistenceExceptions() {
+    return new Object[]{
+        Mockito.mock(TransientDataAccessException.class),
+        new FlowableOptimisticLockingException(""),
+        new PersistenceException(new SQLTransientException(""))
+    };
+  }
+
   @Test
-  @Parameters({"org.springframework.dao.TransientDataAccessException",
-      "org.flowable.engine.common.api.FlowableOptimisticLockingException"})
-  public void updateDeploymentConcurrentTransientException(Class<Exception> clazz)
+  @Parameters(method = "generateTransientPersistenceExceptions")
+  public void updateDeploymentConcurrentTransientException(Exception ex)
       throws Exception {
     DeploymentRequest request = DeploymentRequest
         .builder()
@@ -435,7 +446,7 @@ public class DeploymentControllerTest {
         .build();
 
     String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
-    Mockito.doThrow(Mockito.mock(clazz))
+    Mockito.doThrow(ex)
         .when(deploymentService)
         .updateDeployment(deploymentId, request);
 
@@ -451,13 +462,12 @@ public class DeploymentControllerTest {
   }
 
   @Test
-  @Parameters({"org.springframework.dao.TransientDataAccessException",
-      "org.flowable.engine.common.api.FlowableOptimisticLockingException"})
-  public void deleteDeploymentConcurrentTransientException(Class<Exception> clazz)
+  @Parameters(method = "generateTransientPersistenceExceptions")
+  public void deleteDeploymentConcurrentTransientException(Exception ex)
       throws Exception {
 
     String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
-    Mockito.doThrow(Mockito.mock(clazz))
+    Mockito.doThrow(ex)
         .when(deploymentService)
         .deleteDeployment(deploymentId);
 

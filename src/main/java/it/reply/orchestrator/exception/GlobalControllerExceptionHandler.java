@@ -20,8 +20,11 @@ import it.reply.orchestrator.dto.common.Error;
 import it.reply.orchestrator.exception.http.OrchestratorApiException;
 import it.reply.orchestrator.utils.CommonUtils;
 
+import java.sql.SQLTransientException;
+
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.ibatis.exceptions.PersistenceException;
 import org.flowable.engine.common.api.FlowableOptimisticLockingException;
 import org.springframework.dao.TransientDataAccessException;
 import org.springframework.http.HttpHeaders;
@@ -60,7 +63,7 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
    */
   @ExceptionHandler
   public ResponseEntity<Object> handleException(OAuth2Exception ex, WebRequest request) {
-    // NOTE: is not a requirement to re-thow the same exception,
+    // NOTE: is not a requirement to re-throw the same exception,
     // whichever unchecked exception would fulfill the scope
     throw ex;
   }
@@ -87,6 +90,23 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
   }
 
   /**
+   * {@link PersistenceException} handler.
+   *
+   * @param ex
+   *     the exception
+   * @return a {@code ResponseEntity} instance
+   */
+  @ExceptionHandler
+  public ResponseEntity<Object> handleIbatisPersistenceException(PersistenceException ex,
+      WebRequest request) {
+    if (ex.getCause() instanceof SQLTransientException) {
+      return handleTransientDataException(ex, request);
+    } else {
+      return handleGenericException(ex, request);
+    }
+  }
+
+  /**
    * Server Error exception handler.
    *
    * @param ex
@@ -105,7 +125,7 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
   @Override
   protected ResponseEntity<Object> handleExceptionInternal(Exception ex, Object body,
       HttpHeaders headers, HttpStatus status, WebRequest request) {
-    if (status != HttpStatus.NOT_FOUND) {
+    if (status != HttpStatus.NOT_FOUND && status != HttpStatus.METHOD_NOT_ALLOWED) {
       LOG.error("Error handling request {}", request, ex);
     }
     final HttpHeaders headersToWrite = CommonUtils.notNullOrDefaultValue(headers, HttpHeaders::new);
