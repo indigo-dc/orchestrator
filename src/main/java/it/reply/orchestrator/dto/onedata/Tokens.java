@@ -18,8 +18,8 @@ package it.reply.orchestrator.dto.onedata;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.validation.constraints.NotNull;
 
@@ -29,32 +29,22 @@ import lombok.Builder;
 import lombok.Data;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Data
 @Builder
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class SpaceDetails {
+public class Tokens {
 
-  @JsonProperty("spaceId")
-  @NonNull
-  @NotNull
-  private String spaceId;
-
-  @JsonProperty("name")
-  @Nullable
-  private String name;
-
-  @JsonProperty("providers")
+  @JsonProperty("tokens")
   @NonNull
   @NotNull
   @Builder.Default
-  private Map<String, Long> providers = new HashMap<>();
+  private List<String> tokens = new ArrayList<>();
 
   @SuppressWarnings("null")
   @Deprecated
-  protected SpaceDetails() {
-    providers = new HashMap<>();
+  protected Tokens() {
+    tokens = new ArrayList<>();
   }
 
 }

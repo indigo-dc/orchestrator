@@ -18,21 +18,20 @@ package it.reply.orchestrator.dto.onedata;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.validation.constraints.NotNull;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Data
 @Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class ProviderDetails {
 
@@ -41,19 +40,13 @@ public class ProviderDetails {
   @NotNull
   private String providerId;
 
-  @JsonProperty("clientName")
+  @JsonProperty("name")
   @Nullable
-  private String clientName;
+  private String name;
 
-  @JsonProperty("redirectionPoint")
+  @JsonProperty("domain")
   @Nullable
-  private String redirectionPoint;
-
-  @JsonProperty("urls")
-  @NonNull
-  @NotNull
-  @Builder.Default
-  private List<String> urls = new ArrayList<>();
+  private String domain;
 
   @JsonProperty("latitude")
   @Nullable
@@ -62,11 +55,5 @@ public class ProviderDetails {
   @JsonProperty("longitude")
   @Nullable
   private Double longitude;
-
-  @SuppressWarnings("null")
-  @Deprecated
-  protected ProviderDetails() {
-    urls = new ArrayList<>();
-  }
 
 }

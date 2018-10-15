@@ -16,29 +16,37 @@
 
 package it.reply.orchestrator.service;
 
+import it.reply.orchestrator.dal.entity.OidcTokenId;
+import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.onedata.ProviderDetails;
 import it.reply.orchestrator.dto.onedata.SpaceDetails;
+import it.reply.orchestrator.dto.onedata.Tokens;
 import it.reply.orchestrator.dto.onedata.UserSpaces;
+
+import java.util.Map;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 public interface OneDataService {
 
-  public UserSpaces getUserSpacesId(@Nullable String oneZoneEndpoint, String onedataToken);
+  public UserSpaces getUserSpacesId(String oneZoneEndpoint, String oneDataToken);
 
-  public UserSpaces getUserSpacesId(String onedataToken);
+  public SpaceDetails getSpaceDetailsFromId(String oneZoneEndpoint, String oneDataToken,
+    String oneSpaceId);
 
-  public SpaceDetails getSpaceDetailsFromId(@Nullable String oneZoneEndpoint, String oneDataToken,
-      String oneSpaceId);
+  public ProviderDetails getProviderDetailsFromId(String oneZoneEndpoint, String oneDataToken,
+    String oneProviderId);
 
-  public SpaceDetails getSpaceDetailsFromId(String oneDataToken, String oneSpaceId);
+  Tokens getOneDataTokens(String oneZoneEndpoint, OidcTokenId oidcTokenId);
 
-  public ProviderDetails getProviderDetailsFromId(@Nullable String oneZoneEndpoint,
-      String oneDataToken, String oneProviderId);
+  String generateOneDataToken(String oneZoneEndpoint, OidcTokenId oidcTokenId);
 
-  public ProviderDetails getProviderDetailsFromId(String oneDataToken, String oneProviderId);
+  String getOneDataToken(String oneZoneEndpoint, OidcTokenId oidcTokenId);
 
-  public OneData populateProviderInfo(OneData oneDataParameter);
+  public OneData populateProviderInfo(OneData oneDataParameter,
+    Map<String, CloudProvider> cloudProviders,
+    @Nullable OidcTokenId requestedWithToken,
+    String deploymentId);
 
 }

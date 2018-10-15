@@ -362,14 +362,14 @@ public class PrefilterCloudProvidersTest extends
         .token("token")
         .space("space")
         .path("path")
-        .providers("providers")
+        .providersAsString("providers")
         .smartScheduling(true)
         .build();
     OneData onedataOutput = OneData.builder()
         .token("token")
         .space("space")
         .path("path")
-        .providers("providers")
+        .providersAsString("providers")
         .smartScheduling(true)
         .build();
     oneDataRequirements.put("input", onedataInput);

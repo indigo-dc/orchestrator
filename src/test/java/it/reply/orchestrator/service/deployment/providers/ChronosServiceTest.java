@@ -179,30 +179,27 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
         .token("token")
         .space("space")
         .path("path")
-        .providers("provider")
+        .providersAsString("provider")
         .build();
     OneData inputOd = OneData
         .builder()
         .token("token_input")
         .space("space_input")
         .path("path_input")
-        .providers("provider_input_1,provider_input_2")
+        .providersAsString("provider_input_1,provider_input_2")
         .build();
     OneData outputOd = OneData
         .builder()
         .token("token_output")
         .space("space_output")
         .path("path_output")
-        .providers("provider_output_1,provider2_output_2")
+        .providersAsString("provider_output_1,provider2_output_2")
         .build();
     Map<String, OneData> odParameters =
         ImmutableMap.of("service", serviceOd, "input", inputOd, "output", outputOd);
 
-    String customizedTemplate = chronosService.replaceHardCodedParams(template, odParameters);
-
-    // Re-parse template (TODO: serialize the template in-memory
-    // representation?)
-    ar = toscaService.prepareTemplate(customizedTemplate, inputs);
+    ar = toscaService.prepareTemplate(template, inputs);
+    ar = chronosService.replaceHardCodedParams(ar, odParameters);
 
     Map<String, NodeTemplate> nodes = ar.getTopology().getNodeTemplates();
     NodeTemplate chronosJob = nodes.get("chronos_job");

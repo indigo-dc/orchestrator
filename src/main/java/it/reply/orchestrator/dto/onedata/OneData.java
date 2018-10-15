@@ -18,9 +18,6 @@ package it.reply.orchestrator.dto.onedata;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.validation.constraints.NotNull;
 
@@ -38,13 +35,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @ToString(exclude = "token")
 @Builder
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class OneData implements Cloneable {
+public class OneData {
 
   @Data
   @Builder
   @NoArgsConstructor(access = AccessLevel.PROTECTED)
   @AllArgsConstructor(access = AccessLevel.PROTECTED)
-  public static class OneDataProviderInfo implements Cloneable {
+  public static class OneDataProviderInfo {
 
     @Nullable
     private String id;
@@ -58,16 +55,6 @@ public class OneData implements Cloneable {
     @Nullable
     private String cloudServiceId;
 
-    @Override
-    public OneDataProviderInfo clone() {
-      return OneDataProviderInfo
-          .builder()
-          .id(this.id)
-          .endpoint(this.endpoint)
-          .cloudProviderId(this.cloudProviderId)
-          .cloudServiceId(this.cloudServiceId)
-          .build();
-    }
   }
 
   @Nullable
@@ -80,45 +67,23 @@ public class OneData implements Cloneable {
   private String path;
 
   @Nullable
-  private String zone;
+  private String onezone;
 
   @NonNull
   @NotNull
   @Builder.Default
-  private List<OneDataProviderInfo> providers = new ArrayList<>();
+  private List<OneDataProviderInfo> oneproviders = new ArrayList<>();
+
+  @Nullable
+  private OneDataProviderInfo selectedOneprovider;
 
   private boolean smartScheduling;
 
-  @Override
-  public OneData clone() {
-    return OneData
-        .builder()
-        .token(this.token)
-        .space(this.space)
-        .path(this.path)
-        .zone(this.zone)
-        .providers(providers
-            .stream()
-            .map(OneDataProviderInfo::clone)
-            .collect(Collectors.toList()))
-        .build();
-  }
+  private boolean serviceSpace;
 
   @Deprecated
   protected OneData() {
-    providers = new ArrayList<>();
+    oneproviders = new ArrayList<>();
   }
 
-  public static class OneDataBuilder {
-
-    public OneDataBuilder providersAsString(@Nullable String providers) {
-      return providers(Optional
-          .ofNullable(providers)
-          .map(value -> value.split(","))
-          .map(Stream::of)
-          .orElseGet(Stream::empty)
-          .map(endpoint -> OneDataProviderInfo.builder().endpoint(endpoint).build())
-          .collect(Collectors.toList()));
-    }
-  }
 }

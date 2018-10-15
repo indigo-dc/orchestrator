@@ -17,6 +17,7 @@
 package it.reply.orchestrator.dto.deployment;
 
 import it.reply.orchestrator.dal.entity.OidcTokenId;
+import it.reply.orchestrator.dto.dynafed.Dynafed;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.enums.DeploymentType;
 
@@ -56,6 +57,9 @@ public class BaseWorkflowMessage {
   private Map<String, OneData> oneDataRequirements = new HashMap<>();
 
   @NonNull
+  private Map<String, Dynafed> dynafedRequirements = new HashMap<>();
+
+  @NonNull
   private Map<String, PlacementPolicy> placementPolicies = new HashMap<>();
 
   /**
@@ -71,6 +75,7 @@ public class BaseWorkflowMessage {
     deploymentType = other.deploymentType;
     hybrid = other.hybrid;
     oneDataRequirements = other.oneDataRequirements;
+    dynafedRequirements = other.dynafedRequirements;
     placementPolicies = other.placementPolicies;
   }
 }

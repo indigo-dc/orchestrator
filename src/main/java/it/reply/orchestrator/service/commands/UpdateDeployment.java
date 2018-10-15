@@ -16,31 +16,28 @@
 
 package it.reply.orchestrator.service.commands;
 
-import it.reply.orchestrator.config.properties.OneDataProperties;
-import it.reply.orchestrator.config.properties.OneDataProperties.ServiceSpaceProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.onedata.OneData;
+import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
 import it.reply.orchestrator.dto.workflow.CloudProvidersOrderedIterator;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.exception.service.BusinessWorkflowException;
+import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.CloudProviderEndpointServiceImpl;
 import it.reply.orchestrator.utils.WorkflowConstants;
 import it.reply.orchestrator.utils.WorkflowConstants.ErrorCode;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.apache.commons.collections4.MapUtils;
 import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -54,9 +51,6 @@ import org.springframework.stereotype.Component;
 @Component(WorkflowConstants.Delegate.UPDATE_DEPLOYMENT)
 @Slf4j
 public class UpdateDeployment extends BaseDeployCommand {
-
-  @Autowired
-  private OneDataProperties oneDataProperties;
 
   @Autowired
   private CloudProviderEndpointServiceImpl cloudProviderEndpointService;
@@ -121,80 +115,36 @@ public class UpdateDeployment extends BaseDeployCommand {
         .getDeploymentProvider(deploymentMessage.getDeploymentType(), currentCloudProvider);
     deployment.setDeploymentProvider(deploymentProvider);
 
-    // FIXME Implement OneData scheduling properly and move in a dedicated command
-    deploymentMessage.setOneDataParameters(generateOneDataParameters(rankCloudProvidersMessage,
-        currentCloudProvider, deploymentMessage.getDeploymentId()));
+    deploymentMessage.setOneDataParameters(generateOneDataParameters(currentCloudProvider,
+      rankCloudProvidersMessage.getOneDataRequirements()));
   }
 
   protected Map<String, OneData> generateOneDataParameters(
-      RankCloudProvidersMessage rankCloudProvidersMessage,
-      CloudProvider chosenCloudProvider, String deploymentId) {
-    // Just copy requirements to parameters (in the future the Orchestrator will need to edit I/O
-    // providers, but not for now)
-    // deploymentMessage.getOneDataParameters().putAll(deploymentMessage.getOneDataRequirements());
+    CloudProvider cloudProvider,
+    Map<String, OneData> oneDataRequirements) {
     Map<String, OneData> oneDataParameters = new HashMap<>();
-    // No Requirements -> Service space
-    if (MapUtils.isEmpty(rankCloudProvidersMessage.getOneDataRequirements())) {
-      oneDataParameters.put("service", generateStubOneData(deploymentId));
-      LOG.warn("GENERATING STUB ONE DATA FOR SERVICE"
-          + " (remove once OneData parameters generation is completed!)");
-    } else {
-      LOG.debug("User specified I/O OneData requirements; service space will not be generated.");
-      Map<String, OneData> oneDataRequirements = rankCloudProvidersMessage.getOneDataRequirements();
-      Optional
-          .ofNullable(oneDataRequirements.get("input"))
-          .ifPresent(
-              oneDataRequirement -> {
-                OneData oneDataParameter = oneDataRequirement.clone();
-                if (oneDataParameter.isSmartScheduling()) {
-                  oneDataParameter.setProviders(oneDataParameter.getProviders()
-                      .stream()
-                      .filter(info -> Objects
-                          .equals(info.getCloudProviderId(), chosenCloudProvider.getId()))
-                      .collect(Collectors.toList()));
-                }
-                oneDataParameters.put("input", oneDataParameter);
-              });
-      Optional
-          .ofNullable(oneDataRequirements.get("output"))
-          .ifPresent(
-              oneDataRequirement -> {
-                OneData oneDataParameter = oneDataRequirement.clone();
-                if (oneDataParameter.isSmartScheduling()) {
-                  oneDataParameter.setProviders(oneDataParameter.getProviders()
-                      .stream()
-                      .filter(info -> Objects
-                          .equals(info.getCloudProviderId(), chosenCloudProvider.getId()))
-                      .collect(Collectors.toList()));
-                }
-                oneDataParameters.put("output", oneDataParameter);
-              });
-    }
+
+    oneDataRequirements
+      .forEach((name, oneDataRequirement) -> {
+        Optional<OneDataProviderInfo> localOneProvider = oneDataRequirement
+          .getOneproviders()
+          .stream()
+          .filter(oneDataProviderInfo -> cloudProvider.getId()
+            .equals(oneDataProviderInfo.getCloudProviderId())).findAny();
+        final OneDataProviderInfo selectedOneProvider;
+        if (localOneProvider.isPresent()) {
+          selectedOneProvider = localOneProvider.get();
+        } else {
+          if (oneDataRequirement.isSmartScheduling()) {
+            throw new DeploymentException("No OneProvider available");
+          } else {
+            selectedOneProvider = oneDataRequirement.getOneproviders().get(0);
+          }
+        }
+        oneDataRequirement.setSelectedOneprovider(selectedOneProvider);
+        oneDataParameters.put(name, oneDataRequirement);
+      });
     return oneDataParameters;
-  }
-
-  /**
-   * Temporary method to generate default OneData settings.
-   * 
-   * @return the {@link OneData} settings.
-   */
-  protected OneData generateStubOneData(String deploymentId) {
-
-    ServiceSpaceProperties serviceSpaceProperties = oneDataProperties.getServiceSpace();
-
-    String path = new StringBuilder().append(serviceSpaceProperties.getBaseFolderPath())
-        .append(deploymentId)
-        .toString();
-
-    OneData stub = OneData.builder()
-        .token(serviceSpaceProperties.getToken())
-        .space(serviceSpaceProperties.getName())
-        .path(path)
-        .providersAsString(serviceSpaceProperties.getOneproviderUrl().toString())
-        .build();
-
-    LOG.info("Generated OneData settings {}", stub);
-    return stub;
   }
 
   @Override

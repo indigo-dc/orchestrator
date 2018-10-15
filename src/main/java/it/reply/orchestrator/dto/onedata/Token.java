@@ -18,43 +18,25 @@ package it.reply.orchestrator.dto.onedata;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import javax.validation.constraints.NotNull;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Data
 @Builder
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class SpaceDetails {
+public class Token {
 
-  @JsonProperty("spaceId")
+  @JsonProperty("tokens")
   @NonNull
   @NotNull
-  private String spaceId;
-
-  @JsonProperty("name")
-  @Nullable
-  private String name;
-
-  @JsonProperty("providers")
-  @NonNull
-  @NotNull
-  @Builder.Default
-  private Map<String, Long> providers = new HashMap<>();
-
-  @SuppressWarnings("null")
-  @Deprecated
-  protected SpaceDetails() {
-    providers = new HashMap<>();
-  }
+  private String token;
 
 }

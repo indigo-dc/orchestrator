@@ -83,6 +83,7 @@ public class CloudProviderEndpoint {
   @Nullable
   private String tenant;
 
+  @Nullable
   @JsonProperty
   private String iaasHeaderId;
 

@@ -183,7 +183,7 @@ public class CmdbServiceImpl implements CmdbService {
         .values()
         .stream()
         .filter(cloudService -> cloudService.isMarathonComputeProviderService() || cloudService
-            .isChronosComputeProviderService() || cloudService.isOneProviderStorageService())
+            .isChronosComputeProviderService() || cloudService.getData().getType() == Type.STORAGE)
         .forEach(serviceWithoutSla -> cp
             .getCmdbProviderServices()
             .put(serviceWithoutSla.getId(), serviceWithoutSla));

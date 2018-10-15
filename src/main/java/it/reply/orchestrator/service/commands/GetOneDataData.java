@@ -17,12 +17,8 @@
 package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
-import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.service.OneDataService;
-import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.WorkflowConstants;
-
-import java.util.Map;
 
 import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,15 +34,14 @@ public class GetOneDataData extends BaseRankCloudProvidersCommand {
   public void execute(DelegateExecution execution,
       RankCloudProvidersMessage rankCloudProvidersMessage) {
 
-    Map<String, OneData> oneDataRequirements = rankCloudProvidersMessage.getOneDataRequirements();
+    rankCloudProvidersMessage.getOneDataRequirements()
+      .values()
+      .forEach(oneDataRequirement -> oneDataService.populateProviderInfo(
+        oneDataRequirement,
+        rankCloudProvidersMessage.getCloudProviders(),
+        rankCloudProvidersMessage.getRequestedWithToken(),
+        rankCloudProvidersMessage.getDeploymentId()));
 
-    CommonUtils
-        .getFromOptionalMap(oneDataRequirements, "input")
-        .ifPresent(oneDataService::populateProviderInfo);
-
-    CommonUtils
-        .getFromOptionalMap(oneDataRequirements, "output")
-        .ifPresent(oneDataService::populateProviderInfo);
   }
 
   @Override

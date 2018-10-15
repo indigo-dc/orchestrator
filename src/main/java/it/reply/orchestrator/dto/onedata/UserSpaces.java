@@ -29,7 +29,6 @@ import lombok.Builder;
 import lombok.Data;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Data
 @Builder
@@ -41,10 +40,6 @@ public class UserSpaces {
   @NotNull
   @Builder.Default
   private List<String> spaces = new ArrayList<>();
-
-  @JsonProperty("default")
-  @Nullable
-  private String defaultSpace;
 
   @Deprecated
   protected UserSpaces() {

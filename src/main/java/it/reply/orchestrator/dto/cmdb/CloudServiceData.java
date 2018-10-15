@@ -80,4 +80,9 @@ public class CloudServiceData {
   @Nullable
   private String region;
 
+  @JsonProperty("hostname")
+  @NonNull
+  @NotNull
+  private String hostname;
+
 }

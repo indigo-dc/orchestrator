@@ -30,8 +30,8 @@ import it.reply.orchestrator.dto.cmdb.MesosFrameworkServiceData;
 import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.dto.deployment.PlacementPolicy;
 import it.reply.orchestrator.dto.deployment.SlaPlacementPolicy;
+import it.reply.orchestrator.dto.dynafed.Dynafed;
 import it.reply.orchestrator.dto.onedata.OneData;
-import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
 import it.reply.orchestrator.dto.slam.Service;
 import it.reply.orchestrator.dto.slam.Sla;
 import it.reply.orchestrator.exception.OrchestratorException;
@@ -48,7 +48,6 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.apache.commons.collections4.MapUtils;
 import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -74,18 +73,27 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
 
     discardProvidersAndServices(providersToDiscard, servicesToDiscard, rankCloudProvidersMessage);
 
-    if (!MapUtils.isEmpty(rankCloudProvidersMessage.getOneDataRequirements())) {
-      OneData inputRequirement = rankCloudProvidersMessage.getOneDataRequirements().get("input");
-      discardOnOneDataRequirements(inputRequirement,
-          rankCloudProvidersMessage.getCloudProviders().values(), providersToDiscard,
-          servicesToDiscard);
-      OneData outputRequirement = rankCloudProvidersMessage.getOneDataRequirements().get("output");
-      discardOnOneDataRequirements(outputRequirement,
-          rankCloudProvidersMessage.getCloudProviders().values(), providersToDiscard,
-          servicesToDiscard);
-    }
+    rankCloudProvidersMessage
+        .getOneDataRequirements()
+        .values()
+        .forEach(ondedataRequirement -> {
+          discardOnOneDataRequirements(ondedataRequirement,
+              rankCloudProvidersMessage.getCloudProviders().values(), providersToDiscard,
+              servicesToDiscard);
+          discardProvidersAndServices(providersToDiscard, servicesToDiscard,
+              rankCloudProvidersMessage);
+        });
 
-    discardProvidersAndServices(providersToDiscard, servicesToDiscard, rankCloudProvidersMessage);
+    rankCloudProvidersMessage
+        .getDynafedRequirements()
+        .values()
+        .forEach(dyanfedRequirement -> {
+          discardOnDynafedRequirements(dyanfedRequirement,
+              rankCloudProvidersMessage.getCloudProviders().values(), providersToDiscard,
+              servicesToDiscard);
+          discardProvidersAndServices(providersToDiscard, servicesToDiscard,
+              rankCloudProvidersMessage);
+        });
 
     Deployment deployment = getDeployment(rankCloudProvidersMessage);
     ArchiveRoot ar = toscaService
@@ -216,6 +224,9 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
                     .anyMatch(serviceId -> serviceId.equals(cloudService.getId()));
                 boolean credentialsRequired = cloudService.isCredentialsRequired();
                 if (!serviceIsInSlaPolicy && (slaPlacementRequired || credentialsRequired)) {
+                  LOG.debug(
+                    "Discarded service {} of provider {} because it doesn't match SLA policies",
+                    cloudService.getId(), cloudProvider.getId());
                   addServiceToDiscard(servicesToDiscard, cloudService);
                 }
               });
@@ -223,29 +234,43 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
   }
 
   private void discardOnOneDataRequirements(OneData requirement,
-      Collection<CloudProvider> cloudProviders, Set<CloudProvider> providersToDiscard,
-      Set<CloudService> servicesToDiscard) {
-    if (requirement != null && requirement.isSmartScheduling()) {
-      for (CloudProvider cloudProvider : cloudProviders) {
-        boolean hasOneProviderSupportingSpace = false;
-        for (CloudService cloudService : cloudProvider.getCmdbProviderServices().values()) {
-          if (!cloudService.isOneProviderStorageService()) {
-            continue;
-          } else {
-            for (OneDataProviderInfo providerInfo : requirement.getProviders()) {
-              if (Objects.equals(providerInfo.getId(), cloudService.getData().getEndpoint())) {
-                hasOneProviderSupportingSpace = true;
-                providerInfo.setCloudProviderId(cloudProvider.getId());
-                providerInfo.setCloudServiceId(cloudService.getId());
-              }
-            }
-          }
-        }
+    Collection<CloudProvider> cloudProviders, Set<CloudProvider> providersToDiscard,
+    Set<CloudService> servicesToDiscard) {
+    if (requirement.isSmartScheduling()) {
+      cloudProviders.forEach(cloudProvider -> {
+        boolean hasOneProviderSupportingSpace = requirement
+          .getOneproviders()
+          .stream()
+          .anyMatch(
+            providerInfo -> cloudProvider.getId().equals(providerInfo.getCloudProviderId()));
         if (!hasOneProviderSupportingSpace) {
+          LOG.debug(
+            "Discarded provider {} because it doesn't have any oneProvider supporting space {}",
+            cloudProvider.getId(), requirement.getSpace());
           addProviderToDiscard(providersToDiscard, servicesToDiscard, cloudProvider);
         }
-      }
+      });
     }
+  }
+
+  private void discardOnDynafedRequirements(Dynafed requirement,
+    Collection<CloudProvider> cloudProviders, Set<CloudProvider> providersToDiscard,
+    Set<CloudService> servicesToDiscard) {
+
+    cloudProviders.forEach(cloudProvider -> {
+      boolean supportsAllFiles = requirement
+        .getFiles()
+        .stream()
+        .allMatch(file -> file
+          .getResources()
+          .stream()
+          .anyMatch(resource -> cloudProvider.getId().equals(resource.getCloudProviderId())));
+      if (!supportsAllFiles) {
+        LOG.debug("Discarded provider {} {}", cloudProvider.getId(),
+          "because it doesn't have any storage provider supporting the dynafed requirements");
+        addProviderToDiscard(providersToDiscard, servicesToDiscard, cloudProvider);
+      }
+    });
   }
 
   protected void addProviderToDiscard(Set<CloudProvider> providersToDiscard,
@@ -273,6 +298,8 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
               .getCmdbProviderServices()
               .remove(computeServiceToDiscard.getId()));
       if (cloudProvider.getCmbdProviderServicesByType(Type.COMPUTE).isEmpty()) {
+        LOG.debug("Discarded provider {} {}", cloudProvider.getId(),
+          "because it doesn't have any compute service matching the deployment requirements");
         addProviderToDiscard(providersToDiscard, servicesToDiscard, cloudProvider);
       }
     }
