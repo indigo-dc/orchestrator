@@ -60,6 +60,7 @@ public class WorkflowConstants {
     public static final String GET_SLAM = "getSlam";
     public static final String GET_PROVIDERS_RANK = "getProvidersRank";
     public static final String GET_ONEDATA_DATA = "getOneDataData";
+    public static final String GET_DYNAFED_DATA = "getDynafedData";
     public static final String GET_MONITORING_DATA = "getMonitoringData";
     public static final String GET_CMDB_DATA_UPDATE = "getCmdbDataUpdate";
     public static final String GET_CMDB_DATA_DEPLOY = "getCmdbDataDeploy";

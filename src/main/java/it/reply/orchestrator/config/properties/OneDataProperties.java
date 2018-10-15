@@ -26,6 +26,8 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.validator.constraints.NotBlank;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
 import org.springframework.validation.annotation.Validated;
@@ -60,9 +62,8 @@ public class OneDataProperties {
   @ToString(exclude = "token")
   public static class ServiceSpaceProperties {
 
-    @NotNull
-    @NonNull
-    private URI oneproviderUrl;
+    @Nullable
+    private URI onezoneUrl;
 
     @NotNull
     @NonNull
@@ -74,6 +75,8 @@ public class OneDataProperties {
 
     @NotNull
     @NonNull
-    private String baseFolderPath = "";
+    @NotBlank
+    private String baseFolderPath = "/";
+
   }
 }

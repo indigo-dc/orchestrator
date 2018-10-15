@@ -126,9 +126,17 @@ public class IndigoInputsPreProcessorService {
     Optional.ofNullable(archiveRoot).map(ArchiveRoot::getTopology).ifPresent(topology -> {
 
       Map<String, ToscaFunction> functions = new HashMap<>();
+
+      Map<String, NodeTemplate> nodeTemplates =
+        CommonUtils.notNullOrDefaultValue(topology.getNodeTemplates(), Collections::emptyMap);
+
       functions.put(ToscaFunctionConstants.GET_ATTRIBUTE, (FunctionPropertyValue function,
-          String propertyName) -> processGetAttibute(function, runtimeProperties,
-              propertyName));
+        String propertyName) -> processGetAttibute(function, runtimeProperties,
+        propertyName));
+
+      functions.put(ToscaFunctionConstants.GET_PROPERTY, (FunctionPropertyValue function,
+        String propertyName) -> processGetProperty(function, nodeTemplates,
+        propertyName));
 
       Map<String, PropertyDefinition> templateInputs =
           CommonUtils.notNullOrDefaultValue(topology.getInputs(), Collections::emptyMap);
@@ -155,6 +163,37 @@ public class IndigoInputsPreProcessorService {
     });
     return processedOutputs;
   }
+
+  public void processFunctions(ArchiveRoot archiveRoot, Map<String, Object> inputs,
+    RuntimeProperties runtimeProperties) {
+    Optional
+      .ofNullable(archiveRoot)
+      .map(ArchiveRoot::getTopology)
+      .ifPresent(topology -> {
+        Map<String, ToscaFunction> functions = new HashMap<>();
+
+        Map<String, NodeTemplate> nodeTemplates =
+          CommonUtils.notNullOrDefaultValue(topology.getNodeTemplates(), Collections::emptyMap);
+
+        functions.put(ToscaFunctionConstants.GET_ATTRIBUTE, (FunctionPropertyValue function,
+          String propertyName) -> processGetAttibute(function, runtimeProperties,
+          propertyName));
+
+        functions.put(ToscaFunctionConstants.GET_PROPERTY, (FunctionPropertyValue function,
+          String propertyName) -> processGetProperty(function, nodeTemplates,
+          propertyName));
+
+        Map<String, PropertyDefinition> templateInputs =
+          CommonUtils.notNullOrDefaultValue(topology.getInputs(), Collections::emptyMap);
+
+        functions.put(ToscaFunctionConstants.GET_INPUT, (FunctionPropertyValue function,
+          String propertyName) -> processGetInputFuction(function, templateInputs, inputs,
+          propertyName));
+
+        processFunctions(topology, functions);
+      });
+  }
+
 
   protected void processFunctions(Topology topology, Map<String, ToscaFunction> functions) {
 
@@ -375,6 +414,62 @@ public class IndigoInputsPreProcessorService {
     } else {
       return Optional.of(returnValue);
     }
+  }
+
+  protected Optional<AbstractPropertyValue> processGetProperty(FunctionPropertyValue function,
+    @NonNull Map<String, NodeTemplate> nodeTemplates, String propertyName) {
+    return CommonUtils
+      .getFromOptionalMap(nodeTemplates, function.getParameters().get(0))
+      .flatMap(nodeTemplate -> {
+        String firstParam = function.getParameters().get(1);
+        List<String> additionalParameters = function.getParameters()
+          .subList(2, function.getParameters().size());
+        Optional<AbstractPropertyValue> returnValue = CommonUtils
+          .getFromOptionalMap(nodeTemplate.getProperties(), firstParam)
+          .map(IndigoInputsPreProcessorService::toAbstractPropertyValue);
+        if (!returnValue.isPresent() && !additionalParameters.isEmpty()) {
+          String optionalReqOrCapPropertyName = additionalParameters.get(0);
+          additionalParameters = additionalParameters.subList(1, additionalParameters.size());
+          returnValue = Optional.ofNullable(nodeTemplate.getCapabilities())
+            .map(capabilities -> capabilities.get(firstParam))
+            .flatMap(capability -> CommonUtils
+              .getFromOptionalMap(capability.getProperties(), optionalReqOrCapPropertyName))
+            .map(IndigoInputsPreProcessorService::toAbstractPropertyValue);
+          if (!returnValue.isPresent()) {
+            returnValue = Optional.ofNullable(nodeTemplate.getRelationships())
+              .map(requirements -> requirements.get(firstParam))
+              .flatMap(requirement -> CommonUtils
+                .getFromOptionalMap(requirement.getProperties(), optionalReqOrCapPropertyName))
+              .map(IndigoInputsPreProcessorService::toAbstractPropertyValue);
+          }
+        }
+        if (returnValue.isPresent()) {
+          AbstractPropertyValue propertyValue = returnValue.get();
+          for (String additionalParameter : additionalParameters) {
+            if (propertyValue instanceof ComplexPropertyValue) {
+              propertyValue = IndigoInputsPreProcessorService
+                .toAbstractPropertyValue(((ComplexPropertyValue) propertyValue)
+                  .getValue()
+                  .get(additionalParameter));
+            } else if (propertyValue instanceof ListPropertyValue) {
+              propertyValue = IndigoInputsPreProcessorService
+                .toAbstractPropertyValue(((ListPropertyValue) propertyValue)
+                  .getValue()
+                  .get(Integer.parseInt(additionalParameter)));
+            }
+          }
+          returnValue = Optional.ofNullable(propertyValue);
+        }
+        if (!returnValue.isPresent()) {
+          throw new ToscaException(
+            String.format("Failed to evaluate function %s[%s][%s]: no value found",
+              propertyName, function.getFunction(),
+              CommonUtils.nullableCollectionToStream(function.getParameters()).collect(
+                Collectors.joining(", "))));
+        }
+        return returnValue;
+      });
+
   }
 
   /**

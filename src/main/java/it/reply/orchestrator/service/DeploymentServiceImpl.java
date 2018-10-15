@@ -33,6 +33,7 @@ import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.deployment.PlacementPolicy;
+import it.reply.orchestrator.dto.dynafed.Dynafed;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.enums.DeploymentProvider;
@@ -190,12 +191,13 @@ public class DeploymentServiceImpl implements DeploymentService {
     // Build deployment message
     DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType);
 
-    if (deploymentType == DeploymentType.CHRONOS) {
-      // Extract OneData requirements from template
-      Map<String, OneData> odRequirements = toscaService
-          .extractOneDataRequirements(parsingResult, request.getParameters());
-      deploymentMessage.setOneDataRequirements(odRequirements);
-    }
+    Map<String, OneData> odRequirements = toscaService
+        .extractOneDataRequirements(parsingResult, request.getParameters());
+    deploymentMessage.setOneDataRequirements(odRequirements);
+
+    Map<String, Dynafed> dyanfedRequirements = toscaService
+        .extractDyanfedRequirements(parsingResult, request.getParameters());
+    deploymentMessage.setDynafedRequirements(dyanfedRequirements);
 
     deploymentMessage.setTimeoutInMins(request.getTimeoutMins());
 
@@ -359,6 +361,14 @@ public class DeploymentServiceImpl implements DeploymentService {
     Map<String, PlacementPolicy> placementPolicies =
         toscaService.extractPlacementPolicies(parsingResult);
     deploymentMessage.setPlacementPolicies(placementPolicies);
+
+    Map<String, OneData> odRequirements = toscaService
+        .extractOneDataRequirements(parsingResult, request.getParameters());
+    deploymentMessage.setOneDataRequirements(odRequirements);
+
+    Map<String, Dynafed> dyanfedRequirements = toscaService
+        .extractDyanfedRequirements(parsingResult, request.getParameters());
+    deploymentMessage.setDynafedRequirements(dyanfedRequirements);
 
     deploymentMessage.setTimeoutInMins(request.getTimeoutMins());
 

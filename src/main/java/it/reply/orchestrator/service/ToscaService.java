@@ -34,6 +34,7 @@ import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.ImageData;
 import it.reply.orchestrator.dto.deployment.PlacementPolicy;
+import it.reply.orchestrator.dto.dynafed.Dynafed;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.service.ToscaException;
@@ -247,6 +248,9 @@ public interface ToscaService {
    *         used are hard-coded and are either 'input', 'output' or 'service'.
    */
   public Map<String, OneData> extractOneDataRequirements(ArchiveRoot archiveRoot,
+      Map<String, Object> inputs);
+
+  public Map<String, Dynafed> extractDyanfedRequirements(ArchiveRoot archiveRoot,
       Map<String, Object> inputs);
 
   /**

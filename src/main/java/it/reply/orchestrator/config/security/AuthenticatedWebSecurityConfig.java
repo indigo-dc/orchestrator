@@ -16,6 +16,8 @@
 
 package it.reply.orchestrator.config.security;
 
+import com.google.common.collect.Lists;
+
 import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.config.properties.OidcProperties.ScopedOidcClientProperties;
 import it.reply.orchestrator.exception.CustomOAuth2ExceptionRenderer;
@@ -41,6 +43,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -160,6 +163,8 @@ public class AuthenticatedWebSecurityConfig extends BaseWebSecurityConfig {
     configurer.tokenServices(introspectingTokenService());
 
     CustomOAuth2ExceptionRenderer exceptionRenderer = new CustomOAuth2ExceptionRenderer();
+    exceptionRenderer
+      .setMessageConverters(Lists.newArrayList(new MappingJackson2HttpMessageConverter()));
 
     OAuth2AuthenticationEntryPoint authenticationEntryPoint = new OAuth2AuthenticationEntryPoint();
     authenticationEntryPoint.setExceptionRenderer(exceptionRenderer);

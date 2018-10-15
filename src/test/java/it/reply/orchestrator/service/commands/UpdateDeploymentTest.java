@@ -151,7 +151,7 @@ public class UpdateDeploymentTest extends BaseDeployCommandTest<UpdateDeployment
         .token("token")
         .space("space")
         .path("path")
-        .providers("providers")
+        .providersAsString("providers")
         .smartScheduling(true)
         .build();
     oneDataRequirements.put("input", onedata);
@@ -166,7 +166,7 @@ public class UpdateDeploymentTest extends BaseDeployCommandTest<UpdateDeployment
         .token("token")
         .space("space")
         .path("path")
-        .providers("providers")
+        .providersAsString("providers")
         .smartScheduling(true)
         .build();
     oneDataRequirements.put("output", onedata);
@@ -181,7 +181,7 @@ public class UpdateDeploymentTest extends BaseDeployCommandTest<UpdateDeployment
         .token("token")
         .space("space")
         .path("path")
-        .providers("providers")
+        .providersAsString("providers")
         .smartScheduling(true)
         .build();
     oneDataRequirements.put("input", onedata);
@@ -191,7 +191,7 @@ public class UpdateDeploymentTest extends BaseDeployCommandTest<UpdateDeployment
         .token("token")
         .space("space")
         .path("path")
-        .providers("providers")
+        .providersAsString("providers")
         .smartScheduling(true)
         .build();
     oneDataRequirements.put("output", onedata);

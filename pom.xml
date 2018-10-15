@@ -196,8 +196,12 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		
-		<!-- Ignite -->
+    <dependency>
+      <groupId>com.fasterxml.jackson.dataformat</groupId>
+      <artifactId>jackson-dataformat-xml</artifactId>
+    </dependency>
+
+    <!-- Ignite -->
         <dependency>
             <groupId>org.apache.ignite</groupId>
             <artifactId>ignite-spring</artifactId>

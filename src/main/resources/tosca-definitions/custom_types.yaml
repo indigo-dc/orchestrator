@@ -67,7 +67,7 @@ capability_types:
         required: false
       gpu_model:
         type: string
-        required: false  
+        required: false
 
   tosca.capabilities.indigo.LRMS:
     derived_from: tosca.capabilities.Container
@@ -1214,8 +1214,8 @@ node_types:
       marathon_port:
         required: no
         type: integer
-        default: 8443      
-      tensorflow_image: 
+        default: 8443
+      tensorflow_image:
         required: no
         type: string
         default: 'tensorflow/tensorflow:latest-gpu'
@@ -1244,7 +1244,7 @@ node_types:
           implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/start_tensorflow.yml
           inputs:
             marathon_username: { get_property: [ SELF, marathon_username ] }
-            marathon_password: { get_property: [ SELF, marathon_password ] }      
+            marathon_password: { get_property: [ SELF, marathon_password ] }
             marathon_protocol: { get_property: [ SELF, marathon_protocol ] }
             marathon_host:  { get_property: [ SELF, marathon_host ] }
             marathon_port: { get_property: [ SELF, marathon_port ] }
@@ -1377,7 +1377,7 @@ node_types:
             enable_nfs_share: { get_property: [ SELF, enable_nfs_share ] }
             marathon_enable_gpu_support: { get_property: [ SELF, enable_gpu_support ] }
             mesos_enable_gpu_support: { get_property: [ SELF, enable_gpu_support ] }
-            chronos_enable_gpu_support: { get_property: [ SELF, enable_gpu_support ] }  
+            chronos_enable_gpu_support: { get_property: [ SELF, enable_gpu_support ] }
             wn_ips: { get_property: [ SELF, wn_ips ] }
 
   tosca.nodes.indigo.MesosMaster:
@@ -1451,11 +1451,11 @@ node_types:
         type: string
         required: no
         default: 'https://dodas-tts.cloud.cnaf.infn.it'
-      oneclient_token: 
+      oneclient_token:
         type: string
         required: no
         default: 'dummy'
-      oneprovider_name: 
+      oneprovider_name:
         type: string
         required: no
         default: 'dummy'
@@ -1666,7 +1666,7 @@ node_types:
       marathon_password:
         type: string
         required: yes
-      enable_consul_sd: 
+      enable_consul_sd:
         type: boolean
         required: false
         default: true
@@ -2100,3 +2100,56 @@ node_types:
           inputs:
             jupyterhub_spawner: { get_property: [ SELF, spawner ] }
             jupyterhub_authenticator: { get_property: [ SELF, spawner ] }
+
+  tosca.nodes.indigo.OnedataSpace:
+    derived_from: tosca.nodes.Root
+    attributes:
+      selected_provider:
+        type: string
+    properties:
+      token:
+        required: no
+        type: string
+      space:
+        required: yes
+        type: string
+      oneproviders:
+        required: no
+        type: list
+        entry_schema:
+          type: string
+      onezone:
+        required: no
+        type: string
+      smartScheduling:
+        type: boolean
+        required: false
+        default: false
+
+  tosca.nodes.indigo.OnedataServiceSpace:
+    derived_from: tosca.nodes.Root
+    attributes:
+      space:
+        type: string
+      path:
+        type: string
+      selected_provider:
+        type: string
+      token:
+        type: string
+      onezone:
+        type: string
+    properties:
+      smartScheduling:
+        type: boolean
+        required: false
+        default: false
+
+  tosca.nodes.indigo.Dynafed:
+    derived_from: tosca.nodes.Root
+    properties:
+      files:
+        required: yes
+        type: list
+        entry_schema:
+          type: string

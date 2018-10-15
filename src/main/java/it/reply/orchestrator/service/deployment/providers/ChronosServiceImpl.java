@@ -54,6 +54,8 @@ import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.function.ThrowingConsumer;
 import it.reply.orchestrator.function.ThrowingFunction;
+import it.reply.orchestrator.service.IndigoInputsPreProcessorService;
+import it.reply.orchestrator.service.IndigoInputsPreProcessorService.RuntimeProperties;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.deployment.providers.factory.ChronosClientFactory;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
@@ -109,6 +111,9 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
 
   @Autowired
   private OAuth2TokenService oauth2TokenService;
+
+  @Autowired
+  private IndigoInputsPreProcessorService indigoInputsPreProcessorService;
 
   protected <R> R executeWithClientForResult(CloudProviderEndpoint cloudProviderEndpoint,
       @Nullable OidcTokenId requestedWithToken,
@@ -446,15 +451,9 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
   protected ChronosJobsOrderedIterator getJobsTopologicalOrder(DeploymentMessage deploymentMessage,
       Deployment deployment) {
     LOG.debug("Generating job graph");
-    /*
-     * FIXME TEMPORARY - Replace hard-coded properties in nodes (WARNING: Cannot be done when
-     * receiving the template because we still miss OneData settings that are obtained during the WF
-     * after the site choice, which in turns depends on the template nodes and properties...)
-     */
     Map<String, OneData> odParameters = deploymentMessage.getOneDataParameters();
-    String customizedTemplate = replaceHardCodedParams(deployment.getTemplate(), odParameters);
 
-    ArchiveRoot ar = toscaService.prepareTemplate(customizedTemplate, deployment.getParameters());
+    ArchiveRoot ar = prepareTemplate(deployment, odParameters);
 
     Map<String, NodeTemplate> nodes = Optional
         .ofNullable(ar.getTopology())
@@ -527,52 +526,25 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
    * @param odParameters
    *          the OneData settings.
    */
-  public String replaceHardCodedParams(String template, Map<String, OneData> odParameters) {
+  public ArchiveRoot prepareTemplate(Deployment deployment, Map<String, OneData> odParameters) {
 
-    LOG.debug("Replacing OneData parameters");
-
-    String customizedTemplate = template;
-    if (odParameters.containsKey("input")) {
-      OneData od = odParameters.get("input");
-      if (CollectionUtils.isEmpty(od.getProviders())) {
-        throw new DeploymentException("No OneData Providers available for input");
+    RuntimeProperties runtimeProperties = new RuntimeProperties();
+    odParameters.forEach((nodeName, odParameter) -> {
+      runtimeProperties.put(odParameter.getOnezone(), nodeName, "onezone");
+      runtimeProperties.put(odParameter.getToken(), nodeName, "token");
+      runtimeProperties
+        .put(odParameter.getSelectedOneprovider().getEndpoint(), nodeName, "selected_provider");
+      if (odParameter.isServiceSpace()) {
+        runtimeProperties.put(odParameter.getSpace(), nodeName, "space");
+        runtimeProperties.put(odParameter.getPath(), nodeName, "path");
       }
-      // Replace OneData properties
-      customizedTemplate =
-          customizedTemplate.replace("INPUT_ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR",
-              od.getProviders().get(0).getEndpoint());
-      LOG.debug("Replaced {} OneData parameters with: {}", "input", od);
-    }
+    });
 
-    if (odParameters.containsKey("output")) {
-      OneData od = odParameters.get("output");
-      if (CollectionUtils.isEmpty(od.getProviders())) {
-        throw new DeploymentException("No OneData Providers available for output");
-      }
-      // Replace OneData properties
-      customizedTemplate =
-          customizedTemplate.replace("OUTPUT_ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR",
-              od.getProviders().get(0).getEndpoint());
-      LOG.debug("Replaced {} OneData parameters with: {}", "output", od);
-    }
+    ArchiveRoot ar = toscaService.parseTemplate(deployment.getTemplate());
 
-    if (odParameters.containsKey("service")) {
-      OneData od = odParameters.get("service");
-      if (CollectionUtils.isEmpty(od.getProviders())) {
-        throw new DeploymentException("No OneData Providers available for service space");
-      }
-      // Replace OneData properties
-      customizedTemplate =
-          customizedTemplate
-              .replace("TOKEN_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getToken())
-              .replace("DATA_SPACE_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getSpace())
-              .replace("PATH_TO_BE_SET_BY_THE_ORCHESTRATOR", od.getPath())
-              .replace("ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR",
-                  od.getProviders().get(0).getEndpoint());
-      LOG.debug("Replaced {} OneData parameters with: {}", "service", od);
-    }
-
-    return customizedTemplate;
+    indigoInputsPreProcessorService
+      .processFunctions(ar, deployment.getParameters(), runtimeProperties);
+    return ar;
   }
 
   public enum JobState {

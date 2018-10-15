@@ -33,6 +33,7 @@ import alien4cloud.security.model.Role;
 import alien4cloud.tosca.ArchiveParser;
 import alien4cloud.tosca.ArchiveUploadService;
 import alien4cloud.tosca.model.ArchiveRoot;
+import alien4cloud.tosca.normative.BooleanType;
 import alien4cloud.tosca.normative.IPropertyType;
 import alien4cloud.tosca.normative.IntegerType;
 import alien4cloud.tosca.normative.InvalidPropertyValueException;
@@ -58,7 +59,11 @@ import it.reply.orchestrator.dto.cmdb.ImageData;
 import it.reply.orchestrator.dto.cmdb.ImageData.ImageDataBuilder;
 import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.dto.deployment.PlacementPolicy;
+import it.reply.orchestrator.dto.dynafed.Dynafed;
+import it.reply.orchestrator.dto.dynafed.Dynafed.DynafedBuilder;
 import it.reply.orchestrator.dto.onedata.OneData;
+import it.reply.orchestrator.dto.onedata.OneData.OneDataBuilder;
+import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
@@ -250,10 +255,6 @@ public class ToscaServiceImpl implements ToscaService {
     }
     String template = writer.toString();
 
-    // Log the warning because Alien4Cloud uses an hard-coded Velocity template to encode the string
-    // and some information might be missing!!
-    LOG.warn("TOSCA template conversion from in-memory: "
-        + "WARNING: Some nodes or properties might be missing!! Use at your own risk!");
     LOG.debug(template);
 
     return template;
@@ -267,8 +268,10 @@ public class ToscaServiceImpl implements ToscaService {
   @Override
   public ArchiveRoot parseAndValidateTemplate(String toscaTemplate, Map<String, Object> inputs) {
     ArchiveRoot ar = parseTemplate(toscaTemplate);
-    Optional.ofNullable(ar.getTopology()).map(topology -> topology.getInputs()).ifPresent(
-        topologyInputs -> validateUserInputs(topologyInputs, inputs));
+    Optional
+      .ofNullable(ar.getTopology())
+      .map(Topology::getInputs)
+      .ifPresent(topologyInputs -> validateUserInputs(topologyInputs, inputs));
     return ar;
   }
 
@@ -317,7 +320,7 @@ public class ToscaServiceImpl implements ToscaService {
       if (exception.isPresent()) {
         throw exception.get();
       } else {
-        throw new ToscaException("Failed to parse template, ex");
+        throw new ToscaException("Failed to parse template", ex);
       }
     }
   }
@@ -396,7 +399,6 @@ public class ToscaServiceImpl implements ToscaService {
                       .<ScalarPropertyValue>getTypedCapabilityPropertyByName(osCapability,
                           capabilityPropertyName)
                       .map(ScalarPropertyValue::getValue)
-                      .filter(Objects::nonNull)
                       .ifPresent(
                           property -> mappingFunction.apply(imageMetadataBuilder).apply(property));
                 });
@@ -880,62 +882,88 @@ public class ToscaServiceImpl implements ToscaService {
   @Override
   public Map<String, OneData> extractOneDataRequirements(ArchiveRoot archiveRoot,
       Map<String, Object> inputs) {
-    try {
 
-      // FIXME: Remove hard-coded input extraction and search on OneData nodes instead
+    Map<String, OneData> result = new HashMap<>();
 
-      /*
-       * By now, OneData requirements are in user's input fields: input_onedata_space,
-       * output_onedata_space, [input_onedata_providers, output_onedata_providers]
-       */
-      Map<String, OneData> result = new HashMap<>();
-      OneData oneDataInput = null;
-      if (inputs.get("input_onedata_space") != null) {
-        oneDataInput = OneData.builder()
-            .token((String) inputs.get("input_onedata_token"))
-            .space((String) inputs.get("input_onedata_space"))
-            .path((String) inputs.get("input_path"))
-            .providersAsString((String) inputs.get("input_onedata_providers"))
-            .zone((String) inputs.get("input_onedata_zone"))
-            .build();
-        if (oneDataInput.getProviders().isEmpty()) {
-          oneDataInput.setSmartScheduling(true);
-        }
-        result.put("input", oneDataInput);
-        LOG.debug("Extracted OneData requirement for node <{}>: <{}>", "input", oneDataInput);
-      }
+    archiveRoot
+        .getTopology()
+        .getNodeTemplates()
+      .forEach((name, node) -> {
+        if (isOfToscaType(node, Nodes.ONEDATA_SPACE)) {
+            Map<String, AbstractPropertyValue> properties = node.getProperties();
 
-      if (inputs.get("output_onedata_space") != null) {
-        OneData oneDataOutput = OneData.builder()
-            .token((String) inputs.get("output_onedata_token"))
-            .space((String) inputs.get("output_onedata_space"))
-            .path((String) inputs.get("output_path"))
-            .providersAsString((String) inputs.get("output_onedata_providers"))
-            .zone((String) inputs.get("output_onedata_zone"))
-            .build();
-        if (oneDataOutput.getProviders().isEmpty()) {
-          if (oneDataInput != null) {
-            oneDataOutput.setProviders(oneDataInput.getProviders());
-            oneDataOutput.setSmartScheduling(oneDataInput.isSmartScheduling());
-          } else {
-            oneDataOutput.setSmartScheduling(true);
+          String space = CommonUtils.<ScalarPropertyValue>optionalCast(
+            CommonUtils.getFromOptionalMap(properties, "space"))
+            .map(ScalarPropertyValue::getValue).orElseThrow(() -> new ToscaException(
+              "Space name for node " + node.getName() + " must be provided"));
+          OneDataBuilder oneDataBuilder = OneData
+            .builder()
+            .serviceSpace(false)
+            .space(space);
+            CommonUtils.<ScalarPropertyValue>optionalCast(
+              CommonUtils.getFromOptionalMap(properties, "token"))
+              .map(ScalarPropertyValue::getValue)
+              .ifPresent(oneDataBuilder::token);
+          CommonUtils.<ListPropertyValue>optionalCast(
+            CommonUtils.getFromOptionalMap(properties, "oneproviders"))
+            .map(list -> parseListPropertyValue(list, value -> {
+              return OneDataProviderInfo
+                .builder()
+                .endpoint(((ScalarPropertyValue) value).getValue())
+                .build();
+            }))
+            .ifPresent(oneDataBuilder::oneproviders);
+            CommonUtils.<ScalarPropertyValue>optionalCast(
+              CommonUtils.getFromOptionalMap(properties, "onezone"))
+              .map(ScalarPropertyValue::getValue)
+              .ifPresent(oneDataBuilder::onezone);
+            CommonUtils.<ScalarPropertyValue>optionalCast(
+              CommonUtils.getFromOptionalMap(properties, "smartScheduling"))
+              .map(value -> parseScalarPropertyValue(value, BooleanType.class))
+              .ifPresent(oneDataBuilder::smartScheduling);
+          result.put(node.getName(), oneDataBuilder.build());
+        } else if (isOfToscaType(node, Nodes.ONEDATA_SERVICE_SPACE)) {
+          Map<String, AbstractPropertyValue> properties = node.getProperties();
+          OneDataBuilder oneDataBuilder = OneData
+            .builder()
+            .serviceSpace(true);
+          CommonUtils.<ScalarPropertyValue>optionalCast(
+            CommonUtils.getFromOptionalMap(properties, "smartScheduling"))
+            .map(value -> parseScalarPropertyValue(value, BooleanType.class))
+            .ifPresent(oneDataBuilder::smartScheduling);
+          result.put(node.getName(), oneDataBuilder.build());
           }
-        }
-        result.put("output", oneDataOutput);
-        LOG.debug("Extracted OneData requirement for node <{}>: <{}>", "output", oneDataOutput);
-      }
-
-      if (result.size() == 0) {
-        LOG.debug("No OneData requirements to extract");
-      }
-
-      return result;
-    } catch (RuntimeException ex) {
-      throw new RuntimeException("Failed to extract OneData requirements: " + ex.getMessage(), ex);
-    }
+        });
+    return result;
   }
 
   @Override
+  public Map<String, Dynafed> extractDyanfedRequirements(ArchiveRoot archiveRoot,
+    Map<String, Object> inputs) {
+
+    Map<String, Dynafed> result = new HashMap<>();
+    getNodesOfType(archiveRoot, Nodes.DYNAFED)
+      .forEach(node -> {
+        if (isOfToscaType(node, Nodes.DYNAFED)) {
+          Map<String, AbstractPropertyValue> properties = node.getProperties();
+          DynafedBuilder dynafedBuilder = Dynafed.builder();
+          CommonUtils.<ListPropertyValue>optionalCast(
+            CommonUtils.getFromOptionalMap(properties, "files"))
+            .map(list -> this.parseListPropertyValue(list, value -> {
+              return Dynafed.File
+                .builder()
+                .endpoint(((ScalarPropertyValue) value).getValue())
+                .build();
+            }))
+            .ifPresent(dynafedBuilder::files);
+          result.put(node.getName(), dynafedBuilder.build());
+        }
+      });
+    return result;
+  }
+
+  @Override
+  @NonNull
   public Map<String, PlacementPolicy> extractPlacementPolicies(ArchiveRoot archiveRoot) {
     Map<String, PlacementPolicy> placementPolicies = new HashMap<>();
     Optional.ofNullable(archiveRoot.getTopology())
