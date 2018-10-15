@@ -165,7 +165,7 @@ public class ImServiceTest {
 
     Mockito.doReturn(ar).when(toscaService).prepareTemplate(deployment.getTemplate(),
         deployment.getParameters());
-    Mockito.when(infrastructureManager.createInfrastructure(Mockito.anyString(),
+    Mockito.when(infrastructureManager.createInfrastructureAsync(Mockito.anyString(),
         Mockito.eq(BodyContentType.TOSCA))).thenReturn(infrastructureUri);
     Mockito.doReturn(infrastructureManager).when(imClientFactory)
         .build(Mockito.anyListOf(CloudProviderEndpoint.class), Mockito.any());
@@ -197,7 +197,7 @@ public class ImServiceTest {
         .thenReturn(deployment);
     Mockito.doReturn(ar).when(toscaService).prepareTemplate(deployment.getTemplate(),
         deployment.getParameters());
-    Mockito.when(infrastructureManager.createInfrastructure(Mockito.anyString(),
+    Mockito.when(infrastructureManager.createInfrastructureAsync(Mockito.anyString(),
         Mockito.eq(BodyContentType.TOSCA))).thenReturn(infrastructureUri);
     Mockito.doReturn(infrastructureManager).when(imClientFactory)
         .build(Mockito.anyListOf(CloudProviderEndpoint.class), Mockito.any());
@@ -224,7 +224,7 @@ public class ImServiceTest {
         deployment.getParameters());
     Mockito.doReturn(infrastructureManager).when(imClientFactory)
         .build(Mockito.anyListOf(CloudProviderEndpoint.class), Mockito.any());
-    Mockito.when(infrastructureManager.createInfrastructure(Mockito.anyString(),
+    Mockito.when(infrastructureManager.createInfrastructureAsync(Mockito.anyString(),
         Mockito.eq(BodyContentType.TOSCA))).thenThrow(imException);
     
     assertThatThrownBy(() -> imService.doDeploy(dm))
@@ -527,7 +527,7 @@ public class ImServiceTest {
         .thenReturn(deployment);
     Mockito.doReturn(ar).when(toscaService).prepareTemplate(deployment.getTemplate(),
         deployment.getParameters());
-    Mockito.when(infrastructureManager.createInfrastructure(Mockito.anyString(),
+    Mockito.when(infrastructureManager.createInfrastructureAsync(Mockito.anyString(),
         Mockito.eq(BodyContentType.TOSCA))).thenReturn(infrastructureUri);
     Mockito.doReturn(infrastructureManager).when(imClientFactory)
         .build(Mockito.anyListOf(CloudProviderEndpoint.class), Mockito.any());
@@ -553,7 +553,7 @@ public class ImServiceTest {
         .thenReturn(deployment);
     Mockito.doReturn(ar).when(toscaService).prepareTemplate(deployment.getTemplate(),
         deployment.getParameters());
-    Mockito.when(infrastructureManager.createInfrastructure(Mockito.anyString(),
+    Mockito.when(infrastructureManager.createInfrastructureAsync(Mockito.anyString(),
         Mockito.eq(BodyContentType.TOSCA))).thenReturn(infrastructureUri);
     Mockito.doReturn(infrastructureManager).when(imClientFactory)
         .build(Mockito.anyListOf(CloudProviderEndpoint.class), Mockito.any());
@@ -581,7 +581,7 @@ public class ImServiceTest {
         .thenReturn(deployment);
     Mockito.doReturn(ar).when(toscaService).prepareTemplate(deployment.getTemplate(),
         deployment.getParameters());
-    Mockito.when(infrastructureManager.createInfrastructure(Mockito.anyString(),
+    Mockito.when(infrastructureManager.createInfrastructureAsync(Mockito.anyString(),
         Mockito.eq(BodyContentType.TOSCA))).thenReturn(infrastructureUri);
     Mockito.doReturn(infrastructureManager).when(imClientFactory)
         .build(Mockito.anyListOf(CloudProviderEndpoint.class), Mockito.any());
@@ -611,7 +611,7 @@ public class ImServiceTest {
         .thenReturn(deployment);
     Mockito.doReturn(ar).when(toscaService).prepareTemplate(deployment.getTemplate(),
         deployment.getParameters());
-    Mockito.when(infrastructureManager.createInfrastructure(Mockito.anyString(),
+    Mockito.when(infrastructureManager.createInfrastructureAsync(Mockito.anyString(),
         Mockito.eq(BodyContentType.TOSCA))).thenReturn(infrastructureUri);
     Mockito.doReturn(infrastructureManager).when(imClientFactory)
         .build(Mockito.anyListOf(CloudProviderEndpoint.class), Mockito.any());
@@ -631,7 +631,7 @@ public class ImServiceTest {
         deployment.getParameters());
     Mockito.doReturn(newAr).when(toscaService).prepareTemplate("newTemplate",
         deployment.getParameters());
-    Mockito.when(infrastructureManager.createInfrastructure(Mockito.anyString(),
+    Mockito.when(infrastructureManager.createInfrastructureAsync(Mockito.anyString(),
         Mockito.eq(BodyContentType.TOSCA))).thenReturn(infrastructureUri);
     Mockito.doReturn(infrastructureManager).when(imClientFactory)
         .build(Mockito.anyListOf(CloudProviderEndpoint.class), Mockito.any());
