@@ -21,6 +21,7 @@ import it.reply.orchestrator.exception.OrchestratorException;
 
 import java.util.Optional;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.mitre.oauth2.model.RegisteredClient;
 import org.mitre.openid.connect.client.service.ClientConfigurationService;
 import org.mitre.openid.connect.client.service.ServerConfigurationService;
@@ -39,8 +40,8 @@ public class OAuth2ConfigurationsService {
   private ClientConfigurationService clientConfigurationService;
 
   @Autowired
-  protected OAuth2ConfigurationsService(OidcProperties oidcProperties,
-      ApplicationContext applicationContext) {
+  protected OAuth2ConfigurationsService(@NonNull OidcProperties oidcProperties,
+      @NonNull ApplicationContext applicationContext) {
     this.oidcProperties = oidcProperties;
 
     if (oidcProperties.isEnabled()) {

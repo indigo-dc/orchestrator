@@ -29,14 +29,21 @@ import it.reply.orchestrator.dal.repository.OidcEntityRepository;
 import it.reply.orchestrator.dto.security.IndigoOAuth2Authentication;
 import it.reply.orchestrator.dto.security.IndigoUserInfo;
 import it.reply.orchestrator.exception.OrchestratorException;
+import it.reply.orchestrator.exception.service.DeploymentException;
+import it.reply.orchestrator.function.ThrowingConsumer;
+import it.reply.orchestrator.function.ThrowingFunction;
+import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.JwtUtils;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 @Service
 public class OAuth2TokenService {
@@ -166,6 +173,27 @@ public class OAuth2TokenService {
   }
 
   /**
+   * Gets the user's organization from the token ID.
+   *
+   * @param oidcTokenId
+   *     the token ID
+   * @return the user's organization
+   */
+  public String getOrganization(OidcTokenId oidcTokenId) {
+    Optional<OidcEntity> oidcEntity = oidcEntityRepository
+        .findByOidcEntityId(oidcTokenId.getOidcEntityId());
+    if (oidcEntity.isPresent()) {
+      return oidcEntity.get().getOrganization();
+    } else {
+      if (oidcProperties.isEnabled()) {
+        throw new DeploymentException("No user associated to deployment token found");
+      } else {
+        return "indigo-dc";
+      }
+    }
+  }
+
+  /**
    * Exchange an access token and put it in the cache.
    * 
    * @return the exchanged grant
@@ -193,4 +221,61 @@ public class OAuth2TokenService {
     return oauth2TokenCacheService.get(id).getAccessToken();
   }
 
+  /**
+   * Execute a {@link ThrowingFunction}, handling the OAuth2 token.
+   *
+   * @param oidcTokenId
+   *     the token ID
+   * @param function
+   *     the {@link ThrowingFunction}
+   * @param tokenRefreshEvaluator
+   *     function evaluating whether a refresh token needs to be retrieved
+   * @return the {@link ThrowingFunction} result
+   * @throws E
+   *     the exception thrown by the {@link ThrowingFunction}
+   */
+  public <R, E extends Exception> R executeWithClientForResult(
+      @Nullable OidcTokenId oidcTokenId,
+      ThrowingFunction<String, R, E> function,
+      Predicate<Exception> tokenRefreshEvaluator) throws E {
+    if (!oidcProperties.isEnabled()) {
+      return function.apply(null);
+    } else {
+      String accessToken = getAccessToken(CommonUtils.checkNotNull(oidcTokenId));
+      try {
+        return function.apply(accessToken);
+      } catch (Exception ex) {
+        if (tokenRefreshEvaluator.test(ex)) {
+          String refreshedAccessToken = getRefreshedAccessToken(oidcTokenId);
+          return function.apply(refreshedAccessToken);
+        } else {
+          throw ex;
+        }
+      }
+    }
+  }
+
+  /**
+   * Execute a {@link ThrowingConsumer}, handling the OAuth2 token.
+   *
+   * @param oidcTokenId
+   *     the token ID
+   * @param consumer
+   *     the {@link ThrowingConsumer}
+   * @param tokenRefreshEvaluator
+   *     function evaluating whether a refresh token needs to be retrieved
+   * @throws E
+   *     the exception thrown by the {@link ThrowingConsumer}
+   */
+  public <E extends Exception> void executeWithClient(
+      @Nullable OidcTokenId oidcTokenId,
+      ThrowingConsumer<String, E> consumer,
+      Predicate<Exception> tokenRefreshEvaluator) throws E {
+    executeWithClientForResult(oidcTokenId,
+        accessToken -> consumer.asFunction().apply(accessToken), tokenRefreshEvaluator);
+  }
+
+  public static final Predicate<Exception> restTemplateTokenRefreshEvaluator =
+      ex -> ex instanceof HttpClientErrorException && ((HttpClientErrorException) ex)
+          .getRawStatusCode() == 401;
 }

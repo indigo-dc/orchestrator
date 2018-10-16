@@ -16,16 +16,6 @@
 
 package it.reply.orchestrator.service.deployment.providers;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.mockito.Matchers.any;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
 import alien4cloud.model.components.ComplexPropertyValue;
 import alien4cloud.model.components.ScalarPropertyValue;
 import alien4cloud.model.topology.NodeTemplate;
@@ -39,18 +29,25 @@ import com.google.common.collect.Lists;
 import it.infn.ba.indigo.chronos.client.Chronos;
 import it.infn.ba.indigo.chronos.client.model.v1.Job;
 import it.infn.ba.indigo.chronos.client.utils.ChronosException;
-import it.reply.orchestrator.config.properties.ChronosProperties;
 import it.reply.orchestrator.config.specific.ToscaParserAwareTest;
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
+import it.reply.orchestrator.dto.CloudProviderEndpoint;
+import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
+import it.reply.orchestrator.dto.cmdb.ChronosServiceData;
+import it.reply.orchestrator.dto.cmdb.ChronosServiceData.ChronosServiceProperties;
+import it.reply.orchestrator.dto.cmdb.CloudService;
+import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.dto.deployment.ChronosJobsOrderedIterator;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.onedata.OneData;
+import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.exception.service.DeploymentException;
+import it.reply.orchestrator.function.ThrowingFunction;
 import it.reply.orchestrator.service.ToscaServiceImpl;
 import it.reply.orchestrator.service.ToscaServiceTest;
 import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl.IndigoJob;
@@ -58,13 +55,10 @@ import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl.Job
 import it.reply.orchestrator.service.deployment.providers.factory.ChronosClientFactory;
 import it.reply.orchestrator.util.TestUtil;
 import it.reply.orchestrator.utils.CommonUtils;
+import it.reply.orchestrator.utils.ToscaConstants.Nodes;
 
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
-
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
 
 import org.assertj.core.api.AbstractThrowableAssert;
 import org.junit.Before;
@@ -78,15 +72,20 @@ import org.springframework.boot.test.autoconfigure.json.JsonTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.Matchers.any;
+import static org.mockito.Mockito.*;
+
 @RunWith(JUnitParamsRunner.class)
 @JsonTest
 public class ChronosServiceTest extends ToscaParserAwareTest {
 
   @InjectMocks
   private ChronosServiceImpl chronosService;
-
-  @SpyBean
-  private ChronosProperties chronosProperties;
 
   @SpyBean
   @Autowired
@@ -113,93 +112,59 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
-    when(chronosClientFactory.build(any(Deployment.class))).thenReturn(chronos);
-    chronosProperties.setLocalVolumesHostBasePath("/tmp");
-    chronosProperties.afterPropertiesSet();
+    when(chronosClientFactory.build(any(CloudProviderEndpoint.class), any(String.class)))
+        .thenReturn(chronos);
+    Mockito
+        .when(oauth2tokenService.executeWithClientForResult(
+            Mockito.any(), Mockito.any(), Mockito.any()))
+        .thenAnswer(y -> ((ThrowingFunction) y.getArguments()[1]).apply("token"));
+  }
+
+  private CloudProviderEndpoint generateCloudProviderEndpoint() {
+    return CloudProviderEndpoint
+        .builder()
+        .iaasType(IaaSType.CHRONOS)
+        .cpEndpoint("example.com/chronos")
+        .cpComputeServiceId("chronos-service-id")
+        .password("password")
+        .username("username")
+        .build();
   }
 
   @Test
-  public void checkOneDataHardCodedParamsSubstitutionInUserDefinedTemplate() throws Exception {
+  public void checkOneDataParamsSubstitutionInTemplate() throws Exception {
     String template = TestUtil.getFileContentAsString(ToscaServiceTest.TEMPLATES_ONEDATA_BASE_DIR
-        + "tosca_onedata_requirements_hardcoded_userdefined.yaml");
-    Map<String, Object> inputs = new HashMap<String, Object>();
-    inputs.put("input_onedata_providers", "input_provider_1,input_provider_2");
-    inputs.put("input_onedata_space", "input_onedata_space");
-    inputs.put("input_onedata_token", "input_token");
-    inputs.put("input_path", "input/path");
-    inputs.put("input_onedata_zone", "input_zone");
-    inputs.put("output_onedata_providers", "output_provider_3,output_provider_4");
-    inputs.put("output_onedata_space", "output_onedata_space");
-    inputs.put("output_onedata_token", "output_token");
-    inputs.put("output_path", "output/path");
-    inputs.put("output_onedata_zone", "output_zone");
-    ArchiveRoot ar = toscaService.prepareTemplate(template, inputs);
+        + "tosca_onedata_requirements.yaml");
+    Deployment deployment = ControllerTestUtils.createDeployment();
+    deployment.setTemplate(template);
 
-    Map<String, OneData> odRequirements = toscaService.extractOneDataRequirements(ar, inputs);
-
-    Map<String, OneData> odParameters = odRequirements;
-    // ImmutableMap.of("service", new OneData("token", "space", "path",
-    // "provider"), "input",
-    // new OneData("token_input", "space_input", "path_input",
-    // "provider_input_1,provider_input_2"),
-    // "output", new OneData("token_output", "space_output", "path_output",
-    // "provider_output_1,provider2_output_2"));
-
-    String customizedTemplate = chronosService.replaceHardCodedParams(template, odParameters);
-
-    // Re-parse template (TODO: serialize the template in-memory
-    // representation?)
-    ar = toscaService.prepareTemplate(customizedTemplate, inputs);
-
-    Map<String, NodeTemplate> nodes = ar.getTopology().getNodeTemplates();
-    NodeTemplate chronosJob = nodes.get("chronos_job");
-    Map<String, Object> envVars = CommonUtils
-        .<ComplexPropertyValue>optionalCast(
-            toscaService.getNodePropertyByName(chronosJob, "environment_variables"))
-        .get()
-        .getValue();
-
-    assertThat(
-        ((ScalarPropertyValue) envVars.get("INPUT_ONEDATA_PROVIDERS")).getValue())
-        .isEqualTo("input_provider_1");
-    assertThat(
-        ((ScalarPropertyValue) envVars.get("OUTPUT_ONEDATA_PROVIDERS")).getValue())
-        .isEqualTo("output_provider_3");
-  }
-
-  @Test
-  public void checkOneDataHardCodedParamsSubstitutionInServiceTemplate() throws Exception {
-    String template = TestUtil.getFileContentAsString(ToscaServiceTest.TEMPLATES_ONEDATA_BASE_DIR
-        + "tosca_onedata_requirements_hardcoded_service.yaml");
-
-    Map<String, Object> inputs = new HashMap<String, Object>();
-    ArchiveRoot ar = toscaService.prepareTemplate(template, inputs);
     OneData serviceOd = OneData
         .builder()
-        .token("token")
-        .space("space")
-        .path("path")
-        .providersAsString("provider")
+        .token("service-token")
+        .space("service-space")
+        .onezone("service-onezone.example.com")
+        .path("/service/path/")
+        .selectedOneprovider(OneDataProviderInfo
+            .builder()
+            .endpoint("service-oneprovider.example.com")
+            .build())
+        .serviceSpace(true)
         .build();
-    OneData inputOd = OneData
+    OneData userOd = OneData
         .builder()
-        .token("token_input")
-        .space("space_input")
-        .path("path_input")
-        .providersAsString("provider_input_1,provider_input_2")
+        .token("user-token")
+        .onezone("user-onezone.example.com")
+        .selectedOneprovider(OneDataProviderInfo
+            .builder()
+            .endpoint("user-oneprovider-1.example.com")
+            .build())
         .build();
-    OneData outputOd = OneData
-        .builder()
-        .token("token_output")
-        .space("space_output")
-        .path("path_output")
-        .providersAsString("provider_output_1,provider2_output_2")
-        .build();
-    Map<String, OneData> odParameters =
-        ImmutableMap.of("service", serviceOd, "input", inputOd, "output", outputOd);
 
-    ar = toscaService.prepareTemplate(template, inputs);
-    ar = chronosService.replaceHardCodedParams(ar, odParameters);
+    Map<String, OneData> odParameters = ImmutableMap.of(
+        "onedata_service_space", serviceOd,
+        "onedata_space", userOd);
+
+    ArchiveRoot ar = chronosService.prepareTemplate(deployment, odParameters);
 
     Map<String, NodeTemplate> nodes = ar.getTopology().getNodeTemplates();
     NodeTemplate chronosJob = nodes.get("chronos_job");
@@ -209,18 +174,24 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
         .get()
         .getValue();
 
-    assertThat(
-        ((ScalarPropertyValue) envVars.get("ONEDATA_SERVICE_TOKEN")).getValue())
+    assertThat(((ScalarPropertyValue) envVars.get("ONEDATA_SPACE_TOKEN")).getValue())
+        .isEqualTo(userOd.getToken());
+    assertThat(((ScalarPropertyValue) envVars.get("ONEDATA_SPACE_ONEZONE")).getValue())
+        .isEqualTo(userOd.getOnezone());
+    assertThat(((ScalarPropertyValue) envVars.get("ONEDATA_SPACE_SELECTED_PROVIDER")).getValue())
+        .isEqualTo(userOd.getSelectedOneprovider().getEndpoint());
+    assertThat(((ScalarPropertyValue) envVars.get("ONEDATA_SERVICE_SPACE_TOKEN")).getValue())
         .isEqualTo(serviceOd.getToken());
+    assertThat(((ScalarPropertyValue) envVars.get("ONEDATA_SERVICE_SPACE_ONEZONE")).getValue())
+        .isEqualTo(serviceOd.getOnezone());
     assertThat(
-        ((ScalarPropertyValue) envVars.get("ONEDATA_SPACE")).getValue())
+        ((ScalarPropertyValue) envVars.get("ONEDATA_SERVICE_SPACE_SELECTED_PROVIDER")).getValue())
+        .isEqualTo(serviceOd.getSelectedOneprovider().getEndpoint());
+    assertThat(((ScalarPropertyValue) envVars.get("ONEDATA_SERVICE_SPACE_NAME")).getValue())
         .isEqualTo(serviceOd.getSpace());
-    assertThat(
-        ((ScalarPropertyValue) envVars.get("ONEDATA_PATH")).getValue())
+    assertThat(((ScalarPropertyValue) envVars.get("ONEDATA_SERVICE_SPACE_PATH")).getValue())
         .isEqualTo(serviceOd.getPath());
-    assertThat(serviceOd.getProviders()).hasSize(1);
-    assertThat(((ScalarPropertyValue) envVars.get("ONEDATA_PROVIDERS")).getValue())
-        .isEqualTo(serviceOd.getProviders().get(0).getEndpoint());
+
   }
 
   @Test
@@ -270,8 +241,9 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
     dm.setChronosJobsIterator(iterator);
 
     when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
-    when(iterator.hasNext()).thenReturn(true, !isLast);
-    when(iterator.next()).thenReturn(new IndigoJob(job, "toscaName"));
+    when(iterator.hasCurrent()).thenReturn(true, true);
+    when(iterator.hasNext()).thenReturn(!isLast);
+    when(iterator.current()).thenReturn(new IndigoJob(job, "toscaName"));
 
     Job returnedJob = new Job();
     if (isCompleted) {
@@ -304,7 +276,7 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
     when(chronos.getJob("JobName")).thenReturn(Lists.newArrayList(job));
 
     assertThatCode(
-        () -> chronosService.checkJobsOnChronos(chronos, new IndigoJob(job, "toscaName")))
+        () -> chronosService.checkJobsOnChronos(generateCloudProviderEndpoint(), null, "JobName"))
         .isInstanceOf(DeploymentException.class)
         .hasMessage("Chronos job JobName failed to execute");
   }
@@ -317,7 +289,8 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
     if (!isScheduled) {
       job.setParents(Lists.newArrayList("some parent"));
     }
-    chronosService.createJobOnChronos(chronos, new IndigoJob(job, "toscaName"));
+    chronosService
+        .createJobOnChronos(generateCloudProviderEndpoint(), null, new IndigoJob(job, "toscaName"));
 
     if (isScheduled) {
       verify(chronos, times(1)).createJob(job);
@@ -335,7 +308,8 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
     doThrow(new ChronosException(500, "some message")).when(chronos).createJob(job);
 
     assertThatCode(
-        () -> chronosService.createJobOnChronos(chronos, new IndigoJob(job, "toscaName")))
+        () -> chronosService.createJobOnChronos(generateCloudProviderEndpoint(), null,
+            new IndigoJob(job, "toscaName")))
         .isInstanceOf(DeploymentException.class)
         .hasCauseExactlyInstanceOf(ChronosException.class)
         .hasMessage(
@@ -361,34 +335,28 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
   @Test
   @Parameters({"true", "false"})
   public void doUndeploySuccessful(boolean isLast) throws ChronosException {
-    Deployment deployment = ControllerTestUtils.createDeployment();
+    Deployment deployment = ControllerTestUtils.createDeployment(isLast ? 1 : 2);
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
+    deployment.getResources().forEach(resource -> resource.setToscaNodeType(Nodes.CHRONOS));
 
-    Job job = new Job();
-    job.setName("ChronosName");
-
-    ChronosJobsOrderedIterator iterator = mock(ChronosJobsOrderedIterator.class);
-    dm.setChronosJobsIterator(iterator);
+    String jobName = deployment.getResources().stream().findFirst().get().getId();
 
     when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
-    when(iterator.hasNext()).thenReturn(true, !isLast);
-    when(iterator.next()).thenReturn(new IndigoJob(job, "toscaName"));
 
     assertThat(chronosService.doUndeploy(dm)).isEqualTo(isLast);
-    verify(chronos, times(1)).deleteJob("ChronosName");
+    verify(chronos, times(1)).deleteJob(jobName);
   }
 
   @Test
   @Parameters({"400|false", "404|false", "500|true"})
   public void deleteJobsOnChronosWithChronosException(int statusCode, boolean shouldFail)
       throws ChronosException {
-    Job job = new Job();
-    job.setName("ChronosName");
-    IndigoJob indigoJob = new IndigoJob(job, "toscaName");
+
     doThrow(new ChronosException(statusCode, "someMessage")).when(chronos).deleteJob("ChronosName");
 
     AbstractThrowableAssert<?, ? extends Throwable> assertion = assertThatCode(
-        () -> chronosService.deleteJobsOnChronos(chronos, indigoJob));
+        () -> chronosService
+            .deleteJobsOnChronos(generateCloudProviderEndpoint(), null, "ChronosName"));
     if (shouldFail) {
       assertion.isInstanceOf(DeploymentException.class)
           .hasCauseExactlyInstanceOf(ChronosException.class).hasMessage(
@@ -424,11 +392,23 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
   @Test
   public void generateJobGraph() throws IOException {
     Deployment deployment = generateDeployment();
-
-    when(chronosClientFactory.getFrameworkProperties(deployment)).thenReturn(chronosProperties);
+    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
+    ChronosServiceData chronosProperties = ChronosServiceData
+        .chronosBuilder()
+        .endpoint("example.com/chronos")
+        .serviceType(CloudService.CHRONOS_COMPUTE_SERVICE)
+        .hostname("example.com")
+        .providerId("TEST")
+        .type(Type.COMPUTE)
+        .properties(ChronosServiceProperties
+            .builder()
+            .localVolumesHostBasePath("/tmp/")
+            .build())
+        .build();
+    when(chronosClientFactory.getFrameworkProperties(dm)).thenReturn(chronosProperties);
 
     ChronosJobsOrderedIterator topologyIterator = chronosService.getJobsTopologicalOrder(
-        deployment, new HashMap<>());
+        dm, deployment);
     topologyIterator.next();
     assertThat(objectMapper.writer(SerializationFeature.INDENT_OUTPUT)
         .writeValueAsString(topologyIterator)).isEqualToNormalizingNewlines(TestUtil

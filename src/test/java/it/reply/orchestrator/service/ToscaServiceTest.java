@@ -16,9 +16,6 @@
 
 package it.reply.orchestrator.service;
 
-import static org.hamcrest.CoreMatchers.*;
-import static org.junit.Assert.*;
-
 import alien4cloud.model.components.AbstractPropertyValue;
 import alien4cloud.model.components.ComplexPropertyValue;
 import alien4cloud.model.components.ListPropertyValue;
@@ -31,7 +28,6 @@ import alien4cloud.tosca.parser.ParsingException;
 
 import it.reply.orchestrator.config.specific.ToscaParserAwareTest;
 import it.reply.orchestrator.dto.cmdb.ImageData;
-import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.util.TestUtil;
 import it.reply.orchestrator.utils.CommonUtils;
@@ -43,17 +39,20 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-import junitparams.converters.Nullable;
 
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.OptionalAssert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+import junitparams.converters.Nullable;
+
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 
 @RunWith(JUnitParamsRunner.class)
 public class ToscaServiceTest extends ToscaParserAwareTest {
@@ -210,37 +209,6 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
         .assertThatThrownBy(() -> toscaService.prepareTemplate(template, inputs))
         .isInstanceOf(ToscaException.class)
         .hasMessage(expectedMessage);
-  }
-
-  @Test
-  public void checkOneDataHardCodedRequirementsExtractionInUserDefinedTemplate() throws Exception {
-    String template = TestUtil.getFileContentAsString(
-        TEMPLATES_ONEDATA_BASE_DIR + "tosca_onedata_requirements_hardcoded_userdefined.yaml");
-    Map<String, Object> inputs = new HashMap<String, Object>();
-    inputs.put("input_onedata_providers", "input_provider_1,input_provider_2");
-    inputs.put("input_onedata_space", "input_onedata_space");
-    inputs.put("output_onedata_providers", "output_provider_1,output_provider_2");
-    inputs.put("output_onedata_space", "output_onedata_space");
-    ArchiveRoot ar = toscaService.prepareTemplate(template, inputs);
-    Map<String, OneData> odr = toscaService.extractOneDataRequirements(ar, inputs);
-    assertEquals(true, odr.containsKey("input"));
-    assertArrayEquals(inputs.get("input_onedata_providers").toString().split(","), odr.get("input")
-        .getProviders().stream().map(info -> info.getEndpoint()).collect(Collectors.toList()).toArray());
-    assertEquals(true, odr.containsKey("output"));
-    assertArrayEquals(inputs.get("output_onedata_providers").toString().split(","),
-        odr.get("output").getProviders().stream().map(info -> info.getEndpoint())
-            .collect(Collectors.toList()).toArray());
-  }
-
-  @Test
-  public void checkOneDataHardCodedRequirementsExtractionInServiceTemplate() throws Exception {
-    String template = TestUtil.getFileContentAsString(
-        TEMPLATES_ONEDATA_BASE_DIR + "tosca_onedata_requirements_hardcoded_service.yaml");
-
-    Map<String, Object> inputs = new HashMap<String, Object>();
-    ArchiveRoot ar = toscaService.prepareTemplate(template, inputs);
-    Map<String, OneData> odr = toscaService.extractOneDataRequirements(ar, inputs);
-    assertEquals(0, odr.size());
   }
 
   @Test

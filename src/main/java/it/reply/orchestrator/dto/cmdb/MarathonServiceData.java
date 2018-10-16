@@ -40,9 +40,17 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MarathonServiceData extends MesosFrameworkServiceData<MarathonServiceProperties> {
 
-  protected MarathonServiceData(
+  @Builder(builderMethodName = "marathonBuilder")
+  public MarathonServiceData(
+      @NonNull String serviceType,
+      @NonNull String endpoint,
+      @NonNull String providerId,
+      @NonNull Type type,
+      boolean publicService,
+      @Nullable String region,
+      @NonNull String hostname,
       @NonNull MarathonServiceProperties properties) {
-    super(properties);
+    super(serviceType, endpoint, providerId, type, publicService, region, hostname, properties);
   }
 
   @Data
@@ -61,7 +69,8 @@ public class MarathonServiceData extends MesosFrameworkServiceData<MarathonServi
         boolean gpuSupport,
         @NonNull List<String> persistentStorageDrivers,
         @NonNull List<String> loadBalancerIps) {
-      super(localVolumesHostBasePath, gpuSupport, persistentStorageDrivers);
+      super(localVolumesHostBasePath, gpuSupport,
+          CommonUtils.notNullOrDefaultValue(persistentStorageDrivers, ArrayList::new));
       this.loadBalancerIps = CommonUtils.notNullOrDefaultValue(loadBalancerIps, ArrayList::new);
     }
 

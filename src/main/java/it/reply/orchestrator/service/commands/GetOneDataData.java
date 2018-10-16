@@ -35,12 +35,12 @@ public class GetOneDataData extends BaseRankCloudProvidersCommand {
       RankCloudProvidersMessage rankCloudProvidersMessage) {
 
     rankCloudProvidersMessage.getOneDataRequirements()
-      .values()
-      .forEach(oneDataRequirement -> oneDataService.populateProviderInfo(
-        oneDataRequirement,
-        rankCloudProvidersMessage.getCloudProviders(),
-        rankCloudProvidersMessage.getRequestedWithToken(),
-        rankCloudProvidersMessage.getDeploymentId()));
+        .values()
+        .forEach(oneDataRequirement -> oneDataService.populateProviderInfo(
+            oneDataRequirement,
+            rankCloudProvidersMessage.getCloudProviders(),
+            rankCloudProvidersMessage.getRequestedWithToken(),
+            rankCloudProvidersMessage.getDeploymentId()));
 
   }
 

@@ -56,11 +56,18 @@ public class MesosFrameworkServiceProperties {
     persistentStorageDrivers = new ArrayList<>();
   }
 
-  public String generateLocalVolumesHostPath(String groupId) {
+  /**
+   * Generate the local volume path.
+   *
+   * @param deploymentId
+   *     the deployment ID
+   * @return the path
+   */
+  public String generateLocalVolumesHostPath(String deploymentId) {
     if (StringUtils.isBlank(localVolumesHostBasePath)) {
       throw new ToscaException("Error generating host path: no base host path has been provided");
     } else {
-      return localVolumesHostBasePath.concat(groupId);
+      return localVolumesHostBasePath.concat(deploymentId);
     }
   }
 }

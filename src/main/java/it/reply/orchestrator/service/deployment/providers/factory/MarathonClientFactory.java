@@ -125,12 +125,6 @@ public class MarathonClientFactory extends
     return "Marathon";
   }
 
-  /**
-   * Generate a new Marathon client.
-   *
-   * @param marathonEndpoint
-   * @return the new client
-   */
   @Override
   public Marathon build(String marathonEndpoint, RequestInterceptor authInterceptor) {
     LOG.info("Generating Marathon client with endpoint {}", marathonEndpoint);

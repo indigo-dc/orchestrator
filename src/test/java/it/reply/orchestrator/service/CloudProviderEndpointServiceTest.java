@@ -16,8 +16,7 @@
 
 package it.reply.orchestrator.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
+import com.google.common.collect.ImmutableMap;
 
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
@@ -39,12 +38,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+import junitparams.converters.Nullable;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 @RunWith(JUnitParamsRunner.class)
 public class CloudProviderEndpointServiceTest {
@@ -56,11 +59,59 @@ public class CloudProviderEndpointServiceTest {
     cloudProviderEndpointServiceImpl = new CloudProviderEndpointServiceImpl();
   }
 
+  private Map<String, CloudProvider> generateCloudProviders() {
+    return ImmutableMap.of(
+        "provider1", CloudProvider.builder().id("provider1").build(),
+        "provider2", CloudProvider.builder().id("provider2").build(),
+        "provider3", CloudProvider.builder().id("provider3").build());
+  }
+
+  @Parameters({"null", "1", "2", "3"})
   @Test
-  public void chooseCloudProviderSuccesful() {
+  public void chooseCloudProviderSuccesful(@Nullable Integer maxCpRetries) {
     Deployment deployment = ControllerTestUtils.createDeployment();
     RankCloudProvidersMessage rcpm = new RankCloudProvidersMessage();
+    rcpm.setCloudProviders(generateCloudProviders());
+    rcpm.getRankedCloudProviders().add(RankedCloudProvider
+        .builder()
+        .name("provider1")
+        .rank(100)
+        .ranked(true)
+        .build());
+    rcpm.getRankedCloudProviders().add(RankedCloudProvider
+        .builder()
+        .name("provider2") // the good one
+        .rank(400)
+        .ranked(true)
+        .build());
+    rcpm.getRankedCloudProviders().add(RankedCloudProvider
+        .builder()
+        .name("provider3")
+        .rank(800)
+        .ranked(false)
+        .build());
 
+    CloudProvidersOrderedIterator providersOrderedIterator =
+        cloudProviderEndpointServiceImpl.generateCloudProvidersOrderedIterator(rcpm, maxCpRetries);
+
+    if (maxCpRetries == null) {
+      maxCpRetries = Integer.MAX_VALUE;
+    }
+    assertThat(providersOrderedIterator.getSize()).isEqualTo(Math.min(2, maxCpRetries));
+    assertThat(providersOrderedIterator.next().getId()).isEqualTo("provider2");
+    if (maxCpRetries > 1) {
+      assertThat(providersOrderedIterator.next().getId()).isEqualTo("provider1");
+    }
+  }
+
+  @Test
+  @Parameters({"MARATHON|1", "CHRONOS|1", "TOSCA|2"})
+  public void chooseCloudProviderSuccesfulByDeploymentType(DeploymentType deploymentType,
+      int expectedSized) {
+    Deployment deployment = ControllerTestUtils.createDeployment();
+    RankCloudProvidersMessage rcpm = new RankCloudProvidersMessage();
+    rcpm.setDeploymentType(deploymentType);
+    rcpm.setCloudProviders(generateCloudProviders());
     rcpm.getRankedCloudProviders().add(RankedCloudProvider
         .builder()
         .name("provider1")
@@ -82,15 +133,14 @@ public class CloudProviderEndpointServiceTest {
 
     CloudProvidersOrderedIterator providersOrderedIterator =
         cloudProviderEndpointServiceImpl.generateCloudProvidersOrderedIterator(rcpm, null);
-    assertThat(providersOrderedIterator.getSize()).isEqualTo(2);
-    assertThat(providersOrderedIterator.next().getId()).isEqualTo("provider2");
-    assertThat(providersOrderedIterator.next().getId()).isEqualTo("provider1");
+    assertThat(providersOrderedIterator.getSize()).isEqualTo(expectedSized);
   }
 
   @Test
   public void chooseCloudProviderNoneRanked() {
     Deployment deployment = ControllerTestUtils.createDeployment();
     RankCloudProvidersMessage rcpm = new RankCloudProvidersMessage();
+    rcpm.setCloudProviders(generateCloudProviders());
 
     rcpm.getRankedCloudProviders().add(RankedCloudProvider
         .builder()
@@ -98,9 +148,9 @@ public class CloudProviderEndpointServiceTest {
         .rank(100)
         .ranked(false)
         .build());
-    CloudProvidersOrderedIterator providersOrderedIterator =
-        cloudProviderEndpointServiceImpl.generateCloudProvidersOrderedIterator(rcpm, null);
-    assertThat(providersOrderedIterator.getSize()).isEqualTo(0);
+    CloudProvidersOrderedIterator providersOrderedIterator = cloudProviderEndpointServiceImpl
+        .generateCloudProvidersOrderedIterator(rcpm, null);
+    assertThat(providersOrderedIterator).isEmpty();
 
   }
 
@@ -131,6 +181,7 @@ public class CloudProviderEndpointServiceTest {
             .endpoint("www.example.com")
             .providerId("provider-RECAS-BARI")
             .type(Type.COMPUTE)
+            .hostname("example.com")
             .build())
         .build();
 
@@ -159,21 +210,23 @@ public class CloudProviderEndpointServiceTest {
   }
 
   public Object[] getCloudProviderEndpointSuccesfulParams() {
-    return new Object[] {
-        new Object[] { "com.amazonaws.ec2", false, IaaSType.AWS, false },
-        new Object[] { "com.amazonaws.ec2", true, IaaSType.AWS, false },
-        new Object[] { "com.microsoft.azure", false, IaaSType.AZURE, false },
-        new Object[] { "com.microsoft.azure", true, IaaSType.AZURE, false },
-        new Object[] { "eu.egi.cloud.vm-management.occi", false, IaaSType.OCCI, false },
-        new Object[] { "eu.egi.cloud.vm-management.occi", true, IaaSType.OCCI, false },
-        new Object[] { "eu.egi.cloud.vm-management.opennebula", false, IaaSType.OPENNEBULA, false },
-        new Object[] { "eu.egi.cloud.vm-management.opennebula", true, IaaSType.OPENNEBULA, false },
-        new Object[] { "eu.indigo-datacloud.im-tosca.opennebula", false, IaaSType.OPENNEBULA,
-            true },
-        new Object[] { "eu.indigo-datacloud.im-tosca.opennebula", true, IaaSType.OPENNEBULA,
-            false },
-        new Object[] { "eu.egi.cloud.vm-management.openstack", false, IaaSType.OPENSTACK, false },
-        new Object[] { "eu.egi.cloud.vm-management.openstack", true, IaaSType.OPENSTACK, false }
+    return new Object[]{
+        new Object[]{"com.amazonaws.ec2", false, IaaSType.AWS, false},
+        new Object[]{"com.amazonaws.ec2", true, IaaSType.AWS, false},
+        new Object[]{"com.microsoft.azure", false, IaaSType.AZURE, false},
+        new Object[]{"com.microsoft.azure", true, IaaSType.AZURE, false},
+        new Object[]{"eu.otc.compute", false, IaaSType.OTC, false},
+        new Object[]{"eu.otc.compute", true, IaaSType.OTC, false},
+        new Object[]{"eu.egi.cloud.vm-management.occi", false, IaaSType.OCCI, false},
+        new Object[]{"eu.egi.cloud.vm-management.occi", true, IaaSType.OCCI, false},
+        new Object[]{"eu.egi.cloud.vm-management.opennebula", false, IaaSType.OPENNEBULA, false},
+        new Object[]{"eu.egi.cloud.vm-management.opennebula", true, IaaSType.OPENNEBULA, false},
+        new Object[]{"eu.indigo-datacloud.im-tosca.opennebula", false, IaaSType.OPENNEBULA, true},
+        new Object[]{"eu.indigo-datacloud.im-tosca.opennebula", true, IaaSType.OPENNEBULA, false},
+        new Object[]{"eu.egi.cloud.vm-management.openstack", false, IaaSType.OPENSTACK, false},
+        new Object[]{"eu.egi.cloud.vm-management.openstack", true, IaaSType.OPENSTACK, false},
+        new Object[]{"eu.indigo-datacloud.marathon", false, IaaSType.MARATHON, false},
+        new Object[]{"eu.indigo-datacloud.chronos", false, IaaSType.CHRONOS, false},
     };
   }
 
@@ -188,6 +241,7 @@ public class CloudProviderEndpointServiceTest {
             .endpoint("www.example.com")
             .providerId("provider-RECAS-BARI")
             .type(Type.COMPUTE)
+            .hostname("example.com")
             .build())
         .build();
 

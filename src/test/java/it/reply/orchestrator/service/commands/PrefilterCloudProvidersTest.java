@@ -16,10 +16,6 @@
 
 package it.reply.orchestrator.service.commands;
 
-import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.when;
-
 import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 
@@ -64,6 +60,10 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.*;
+
 public class PrefilterCloudProvidersTest extends
     BaseRankCloudProvidersCommandTest<PrefilterCloudProviders> {
 
@@ -88,6 +88,7 @@ public class PrefilterCloudProvidersTest extends
     DeploymentMessage generateDeployDm = TestUtil.generateDeployDm(deployment);
     deployment.setDeploymentProvider(DeploymentProvider.HEAT);
     RankCloudProvidersMessage rankCloudProvidersMessage = new RankCloudProvidersMessage();
+    rankCloudProvidersMessage.setSlamPreferences(SlamPreferences.builder().build());
     rankCloudProvidersMessage.setDeploymentId(generateDeployDm.getDeploymentId());
 
     when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
@@ -345,10 +346,11 @@ public class PrefilterCloudProvidersTest extends
         .id("provider-RECAS-BARI")
         .data(CloudServiceData
             .builder()
-            .type(Type.COMPUTE)
+            .type(Type.STORAGE)
             .endpoint("http://example.com")
             .providerId("providerId")
             .serviceType(CloudService.ONEPROVIDER_STORAGE_SERVICE)
+            .hostname("example.com")
             .build())
         .build();
     Map<String, CloudService> cloudServices = new HashMap<>();
@@ -362,14 +364,12 @@ public class PrefilterCloudProvidersTest extends
         .token("token")
         .space("space")
         .path("path")
-        .providersAsString("providers")
         .smartScheduling(true)
         .build();
     OneData onedataOutput = OneData.builder()
         .token("token")
         .space("space")
         .path("path")
-        .providersAsString("providers")
         .smartScheduling(true)
         .build();
     oneDataRequirements.put("input", onedataInput);

@@ -347,6 +347,8 @@ public class DeploymentControllerTest {
         .parameters(parameters)
         .template("template")
         .callback("http://localhost:8080/callback")
+        .keepLastAttempt(false)
+        .maxProvidersRetry(1)
         .build();
 
     Deployment deployment = ControllerTestUtils.createDeployment();
@@ -365,7 +367,11 @@ public class DeploymentControllerTest {
                     .description("A string containing a TOSCA YAML-formatted template"),
                 fieldWithPath("parameters").optional()
                     .description("The input parameters of the deployment(Map of String, Object)"),
-                fieldWithPath("callback").description("The deployment callback URL (optional)")),
+                fieldWithPath("callback").description("The deployment callback URL (optional)"),
+                fieldWithPath("maxProvidersRetry").description(
+                    "The maximum number Cloud providers on which attempt to create the deployment (Optional, default unbounded)"),
+                fieldWithPath("keepLastAttempt").description(
+                    "Whether the Orchestrator, in case of failure, will keep the resources of the last deploy attempt or not (Optional, default false)")),
             responseFields(fieldWithPath("links[]").ignored(),
                 fieldWithPath("uuid").description("The unique identifier of a resource"),
                 fieldWithPath("creationTime").description(
@@ -491,6 +497,8 @@ public class DeploymentControllerTest {
         .parameters(parameters)
         .template("template")
         .callback("http://localhost:8080/callback")
+        .keepLastAttempt(false)
+        .maxProvidersRetry(1)
         .build();
 
     String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
@@ -507,7 +515,11 @@ public class DeploymentControllerTest {
                     .description("A string containing a TOSCA YAML-formatted template"),
                 fieldWithPath("parameters").optional()
                     .description("The input parameters of the deployment (Map of String, Object)"),
-                fieldWithPath("callback").description("The deployment callback URL (optional)"))));
+                fieldWithPath("callback").description("The deployment callback URL (optional)"),
+                fieldWithPath("maxProvidersRetry").description(
+                    "The maximum number Cloud providers on which attempt to update the hybrid deployment update (Optional, default unbounded)"),
+                fieldWithPath("keepLastAttempt").description(
+                    "Whether the Orchestrator, in case of failure, will keep the resources of the last update attempt or not (Optional, default false)"))));
 
   }
 

@@ -56,14 +56,10 @@ public abstract class BaseJavaDelegate implements JavaDelegate {
       LOG.info("Task {} - STARTED", taskName);
       customExecute(execution);
       LOG.info("Task {} - ENDED SUCCESSFULLY", taskName);
-    } catch (FlowableException ex) {
-      LOG.error("Task {} - ENDED WITH ERROR:\n{}", taskName, getErrorMessagePrefix(), ex);
-      // Re-throw
-      throw ex;
     } catch (BusinessWorkflowException ex) {
       LOG.error("Task {} - ENDED WITH ERROR:\n{}", taskName, getErrorMessagePrefix(), ex);
       WorkflowUtil.persistAndPropagateError(execution, ex);
-    } catch (WorkflowException ex) {
+    } catch (FlowableException | WorkflowException ex) {
       LOG.error("Task {} - ENDED WITH ERROR:\n{}", taskName, getErrorMessagePrefix(), ex);
       // Re-throw
       throw ex;

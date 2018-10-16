@@ -1,0 +1,55 @@
+tosca_definitions_version: tosca_simple_yaml_1_0
+
+imports:
+- indigo_custom_types: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/custom_types.yaml
+
+description: >
+  TOSCA examples for specifying a Chronos Job that runs an application using the input stored at some URL and uploads the output data to a Swift container (using Swift auth 1 or Keystone)
+
+topology_template:
+
+  node_templates:
+
+    chronos_job:
+      type: tosca.nodes.indigo.Container.Application.Docker.Chronos
+      properties:
+        command: echo hello
+        environment_variables:
+          ONEDATA_SPACE_TOKEN: { get_attribute: [ onedata_space, token ] }
+          ONEDATA_SPACE_ONEZONE: { get_attribute: [ onedata_space, onezone ] }
+          ONEDATA_SPACE_SELECTED_PROVIDER: { get_attribute: [ onedata_space, selected_provider ] }
+          ONEDATA_SERVICE_SPACE_TOKEN: { get_attribute: [ onedata_service_space, token ] }
+          ONEDATA_SERVICE_SPACE_ONEZONE: { get_attribute: [ onedata_service_space, onezone ] }
+          ONEDATA_SERVICE_SPACE_SELECTED_PROVIDER: { get_attribute: [ onedata_service_space, selected_provider ] }
+          ONEDATA_SERVICE_SPACE_NAME: { get_attribute: [ onedata_service_space, space ] }
+          ONEDATA_SERVICE_SPACE_PATH: { get_attribute: [ onedata_service_space, path ] }
+        retries: 3
+      artifacts:
+        image:
+          file: alpine
+          type: tosca.artifacts.Deployment.Image.Container.Docker
+      requirements:
+      - host: docker_runtime
+
+
+    docker_runtime:
+      type: tosca.nodes.indigo.Container.Runtime.Docker
+      capabilities:
+        host:
+          properties:
+            num_cpus: 1.0
+            mem_size: 1 GB
+
+    onedata_space:
+      type: tosca.nodes.indigo.OnedataSpace
+      properties:
+        token: 'user-token'
+        space: 'user-space'
+        oneproviders: [ 'user-oneprovider-1.example.com', 'user-oneprovider-2.example.com' ]
+        onezone: 'user-onezone.example.com'
+        smartScheduling: true
+
+    onedata_service_space:
+      type: tosca.nodes.indigo.OnedataServiceSpace
+      properties:
+        smartScheduling: true

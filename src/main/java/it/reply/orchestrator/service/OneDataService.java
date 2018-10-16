@@ -21,6 +21,7 @@ import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.onedata.ProviderDetails;
 import it.reply.orchestrator.dto.onedata.SpaceDetails;
+import it.reply.orchestrator.dto.onedata.Token;
 import it.reply.orchestrator.dto.onedata.Tokens;
 import it.reply.orchestrator.dto.onedata.UserSpaces;
 
@@ -33,20 +34,20 @@ public interface OneDataService {
   public UserSpaces getUserSpacesId(String oneZoneEndpoint, String oneDataToken);
 
   public SpaceDetails getSpaceDetailsFromId(String oneZoneEndpoint, String oneDataToken,
-    String oneSpaceId);
+      String oneSpaceId);
 
   public ProviderDetails getProviderDetailsFromId(String oneZoneEndpoint, String oneDataToken,
-    String oneProviderId);
+      String oneProviderId);
 
   Tokens getOneDataTokens(String oneZoneEndpoint, OidcTokenId oidcTokenId);
 
-  String generateOneDataToken(String oneZoneEndpoint, OidcTokenId oidcTokenId);
+  Token generateOneDataToken(String oneZoneEndpoint, OidcTokenId oidcTokenId);
 
-  String getOneDataToken(String oneZoneEndpoint, OidcTokenId oidcTokenId);
+  String getOrGenerateOneDataToken(String oneZoneEndpoint, OidcTokenId oidcTokenId);
 
   public OneData populateProviderInfo(OneData oneDataParameter,
-    Map<String, CloudProvider> cloudProviders,
-    @Nullable OidcTokenId requestedWithToken,
-    String deploymentId);
+      Map<String, CloudProvider> cloudProviders,
+      @Nullable OidcTokenId requestedWithToken,
+      String deploymentId);
 
 }

@@ -38,6 +38,7 @@ import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -116,34 +117,35 @@ public class UpdateDeployment extends BaseDeployCommand {
     deployment.setDeploymentProvider(deploymentProvider);
 
     deploymentMessage.setOneDataParameters(generateOneDataParameters(currentCloudProvider,
-      rankCloudProvidersMessage.getOneDataRequirements()));
+        rankCloudProvidersMessage.getOneDataRequirements()));
   }
 
-  protected Map<String, OneData> generateOneDataParameters(
-    CloudProvider cloudProvider,
-    Map<String, OneData> oneDataRequirements) {
+  protected @NonNull Map<String, OneData> generateOneDataParameters(
+      @NonNull CloudProvider cloudProvider,
+      @NonNull Map<String, OneData> oneDataRequirements) {
     Map<String, OneData> oneDataParameters = new HashMap<>();
 
     oneDataRequirements
-      .forEach((name, oneDataRequirement) -> {
-        Optional<OneDataProviderInfo> localOneProvider = oneDataRequirement
-          .getOneproviders()
-          .stream()
-          .filter(oneDataProviderInfo -> cloudProvider.getId()
-            .equals(oneDataProviderInfo.getCloudProviderId())).findAny();
-        final OneDataProviderInfo selectedOneProvider;
-        if (localOneProvider.isPresent()) {
-          selectedOneProvider = localOneProvider.get();
-        } else {
-          if (oneDataRequirement.isSmartScheduling()) {
-            throw new DeploymentException("No OneProvider available");
+        .forEach((name, oneDataRequirement) -> {
+          Optional<OneDataProviderInfo> localOneProvider = oneDataRequirement
+              .getOneproviders()
+              .stream()
+              .filter(oneDataProviderInfo -> cloudProvider.getId()
+                  .equals(oneDataProviderInfo.getCloudProviderId()))
+              .findAny();
+          final OneDataProviderInfo selectedOneProvider;
+          if (localOneProvider.isPresent()) {
+            selectedOneProvider = localOneProvider.get();
           } else {
-            selectedOneProvider = oneDataRequirement.getOneproviders().get(0);
+            if (oneDataRequirement.isSmartScheduling()) {
+              throw new DeploymentException("No OneProvider available");
+            } else {
+              selectedOneProvider = oneDataRequirement.getOneproviders().get(0);
+            }
           }
-        }
-        oneDataRequirement.setSelectedOneprovider(selectedOneProvider);
-        oneDataParameters.put(name, oneDataRequirement);
-      });
+          oneDataRequirement.setSelectedOneprovider(selectedOneProvider);
+          oneDataParameters.put(name, oneDataRequirement);
+        });
     return oneDataParameters;
   }
 

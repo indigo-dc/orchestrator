@@ -46,11 +46,13 @@ import org.springframework.stereotype.Service;
 public class CloudProviderEndpointServiceImpl {
 
   /**
-   * Choose a Cloud Provider.
-   * 
+   * Generates the {@link CloudProvidersOrderedIterator} a Cloud Provider.
+   *
    * @param rankCloudProvidersMessage
+   *     the rankCloudProvidersMessage
    * @param maxProvidersRetry
-   * @return .
+   *     max num of cloud providers on which iterate
+   * @return the iterator
    */
   public CloudProvidersOrderedIterator generateCloudProvidersOrderedIterator(
       RankCloudProvidersMessage rankCloudProvidersMessage, Integer maxProvidersRetry) {
@@ -82,11 +84,15 @@ public class CloudProviderEndpointServiceImpl {
   }
 
   /**
-   * .
-   * 
+   * Generates the {@link CloudProviderEndpoint}.
+   *
    * @param chosenCloudProvider
-   *          .
-   * @return .
+   *     the chosen {@link CloudProvider}
+   * @param placementPolicies
+   *     the placementPolicies
+   * @param isHybrid
+   *     true if the deployment id hybrid
+   * @return the {@link CloudProviderEndpoint}
    */
   public CloudProviderEndpoint getCloudProviderEndpoint(CloudProvider chosenCloudProvider,
       Map<String, PlacementPolicy> placementPolicies, boolean isHybrid) {

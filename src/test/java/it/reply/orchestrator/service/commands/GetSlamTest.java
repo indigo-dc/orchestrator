@@ -19,7 +19,9 @@ package it.reply.orchestrator.service.commands;
 import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.config.properties.SlamProperties;
 import it.reply.orchestrator.dal.repository.OidcEntityRepository;
+import it.reply.orchestrator.function.ThrowingFunction;
 import it.reply.orchestrator.service.SlamServiceImpl;
+import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.util.IntegrationTestUtil;
 
 import java.net.URI;
@@ -30,6 +32,8 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
+
+import static org.mockito.Mockito.*;
 
 public class GetSlamTest extends BaseRankCloudProvidersCommandTest<GetSlam> {
 
@@ -50,9 +54,15 @@ public class GetSlamTest extends BaseRankCloudProvidersCommandTest<GetSlam> {
     super(new GetSlam());
   }
 
+  @Mock
+  private OAuth2TokenService oauth2TokenService;
+
   @Before
   public void setup() {
     slamProperties.setUrl(URI.create("https://www.example.com"));
+    when(oauth2TokenService.executeWithClientForResult(any(), any(), any()))
+        .thenAnswer(y -> ((ThrowingFunction) y.getArguments()[1]).apply("token"));
+    when(oauth2TokenService.getOrganization(any())).thenReturn("indigo-dc");
   }
 
   @Test

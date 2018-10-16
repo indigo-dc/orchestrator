@@ -18,6 +18,7 @@ package it.reply.orchestrator.config.security;
 
 import it.reply.orchestrator.config.properties.OidcProperties;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.core.annotation.Order;
@@ -40,7 +41,7 @@ public abstract class BaseWebSecurityConfig extends WebSecurityConfigurerAdapter
   }
 
   @Override
-  public void configure(HttpSecurity http) throws Exception {
+  public void configure(@NonNull HttpSecurity http) throws Exception {
     http
         .csrf()
         .disable()

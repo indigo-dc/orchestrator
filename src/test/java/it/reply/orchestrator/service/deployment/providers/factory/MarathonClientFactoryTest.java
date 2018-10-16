@@ -16,22 +16,22 @@
 
 package it.reply.orchestrator.service.deployment.providers.factory;
 
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 
 import java.util.UUID;
 
-import junitparams.JUnitParamsRunner;
-
-import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.junit.MockitoJUnit;
 import org.mockito.junit.MockitoRule;
+
+import junitparams.JUnitParamsRunner;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @RunWith(JUnitParamsRunner.class)
 public class MarathonClientFactoryTest {
@@ -54,10 +54,9 @@ public class MarathonClientFactoryTest {
         .cpComputeServiceId(UUID.randomUUID().toString())
         .iaasType(IaaSType.MARATHON)
         .build();
-    Assertions
-        .assertThat(
-            Assertions.catchThrowable(() -> clientFactory.build(cloudProviderEndpoint, "token")))
-        .isNull();
+    assertThat(clientFactory.build(cloudProviderEndpoint, "token"))
+        .extracting("h.target.url")
+        .containsOnly("http://example.com");
   }
 
   @Test
