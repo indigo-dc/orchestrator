@@ -34,6 +34,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import javax.cache.Cache;
+import javax.cache.Cache.Entry;
 import javax.cache.processor.EntryProcessor;
 import javax.cache.processor.EntryProcessorException;
 import javax.cache.processor.MutableEntry;
@@ -43,9 +44,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.cache.CacheAtomicityMode;
 import org.apache.ignite.cache.CacheMode;
+import org.apache.ignite.cache.eviction.EvictionFilter;
 import org.apache.ignite.cache.eviction.lru.LruEvictionPolicy;
 import org.apache.ignite.configuration.CacheConfiguration;
 import org.apache.ignite.resources.SpringApplicationContextResource;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Component;
@@ -62,16 +65,25 @@ public class OAuth2TokenCacheService {
 
   private Cache<OidcTokenId, AccessGrant> oauth2TokensCache;
 
+  public static class TokenEvictionFilter implements EvictionFilter<OidcTokenId, AccessGrant> {
+
+    @Override
+    public boolean evictAllowed(Entry<OidcTokenId, AccessGrant> entry) {
+      return entry.getValue() == null || entry.getValue().isExpired();
+    }
+  }
+
   /**
    * Creates a new OAuth2TokenCacheService.
    * 
    * @param ignite
    *          the {@link Ignite} instance.
    */
-  public OAuth2TokenCacheService(Ignite ignite) {
+  public OAuth2TokenCacheService(@NonNull Ignite ignite) {
+
     CacheConfiguration<OidcTokenId, AccessGrant> oauth2CacheCfg =
         new CacheConfiguration<OidcTokenId, AccessGrant>(CACHE_NAME)
-            .setEvictionFilter(entry -> entry.getValue() == null || entry.getValue().isExpired())
+            .setEvictionFilter(new TokenEvictionFilter())
             .setEvictionPolicy(new LruEvictionPolicy<OidcTokenId, AccessGrant>(1_000))
             .setAtomicityMode(CacheAtomicityMode.ATOMIC)
             .setOnheapCacheEnabled(true)
@@ -124,7 +136,7 @@ public class OAuth2TokenCacheService {
   public static class ExchangeEntryProcessor extends AbstractGetEntryProcessor {
 
     @Override
-    public AccessGrant processInternal(MutableEntry<OidcTokenId, AccessGrant> entry,
+    public AccessGrant processInternal(@NonNull MutableEntry<OidcTokenId, AccessGrant> entry,
         Object... arguments) {
       String accessToken = (String) arguments[0];
       return exchange(entry, accessToken);
@@ -135,7 +147,7 @@ public class OAuth2TokenCacheService {
   public static class GetEntryProcessor extends AbstractGetEntryProcessor {
 
     @Override
-    public AccessGrant processInternal(MutableEntry<OidcTokenId, AccessGrant> entry,
+    public AccessGrant processInternal(@NonNull MutableEntry<OidcTokenId, AccessGrant> entry,
         Object... arguments) {
       OidcTokenId id = entry.getKey();
       LOG.debug("Retrieving access token for {} from cache", id);
@@ -159,7 +171,7 @@ public class OAuth2TokenCacheService {
   public static class GetNewEntryProcessor extends AbstractGetEntryProcessor {
 
     @Override
-    public AccessGrant processInternal(MutableEntry<OidcTokenId, AccessGrant> entry,
+    public AccessGrant processInternal(@NonNull MutableEntry<OidcTokenId, AccessGrant> entry,
         Object... arguments) {
       OidcTokenId id = entry.getKey();
       LOG.info("Force refesh of access token for {}", id);
@@ -180,7 +192,7 @@ public class OAuth2TokenCacheService {
     @Autowired
     private PlatformTransactionManager transactionManager;
 
-    protected AccessGrant refresh(MutableEntry<OidcTokenId, AccessGrant> entry) {
+    protected AccessGrant refresh(@NonNull MutableEntry<OidcTokenId, AccessGrant> entry) {
       OidcTokenId id = entry.getKey();
       CustomOAuth2Template template = customOAuth2TemplateFactory.generateOAuth2Template(id);
       AccessGrant newGrant = generateTransactionTemplate().execute(transactionStatus -> {
@@ -203,7 +215,7 @@ public class OAuth2TokenCacheService {
       return newGrant;
     }
 
-    protected AccessGrant exchange(MutableEntry<OidcTokenId, AccessGrant> entry,
+    protected AccessGrant exchange(@NonNull MutableEntry<OidcTokenId, AccessGrant> entry,
         String accessToken) {
       OidcTokenId id = entry.getKey();
       AccessGrant oldGrant = entry.getValue();
@@ -250,12 +262,13 @@ public class OAuth2TokenCacheService {
     }
 
     @Override
-    public AccessGrant process(MutableEntry<OidcTokenId, AccessGrant> entry,
+    public AccessGrant process(@NonNull MutableEntry<OidcTokenId, AccessGrant> entry,
         Object... arguments) throws EntryProcessorException {
       return processInternal(entry, arguments);
     }
 
-    public abstract AccessGrant processInternal(MutableEntry<OidcTokenId, AccessGrant> entry,
+    public abstract AccessGrant processInternal(
+        @NonNull MutableEntry<OidcTokenId, AccessGrant> entry,
         Object... arguments) throws EntryProcessorException;
   }
 
@@ -271,7 +284,7 @@ public class OAuth2TokenCacheService {
     @SpringApplicationContextResource
     private transient ApplicationContext springCtx;
 
-    public EntryProcessorMdcDecorator(Class<E> delegateClass) {
+    public EntryProcessorMdcDecorator(@NonNull Class<E> delegateClass) {
       this.delegateClass = Objects.requireNonNull(delegateClass);
     }
 
@@ -280,7 +293,8 @@ public class OAuth2TokenCacheService {
     }
 
     @Override
-    public T process(MutableEntry<K, V> entry, Object... arguments) throws EntryProcessorException {
+    public T process(@NonNull MutableEntry<K, V> entry, Object... arguments)
+        throws EntryProcessorException {
       String requestId = (String) arguments[0];
       String deploymentId = (String) arguments[1];
 

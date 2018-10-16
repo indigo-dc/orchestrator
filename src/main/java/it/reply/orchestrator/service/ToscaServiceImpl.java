@@ -888,50 +888,50 @@ public class ToscaServiceImpl implements ToscaService {
     archiveRoot
         .getTopology()
         .getNodeTemplates()
-      .forEach((name, node) -> {
-        if (isOfToscaType(node, Nodes.ONEDATA_SPACE)) {
+        .forEach((name, node) -> {
+          if (isOfToscaType(node, Nodes.ONEDATA_SPACE)) {
             Map<String, AbstractPropertyValue> properties = node.getProperties();
 
-          String space = CommonUtils.<ScalarPropertyValue>optionalCast(
-            CommonUtils.getFromOptionalMap(properties, "space"))
-            .map(ScalarPropertyValue::getValue).orElseThrow(() -> new ToscaException(
-              "Space name for node " + node.getName() + " must be provided"));
-          OneDataBuilder oneDataBuilder = OneData
-            .builder()
-            .serviceSpace(false)
-            .space(space);
-            CommonUtils.<ScalarPropertyValue>optionalCast(
-              CommonUtils.getFromOptionalMap(properties, "token"))
-              .map(ScalarPropertyValue::getValue)
-              .ifPresent(oneDataBuilder::token);
-          CommonUtils.<ListPropertyValue>optionalCast(
-            CommonUtils.getFromOptionalMap(properties, "oneproviders"))
-            .map(list -> parseListPropertyValue(list, value -> {
-              return OneDataProviderInfo
+            String space = CommonUtils.<ScalarPropertyValue>optionalCast(
+                CommonUtils.getFromOptionalMap(properties, "space"))
+                .map(ScalarPropertyValue::getValue).orElseThrow(() -> new ToscaException(
+                    "Space name for node " + node.getName() + " must be provided"));
+            OneDataBuilder oneDataBuilder = OneData
                 .builder()
-                .endpoint(((ScalarPropertyValue) value).getValue())
-                .build();
-            }))
-            .ifPresent(oneDataBuilder::oneproviders);
+                .serviceSpace(false)
+                .space(space);
             CommonUtils.<ScalarPropertyValue>optionalCast(
-              CommonUtils.getFromOptionalMap(properties, "onezone"))
-              .map(ScalarPropertyValue::getValue)
-              .ifPresent(oneDataBuilder::onezone);
+                CommonUtils.getFromOptionalMap(properties, "token"))
+                .map(ScalarPropertyValue::getValue)
+                .ifPresent(oneDataBuilder::token);
+            CommonUtils.<ListPropertyValue>optionalCast(
+                CommonUtils.getFromOptionalMap(properties, "oneproviders"))
+                .map(list -> parseListPropertyValue(list, value -> {
+                  return OneDataProviderInfo
+                      .builder()
+                      .endpoint(((ScalarPropertyValue) value).getValue())
+                      .build();
+                }))
+                .ifPresent(oneDataBuilder::oneproviders);
             CommonUtils.<ScalarPropertyValue>optionalCast(
-              CommonUtils.getFromOptionalMap(properties, "smartScheduling"))
-              .map(value -> parseScalarPropertyValue(value, BooleanType.class))
-              .ifPresent(oneDataBuilder::smartScheduling);
-          result.put(node.getName(), oneDataBuilder.build());
-        } else if (isOfToscaType(node, Nodes.ONEDATA_SERVICE_SPACE)) {
-          Map<String, AbstractPropertyValue> properties = node.getProperties();
-          OneDataBuilder oneDataBuilder = OneData
-            .builder()
-            .serviceSpace(true);
-          CommonUtils.<ScalarPropertyValue>optionalCast(
-            CommonUtils.getFromOptionalMap(properties, "smartScheduling"))
-            .map(value -> parseScalarPropertyValue(value, BooleanType.class))
-            .ifPresent(oneDataBuilder::smartScheduling);
-          result.put(node.getName(), oneDataBuilder.build());
+                CommonUtils.getFromOptionalMap(properties, "onezone"))
+                .map(ScalarPropertyValue::getValue)
+                .ifPresent(oneDataBuilder::onezone);
+            CommonUtils.<ScalarPropertyValue>optionalCast(
+                CommonUtils.getFromOptionalMap(properties, "smartScheduling"))
+                .map(value -> parseScalarPropertyValue(value, BooleanType.class))
+                .ifPresent(oneDataBuilder::smartScheduling);
+            result.put(node.getName(), oneDataBuilder.build());
+          } else if (isOfToscaType(node, Nodes.ONEDATA_SERVICE_SPACE)) {
+            Map<String, AbstractPropertyValue> properties = node.getProperties();
+            OneDataBuilder oneDataBuilder = OneData
+                .builder()
+                .serviceSpace(true);
+            CommonUtils.<ScalarPropertyValue>optionalCast(
+                CommonUtils.getFromOptionalMap(properties, "smartScheduling"))
+                .map(value -> parseScalarPropertyValue(value, BooleanType.class))
+                .ifPresent(oneDataBuilder::smartScheduling);
+            result.put(node.getName(), oneDataBuilder.build());
           }
         });
     return result;
@@ -939,26 +939,26 @@ public class ToscaServiceImpl implements ToscaService {
 
   @Override
   public Map<String, Dynafed> extractDyanfedRequirements(ArchiveRoot archiveRoot,
-    Map<String, Object> inputs) {
+      Map<String, Object> inputs) {
 
     Map<String, Dynafed> result = new HashMap<>();
     getNodesOfType(archiveRoot, Nodes.DYNAFED)
-      .forEach(node -> {
-        if (isOfToscaType(node, Nodes.DYNAFED)) {
-          Map<String, AbstractPropertyValue> properties = node.getProperties();
-          DynafedBuilder dynafedBuilder = Dynafed.builder();
-          CommonUtils.<ListPropertyValue>optionalCast(
-            CommonUtils.getFromOptionalMap(properties, "files"))
-            .map(list -> this.parseListPropertyValue(list, value -> {
-              return Dynafed.File
-                .builder()
-                .endpoint(((ScalarPropertyValue) value).getValue())
-                .build();
-            }))
-            .ifPresent(dynafedBuilder::files);
-          result.put(node.getName(), dynafedBuilder.build());
-        }
-      });
+        .forEach(node -> {
+          if (isOfToscaType(node, Nodes.DYNAFED)) {
+            Map<String, AbstractPropertyValue> properties = node.getProperties();
+            DynafedBuilder dynafedBuilder = Dynafed.builder();
+            CommonUtils.<ListPropertyValue>optionalCast(
+                CommonUtils.getFromOptionalMap(properties, "files"))
+                .map(list -> this.parseListPropertyValue(list, value -> {
+                  return Dynafed.File
+                      .builder()
+                      .endpoint(((ScalarPropertyValue) value).getValue())
+                      .build();
+                }))
+                .ifPresent(dynafedBuilder::files);
+            result.put(node.getName(), dynafedBuilder.build());
+          }
+        });
     return result;
   }
 

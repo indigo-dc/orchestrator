@@ -32,15 +32,14 @@ public class GetDynafedData extends BaseRankCloudProvidersCommand {
 
   @Override
   public void execute(DelegateExecution execution,
-    RankCloudProvidersMessage rankCloudProvidersMessage) {
+      RankCloudProvidersMessage rankCloudProvidersMessage) {
 
     rankCloudProvidersMessage.getDynafedRequirements()
-      .values()
-      .forEach(dynafedRequirement -> dynafedService.populateDyanfedData(
-        dynafedRequirement,
-        rankCloudProvidersMessage.getCloudProviders(),
-        rankCloudProvidersMessage.getRequestedWithToken()));
-
+        .values()
+        .forEach(dynafedRequirement -> dynafedService.populateDyanfedData(
+            dynafedRequirement,
+            rankCloudProvidersMessage.getCloudProviders(),
+            rankCloudProvidersMessage.getRequestedWithToken()));
   }
 
   @Override

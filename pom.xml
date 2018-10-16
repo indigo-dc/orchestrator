@@ -63,7 +63,7 @@
 		<asciidoctor-maven-plugin.version>1.5.2</asciidoctor-maven-plugin.version>
 		<maven-release-plugin.version>2.5.3</maven-release-plugin.version>
 		<license-maven-plugin.version>3.0</license-maven-plugin.version>
-		<jacoco-maven-plugin.version>0.8.0</jacoco-maven-plugin.version>
+		<jacoco-maven-plugin.version>0.8.2</jacoco-maven-plugin.version>
 		<checkstyle-plugin.version>3.0.0</checkstyle-plugin.version>
 		<puppycrawl-tools-checkstyle.version>8.10</puppycrawl-tools-checkstyle.version>
 

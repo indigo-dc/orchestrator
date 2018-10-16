@@ -16,9 +16,6 @@
 
 package it.reply.orchestrator.service;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
-
 import alien4cloud.model.components.ScalarPropertyValue;
 import alien4cloud.model.topology.Capability;
 import alien4cloud.model.topology.NodeTemplate;
@@ -47,9 +44,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
-
 import org.assertj.core.util.Lists;
 import org.flowable.engine.impl.ExecutionQueryImpl;
 import org.flowable.engine.impl.RuntimeServiceImpl;
@@ -72,6 +66,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
+
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @JsonTest
 @RunWith(JUnitParamsRunner.class)
@@ -175,7 +175,11 @@ public class DeploymentServiceTest {
 
     Mockito
         .when(deploymentRepository.save(Mockito.any(Deployment.class)))
-        .thenAnswer(y -> y.getArguments()[0]);
+        .thenAnswer(y -> {
+          Deployment deployment = (Deployment) y.getArguments()[0];
+          deployment.setId(UUID.randomUUID().toString());
+          return deployment;
+        });
 
     Mockito.when(resourceRepository.save(Mockito.any(Resource.class))).thenAnswer(y -> {
       Resource res = (Resource) y.getArguments()[0];

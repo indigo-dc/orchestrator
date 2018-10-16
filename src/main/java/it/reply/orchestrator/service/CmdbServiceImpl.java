@@ -33,7 +33,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.core.UriBuilder;
@@ -169,7 +168,7 @@ public class CmdbServiceImpl implements CmdbService {
 
     Map<String, CloudService> allServices = getServicesByProvider(cp.getId())
         .stream()
-        .collect(Collectors.toMap(CloudService::getId, Function.identity()));
+        .collect(Collectors.toMap(CloudService::getId, cs -> cs));
     // Get provider's services' data
     cp
         .getCmdbProviderServices()

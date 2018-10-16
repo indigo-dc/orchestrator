@@ -16,12 +16,20 @@
 
 package it.reply.orchestrator.config;
 
+import java.util.Objects;
+
+import javax.cache.configuration.Factory;
+import javax.transaction.TransactionManager;
+
+import lombok.AllArgsConstructor;
+
 import org.apache.ignite.Ignite;
 import org.apache.ignite.IgniteCheckedException;
 import org.apache.ignite.IgniteSpring;
 import org.apache.ignite.configuration.IgniteConfiguration;
 import org.apache.ignite.configuration.TransactionConfiguration;
 import org.apache.ignite.logger.slf4j.Slf4jLogger;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,6 +37,18 @@ import org.springframework.transaction.jta.JtaTransactionManager;
 
 @Configuration
 public class IgniteConfig {
+
+  @AllArgsConstructor
+  public static class TransactionManagerFactory implements Factory<TransactionManager> {
+
+    @NonNull
+    private transient TransactionManager transactionManager;
+
+    @Override
+    public TransactionManager create() {
+      return Objects.requireNonNull(transactionManager);
+    }
+  }
 
   /**
    * Generates a new IgniteConfiguration.
@@ -38,14 +58,15 @@ public class IgniteConfig {
   @Bean
   public IgniteConfiguration igniteConfiguration(JtaTransactionManager transactionManager) {
 
-    TransactionConfiguration txCfg = new TransactionConfiguration()
-        .setTxManagerFactory(() -> transactionManager.getTransactionManager());
+    Factory<TransactionManager> txManagerFactory = new TransactionManagerFactory(
+        transactionManager.getTransactionManager());
 
     return new IgniteConfiguration()
         .setGridLogger(new Slf4jLogger())
         .setClientMode(false)
         .setActiveOnStart(true)
-        .setTransactionConfiguration(txCfg)
+        .setTransactionConfiguration(
+            new TransactionConfiguration().setTxManagerFactory(txManagerFactory))
         .setMetricsLogFrequency(0);
   }
 

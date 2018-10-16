@@ -26,7 +26,6 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.MoreCollectors;
 
 import it.reply.orchestrator.annotation.DeploymentProviderQualifier;
-import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.entity.Resource;
@@ -39,6 +38,8 @@ import it.reply.orchestrator.dto.mesos.MesosPortMapping;
 import it.reply.orchestrator.dto.mesos.marathon.MarathonApp;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.service.DeploymentException;
+import it.reply.orchestrator.function.ThrowingConsumer;
+import it.reply.orchestrator.function.ThrowingFunction;
 import it.reply.orchestrator.service.IndigoInputsPreProcessorService;
 import it.reply.orchestrator.service.IndigoInputsPreProcessorService.RuntimeProperties;
 import it.reply.orchestrator.service.ToscaService;
@@ -57,8 +58,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -114,45 +113,21 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   private MarathonClientFactory marathonClientFactory;
 
   @Autowired
-  private OidcProperties oidcProperties;
-
-  @Autowired
   private OAuth2TokenService oauth2TokenService;
 
   protected <R> R executeWithClientForResult(CloudProviderEndpoint cloudProviderEndpoint,
       @Nullable OidcTokenId requestedWithToken,
-      Function<Marathon, R> function) {
-    if (!oidcProperties.isEnabled()) {
-      Marathon client = marathonClientFactory.build(cloudProviderEndpoint, null);
-      return function.apply(client);
-    } else {
-      String accessToken =
-          oauth2TokenService.getAccessToken(CommonUtils.checkNotNull(requestedWithToken));
-      try {
-        Marathon client = marathonClientFactory.build(cloudProviderEndpoint, accessToken);
-        return function.apply(client);
-      } catch (MarathonException ex) {
-        if (ex.getStatus() == HttpStatus.UNAUTHORIZED.value()) {
-          String refreshedAccessToken =
-              oauth2TokenService.getRefreshedAccessToken(requestedWithToken);
-          Marathon client =
-              marathonClientFactory.build(cloudProviderEndpoint, refreshedAccessToken);
-          return function.apply(client);
-        } else {
-          throw ex;
-        }
-      }
-    }
+      ThrowingFunction<Marathon, R, MarathonException> function) {
+    return oauth2TokenService.executeWithClientForResult(requestedWithToken,
+        token -> function.apply(marathonClientFactory.build(cloudProviderEndpoint, token)),
+        ex -> ex instanceof MarathonException && ((MarathonException) ex).getStatus() == 401);
   }
 
   protected void executeWithClient(CloudProviderEndpoint cloudProviderEndpoint,
       @Nullable OidcTokenId requestedWithToken,
-      Consumer<Marathon> consumer) {
-    executeWithClientForResult(cloudProviderEndpoint, requestedWithToken, (client) -> {
-          consumer.accept(client);
-          return (Void) null;
-        }
-    );
+      ThrowingConsumer<Marathon, MarathonException> consumer) {
+    executeWithClientForResult(cloudProviderEndpoint, requestedWithToken,
+        client -> consumer.asFunction().apply(client));
   }
 
   protected Group createGroup(Deployment deployment) {
@@ -248,7 +223,6 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   @Override
   public boolean isDeployed(DeploymentMessage deploymentMessage) throws DeploymentException {
     Deployment deployment = getDeployment(deploymentMessage);
-    String groupId = deployment.getId();
 
     Group group = getPolulatedGroup(deploymentMessage, deployment);
     ///////////////////////////////////////////////////////////////
@@ -486,7 +460,6 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   @Override
   public Optional<String> getAdditionalErrorInfoInternal(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
-    String groupId = deployment.getId();
 
     Group group = getPolulatedGroup(deploymentMessage, deployment);
 
@@ -552,26 +525,26 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
             "load_balancer_ips");
 
         List<Integer> ports = group
-          .getApps()
-          .stream()
-          .filter(app -> app.getId().endsWith("/" + marathonNode.getName()))
-          .collect(MoreCollectors.toOptional())
-          .flatMap(app -> {
-            if (app.getContainer() != null && app.getContainer().getType()
-              .equals(MesosContainer.Type.DOCKER.getName())) {
-              return Optional.ofNullable(app.getContainer().getPortMappings())
-                .map(collection -> collection
-                  .stream()
-                  .map(Port::getServicePort));
-            } else {
-              return Optional.ofNullable(app.getPortDefinitions())
-                .map(collection -> collection
-                  .stream()
-                  .map(PortDefinition::getPort));
-            }
-          })
-          .map(stream -> stream.collect(Collectors.toList()))
-          .orElseGet(ArrayList::new);
+            .getApps()
+            .stream()
+            .filter(app -> app.getId().endsWith("/" + marathonNode.getName()))
+            .collect(MoreCollectors.toOptional())
+            .flatMap(app -> {
+              if (app.getContainer() != null && app.getContainer().getType()
+                  .equals(MesosContainer.Type.DOCKER.getName())) {
+                return Optional.ofNullable(app.getContainer().getPortMappings())
+                    .map(collection -> collection
+                        .stream()
+                        .map(Port::getServicePort));
+              } else {
+                return Optional.ofNullable(app.getPortDefinitions())
+                    .map(collection -> collection
+                        .stream()
+                        .map(PortDefinition::getPort));
+              }
+            })
+            .map(stream -> stream.collect(Collectors.toList()))
+            .orElseGet(ArrayList::new);
 
         NodeTemplate hostNode = getHostNode(graph, marathonNode);
         for (int i = 0; i < ports.size(); ++i) {

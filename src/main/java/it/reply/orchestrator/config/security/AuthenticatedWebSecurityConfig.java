@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.mitre.jwt.signer.service.impl.JWKSetCacheService;
 import org.mitre.oauth2.introspectingfilter.service.IntrospectionConfigurationService;
 import org.mitre.oauth2.introspectingfilter.service.impl.JWTParsingIntrospectionConfigurationService;
@@ -149,7 +150,7 @@ public class AuthenticatedWebSecurityConfig extends BaseWebSecurityConfig {
   }
 
   @Override
-  public void configure(HttpSecurity http) throws Exception {
+  public void configure(@NonNull HttpSecurity http) throws Exception {
     super.configure(http);
     http
         .authorizeRequests()

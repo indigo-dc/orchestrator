@@ -108,27 +108,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       @Nullable OidcTokenId requestedWithToken,
       ThrowingFunction<InfrastructureManager, R, ImClientException> function)
       throws ImClientException {
-    if (!oidcProperties.isEnabled()) {
-      InfrastructureManager client = imClientFactory.build(cloudProviderEndpoints, null);
-      return function.apply(client);
-    } else {
-      String accessToken =
-          oauth2TokenService.getAccessToken(CommonUtils.checkNotNull(requestedWithToken));
-      try {
-        InfrastructureManager client = imClientFactory.build(cloudProviderEndpoints, accessToken);
-        return function.apply(client);
-      } catch (ImClientErrorException ex) {
-        if (isUnauthorized(ex.getResponseError())) {
-          String refreshedAccessToken =
-              oauth2TokenService.getRefreshedAccessToken(requestedWithToken);
-          InfrastructureManager client =
-              imClientFactory.build(cloudProviderEndpoints, refreshedAccessToken);
-          return function.apply(client);
-        } else {
-          throw ex;
-        }
-      }
-    }
+    return oauth2TokenService.executeWithClientForResult(requestedWithToken,
+        accessToken -> function.apply(imClientFactory.build(cloudProviderEndpoints, accessToken)),
+        ex -> ex instanceof ImClientErrorException && isUnauthorized((ImClientErrorException) ex));
   }
 
   protected void executeWithClient(List<CloudProviderEndpoint> cloudProviderEndpoints,
@@ -138,9 +120,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     executeWithClientForResult(cloudProviderEndpoints, requestedWithToken, consumer.asFunction());
   }
 
-  private static boolean isUnauthorized(ResponseError error) {
+  private static boolean isUnauthorized(ImClientErrorException error) {
     return Optional
-        .ofNullable(error)
+        .ofNullable(error.getResponseError())
         .map(ResponseError::getCode)
         .filter(code -> code.equals(HttpStatus.UNAUTHORIZED.value()))
         .isPresent();
@@ -299,11 +281,11 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
 
       List<CloudProviderEndpoint> cloudProviderEndpoints =
-        deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
+          deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
 
       try {
         executeWithClient(cloudProviderEndpoints, requestedWithToken,
-          client -> client.destroyInfrastructure(deploymentEndpoint));
+            client -> client.destroyInfrastructure(deploymentEndpoint));
         deployment.setEndpoint(null);
       } catch (ImClientErrorException exception) {
         if (!getImResponseError(exception).is404Error()) {
@@ -681,7 +663,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       ResponseError responseError = getImResponseError((ImClientErrorException) ex);
       String errorMessage = responseError.getMessage();
       if (Strings.nullToEmpty(errorMessage).startsWith("Error Creating Inf.")) {
-        throw new BusinessWorkflowException(ErrorCode.CLOUD_PROVIDER_ERROR,
+        return new BusinessWorkflowException(ErrorCode.CLOUD_PROVIDER_ERROR,
             responseError.getFormattedErrorMessage(),
             ex);
       } else {

@@ -16,7 +16,6 @@
 
 package it.reply.orchestrator.service;
 
-import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudService;
@@ -32,22 +31,15 @@ import it.reply.orchestrator.service.security.OAuth2TokenService;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.core.UriBuilder;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.RequestEntity;
 import org.springframework.http.RequestEntity.HeadersBuilder;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
@@ -56,100 +48,97 @@ public class DynafedServiceImpl {
 
   private RestTemplate restTemplate;
 
-  private OidcProperties oidcProperties;
-
   private OAuth2TokenService oauth2TokenService;
 
-  public DynafedServiceImpl(OidcProperties oidcProperties,
-    OAuth2TokenService oauth2TokenService,
-    RestTemplateBuilder restTemplateBuilder) {
-    this.oidcProperties = oidcProperties;
+  /**
+   * Generate a new {@link DynafedServiceImpl}.
+   *
+   * @param restTemplateBuilder
+   *     the restTemplateBuilder
+   * @param oauth2TokenService
+   *     the oauth2TokenService
+   */
+  public DynafedServiceImpl(OAuth2TokenService oauth2TokenService,
+      RestTemplateBuilder restTemplateBuilder) {
     this.oauth2TokenService = oauth2TokenService;
     this.restTemplate = restTemplateBuilder.build();
   }
 
-  protected ResponseEntity<Metalink> get(URI requestUri, OidcTokenId tokenId) {
-    if (!oidcProperties.isEnabled()) {
-      return executeGet(requestUri, null);
-    }
-    try {
-      String accessToken = oauth2TokenService.getAccessToken(tokenId);
-      return executeGet(requestUri, accessToken);
-    } catch (HttpClientErrorException ex) {
-      if (HttpStatus.UNAUTHORIZED == ex.getStatusCode()) {
-        String refreshedAccessToken = oauth2TokenService.getRefreshedAccessToken(tokenId);
-        return executeGet(requestUri, refreshedAccessToken);
-      } else {
-        throw ex;
-      }
-    }
-  }
-
-  private ResponseEntity<Metalink> executeGet(URI requestUri, @Nullable String accessToken) {
-    HeadersBuilder<?> requestBuilder = RequestEntity.get(requestUri);
-    if (accessToken != null) {
-      requestBuilder.header(HttpHeaders.AUTHORIZATION,
-        String.format("%s %s", OAuth2AccessToken.BEARER_TYPE, accessToken));
-    }
-    return restTemplate.exchange(requestBuilder.build(), Metalink.class);
-  }
-
+  /**
+   * Populate a {@link Dynafed} requirement.
+   *
+   * @param dynafed
+   *     the requirement to populate
+   * @param cloudProviders
+   *     the available cloud providers
+   * @param requestedWithToken
+   *     the token ID
+   * @return the requirement populated
+   */
   public Dynafed populateDyanfedData(Dynafed dynafed,
-    @NonNull Map<String, CloudProvider> cloudProviders,
-    @Nullable OidcTokenId requestedWithToken) {
+      Map<String, CloudProvider> cloudProviders,
+      OidcTokenId requestedWithToken) {
 
     Map<String, CloudService> storageServices = cloudProviders
-      .values()
-      .stream()
-      .flatMap(cloudProvider -> cloudProvider
-        .getCmdbProviderServices()
         .values()
         .stream()
-        .filter(cloudService -> Type.STORAGE == cloudService.getData().getType() && !cloudService
-          .isOneProviderStorageService()))
-      .collect(Collectors
-        .toMap(cloudService -> cloudService.getData().getHostname(), Function.identity()));
+        .flatMap(cloudProvider -> cloudProvider
+            .getCmdbProviderServices()
+            .values()
+            .stream()
+            .filter(
+                cloudService -> Type.STORAGE == cloudService.getData().getType() && !cloudService
+                    .isOneProviderStorageService()))
+        .collect(Collectors
+            .toMap(cs -> cs.getData().getHostname(), cs -> cs));
 
     dynafed
-      .getFiles()
-      .forEach(file -> {
-        URI requestUri = UriBuilder
-          .fromUri(file.getEndpoint() + "?metalink")
-          .build()
-          .normalize();
+        .getFiles()
+        .forEach(file -> {
+          URI requestUri = UriBuilder
+              .fromUri(file.getEndpoint() + "?metalink")
+              .build()
+              .normalize();
 
-        Metalink metalink;
-        try {
-          metalink = get(requestUri, requestedWithToken).getBody();
-        } catch (RestClientException ex) {
-          throw new DeploymentException("Error retrieving metalink of file " + file.getEndpoint(),
-            ex);
-        }
-        File metalinkFile = metalink.getFiles().get(0);
-        file.setSize(metalinkFile.getSize());
+          Metalink metalink;
+          try {
+            metalink = oauth2TokenService.executeWithClientForResult(requestedWithToken,
+                accessToken -> {
+                  HeadersBuilder<?> requestBuilder = RequestEntity.get(requestUri);
+                  if (accessToken != null) {
+                    requestBuilder.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
+                  }
+                  return restTemplate.exchange(requestBuilder.build(), Metalink.class);
+                }, OAuth2TokenService.restTemplateTokenRefreshEvaluator).getBody();
+          } catch (RestClientException ex) {
+            throw new DeploymentException("Error retrieving metalink of file " + file.getEndpoint(),
+                ex);
+          }
+          File metalinkFile = metalink.getFiles().get(0);
+          file.setSize(metalinkFile.getSize());
 
-        List<Resource> resources = metalinkFile
-          .getUrls()
-          .stream()
-          .map(Url::getValue)
-          .filter(url -> storageServices.containsKey(url.getHost()))
-          .map(url -> {
-            CloudService storageService = storageServices.get(url.getHost());
-            return Dynafed.Resource
-              .builder()
-              .endpoint(url.toString())
-              .cloudProviderId(storageService.getData().getProviderId())
-              .cloudServiceId(storageService.getId())
-              .build();
-          })
-          .collect(Collectors.toList());
+          List<Resource> resources = metalinkFile
+              .getUrls()
+              .stream()
+              .map(Url::getValue)
+              .filter(url -> storageServices.containsKey(url.getHost()))
+              .map(url -> {
+                CloudService storageService = storageServices.get(url.getHost());
+                return Dynafed.Resource
+                    .builder()
+                    .endpoint(url.toString())
+                    .cloudProviderId(storageService.getData().getProviderId())
+                    .cloudServiceId(storageService.getId())
+                    .build();
+              })
+              .collect(Collectors.toList());
 
-        if (resources.isEmpty()) {
-          throw new DeploymentException(
-            "No registered storage service available for file " + file.getEndpoint());
-        }
-        file.setResources(resources);
-      });
+          if (resources.isEmpty()) {
+            throw new DeploymentException(
+                "No registered storage service available for file " + file.getEndpoint());
+          }
+          file.setResources(resources);
+        });
     return dynafed;
   }
 }

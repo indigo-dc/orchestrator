@@ -34,7 +34,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class Token {
 
-  @JsonProperty("tokens")
+  @JsonProperty("token")
   @NonNull
   @NotNull
   private String token;

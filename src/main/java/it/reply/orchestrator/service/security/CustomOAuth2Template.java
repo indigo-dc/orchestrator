@@ -25,6 +25,7 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.mitre.oauth2.model.ClientDetailsEntity.AuthMethod;
 import org.mitre.oauth2.model.RegisteredClient;
 import org.mitre.openid.connect.config.ServerConfiguration;
@@ -57,8 +58,8 @@ public class CustomOAuth2Template {
    * @param builder
    *          the RestTemplate builder
    */
-  public CustomOAuth2Template(ServerConfiguration serverConfiguration,
-      RegisteredClient clientConfiguration, RestTemplateBuilder builder) {
+  public CustomOAuth2Template(@NonNull ServerConfiguration serverConfiguration,
+      @NonNull RegisteredClient clientConfiguration, @NonNull RestTemplateBuilder builder) {
     this.serverConfiguration = serverConfiguration;
     this.clientConfiguration = clientConfiguration;
 

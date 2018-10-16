@@ -25,6 +25,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -37,4 +38,16 @@ public class MesosFrameworkServiceData<T extends MesosFrameworkServiceProperties
   @NotNull
   private T properties;
 
+  public MesosFrameworkServiceData(
+      @NonNull String serviceType,
+      @NonNull String endpoint,
+      @NonNull String providerId,
+      @NonNull Type type,
+      boolean publicService,
+      @Nullable String region,
+      @NonNull String hostname,
+      @NonNull T properties) {
+    super(serviceType, endpoint, providerId, type, publicService, region, hostname);
+    this.properties = properties;
+  }
 }

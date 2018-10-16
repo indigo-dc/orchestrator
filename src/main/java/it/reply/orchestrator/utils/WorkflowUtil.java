@@ -43,6 +43,14 @@ public class WorkflowUtil {
     return objectMapper.valueToTree(new RankCloudProvidersMessage(dm));
   }
 
+  /**
+   * Persist a {@link WorkflowException} as workflow parameter and propagate it to its handler.
+   *
+   * @param execution
+   *     the current workflow execution
+   * @param exception
+   *     the exception to hadle
+   */
   public static void persistAndPropagateError(DelegateExecution execution,
       WorkflowException exception) {
     ExecutionEntity parentExecution;

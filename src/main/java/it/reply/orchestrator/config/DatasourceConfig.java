@@ -28,6 +28,7 @@ import liquibase.integration.spring.SpringLiquibase;
 import net.ttddyy.dsproxy.listener.logging.SLF4JLogLevel;
 import net.ttddyy.dsproxy.support.ProxyDataSourceBuilder;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.MutablePropertyValues;
@@ -118,8 +119,8 @@ public class DatasourceConfig implements BeanClassLoaderAware {
     return springLiquibase(workflowDataSource(wrapper), workflowLiquibaseProperties());
   }
 
-  private static SpringLiquibase springLiquibase(DataSource dataSource,
-      LiquibaseProperties properties) {
+  private static SpringLiquibase springLiquibase(@NonNull DataSource dataSource,
+      @NonNull LiquibaseProperties properties) {
     SpringLiquibase liquibase = new SpringLiquibase();
     liquibase.setDataSource(dataSource);
     liquibase.setChangeLog(properties.getChangeLog());

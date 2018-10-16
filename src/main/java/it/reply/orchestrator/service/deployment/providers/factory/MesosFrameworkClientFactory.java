@@ -39,6 +39,15 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public abstract class MesosFrameworkClientFactory<V extends MesosFrameworkServiceData, T> {
 
+  /**
+   * Generate a new Mesos framework client.
+   *
+   * @param cloudProviderEndpoint
+   *     the framework endpoint
+   * @param accessToken
+   *     the access token
+   * @return the new client
+   */
   public T build(CloudProviderEndpoint cloudProviderEndpoint, String accessToken) {
     final RequestInterceptor requestInterceptor;
     if (cloudProviderEndpoint.getUsername() != null
@@ -48,9 +57,10 @@ public abstract class MesosFrameworkClientFactory<V extends MesosFrameworkServic
       requestInterceptor = new BasicAuthRequestInterceptor(cloudProviderEndpoint.getUsername(),
           cloudProviderEndpoint.getPassword());
     } else {
-      requestInterceptor = (requestTemplate) -> {
+      Objects.requireNonNull(accessToken, "Access Token must not be null");
+      requestInterceptor = requestTemplate -> {
         requestTemplate
-            .header(HttpHeaders.AUTHORIZATION, "Bearer " + Objects.requireNonNull(accessToken));
+            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
       };
     }
     return build(cloudProviderEndpoint.getCpEndpoint(), requestInterceptor);
@@ -58,6 +68,13 @@ public abstract class MesosFrameworkClientFactory<V extends MesosFrameworkServic
 
   public abstract T build(String endpoint, RequestInterceptor authInterceptor);
 
+  /**
+   * Get the framework properties.
+   *
+   * @param deploymentMessage
+   *     the deploymentMessage
+   * @return the framework properties
+   */
   @NonNull
   public V getFrameworkProperties(DeploymentMessage deploymentMessage) {
     String computeServiceId = deploymentMessage.getChosenCloudProviderEndpoint()

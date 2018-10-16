@@ -44,7 +44,7 @@ public abstract class ToscaParserAwareTest {
   public final SpringMethodRule springMethodRule = new SpringMethodRule();
 
   @MockBean
-  private OAuth2TokenService oauth2tokenService;
+  protected OAuth2TokenService oauth2tokenService;
 
   @SpyBean
   private IndigoInputsPreProcessorService indigoInputsPreProcessorService;

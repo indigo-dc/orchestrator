@@ -17,7 +17,9 @@
 package it.reply.orchestrator.dto.cmdb;
 
 import it.reply.orchestrator.dto.cmdb.ChronosServiceData.ChronosServiceProperties;
+import it.reply.orchestrator.utils.CommonUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import lombok.AccessLevel;
@@ -34,8 +36,17 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ChronosServiceData extends MesosFrameworkServiceData<ChronosServiceProperties> {
 
-  public ChronosServiceData(@NonNull ChronosServiceProperties properties) {
-    super(properties);
+  @Builder(builderMethodName = "chronosBuilder")
+  public ChronosServiceData(
+      @NonNull String serviceType,
+      @NonNull String endpoint,
+      @NonNull String providerId,
+      @NonNull Type type,
+      boolean publicService,
+      @Nullable String region,
+      @NonNull String hostname,
+      @NonNull ChronosServiceProperties properties) {
+    super(serviceType, endpoint, providerId, type, publicService, region, hostname, properties);
   }
 
   @Data
@@ -48,7 +59,8 @@ public class ChronosServiceData extends MesosFrameworkServiceData<ChronosService
         @Nullable String localVolumesHostBasePath,
         boolean gpuSupport,
         @NonNull List<String> persistentStorageDrivers) {
-      super(localVolumesHostBasePath, gpuSupport, persistentStorageDrivers);
+      super(localVolumesHostBasePath, gpuSupport, CommonUtils
+          .notNullOrDefaultValue(persistentStorageDrivers, ArrayList::new));
     }
   }
 }

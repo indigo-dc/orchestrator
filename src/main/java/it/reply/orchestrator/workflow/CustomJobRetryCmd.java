@@ -162,7 +162,6 @@ public class CustomJobRetryCmd extends JobRetryCmd {
   protected AbstractRuntimeJobEntity handleExaustedRetries(JobEntity job, JobService jobService,
       @Nullable ExecutionEntity executionEntity) {
     if (exception.getCause() instanceof WorkflowException && executionEntity != null) {
-      WorkflowException wfException = (WorkflowException) exception.getCause();
       job.setRetries(0);
       FlowableEventDispatcher eventDispatcher = CommandContextUtil.getEventDispatcher();
       if (eventDispatcher.isEnabled()) {
@@ -170,6 +169,7 @@ public class CustomJobRetryCmd extends JobRetryCmd {
             .createEntityEvent(FlowableEngineEventType.JOB_RETRIES_DECREMENTED, job));
       }
       jobService.deleteJob(job);
+      WorkflowException wfException = (WorkflowException) exception.getCause();
       WorkflowUtil.persistAndPropagateError(executionEntity, wfException);
       return null;
     } else {
