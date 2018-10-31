@@ -445,39 +445,79 @@
 			</build>
 		</profile>
 		<profile>
-			<id>test-with-jacoco</id>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.jacoco</groupId>
-						<artifactId>jacoco-maven-plugin</artifactId>
-						<version>${jacoco-maven-plugin.version}</version>
-						<executions>
-							<execution>
-								<goals>
-									<goal>prepare-agent</goal>
-									<goal>prepare-agent-integration</goal>
-								</goals>
-							</execution>
-							<execution>
-								<id>report</id>
-								<phase>test</phase>
-								<goals>
-									<goal>report</goal>
-								</goals>
-							</execution>
-							<execution>
-								<id>report-it</id>
-								<phase>verify</phase>
-								<goals>
-									<goal>report-integration</goal>
-								</goals>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
+      <id>m2e</id>
+      <activation>
+        <property>
+          <name>m2e.version</name>
+        </property>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.eclipse.m2e</groupId>
+            <artifactId>lifecycle-mapping</artifactId>
+            <version>1.0.0</version>
+            <configuration>
+              <lifecycleMappingMetadata>
+                <pluginExecutions>
+                  <pluginExecution>
+                    <pluginExecutionFilter>
+                      <groupId>com.mycila</groupId>
+                      <artifactId>
+                        license-maven-plugin
+                      </artifactId>
+                      <versionRange>
+                        [1.0,)
+                      </versionRange>
+                      <goals>
+                        <goal>check</goal>
+                      </goals>
+                    </pluginExecutionFilter>
+                    <action>
+                      <ignore/>
+                    </action>
+                  </pluginExecution>
+                </pluginExecutions>
+              </lifecycleMappingMetadata>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+    <profile>
+      <id>test-with-jacoco</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.jacoco</groupId>
+            <artifactId>jacoco-maven-plugin</artifactId>
+            <version>${jacoco-maven-plugin.version}</version>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>prepare-agent</goal>
+                  <goal>prepare-agent-integration</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>report</id>
+                <phase>test</phase>
+                <goals>
+                  <goal>report</goal>
+                </goals>
+              </execution>
+              <execution>
+                <id>report-it</id>
+                <phase>verify</phase>
+                <goals>
+                  <goal>report-integration</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
 	</profiles>
 
 	<build>
@@ -485,34 +525,6 @@
 		<pluginManagement>
 			<!-- All plugins ordered by shortname (antrun, assembly ...) -->
 			<plugins>
-				<plugin>
-					<groupId>org.eclipse.m2e</groupId>
-					<artifactId>lifecycle-mapping</artifactId>
-					<version>1.0.0</version>
-					<configuration>
-						<lifecycleMappingMetadata>
-							<pluginExecutions>
-								<pluginExecution>
-									<pluginExecutionFilter>
-										<groupId>com.mycila</groupId>
-										<artifactId>
-											license-maven-plugin
-										</artifactId>
-										<versionRange>
-											[1.0,)
-										</versionRange>
-										<goals>
-											<goal>check</goal>
-										</goals>
-									</pluginExecutionFilter>
-									<action>
-										<ignore />
-									</action>
-								</pluginExecution>
-							</pluginExecutions>
-						</lifecycleMappingMetadata>
-					</configuration>
-				</plugin>
 				<plugin>
 					<artifactId>maven-clean-plugin</artifactId>
 					<configuration>
