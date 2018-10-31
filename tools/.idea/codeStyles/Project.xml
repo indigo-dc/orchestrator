@@ -49,6 +49,8 @@
           <emptyLine />
           <package name="javax" withSubpackages="true" static="false" />
           <emptyLine />
+          <package name="liquibase" withSubpackages="true" static="false" />
+          <emptyLine />
           <package name="lombok" withSubpackages="true" static="false" />
           <emptyLine />
           <package name="mesosphere" withSubpackages="true" static="false" />
@@ -68,6 +70,7 @@
       <option name="JD_KEEP_EMPTY_PARAMETER" value="false" />
       <option name="JD_KEEP_EMPTY_EXCEPTION" value="false" />
       <option name="JD_KEEP_EMPTY_RETURN" value="false" />
+      <option name="JD_PARAM_DESCRIPTION_ON_NEW_LINE" value="true" />
     </JavaCodeStyleSettings>
     <Objective-C>
       <option name="INDENT_NAMESPACE_MEMBERS" value="0" />
@@ -121,6 +124,9 @@
       <option name="XML_ALIGN_ATTRIBUTES" value="false" />
       <option name="XML_LEGACY_SETTINGS_IMPORTED" value="true" />
     </XML>
+    <editorconfig>
+      <option name="ENABLED" value="false" />
+    </editorconfig>
     <codeStyleSettings language="CSS">
       <indentOptions>
         <option name="INDENT_SIZE" value="2" />
