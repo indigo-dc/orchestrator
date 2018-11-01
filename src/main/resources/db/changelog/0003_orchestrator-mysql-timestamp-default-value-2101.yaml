@@ -1,0 +1,24 @@
+databaseChangeLog:
+- changeSet:
+    id: 0003_orchestrator-mysql-timestamp-default-value-2101
+    author: a.brigandi
+    comment: >
+      Set the default value as CURRENT_TIMESTAMP(6) for non-nullable TIMESTAMP columns in MySql.
+      This is needed to fix the default behaviour of MySql of appending
+      ON UPDATE CURRENT_TIMESTAMP(6) in the default value of non-nullable TIMESTAMP columns
+    changes:
+    - sql:
+        dbms: mysql
+        sql: >
+          ALTER TABLE `deployment`
+          CHANGE COLUMN `created_at` `created_at` TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)
+    - sql:
+        dbms: mysql
+        sql: >
+          ALTER TABLE `resource`
+          CHANGE COLUMN `created_at` `created_at` TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)
+    - sql:
+        dbms: mysql
+        sql: >
+          ALTER TABLE `oidc_refresh_token`
+          CHANGE COLUMN `issued_at` `issued_at` TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6)

@@ -2,3 +2,6 @@ databaseChangeLog:
   - include:
     - file: 0002_orchestrator-create-2001.yaml
       relativeToChangelogFile: true
+  - include:
+    - file: 0003_orchestrator-mysql-timestamp-default-value-2101.yaml
+      relativeToChangelogFile: true
