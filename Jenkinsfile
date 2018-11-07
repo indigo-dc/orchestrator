@@ -103,10 +103,12 @@ pipeline {
             }
             steps {
                 checkout scm
-                dir("$WORKSPACE/docker") {
-                    script {
-                        dockerhub_image_id = DockerBuild(dockerhub_repo, env.BRANCH_NAME)
-                    }
+                script {
+                    MavenRun('-DskipTests=true package')
+                    dockerhub_image_id = DockerBuild(
+                        dockerhub_repo,
+                        env.BRANCH_NAME,
+                        'docker')
                 }
             }
             post {
@@ -126,7 +128,7 @@ pipeline {
             when {
                 buildingTag()
             }
-	    steps {
+            steps {
                 JiraIssueNotification(
                     'DEEP',
                     'DPM',
