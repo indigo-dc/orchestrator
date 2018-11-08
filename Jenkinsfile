@@ -95,7 +95,8 @@ pipeline {
             when {
                 anyOf {
                     branch 'master'
-                    buildingTag()
+                    branch 'releases/.+'
+                    tag 'v\\d+\\.\\d+\\.\\d+-.+'
                 }
             }
             agent {
@@ -107,7 +108,7 @@ pipeline {
                     MavenRun('-DskipTests=true package')
                     dockerhub_image_id = DockerBuild(
                         dockerhub_repo,
-                        env.BRANCH_NAME,
+                        env.POM_VERSION,
                         'docker')
                 }
             }
@@ -126,16 +127,16 @@ pipeline {
 
         stage('Notifications') {
             when {
-                buildingTag()
+                tag 'v\\d+\\.\\d+\\.\\d+-.+'
             }
             steps {
                 JiraIssueNotification(
                     'DEEP',
                     'DPM',
                     '10204',
-                    "[preview-testbed] New Orchestrator version ${env.BRANCH_NAME} available",
-                    "Check new artifacts at:\n\t- Docker image: [${dockerhub_image_id}:${env.BRANCH_NAME}|https://hub.docker.com/r/${dockerhub_image_id}/tags/]",
-                    ['wp3', 'preview-testbed', "orchestrator-${env.BRANCH_NAME}"],
+                    "[preview-testbed] New Orchestrator version ${env.POM_VERSION} available",
+                    "Check new artifacts at:\n\t- Docker image: [${dockerhub_image_id}|https://hub.docker.com/r/${dockerhub_repo}/tags/]",
+                    ['wp3', 'preview-testbed', "orchestrator-${env.POM_VERSION}"],
                     'Task',
                     'mariojmdavid'
                 )
