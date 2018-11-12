@@ -67,3 +67,17 @@ No action required.
 The way the service must be configured has been completely revised, making it more coherent and expressive. Please refer to the [deployment guide](./how_to_deploy.md) to properly update the service configuration
 #### Upgrading to v1.5.1-FINAL
 No action required.
+### UPGRADING TO v2.0.x
+#### Upgrading to v2.0.0-FINAL
+:warning: Due to internal changes in how the data saved on DB is handled, an upgrade path that allows to preserve saved data is *NOT* available. *Both DBs (orchestrator and workflows) need to be recreated*.
+
+No change in configuration file is needed.
+### UPGRADING TO v2.1.x
+#### Upgrading to v2.1.0-FINAL
+With this release 2 major configuration changes have been introduced:
+ - It has been introduced the retrieval of the Mesos framework information from CMDB. The configuration through properties/YAML file has been therefore deprecated and removed.
+ - There have also been some changes with the OneData integration:
+   - The property `ONEDATA_SERVICE_SPACE_ONEPROVIDER_URL` have been removed; now the OneProvider endpoint for the Service Space Storage is automatically retrieved from OneZone
+   - The property `ONEDATA_SERVICE_SPACE_ONEZONE_URL` have been introduced to optionally allow to use, for the Serivce Space, a OneZone different from the default one.
+#### Upgrading to v2.1.1-FINAL
+No action required.

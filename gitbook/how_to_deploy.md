@@ -127,62 +127,19 @@ Please make reference to the [IAM guide](https://indigo-dc.gitbooks.io/iam/conte
 
 :warning: Even if the authentication is optional and disabled by default, you are highly encouraged to enable it, otherwise you will not be able to create deployments neither on OpenStack nor on OpenNebula.
 
-### Configure Chronos and Marathon (optional)
-The orchestrator can both run jobs on Chronos and managed applications on Marathon; to do that you need to provide a file called `application.yml` and mount it (via docker bind-mounting) on `/orchestrator/application.yml`. Inside the file you need to provide the following configuration:
-```yaml
-mesos:
-  instances:
-    "{cloud-provider-id}":
-      chronos:
-        url: '{chronos-endpoint}'
-        username: '{chronos-username}'
-        password: '{chronos-password}'
-        local-volumes-host-base-path: '{base-path}'
-      marathon:
-        url: '{marathon-endpoint}'
-        username: '{marathon-username}'
-        password: '{marathon-password}'
-        local-volumes-host-base-path: '{base-path}'
-        load-balancer-ips: {marathon-lb-ips}
-```
-
-with, as parameters
- * `{cloud-provider-id}`
-    * **Description**: The Cloud Provider that hosts the Mesos cluster on which it runs Chronos; it should be the same id that's returned from the CMDB service
- * `chronos.url`
-    * **Description**: The Chronos REST endpoint
-    * **Format**: http://{host}:{port}
- * `chronos.username`
-    * **Description**: The Chronos username
- * `chronos.password`
-    * **Description**: The Chronos password
- * `chronos.local-volumes-host-base-path`
-    * **Description**: (Optional) The host path on which the jobs' local volumes will be mounted. If not provided support for local volumes will be disabled. If provided, it must start with `/`
- * `marathon.url`
-    * **Description**: The Marathon REST endpoint
-    * **Format**: http://{host}:{port}
- * `marathon.username`
-    * **Description**: The Marathon username
- * `marathon.password`
-    * **Description**: The Marathon password
- * `marathon.local-volumes-host-base-path`
-    * **Description**: (Optional) The host path on which the applications' local volumes will be mounted. If not provided support for local volumes will be disabled. If provided, it must start with `/`
- * `marathon.load-balancer-ips`
-    * **Description**: The list of Marathon LB IPs
-
 ### Configure OneData (optional)
 The Orchestrator, when the Chronos parameters are set, allows to exploit a [OneData](https://onedata.org/) service space. This enables the users to execute tasks on Chronos that use temporary files hosted on a shared OneData space.
 
 To enable this functionality you need to configure the following parameters:
 
  * `ONEDATA_ONEZONE_URL`
-    * **Description**: The endpoint of the default OneZone to which your OneData user is registered
+    * **Description**: The endpoint of the default OneZone to use
     * **Format**: http://{host}:{port}
-    * **Default value**: https://onezone.cloud.ba.infn.it:8443
- * `ONEDATA_SERVICE_SPACE_ONEPROVIDER_URL`
-    * **Description**: The OneData service space provider that hosts the service space
+    * **Default value**: https://onezone-beta.cloud.ba.infn.it
+ * `ONEDATA_SERVICE_SPACE_ONEZONE_URL`
+    * **Description**: (Optional) The OneZone to use when dealing with OneData service space
     * **Format**: {host}:{port}
-    * **Default value**: cdmi-indigo.recas.ba.infn.it
+    * **Default value**: The OneZone endpoint defined in `$ONEDATA_ONEZONE_URL`
  * `ONEDATA_SERVICE_SPACE_TOKEN`
     * **Description**: The OneData service space token; you can retrieve it from the OneZone user interface
  * `ONEDATA_SERVICE_SPACE_NAME`
@@ -190,4 +147,4 @@ To enable this functionality you need to configure the following parameters:
     * **Default value**: `INDIGO Service Space`
  * `ONEDATA_SERVICE_SPACE_BASE_FOLDER_PATH`
     * **Description**: The path (relative to the space one) to the folder that will host the files
-    * **Default value**: Empty (files will be hosted directly in the space folder)
+    * **Default value**: `/`
