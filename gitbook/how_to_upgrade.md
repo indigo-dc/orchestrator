@@ -56,7 +56,7 @@ In this release the IAM integration has undergone a major rework, thus some chan
    * `OIDC_CLIENT_ID`: _**client_id**_
    * `OIDC_CLIENT_SECRET`: _**client_secret**_
   
-  now it wolud be:
+  now it would be:
    * `OIDC_IAM-PROPERTIES[https://iam-test.indigo-datacloud.eu/]_ORCHESTRATOR_CLIENT-ID`: _**client_id**_
    * `OIDC_IAM-PROPERTIES[https://iam-test.indigo-datacloud.eu/]_ORCHESTRATOR_CLIENT-SECRET`: _**client_secret**_
 ### UPGRADING TO v1.4.x
@@ -79,5 +79,7 @@ With this release 2 major configuration changes have been introduced:
  - There have also been some changes with the OneData integration:
    - The property `ONEDATA_SERVICE_SPACE_ONEPROVIDER_URL` have been removed; now the OneProvider endpoint for the Service Space Storage is automatically retrieved from OneZone
    - The property `ONEDATA_SERVICE_SPACE_ONEZONE_URL` have been introduced to optionally allow to use, for the Serivce Space, a OneZone different from the default one.
+
+Additionally, a way to import self-signed certificates has been added. Please check to the [deployment guide](./how_to_deploy.md) to learn more about this feature.
 #### Upgrading to v2.1.1-FINAL
 No action required.

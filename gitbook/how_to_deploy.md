@@ -78,6 +78,15 @@ This is the list of additional parameters that allows to configure the orchestra
     * **Format**: http://{host}:{port}
     * **Default value**: http://90.147.170.181
 
+### Import self-signed certificates (optional)
+The Orchestrator supports connections to external services with self-signed certificates.
+In order to import these certificates you need to:
+ 1. If you doesn't have them already, generate the PEM encoded public certificates from your private key certificates.
+ 2. Copy the PEM encoded public certificates info a folder; this directory must contain only the certificates that you want to import
+ 3. Run the orchestrator with the folder mounted as a volume; the mount point must be `/orchestrator/trusted_certs`
+
+:warning: **The certificates are re-imported at every Orchestrator restart.**
+
 ### Configure IAM integration (optional)
 By default the REST APIs are not authenticated; if you want to enable the IAM integration you must (for each IAM you want to associate):
 
