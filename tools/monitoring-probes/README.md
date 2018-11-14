@@ -11,11 +11,11 @@ The usage of the script is:
 ```
 where
 
- * -h            prints this help
- * -u URL        mandatory URL of the PaaS Orchestrator (e.g. https://indigo-paas.cloud.ba.infn.it/orchestrator)
- * -t TIMEOUT    optional timeout after which the probe will be terminated
- * -v            turns on the verbose mode
-```
+ * -h :           prints this help
+ * -u URL :       mandatory URL of the PaaS Orchestrator (e.g. https://indigo-paas.cloud.ba.infn.it/orchestrator)
+ * -t TIMEOUT :   optional timeout after which the probe will be terminated
+ * -v :           turns on the verbose mode
+
 
 ### Exit codes
 
