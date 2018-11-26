@@ -19,9 +19,6 @@ It takes the deployment requests, expressed through templates written in [TOSCA 
  1. it gathers SLAs, monitoring info and other data from other platform services,
  2. it asks to the cloud provider ranker for a list of the best cloud sites.
 
-The exposed REST APIs are consumed by the Future Gateway portal.
-Here you can find the [REST APIs documentation](http://indigo-dc.github.io/orchestrator/restdocs/) and the [Java doc](http://indigo-dc.github.io/orchestrator/apidocs/).
-
 ### DEPENDENCIES TO OTHER SERVICES
 
 The PaaS Orchestrator needs the presence of the following INDIGO services:
