@@ -12,6 +12,7 @@ INDIGO PaaS Orchestrator
 [![SonarQube Tech Debt](https://img.shields.io/sonar/https/sonarcloud.io/it.reply%3Aorchestrator/tech_debt.svg?maxAge=3600&style=flat-square)](https://sonarcloud.io/dashboard?id=it.reply%3Aorchestrator)
 [![Known Vulnerabilities](https://snyk.io/test/github/indigo-dc/orchestrator/badge.svg?style=flat-square)](https://snyk.io/test/github/indigo-dc/orchestrator)
 
+[![Jenkins](https://jenkins.indigo-datacloud.eu:8080/buildStatus/icon?job=Pipeline-as-code/orchestrator/master)](https://jenkins.indigo-datacloud.eu:8080/job/Pipeline-as-code/job/orchestrator/job/master)
 
 The INDIGO PaaS Orchestrator is a component of the PaaS layer that allows to instantiate resources on Cloud Management Frameworks (like [OpenStack](https://www.openstack.org/) and [OpenNebula](http://opennebula.org/)) and [Mesos](http://mesos.apache.org/) clusters.
 
