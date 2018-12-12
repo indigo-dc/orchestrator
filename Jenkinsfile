@@ -142,7 +142,13 @@ pipeline {
                     "Check new artifacts at:\n\t- Docker image: [${dockerhub_image_id}|https://hub.docker.com/r/${dockerhub_repo}/tags/]",
                     ['wp3', 'preview-testbed', "orchestrator-${env.BRANCH_NAME}"],
                     'Task',
-                    'mariojmdavid'
+                    'mariojmdavid',
+                    ['wgcastell',
+                     'vkozlov',
+                     'dlugo',
+                     'keiichiito',
+                     'laralloret',
+                     'ignacioheredia']
                 )
             }
         }
