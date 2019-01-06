@@ -133,23 +133,41 @@ pipeline {
             when {
                 tag 'v*'
             }
-            steps {
-                JiraIssueNotification(
-                    'DEEP',
-                    'DPM',
-                    '10204',
-                    "[preview-testbed] New Orchestrator version ${env.BRANCH_NAME} available",
-                    "Check new artifacts at:\n\t- Docker image: [${dockerhub_image_id}|https://hub.docker.com/r/${dockerhub_repo}/tags/]",
-                    ['wp3', 'preview-testbed', "orchestrator-${env.BRANCH_NAME}"],
-                    'Task',
-                    'mariojmdavid',
-                    ['wgcastell',
-                     'vkozlov',
-                     'dlugo',
-                     'keiichiito',
-                     'laralloret',
-                     'ignacioheredia']
-                )
+            parallel {
+                stage('Notify DEEP') {
+                        steps {
+                                JiraIssueNotification(
+                                    'DEEP',
+                                    'DPM',
+                                    '10204',
+                                    "[preview-testbed] New orchent version ${env.BRANCH_NAME} available",
+                                    "Check new artifacts at:\n\t- Docker image: [${dockerhub_image_id}|https://hub.docker.com/r/${dockerhub_repo}/tags/]",
+                                    ['wp3', 'preview-testbed', "orchent-${env.BRANCH_NAME}"],
+                                    'Task',
+                                    'mariojmdavid',
+                                    ['wgcastell',
+                                     'vkozlov',
+                                     'dlugo',
+                                     'keiichiito',
+                                     'laralloret',
+                                     'ignacioheredia']                                )              
+                        }
+                }
+                stage('Notify XDC') {
+                        steps {
+                                JiraIssueNotification(
+                                    'XDC',
+                                    'XDM',
+                                    '10100',
+                                    "[preview-testbed] New orchent version ${env.BRANCH_NAME} available",
+                                    "Check new artifacts at:\n\t- Docker image: [${dockerhub_image_id}|https://hub.docker.com/r/${dockerhub_repo}/tags/]",
+                                    ['WP3', 't3.2', 'preview-testbed', "orchent-${env.BRANCH_NAME}"],
+                                    'Task',
+                                    'doinacristinaduma',
+                                    ['doinacristinaduma']
+                                )
+                        }
+                }
             }
         }
     } // stages
