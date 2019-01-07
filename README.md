@@ -1,4 +1,5 @@
 ![INDIGO](https://pbs.twimg.com/media/Cldr8SHWYAA0JbY.png)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Findigo-dc%2Forchestrator.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Findigo-dc%2Forchestrator?ref=badge_shield)
 
 INDIGO PaaS Orchestrator
 ============================
@@ -35,3 +36,7 @@ The PaaS Orchestrator needs the presence of the following INDIGO services:
 * [REST APIs](http://indigo-dc.github.io/orchestrator/restdocs/)
 * [Java Doc](http://indigo-dc.github.io/orchestrator/apidocs/)
 * [Service Reference Card](gitbook/service_reference_card.md)
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Findigo-dc%2Forchestrator.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Findigo-dc%2Forchestrator?ref=badge_large)
