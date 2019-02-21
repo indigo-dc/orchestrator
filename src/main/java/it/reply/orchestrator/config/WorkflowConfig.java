@@ -37,6 +37,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.core.task.TaskExecutor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
@@ -46,6 +48,16 @@ public class WorkflowConfig extends ProcessEngineAutoConfiguration {
       FlowableProcessProperties processProperties, FlowableIdmProperties idmProperties,
       FlowableMailProperties mailProperties) {
     super(flowableProperties, processProperties, idmProperties, mailProperties);
+  }
+
+  @Bean
+  @Process
+  TaskExecutor processTaskExecutor() {
+    ThreadPoolTaskExecutor taskExecutor = new ThreadPoolTaskExecutor();
+    taskExecutor.setThreadGroupName("WorkflowTaskExecutor");
+    taskExecutor.setMaxPoolSize(10);
+    taskExecutor.initialize();
+    return taskExecutor;
   }
 
   /**
@@ -78,9 +90,10 @@ public class WorkflowConfig extends ProcessEngineAutoConfiguration {
     configuration.setJpaHandleTransaction(false);
     configuration.setJpaCloseEntityManager(false);
     configuration.setFailedJobCommandFactory(new CustomFailedJobCommandFactory());
+    configuration.setIdGenerator(new StrongSequentialUuidGenerator());
     configuration.setAsyncExecutorMessageQueueMode(true);
     configuration.setAsyncHistoryExecutorMessageQueueMode(true);
-    configuration.setIdGenerator(new StrongSequentialUuidGenerator());
+    configuration.setAsyncExecutorActivate(true);
 
     return configuration;
   }
