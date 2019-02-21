@@ -122,6 +122,7 @@ import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StopWatch;
 
 @Service
 @Slf4j
@@ -277,8 +278,15 @@ public class ToscaServiceImpl implements ToscaService {
 
   @Override
   public ArchiveRoot prepareTemplate(String toscaTemplate, Map<String, Object> inputs) {
+    StopWatch stopWatch = new StopWatch("prepareTemplate");
+    stopWatch.start("parseAndValidateTemplate");
     ArchiveRoot ar = parseAndValidateTemplate(toscaTemplate, inputs);
+    stopWatch.stop();
+    stopWatch.start("replaceInputFunctions");
     replaceInputFunctions(ar, inputs);
+    stopWatch.stop();
+    LOG.info("TOSCA Template parsed and validated: {}", stopWatch);
+    LOG.debug(stopWatch.prettyPrint());
     return ar;
   }
 
