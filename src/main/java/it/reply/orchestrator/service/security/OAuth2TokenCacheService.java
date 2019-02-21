@@ -56,6 +56,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.util.StopWatch;
 
 @Service
 @Slf4j
@@ -105,9 +106,8 @@ public class OAuth2TokenCacheService {
    * @return the received access grant
    */
   public AccessGrant exchangeAccessToken(OidcTokenId id, String accessToken) {
-    oauth2TokensCache.invoke(id, exchangeEntryProcessor(), MdcUtils.getRequestId(),
+    return oauth2TokensCache.invoke(id, exchangeEntryProcessor(), MdcUtils.getRequestId(),
         MdcUtils.getDeploymentId(), accessToken);
-    return get(id);
   }
 
   public AccessGrant get(OidcTokenId id) {
@@ -149,21 +149,7 @@ public class OAuth2TokenCacheService {
     @Override
     public AccessGrant processInternal(@NonNull MutableEntry<OidcTokenId, AccessGrant> entry,
         Object... arguments) {
-      OidcTokenId id = entry.getKey();
-      LOG.debug("Retrieving access token for {} from cache", id);
-      AccessGrant oldGrant = entry.getValue();
-      Duration expirationDuration = Duration.ofMinutes(5);
-      if (oldGrant == null) {
-        LOG.info("No access token for {} available. Refeshing and populating cache", id);
-        return refresh(entry);
-      } else if (oldGrant.isExpiringIn(expirationDuration)) {
-        LOG.info(
-            "Refreshing access token for {} because the one in cache is expiring in less than {}",
-            id, expirationDuration);
-        return refresh(entry);
-      } else {
-        return oldGrant;
-      }
+      return refreshIfExpired(entry);
     }
   }
 
@@ -174,7 +160,7 @@ public class OAuth2TokenCacheService {
     public AccessGrant processInternal(@NonNull MutableEntry<OidcTokenId, AccessGrant> entry,
         Object... arguments) {
       OidcTokenId id = entry.getKey();
-      LOG.info("Force refesh of access token for {}", id);
+      LOG.info("Force refresh of access token for {}", id);
       entry.remove();
       return refresh(entry);
     }
@@ -192,6 +178,25 @@ public class OAuth2TokenCacheService {
     @Autowired
     private PlatformTransactionManager transactionManager;
 
+    protected AccessGrant refreshIfExpired(@NonNull MutableEntry<OidcTokenId, AccessGrant> entry) {
+      OidcTokenId id = entry.getKey();
+      LOG.info("Retrieving access token for {} from cache", id);
+      AccessGrant oldGrant = entry.getValue();
+      Duration expirationDuration = Duration.ofMinutes(5);
+      if (oldGrant == null) {
+        LOG.info("No access token for {} available. Refreshing and populating cache", id);
+        return refresh(entry);
+      } else if (oldGrant.isExpiringIn(expirationDuration)) {
+        LOG.info(
+            "Refreshing access token for {} because the one in cache is expiring in less than {}",
+            id, expirationDuration);
+        return refresh(entry);
+      } else {
+        LOG.info("Access token for {} retrieved from cache", id);
+        return oldGrant;
+      }
+    }
+
     protected AccessGrant refresh(@NonNull MutableEntry<OidcTokenId, AccessGrant> entry) {
       OidcTokenId id = entry.getKey();
       CustomOAuth2Template template = customOAuth2TemplateFactory.generateOAuth2Template(id);
@@ -201,12 +206,15 @@ public class OAuth2TokenCacheService {
                 .findByOidcTokenId(id)
                 .orElseThrow(
                     () -> new OrchestratorException("No refresh token found for " + id));
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
         AccessGrant grant =
             template.refreshToken(refreshToken.getValue(), OidcProperties.REQUIRED_SCOPES);
-        LOG.info("Access token for {} refreshed", id);
+        stopWatch.stop();
+        LOG.info("Access token for {} refreshed in {}ms", id, stopWatch.getTotalTimeMillis());
         String newRefreshToken = grant.getRefreshToken();
         if (newRefreshToken != null && !newRefreshToken.equals(refreshToken.getValue())) {
-          LOG.info("New refesh token received for {}", id);
+          LOG.info("New refresh token received for {}", id);
           refreshToken.updateFromAccessGrant(grant);
         }
         return grant;
@@ -218,15 +226,18 @@ public class OAuth2TokenCacheService {
     protected AccessGrant exchange(@NonNull MutableEntry<OidcTokenId, AccessGrant> entry,
         String accessToken) {
       OidcTokenId id = entry.getKey();
-      AccessGrant oldGrant = entry.getValue();
       CustomOAuth2Template template = customOAuth2TemplateFactory.generateOAuth2Template(id);
-      return generateTransactionTemplate().execute(transactionStatus -> {
+      generateTransactionTemplate().execute(transactionStatus -> {
         Optional<OidcRefreshToken> refreshToken = oidcTokenRepository.findByOidcTokenId(id);
         if (refreshToken.isPresent()) {
+          StopWatch stopWatch = new StopWatch();
+          stopWatch.start();
           boolean isActive = refreshToken
               .map(token -> template.introspectToken(token.getValue()))
               .filter(TokenIntrospectionResponse::isActive)
               .isPresent();
+          stopWatch.stop();
+          LOG.info("Refresh token for {} validated in {}ms", id, stopWatch.getTotalTimeMillis());
           if (!isActive) {
             LOG.info(
                 "Refresh token for {} isn't active anymore."
@@ -235,12 +246,12 @@ public class OAuth2TokenCacheService {
             AccessGrant grant = template.exchangeToken(accessToken, OidcProperties.REQUIRED_SCOPES);
             refreshToken.get().updateFromAccessGrant(grant);
             entry.setValue(grant);
-            return grant;
+            return null;
           } else {
             LOG.info(
                 "A valid refresh token for {} is already available. Not exchanging the current one",
                 id);
-            return oldGrant;
+            return null;
           }
         } else {
           LOG.info("No refresh token found for {}. Exchanging access token with jti={}",
@@ -249,9 +260,10 @@ public class OAuth2TokenCacheService {
           OidcRefreshToken token = OidcRefreshToken.createFromAccessGrant(grant, entry.getKey());
           oidcTokenRepository.save(token);
           entry.setValue(grant);
-          return grant;
+          return null;
         }
       });
+      return refreshIfExpired(entry);
     }
 
     private TransactionTemplate generateTransactionTemplate() {
