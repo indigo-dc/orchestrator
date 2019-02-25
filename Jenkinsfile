@@ -70,7 +70,9 @@ pipeline {
             post {
                 always {
                     OWASPDependencyCheckPublish()
-                    HTMLReport('src', 'dependency-check-report.html', 'OWASP Dependency Report')
+                    HTMLReport("$WORKSPACE/orchestrator/src",
+                               'dependency-check-report.html',
+                               'OWASP Dependency Report')
                     deleteDir()
                 }
             }
