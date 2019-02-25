@@ -1,6 +1,6 @@
 #!/usr/bin/groovy
 
-@Library(['github.com/indigo-dc/jenkins-pipeline-library']) _
+@Library(['github.com/indigo-dc/jenkins-pipeline-library@1.3.1']) _
 
 pipeline {
     agent {
@@ -114,8 +114,8 @@ pipeline {
                     MavenRun('-DskipTests=true package')
                     dockerhub_image_id = DockerBuild(
                         dockerhub_repo,
-                        PROJECT_VERSION,
-                        'docker')
+                        tag: PROJECT_VERSION,
+                        build_dir: 'docker')
                 }
             }
             post {
