@@ -1,6 +1,6 @@
 #!/usr/bin/groovy
 
-@Library(['github.com/indigo-dc/jenkins-pipeline-library']) _
+@Library(['github.com/indigo-dc/jenkins-pipeline-library@1.3.2']) _
 
 pipeline {
     agent {
@@ -59,6 +59,7 @@ pipeline {
             }
         }
 
+        /*
         stage('Dependency check') {
             agent {
                 label 'docker-build'
@@ -70,11 +71,14 @@ pipeline {
             post {
                 always {
                     OWASPDependencyCheckPublish()
-                    HTMLReport('src', 'dependency-check-report.html', 'OWASP Dependency Report')
+                    HTMLReport("$WORKSPACE/orchestrator/src",
+                               'dependency-check-report.html',
+                               'OWASP Dependency Report')
                     deleteDir()
                 }
             }
         }
+        */
 
         stage('Metrics') {
             agent {
@@ -112,8 +116,8 @@ pipeline {
                     MavenRun('-DskipTests=true package')
                     dockerhub_image_id = DockerBuild(
                         dockerhub_repo,
-                        PROJECT_VERSION,
-                        'docker')
+                        tag: PROJECT_VERSION,
+                        build_dir: 'docker')
                 }
             }
             post {
@@ -133,17 +137,42 @@ pipeline {
             when {
                 tag 'v*'
             }
-            steps {
-                JiraIssueNotification(
-                    'DEEP',
-                    'DPM',
-                    '10204',
-                    "[preview-testbed] New Orchestrator version ${env.BRANCH_NAME} available",
-                    "Check new artifacts at:\n\t- Docker image: [${dockerhub_image_id}|https://hub.docker.com/r/${dockerhub_repo}/tags/]",
-                    ['wp3', 'preview-testbed', "orchestrator-${env.BRANCH_NAME}"],
-                    'Task',
-                    'mariojmdavid'
-                )
+            parallel {
+                stage('Notify DEEP') {
+                    steps {
+                        JiraIssueNotification(
+                            'DEEP',
+                            'DPM',
+                            '10204',
+                            "[preview-testbed] New orchestrator version ${env.BRANCH_NAME} available",
+                            "Check new artifacts at:\n\t- Docker image: [${dockerhub_image_id}|https://hub.docker.com/r/${dockerhub_repo}/tags/]",
+                            ['wp3', 'preview-testbed', "orchestrator-${env.BRANCH_NAME}"],
+                            'Task',
+                            'mariojmdavid',
+                            ['wgcastell',
+                            'vkozlov',
+                            'dlugo',
+                            'keiichiito',
+                            'laralloret',
+                            'ignacioheredia']
+                        )
+                    }
+                }
+                stage('Notify XDC') {
+                    steps {
+                        JiraIssueNotification(
+                            'XDC',
+                            'XDM',
+                            '10100',
+                            "[preview-testbed] New orchestrator version ${env.BRANCH_NAME} available",
+                            "Check new artifacts at:\n\t- Docker image: [${dockerhub_image_id}|https://hub.docker.com/r/${dockerhub_repo}/tags/]",
+                            ['WP3', 't3.2', 'preview-testbed', "orchestrator-${env.BRANCH_NAME}"],
+                            'Task',
+                            'doinacristinaduma',
+                            ['doinacristinaduma']
+                        )
+                    }
+                }
             }
         }
     } // stages
