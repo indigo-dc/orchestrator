@@ -7,9 +7,6 @@
 * Configuration files location with example or template
   * The configuration parameters are provided through environment variables of the docker run command
 * Logfile locations (and management) and other useful audit information
-  * inside the docker container
-    * `/opt/jboss/wildfly/standalone/log/server.log` (logs are rotated every day)
-  * outside the docker container
     * logs can be retrieved with the `docker logs` command
 * Open ports
   * `8080` HTTP port
