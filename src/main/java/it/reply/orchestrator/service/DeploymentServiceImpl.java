@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,6 @@
 
 package it.reply.orchestrator.service;
 
-import alien4cloud.model.topology.NodeTemplate;
-import alien4cloud.model.topology.RelationshipTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,9 +30,9 @@ import it.reply.orchestrator.dal.entity.WorkflowReference.Action;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
-import it.reply.orchestrator.dto.deployment.PlacementPolicy;
 import it.reply.orchestrator.dto.dynafed.Dynafed;
 import it.reply.orchestrator.dto.onedata.OneData;
+import it.reply.orchestrator.dto.policies.ToscaPolicy;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.DeploymentType;
@@ -58,10 +56,12 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.alien4cloud.tosca.model.templates.NodeTemplate;
+import org.alien4cloud.tosca.model.templates.RelationshipTemplate;
 import org.flowable.engine.RuntimeService;
 import org.flowable.engine.runtime.ProcessInstance;
 import org.jgrapht.graph.DirectedMultigraph;
@@ -204,7 +204,7 @@ public class DeploymentServiceImpl implements DeploymentService {
     deploymentMessage.setMaxProvidersRetry(request.getMaxProvidersRetry());
     deploymentMessage.setKeepLastAttempt(request.isKeepLastAttempt());
 
-    Map<String, PlacementPolicy> placementPolicies = toscaService
+    Map<String, ToscaPolicy> placementPolicies = toscaService
         .extractPlacementPolicies(parsingResult);
     deploymentMessage.setPlacementPolicies(placementPolicies);
     deploymentMessage.setDeploymentType(deploymentType);
@@ -242,9 +242,9 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   private DeploymentType inferDeploymentType(Map<String, NodeTemplate> nodes) {
     for (NodeTemplate node : nodes.values()) {
-      if (toscaService.isOfToscaType(node, ToscaConstants.Nodes.CHRONOS)) {
+      if (toscaService.isOfToscaType(node, ToscaConstants.Nodes.Types.CHRONOS)) {
         return DeploymentType.CHRONOS;
-      } else if (toscaService.isOfToscaType(node, ToscaConstants.Nodes.MARATHON)) {
+      } else if (toscaService.isOfToscaType(node, ToscaConstants.Nodes.Types.MARATHON)) {
         return DeploymentType.MARATHON;
       }
     }
@@ -358,7 +358,7 @@ public class DeploymentServiceImpl implements DeploymentService {
     boolean isHybrid = toscaService.isHybridDeployment(parsingResult);
     deploymentMessage.setHybrid(isHybrid);
 
-    Map<String, PlacementPolicy> placementPolicies =
+    Map<String, ToscaPolicy> placementPolicies =
         toscaService.extractPlacementPolicies(parsingResult);
     deploymentMessage.setPlacementPolicies(placementPolicies);
 
@@ -411,8 +411,8 @@ public class DeploymentServiceImpl implements DeploymentService {
       List<NodeTemplate> parentNodes =
           relationships.stream().map(graph::getEdgeSource).collect(Collectors.toList());
 
-      int nodeCount = toscaService.getCount(node).orElse(1);
-      Set<Resource> resources = IntStream
+      long nodeCount = toscaService.getCount(node).orElse(1L);
+      Set<Resource> resources = LongStream
           .range(0, nodeCount)
           .mapToObj(i -> {
 
