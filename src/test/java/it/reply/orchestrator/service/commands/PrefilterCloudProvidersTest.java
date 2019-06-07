@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package it.reply.orchestrator.service.commands;
 
-import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 
 import com.google.common.collect.Lists;
@@ -31,9 +30,9 @@ import it.reply.orchestrator.dto.cmdb.CloudServiceData;
 import it.reply.orchestrator.dto.cmdb.ImageData;
 import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
-import it.reply.orchestrator.dto.deployment.PlacementPolicy;
-import it.reply.orchestrator.dto.deployment.SlaPlacementPolicy;
 import it.reply.orchestrator.dto.onedata.OneData;
+import it.reply.orchestrator.dto.policies.SlaPlacementPolicy;
+import it.reply.orchestrator.dto.policies.ToscaPolicy;
 import it.reply.orchestrator.dto.slam.Preference;
 import it.reply.orchestrator.dto.slam.PreferenceCustomer;
 import it.reply.orchestrator.dto.slam.Priority;
@@ -47,11 +46,12 @@ import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.util.TestUtil;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
 
+import org.alien4cloud.tosca.model.templates.NodeTemplate;
 import org.assertj.core.util.Maps;
 import org.flowable.engine.impl.persistence.entity.ExecutionEntity;
 import org.junit.Before;
@@ -116,8 +116,8 @@ public class PrefilterCloudProvidersTest extends
     rankCloudProvidersMessage.setSlamPreferences(slamPreferences);
 
     // set placement policies
-    Map<String, PlacementPolicy> placementPolicies = new HashMap<>();
-    placementPolicies.put("policy", new SlaPlacementPolicy(new ArrayList<>(), id));
+    Map<String, ToscaPolicy> placementPolicies = new HashMap<>();
+    placementPolicies.put("policy", new SlaPlacementPolicy(new HashSet<>(), id));
     rankCloudProvidersMessage.setPlacementPolicies(placementPolicies);
 
     // set cloud provider
@@ -159,10 +159,10 @@ public class PrefilterCloudProvidersTest extends
 
 
     // set placementPolicies
-    Map<String, PlacementPolicy> placementPolicies = new HashMap<>();
-    placementPolicies.put("policy_1", new SlaPlacementPolicy(new ArrayList<String>(), id));
+    Map<String, ToscaPolicy> placementPolicies = new HashMap<>();
+    placementPolicies.put("policy_1", new SlaPlacementPolicy(new HashSet<>(), id));
     placementPolicies.put("policy_2",
-        new SlaPlacementPolicy(new ArrayList<String>(), UUID.randomUUID().toString()));
+        new SlaPlacementPolicy(new HashSet<>(), UUID.randomUUID().toString()));
 
     rankCloudProvidersMessage.setPlacementPolicies(placementPolicies);
     ArchiveRoot ar = new ArchiveRoot();
@@ -196,11 +196,10 @@ public class PrefilterCloudProvidersTest extends
     rankCloudProvidersMessage.setSlamPreferences(slamPreferences);
 
     // set placement policies
-    Map<String, PlacementPolicy> placementPolicies = new HashMap<>();
+    Map<String, ToscaPolicy> placementPolicies = new HashMap<>();
     // use another id for launch exception
     String slaId = UUID.randomUUID().toString();
-    placementPolicies.put("policy",
-        new SlaPlacementPolicy(new ArrayList<String>(), slaId));
+    placementPolicies.put("policy", new SlaPlacementPolicy(new HashSet<>(), slaId));
 
     rankCloudProvidersMessage.setPlacementPolicies(placementPolicies);
     ArchiveRoot ar = new ArchiveRoot();
@@ -234,8 +233,8 @@ public class PrefilterCloudProvidersTest extends
     rankCloudProvidersMessage.setSlamPreferences(slamPreferences);
 
     // set placement policies
-    Map<String, PlacementPolicy> placementPolicies = new HashMap<>();
-    placementPolicies.put("policy", Mockito.mock(PlacementPolicy.class));
+    Map<String, ToscaPolicy> placementPolicies = new HashMap<>();
+    placementPolicies.put("policy", Mockito.mock(ToscaPolicy.class));
     rankCloudProvidersMessage.setPlacementPolicies(placementPolicies);
 
     ArchiveRoot ar = new ArchiveRoot();

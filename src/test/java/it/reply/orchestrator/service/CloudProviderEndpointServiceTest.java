@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.CloudServiceData;
 import it.reply.orchestrator.dto.cmdb.Type;
-import it.reply.orchestrator.dto.deployment.PlacementPolicy;
+import it.reply.orchestrator.dto.policies.ToscaPolicy;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
 import it.reply.orchestrator.dto.workflow.CloudProvidersOrderedIterator;
 import it.reply.orchestrator.enums.DeploymentProvider;
@@ -157,7 +157,7 @@ public class CloudProviderEndpointServiceTest {
   @Test
   public void getCloudProviderEndpointFailBecauseOfNoComputeService() {
     CloudProvider chosenCloudProvider = CloudProvider.builder().id("provider-RECAS-BARI").build();
-    Map<String, PlacementPolicy> placementPolicies = new HashMap<>();
+    Map<String, ToscaPolicy> placementPolicies = new HashMap<>();
 
     assertThatCode(
         () -> cloudProviderEndpointServiceImpl.getCloudProviderEndpoint(chosenCloudProvider,

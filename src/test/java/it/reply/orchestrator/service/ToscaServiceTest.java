@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,6 @@
 
 package it.reply.orchestrator.service;
 
-import alien4cloud.model.components.AbstractPropertyValue;
-import alien4cloud.model.components.ComplexPropertyValue;
-import alien4cloud.model.components.ListPropertyValue;
-import alien4cloud.model.components.PropertyValue;
-import alien4cloud.model.components.ScalarPropertyValue;
-import alien4cloud.model.topology.Capability;
-import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingException;
 
@@ -30,7 +23,7 @@ import it.reply.orchestrator.config.specific.ToscaParserAwareTest;
 import it.reply.orchestrator.dto.cmdb.ImageData;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.util.TestUtil;
-import it.reply.orchestrator.utils.CommonUtils;
+import it.reply.orchestrator.utils.ToscaUtils;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
@@ -40,6 +33,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.alien4cloud.tosca.model.definitions.AbstractPropertyValue;
+import org.alien4cloud.tosca.model.definitions.PropertyValue;
+import org.alien4cloud.tosca.model.templates.Capability;
+import org.alien4cloud.tosca.model.templates.NodeTemplate;
+import org.alien4cloud.tosca.normative.types.FloatType;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.OptionalAssert;
 import org.junit.Test;
@@ -138,36 +136,24 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
     NodeTemplate chronosJob = nodes.get("chronos_job");
     // Node's properties
     assertEquals(
-        inputs
-            .get(
-                "command"),
-        CommonUtils.<ScalarPropertyValue> optionalCast(
-            toscaService.getNodePropertyByName(chronosJob, "command")).get().getValue());
+        inputs.get("command"),
+        ToscaUtils.extractScalar(chronosJob.getProperties(), "command").get()
+    );
     // Validate list replacement (little bit hard-coded... should be improved)
-    AbstractPropertyValue uris = toscaService.getNodePropertyByName(chronosJob, "uris").get();
-    assertThat(uris, instanceOf(ListPropertyValue.class));
-    AbstractPropertyValue urisOne =
-        (AbstractPropertyValue) ((ListPropertyValue) uris).getValue().get(0);
-    AbstractPropertyValue urisTwo =
-        (AbstractPropertyValue) ((ListPropertyValue) uris).getValue().get(1);
-    assertThat(urisOne, instanceOf(ScalarPropertyValue.class));
-    assertThat(urisTwo, instanceOf(ScalarPropertyValue.class));
-    assertEquals(inputs.get("input_urls"), Arrays.asList(((ScalarPropertyValue) urisOne).getValue(),
-        ((ScalarPropertyValue) urisTwo).getValue()));
+    List<String> uris = ToscaUtils
+        .extractList(chronosJob.getProperties(), "uris", String.class::cast).get();
+    assertEquals(inputs.get("input_urls"), uris);
 
     // Recursive node's properties
-    AbstractPropertyValue outputFileNames = (AbstractPropertyValue) CommonUtils
-        .<ComplexPropertyValue> optionalCast(
-            toscaService.getNodePropertyByName(chronosJob, "environment_variables"))
-        .get().getValue().get("OUTPUT_FILENAMES");
+    String outputFileNames = ToscaUtils
+        .extractMap(chronosJob.getProperties(), "environment_variables", String.class::cast)
+        .get().get("OUTPUT_FILENAMES");
 
-    assertThat(outputFileNames, instanceOf(ScalarPropertyValue.class));
-    assertEquals(inputs.get("output_filenames").toString(),
-        ((ScalarPropertyValue) outputFileNames).getValue());
+    assertEquals(inputs.get("output_filenames"), outputFileNames);
 
     // Artifacts' properties
     assertEquals(inputs.get("docker_image"),
-        ((ScalarPropertyValue) chronosJob.getArtifacts().get("image").getFile()).getValue());
+        chronosJob.getArtifacts().get("image").getArtifactRef());
 
     // Requirements' properties
     Map<String, NodeTemplate> dockerRelationships =
@@ -175,16 +161,15 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
 
     NodeTemplate dockerNode = dockerRelationships.values().iterator().next();
     Capability dockerCapability = dockerNode.getCapabilities().get("host");
-    assertEquals(inputs.get("cpus").toString(),
-        CommonUtils
-            .<ScalarPropertyValue> optionalCast(
-                toscaService.getCapabilityPropertyByName(dockerCapability, "num_cpus"))
-            .get().getValue());
-    assertEquals(inputs.get("mem").toString(),
-        CommonUtils
-            .<ScalarPropertyValue> optionalCast(
-                toscaService.getCapabilityPropertyByName(dockerCapability, "mem_size"))
-            .get().getValue());
+    assertEquals(
+        inputs.get("cpus"),
+        ToscaUtils.extractScalar(dockerCapability.getProperties(), "num_cpus", FloatType.class)
+            .get()
+    );
+    assertEquals(
+        inputs.get("mem"),
+        ToscaUtils.extractScalar(dockerCapability.getProperties(), "mem_size").get()
+    );
 
     // FIXME: Also test relationships' properties
   }
@@ -198,7 +183,7 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
   @Test
   public void checkUserInputNotRequiredNoDefaultValueNotGiven() throws Exception {
     checkUserInputGeneric("tosca_inputs_not_required_no_default_not_given.yaml",
-        "Failed to replace input function on node_templates[my_server][capabilities][host][properties][num_cpus]; nested exception is java.lang.IllegalArgumentException: No input provided for <cpus> and no default value provided in the definition");
+        "Failed to evaluate node_templates[my_server][capabilities][host][properties][num_cpus][get_input][cpus]: No input provided for <cpus> and no default value provided in the definition");
   }
 
   private void checkUserInputGeneric(String templateName, String expectedMessage) throws Exception {

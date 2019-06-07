@@ -1,7 +1,8 @@
 tosca_definitions_version: tosca_simple_yaml_1_0
 
+template_author: INDIGO/DEEP
 template_name: indigo_custom_types
-template_version: 1.0.0-SNAPSHOT
+template_version: 1.0.0
 
 capability_types:
 
@@ -68,6 +69,9 @@ capability_types:
       gpu_model:
         type: string
         required: false
+      sgx:
+        type: boolean
+        required: no
 
   tosca.capabilities.indigo.LRMS:
     derived_from: tosca.capabilities.Container
@@ -107,6 +111,7 @@ capability_types:
         default: kubernetes
         constraints:
           - equal: kubernetes
+
   tosca.capabilities.indigo.LRMS.Local:
     derived_from: tosca.capabilities.indigo.LRMS
     properties:
@@ -182,10 +187,19 @@ artifact_types:
   tosca.artifacts.Deployment.Image.Container.Docker:
     derived_from: tosca.artifacts.Deployment.Image
     description: Docker Container Image
+
 relationship_types:
 
   tosca.relationships.indigo.Manages:
     derived_from: tosca.relationships.Root
+
+  tosca.relationships.indigo.AttachesTo:
+    derived_from: tosca.relationships.AttachesTo
+    properties:
+      fs_type:
+        type: string
+        required: false
+        default:
 
 node_types:
 
@@ -194,10 +208,10 @@ node_types:
   tosca.nodes.Database.MySQL:
     derived_from: tosca.nodes.Database
     requirements:
-      host:
-        type: tosca.capabilities.Container
-        relationship: tosca.relationships.HostedOn
-        node: tosca.nodes.DBMS.MySQL
+      - host:
+          capability: tosca.capabilities.Container
+          relationship: tosca.relationships.HostedOn
+          node: tosca.nodes.DBMS.MySQL
     interfaces:
       Standard:
         create:
@@ -256,10 +270,10 @@ node_types:
         type: string
         required: true
     requirements:
-      host:
-        type: tosca.capabilities.Container
-        relationship: tosca.relationships.HostedOn
-        node: tosca.nodes.DBMS.MySQL
+      - host:
+          capability: tosca.capabilities.Container
+          relationship: tosca.relationships.HostedOn
+          node: tosca.nodes.DBMS.MySQL
     interfaces:
       Standard:
         create:
@@ -305,11 +319,9 @@ node_types:
         required: no
         default: orchestrator.cloud.cnaf.infn.it
       zabbix_server_port:
-        type: integer
+        type: tosca.datatypes.network.PortDef
         required: no
         default: 10051
-        constraints: 
-          - in_range: [ 1, 65535 ]
       zabbix_server_metadata:
         type: string
         required: no
@@ -379,10 +391,10 @@ node_types:
         default: true
         required: false
     requirements:
-      lrms:
-        type: tosca.capabilities.indigo.LRMS
-        node: tosca.nodes.indigo.LRMS.FrontEnd
-        relationship: tosca.relationships.HostedOn
+      - lrms:
+          capability: tosca.capabilities.indigo.LRMS
+          node: tosca.nodes.indigo.LRMS.FrontEnd
+          relationship: tosca.relationships.HostedOn
     artifacts:
       nfs_role:
         file: indigo-dc.nfs
@@ -519,10 +531,10 @@ node_types:
         default: /export
         required: true
     requirements:
-      host:
-        type: tosca.capabilities.Container
-        node: tosca.nodes.Compute
-        relationship: tosca.relationships.HostedOn
+      - host:
+          capability: tosca.capabilities.Container
+          node: tosca.nodes.Compute
+          relationship: tosca.relationships.HostedOn
     interfaces:
       Standard:
         configure:
@@ -545,10 +557,10 @@ node_types:
         default: master
         required: false
     requirements:
-      host:
-        type: tosca.capabilities.Container
-        node: tosca.nodes.Compute
-        relationship: tosca.relationships.HostedOn
+      - host:
+          capability: tosca.capabilities.Container
+          node: tosca.nodes.Compute
+          relationship: tosca.relationships.HostedOn
     interfaces:
       Standard:
         configure:
@@ -603,10 +615,10 @@ node_types:
         default: /refdata
         required: false
     requirements:
-      host:
-        type: tosca.capabilities.Container
-        node: tosca.nodes.Compute
-        relationship: tosca.relationships.HostedOn
+      - host:
+          capability: tosca.capabilities.Container
+          node: tosca.nodes.Compute
+          relationship: tosca.relationships.HostedOn
     interfaces:
       Standard:
         configure:
@@ -649,10 +661,10 @@ node_types:
         default: true
         required: false
     requirements:
-      host:
-        type: tosca.capabilities.Container
-        node: tosca.nodes.indigo.GalaxyPortal
-        relationship: tosca.relationships.HostedOn
+      - host:
+          capability: tosca.capabilities.Container
+          node: tosca.nodes.indigo.GalaxyPortal
+          relationship: tosca.relationships.HostedOn
     artifacts:
       galaxy_role:
         file: indigo-dc.galaxycloud-tools
@@ -669,7 +681,6 @@ node_types:
             galaxy_admin_api_key: { get_property: [ HOST, admin_api_key ] }
             instance_public_ip: { get_attribute: [ HOST, public_address, 0 ] }
             galaxy_version: { get_property: [ SELF, version ] }
-            galaxy_flavor: { get_property: [ SELF, flavor ] }
             get_refdata: { get_property: [ SELF, reference_data ] }
 
   tosca.nodes.indigo.GalaxyReferenceData:
@@ -736,10 +747,10 @@ node_types:
         default: /refdata
         required: false
     requirements:
-      host:
-        type: tosca.capabilities.Container
-        node: tosca.nodes.indigo.GalaxyPortal
-        relationship: tosca.relationships.HostedOn
+      - host:
+          capability: tosca.capabilities.Container
+          node: tosca.nodes.indigo.GalaxyPortal
+          relationship: tosca.relationships.HostedOn
     artifacts:
       oneclient_role:
         file: indigo-dc.oneclient
@@ -768,6 +779,54 @@ node_types:
             refdata_cvmfs_proxy_port: { get_property: [ SELF, refdata_cvmfs_proxy_port ] }
             refdata_dir: { get_property: [ SELF, refdata_dir ] }
 
+  tosca.nodes.indigo.TeskAPI:
+    derived_from: tosca.nodes.WebServer
+    properties:
+      auth_mode:
+        type: string
+        description: Authentication mode
+        default: noauth
+        required: false
+      mount_ftp:
+        description: Flag used to specify that the ftp has to be enabled
+        type: boolean
+        required: false
+        default: true
+      teskmaster_ftp_url:
+        type: string
+        description: ftp url
+        default: 'ftp://ftp_url'
+        required: false
+      teskmaster_ftp_user:
+        type: string
+        description: ftp username
+        default: 'user'
+        required: false
+      teskmaster_ftp_password:
+        type: string
+        description: ftp password
+        default: 'password'
+        required: false
+    requirements:
+      - lrms:
+          capability: tosca.capabilities.indigo.LRMS
+          node: tosca.nodes.indigo.LRMS.FrontEnd
+          relationship: tosca.relationships.HostedOn
+    artifacts:
+      galaxy_role:
+        file: indigo-dc.tesk
+        type: tosca.artifacts.AnsibleGalaxy.role
+    interfaces:
+      Standard:
+        configure:
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/ga4gh_cloud_apis/tesk_install.yml
+          inputs:
+            auth_mode: { get_property: [ SELF, auth_mode ] }
+            mount_ftp: { get_property: [ SELF, mount_ftp ] }
+            teskmaster_ftp_url: { get_property: [ SELF, teskmaster_ftp_url ] }
+            teskmaster_ftp_user:  { get_property: [ SELF, teskmaster_ftp_user ] }
+            teskmaster_ftp_password:  { get_property: [ SELF, teskmaster_ftp_password ] }
+
   tosca.nodes.indigo.ElasticCluster:
     derived_from: tosca.nodes.SoftwareComponent
     properties:
@@ -780,6 +839,7 @@ node_types:
         type: string
         description: ID of the deployment of this elastic cluster in the orchestrator
         required: false
+        default: ''
       orchestrator_url:
         type: string
         description: URL of the orchestrator
@@ -803,23 +863,48 @@ node_types:
       marathon_credentials:
         type: tosca.datatypes.Credential
         description: Credentials to access the marathon endpoint from CLUES plugin
+        default:
+          protocol: http
+          user: admin
+          token: password
         required: false
       chronos_credentials:
         type: tosca.datatypes.Credential
         description: Credentials to access the chronos endpoint from CLUES plugin
+        default:
+          protocol: http
+          user: admin
+          token: password
         required: false
       mesos_credentials:
         type: tosca.datatypes.Credential
         description: Credentials to access the mesos endpoint from CLUES plugin
+        default:
+          protocol: http
+          user: admin
+          token: password
         required: false
       hybrid:
         type: boolean
         description: Flag to specify that this ElasticCluster will work in a hybrid environment
         default: false
         required: false
+      powermanager_plugin:
+        type: string
+        description: Plugin that will manage the VMs (indigo_orchestrator or im)
+        default: indigo_orchestrator
+        required: false
+      im_auth:
+        type: string
+        description: IM auth data
+        default: ""
+        required: false
     artifacts:
-      docker_agent_role:
+      clues_role:
         file: indigo-dc.clues
+        type: tosca.artifacts.AnsibleGalaxy.role
+      im_role:
+        file: grycap.im
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
@@ -837,15 +922,17 @@ node_types:
             clues_marathon_credentials: { get_property: [ SELF, marathon_credentials] }
             clues_chronos_credentials: { get_property: [ SELF, chronos_credentials] }
             clues_mesos_credentials: { get_property: [ SELF, mesos_credentials] }
+            clues_powermanager_plugin: { get_property: [ SELF, powermanager_plugin] }
+            im_auth_data: { get_property: [ SELF, im_auth] }
     requirements:
-      wn:
-        type: tosca.capabilities.Scalable
-        node: tosca.nodes.indigo.LRMS.WorkerNode
-        relationship: tosca.relationships.indigo.Manages
-      lrms:
-        type: tosca.capabilities.indigo.LRMS
-        node: tosca.nodes.indigo.LRMS.FrontEnd
-        relationship: tosca.relationships.HostedOn
+      - wn:
+          capability: tosca.capabilities.Scalable
+          node: tosca.nodes.indigo.LRMS.WorkerNode
+          relationship: tosca.relationships.indigo.Manages
+      - lrms:
+          capability: tosca.capabilities.indigo.LRMS
+          node: tosca.nodes.indigo.LRMS.FrontEnd
+          relationship: tosca.relationships.HostedOn
 
   tosca.nodes.indigo.LRMS.WorkerNode:
     derived_from: tosca.nodes.SoftwareComponent
@@ -869,10 +956,10 @@ node_types:
           type: tosca.capabilities.Scalable
           valid_source_types: [tosca.nodes.indigo.ElasticCluster]
     requirements:
-      host:
-        type: tosca.capabilities.Container
-        node: tosca.nodes.Compute
-        relationship: tosca.relationships.HostedOn
+      - host:
+          capability: tosca.capabilities.Container
+          node: tosca.nodes.Compute
+          relationship: tosca.relationships.HostedOn
 
   tosca.nodes.indigo.LRMS.WorkerNode.Torque:
     derived_from: tosca.nodes.indigo.LRMS.WorkerNode
@@ -914,6 +1001,7 @@ node_types:
           type: string
         description: List of IPs of the WNs
         required: false
+        default: []
       hybrid:
         type: boolean
         description: Flag to specify that this FrontEnd will work in a hybrid environment
@@ -923,10 +1011,10 @@ node_types:
         lrms:
           type: tosca.capabilities.indigo.LRMS
     requirements:
-      host:
-        type: tosca.capabilities.Container
-        node: tosca.nodes.Compute
-        relationship: tosca.relationships.HostedOn
+      - host:
+          capability: tosca.capabilities.Container
+          node: tosca.nodes.Compute
+          relationship: tosca.relationships.HostedOn
 
   tosca.nodes.indigo.LRMS.FrontEnd.Torque:
     derived_from: tosca.nodes.indigo.LRMS.FrontEnd
@@ -992,6 +1080,8 @@ node_types:
       command:
         required: no
         type: string
+        constraints:
+          - min_length: 1
       uris:
         required: no
         type: list
@@ -1014,7 +1104,7 @@ node_types:
         type: map
         entry_schema:
           type: string
-      priviliged:
+      privileged:
         required: no
         type: boolean
         default: false
@@ -1033,6 +1123,8 @@ node_types:
       command:
         required: yes
         type: string
+        constraints:
+          - min_length: 1
       description:
         required: no
         type: string
@@ -1043,7 +1135,7 @@ node_types:
         required: no
         type: string
         default: PT10S
-      priviliged:
+      privileged:
         required: no
         type: boolean
         default: true
@@ -1057,11 +1149,11 @@ node_types:
         valid_source_types: [tosca.nodes.indigo.Container.Application.Docker.Chronos]
         occurrences: [0, UNBOUNDED]
     requirements:
-      parent_job:
-        type: tosca.capabilities.indigo.Container.Application.Docker.Chronos
-        node: tosca.nodes.indigo.Container.Application.Docker.Chronos
-        relationship: tosca.relationships.DependsOn
-        occurrences: [0, 1]
+      - parent_job:
+          capability: tosca.capabilities.indigo.Container.Application.Docker.Chronos
+          node: tosca.nodes.indigo.Container.Application.Docker.Chronos
+          relationship: tosca.relationships.DependsOn
+          occurrences: [0, 1]
 
 
   tosca.nodes.indigo.DariahRepository:
@@ -1186,11 +1278,11 @@ node_types:
             dariahrepo_app_worker_mem: { get_property: [ SELF, worker_mem ] }
             dariahrepo_app_worker_image: { get_property: [ SELF, worker_image ] }
     requirements:
-      host:
-        type: tosca.capabilities.indigo.MesosMaster
-        relationship: tosca.relationships.HostedOn
-        node: tosca.nodes.SoftwareComponent
-        occurrences: [1, 1]
+      - host:
+          capability: tosca.capabilities.indigo.MesosMaster
+          relationship: tosca.relationships.HostedOn
+          node: tosca.nodes.SoftwareComponent
+          occurrences: [1, 1]
 
 
   tosca.nodes.indigo.TensorflowOnMesos:
@@ -1214,8 +1306,8 @@ node_types:
       marathon_port:
         required: no
         type: integer
-        default: 8443
-      tensorflow_image:
+        default: 8443      
+      tensorflow_image: 
         required: no
         type: string
         default: 'tensorflow/tensorflow:latest-gpu'
@@ -1244,7 +1336,7 @@ node_types:
           implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/start_tensorflow.yml
           inputs:
             marathon_username: { get_property: [ SELF, marathon_username ] }
-            marathon_password: { get_property: [ SELF, marathon_password ] }
+            marathon_password: { get_property: [ SELF, marathon_password ] }      
             marathon_protocol: { get_property: [ SELF, marathon_protocol ] }
             marathon_host:  { get_property: [ SELF, marathon_host ] }
             marathon_port: { get_property: [ SELF, marathon_port ] }
@@ -1283,6 +1375,7 @@ node_types:
         entry_schema:
           type: string
         required: no
+        default: ['127.0.0.1']
       mesos_authenticate_http:
         type: boolean
         required: no
@@ -1377,7 +1470,7 @@ node_types:
             enable_nfs_share: { get_property: [ SELF, enable_nfs_share ] }
             marathon_enable_gpu_support: { get_property: [ SELF, enable_gpu_support ] }
             mesos_enable_gpu_support: { get_property: [ SELF, enable_gpu_support ] }
-            chronos_enable_gpu_support: { get_property: [ SELF, enable_gpu_support ] }
+            chronos_enable_gpu_support: { get_property: [ SELF, enable_gpu_support ] }  
             wn_ips: { get_property: [ SELF, wn_ips ] }
 
   tosca.nodes.indigo.MesosMaster:
@@ -1451,11 +1544,11 @@ node_types:
         type: string
         required: no
         default: 'https://dodas-tts.cloud.cnaf.infn.it'
-      oneclient_token:
+      oneclient_token: 
         type: string
         required: no
         default: 'dummy'
-      oneprovider_name:
+      oneprovider_name: 
         type: string
         required: no
         default: 'dummy'
@@ -1494,11 +1587,11 @@ node_types:
             oneclient_token: { get_property: [ SELF, oneclient_token ] }
             oneprovider_name: { get_property: [ SELF, oneprovider_name ] }
     requirements:
-      host:
-        type: tosca.capabilities.indigo.MesosMaster
-        relationship: tosca.relationships.HostedOn
-        node: tosca.nodes.SoftwareComponent
-        occurrences: [1, 1]
+      - host:
+          capability: tosca.capabilities.indigo.MesosMaster
+          relationship: tosca.relationships.HostedOn
+          node: tosca.nodes.SoftwareComponent
+          occurrences: [1, 1]
 
 
   tosca.nodes.indigo.LRMS.WorkerNode.Mesos:
@@ -1644,11 +1737,11 @@ node_types:
             cms_config_elastic_secret: { get_property: [ SELF, elasticsearch_secret ] }
             monitordb_ip: { get_property: [ SELF, monitordb_ip ] }
     requirements:
-      host:
-        type: tosca.capabilities.indigo.MesosSlave
-        relationship: tosca.relationships.HostedOn
-        node: tosca.nodes.SoftwareComponent
-        occurrences: [1, 1]
+      - host:
+          capability: tosca.capabilities.indigo.MesosSlave
+          relationship: tosca.relationships.HostedOn
+          node: tosca.nodes.SoftwareComponent
+          occurrences: [1, 1]
 
 
   tosca.nodes.indigo.MesosLoadBalancer:
@@ -1666,7 +1759,7 @@ node_types:
       marathon_password:
         type: string
         required: yes
-      enable_consul_sd:
+      enable_consul_sd: 
         type: boolean
         required: false
         default: true
@@ -1690,10 +1783,10 @@ node_types:
             marathon_username: { get_property: [ SELF, marathon_username ] }
             marathon_password: { get_property: [ SELF, marathon_password ] }
     requirements:
-      host:
-        type: tosca.capabilities.Container
-        node: tosca.nodes.indigo.Compute
-        relationship: tosca.relationships.HostedOn
+      - host:
+          capability: tosca.capabilities.Container
+          node: tosca.nodes.indigo.Compute
+          relationship: tosca.relationships.HostedOn
 
   tosca.nodes.indigo.SparkMesos:
     derived_from: tosca.nodes.SoftwareComponent
@@ -1787,11 +1880,11 @@ node_types:
             spark_mesos_driver_mem: { get_property: [ SELF, spark_driver_mem ] }
             spark_mesos_driver_cores: { get_property: [ SELF, spark_driver_cores ] }
     requirements:
-      host:
-        type: tosca.capabilities.indigo.MesosMaster
-        relationship: tosca.relationships.HostedOn
-        node: tosca.nodes.SoftwareComponent
-        occurrences: [1, 1]
+      - host:
+          capability: tosca.capabilities.indigo.MesosMaster
+          relationship: tosca.relationships.HostedOn
+          node: tosca.nodes.SoftwareComponent
+          occurrences: [1, 1]
 
   tosca.nodes.indigo.OneDataStorage:
     derived_from: tosca.nodes.BlockStorage
@@ -1929,6 +2022,7 @@ node_types:
           type: string
         description: List of IPs of the Ophidia IO nodes
         required: false
+        default: []
     artifacts:
       ophidia_role:
         file: indigo-dc.ophidia-cluster
@@ -2024,7 +2118,7 @@ node_types:
     derived_from: tosca.nodes.indigo.LRMS.WorkerNode
     artifacts:
       kube_role:
-        file: grycap.kubernetes
+        file: indigo-dc.kubernetes
         type: tosca.artifacts.AnsibleGalaxy.role
       nfs_role:
         file: indigo-dc.nfs
@@ -2050,10 +2144,10 @@ node_types:
       admin_token:
         required: no
         type: string
-        value: some_insecure_token
+        default: some_insecure_token
     artifacts:
       kube_role:
-        file: grycap.kubernetes
+        file: indigo-dc.kubernetes
         type: tosca.artifacts.AnsibleGalaxy.role
       nfs_role:
         file: indigo-dc.nfs
@@ -2100,6 +2194,7 @@ node_types:
           inputs:
             jupyterhub_spawner: { get_property: [ SELF, spawner ] }
             jupyterhub_authenticator: { get_property: [ SELF, spawner ] }
+            
 
   tosca.nodes.indigo.OnedataSpace:
     derived_from: tosca.nodes.Root
@@ -2153,3 +2248,31 @@ node_types:
         type: list
         entry_schema:
           type: string
+
+  tosca.nodes.indigo.BlockStorage:
+    derived_from: tosca.nodes.BlockStorage
+    properties:
+      type:
+        type: string
+        required: false
+
+policy_types:
+  tosca.policies.indigo.SlaPlacement:
+    derived_from: tosca.policies.Placement
+    properties:
+      sla_id:
+        required: true
+        type: string
+    
+  tosca.policies.indigo.CredentialsAwareSlaPlacement:
+    derived_from: tosca.policies.indigo.SlaPlacement
+    properties:
+      username:
+        required: true
+        type: string
+      password:
+        required: true
+        type: string
+      subscription_id:
+        required: false
+        type: string

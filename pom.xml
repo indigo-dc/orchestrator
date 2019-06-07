@@ -78,7 +78,7 @@
     <im-java-api.version>0.4.13</im-java-api.version>
     <monitoring-pillar-domain.version>1.8.1-FINAL</monitoring-pillar-domain.version>
     <flowable.version>6.3.0</flowable.version>
-    <alien4cloud.version>1.1.0-INDIGO2-BETA.1</alien4cloud.version>
+    <alien4cloud.version>2.1.0-DEEP-1.0.0-SNAPSHOT</alien4cloud.version>
     <chronos-client.version>0.0.1</chronos-client.version>
     <marathon-client.version>0.6.0</marathon-client.version>
     <ignite.version>2.3.0</ignite.version>
@@ -257,8 +257,8 @@
       <version>${alien4cloud.version}</version>
       <exclusions>
         <exclusion>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-log4j12</artifactId>
+          <groupId>org.apache.logging.log4j</groupId>
+          <artifactId>log4j-slf4j-impl</artifactId>
         </exclusion>
         <exclusion>
           <groupId>org.springframework.ldap</groupId>
@@ -281,16 +281,12 @@
           <artifactId>spring-social-web</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.springframework.social</groupId>
-          <artifactId>spring-social-config</artifactId>
-        </exclusion>
-        <exclusion>
           <groupId>org.springframework.security</groupId>
           <artifactId>spring-security-ldap</artifactId>
         </exclusion>
         <exclusion>
-          <groupId>org.springframework.security.extensions</groupId>
-          <artifactId>spring-security-saml2-core</artifactId>
+          <groupId>org.springframework.boot</groupId>
+          <artifactId>spring-boot-actuator</artifactId>
         </exclusion>
       </exclusions>
     </dependency>

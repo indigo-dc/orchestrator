@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -149,7 +149,7 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
     app.setDeployment(deployment);
     app.setId("2");
     app.setState(NodeStates.INITIAL);
-    app.setToscaNodeName("marathon-app");
+    app.setToscaNodeName("marathonapp");
     app.setToscaNodeType("tosca.nodes.indigo.Container.Application.Docker.Marathon");
     app.addRequiredResource(runtime);
     deployment.getResources().add(app);
@@ -160,7 +160,7 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
         .thenReturn(Lists.newArrayList(runtime));
 
     Mockito
-        .when(resourceRepository.findByToscaNodeNameAndDeployment_id("marathon-app",
+        .when(resourceRepository.findByToscaNodeNameAndDeployment_id("marathonapp",
             deployment.getId()))
         .thenReturn(Lists.newArrayList(app));
     return deployment;

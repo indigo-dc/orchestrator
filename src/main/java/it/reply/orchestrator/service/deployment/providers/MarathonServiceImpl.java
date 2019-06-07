@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,6 @@
 
 package it.reply.orchestrator.service.deployment.providers;
 
-import alien4cloud.model.components.OutputDefinition;
-import alien4cloud.model.topology.NodeTemplate;
-import alien4cloud.model.topology.RelationshipTemplate;
-import alien4cloud.model.topology.Topology;
 import alien4cloud.tosca.model.ArchiveRoot;
 
 import com.google.common.collect.Lists;
@@ -34,6 +30,7 @@ import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.cmdb.MarathonServiceData.MarathonServiceProperties;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.mesos.MesosContainer;
+import it.reply.orchestrator.dto.mesos.MesosContainer.Type;
 import it.reply.orchestrator.dto.mesos.MesosPortMapping;
 import it.reply.orchestrator.dto.mesos.marathon.MarathonApp;
 import it.reply.orchestrator.enums.DeploymentProvider;
@@ -79,6 +76,10 @@ import mesosphere.marathon.client.model.v2.Port;
 import mesosphere.marathon.client.model.v2.PortDefinition;
 import mesosphere.marathon.client.model.v2.Volume;
 
+import org.alien4cloud.tosca.model.definitions.OutputDefinition;
+import org.alien4cloud.tosca.model.templates.NodeTemplate;
+import org.alien4cloud.tosca.model.templates.RelationshipTemplate;
+import org.alien4cloud.tosca.model.templates.Topology;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -148,7 +149,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
 
     List<NodeTemplate> orderedMarathonApps = CommonUtils
         .iteratorToStream(orderIterator)
-        .filter(node -> toscaService.isOfToscaType(node, ToscaConstants.Nodes.MARATHON))
+        .filter(node -> toscaService.isOfToscaType(node, ToscaConstants.Nodes.Types.MARATHON))
         .collect(Collectors.toList());
 
     Group group = new Group();
@@ -380,15 +381,15 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
           container.setDocker(docker);
           docker.setImage(mesosContainer.getImage());
           docker.setForcePullImage(mesosContainer.isForcePullImage());
-          docker.setPrivileged(mesosContainer.isPriviliged());
+          docker.setPrivileged(mesosContainer.isPrivileged());
           List<Port> ports = mesosContainer
               .getPortMappings()
               .stream()
               .map(this::generatePort)
               .collect(Collectors.toList());
 
-          if (mesosContainer.getType() == MesosContainer.Type.DOCKER && !useGpu) {
-            container.setType(MesosContainer.Type.DOCKER.getName());
+          if (mesosContainer.getType() == Type.DOCKER && !useGpu) {
+            container.setType(Type.DOCKER.getName());
             docker.setPortMappings(ports);
             //// HARDCODED BITS //////
             docker.setNetwork("BRIDGE");
@@ -513,7 +514,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
 
       List<NodeTemplate> orderedMarathonApps = CommonUtils
           .iteratorToStream(orderIterator)
-          .filter(node -> toscaService.isOfToscaType(node, ToscaConstants.Nodes.MARATHON))
+          .filter(node -> toscaService.isOfToscaType(node, ToscaConstants.Nodes.Types.MARATHON))
           .collect(Collectors.toList());
 
       MarathonServiceProperties marathonProperties =

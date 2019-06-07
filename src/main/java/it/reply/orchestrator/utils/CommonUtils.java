@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,12 +18,15 @@ package it.reply.orchestrator.utils;
 
 import com.google.common.base.Equivalence;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.primitives.Primitives;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.BiConsumer;
@@ -43,6 +46,18 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 
 @UtilityClass
 public class CommonUtils {
+
+  private static final Set<Class<?>> PRIMITIVE_CLASSES = ImmutableSet.of(
+      String.class,
+      Boolean.class,
+      Byte.class,
+      Character.class,
+      Double.class,
+      Float.class,
+      Integer.class,
+      Long.class,
+      Short.class
+  );
 
   /**
    * Verify that a <code>@Nullable</code> reference is effectively non null and cast it to a
@@ -208,4 +223,9 @@ public class CommonUtils {
     };
     return Collector.of(HashMap::new, accumulator, combiner);
   }
+
+  public static boolean isPrimitive(Object o) {
+    return o != null && PRIMITIVE_CLASSES.contains(Primitives.wrap(o.getClass()));
+  }
+
 }
