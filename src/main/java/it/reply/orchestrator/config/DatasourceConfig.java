@@ -149,6 +149,7 @@ public class DatasourceConfig implements BeanClassLoaderAware {
         DataSource dataSourceBean = (DataSource) bean;
         return ProxyDataSourceBuilder
             .create(dataSourceBean)
+            .multiline()
             .logQueryBySlf4j(SLF4JLogLevel.TRACE, "it.reply.orchestrator.datasources." + beanName)
             .build();
       }
