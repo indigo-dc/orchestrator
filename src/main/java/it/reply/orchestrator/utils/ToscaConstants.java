@@ -24,9 +24,9 @@ public class ToscaConstants {
   public static class Nodes {
     private static final String BASE_INDIGO_NAME = "tosca.nodes.indigo.";
     public static final String CHRONOS = BASE_INDIGO_NAME + "Container.Application.Docker.Chronos";
-    public static final String MARATHON =
-        BASE_INDIGO_NAME + "Container.Application.Docker.Marathon";
+    public static final String MARATHON = BASE_INDIGO_NAME + "Container.Application.Docker.Marathon";
     public static final String COMPUTE = BASE_INDIGO_NAME + "Compute";
+    public static final String QCG = BASE_INDIGO_NAME + "Qcg.Job";
     public static final String ELASTIC_CLUSTER = BASE_INDIGO_NAME + "ElasticCluster";
     public static final String DOCKER_RUNTIME = BASE_INDIGO_NAME + "Container.Runtime.Docker";
 

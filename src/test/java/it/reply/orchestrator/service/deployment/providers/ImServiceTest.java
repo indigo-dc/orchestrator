@@ -118,8 +118,9 @@ public class ImServiceTest {
   @Mock
   private OAuth2TokenService oauth2TokenService;
 
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Before
-  public void setup() throws ParsingException {
+  public void setup() throws Exception, ParsingException {
     MockitoAnnotations.initMocks(this);
     Mockito
         .when(oauth2TokenService.executeWithClientForResult(
@@ -127,6 +128,7 @@ public class ImServiceTest {
         .thenAnswer(y -> ((ThrowingFunction) y.getArguments()[1]).apply("token"));
   }
 
+  /*
   private DeploymentMessage generateIsDeployedDm() {
     Deployment deployment = ControllerTestUtils.createDeployment(2);
     deployment.setDeploymentProvider(DeploymentProvider.IM);
@@ -138,7 +140,8 @@ public class ImServiceTest {
     deployment.setDeploymentProvider(DeploymentProvider.IM);
     return dm;
   }
-
+  */
+  
   private InfrastructureState generateInfrastructureState(States state, int vmNum) {
     InfrastructureState infrastructureState =
         new InfrastructureState(state.getValue(), Maps.newHashMap());

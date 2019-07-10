@@ -75,7 +75,6 @@ public abstract class BaseJavaDelegate implements JavaDelegate {
 
   protected abstract void customExecute(DelegateExecution execution);
 
-  @SuppressWarnings("unchecked")
   protected <C> Optional<C> getOptionalParameter(DelegateExecution execution,
       String parameterName, Class<C> clazz) {
     Object variable = execution.getVariable(parameterName, false);

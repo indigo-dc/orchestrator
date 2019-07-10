@@ -94,8 +94,9 @@ public class DynafedServiceTest {
   private final static String accessToken = "AccessToken";
   private final static String fileName = "fileName";
 
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Before
-  public void setup() {
+  public void setup() throws Exception {
 
     when(oauth2TokenService.executeWithClientForResult(eq(oidcTokenId), any(), any()))
         .then(a -> ((ThrowingFunction) a.getArguments()[1]).apply(accessToken));

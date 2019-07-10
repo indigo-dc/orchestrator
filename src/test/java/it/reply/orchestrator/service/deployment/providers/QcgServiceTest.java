@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2019 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,19 +16,22 @@
 
 package it.reply.orchestrator.service.deployment.providers;
 
-import alien4cloud.model.components.ComplexPropertyValue;
-import alien4cloud.model.components.ScalarPropertyValue;
-import alien4cloud.model.topology.NodeTemplate;
-import alien4cloud.tosca.model.ArchiveRoot;
+
+//import alien4cloud.model.components.ComplexPropertyValue;
+//import alien4cloud.model.components.ScalarPropertyValue;
+//import alien4cloud.model.topology.NodeTemplate;
+//import alien4cloud.tosca.model.ArchiveRoot;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.google.common.collect.ImmutableMap;
+//import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
-import it.infn.ba.indigo.chronos.client.Chronos;
-import it.infn.ba.indigo.chronos.client.model.v1.Job;
-import it.infn.ba.indigo.chronos.client.utils.ChronosException;
+import it.infn.ba.deep.qcg.client.Qcg;
+import it.infn.ba.deep.qcg.client.model.Job;
+import it.infn.ba.deep.qcg.client.model.JobDescription;
+import it.infn.ba.deep.qcg.client.model.JobDescriptionExecution;
+import it.infn.ba.deep.qcg.client.utils.QcgException;
 import it.reply.orchestrator.config.specific.ToscaParserAwareTest;
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
@@ -37,28 +40,28 @@ import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
-import it.reply.orchestrator.dto.cmdb.ChronosServiceData;
-import it.reply.orchestrator.dto.cmdb.ChronosServiceData.ChronosServiceProperties;
 import it.reply.orchestrator.dto.cmdb.CloudService;
+import it.reply.orchestrator.dto.cmdb.QcgServiceData;
 import it.reply.orchestrator.dto.cmdb.Type;
-import it.reply.orchestrator.dto.deployment.ChronosJobsOrderedIterator;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
-import it.reply.orchestrator.dto.onedata.OneData;
-import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
+import it.reply.orchestrator.dto.deployment.QcgJobsOrderedIterator;
+//import it.reply.orchestrator.dto.onedata.OneData;
+//import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.function.ThrowingFunction;
 import it.reply.orchestrator.service.ToscaServiceImpl;
 import it.reply.orchestrator.service.ToscaServiceTest;
-import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl.IndigoJob;
-import it.reply.orchestrator.service.deployment.providers.ChronosServiceImpl.JobState;
-import it.reply.orchestrator.service.deployment.providers.factory.ChronosClientFactory;
+import it.reply.orchestrator.service.deployment.providers.QcgServiceImpl.DeepJob;
+import it.reply.orchestrator.service.deployment.providers.QcgServiceImpl.JobState;
+import it.reply.orchestrator.service.deployment.providers.factory.QcgClientFactory;
 import it.reply.orchestrator.util.TestUtil;
-import it.reply.orchestrator.utils.CommonUtils;
+//import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.ToscaConstants.Nodes;
 
 import java.io.IOException;
-import java.util.Map;
+//import java.util.Map;
+import java.util.UUID;
 
 import org.assertj.core.api.AbstractThrowableAssert;
 import org.junit.Before;
@@ -67,10 +70,12 @@ import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.json.JsonTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.web.client.RestTemplate;
 
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -80,12 +85,13 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.*;
 
+
 @RunWith(JUnitParamsRunner.class)
 @JsonTest
-public class ChronosServiceTest extends ToscaParserAwareTest {
+public class QcgServiceTest extends ToscaParserAwareTest {
 
   @InjectMocks
-  private ChronosServiceImpl chronosService;
+  private QcgServiceImpl qcgService;
 
   @SpyBean
   @Autowired
@@ -101,37 +107,53 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
   private ResourceRepository resourceRepository;
 
   @MockBean
-  private Chronos chronos;
+  private Qcg qcg;
 
   @MockBean
-  private ChronosClientFactory chronosClientFactory;
+  private QcgClientFactory qcgClientFactory;
 
   @SpyBean
   private ObjectMapper objectMapper;
-
-  @SuppressWarnings({ "rawtypes", "unchecked" })
+  
+  @Spy
+  protected RestTemplate restTemplate;
+  
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Before
   public void setup() throws Exception {
+	  
     MockitoAnnotations.initMocks(this);
-    when(chronosClientFactory.build(any(CloudProviderEndpoint.class), any(String.class)))
-        .thenReturn(chronos);
+    
+    when(qcgClientFactory.build(any(CloudProviderEndpoint.class), any(String.class)))
+        .thenReturn(qcg);
+    
+//    Job resp1 = (new JobDecoder()).decode("{\"id\":\"999\",\"attributes\":{},\"user\":\"default-user\",\"state\":\"FINISHED\",\"operation\":null,\"note\":\"3c915645-5402-471c-b9c6-dcc84a114ae6\",\"description\":{\"note\":\"3c915645-5402-471c-b9c6-dcc84a114ae6\",\"execution\":{\"directory\":\"/qcg/${QCGNCOMP_JOB_ID}\",\"executable\":\"/usr/bin/date\",\"environment\":{\"USER\":\"slurm_user\",\"QCGNCOMP_JOB_ID\":\"999\",\"QCGNCOMP_JOB_SECRET_AUTH\":\"0a05ef399fc54112abae2b9b1eb4bff8\"},\"directory_policy\":{\"create\":\"OVERWRITE\",\"remove\":\"NEVER\"}}},\"operation_start\":null,\"resource\":null,\"queue\":\"normal\",\"local_user\":\"slurm_user\",\"local_group\":null,\"local_id\":\"53\",\"submit_time\":\"2019-06-07T12:55:23.912772Z\",\"start_time\":\"2019-06-07T12:55:25Z\",\"finish_time\":\"2019-06-07T12:55:25Z\",\"updated_time\":\"2019-06-07T12:55:29.468312Z\",\"eta\":null,\"nodes\":\"c1\",\"cpus\":1,\"exit_code\":0,\"errors\":null,\"resubmit\":1,\"work_dir\":\"/qcg/999\",\"created_work_dir\":true,\"last_seen\":\"2019-06-07T12:55:29.466927Z\"}");
+    
     Mockito
         .when(oauth2tokenService.executeWithClientForResult(
             Mockito.any(), Mockito.any(), Mockito.any()))
-        .thenAnswer(y -> ((ThrowingFunction) y.getArguments()[1]).apply("token"));
-  }
+    	        .thenAnswer(y -> ((ThrowingFunction) y.getArguments()[1]).apply("token"));
+//        .thenAnswer(new Answer<Job>() {
+//            public Job answer(InvocationOnMock invocation) throws Throwable {
+//                return resp1;
+//            }
+//        });
+    
 
+  }
+  
   private CloudProviderEndpoint generateCloudProviderEndpoint() {
     return CloudProviderEndpoint
         .builder()
-        .iaasType(IaaSType.CHRONOS)
-        .cpEndpoint("example.com/chronos")
-        .cpComputeServiceId("chronos-service-id")
+        .iaasType(IaaSType.QCG)
+        .cpEndpoint("http://www.example.com/api")
+        .cpComputeServiceId("qcg-service-id")
         .password("password")
         .username("username")
         .build();
   }
 
+  /*
   @Test
   public void checkOneDataParamsSubstitutionInTemplate() throws Exception {
     String template = TestUtil.getFileContentAsString(ToscaServiceTest.TEMPLATES_ONEDATA_BASE_DIR
@@ -165,13 +187,13 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
         "onedata_service_space", serviceOd,
         "onedata_space", userOd);
 
-    ArchiveRoot ar = chronosService.prepareTemplate(deployment, odParameters);
+    ArchiveRoot ar = qcgService.prepareTemplate(deployment, odParameters);
 
     Map<String, NodeTemplate> nodes = ar.getTopology().getNodeTemplates();
-    NodeTemplate chronosJob = nodes.get("chronos_job");
+    NodeTemplate qcgJob = nodes.get("qcg_job");
     Map<String, Object> envVars = CommonUtils
         .<ComplexPropertyValue>optionalCast(
-            toscaService.getNodePropertyByName(chronosJob, "environment_variables"))
+            toscaService.getNodePropertyByName(qcgJob, "environment_variables"))
         .get()
         .getValue();
 
@@ -194,36 +216,43 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
         .isEqualTo(serviceOd.getPath());
 
   }
-
+ */
+  
   @Test
-  @Parameters({"0,0,FRESH", "1,0,SUCCESS", "1,1,SUCCESS", "0,1,FAILURE"})
-  public void getLastState(int successCount, int errorCount, JobState expectedState) {
+  @Parameters({"0,,FRESH", "1,,SUCCESS", "1,fail,FAILURE", "0,fail,FAILURE"})
+  public void getLastState(int successCount, String error, JobState expectedState) {
     Job job = new Job();
-    job.setSuccessCount(successCount);
-    job.setErrorCount(errorCount);
-    JobState lastState = ChronosServiceImpl.getLastState(job);
+    job.setResubmit(successCount);
+    job.setErrors(error);
+    JobState lastState = QcgServiceImpl.getLastState(job);
 
     assertThat(lastState).isEqualTo(expectedState);
   }
 
   @Test
   @Parameters({"true", "false"})
-  public void doDeploy(boolean isLast) throws ChronosException {
+  public void doDeploy(boolean isLast) throws QcgException {
     Deployment deployment = ControllerTestUtils.createDeployment();
-    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
+    DeploymentMessage dm = generateDeployDmQcg(deployment);
 
     Job job = new Job();
-    job.setName("ChronosName");
+    job.setCpus(1);
+    
+    JobDescription description = new JobDescription();
+    JobDescriptionExecution execution = new JobDescriptionExecution();
+    execution.setExecutable("/usr/bin/printf");
+    description.setExecution(execution);
+    job.setDescription(description);
 
-    ChronosJobsOrderedIterator topologyIterator = mock(ChronosJobsOrderedIterator.class);
-    dm.setChronosJobsIterator(topologyIterator);
+    QcgJobsOrderedIterator topologyIterator = mock(QcgJobsOrderedIterator.class);
+    dm.setQcgJobsIterator(topologyIterator);
 
     when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
     when(topologyIterator.hasNext()).thenReturn(true, !isLast);
-    when(topologyIterator.next()).thenReturn(new IndigoJob(job, "toscaName"));
+    when(topologyIterator.next()).thenReturn(new DeepJob(job,"toscaName"));
 
-    assertThat(chronosService.doDeploy(dm)).isEqualTo(isLast);
-    verify(chronos, times(1)).createJob(job);
+    assertThat(qcgService.doDeploy(dm)).isEqualTo(isLast);
+    verify(qcg, times(1)).createJob(job.getDescription());
     if (isLast) {
       verify(topologyIterator, times(1)).reset();
     }
@@ -233,30 +262,30 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
   @Parameters({"true|true", "true|false", "false|true", "false|false"})
   public void isDeployed(boolean isCompleted, boolean isLast) {
     Deployment deployment = ControllerTestUtils.createDeployment();
-    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
+    DeploymentMessage dm = generateDeployDmQcg(deployment);
 
     Job job = new Job();
-    job.setName("ChronosName");
+    job.setId("999");
 
-    ChronosJobsOrderedIterator iterator = mock(ChronosJobsOrderedIterator.class);
-    dm.setChronosJobsIterator(iterator);
+    QcgJobsOrderedIterator iterator = mock(QcgJobsOrderedIterator.class);
+    dm.setQcgJobsIterator(iterator);
 
     when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
     when(iterator.hasCurrent()).thenReturn(true, true);
     when(iterator.hasNext()).thenReturn(!isLast);
-    when(iterator.current()).thenReturn(new IndigoJob(job, "toscaName"));
+    when(iterator.current()).thenReturn(new DeepJob(job,"toscaName"));
 
     Job returnedJob = new Job();
     if (isCompleted) {
-      returnedJob.setSuccessCount(1);
+      returnedJob.setResubmit(1);
     } else {
-      returnedJob.setSuccessCount(0);
-      returnedJob.setErrorCount(0);
+      returnedJob.setResubmit(0);
+      returnedJob.setErrors(null);
     }
 
-    when(chronos.getJob("ChronosName")).thenReturn(Lists.newArrayList(returnedJob));
+    when(qcg.getJob("999")).thenReturn(returnedJob);
 
-    boolean result = chronosService.isDeployed(dm);
+    boolean result = qcgService.isDeployed(dm);
 
     if (!isCompleted) {
       assertThat(result).isFalse();
@@ -269,60 +298,61 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
   }
 
   @Test
-  public void testCheckJobsOnChronosFail() {
+  public void testCheckJobsOnQcgFail() {
     Job job = new Job();
-    job.setName("JobName");
-    job.setSuccessCount(0);
-    job.setErrorCount(1);
-    when(chronos.getJob("JobName")).thenReturn(Lists.newArrayList(job));
+    job.setId("999");
+    job.setResubmit(0);
+    job.setErrors("fail");
+    when(qcg.getJob("999")).thenReturn(job);
 
     assertThatCode(
-        () -> chronosService.checkJobsOnChronos(generateCloudProviderEndpoint(), null, "JobName"))
+        () -> qcgService.checkJobsOnQcg(generateCloudProviderEndpoint(), null, "999"))
         .isInstanceOf(DeploymentException.class)
-        .hasMessage("Chronos job JobName failed to execute");
+        .hasMessage("Qcg job 999 failed to execute");
   }
 
   @Test
-  @Parameters({"true", "false"})
-  public void createJobOnChronosSuccessful(boolean isScheduled) throws ChronosException {
+  public void createJobOnQcgSuccessful() throws QcgException {
 
     Job job = new Job();
-    if (!isScheduled) {
-      job.setParents(Lists.newArrayList("some parent"));
-    }
-    chronosService
-        .createJobOnChronos(generateCloudProviderEndpoint(), null, new IndigoJob(job, "toscaName"));
-
-    if (isScheduled) {
-      verify(chronos, times(1)).createJob(job);
-      verify(chronos, never()).createDependentJob(any(Job.class));
-    } else {
-      verify(chronos, never()).createJob(any(Job.class));
-      verify(chronos, times(1)).createDependentJob(job);
-    }
+    JobDescription description = new JobDescription();
+    JobDescriptionExecution execution = new JobDescriptionExecution();
+    execution.setExecutable("/usr/bin/printf");
+    description.setExecution(execution);
+    job.setDescription(description);
+    
+    /*Job updated =*/ qcgService
+    	.createJobOnQcg(generateCloudProviderEndpoint(), null, new DeepJob(job,"toscaName"));
+    verify(qcg, times(1)).createJob(job.getDescription());
   }
 
   @Test
-  public void createJobOnChronosFail() throws ChronosException {
+  public void createJobOnQcgFail() throws QcgException {
     Job job = new Job();
-    job.setName("JobName");
-    doThrow(new ChronosException(500, "some message")).when(chronos).createJob(job);
+    job.setId("999");
+    JobDescription description = new JobDescription();
+    JobDescriptionExecution execution = new JobDescriptionExecution();
+    execution.setExecutable("/usr/bin/printf");
+    description.setExecution(execution);
+    job.setDescription(description);
+    
+    doThrow(new QcgException(500, "some message")).when(qcg).createJob(job.getDescription());
 
     assertThatCode(
-        () -> chronosService.createJobOnChronos(generateCloudProviderEndpoint(), null,
-            new IndigoJob(job, "toscaName")))
+        () -> qcgService
+        .createJobOnQcg(generateCloudProviderEndpoint(), null, new DeepJob(job,"toscaName")))
         .isInstanceOf(DeploymentException.class)
-        .hasCauseExactlyInstanceOf(ChronosException.class)
+        .hasCauseExactlyInstanceOf(QcgException.class)
         .hasMessage(
-            "Failed to launch job <%s> on Chronos; nested exception is %s (http status: %s)",
-            "JobName", "some message", 500);
+            "Failed to launch job <%s> on Qcg; nested exception is %s (http status: %s)",
+            "999", "some message", 500);
   }
 
   @Test
   public void doUpdateNoSupport() {
-    assertThatCode(() -> chronosService.doUpdate(null, null))
+    assertThatCode(() -> qcgService.doUpdate(null, null))
         .isExactlyInstanceOf(UnsupportedOperationException.class)
-        .hasMessage("Chronos job deployments do not support update.");
+        .hasMessage("Qcg job deployments do not support update.");
   }
 
   @Test
@@ -330,38 +360,39 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
     Deployment deployment = ControllerTestUtils.createDeployment();
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
 
-    assertThat(chronosService.isUndeployed(dm)).isTrue();
+    assertThat(qcgService.isUndeployed(dm)).isTrue();
   }
 
   @Test
   @Parameters({"true", "false"})
-  public void doUndeploySuccessful(boolean isLast) throws ChronosException {
+  public void doUndeploySuccessful(boolean isLast) throws QcgException {
     Deployment deployment = ControllerTestUtils.createDeployment(isLast ? 1 : 2);
-    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
-    deployment.getResources().forEach(resource -> resource.setToscaNodeType(Nodes.CHRONOS));
+    deployment.setEndpoint(isLast ? "999" : "1000");
+    DeploymentMessage dm = generateDeployDmQcg(deployment);
+    deployment.getResources().forEach(resource -> resource.setToscaNodeType(Nodes.QCG));
 
-    String jobName = deployment.getResources().stream().findFirst().get().getId();
+    String jobId = deployment.getEndpoint();
 
     when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
 
-    assertThat(chronosService.doUndeploy(dm)).isEqualTo(isLast);
-    verify(chronos, times(1)).deleteJob(jobName);
+    assertThat(qcgService.doUndeploy(dm)).isEqualTo(isLast);
+    verify(qcg, times(1)).deleteJob(jobId);
   }
 
   @Test
   @Parameters({"400|false", "404|false", "500|true"})
-  public void deleteJobsOnChronosWithChronosException(int statusCode, boolean shouldFail)
-      throws ChronosException {
+  public void deleteJobsOnQcgWithQcgException(int statusCode, boolean shouldFail)
+      throws QcgException {
 
-    doThrow(new ChronosException(statusCode, "someMessage")).when(chronos).deleteJob("ChronosName");
+    doThrow(new QcgException(statusCode, "someMessage")).when(qcg).deleteJob("999");
 
     AbstractThrowableAssert<?, ? extends Throwable> assertion = assertThatCode(
-        () -> chronosService
-            .deleteJobsOnChronos(generateCloudProviderEndpoint(), null, "ChronosName"));
+        () -> qcgService
+            .deleteJobsOnQcg(generateCloudProviderEndpoint(), null, "999"));
     if (shouldFail) {
       assertion.isInstanceOf(DeploymentException.class)
-          .hasCauseExactlyInstanceOf(ChronosException.class).hasMessage(
-          "Failed to delete job ChronosName on Chronos; nested exception is %s (http status: %s)",
+          .hasCauseExactlyInstanceOf(QcgException.class).hasMessage(
+          "Failed to delete job 999 on Qcg; nested exception is %s (http status: %s)",
           "someMessage", statusCode);
     } else {
       assertion.doesNotThrowAnyException();
@@ -371,20 +402,21 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
   @Test
   public void finalizeUndeployUpdateOnSuccess() {
     Deployment deployment = ControllerTestUtils.createDeployment();
-    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
+    DeploymentMessage dm = generateDeployDmQcg(deployment);
 
-    chronosService.finalizeUndeploy(dm);
+    qcgService.finalizeUndeploy(dm);
 
     verify(deploymentStatusHelper, times(1))
         .updateOnSuccess(deployment.getId());
   }
 
+  
   @Test
   public void finalizeDeployTestUpdateOnSuccess() {
     Deployment deployment = ControllerTestUtils.createDeployment();
-    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
+    DeploymentMessage dm = generateDeployDmQcg(deployment);
 
-    chronosService.finalizeDeploy(dm);
+    qcgService.finalizeDeploy(dm);
 
     verify(deploymentStatusHelper, times(1))
         .updateOnSuccess(deployment.getId());
@@ -393,27 +425,23 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
   @Test
   public void generateJobGraph() throws IOException {
     Deployment deployment = generateDeployment();
-    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
-    ChronosServiceData chronosProperties = ChronosServiceData
-        .chronosBuilder()
-        .endpoint("example.com/chronos")
-        .serviceType(CloudService.CHRONOS_COMPUTE_SERVICE)
-        .hostname("example.com")
+    DeploymentMessage dm = generateDeployDmQcg(deployment);
+    QcgServiceData qcgProperties = QcgServiceData
+        .qcgBuilder()
+        .endpoint("http://www.example.com/api")
+        .serviceType(CloudService.QCG_COMPUTE_SERVICE)
+        .hostname("www.example.com")
         .providerId("TEST")
         .type(Type.COMPUTE)
-        .properties(ChronosServiceProperties
-            .builder()
-            .localVolumesHostBasePath("/tmp/")
-            .build())
         .build();
-    when(chronosClientFactory.getFrameworkProperties(dm)).thenReturn(chronosProperties);
+    when(qcgClientFactory.getFrameworkProperties(dm)).thenReturn(qcgProperties);
 
-    ChronosJobsOrderedIterator topologyIterator = chronosService.getJobsTopologicalOrder(
+    QcgJobsOrderedIterator topologyIterator = qcgService.getJobsTopologicalOrder(
         dm, deployment);
     topologyIterator.next();
     assertThat(objectMapper.writer(SerializationFeature.INDENT_OUTPUT)
-        .writeValueAsString(topologyIterator)).isEqualToNormalizingNewlines(TestUtil
-        .getFileContentAsString(ToscaServiceTest.TEMPLATES_BASE_DIR + "chronos_2_jobs.json"));
+            .writeValueAsString(topologyIterator)).isEqualToNormalizingNewlines(TestUtil
+                    .getFileContentAsString(ToscaServiceTest.TEMPLATES_BASE_DIR + "qcg_jobs.json"));
   }
 
   private Deployment generateDeployment() throws IOException {
@@ -422,62 +450,37 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
 
     deployment.setTemplate(
         TestUtil
-            .getFileContentAsString(ToscaServiceTest.TEMPLATES_BASE_DIR + "chronos_2_jobs.yaml"));
-
-    Resource runtime1 = new Resource();
-    runtime1.setDeployment(deployment);
-    runtime1.setId("1");
-    runtime1.setState(NodeStates.INITIAL);
-    runtime1.setToscaNodeName("docker_runtime1");
-    runtime1.setToscaNodeType("tosca.nodes.indigo.Container.Runtime.Docker");
-    deployment.getResources().add(runtime1);
+            .getFileContentAsString(ToscaServiceTest.TEMPLATES_BASE_DIR + "qcg_jobs.yaml"));
 
     Resource job1 = new Resource();
     job1.setDeployment(deployment);
-    job1.setId("2");
+    job1.setId("1");
     job1.setState(NodeStates.INITIAL);
-    job1.setToscaNodeName("chronos_job");
-    job1.setToscaNodeType("tosca.nodes.indigo.Container.Application.Docker.Chronos");
-    job1.addRequiredResource(runtime1);
+    job1.setToscaNodeName("qcg_job");
+    job1.setToscaNodeType("tosca.nodes.indigo.Qcg.Job");
     deployment.getResources().add(job1);
 
     Mockito
-        .when(resourceRepository.findByToscaNodeNameAndDeployment_id("docker_runtime1",
-            deployment.getId()))
-        .thenReturn(Lists.newArrayList(runtime1));
-
-    Mockito
-        .when(resourceRepository.findByToscaNodeNameAndDeployment_id("chronos_job",
+        .when(resourceRepository.findByToscaNodeNameAndDeployment_id("qcg_job",
             deployment.getId()))
         .thenReturn(Lists.newArrayList(job1));
 
-    Resource runtime2 = new Resource();
-    runtime2.setDeployment(deployment);
-    runtime2.setId("3");
-    runtime2.setState(NodeStates.INITIAL);
-    runtime2.setToscaNodeName("docker_runtime2");
-    runtime2.setToscaNodeType("tosca.nodes.indigo.Container.Runtime.Docker");
-    deployment.getResources().add(runtime2);
-
-    Resource job2 = new Resource();
-    job2.setDeployment(deployment);
-    job2.setId("4");
-    job2.setState(NodeStates.INITIAL);
-    job2.setToscaNodeName("chronos_job_upload");
-    job2.setToscaNodeType("tosca.nodes.indigo.Container.Application.Docker.Chronos");
-    job2.addRequiredResource(runtime2);
-    deployment.getResources().add(job2);
-
-    Mockito
-        .when(resourceRepository.findByToscaNodeNameAndDeployment_id("docker_runtime2",
-            deployment.getId()))
-        .thenReturn(Lists.newArrayList(runtime2));
-
-    Mockito
-        .when(resourceRepository.findByToscaNodeNameAndDeployment_id("chronos_job_upload",
-            deployment.getId()))
-        .thenReturn(Lists.newArrayList(job2));
-
     return deployment;
   }
+  
+  private DeploymentMessage generateDeployDmQcg(Deployment deployment) {
+	  DeploymentMessage dm = new DeploymentMessage();
+	  dm.setDeploymentId(deployment.getId());
+	  CloudProviderEndpoint chosenCloudProviderEndpoint = CloudProviderEndpoint
+	      .builder()
+	      .cpComputeServiceId(UUID.randomUUID().toString())
+	      .cpEndpoint("http://www.example.com/api")
+	      .iaasType(IaaSType.QCG)
+	      .build();
+	  dm.setChosenCloudProviderEndpoint(chosenCloudProviderEndpoint);
+	  deployment.setCloudProviderEndpoint(chosenCloudProviderEndpoint);    
+	  return dm;
+  }
+
+  
 }

@@ -100,8 +100,9 @@ public class OneDataServiceTest {
   private static final String deploymentId = "deploymentId";
   private static final OidcTokenId oidcTokenId = new OidcTokenId();
 
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   @Before
-  public void setup() {
+  public void setup() throws Exception {
     oneDataProperties.setOnezoneUrl(URI.create(defaultOneZoneEndpoint));
     oneDataProperties.getServiceSpace().setToken(onedataToken);
     oneDataProperties.getServiceSpace().setName(serviceSpaceName);

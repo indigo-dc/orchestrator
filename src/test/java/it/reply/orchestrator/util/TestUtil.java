@@ -47,5 +47,4 @@ public class TestUtil {
     deployment.setCloudProviderEndpoint(chosenCloudProviderEndpoint);
     return dm;
   }
-
 }

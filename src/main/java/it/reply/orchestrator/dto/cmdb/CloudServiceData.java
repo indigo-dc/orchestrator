@@ -49,7 +49,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
     @JsonSubTypes.Type(
         value = ChronosServiceData.class,
         name = CloudService.CHRONOS_COMPUTE_SERVICE
+    ),
+    @JsonSubTypes.Type(
+            value = QcgServiceData.class,
+            name = CloudService.QCG_COMPUTE_SERVICE
     )
+    
 })
 public class CloudServiceData {
 

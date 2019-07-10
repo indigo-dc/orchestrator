@@ -25,6 +25,7 @@ import it.reply.orchestrator.dto.cmdb.ChronosServiceData;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.MarathonServiceData;
 import it.reply.orchestrator.dto.cmdb.MesosFrameworkServiceData;
+import it.reply.orchestrator.dto.cmdb.QcgServiceData;
 import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.dto.deployment.PlacementPolicy;
 import it.reply.orchestrator.dto.deployment.SlaPlacementPolicy;
@@ -126,6 +127,10 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
                     } else {
                       discardOnMesosGpuRequirement(ar, cloudProviderService, servicesToDiscard);
                     }
+                  case QCG:
+                      if (!(cloudProviderService.getData() instanceof QcgServiceData)) {
+                        addServiceToDiscard(servicesToDiscard, cloudProviderService);
+                      } 
                     break;
                   default:
                     throw new DeploymentException("Unknown Deployment Type: " + type);
@@ -223,7 +228,7 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
       CloudService mesosFrameworkService,
       Set<CloudService> servicesToDiscard) {
     boolean requiresGpu = toscaService.isMesosGpuRequired(archiveRoot);
-    if (requiresGpu && !((MesosFrameworkServiceData) mesosFrameworkService.getData())
+    if (requiresGpu && !((MesosFrameworkServiceData<?>) mesosFrameworkService.getData())
         .getProperties().isGpuSupport()) {
       LOG.debug(
           "Discarded Mesos framework service {} of provider {} because it doesn't support GPUs",

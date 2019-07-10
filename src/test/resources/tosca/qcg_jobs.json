@@ -1,0 +1,13 @@
+{
+  "items" : [ {
+    "qcgJob" : {
+      "note" : "1",
+      "executable" : "/usr/bin/date",
+      "directory_policy" : {
+        "remove" : "NEVER"
+      }
+    },
+    "toscaNodeName" : "qcg_job"
+  } ],
+  "currentIndex" : 0
+}

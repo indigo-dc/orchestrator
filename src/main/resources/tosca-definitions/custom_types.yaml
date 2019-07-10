@@ -1986,6 +1986,22 @@ node_types:
         entry_schema:
           type: string
         description: A map of string representing environment settings
+        
+  tosca.nodes.indigo.Qcg.Job:
+    derived_from: tosca.nodes.indigo.Batch.Job
+    properties:
+      directory:
+        required: no
+        type: string
+        description: Work directory for the Job
+      schema:
+        required: no
+        type: string
+        description: Job schema
+      note:
+        required: no
+        type: string
+        description: User's note for the Job
 
 # https://wiki.italiangrid.it/twiki/bin/view/CREAM/JdlGuide
   tosca.nodes.indigo.Grid.Job:

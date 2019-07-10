@@ -67,7 +67,12 @@ public class OAuth2TokenCacheService {
 
   public static class TokenEvictionFilter implements EvictionFilter<OidcTokenId, AccessGrant> {
 
-    @Override
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 94313752303740873L;
+
+	@Override
     public boolean evictAllowed(Entry<OidcTokenId, AccessGrant> entry) {
       return entry.getValue() == null || entry.getValue().isExpired();
     }
