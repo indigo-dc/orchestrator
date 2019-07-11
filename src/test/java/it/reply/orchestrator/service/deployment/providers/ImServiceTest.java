@@ -119,7 +119,7 @@ public class ImServiceTest {
   private OAuth2TokenService oauth2TokenService;
 
   @Before
-  public void setup() throws ParsingException {
+  public void setup() throws Exception {
     MockitoAnnotations.initMocks(this);
     Mockito
         .when(oauth2TokenService.executeWithClientForResult(

@@ -41,6 +41,11 @@ public class IgniteConfig {
   @AllArgsConstructor
   public static class TransactionManagerFactory implements Factory<TransactionManager> {
 
+    /**
+     * 
+     */
+    private static final long serialVersionUID = 1L;
+    
     @NonNull
     private transient TransactionManager transactionManager;
 

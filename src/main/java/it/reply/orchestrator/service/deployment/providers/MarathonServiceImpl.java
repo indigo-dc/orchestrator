@@ -43,6 +43,7 @@ import it.reply.orchestrator.function.ThrowingFunction;
 import it.reply.orchestrator.service.IndigoInputsPreProcessorService;
 import it.reply.orchestrator.service.IndigoInputsPreProcessorService.RuntimeProperties;
 import it.reply.orchestrator.service.ToscaService;
+import it.reply.orchestrator.service.VaultService;
 import it.reply.orchestrator.service.deployment.providers.factory.MarathonClientFactory;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
@@ -77,6 +78,7 @@ import mesosphere.marathon.client.model.v2.LocalVolume;
 import mesosphere.marathon.client.model.v2.Network;
 import mesosphere.marathon.client.model.v2.Port;
 import mesosphere.marathon.client.model.v2.PortDefinition;
+import mesosphere.marathon.client.model.v2.SecretSource;
 import mesosphere.marathon.client.model.v2.Volume;
 
 import org.apache.commons.lang3.ObjectUtils;
@@ -114,6 +116,9 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
 
   @Autowired
   private OAuth2TokenService oauth2TokenService;
+  
+  @Autowired
+  private VaultService vaultService;
 
   protected <R> R executeWithClientForResult(CloudProviderEndpoint cloudProviderEndpoint,
       @Nullable OidcTokenId requestedWithToken,
@@ -350,7 +355,31 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     app.setMem(marathonTask.getMemSize());
     app.setUris(marathonTask.getUris());
     app.setLabels(marathonTask.getLabels());
-    app.setEnv(new HashMap<>(marathonTask.getEnv()));
+    
+    Map<String,Object> marathonEnv = new HashMap<>(marathonTask.getEnv());
+    
+    // handle secrets
+    if (marathonTask.getSecrets() != null && marathonTask.getSecrets().size() > 0) {
+    
+        Map<String, SecretSource> secrets = new HashMap<String, SecretSource>();
+        
+        for (Map.Entry<String, String> entry : marathonTask.getSecrets().entrySet()) {
+            Map<String,String> enventry = new HashMap<String,String>();
+            enventry.put("secret", entry.getKey());
+            marathonEnv.put(entry.getKey(), enventry);
+            SecretSource source = new SecretSource();
+            source.setSource(entry.getKey()+"@value");
+            secrets.put(entry.getKey(), source);
+            
+            //write secret on service
+            String spath = "/" + id + "/marathon/" + source.getSource(); 
+            vaultService.writeSecret(spath, entry.getValue());
+        }        
+        app.setSecrets(secrets);
+    }
+    
+    
+    app.setEnv(marathonEnv);
     app.setInstances(marathonTask.getInstances());
     boolean useGpu = Optional
         .ofNullable(marathonTask.getGpus())

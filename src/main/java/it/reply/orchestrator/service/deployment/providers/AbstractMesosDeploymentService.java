@@ -113,6 +113,15 @@ public abstract class AbstractMesosDeploymentService<T extends MesosTask<T>, S e
         });
 
     toscaService
+    .<ComplexPropertyValue>getTypedNodePropertyByName(taskNode, "secrets")
+    .ifPresent(property -> {
+      // Convert Map<String, Object> to Map<String, String>
+      Map<String, String> secrets = toscaService.parseComplexPropertyValue(property,
+          value -> ((ScalarPropertyValue) value).getValue());
+      task.setSecrets(secrets);
+    });
+
+    toscaService
         .<ListPropertyValue>getTypedNodePropertyByName(taskNode, "constraints")
         .ifPresent(property -> {
           List<List<String>> constraints = toscaService

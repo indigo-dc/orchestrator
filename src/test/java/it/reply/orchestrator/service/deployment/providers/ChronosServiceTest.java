@@ -110,7 +110,7 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
   private ObjectMapper objectMapper;
 
   @Before
-  public void setup() {
+  public void setup() throws Exception {
     MockitoAnnotations.initMocks(this);
     when(chronosClientFactory.build(any(CloudProviderEndpoint.class), any(String.class)))
         .thenReturn(chronos);
