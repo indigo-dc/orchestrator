@@ -37,7 +37,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor
-public abstract class MesosFrameworkClientFactory<V extends MesosFrameworkServiceData, T> {
+public abstract class MesosFrameworkClientFactory<V extends MesosFrameworkServiceData<?>, T> {
 
   /**
    * Generate a new Mesos framework client.
@@ -75,6 +75,7 @@ public abstract class MesosFrameworkClientFactory<V extends MesosFrameworkServic
    *     the deploymentMessage
    * @return the framework properties
    */
+  @SuppressWarnings("unchecked")
   @NonNull
   public V getFrameworkProperties(DeploymentMessage deploymentMessage) {
     String computeServiceId = deploymentMessage.getChosenCloudProviderEndpoint()

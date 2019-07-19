@@ -16,7 +16,7 @@
 
 package it.reply.orchestrator.service.deployment.providers;
 
-import alien4cloud.tosca.parser.ParsingException;
+//import alien4cloud.tosca.parser.ParsingException;
 
 import com.google.common.collect.Lists;
 
@@ -92,6 +92,7 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
   @MockBean
   private Marathon marathonClient;
 
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   @Before
   public void setup() throws Exception {
     MockitoAnnotations.initMocks(this);
@@ -171,7 +172,7 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
     Deployment deployment = generateDeployment();
 
     Assertions
-        .assertThat(marathonServiceImpl.createGroup(deployment))
+        .assertThat(marathonServiceImpl.createGroup(deployment, null))
         .isEqualToComparingFieldByFieldRecursively(
             ModelUtils.GSON.fromJson(TestUtil.getFileContentAsString(
                 ToscaServiceTest.TEMPLATES_BASE_DIR + "marathon_app.json"), Group.class));

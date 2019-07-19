@@ -100,6 +100,7 @@ public class OneDataServiceTest {
   private static final String deploymentId = "deploymentId";
   private static final OidcTokenId oidcTokenId = new OidcTokenId();
 
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Before
   public void setup() throws Exception {
     oneDataProperties.setOnezoneUrl(URI.create(defaultOneZoneEndpoint));

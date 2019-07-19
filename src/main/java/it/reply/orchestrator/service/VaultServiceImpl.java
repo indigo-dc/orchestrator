@@ -16,19 +16,39 @@
 
 package it.reply.orchestrator.service;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.net.URI;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
+import org.springframework.vault.VaultException;
 import org.springframework.vault.authentication.TokenAuthentication;
 import org.springframework.vault.client.VaultEndpoint;
 import org.springframework.vault.core.VaultTemplate;
+import org.springframework.vault.support.VaultResponse;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import it.reply.orchestrator.config.properties.VaultProperties;
+import it.reply.orchestrator.exception.VaultTokenExpiredException;
 
-
+/**
+ * 
+ * @author Michele Perniola
+ *
+ */
 @Service
 @EnableConfigurationProperties(VaultProperties.class)
 public class VaultServiceImpl implements VaultService {
@@ -36,26 +56,33 @@ public class VaultServiceImpl implements VaultService {
     @Autowired
     private VaultProperties vaultProperties;
     
+    private String token;
+    
     /**
      * 
      * @param vaultProperties
      */
     public VaultServiceImpl(VaultProperties vaultProperties) {
         this.vaultProperties = vaultProperties;
+        this.token = "";
     }
     
+    /**
+     * 
+     * @return
+     */
     private VaultTemplate getTemplate() {
         return new VaultTemplate(VaultEndpoint.create(
                 vaultProperties.getUrl(),
                 vaultProperties.getPort()),
-            new TokenAuthentication(vaultProperties.getToken()));       
+            new TokenAuthentication(token));       
     }
 
     /**
      * 
      */
-    public void writeSecret(String path, Object secret) {
-        getTemplate().write(path, secret);
+    public VaultResponse writeSecret(String path, Object secret) {
+         return getTemplate().write(path, secret);
     }
 
     /**
@@ -86,4 +113,81 @@ public class VaultServiceImpl implements VaultService {
         return getTemplate().list(path);
     }
 
+    /**
+     * 
+     */
+    @SuppressWarnings("unchecked")
+    public VaultService retrieveToken(String accessToken) {
+        String token = "";
+        try {
+            VaultEndpoint endpoint = VaultEndpoint.create(
+                    vaultProperties.getUrl(),
+                    vaultProperties.getPort());
+            URI uri = endpoint.createUri("auth/jwt/login");
+                        
+            CloseableHttpClient httpclient = HttpClients.createDefault();
+            HttpPost httpPost = new HttpPost(uri.toString());
+            String json = "{\"jwt\":\""+accessToken+"\"}";
+            HttpEntity stringEntity = new StringEntity(json,ContentType.APPLICATION_JSON);
+            httpPost.setEntity(stringEntity);
+            CloseableHttpResponse response = httpclient.execute(httpPost);            
+            
+            int status = response.getStatusLine().getStatusCode();
+
+            StringBuilder responseStrBuilder = new StringBuilder();
+            
+            BufferedReader reader = new BufferedReader(
+                    new InputStreamReader((response.getEntity().getContent())));
+
+            String inputStr;
+            while ((inputStr = reader.readLine()) != null)
+                responseStrBuilder.append(inputStr);
+            
+            reader.close();
+            response.close();
+            httpclient.close();
+            
+            if (status == 200) {
+         
+                HashMap<String,Object> result =
+                        new ObjectMapper().readValue(responseStrBuilder.toString(), HashMap.class);         
+    
+                HashMap<String,Object> auth = (HashMap<String,Object>) result.get("auth");
+             
+                
+                token = (String) auth.get("client_token");
+            } else {
+                String message = responseStrBuilder.toString();
+                if (status == 400) {
+                    if (message.toLowerCase().contains("token is expired")) {
+                        throw new VaultTokenExpiredException("Unable to retrieve token for Vault: accessToken is expired");
+                    }
+                }
+                throw new VaultException(String.format("Unable to retrieve token for Vault: %d (%s).", status, message));
+            }        
+        } catch (VaultException ve) {            
+            throw ve;
+        } catch (Exception e) {
+            throw new VaultException(String.format("Unable to retrieve token for Vault: %s.", e.getMessage()));
+        }     
+
+        
+        this.token = token;
+        return this;
+    }
+    
+    /**
+     * 
+     */
+    public VaultService setVaultToken(String token) {
+        this.token = token;
+        return this;
+    }
+    
+    /**
+     * 
+     */
+    public String getVaultToken() {
+        return token;
+    }
 }

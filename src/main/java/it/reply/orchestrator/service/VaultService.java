@@ -19,14 +19,22 @@ package it.reply.orchestrator.service;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.vault.support.VaultResponse;
+
+/**
+ * 
+ * @author Michele Perniola
+ *
+ */
 public interface VaultService {
 
     /**
      * 
      * @param path
      * @param secret
+     * @return
      */
-    public void writeSecret(String path, Object secret);
+    public VaultResponse writeSecret(String path, Object secret);
     
     /**
      * 
@@ -56,4 +64,23 @@ public interface VaultService {
      * @return
      */
     public List<String> listSecrets(String path);
+    
+    /**
+     * 
+     * @param accessToken
+     * @return
+     */
+    public VaultService retrieveToken(String accessToken);
+    
+    /**
+     * 
+     * @param token
+     * @return
+     */
+    public VaultService setVaultToken(String token);
+    /**
+     * 
+     * @return
+     */
+    public String getVaultToken();
 }

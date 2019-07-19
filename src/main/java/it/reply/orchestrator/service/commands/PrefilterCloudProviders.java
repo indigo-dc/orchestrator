@@ -16,6 +16,10 @@
 
 package it.reply.orchestrator.service.commands;
 
+import alien4cloud.model.components.ComplexPropertyValue;
+import alien4cloud.model.topology.NodeTemplate;
+import alien4cloud.model.topology.RelationshipTemplate;
+import alien4cloud.model.topology.Topology;
 import alien4cloud.tosca.model.ArchiveRoot;
 
 import it.reply.orchestrator.dal.entity.Deployment;
@@ -36,13 +40,17 @@ import it.reply.orchestrator.enums.DeploymentType;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.ToscaService;
+import it.reply.orchestrator.utils.CommonUtils;
+import it.reply.orchestrator.utils.ToscaConstants;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -50,6 +58,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.flowable.engine.delegate.DelegateExecution;
+import org.jgrapht.graph.DirectedMultigraph;
+import org.jgrapht.traverse.TopologicalOrderIterator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -100,13 +110,45 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
     ArchiveRoot ar = toscaService
         .prepareTemplate(deployment.getTemplate(), deployment.getParameters());
 
+    DeploymentType type = rankCloudProvidersMessage.getDeploymentType();
+
+    //secrets handling
+    boolean hasSecrets = false;
+    
+    if (type.equals(DeploymentType.MARATHON)) {
+        Map<String, NodeTemplate> nodes = Optional
+                .ofNullable(ar.getTopology())
+                .map(Topology::getNodeTemplates)
+                .orElseGet(HashMap::new);
+
+        DirectedMultigraph<NodeTemplate, RelationshipTemplate> graph =
+            toscaService.buildNodeGraph(nodes, false);
+
+        TopologicalOrderIterator<NodeTemplate, RelationshipTemplate> orderIterator =
+            new TopologicalOrderIterator<>(graph);
+
+        List<NodeTemplate> orderedMarathonApps = CommonUtils
+            .iteratorToStream(orderIterator)
+            .filter(node -> toscaService.isOfToscaType(node, ToscaConstants.Nodes.MARATHON))
+            .collect(Collectors.toList());
+
+        for (NodeTemplate marathonNode : orderedMarathonApps) {
+            hasSecrets = toscaService
+                .<ComplexPropertyValue>getTypedNodePropertyByName(marathonNode, "secrets")
+                .isPresent();
+            if (hasSecrets)
+                break;
+        }        
+    }
+    
+    final boolean hs = hasSecrets;
+    
     rankCloudProvidersMessage
         .getCloudProviders()
         .forEach((name, cloudProvider) -> {
           cloudProvider
               .getCmdbProviderServices()
               .forEach((id, cloudProviderService) -> {
-                DeploymentType type = rankCloudProvidersMessage.getDeploymentType();
                 switch (type) {
                   case TOSCA:
                     if (cloudProviderService.getData() instanceof MesosFrameworkServiceData) {
@@ -118,6 +160,7 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
                       addServiceToDiscard(servicesToDiscard, cloudProviderService);
                     } else {
                       discardOnMesosGpuRequirement(ar, cloudProviderService, servicesToDiscard);
+                      discardOnMarathonSecretsRequirement(ar,cloudProviderService, servicesToDiscard, hs);
                     }
                     break;
                   case CHRONOS:
@@ -223,7 +266,7 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
       CloudService mesosFrameworkService,
       Set<CloudService> servicesToDiscard) {
     boolean requiresGpu = toscaService.isMesosGpuRequired(archiveRoot);
-    if (requiresGpu && !((MesosFrameworkServiceData) mesosFrameworkService.getData())
+    if (requiresGpu && !((MesosFrameworkServiceData<?>) mesosFrameworkService.getData())
         .getProperties().isGpuSupport()) {
       LOG.debug(
           "Discarded Mesos framework service {} of provider {} because it doesn't support GPUs",
@@ -231,6 +274,19 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
       addServiceToDiscard(servicesToDiscard, mesosFrameworkService);
     }
   }
+
+  protected void discardOnMarathonSecretsRequirement(ArchiveRoot archiveRoot,
+          CloudService mesosFrameworkService,
+          Set<CloudService> servicesToDiscard,
+          boolean isSecretsRequired) {
+        if (isSecretsRequired && !((MarathonServiceData) mesosFrameworkService.getData())
+            .getProperties().isSecretSupport()) {
+          LOG.debug(
+              "Discarded Marathon framework service {} of provider {} because it doesn't support Secrets",
+              mesosFrameworkService.getId(), mesosFrameworkService.getData().getProviderId());
+          addServiceToDiscard(servicesToDiscard, mesosFrameworkService);
+        }
+      }
 
   protected void discardOnOneDataRequirements(OneData requirement,
       Collection<CloudProvider> cloudProviders, Set<CloudProvider> providersToDiscard,

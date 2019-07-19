@@ -57,6 +57,7 @@ public class GetSlamTest extends BaseRankCloudProvidersCommandTest<GetSlam> {
   @Mock
   private OAuth2TokenService oauth2TokenService;
 
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Before
   public void setup() throws Exception {
     slamProperties.setUrl(URI.create("https://www.example.com"));

@@ -49,6 +49,7 @@ public class Metalink {
   @Builder.Default
   private List<File> files = new ArrayList<>();
 
+  @SuppressWarnings("unused")
   @Deprecated
   private Metalink() {
     files = new ArrayList<>();
@@ -77,6 +78,7 @@ public class Metalink {
     @Builder.Default
     private List<Url> urls = new ArrayList<>();
 
+    @SuppressWarnings("unused")
     @Deprecated
     private File() {
       urls = new ArrayList<>();

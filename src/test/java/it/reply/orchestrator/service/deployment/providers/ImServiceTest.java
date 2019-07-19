@@ -118,6 +118,7 @@ public class ImServiceTest {
   @Mock
   private OAuth2TokenService oauth2TokenService;
 
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   @Before
   public void setup() throws Exception {
     MockitoAnnotations.initMocks(this);
@@ -127,6 +128,7 @@ public class ImServiceTest {
         .thenAnswer(y -> ((ThrowingFunction) y.getArguments()[1]).apply("token"));
   }
 
+  @SuppressWarnings("unused")
   private DeploymentMessage generateIsDeployedDm() {
     Deployment deployment = ControllerTestUtils.createDeployment(2);
     deployment.setDeploymentProvider(DeploymentProvider.IM);

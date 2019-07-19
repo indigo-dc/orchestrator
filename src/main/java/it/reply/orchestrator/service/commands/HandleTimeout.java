@@ -22,14 +22,14 @@ import it.reply.orchestrator.utils.WorkflowConstants.ErrorCode;
 import it.reply.orchestrator.utils.WorkflowUtil;
 
 import lombok.AllArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+//import lombok.extern.slf4j.Slf4j;
 
 import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.stereotype.Component;
 
 @Component(WorkflowConstants.Delegate.HANDLE_TIMEOUT)
 @AllArgsConstructor
-@Slf4j
+//@Slf4j
 public class HandleTimeout extends BaseJavaDelegate {
 
   @Override

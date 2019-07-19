@@ -94,6 +94,7 @@ public class DynafedServiceTest {
   private final static String accessToken = "AccessToken";
   private final static String fileName = "fileName";
 
+  @SuppressWarnings({ "rawtypes", "unchecked" })
   @Before
   public void setup() throws Exception {
 

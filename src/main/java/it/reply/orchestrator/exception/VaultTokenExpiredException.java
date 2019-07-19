@@ -14,35 +14,18 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.config.properties;
+package it.reply.orchestrator.exception;
 
-import javax.validation.constraints.NotNull;
+import org.springframework.vault.VaultException;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
+@SuppressWarnings("serial")
+public class VaultTokenExpiredException extends VaultException {
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.validation.annotation.Validated;
+    public VaultTokenExpiredException(String msg) {
+        super(msg);
+    }
 
-/**
- * 
- * @author Michele Perniola
- *
- */
-@Validated
-@Data
-@ConfigurationProperties(prefix = "vault")
-@NoArgsConstructor
-public class VaultProperties {
-
-  @NotNull
-  @NonNull
-  private String url;
-
-  @NotNull
-  @NonNull
-  private Integer port;
-
+    public VaultTokenExpiredException(String msg, Throwable cause) {
+        super(msg, cause);
+    }
 }
-

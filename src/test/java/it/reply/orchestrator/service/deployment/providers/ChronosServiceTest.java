@@ -109,6 +109,7 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
   @SpyBean
   private ObjectMapper objectMapper;
 
+  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Before
   public void setup() throws Exception {
     MockitoAnnotations.initMocks(this);
