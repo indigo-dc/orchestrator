@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 I.N.F.N.
+ * Copyright © 2016-2019 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,66 +21,21 @@ import java.util.Map;
 
 import org.springframework.vault.support.VaultResponse;
 
-/**
- * 
- * @author Michele Perniola
- *
- */
 public interface VaultService {
 
-    /**
-     * 
-     * @param path
-     * @param secret
-     * @return
-     */
-    public VaultResponse writeSecret(String path, Object secret);
-    
-    /**
-     * 
-     * @param <T>
-     * @param path
-     * @param type
-     * @return
-     */
-    public <T> T readSecret(String path, Class<T> type);
-    
-    /**
-     * 
-     * @param path
-     * @return
-     */
-    public Map<String,Object> readSecret(String path);
-    
-    /**
-     * 
-     * @param path
-     */
-    public void deleteSecret(String path);
-    
-    /**
-     * 
-     * @param path
-     * @return
-     */
-    public List<String> listSecrets(String path);
-    
-    /**
-     * 
-     * @param accessToken
-     * @return
-     */
-    public VaultService retrieveToken(String accessToken);
-    
-    /**
-     * 
-     * @param token
-     * @return
-     */
-    public VaultService setVaultToken(String token);
-    /**
-     * 
-     * @return
-     */
-    public String getVaultToken();
+  public VaultResponse writeSecret(String path, Object secret);
+
+  public <T> T readSecret(String path, Class<T> type);
+
+  public Map<String,Object> readSecret(String path);
+
+  public void deleteSecret(String path);
+
+  public List<String> listSecrets(String path);
+
+  public VaultService retrieveToken(String accessToken);
+
+  public VaultService setVaultToken(String token);
+
+  public String getVaultToken();
 }

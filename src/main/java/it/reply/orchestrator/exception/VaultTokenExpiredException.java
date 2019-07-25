@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 I.N.F.N.
+ * Copyright © 2016-2019 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,11 +21,11 @@ import org.springframework.vault.VaultException;
 @SuppressWarnings("serial")
 public class VaultTokenExpiredException extends VaultException {
 
-    public VaultTokenExpiredException(String msg) {
-        super(msg);
-    }
+  public VaultTokenExpiredException(String msg) {
+    super(msg);
+  }
 
-    public VaultTokenExpiredException(String msg, Throwable cause) {
-        super(msg, cause);
-    }
+  public VaultTokenExpiredException(String msg, Throwable cause) {
+    super(msg, cause);
+  }
 }

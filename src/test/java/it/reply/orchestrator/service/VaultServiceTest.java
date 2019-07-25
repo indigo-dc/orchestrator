@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 I.N.F.N.
+ * Copyright © 2016-2019 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,30 +38,33 @@ import it.reply.orchestrator.service.deployment.providers.MarathonServiceImpl.Va
 @RunWith(SpringJUnit4ClassRunner.class)
 @SpringBootTest(classes = Application.class)
 public class VaultServiceTest {
-    
-    @Autowired
-    private VaultService vaultService;
-    
-    @Test
-    public void testVault() {
-        
-        //write secret on service
-        String spath = "secret/private/marathon/11e9a30f-f358-0741-a6d8-024283ff312b/password"; 
-        vaultService.writeSecret(spath, (new VaultSecret()).setValue("mypass")); 
-        
-        VaultSecret mypass = vaultService.readSecret(spath, VaultSecret.class);
-        
-        assertEquals(mypass.getValue(), "mypass");
-        
-        spath = "secret/private/marathon/11e9a30f-f358-0741-a6d8-024283ff312b";
-        List<String> depentries = vaultService.listSecrets(spath);
-        
-        assertEquals(depentries.size(), 1);
-        
-        vaultService.deleteSecret(spath + "/" + depentries.get(0));
-        
-        depentries = vaultService.listSecrets(spath);
-        assertEquals(depentries.size(), 0);
-    }
+
+  @Autowired
+  private VaultService vaultService;
+
+  @Test
+  public void testVault() {
+
+    //fake token, replace with valid one
+    vaultService.setVaultToken("s.DQSf698xaTFLtBCY9bG2QdhI");
+
+    //write secret on service
+    String spath = "secret/private/marathon/11e9a30f-f358-0741-a6d8-024283ff312b/password"; 
+    vaultService.writeSecret(spath, (new VaultSecret()).setValue("mypass")); 
+
+    VaultSecret mypass = vaultService.readSecret(spath, VaultSecret.class);
+
+    assertEquals(mypass.getValue(), "mypass");
+
+    spath = "secret/private/marathon/11e9a30f-f358-0741-a6d8-024283ff312b";
+    List<String> depentries = vaultService.listSecrets(spath);
+
+    assertEquals(depentries.size(), 1);
+
+    vaultService.deleteSecret(spath + "/" + depentries.get(0));
+
+    depentries = vaultService.listSecrets(spath);
+    assertEquals(depentries.size(), 0);
+  }
 
 }

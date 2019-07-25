@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,7 +83,7 @@ public class PrefilterCloudProvidersTest extends
   }
 
   @Test
-  public void testBasicCustomExecuteSuccess() throws Exception {
+  public void testBasicCustomExecuteSuccess() {
     Deployment deployment = ControllerTestUtils.createDeployment();
     DeploymentMessage generateDeployDm = TestUtil.generateDeployDm(deployment);
     deployment.setDeploymentProvider(DeploymentProvider.HEAT);
@@ -104,7 +104,7 @@ public class PrefilterCloudProvidersTest extends
 
 
   @Test
-  public void testCustomExecuteSuccess() throws Exception {
+  public void testCustomExecuteSuccess() {
     Deployment deployment = ControllerTestUtils.createDeployment();
     DeploymentMessage generateDeployDm = TestUtil.generateDeployDm(deployment);
     String id = UUID.randomUUID().toString();
@@ -146,7 +146,7 @@ public class PrefilterCloudProvidersTest extends
   }
 
   @Test
-  public void testCustomExecuteOrchestratorExceptionNoSinglePlacement() throws Exception {
+  public void testCustomExecuteOrchestratorExceptionNoSinglePlacement() {
     String id = UUID.randomUUID().toString();
     Deployment deployment = ControllerTestUtils.createDeployment();
     DeploymentMessage generateDeployDm = TestUtil.generateDeployDm(deployment);
@@ -184,7 +184,7 @@ public class PrefilterCloudProvidersTest extends
   }
 
   @Test
-  public void testCustomExecuteOrchestratorExceptioNoSLAWithId() throws Exception {
+  public void testCustomExecuteOrchestratorExceptioNoSLAWithId() {
     String id = UUID.randomUUID().toString();
     Deployment deployment = ControllerTestUtils.createDeployment();
     DeploymentMessage generateDeployDm = TestUtil.generateDeployDm(deployment);
@@ -222,7 +222,7 @@ public class PrefilterCloudProvidersTest extends
   }
 
   @Test
-  public void testCustomExecuteOrchestratorExceptioNoSLAPlacement() throws Exception {
+  public void testCustomExecuteOrchestratorExceptioNoSLAPlacement() {
     String id = UUID.randomUUID().toString();
     Deployment deployment = ControllerTestUtils.createDeployment();
     DeploymentMessage generateDeployDm = TestUtil.generateDeployDm(deployment);
@@ -257,7 +257,7 @@ public class PrefilterCloudProvidersTest extends
   }
 
   @Test
-  public void testCustomExecuteRemoveCloudService() throws Exception {
+  public void testCustomExecuteRemoveCloudService() {
     String id = UUID.randomUUID().toString();
     Deployment deployment = ControllerTestUtils.createDeployment();
     DeploymentMessage generateDeployDm = TestUtil.generateDeployDm(deployment);

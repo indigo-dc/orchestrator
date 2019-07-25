@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -114,35 +114,36 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
 
     //secrets handling
     boolean hasSecrets = false;
-    
-    if (type.equals(DeploymentType.MARATHON)) {
-        Map<String, NodeTemplate> nodes = Optional
-                .ofNullable(ar.getTopology())
-                .map(Topology::getNodeTemplates)
-                .orElseGet(HashMap::new);
 
-        DirectedMultigraph<NodeTemplate, RelationshipTemplate> graph =
-            toscaService.buildNodeGraph(nodes, false);
+    if (type != null && type.equals(DeploymentType.MARATHON)) {
+      Map<String, NodeTemplate> nodes = Optional
+          .ofNullable(ar.getTopology())
+          .map(Topology::getNodeTemplates)
+          .orElseGet(HashMap::new);
 
-        TopologicalOrderIterator<NodeTemplate, RelationshipTemplate> orderIterator =
-            new TopologicalOrderIterator<>(graph);
+      DirectedMultigraph<NodeTemplate, RelationshipTemplate> graph =
+          toscaService.buildNodeGraph(nodes, false);
 
-        List<NodeTemplate> orderedMarathonApps = CommonUtils
-            .iteratorToStream(orderIterator)
-            .filter(node -> toscaService.isOfToscaType(node, ToscaConstants.Nodes.MARATHON))
-            .collect(Collectors.toList());
+      TopologicalOrderIterator<NodeTemplate, RelationshipTemplate> orderIterator =
+          new TopologicalOrderIterator<>(graph);
 
-        for (NodeTemplate marathonNode : orderedMarathonApps) {
-            hasSecrets = toscaService
-                .<ComplexPropertyValue>getTypedNodePropertyByName(marathonNode, "secrets")
-                .isPresent();
-            if (hasSecrets)
-                break;
-        }        
+      List<NodeTemplate> orderedMarathonApps = CommonUtils
+          .iteratorToStream(orderIterator)
+          .filter(node -> toscaService.isOfToscaType(node, ToscaConstants.Nodes.MARATHON))
+          .collect(Collectors.toList());
+
+      for (NodeTemplate marathonNode : orderedMarathonApps) {
+        hasSecrets = toscaService
+            .<ComplexPropertyValue>getTypedNodePropertyByName(marathonNode, "secrets")
+            .isPresent();
+        if (hasSecrets) {
+          break;
+        }
+      }        
     }
-    
+
     final boolean hs = hasSecrets;
-    
+
     rankCloudProvidersMessage
         .getCloudProviders()
         .forEach((name, cloudProvider) -> {
@@ -160,7 +161,8 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
                       addServiceToDiscard(servicesToDiscard, cloudProviderService);
                     } else {
                       discardOnMesosGpuRequirement(ar, cloudProviderService, servicesToDiscard);
-                      discardOnMarathonSecretsRequirement(ar,cloudProviderService, servicesToDiscard, hs);
+                      discardOnMarathonSecretsRequirement(ar,cloudProviderService, 
+                          servicesToDiscard, hs);
                     }
                     break;
                   case CHRONOS:
@@ -276,17 +278,18 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
   }
 
   protected void discardOnMarathonSecretsRequirement(ArchiveRoot archiveRoot,
-          CloudService mesosFrameworkService,
-          Set<CloudService> servicesToDiscard,
-          boolean isSecretsRequired) {
-        if (isSecretsRequired && !((MarathonServiceData) mesosFrameworkService.getData())
-            .getProperties().isSecretSupport()) {
-          LOG.debug(
-              "Discarded Marathon framework service {} of provider {} because it doesn't support Secrets",
-              mesosFrameworkService.getId(), mesosFrameworkService.getData().getProviderId());
-          addServiceToDiscard(servicesToDiscard, mesosFrameworkService);
-        }
-      }
+      CloudService mesosFrameworkService,
+      Set<CloudService> servicesToDiscard,
+      boolean isSecretsRequired) {
+    if (isSecretsRequired && !((MarathonServiceData) mesosFrameworkService.getData())
+        .getProperties().isSecretSupport()) {
+      LOG.debug(
+          "Discarded Marathon framework service {} of provider {}"
+          + " because it doesn't support Secrets",
+          mesosFrameworkService.getId(), mesosFrameworkService.getData().getProviderId());
+      addServiceToDiscard(servicesToDiscard, mesosFrameworkService);
+    }
+  }
 
   protected void discardOnOneDataRequirements(OneData requirement,
       Collection<CloudProvider> cloudProviders, Set<CloudProvider> providersToDiscard,

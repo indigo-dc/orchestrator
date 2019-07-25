@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -84,10 +84,10 @@ public abstract class AbstractMesosDeploymentService<T extends MesosTask<T>, S e
     task.setId(taskId);
 
     toscaService
-        .<ScalarPropertyValue>getTypedNodePropertyByName(taskNode, "command")
-        .map(ScalarPropertyValue::getValue)
-        .map(String::trim)
-        .ifPresent(task::setCmd);
+      .<ScalarPropertyValue>getTypedNodePropertyByName(taskNode, "command")
+      .map(ScalarPropertyValue::getValue)
+      .map(String::trim)
+      .ifPresent(task::setCmd);
 
     if ("".equals(task.getCmd())) { // it must be either null or not empty
       throw new ToscaException(String.format(
@@ -113,13 +113,13 @@ public abstract class AbstractMesosDeploymentService<T extends MesosTask<T>, S e
         });
 
     toscaService
-    .<ComplexPropertyValue>getTypedNodePropertyByName(taskNode, "secrets")
-    .ifPresent(property -> {
-      // Convert Map<String, Object> to Map<String, String>
-      Map<String, String> secrets = toscaService.parseComplexPropertyValue(property,
-          value -> ((ScalarPropertyValue) value).getValue());
-      task.setSecrets(secrets);
-    });
+        .<ComplexPropertyValue>getTypedNodePropertyByName(taskNode, "secrets")
+        .ifPresent(property -> {
+          // Convert Map<String, Object> to Map<String, String>
+          Map<String, String> secrets = toscaService.parseComplexPropertyValue(property,
+              value -> ((ScalarPropertyValue) value).getValue());
+          task.setSecrets(secrets);
+        });
 
     toscaService
         .<ListPropertyValue>getTypedNodePropertyByName(taskNode, "constraints")
@@ -158,7 +158,7 @@ public abstract class AbstractMesosDeploymentService<T extends MesosTask<T>, S e
         .orElseThrow(() -> new IllegalArgumentException(String.format(
             "Unsupported artifact type for <image> artifact in node <%s> of type <%s>."
                 + " Given <%s>, supported <%s>",
-            taskNode, taskNode.getType(), image.getArtifactType(), supportedTypes)));
+                taskNode, taskNode.getType(), image.getArtifactType(), supportedTypes)));
 
     MesosContainer container = new MesosContainer(containerType);
 
@@ -226,11 +226,11 @@ public abstract class AbstractMesosDeploymentService<T extends MesosTask<T>, S e
     if (publishPortsProperty.isPresent()) {
       List<MesosPortMapping> portMapping =
           toscaService
-              .parseListPropertyValue(publishPortsProperty.get(),
-                  item -> (ComplexPropertyValue) item)
-              .stream()
-              .map(this::generatePortMapping)
-              .collect(Collectors.toList());
+          .parseListPropertyValue(publishPortsProperty.get(),
+              item -> (ComplexPropertyValue) item)
+          .stream()
+          .map(this::generatePortMapping)
+          .collect(Collectors.toList());
       task
           .getContainer()
           .orElseThrow(() -> new RuntimeException(
@@ -282,9 +282,9 @@ public abstract class AbstractMesosDeploymentService<T extends MesosTask<T>, S e
 
     ScalarPropertyValue sourcePortProperty =
         CommonUtils
-            .getFromOptionalMap(values, "source")
-            .orElseThrow(() -> new ToscaException(
-                "source port in 'publish_ports' property must be provided"));
+        .getFromOptionalMap(values, "source")
+        .orElseThrow(() -> new ToscaException(
+            "source port in 'publish_ports' property must be provided"));
 
     Long sourcePortVaule =
         toscaService.parseScalarPropertyValue(sourcePortProperty, IntegerType.class);
