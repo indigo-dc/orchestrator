@@ -572,7 +572,7 @@
 							<include>src/test/java/**</include>
 							<include>kubernetes/**</include>
 							<include>pom.xml</include>
-						</includes>
+						</includes>			
 						<useDefaultExcludes>true</useDefaultExcludes>
 						<useDefaultMapping>true</useDefaultMapping>
 						<strictCheck>true</strictCheck>
@@ -682,7 +682,18 @@
 							<goal>check</goal>
 						</goals>
 					</execution>
-				</executions>
+				</executions> 
+				<configuration>
+					<excludes>
+						<exclude>docker/*.war</exclude>
+						<!-- excluded because I.N.F.N. Copyright -->
+						<exclude>src/main/java/it/reply/orchestrator/config/properties/VaultProperties.java</exclude>
+						<exclude>src/main/java/it/reply/orchestrator/exception/VaultTokenExpiredException.java</exclude>
+						<exclude>src/main/java/it/reply/orchestrator/service/VaultService.java</exclude>
+						<exclude>src/main/java/it/reply/orchestrator/service/VaultServiceImpl.java</exclude>
+						<exclude>src/test/java/it/reply/orchestrator/service/VaultServiceTest.java</exclude>
+					</excludes>
+				</configuration>			
 			</plugin>
  
 			<plugin>
