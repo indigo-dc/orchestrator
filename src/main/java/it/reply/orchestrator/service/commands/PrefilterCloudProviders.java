@@ -16,10 +16,6 @@
 
 package it.reply.orchestrator.service.commands;
 
-import alien4cloud.model.components.ComplexPropertyValue;
-import alien4cloud.model.topology.NodeTemplate;
-import alien4cloud.model.topology.RelationshipTemplate;
-import alien4cloud.model.topology.Topology;
 import alien4cloud.tosca.model.ArchiveRoot;
 
 import it.reply.orchestrator.dal.entity.Deployment;
@@ -55,6 +51,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
+
+import org.alien4cloud.tosca.model.definitions.ComplexPropertyValue;
+import org.alien4cloud.tosca.model.templates.NodeTemplate;
+import org.alien4cloud.tosca.model.templates.RelationshipTemplate;
+import org.alien4cloud.tosca.model.templates.Topology;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.flowable.engine.delegate.DelegateExecution;
@@ -129,7 +130,7 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
 
       List<NodeTemplate> orderedMarathonApps = CommonUtils
           .iteratorToStream(orderIterator)
-          .filter(node -> toscaService.isOfToscaType(node, ToscaConstants.Nodes.MARATHON))
+          .filter(node -> toscaService.isOfToscaType(node, ToscaConstants.Nodes.Types.MARATHON))
           .collect(Collectors.toList());
 
       for (NodeTemplate marathonNode : orderedMarathonApps) {

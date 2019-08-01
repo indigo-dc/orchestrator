@@ -781,6 +781,19 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
+  public Optional<AbstractPropertyValue> getNodePropertyByName(NodeTemplate node,
+      String propertyName) {
+    return CommonUtils.getFromOptionalMap(node.getProperties(), propertyName);
+
+  }
+
+  @Override
+  public <T extends AbstractPropertyValue> Optional<T> getTypedNodePropertyByName(NodeTemplate node,
+      String propertyName) {
+    return CommonUtils.optionalCast(getNodePropertyByName(node, propertyName));
+  }
+  
+  @Override
   public Map<String, NodeTemplate> getAssociatedNodesByCapability(Map<String, NodeTemplate> nodes,
       NodeTemplate nodeTemplate, String capabilityName) {
 
