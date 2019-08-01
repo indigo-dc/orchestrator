@@ -16,26 +16,16 @@
 
 package it.reply.orchestrator.service;
 
-import alien4cloud.model.components.AbstractPropertyValue;
-import alien4cloud.model.components.ComplexPropertyValue;
-import alien4cloud.model.components.DeploymentArtifact;
-import alien4cloud.model.components.ListPropertyValue;
-import alien4cloud.model.components.PropertyDefinition;
-import alien4cloud.model.components.ScalarPropertyValue;
-import alien4cloud.model.topology.Capability;
-import alien4cloud.model.topology.NodeTemplate;
-import alien4cloud.model.topology.RelationshipTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
-import alien4cloud.tosca.normative.IPropertyType;
 import alien4cloud.tosca.parser.ParsingException;
 import alien4cloud.tosca.parser.ParsingResult;
 
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.ImageData;
-import it.reply.orchestrator.dto.deployment.PlacementPolicy;
 import it.reply.orchestrator.dto.dynafed.Dynafed;
 import it.reply.orchestrator.dto.onedata.OneData;
+import it.reply.orchestrator.dto.policies.ToscaPolicy;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.service.ToscaException;
 
@@ -44,8 +34,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 
+import org.alien4cloud.tosca.model.definitions.DeploymentArtifact;
+import org.alien4cloud.tosca.model.definitions.PropertyDefinition;
+import org.alien4cloud.tosca.model.templates.Capability;
+import org.alien4cloud.tosca.model.templates.NodeTemplate;
+import org.alien4cloud.tosca.model.templates.RelationshipTemplate;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jgrapht.graph.DirectedMultigraph;
 
@@ -185,21 +179,6 @@ public interface ToscaService {
 
   public Optional<DeploymentArtifact> getNodeArtifactByName(NodeTemplate node, String artifactName);
 
-  public Optional<AbstractPropertyValue> getNodePropertyByName(NodeTemplate node,
-      String propertyName);
-
-  /**
-   * Find a property with a given name in a capability.
-   * 
-   * @param capability
-   *          the capability
-   * @param propertyName
-   *          the name of the property
-   * @return the {@link AbstractPropertyValue} containing the property value
-   */
-  public Optional<AbstractPropertyValue> getCapabilityPropertyByName(Capability capability,
-      String propertyName);
-
   public List<RelationshipTemplate> getRelationshipTemplatesByCapabilityName(
       Map<String, RelationshipTemplate> relationships, String capabilityName);
 
@@ -221,7 +200,7 @@ public interface ToscaService {
 
   public Collection<NodeTemplate> getScalableNodes(ArchiveRoot archiveRoot);
 
-  public Optional<Integer> getCount(NodeTemplate nodeTemplate);
+  public Optional<Long> getCount(NodeTemplate nodeTemplate);
 
   /**
    * Get the list of resources to be removed.
@@ -260,25 +239,10 @@ public interface ToscaService {
    *          an {@link ArchiveRoot} representing the template.
    * @return the list of placementPolicies
    */
-  @NonNull
-  public Map<String, PlacementPolicy> extractPlacementPolicies(ArchiveRoot archiveRoot);
+  public @NonNull Map<String, ToscaPolicy> extractPlacementPolicies(ArchiveRoot archiveRoot);
 
   public DirectedMultigraph<NodeTemplate, RelationshipTemplate> buildNodeGraph(
       Map<String, NodeTemplate> nodes, boolean checkForCycles);
-
-  public <T extends AbstractPropertyValue> Optional<T> getTypedNodePropertyByName(NodeTemplate node,
-      String propertyName);
-
-  public <T extends AbstractPropertyValue> Optional<T> getTypedCapabilityPropertyByName(
-      Capability capability, String propertyName);
-
-  public <T extends IPropertyType<V>, V> V parseScalarPropertyValue(ScalarPropertyValue value,
-      Class<T> clazz);
-
-  public <V> List<V> parseListPropertyValue(ListPropertyValue value, Function<Object, V> mapper);
-
-  public <V> Map<String, V> parseComplexPropertyValue(ComplexPropertyValue value,
-      Function<Object, V> mapper);
 
   public boolean isHybridDeployment(ArchiveRoot archiveRoot);
 

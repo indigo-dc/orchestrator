@@ -16,11 +16,6 @@
 
 package it.reply.orchestrator.service.deployment.providers;
 
-import alien4cloud.model.components.AbstractPropertyValue;
-import alien4cloud.model.components.ScalarPropertyValue;
-import alien4cloud.model.topology.Capability;
-import alien4cloud.model.topology.NodeTemplate;
-import alien4cloud.model.topology.Topology;
 import alien4cloud.tosca.model.ArchiveRoot;
 
 import com.google.common.base.Strings;
@@ -77,6 +72,11 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.alien4cloud.tosca.model.definitions.AbstractPropertyValue;
+import org.alien4cloud.tosca.model.definitions.ScalarPropertyValue;
+import org.alien4cloud.tosca.model.templates.Capability;
+import org.alien4cloud.tosca.model.templates.NodeTemplate;
+import org.alien4cloud.tosca.model.templates.Topology;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -400,7 +400,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
               resource.setState(NodeStates.DELETING);
               resourcesToRemove.add(resource);
             });
-            int newCount = toscaService.getCount(newNode).orElse(1);
+            long newCount = toscaService.getCount(newNode).orElse(1L);
             List<Resource> remainingResources = resources
                 .stream()
                 .filter(resource -> resource.getState() != NodeStates.DELETING)
@@ -430,10 +430,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
               && resource.getState() != NodeStates.DELETING)
           .collect(Collectors.toList());
 
-      int newCount = toscaService.getCount(newNode).orElse(1);
+      long newCount = toscaService.getCount(newNode).orElse(1L);
       int oldCount = resources.size();
-      int diff = newCount - oldCount;
-      for (int i = 0; i < diff; i++) {
+      long diff = newCount - oldCount;
+      for (long i = 0; i < diff; i++) {
         Resource resource = new Resource();
         resource.setDeployment(deployment);
         resource.setState(NodeStates.CREATING);
@@ -516,12 +516,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           endpointCapability.setProperties(new HashMap<>());
           return endpointCapability.getProperties();
         });
-    ScalarPropertyValue scalarPropertyValue = new ScalarPropertyValue("PUBLIC");
-    scalarPropertyValue.setPrintable(true);
-    endpointCapabilityProperties.put("network_name", scalarPropertyValue);
-    scalarPropertyValue = new ScalarPropertyValue("false");
-    scalarPropertyValue.setPrintable(true);
-    endpointCapabilityProperties.put("private_ip", scalarPropertyValue);
+    endpointCapabilityProperties.put("network_name", new ScalarPropertyValue("PUBLIC"));
+    endpointCapabilityProperties.put("private_ip", new ScalarPropertyValue("false"));
   }
 
   @Override

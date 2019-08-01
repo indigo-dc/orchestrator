@@ -7,7 +7,7 @@ topology_template:
 
   node_templates:
 
-    marathon-app:
+    marathonapp:
       type: tosca.nodes.indigo.Container.Application.Docker.Marathon
       properties:
         uris: []
@@ -34,4 +34,4 @@ topology_template:
 
   outputs:
     endpoint: 
-      value:  { concat: [ { get_attribute : [ marathon-app, load_balancer_ips, 0 ] }, ':', { get_attribute : [ docker_runtime, host, publish_ports, 0, target ] } ] }
+      value:  { concat: [ { get_attribute : [ marathonapp, load_balancer_ips, 0 ] }, ':', { get_attribute : [ docker_runtime, host, publish_ports, 0, target ] } ] }

@@ -17,6 +17,10 @@
 package it.reply.orchestrator.config;
 
 import alien4cloud.security.ResourceRoleService;
+import alien4cloud.security.groups.ElasticSearchGroupDao;
+import alien4cloud.security.groups.IAlienGroupDao;
+import alien4cloud.security.users.ElasticSearchUserDao;
+import alien4cloud.security.users.IAlienUserDao;
 import alien4cloud.utils.AlienYamlPropertiesFactoryBeanFactory;
 
 import it.reply.orchestrator.utils.CommonUtils;
@@ -41,10 +45,12 @@ import org.springframework.core.env.AbstractEnvironment;
 import org.springframework.core.env.MapPropertySource;
 
 @Configuration
-@ComponentScan(basePackages = { "alien4cloud", "org.elasticsearch.mapping" },
+@ComponentScan(
+    basePackages = {"alien4cloud", "org.alien4cloud", "org.elasticsearch.mapping"},
     excludeFilters = {
         @ComponentScan.Filter(type = FilterType.REGEX, pattern = "alien4cloud.security.*"),
-        @ComponentScan.Filter(type = FilterType.REGEX, pattern = "alien4cloud.audit.*") })
+        @ComponentScan.Filter(type = FilterType.REGEX, pattern = "alien4cloud.audit.*")
+    })
 @Slf4j
 public class Alien4CloudConfig {
 
@@ -54,6 +60,16 @@ public class Alien4CloudConfig {
   @Bean
   public ResourceRoleService getDummyRoleResourceService() {
     return new ResourceRoleService();
+  }
+
+  @Bean
+  public IAlienGroupDao getIAlienGroupDao() {
+    return new ElasticSearchGroupDao();
+  }
+
+  @Bean
+  public IAlienUserDao getIAlienUserDao() {
+    return new ElasticSearchUserDao();
   }
 
   @Configuration

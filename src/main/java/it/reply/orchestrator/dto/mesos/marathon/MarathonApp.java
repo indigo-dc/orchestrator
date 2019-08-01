@@ -32,7 +32,7 @@ public class MarathonApp extends MesosTask<MarathonApp> {
 
   @Override
   public final String getToscaNodeName() {
-    return ToscaConstants.Nodes.MARATHON;
+    return ToscaConstants.Nodes.Types.MARATHON;
   }
 
 }

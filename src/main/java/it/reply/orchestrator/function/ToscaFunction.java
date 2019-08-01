@@ -16,13 +16,12 @@
 
 package it.reply.orchestrator.function;
 
-import alien4cloud.model.components.AbstractPropertyValue;
-import alien4cloud.model.components.FunctionPropertyValue;
-
 import java.util.Optional;
 import java.util.function.BiFunction;
 
+import org.alien4cloud.tosca.model.definitions.FunctionPropertyValue;
+
 @FunctionalInterface
 public interface ToscaFunction
-    extends BiFunction<FunctionPropertyValue, String, Optional<AbstractPropertyValue>> {
+    extends BiFunction<FunctionPropertyValue, String, Optional<Object>> {
 }

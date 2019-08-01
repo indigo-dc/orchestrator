@@ -20,18 +20,47 @@ import lombok.experimental.UtilityClass;
 
 @UtilityClass
 public class ToscaConstants {
+
   @UtilityClass
   public static class Nodes {
-    private static final String BASE_INDIGO_NAME = "tosca.nodes.indigo.";
-    public static final String CHRONOS = BASE_INDIGO_NAME + "Container.Application.Docker.Chronos";
-    public static final String MARATHON =
-        BASE_INDIGO_NAME + "Container.Application.Docker.Marathon";
-    public static final String COMPUTE = BASE_INDIGO_NAME + "Compute";
-    public static final String ELASTIC_CLUSTER = BASE_INDIGO_NAME + "ElasticCluster";
-    public static final String DOCKER_RUNTIME = BASE_INDIGO_NAME + "Container.Runtime.Docker";
 
-    public static final String ONEDATA_SPACE = BASE_INDIGO_NAME + "OnedataSpace";
-    public static final String ONEDATA_SERVICE_SPACE = BASE_INDIGO_NAME + "OnedataServiceSpace";
-    public static final String DYNAFED = BASE_INDIGO_NAME + "Dynafed";
+    @UtilityClass
+    public static class Types {
+
+      private static final String BASE_INDIGO_NAME = "tosca.nodes.indigo.";
+      public static final String CHRONOS =
+          BASE_INDIGO_NAME + "Container.Application.Docker.Chronos";
+      public static final String MARATHON =
+          BASE_INDIGO_NAME + "Container.Application.Docker.Marathon";
+      public static final String COMPUTE = BASE_INDIGO_NAME + "Compute";
+      public static final String ELASTIC_CLUSTER = BASE_INDIGO_NAME + "ElasticCluster";
+      public static final String DOCKER_RUNTIME = BASE_INDIGO_NAME + "Container.Runtime.Docker";
+
+      public static final String ONEDATA_SPACE = BASE_INDIGO_NAME + "OnedataSpace";
+      public static final String ONEDATA_SERVICE_SPACE = BASE_INDIGO_NAME + "OnedataServiceSpace";
+      public static final String DYNAFED = BASE_INDIGO_NAME + "Dynafed";
+    }
+  }
+
+  @UtilityClass
+  public static class Policies {
+
+    @UtilityClass
+    public static class Types {
+
+      private static final String BASE_INDIGO_NAME = "tosca.policies.indigo.";
+      public static final String SLA_PLACEMENT = BASE_INDIGO_NAME + "SlaPlacement";
+      public static final String CREDENTIALS_AWARE_SLA_PLACEMENT =
+          BASE_INDIGO_NAME + "CredentialsAwareSlaPlacement";
+    }
+
+    @UtilityClass
+    public static class Properties {
+
+      public static final String PLACEMENT_ID = "sla_id";
+      public static final String USERNAME = "username";
+      public static final String PASSWORD = "password";
+      public static final String TENANT_ID = "subscription_id";
+    }
   }
 }

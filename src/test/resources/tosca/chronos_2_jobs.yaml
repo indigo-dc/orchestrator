@@ -25,7 +25,7 @@ topology_template:
           ONEDATA_SPACE: "DATA_SPACE_TO_BE_SET_BY_THE_ORCHESTRATOR"
           ONEDATA_PATH: "PATH_TO_BE_SET_BY_THE_ORCHESTRATOR"
           ONEDATA_PROVIDERS: "ONEDATA_PROVIDERS_TO_BE_SET_BY_THE_ORCHESTRATOR"
-        priviliged: false
+        privileged: false
         force_pull_image: false
         epsilon: PT12S
         labels:

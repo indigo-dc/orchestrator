@@ -23,8 +23,8 @@ import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.Type;
-import it.reply.orchestrator.dto.deployment.CredentialsAwareSlaPlacementPolicy;
-import it.reply.orchestrator.dto.deployment.PlacementPolicy;
+import it.reply.orchestrator.dto.policies.CredentialsAwareSlaPlacementPolicy;
+import it.reply.orchestrator.dto.policies.ToscaPolicy;
 import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
 import it.reply.orchestrator.dto.workflow.CloudProvidersOrderedIterator;
 import it.reply.orchestrator.enums.DeploymentProvider;
@@ -95,7 +95,7 @@ public class CloudProviderEndpointServiceImpl {
    * @return the {@link CloudProviderEndpoint}
    */
   public CloudProviderEndpoint getCloudProviderEndpoint(CloudProvider chosenCloudProvider,
-      Map<String, PlacementPolicy> placementPolicies, boolean isHybrid) {
+      Map<String, ToscaPolicy> placementPolicies, boolean isHybrid) {
 
     CloudService computeService = chosenCloudProvider
         .getCmbdProviderServicesByType(Type.COMPUTE)

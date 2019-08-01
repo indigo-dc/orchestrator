@@ -38,7 +38,7 @@ public class ChronosJob extends MesosTask<ChronosJob> {
 
   @Override
   public final String getToscaNodeName() {
-    return ToscaConstants.Nodes.CHRONOS;
+    return ToscaConstants.Nodes.Types.CHRONOS;
   }
 
 }

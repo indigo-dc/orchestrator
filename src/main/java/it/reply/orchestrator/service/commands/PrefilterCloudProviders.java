@@ -30,10 +30,10 @@ import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.MarathonServiceData;
 import it.reply.orchestrator.dto.cmdb.MesosFrameworkServiceData;
 import it.reply.orchestrator.dto.cmdb.Type;
-import it.reply.orchestrator.dto.deployment.PlacementPolicy;
-import it.reply.orchestrator.dto.deployment.SlaPlacementPolicy;
 import it.reply.orchestrator.dto.dynafed.Dynafed;
 import it.reply.orchestrator.dto.onedata.OneData;
+import it.reply.orchestrator.dto.policies.SlaPlacementPolicy;
+import it.reply.orchestrator.dto.policies.ToscaPolicy;
 import it.reply.orchestrator.dto.slam.Service;
 import it.reply.orchestrator.dto.slam.Sla;
 import it.reply.orchestrator.enums.DeploymentType;
@@ -208,7 +208,7 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
   }
 
 
-  private void discardOnPlacementPolicies(Map<String, PlacementPolicy> placementPolicies,
+  private void discardOnPlacementPolicies(Map<String, ToscaPolicy> placementPolicies,
       Collection<CloudProvider> cloudProviders, List<Sla> slas,
       Set<CloudService> servicesToDiscard) {
 
@@ -230,7 +230,7 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
                 .orElseThrow(() -> new OrchestratorException(
                     String.format("No SLA with id %s available", slaPlacementPolicy.getSlaId())));
 
-            slaPlacementPolicy.setServiceIds(selectedSla
+            slaPlacementPolicy.setServicesId(selectedSla
                 .getServices()
                 .stream()
                 .map(Service::getServiceId)

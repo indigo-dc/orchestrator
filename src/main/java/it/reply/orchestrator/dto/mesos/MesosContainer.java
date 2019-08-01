@@ -63,7 +63,7 @@ public class MesosContainer {
   private Boolean forcePullImage;
 
   @Nullable
-  private Boolean priviliged;
+  private Boolean privileged;
 
   @NonNull
   private List<String> volumes = new ArrayList<>();
@@ -72,8 +72,8 @@ public class MesosContainer {
     return Boolean.TRUE.equals(forcePullImage);
   }
 
-  public boolean isPriviliged() {
-    return Boolean.TRUE.equals(priviliged);
+  public boolean isPrivileged() {
+    return Boolean.TRUE.equals(privileged);
   }
 
 }
