@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2015-2018 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -780,6 +780,19 @@ public class ToscaServiceImpl implements ToscaService {
     return CommonUtils.getFromOptionalMap(node.getArtifacts(), artifactName);
   }
 
+  @Override
+  public Optional<AbstractPropertyValue> getNodePropertyByName(NodeTemplate node,
+      String propertyName) {
+    return CommonUtils.getFromOptionalMap(node.getProperties(), propertyName);
+
+  }
+
+  @Override
+  public <T extends AbstractPropertyValue> Optional<T> getTypedNodePropertyByName(NodeTemplate node,
+      String propertyName) {
+    return CommonUtils.optionalCast(getNodePropertyByName(node, propertyName));
+  }
+  
   @Override
   public Map<String, NodeTemplate> getAssociatedNodesByCapability(Map<String, NodeTemplate> nodes,
       NodeTemplate nodeTemplate, String capabilityName) {

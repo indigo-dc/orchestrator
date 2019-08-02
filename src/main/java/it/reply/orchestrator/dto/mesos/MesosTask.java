@@ -56,6 +56,9 @@ public abstract class MesosTask<T extends MesosTask<T>> {
   private Map<String, String> env = new HashMap<>();
 
   @NonNull
+  private Map<String, String> secrets = new HashMap<>();
+
+  @NonNull
   private Map<String, String> labels = new HashMap<>();
 
   public Optional<MesosContainer> getContainer() {

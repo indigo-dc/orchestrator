@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2015-2018 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.alien4cloud.tosca.model.definitions.AbstractPropertyValue;
 import org.alien4cloud.tosca.model.definitions.DeploymentArtifact;
 import org.alien4cloud.tosca.model.definitions.PropertyDefinition;
 import org.alien4cloud.tosca.model.templates.Capability;
@@ -177,6 +178,9 @@ public interface ToscaService {
 
   public Optional<Capability> getNodeCapabilityByName(NodeTemplate node, String propertyName);
 
+  public Optional<AbstractPropertyValue> getNodePropertyByName(NodeTemplate node,
+      String propertyName);
+  
   public Optional<DeploymentArtifact> getNodeArtifactByName(NodeTemplate node, String artifactName);
 
   public List<RelationshipTemplate> getRelationshipTemplatesByCapabilityName(
@@ -244,6 +248,9 @@ public interface ToscaService {
   public DirectedMultigraph<NodeTemplate, RelationshipTemplate> buildNodeGraph(
       Map<String, NodeTemplate> nodes, boolean checkForCycles);
 
+  public <T extends AbstractPropertyValue> Optional<T> getTypedNodePropertyByName(NodeTemplate node,
+      String propertyName);
+  
   public boolean isHybridDeployment(ArchiveRoot archiveRoot);
 
   public boolean isMesosGpuRequired(ArchiveRoot archiveRoot);

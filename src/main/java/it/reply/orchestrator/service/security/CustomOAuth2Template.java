@@ -82,6 +82,7 @@ public class CustomOAuth2Template {
         generateParams(clientConfiguration.getTokenEndpointAuthMethod());
     params.set("subject_token", accessToken);
     params.set("grant_type", "urn:ietf:params:oauth:grant-type:token-exchange");
+    params.set("audience", clientConfiguration.getClientId());
     return postForAccessGrant(params, scopes);
   }
 
@@ -99,6 +100,7 @@ public class CustomOAuth2Template {
         generateParams(clientConfiguration.getTokenEndpointAuthMethod());
     params.set("refresh_token", refreshToken);
     params.set("grant_type", "refresh_token");
+    params.set("audience", clientConfiguration.getClientId());
     return postForAccessGrant(params, scopes);
   }
 

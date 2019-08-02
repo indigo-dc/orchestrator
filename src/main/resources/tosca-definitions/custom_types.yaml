@@ -1092,6 +1092,11 @@ node_types:
         type: map
         entry_schema:
           type: string
+      secrets:
+        required: no
+        type: map
+        entry_schema:
+          type: string
       constraints:
         required: no
         type: list
