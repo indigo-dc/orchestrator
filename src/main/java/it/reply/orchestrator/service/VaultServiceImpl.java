@@ -85,7 +85,7 @@ public class VaultServiceImpl implements VaultService {
 
   /**
    * Retrieve the vault token from the IAM token.
-   * @throws IOException 
+   * @throws IOException when IO operations fail
    */
   @SuppressWarnings("unchecked")
   public String retrieveToken(String accessToken) throws IOException {
@@ -142,8 +142,7 @@ public class VaultServiceImpl implements VaultService {
       throw ve;
     } catch (IOException e) {      
       throw new VaultException(String.format("%s %s.", exmessage, e.getMessage()));
-    }     
-    finally {
+    } finally {
       if (reader != null) {
         reader.close();
       }
