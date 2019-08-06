@@ -335,7 +335,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
       for (String depentry:depentries) {
         List<String> entries = vaultService.listSecrets(vtoken, spath + "/" + depentry);
         for (String entry:entries) {
-            vaultService.deleteSecret(vtoken, spath + "/" + depentry + "/" + entry);
+          vaultService.deleteSecret(vtoken, spath + "/" + depentry + "/" + entry);
         }
       }
     }

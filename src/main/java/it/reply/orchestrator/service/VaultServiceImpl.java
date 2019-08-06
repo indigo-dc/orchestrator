@@ -143,11 +143,25 @@ public class VaultServiceImpl implements VaultService {
       throw new VaultException(String.format("%s %s.", exmessage, e.getMessage()));
     }     
     finally {
-      if (reader != null)
-        try {reader.close();} catch(IOException e){}
-      if (response != null)
-        try {response.close();} catch(IOException e) {}
-      try {httpclient.close();} catch(IOException e) {}
+      if (reader != null) {
+        try {
+          reader.close();
+        } 
+        catch(IOException e) {          
+        }
+      }
+      if (response != null) {
+        try {
+          response.close();
+        } 
+        catch(IOException e) {          
+        }
+      }
+      try {
+        httpclient.close();
+      }
+      catch(IOException e) {        
+      }
     }
 
     return token;
