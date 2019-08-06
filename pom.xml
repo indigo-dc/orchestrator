@@ -690,7 +690,7 @@
 				<exclude>docker/*.war</exclude>
 				<!-- excluded because I.N.F.N. Copyright -->
 				<exclude>src/main/java/it/reply/orchestrator/config/properties/VaultProperties.java</exclude>
-				<exclude>src/test/java/it/reply/orchestrator/dto/vault/VaultSecret.java</exclude>
+				<exclude>src/main/java/it/reply/orchestrator/dto/vault/VaultSecret.java</exclude>
 				<exclude>src/main/java/it/reply/orchestrator/exception/VaultTokenExpiredException.java</exclude>
 				<exclude>src/main/java/it/reply/orchestrator/service/VaultService.java</exclude>
 				<exclude>src/main/java/it/reply/orchestrator/service/VaultServiceImpl.java</exclude>
