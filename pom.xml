@@ -1,6 +1,6 @@
 <!--
 
-    Copyright © 2015-2018 Santer Reply S.p.A.
+    Copyright © 2015-2019 Santer Reply S.p.A.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -80,9 +80,6 @@
     <flowable.version>6.3.0</flowable.version>
 
     <alien4cloud.version>2.1.0-DEEP-1.0.0-SNAPSHOT</alien4cloud.version>
-	<!-- 
-    <alien4cloud.version>1.1.0-INDIGO2-BETA.1</alien4cloud.version>
-     -->
     <chronos-client.version>0.0.1</chronos-client.version>
     <marathon-client.version>0.6.2</marathon-client.version>
 	<org.springframework.vault.version>1.1.3.RELEASE</org.springframework.vault.version>
@@ -693,6 +690,7 @@
 				<exclude>docker/*.war</exclude>
 				<!-- excluded because I.N.F.N. Copyright -->
 				<exclude>src/main/java/it/reply/orchestrator/config/properties/VaultProperties.java</exclude>
+				<exclude>src/test/java/it/reply/orchestrator/dto/vault/VaultSecret.java</exclude>
 				<exclude>src/main/java/it/reply/orchestrator/exception/VaultTokenExpiredException.java</exclude>
 				<exclude>src/main/java/it/reply/orchestrator/service/VaultService.java</exclude>
 				<exclude>src/main/java/it/reply/orchestrator/service/VaultServiceImpl.java</exclude>

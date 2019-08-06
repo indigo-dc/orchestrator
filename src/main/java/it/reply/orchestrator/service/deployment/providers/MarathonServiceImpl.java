@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import it.reply.orchestrator.dto.mesos.MesosContainer;
 import it.reply.orchestrator.dto.mesos.MesosContainer.Type;
 import it.reply.orchestrator.dto.mesos.MesosPortMapping;
 import it.reply.orchestrator.dto.mesos.marathon.MarathonApp;
+import it.reply.orchestrator.dto.vault.VaultSecret;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.VaultTokenExpiredException;
 import it.reply.orchestrator.exception.service.DeploymentException;
@@ -312,31 +313,29 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
         throw ex;
       }
     }
+    
+    String vtoken = null;
+    String atoken = oauth2TokenService.getAccessToken(requestedWithToken);
+    try {
+      vtoken = vaultService.retrieveToken(atoken);
+    } catch (VaultTokenExpiredException e) {
+      atoken = oauth2TokenService.getRefreshedAccessToken(requestedWithToken);
+      vtoken = vaultService.retrieveToken(atoken);
+    }
+    if (StringUtils.isEmpty(vtoken)) {
+      throw new VaultException("Vault token not defined.");
+    }
+    
     //remove vault entries if present
     String spath = "secret/private/" + deployment.getId(); 
-    List<String> depentries = vaultService.listSecrets(spath);
+    List<String> depentries = vaultService.listSecrets(vtoken, spath);
     if (!depentries.isEmpty()) {
       //read token for vault
-      String vtoken = oauth2TokenService.getAccessToken(requestedWithToken);
-      try {
-        vaultService.retrieveToken(vtoken);
-      } catch (VaultTokenExpiredException e) {
-        vtoken = oauth2TokenService.getRefreshedAccessToken(requestedWithToken);
-        vaultService.retrieveToken(vtoken);
-      }
-
-      if (StringUtils.isEmpty(vaultService.getVaultToken())) {
-        throw new VaultException("Vault token not defined.");
-      }        
 
       for (String depentry:depentries) {
-        List<String> entries = vaultService.listSecrets(spath + "/" + depentry);
+        List<String> entries = vaultService.listSecrets(vtoken, spath + "/" + depentry);
         for (String entry:entries) {
-          try {
-            vaultService.deleteSecret(spath + "/" + depentry + "/" + entry);
-          } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-          }      
+            vaultService.deleteSecret(vtoken, spath + "/" + depentry + "/" + entry);
         }
       }
     }
@@ -380,24 +379,8 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
    * implemented method with deploymentId parameter used to create Vault entry
    */
   protected App generateExternalTaskRepresentation(MarathonApp marathonTask) {
-    App app = new App();
-    return app;
+    throw new UnsupportedOperationException();
   }
-
-  public static class VaultSecret {
-
-    String value;
-
-    public String getValue() {
-      return value;
-    }
-
-    public VaultSecret setValue(String value) {
-      this.value = value;
-      return this;
-    }
-  }  
-
 
   protected App generateExternalTaskRepresentation(MarathonApp marathonTask, String deploymentId, 
       OidcTokenId requestedWithToken) {
@@ -423,19 +406,20 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     if (marathonTask.getSecrets() != null && marathonTask.getSecrets().size() > 0) {
 
       //read token for vault
+      String vtoken = null;
       if (requestedWithToken != null) {
-        String vtoken = oauth2TokenService.getAccessToken(requestedWithToken);
+        String atoken = oauth2TokenService.getAccessToken(requestedWithToken);
         try {
-          vaultService.retrieveToken(vtoken);
+          vtoken = vaultService.retrieveToken(atoken);
         } catch (VaultTokenExpiredException e) {
-          vtoken = oauth2TokenService.getRefreshedAccessToken(requestedWithToken);
-          vaultService.retrieveToken(vtoken);
+          atoken = oauth2TokenService.getRefreshedAccessToken(requestedWithToken);
+          vtoken = vaultService.retrieveToken(atoken);
         }
-      } 
-      if (StringUtils.isEmpty(vaultService.getVaultToken())) {
+      }
+      
+      if (StringUtils.isEmpty(vtoken)) {
         throw new VaultException("Vault token not defined.");
       }
-
 
       Map<String, SecretSource> secrets = new HashMap<String, SecretSource>();
 
@@ -450,15 +434,9 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
         //write secret on service
         String spath = "secret/private/" + deploymentId + "/" + marathonTask.getId() + "/" 
             + entry.getKey();
-        try {
-          VaultResponse response = vaultService.writeSecret(spath, 
+        
+        VaultResponse response = vaultService.writeSecret(vtoken, spath, 
               (new VaultSecret()).setValue(entry.getValue()));
-          if (response != null) {
-            System.out.println(response.toString());
-          }
-        } catch (Exception ex) {
-          System.out.println(ex.getMessage());
-        }
 
       }        
       app.setSecrets(secrets);

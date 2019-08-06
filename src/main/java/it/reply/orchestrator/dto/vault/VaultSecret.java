@@ -14,24 +14,18 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.service;
+package it.reply.orchestrator.dto.vault;
 
-import java.util.List;
-import java.util.Map;
+public class VaultSecret {
 
-import org.springframework.vault.support.VaultResponse;
+  String value;
 
-public interface VaultService {
+  public String getValue() {
+    return value;
+  }
 
-  public VaultResponse writeSecret(String token, String path, Object secret);
-
-  public <T> T readSecret(String token, String path, Class<T> type);
-
-  public Map<String,Object> readSecret(String token, String path);
-
-  public void deleteSecret(String token, String path);
-
-  public List<String> listSecrets(String token, String path);
-
-  public String retrieveToken(String accessToken);
-}
+  public VaultSecret setValue(String value) {
+    this.value = value;
+    return this;
+  }
+}  
