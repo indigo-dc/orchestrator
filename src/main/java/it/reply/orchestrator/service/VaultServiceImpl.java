@@ -84,7 +84,7 @@ public class VaultServiceImpl implements VaultService {
   }
 
   /**
-   * retrieve the vault token from the IAM token
+   * Retrieve the vault token from the IAM token.
    */
   @SuppressWarnings("unchecked")
   public String retrieveToken(String accessToken) {

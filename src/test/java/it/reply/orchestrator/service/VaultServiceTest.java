@@ -28,7 +28,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import it.reply.orchestrator.Application;
-import it.reply.orchestrator.service.deployment.providers.MarathonServiceImpl.VaultSecret;
+import it.reply.orchestrator.dto.vault.VaultSecret;
 
 /**
  * This integration test makes real request to the Vault APIs.
@@ -48,24 +48,24 @@ public class VaultServiceTest {
   public void testVault() {
 
     //fake token, replace with valid one
-    vaultService.setVaultToken("s.DQSf698xaTFLtBCY9bG2QdhI");
+    String token = "s.DQSf698xaTFLtBCY9bG2QdhI";
 
     //write secret on service
     String spath = "secret/private/marathon/11e9a30f-f358-0741-a6d8-024283ff312b/password"; 
-    vaultService.writeSecret(spath, (new VaultSecret()).setValue("mypass")); 
+    vaultService.writeSecret(token, spath, (new VaultSecret()).setValue("mypass")); 
 
-    VaultSecret mypass = vaultService.readSecret(spath, VaultSecret.class);
+    VaultSecret mypass = vaultService.readSecret(token, spath, VaultSecret.class);
 
     assertEquals(mypass.getValue(), "mypass");
 
     spath = "secret/private/marathon/11e9a30f-f358-0741-a6d8-024283ff312b";
-    List<String> depentries = vaultService.listSecrets(spath);
+    List<String> depentries = vaultService.listSecrets(token, spath);
 
     assertEquals(depentries.size(), 1);
 
-    vaultService.deleteSecret(spath + "/" + depentries.get(0));
+    vaultService.deleteSecret(token, spath + "/" + depentries.get(0));
 
-    depentries = vaultService.listSecrets(spath);
+    depentries = vaultService.listSecrets(token, spath);
     assertEquals(depentries.size(), 0);
   }
 
