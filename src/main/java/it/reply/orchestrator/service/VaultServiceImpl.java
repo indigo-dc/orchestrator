@@ -83,11 +83,6 @@ public class VaultServiceImpl implements VaultService {
     return getTemplate(token).list(path);
   }
 
-  /**
-   * Retrieve Vault token starting from access token.
-   * @throws Exception 
-   * @throws InterruptedException 
-   */
   @SuppressWarnings("unchecked")
   public String retrieveToken(String accessToken) {
     String exmessage = "Unable to retrieve token for Vault:";
@@ -133,7 +128,8 @@ public class VaultServiceImpl implements VaultService {
         String message = responseStrBuilder.toString();
         if (status == 400) {
           if (message.toLowerCase().contains("token is expired")) {
-            throw new VaultTokenExpiredException(String.format("%s accessToken is expired",exmessage));
+            throw new VaultTokenExpiredException(
+                String.format("%s accessToken is expired",exmessage));
           }
         }
         throw new VaultException(String.format("%s %d (%s).", exmessage, status, message));
@@ -141,7 +137,7 @@ public class VaultServiceImpl implements VaultService {
     } catch (VaultException ve) {            
       throw ve;
     } catch (IOException e) {      
-        throw new VaultException(String.format("%s %s.", exmessage, e.getMessage()));
+      throw new VaultException(String.format("%s %s.", exmessage, e.getMessage()));
     }     
     finally {
       if (reader != null)
