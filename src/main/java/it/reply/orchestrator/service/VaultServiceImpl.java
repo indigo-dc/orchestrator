@@ -85,9 +85,10 @@ public class VaultServiceImpl implements VaultService {
 
   /**
    * Retrieve the vault token from the IAM token.
+   * @throws IOException 
    */
   @SuppressWarnings("unchecked")
-  public String retrieveToken(String accessToken) {
+  public String retrieveToken(String accessToken) throws IOException {
     String exmessage = "Unable to retrieve token for Vault:";
     String token = "";
     VaultEndpoint endpoint = VaultEndpoint.create(
@@ -144,24 +145,12 @@ public class VaultServiceImpl implements VaultService {
     }     
     finally {
       if (reader != null) {
-        try {
-          reader.close();
-        } 
-        catch(IOException e) {          
-        }
+        reader.close();
       }
       if (response != null) {
-        try {
-          response.close();
-        } 
-        catch(IOException e) {          
-        }
+        response.close();
       }
-      try {
-        httpclient.close();
-      }
-      catch(IOException e) {        
-      }
+      httpclient.close();
     }
 
     return token;

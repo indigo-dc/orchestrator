@@ -48,6 +48,7 @@ import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -314,13 +315,19 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
       }
     }
     
-    String vtoken = null;
+    String vtoken;
     String atoken = oauth2TokenService.getAccessToken(requestedWithToken);
     try {
       vtoken = vaultService.retrieveToken(atoken);
     } catch (VaultTokenExpiredException e) {
       atoken = oauth2TokenService.getRefreshedAccessToken(requestedWithToken);
-      vtoken = vaultService.retrieveToken(atoken);
+      try {
+        vtoken = vaultService.retrieveToken(atoken);
+      } catch (IOException ex) {
+        vtoken = null;
+      }
+    } catch (IOException e) {
+      vtoken = null;
     }
     if (StringUtils.isEmpty(vtoken)) {
       throw new VaultException("Vault token not defined.");
@@ -413,8 +420,14 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
           vtoken = vaultService.retrieveToken(atoken);
         } catch (VaultTokenExpiredException e) {
           atoken = oauth2TokenService.getRefreshedAccessToken(requestedWithToken);
-          vtoken = vaultService.retrieveToken(atoken);
-        }
+          try {
+            vtoken = vaultService.retrieveToken(atoken);
+          } catch (IOException ex) {
+            vtoken = null;
+          }
+        } catch (IOException e) {
+          vtoken = null;
+        }      
       }
       
       if (StringUtils.isEmpty(vtoken)) {

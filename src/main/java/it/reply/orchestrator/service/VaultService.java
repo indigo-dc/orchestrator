@@ -16,6 +16,7 @@
 
 package it.reply.orchestrator.service;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -33,5 +34,5 @@ public interface VaultService {
 
   public List<String> listSecrets(String token, String path);
 
-  public String retrieveToken(String accessToken);
+  public String retrieveToken(String accessToken) throws IOException;
 }
