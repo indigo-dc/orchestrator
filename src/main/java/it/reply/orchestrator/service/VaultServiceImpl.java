@@ -83,6 +83,9 @@ public class VaultServiceImpl implements VaultService {
     return getTemplate(token).list(path);
   }
 
+  /**
+   * retrieve the vault token from the IAM token
+   */
   @SuppressWarnings("unchecked")
   public String retrieveToken(String accessToken) {
     String exmessage = "Unable to retrieve token for Vault:";
