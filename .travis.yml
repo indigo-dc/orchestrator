@@ -15,7 +15,8 @@ addons:
     organization: ${SONAR_ORGANIZATION}
 
 script:
-  - ./mvnw clean verify -U sonar:sonar -P test-with-jacoco
+  - 'if [ "${SONAR_SCANNER_HOME}" != "" ] && [ "${SONAR_ORGANIZATION}" != "" ]; then ./mvnw clean verify -U sonar:sonar -P test-with-jacoco; fi'
+  - 'if [ "${SONAR_SCANNER_HOME}" = "" ] || [ "${SONAR_ORGANIZATION}" = "" ]; then ./mvnw clean verify -U -P test-with-jacoco; fi'
 
 after_success:
   - bash <(curl -s https://codecov.io/bash) -F unittests -s "target/site/jacoco"
