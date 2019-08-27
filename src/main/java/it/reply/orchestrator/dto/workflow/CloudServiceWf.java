@@ -27,12 +27,15 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.RequiredArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Data
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 @AllArgsConstructor
+@RequiredArgsConstructor
 @Builder
 public class CloudServiceWf {
 
@@ -40,5 +43,9 @@ public class CloudServiceWf {
   @NonNull
   @NotNull
   private CloudService cloudService;
+
+  @JsonProperty("last_error_cause")
+  @Nullable
+  String lastErrorCause;
 
 }
