@@ -161,6 +161,27 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
               });
         });
 
+    // Filter provider by flavor contextualization check
+    rankCloudProvidersMessage
+        .getCloudProviders()
+        .forEach((cloudProviderName, cloudProvider) -> {
+          cloudProvider
+              .getServicesOfType(ComputeService.class)
+              .forEach(cloudService -> {
+                boolean hasMatchingFlavors = toscaService
+                    .contextualizeFlavors(ar, cloudService)
+                    .get(Boolean.FALSE)
+                    .isEmpty();
+                if (!hasMatchingFlavors) {
+                  // Failed to match all required flavors -> discard provider
+                  LOG.debug(
+                      "Discarded service {} of provider {} {}", cloudService.getId(),
+                      cloudProvider.getId(), "because it doesn't match flavors requirements");
+                  addServiceToDiscard(servicesToDiscard, cloudService);
+                }
+              });
+        });
+
     discardProvidersAndServices(providersToDiscard, servicesToDiscard, rankCloudProvidersMessage);
   }
 

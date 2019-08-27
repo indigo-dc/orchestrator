@@ -42,6 +42,12 @@ public class ComputeService extends CloudService {
   @Builder.Default
   List<Image> images = new ArrayList<>();
 
+  @JsonProperty("flavors")
+  @NonNull
+  @NotNull
+  @Builder.Default
+  List<Flavor> flavors = new ArrayList<>();
+
   /**
    * Generate a new ComputeService.
    *
@@ -63,6 +69,8 @@ public class ComputeService extends CloudService {
    *     the hostname
    * @param images
    *     the images
+   * @param flavors
+   *     the flavors
    */
   @Builder(builderMethodName = "computeBuilder")
   public ComputeService(
@@ -74,13 +82,16 @@ public class ComputeService extends CloudService {
       boolean publicService,
       @Nullable String region,
       @NonNull String hostname,
-      @NonNull List<Image> images) {
+      @NonNull List<Image> images,
+      @NonNull List<Flavor> flavors) {
     super(id, serviceType, endpoint, providerId, type, publicService, region, hostname);
     this.images = CommonUtils.notNullOrDefaultValue(images, ArrayList::new);
+    this.flavors = CommonUtils.notNullOrDefaultValue(flavors, ArrayList::new);
   }
 
   @Deprecated
   private ComputeService() {
     images = new ArrayList<>();
+    flavors = new ArrayList<>();
   }
 }

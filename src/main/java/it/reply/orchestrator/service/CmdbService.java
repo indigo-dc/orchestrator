@@ -18,6 +18,7 @@ package it.reply.orchestrator.service;
 
 import it.reply.orchestrator.dto.cmdb.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudService;
+import it.reply.orchestrator.dto.cmdb.Flavor;
 import it.reply.orchestrator.dto.cmdb.Image;
 
 import java.util.List;
@@ -34,6 +35,10 @@ public interface CmdbService {
   public List<Image> getImagesByService(String serviceId);
 
   public Image getImageById(String imageId);
+
+  public List<Flavor> getFlavorsByService(String serviceId);
+
+  public Flavor getFlavorById(String flavorId);
 
   public CloudProvider fillCloudProviderInfo(String providerId, Set<String> servicesWithSla);
 
