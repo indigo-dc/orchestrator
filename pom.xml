@@ -379,11 +379,6 @@
       <artifactId>janino</artifactId>
       <scope>runtime</scope>
     </dependency>
-	<!-- needed to query Vault service -->
-	<dependency>
-	    <groupId>org.apache.httpcomponents</groupId>
-	    <artifactId>httpclient</artifactId>
-	</dependency>
 	
     <!-- test -->
     <dependency>

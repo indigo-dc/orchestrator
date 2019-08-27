@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -90,6 +90,21 @@ public class OAuth2ConfigurationsService {
     oidcProperties.throwIfSecurityDisabled();
     ServerConfiguration serverConfiguration = getServerConfiguration(issuer);
     return getClientConfiguration(serverConfiguration);
+  }
+  
+  /**
+   * Get audience
+   * 
+   * @param issuer
+   *          the issuer of the server on which the client has been registered
+   * @return the audience UUID
+   */
+  public String getAudience(String issuer) {
+    oidcProperties.throwIfSecurityDisabled();
+    return Optional
+        .ofNullable(oidcProperties.getIamConfiguration(issuer).get().getAudience())
+        .orElseThrow(() -> new OrchestratorException(
+            "No audience configuration found for IAM with iss" + issuer));    
   }
 
 }

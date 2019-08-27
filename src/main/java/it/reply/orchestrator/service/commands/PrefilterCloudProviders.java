@@ -36,8 +36,8 @@ import it.reply.orchestrator.enums.DeploymentType;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.ToscaService;
-import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
+import it.reply.orchestrator.utils.ToscaUtils;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
 import java.util.Collection;
@@ -52,15 +52,11 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.alien4cloud.tosca.model.definitions.ComplexPropertyValue;
 import org.alien4cloud.tosca.model.templates.NodeTemplate;
-import org.alien4cloud.tosca.model.templates.RelationshipTemplate;
 import org.alien4cloud.tosca.model.templates.Topology;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.flowable.engine.delegate.DelegateExecution;
-import org.jgrapht.graph.DirectedMultigraph;
-import org.jgrapht.traverse.TopologicalOrderIterator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -117,27 +113,23 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
     boolean hasSecrets = false;
 
     if (type != null && type.equals(DeploymentType.MARATHON)) {
+            
       Map<String, NodeTemplate> nodes = Optional
           .ofNullable(ar.getTopology())
           .map(Topology::getNodeTemplates)
           .orElseGet(HashMap::new);
-
-      DirectedMultigraph<NodeTemplate, RelationshipTemplate> graph =
-          toscaService.buildNodeGraph(nodes, false);
-
-      TopologicalOrderIterator<NodeTemplate, RelationshipTemplate> orderIterator =
-          new TopologicalOrderIterator<>(graph);
-
-      List<NodeTemplate> orderedMarathonApps = CommonUtils
-          .iteratorToStream(orderIterator)
-          .filter(node -> toscaService.isOfToscaType(node, ToscaConstants.Nodes.Types.MARATHON))
+      
+      List<NodeTemplate> filteredNodes = nodes.entrySet().stream()
+          .filter(node -> toscaService.isOfToscaType(node.getValue(), ToscaConstants.Nodes.Types.MARATHON))
+          .map(Map.Entry::getValue)
           .collect(Collectors.toList());
 
-      for (NodeTemplate marathonNode : orderedMarathonApps) {
-        hasSecrets = toscaService
-            .<ComplexPropertyValue>getTypedNodePropertyByName(marathonNode, "secrets")
-            .isPresent();
-        if (hasSecrets) {
+      for (NodeTemplate marathonNode : filteredNodes) {
+        
+        Optional<Map<String, String>> map = ToscaUtils
+            .extractMap(marathonNode.getProperties(), "secrets", String.class::cast);
+        if (map.isPresent()) {
+          hasSecrets = true;
           break;
         }
       }        

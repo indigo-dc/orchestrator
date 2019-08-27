@@ -21,29 +21,28 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.reply.orchestrator.config.properties.VaultProperties;
 import it.reply.orchestrator.exception.VaultTokenExpiredException;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.http.HttpEntity;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.vault.VaultException;
 import org.springframework.vault.authentication.TokenAuthentication;
 import org.springframework.vault.client.VaultEndpoint;
 import org.springframework.vault.core.VaultTemplate;
 import org.springframework.vault.support.VaultResponse;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 @EnableConfigurationProperties(VaultProperties.class)
@@ -96,40 +95,28 @@ public class VaultServiceImpl implements VaultService {
         vaultProperties.getPort());
     URI uri = endpoint.createUri("auth/jwt/login");
 
-    CloseableHttpClient httpclient = HttpClients.createDefault();
-    CloseableHttpResponse response = null;
-    BufferedReader reader = null;
-    HttpPost httpPost = new HttpPost(uri.toString());
-    String json = "{\"jwt\":\"" + accessToken + "\"}";
-    HttpEntity stringEntity = new StringEntity(json,ContentType.APPLICATION_JSON);
-    httpPost.setEntity(stringEntity);
+    RestTemplate restTemplate = new RestTemplate();
     
+    String json = "{\"jwt\":\"" + accessToken + "\"}";
+    
+    HttpHeaders headers = new HttpHeaders();
+    headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
+    HttpEntity<String> stringEntity = new HttpEntity<String>(json, headers);
+     
     try {
-      response = httpclient.execute(httpPost);            
-
-      StringBuilder responseStrBuilder = new StringBuilder();
-
-      reader = new BufferedReader(
-          new InputStreamReader((response.getEntity().getContent())));
-
-      String inputStr;
-      while ((inputStr = reader.readLine()) != null) {
-        responseStrBuilder.append(inputStr);
-      }
+      ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.POST, stringEntity, String.class);
       
-      final int status = response.getStatusLine().getStatusCode();
+      final int status = response.getStatusCodeValue();
 
       if (status == 200) {
-
         HashMap<String,Object> result =
-            new ObjectMapper().readValue(responseStrBuilder.toString(), HashMap.class);         
+            new ObjectMapper().readValue(response.getBody(), HashMap.class);         
 
         HashMap<String,Object> auth = (HashMap<String,Object>) result.get("auth");
 
-
         token = (String) auth.get("client_token");
       } else {
-        String message = responseStrBuilder.toString();
+        String message = response.getBody();
         if (status == 400) {
           if (message.toLowerCase().contains("token is expired")) {
             throw new VaultTokenExpiredException(
@@ -140,16 +127,8 @@ public class VaultServiceImpl implements VaultService {
       }        
     } catch (VaultException ve) {            
       throw ve;
-    } catch (IOException e) {      
+    } catch (RestClientException e) {      
       throw new VaultException(String.format("%s %s.", exmessage, e.getMessage()));
-    } finally {
-      if (reader != null) {
-        reader.close();
-      }
-      if (response != null) {
-        response.close();
-      }
-      httpclient.close();
     }
 
     return token;

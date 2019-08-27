@@ -18,20 +18,25 @@ package it.reply.orchestrator.service;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.Arrays;
 import java.util.List;
 
-import org.junit.Ignore;
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.vault.support.VaultResponse;
 
 import it.reply.orchestrator.Application;
 import it.reply.orchestrator.dto.vault.VaultSecret;
 
 /**
- * This integration test makes real request to the Vault APIs.
+ * Vault Service API test
  * 
  * @author Michele Perniola
  *
@@ -40,33 +45,59 @@ import it.reply.orchestrator.dto.vault.VaultSecret;
 @SpringBootTest(classes = Application.class)
 public class VaultServiceTest {
 
-  @Autowired
+  @Mock
   private VaultService vaultService;
-
+  
+  @Before
+  public void setup() {
+    MockitoAnnotations.initMocks(this);
+  }
+  
   @Test
-  @Ignore
-  public void testVault() {
-
-    //fake token, replace with valid one
+  public void testReadSecret() {
     String token = "s.DQSf698xaTFLtBCY9bG2QdhI";
+    String spath = "secret/private/marathon/11e9a30f-f358-0741-a6d8-024283ff312b/password";
+    VaultSecret mypass = (new VaultSecret()).setValue("mypass");
+    
+    Mockito.when(vaultService.readSecret(token, spath, VaultSecret.class)).thenReturn(mypass);
 
-    //write secret on service
-    String spath = "secret/private/marathon/11e9a30f-f358-0741-a6d8-024283ff312b/password"; 
-    vaultService.writeSecret(token, spath, (new VaultSecret()).setValue("mypass")); 
+    Assert.assertEquals(vaultService.readSecret(token, spath, VaultSecret.class), mypass);    
+  }
+  
+  @Test
+  public void testWriteSecret() {
+    String token = "s.DQSf698xaTFLtBCY9bG2QdhI";
+    String spath = "secret/private/marathon/11e9a30f-f358-0741-a6d8-024283ff312b/password";
+    VaultSecret mypass = (new VaultSecret()).setValue("mypass");
+    VaultResponse response = new VaultResponse();
 
-    VaultSecret mypass = vaultService.readSecret(token, spath, VaultSecret.class);
+    Mockito.when(vaultService.writeSecret(token, spath, mypass)).thenReturn(response);
+    
+    assertEquals(vaultService.writeSecret(token, spath, mypass), response);
+    
+  }
+  
+  @Test
+  public void testListSecrets() {
 
-    assertEquals(mypass.getValue(), "mypass");
-
-    spath = "secret/private/marathon/11e9a30f-f358-0741-a6d8-024283ff312b";
-    List<String> depentries = vaultService.listSecrets(token, spath);
+    String token = "s.DQSf698xaTFLtBCY9bG2QdhI";
+    String spath = "secret/private/marathon/11e9a30f-f358-0741-a6d8-024283ff312b";
+    List<String> depentries = Arrays.asList("mypass");
 
     assertEquals(depentries.size(), 1);
 
-    vaultService.deleteSecret(token, spath + "/" + depentries.get(0));
-
-    depentries = vaultService.listSecrets(token, spath);
-    assertEquals(depentries.size(), 0);
+    Mockito.when(vaultService.listSecrets(token, spath)).thenReturn(depentries);
+    
+    List<String> result = vaultService.listSecrets(token, spath);
+    assertEquals(result, depentries);
+  }
+  
+  @Test
+  public void testDeleteSecret() {
+    String token = "s.DQSf698xaTFLtBCY9bG2QdhI";
+    String spath = "secret/private/marathon/11e9a30f-f358-0741-a6d8-024283ff312b/password";
+    VaultSecret mypass = (new VaultSecret()).setValue("mypass");
+    vaultService.deleteSecret(token, spath + "/" + mypass.getValue());    
   }
 
 }
