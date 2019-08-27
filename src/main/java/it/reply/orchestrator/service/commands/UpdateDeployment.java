@@ -29,15 +29,18 @@ import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.exception.service.BusinessWorkflowException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.CloudProviderEndpointServiceImpl;
+import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.WorkflowConstants;
 import it.reply.orchestrator.utils.WorkflowConstants.ErrorCode;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,6 +52,8 @@ import org.springframework.stereotype.Component;
 @Component(WorkflowConstants.Delegate.UPDATE_DEPLOYMENT)
 @Slf4j
 public class UpdateDeployment extends BaseDeployCommand {
+
+  private static final String DELIMITER = "\n" + StringUtils.repeat("-", 64) + "\n";
 
   @Autowired
   private CloudProviderEndpointServiceImpl cloudProviderEndpointService;
@@ -72,8 +77,20 @@ public class UpdateDeployment extends BaseDeployCommand {
         throw new BusinessWorkflowException(ErrorCode.RUNTIME_ERROR,
             "No cloud providers available to deploy");
       } else {
+        servicesIt.reset();
+        String causes = CommonUtils
+            .iteratorToStream(servicesIt)
+            .map(wfService -> new StringBuilder()
+                .append("Cloud Provider <")
+                .append(wfService.getCloudService().getProviderId())
+                .append(">\nCloud Provider Service <")
+                .append(wfService.getCloudService().getId())
+                .append(">\n\n")
+                .append(wfService.getLastErrorCause()))
+            .collect(Collectors.joining(DELIMITER, DELIMITER, ""));
+
         throw new BusinessWorkflowException(ErrorCode.RUNTIME_ERROR,
-            "Retries on cloud providers exhausted");
+            "Retries on cloud providers exhausted. Error list is:\n" + causes);
       }
     }
     CloudService currentCloudService = servicesIt.next().getCloudService();
