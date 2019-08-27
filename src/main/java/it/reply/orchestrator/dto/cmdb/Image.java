@@ -72,6 +72,23 @@ public class Image implements CmdbIdentifiable {
   @Nullable
   private String userName;
 
+  @JsonProperty("gpu_driver")
+  @Nullable
+  private Boolean gpuDriver;
 
+  @JsonProperty("gpu_driver_version")
+  @Nullable
+  private String gpuDriverVersion;
 
+  @JsonProperty("cuda_support")
+  @Nullable
+  private Boolean cudaSupport;
+
+  @JsonProperty("cuda_version")
+  @Nullable
+  private String cudaVersion;
+
+  @JsonProperty("cuDNN_version")
+  @Nullable
+  private String cuDnnVersion;
 }

@@ -41,6 +41,8 @@ import it.reply.orchestrator.config.properties.OrchestratorProperties;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.ComputeService;
+import it.reply.orchestrator.dto.cmdb.Flavor;
+import it.reply.orchestrator.dto.cmdb.Flavor.FlavorBuilder;
 import it.reply.orchestrator.dto.cmdb.Image;
 import it.reply.orchestrator.dto.cmdb.Image.ImageBuilder;
 import it.reply.orchestrator.dto.dynafed.Dynafed;
@@ -114,6 +116,7 @@ import org.alien4cloud.tosca.model.templates.RelationshipTemplate;
 import org.alien4cloud.tosca.model.templates.Topology;
 import org.alien4cloud.tosca.normative.types.BooleanType;
 import org.alien4cloud.tosca.normative.types.IntegerType;
+import org.alien4cloud.tosca.normative.types.SizeType;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -139,6 +142,8 @@ public class ToscaServiceImpl implements ToscaService {
   public static final String SCALABLE_CAPABILITY_NAME = "scalable";
 
   public static final String OS_CAPABILITY_NAME = "os";
+
+  public static final String HOST_CAPABILITY_NAME = "host";
 
   @Autowired
   private ApplicationContext ctx;
@@ -383,6 +388,23 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
+  public void contextualizeAndReplaceFlavors(ArchiveRoot parsingResult,
+      ComputeService computeService,
+      DeploymentProvider deploymentProvider) {
+    Map<Boolean, Map<NodeTemplate, Flavor>> contextualizedImages =
+        contextualizeFlavors(parsingResult, computeService);
+    Preconditions.checkState(contextualizedImages.get(Boolean.FALSE).isEmpty(),
+        "Error contextualizing flavors; flavors for nodes %s couldn't be contextualized",
+        contextualizedImages
+            .get(Boolean.FALSE)
+            .keySet()
+            .stream()
+            .map(NodeTemplate::getName)
+            .collect(Collectors.toList()));
+    replaceFlavor(contextualizedImages.get(Boolean.TRUE), computeService, deploymentProvider);
+  }
+
+  @Override
   public Map<NodeTemplate, Image> extractImageRequirements(ArchiveRoot parsingResult) {
 
     Map<String, Function<ImageBuilder, Function<String, ImageBuilder>>>
@@ -402,6 +424,23 @@ public class ToscaServiceImpl implements ToscaService {
 
     capabilityPropertiesMapping.put("version",
         imageMetadataBuilder -> imageMetadataBuilder::version);
+
+    capabilityPropertiesMapping.put("gpu_driver",
+        imageMetadataBuilder -> (String value) -> imageMetadataBuilder
+            .gpuDriver(Boolean.parseBoolean(value)));
+
+    capabilityPropertiesMapping.put("gpu_driver_version",
+        imageMetadataBuilder -> imageMetadataBuilder::gpuDriverVersion);
+
+    capabilityPropertiesMapping.put("cuda_support",
+        imageMetadataBuilder -> (String value) -> imageMetadataBuilder
+            .cudaSupport(Boolean.parseBoolean(value)));
+
+    capabilityPropertiesMapping.put("cuda_min_version",
+        imageMetadataBuilder -> imageMetadataBuilder::cudaVersion);
+
+    capabilityPropertiesMapping.put("cuDNN_version",
+        imageMetadataBuilder -> imageMetadataBuilder::cuDnnVersion);
 
     // Only indigo.Compute nodes are relevant
     return getNodesOfType(parsingResult, ToscaConstants.Nodes.Types.COMPUTE)
@@ -427,6 +466,62 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
+  public Map<NodeTemplate, Flavor> extractFlavorRequirements(ArchiveRoot parsingResult) {
+
+    Map<String, Function<FlavorBuilder, Function<String, FlavorBuilder>>>
+        capabilityPropertiesMapping = new HashMap<>();
+
+    capabilityPropertiesMapping.put("instance_type",
+        flavorMetadataBuilder -> flavorMetadataBuilder::flavorName);
+
+    capabilityPropertiesMapping.put("num_cpus",
+        flavorMetadataBuilder -> (String numCpus) -> flavorMetadataBuilder
+            .numCpus(Integer.parseInt(numCpus)));
+
+    capabilityPropertiesMapping.put("disk_size",
+        flavorMetadataBuilder ->
+            (String diskSize) -> flavorMetadataBuilder
+                .diskSize(ToscaUtils.parseScalar(diskSize, SizeType.class).convert("GB"))
+    );
+
+    capabilityPropertiesMapping.put("mem_size",
+        flavorMetadataBuilder -> (String memSize) -> flavorMetadataBuilder
+            .memSize(ToscaUtils.parseScalar(memSize, SizeType.class).convert("MB")));
+
+    capabilityPropertiesMapping.put("num_gpus",
+        flavorMetadataBuilder -> (String numGpus) -> flavorMetadataBuilder
+            .numGpus(Integer.parseInt(numGpus)));
+
+    capabilityPropertiesMapping.put("gpu_vendor",
+        flavorMetadataBuilder -> flavorMetadataBuilder::gpuVendor);
+
+    capabilityPropertiesMapping.put("gpu_model",
+        flavorMetadataBuilder -> flavorMetadataBuilder::gpuModel);
+
+    // Only indigo.Compute nodes are relevant
+    return getNodesOfType(parsingResult, ToscaConstants.Nodes.Types.COMPUTE)
+        .stream()
+        .map(node -> {
+          FlavorBuilder flavorMetadataBuilder = Flavor.builder();
+          this.getNodeCapabilityByName(node, HOST_CAPABILITY_NAME)
+              .ifPresent(hostCapability -> {
+                // We've got an HOST capability -> Check the attributes to find best match for the
+                // image
+                capabilityPropertiesMapping
+                    .forEach((capabilityPropertyName, mappingFunction) -> {
+                      ToscaUtils
+                          .extractScalar(hostCapability.getProperties(), capabilityPropertyName)
+                          .ifPresent(
+                              property -> mappingFunction.apply(flavorMetadataBuilder)
+                                  .apply(property));
+                    });
+              });
+          return new SimpleEntry<>(node, flavorMetadataBuilder.build());
+        })
+        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+  }
+
+  @Override
   public Map<Boolean, Map<NodeTemplate, Image>> contextualizeImages(ArchiveRoot parsingResult,
       ComputeService computeService) {
     try {
@@ -446,13 +541,12 @@ public class ToscaServiceImpl implements ToscaService {
         if (image.isPresent()) {
           // Found a good image -> replace the image attribute with the provider-specific ID
           LOG.debug(
-              "Found image match in provider <{}> for image metadata <{}>"
-                  + ", provider-specific image id <{}>",
-              computeService.getProviderId(), imageMetadata, image.get().getImageId());
+              "Found image match in service <{}> of provider <{}>: {}",
+              computeService.getId(), computeService.getProviderId(), image.get());
         } else {
           // No image match found -> throw error
-          LOG.debug("Failed to found a match in provider <{}> for image metadata <{}>",
-              computeService.getProviderId(), imageMetadata);
+          LOG.debug("Couldn't find a match in service <{}> of provider <{}>",
+              computeService.getId(), computeService.getProviderId());
         }
         return new SimpleEntry<>(node, image);
       }).collect(Collectors.partitioningBy(entry -> entry.getValue().isPresent(),
@@ -460,7 +554,42 @@ public class ToscaServiceImpl implements ToscaService {
           // https://bugs.openjdk.java.net/browse/JDK-8148463
           CommonUtils.toMap(Entry::getKey, entry -> entry.getValue().orElse(null))));
     } catch (RuntimeException ex) {
-      throw new RuntimeException("Failed to contextualize images", ex);
+      throw new RuntimeException("Failed to contextualize some image", ex);
+    }
+  }
+
+  @Override
+  public Map<Boolean, Map<NodeTemplate, Flavor>> contextualizeFlavors(ArchiveRoot parsingResult,
+      ComputeService computeService) {
+    try {
+      return extractFlavorRequirements(parsingResult).entrySet().stream().map(entry -> {
+        NodeTemplate node = entry.getKey();
+        Flavor flavorMetadata = entry.getValue();
+
+        List<Flavor> flavors = computeService
+            .getFlavors()
+            .stream()
+            .sorted()
+            .collect(Collectors.toList());
+        Optional<Flavor> flavor = getBestFlavorForCloudProvider(flavorMetadata, flavors);
+
+        if (flavor.isPresent()) {
+          // Found a good flavor -> replace the flavor attribute with the provider-specific ID
+          LOG.debug(
+              "Found flavor match in service <{}> of provider <{}>: {}",
+              computeService.getId(), computeService.getProviderId(), flavor.get());
+        } else {
+          // No flavor match found -> throw error
+          LOG.debug("Couldn't find a match in service <{}> of provider <{}> for flavor metadata",
+              computeService.getId(), computeService.getProviderId());
+        }
+        return new SimpleEntry<>(node, flavor);
+      }).collect(Collectors.partitioningBy(entry -> entry.getValue().isPresent(),
+          // do not use the Collectors.toMap() because it doesn't play nice with null values
+          // https://bugs.openjdk.java.net/browse/JDK-8148463
+          CommonUtils.toMap(Entry::getKey, entry -> entry.getValue().orElse(null))));
+    } catch (RuntimeException ex) {
+      throw new RuntimeException("Failed to contextualize some flavor", ex);
     }
   }
 
@@ -497,6 +626,27 @@ public class ToscaServiceImpl implements ToscaService {
         credential.put("user", image.getUserName());
         credential.put("token", "");
       }
+    });
+  }
+
+  private void replaceFlavor(Map<NodeTemplate, Flavor> contextualizedFlavors,
+      ComputeService cloudService, DeploymentProvider deploymentProvider) {
+    contextualizedFlavors.forEach((node, flavor) -> {
+      Map<String, Capability> capabilities =
+          Optional.ofNullable(node.getCapabilities()).orElseGet(() -> {
+            node.setCapabilities(new HashMap<>());
+            return node.getCapabilities();
+          });
+      // The node doesn't have an OS Capability -> need to add a dummy one to hold a
+      // random image for underlying deployment systems
+      Capability osCapability = capabilities.computeIfAbsent(HOST_CAPABILITY_NAME, key -> {
+        LOG.debug("Generating default Container capability for node <{}>", node.getName());
+        Capability capability = new Capability();
+        capability.setType("tosca.capabilities.indigo.Container");
+        return capability;
+      });
+      String flavorName = flavor.getFlavorName();
+      osCapability.getProperties().put("instance_type", new ScalarPropertyValue(flavorName));
     });
   }
 
@@ -555,6 +705,17 @@ public class ToscaServiceImpl implements ToscaService {
     }
   }
 
+  protected Optional<Flavor> getBestFlavorForCloudProvider(Flavor flavorMetadata,
+      Collection<Flavor> flavors) {
+
+    Optional<Flavor> flavorFoundByName = findFlavorByName(flavorMetadata, flavors);
+    if (flavorFoundByName.isPresent()) {
+      return flavorFoundByName;
+    } else {
+      return findFlavorByFallbackFields(flavorMetadata, flavors);
+    }
+  }
+
   protected Optional<Image> findImageByName(Image requiredImageMetadata,
       Collection<Image> cloudProviderServiceImages) {
     String requiredImageName = requiredImageMetadata.getImageName();
@@ -569,6 +730,25 @@ public class ToscaServiceImpl implements ToscaService {
         LOG.debug("Image <{}> found with name <{}>", imageWithName.get().getImageId(),
             requiredImageName);
         return imageWithName;
+      }
+    }
+    return Optional.empty();
+  }
+
+  protected Optional<Flavor> findFlavorByName(Flavor requiredFlavorMetadata,
+      Collection<Flavor> cloudProviderServiceFlavors) {
+    String requiredFlavorName = requiredFlavorMetadata.getFlavorName();
+    if (requiredFlavorName != null) {
+      LOG.debug("Looking up flavors by name <{}>", requiredFlavorName);
+      Optional<Flavor> flavorWithName = cloudProviderServiceFlavors
+          .stream()
+          .filter(flavor -> requiredFlavorName.equals(flavor.getFlavorName()))
+          .findFirst();
+
+      if (flavorWithName.isPresent()) {
+        LOG.debug("Flavor <{}> found with name <{}>", flavorWithName.get().getFlavorId(),
+            requiredFlavorName);
+        return flavorWithName;
       }
     }
     return Optional.empty();
@@ -600,12 +780,17 @@ public class ToscaServiceImpl implements ToscaService {
 
   protected Optional<Image> findImageByFallbackFields(Image requiredImageMetadata,
       Collection<Image> cloudProviderServiceImages) {
-    LOG.debug("Looking up images by fallback metatada");
+    LOG.debug("Looking up images by metatada {}", requiredImageMetadata);
     ArrayList<Filter<Image, ?>> fallbackFieldExtractors = Lists.newArrayList(
         new Filter<>(Image::getType, String::equalsIgnoreCase),
         new Filter<>(Image::getArchitecture, String::equalsIgnoreCase),
         new Filter<>(Image::getDistribution, String::equalsIgnoreCase),
-        new Filter<>(Image::getVersion, String::equalsIgnoreCase)
+        new Filter<>(Image::getVersion, String::equalsIgnoreCase),
+        new Filter<>(Image::getGpuDriver, (a, b) -> !a || (b != null ? b : false)),
+        new Filter<>(Image::getGpuDriverVersion, String::equalsIgnoreCase),
+        new Filter<>(Image::getCudaSupport, (a, b) -> !a || (b != null ? b : false)),
+        new Filter<>(Image::getCudaVersion, String::equalsIgnoreCase),
+        new Filter<>(Image::getCuDnnVersion, String::equalsIgnoreCase)
     );
 
     Stream<Image> imageStream = cloudProviderServiceImages.stream();
@@ -644,6 +829,36 @@ public class ToscaServiceImpl implements ToscaService {
           .ofNullable(extractor.apply(metadata))
           .map(field -> stream.filter(element -> evaluator.apply(field, extractor.apply(element))))
           .orElse(null);
+    }
+  }
+
+  protected Optional<Flavor> findFlavorByFallbackFields(Flavor requiredFlavorMetadata,
+      Collection<Flavor> cloudProviderServiceFlavors) {
+    LOG.debug("Looking up flavors by metatada {}", requiredFlavorMetadata);
+    ArrayList<Filter<Flavor, ?>> fallbackFieldExtractors = Lists.newArrayList(
+        new Filter<>(Flavor::getNumCpus, (a, b) -> b >= a),
+        new Filter<>(Flavor::getMemSize, (a, b) -> b >= a),
+        new Filter<>(Flavor::getDiskSize, (a, b) -> b >= a),
+        new Filter<>(Flavor::getNumGpus, (a, b) -> b >= a),
+        new Filter<>(Flavor::getGpuVendor, String::equalsIgnoreCase),
+        new Filter<>(Flavor::getGpuModel, String::equalsIgnoreCase)
+    );
+    Stream<Flavor> flavorStream = cloudProviderServiceFlavors.stream();
+
+    boolean filteredOnSomeField = false;
+    for (Filter<Flavor, ?> fieldExtractor : fallbackFieldExtractors) {
+      Stream<Flavor> newStream = fieldExtractor.filter(requiredFlavorMetadata, flavorStream);
+      if (newStream != null) {
+        flavorStream = newStream;
+        filteredOnSomeField = true;
+      }
+    }
+
+    boolean flavorNameIsPresent = requiredFlavorMetadata.getFlavorName() != null;
+    if (!filteredOnSomeField && flavorNameIsPresent) {
+      return Optional.empty();
+    } else {
+      return flavorStream.findFirst();
     }
   }
 

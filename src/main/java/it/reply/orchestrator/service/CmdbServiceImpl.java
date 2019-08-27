@@ -21,6 +21,7 @@ import it.reply.orchestrator.dto.cmdb.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.CmdbIdentifiable;
 import it.reply.orchestrator.dto.cmdb.ComputeService;
+import it.reply.orchestrator.dto.cmdb.Flavor;
 import it.reply.orchestrator.dto.cmdb.Image;
 import it.reply.orchestrator.dto.cmdb.wrappers.CmdbDataWrapper;
 import it.reply.orchestrator.dto.cmdb.wrappers.CmdbHasManyList;
@@ -75,6 +76,16 @@ public class CmdbServiceImpl implements CmdbService {
   private static final ParameterizedTypeReference<CmdbDataWrapper<Image>>
       IMAGE_RESPONSE_TYPE =
       new ParameterizedTypeReference<CmdbDataWrapper<Image>>() {
+      };
+
+  private static final ParameterizedTypeReference<CmdbHasManyList<Flavor>>
+      FLAVORS_LIST_RESPONSE_TYPE =
+      new ParameterizedTypeReference<CmdbHasManyList<Flavor>>() {
+      };
+
+  private static final ParameterizedTypeReference<CmdbDataWrapper<Flavor>>
+      FLAVOR_RESPONSE_TYPE =
+      new ParameterizedTypeReference<CmdbDataWrapper<Flavor>>() {
       };
 
   private CmdbProperties cmdbProperties;
@@ -189,6 +200,38 @@ public class CmdbServiceImpl implements CmdbService {
     } catch (RestClientException ex) {
       throw new DeploymentException(
           "Error loading images list for service <" + serviceId + "> from CMDB.", ex);
+    }
+  }
+
+  @Override
+  public Flavor getFlavorById(String flavorId) {
+
+    URI requestUri = UriBuilder
+        .fromUri(cmdbProperties.getUrl() + cmdbProperties.getFlavorByIdPath())
+        .build(flavorId)
+        .normalize();
+
+    try {
+      return get(requestUri, FLAVOR_RESPONSE_TYPE);
+    } catch (RestClientException ex) {
+      throw new DeploymentException("Error loading info for flavor <" + flavorId + "> from CMDB.",
+          ex);
+    }
+  }
+
+  @Override
+  public List<Flavor> getFlavorsByService(String serviceId) {
+
+    URI requestUri = UriBuilder
+        .fromUri(cmdbProperties.getUrl() + cmdbProperties.getFlavorsByServiceIdPath())
+        .build(serviceId)
+        .normalize();
+
+    try {
+      return getAll(requestUri, FLAVORS_LIST_RESPONSE_TYPE);
+    } catch (RestClientException ex) {
+      throw new DeploymentException(
+          "Error loading flavor list for service <" + serviceId + "> from CMDB.", ex);
     }
   }
 

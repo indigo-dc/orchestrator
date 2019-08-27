@@ -59,4 +59,13 @@ public class CmdbProperties {
   @NonNull
   private String imageByIdPath = "/image/id/{imageId}?include_docs=true";
 
+  @NotNull
+  @NonNull
+  private String flavorsByServiceIdPath =
+      "/service/id/{serviceId}/has_many/flavors?include_docs=true";
+
+  @NotNull
+  @NonNull
+  private String flavorByIdPath = "/flavor/id/{flavorId}?include_docs=true";
+
 }
