@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ package it.reply.orchestrator.service;
 import it.reply.orchestrator.config.properties.OneDataProperties;
 import it.reply.orchestrator.config.properties.OneDataProperties.ServiceSpaceProperties;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
-import it.reply.orchestrator.dto.CloudProvider;
+import it.reply.orchestrator.dto.cmdb.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
@@ -41,6 +41,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.core.UriBuilder;
@@ -261,9 +262,9 @@ public class OneDataServiceImpl implements OneDataService {
     Map<String, CloudService> oneProviderCloudServices = cloudProviders
         .values()
         .stream()
-        .flatMap(provider -> provider.getCmdbProviderServices().values().stream())
+        .flatMap(provider -> provider.getServices().values().stream())
         .filter(CloudService::isOneProviderStorageService)
-        .collect(Collectors.toMap(cs -> cs.getData().getEndpoint(), cs -> cs));
+        .collect(Collectors.toMap(CloudService::getEndpoint, Function.identity()));
 
     while (providerIdIterator.hasNext() && (!useRequestedProviders || !requestedProviders
         .isEmpty())) {
@@ -276,7 +277,7 @@ public class OneDataServiceImpl implements OneDataService {
       boolean cloudServiceFound = cloudService != null;
       if (cloudServiceFound) {
         oneDataProviderInfobuilder
-            .cloudProviderId(cloudService.getData().getProviderId())
+            .cloudProviderId(cloudService.getProviderId())
             .cloudServiceId(cloudService.getId());
       }
 

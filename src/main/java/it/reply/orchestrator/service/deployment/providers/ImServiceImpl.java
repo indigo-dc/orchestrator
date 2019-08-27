@@ -39,10 +39,10 @@ import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
-import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
+import it.reply.orchestrator.dto.cmdb.ComputeService;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
-import it.reply.orchestrator.dto.workflow.CloudProvidersOrderedIterator;
+import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
@@ -153,9 +153,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       accessToken = oauth2TokenService.getAccessToken(requestedWithToken);
     }
     toscaService.addElasticClusterParameters(ar, deployment.getId(), accessToken);
-    CloudProvider cloudProvider = deploymentMessage.getCloudProvidersOrderedIterator().current();
-    toscaService.contextualizeAndReplaceImages(ar, cloudProvider,
-        chosenCloudProviderEndpoint.getCpComputeServiceId(), DeploymentProvider.IM);
+    ComputeService computeService = deploymentMessage
+        .getCloudServicesOrderedIterator()
+        .currentService(ComputeService.class);
+    toscaService.contextualizeAndReplaceImages(ar, computeService, DeploymentProvider.IM);
     String imCustomizedTemplate = toscaService.getTemplateFromTopology(ar);
 
     List<CloudProviderEndpoint> cloudProviderEndpoints =
@@ -263,7 +264,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   @Override
   public void cleanFailedDeploy(DeploymentMessage deploymentMessage) {
-    CloudProvidersOrderedIterator iterator = deploymentMessage.getCloudProvidersOrderedIterator();
+    CloudServicesOrderedIterator iterator = deploymentMessage.getCloudServicesOrderedIterator();
     boolean isLastProvider = !iterator.hasNext();
     boolean isKeepLastAttempt = deploymentMessage.isKeepLastAttempt();
     LOG.info("isLastProvider: {} and isKeepLastAttempt: {}", isLastProvider, isKeepLastAttempt);
@@ -449,10 +450,11 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       }
     });
 
-    CloudProvider cloudProvider = deploymentMessage.getCloudProvidersOrderedIterator().current();
+    ComputeService computeService = deploymentMessage
+        .getCloudServicesOrderedIterator()
+        .currentService(ComputeService.class);
 
-    toscaService.contextualizeAndReplaceImages(newAr, cloudProvider,
-        chosenCloudProviderEndpoint.getCpComputeServiceId(), DeploymentProvider.IM);
+    toscaService.contextualizeAndReplaceImages(newAr, computeService, DeploymentProvider.IM);
 
     // FIXME: There's not check if the Template actually changed!
     deployment.setTemplate(toscaService.updateTemplate(template));

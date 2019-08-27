@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,40 +14,50 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.dto.cmdb;
+package it.reply.orchestrator.dto.ranker;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.PaaSMetric;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.validation.constraints.NotNull;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Builder
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public class MesosFrameworkServiceData<T extends MesosFrameworkServiceProperties> extends
-    CloudServiceData {
+public class MonitoringService {
 
+  @JsonProperty("service_id")
   @NonNull
   @NotNull
-  private T properties;
+  private String serviceId;
 
-  public MesosFrameworkServiceData(
-      @NonNull String serviceType,
-      @NonNull String endpoint,
-      @NonNull String providerId,
-      @NonNull Type type,
-      boolean publicService,
-      @Nullable String region,
-      @NonNull String hostname,
-      @NonNull T properties) {
-    super(serviceType, endpoint, providerId, type, publicService, region, hostname);
-    this.properties = properties;
+  @JsonProperty("parent_service_id")
+  @Nullable
+  private String parentServiceId;
+
+  @JsonProperty("type")
+  @NonNull
+  @NotNull
+  private String type;
+
+  @JsonProperty("metrics")
+  @Builder.Default
+  private List<PaaSMetric> metrics = new ArrayList<>();
+
+  @Deprecated
+  protected MonitoringService() {
+    metrics = new ArrayList<>();
   }
 }

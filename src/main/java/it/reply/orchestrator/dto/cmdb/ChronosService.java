@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,15 +16,11 @@
 
 package it.reply.orchestrator.dto.cmdb;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
-import it.reply.orchestrator.dto.cmdb.MarathonServiceData.MarathonServiceProperties;
+import it.reply.orchestrator.dto.cmdb.ChronosService.ChronosServiceProperties;
 import it.reply.orchestrator.utils.CommonUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-
-import javax.validation.constraints.NotNull;
 
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -38,46 +34,34 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class MarathonServiceData extends MesosFrameworkServiceData<MarathonServiceProperties> {
+public class ChronosService extends MesosFrameworkService<ChronosServiceProperties> {
 
-  @Builder(builderMethodName = "marathonBuilder")
-  public MarathonServiceData(
+  @Builder(builderMethodName = "chronosBuilder")
+  public ChronosService(
+      @NonNull String id,
       @NonNull String serviceType,
       @NonNull String endpoint,
       @NonNull String providerId,
-      @NonNull Type type,
+      @NonNull CloudServiceType type,
       boolean publicService,
       @Nullable String region,
       @NonNull String hostname,
-      @NonNull MarathonServiceProperties properties) {
-    super(serviceType, endpoint, providerId, type, publicService, region, hostname, properties);
+      @NonNull ChronosServiceProperties properties) {
+    super(id, serviceType, endpoint, providerId, type, publicService, region, hostname, properties);
   }
 
   @Data
   @EqualsAndHashCode(callSuper = true)
-  public static class MarathonServiceProperties extends MesosFrameworkServiceProperties {
-
-    @NonNull
-    @NotNull
-    @Builder.Default
-    @JsonProperty("load_balancer_ips")
-    private List<String> loadBalancerIps = new ArrayList<>();
+  @NoArgsConstructor(access = AccessLevel.PROTECTED)
+  public static class ChronosServiceProperties extends MesosFrameworkServiceProperties {
 
     @Builder
-    protected MarathonServiceProperties(
+    public ChronosServiceProperties(
         @Nullable String localVolumesHostBasePath,
         boolean gpuSupport,
-        @NonNull List<String> persistentStorageDrivers,
-        @NonNull List<String> loadBalancerIps) {
-      super(localVolumesHostBasePath, gpuSupport,
-          CommonUtils.notNullOrDefaultValue(persistentStorageDrivers, ArrayList::new));
-      this.loadBalancerIps = CommonUtils.notNullOrDefaultValue(loadBalancerIps, ArrayList::new);
+        @NonNull List<String> persistentStorageDrivers) {
+      super(localVolumesHostBasePath, gpuSupport, CommonUtils
+          .notNullOrDefaultValue(persistentStorageDrivers, ArrayList::new));
     }
-
-    @Deprecated
-    protected MarathonServiceProperties() {
-      loadBalancerIps = new ArrayList<>();
-    }
-
   }
 }

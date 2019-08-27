@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package it.reply.orchestrator.dto.deployment;
 
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.onedata.OneData;
-import it.reply.orchestrator.dto.workflow.CloudProvidersOrderedIterator;
+import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -72,7 +72,7 @@ public class DeploymentMessage extends BaseWorkflowMessage {
   private boolean skipPollInterval;
 
   @Nullable
-  private CloudProvidersOrderedIterator cloudProvidersOrderedIterator;
+  private CloudServicesOrderedIterator cloudServicesOrderedIterator;
 
   @Nullable
   private CloudProviderEndpoint chosenCloudProviderEndpoint;

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,26 +14,45 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.dto.workflow;
+package it.reply.orchestrator.dto.ranker;
 
-import it.reply.orchestrator.dto.CloudProvider;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.List;
+import javax.validation.constraints.NotNull;
 
 import lombok.AccessLevel;
-import lombok.EqualsAndHashCode;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
+@Data
+@Builder
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@ToString(callSuper = true)
-@EqualsAndHashCode(callSuper = true)
-public class CloudProvidersOrderedIterator extends WorkflowListIterator<CloudProvider> {
+public class RankedCloudService {
 
-  public CloudProvidersOrderedIterator(@NonNull List<CloudProvider> items) {
-    super(items);
-  }
+  @NonNull
+  @NotNull
+  private String provider;
+
+  @NonNull
+  @NotNull
+  @JsonProperty("service_id")
+  private String serviceId;
+
+  private int rank;
+
+  private boolean ranked;
+
+  @JsonProperty("total_score")
+  private float totalScore;
+
+  @Nullable
+  @JsonProperty("error_reason")
+  private String errorReason;
 
 }

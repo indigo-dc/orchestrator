@@ -41,10 +41,11 @@ import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
-import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
+import it.reply.orchestrator.dto.cmdb.ComputeService;
+import it.reply.orchestrator.dto.cmdb.CloudServiceType;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
-import it.reply.orchestrator.dto.workflow.CloudProvidersOrderedIterator;
+import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
@@ -84,6 +85,7 @@ import junitparams.Parameters;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static it.reply.orchestrator.dto.cmdb.CloudService.OPENSTACK_COMPUTE_SERVICE;
 import static org.mockito.Mockito.*;
 
 @RunWith(JUnitParamsRunner.class)
@@ -164,11 +166,20 @@ public class ImServiceTest {
     Deployment deployment = ControllerTestUtils.createDeployment(2);
     deployment.setDeploymentProvider(DeploymentProvider.IM);
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
-    CloudProvidersOrderedIterator cpi = new CloudProvidersOrderedIterator(Lists.newArrayList(
-        CloudProvider.builder().id("cloud-provider-id").build()
-    ));
-    cpi.next();
-    dm.setCloudProvidersOrderedIterator(cpi);
+
+    ComputeService cs = ComputeService
+        .computeBuilder()
+        .endpoint("http://example.com")
+        .providerId("cloud-provider-id-1")
+        .id("cloud-service-id-1")
+        .type(CloudServiceType.COMPUTE)
+        .endpoint("http://example.com")
+        .serviceType(OPENSTACK_COMPUTE_SERVICE)
+        .hostname("example.com")
+        .build();
+    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(cs));
+    csi.next();
+    dm.setCloudServicesOrderedIterator(csi);
 
     String infrastructureId = UUID.randomUUID().toString();
     InfrastructureUri infrastructureUri =
@@ -202,11 +213,19 @@ public class ImServiceTest {
     deployment.setDeploymentProvider(DeploymentProvider.IM);
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
 
-    CloudProvidersOrderedIterator cpi = new CloudProvidersOrderedIterator(Lists.newArrayList(
-        CloudProvider.builder().id("cloud-provider-id").build()
-    ));
-    cpi.next();
-    dm.setCloudProvidersOrderedIterator(cpi);
+    ComputeService cs = ComputeService
+        .computeBuilder()
+        .endpoint("http://example.com")
+        .providerId("cloud-provider-id-1")
+        .id("cloud-service-id-1")
+        .type(CloudServiceType.COMPUTE)
+        .endpoint("http://example.com")
+        .serviceType(OPENSTACK_COMPUTE_SERVICE)
+        .hostname("example.com")
+        .build();
+    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(cs));
+    csi.next();
+    dm.setCloudServicesOrderedIterator(csi);
 
     InfrastructureUri infrastructureUri =
         new InfrastructureUri("http://localhost:8080/infrastructures/");
@@ -250,10 +269,10 @@ public class ImServiceTest {
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
     dm.setKeepLastAttempt(isKeepLastAttempt);
 
-    CloudProvidersOrderedIterator cpi = mock(CloudProvidersOrderedIterator.class);
-    Mockito.when(cpi.hasNext()).thenReturn(!isLastProvider);
+    CloudServicesOrderedIterator csi = mock(CloudServicesOrderedIterator.class);
+    Mockito.when(csi.hasNext()).thenReturn(!isLastProvider);
 
-    dm.setCloudProvidersOrderedIterator(cpi);
+    dm.setCloudServicesOrderedIterator(csi);
 
     Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
 
@@ -272,11 +291,19 @@ public class ImServiceTest {
     deployment.setDeploymentProvider(DeploymentProvider.IM);
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
 
-    CloudProvidersOrderedIterator cpi = new CloudProvidersOrderedIterator(Lists.newArrayList(
-        CloudProvider.builder().id("cloud-provider-id").build()
-    ));
-    cpi.next();
-    dm.setCloudProvidersOrderedIterator(cpi);
+    ComputeService cs = ComputeService
+        .computeBuilder()
+        .endpoint("http://example.com")
+        .providerId("cloud-provider-id-1")
+        .id("cloud-service-id-1")
+        .type(CloudServiceType.COMPUTE)
+        .endpoint("http://example.com")
+        .serviceType(OPENSTACK_COMPUTE_SERVICE)
+        .hostname("example.com")
+        .build();
+    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(cs));
+    csi.next();
+    dm.setCloudServicesOrderedIterator(csi);
 
     ArchiveRoot ar = new ArchiveRoot();
     ImClientErrorException imException =
@@ -709,11 +736,19 @@ public class ImServiceTest {
     deployment.setDeploymentProvider(DeploymentProvider.IM);
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
 
-    CloudProvidersOrderedIterator cpi = new CloudProvidersOrderedIterator(Lists.newArrayList(
-        CloudProvider.builder().id("cloud-provider-id").build()
-    ));
-    cpi.next();
-    dm.setCloudProvidersOrderedIterator(cpi);
+    ComputeService cs = ComputeService
+        .computeBuilder()
+        .endpoint("http://example.com")
+        .providerId("cloud-provider-id-1")
+        .id("cloud-service-id-1")
+        .type(CloudServiceType.COMPUTE)
+        .endpoint("http://example.com")
+        .serviceType(OPENSTACK_COMPUTE_SERVICE)
+        .hostname("example.com")
+        .build();
+    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(cs));
+    csi.next();
+    dm.setCloudServicesOrderedIterator(csi);
 
     String infrastructureId = UUID.randomUUID().toString();
     InfrastructureUri infrastructureUri =
@@ -768,11 +803,19 @@ public class ImServiceTest {
     deployment.setDeploymentProvider(DeploymentProvider.IM);
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
 
-    CloudProvidersOrderedIterator cpi = new CloudProvidersOrderedIterator(Lists.newArrayList(
-        CloudProvider.builder().id("cloud-provider-id").build()
-    ));
-    cpi.next();
-    dm.setCloudProvidersOrderedIterator(cpi);
+    ComputeService cs = ComputeService
+        .computeBuilder()
+        .endpoint("http://example.com")
+        .providerId("cloud-provider-id-1")
+        .id("cloud-service-id-1")
+        .type(CloudServiceType.COMPUTE)
+        .endpoint("http://example.com")
+        .serviceType(OPENSTACK_COMPUTE_SERVICE)
+        .hostname("example.com")
+        .build();
+    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(cs));
+    csi.next();
+    dm.setCloudServicesOrderedIterator(csi);
 
     String infrastructureId = UUID.randomUUID().toString();
     InfrastructureUri infrastructureUri =
