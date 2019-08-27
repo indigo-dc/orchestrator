@@ -21,8 +21,9 @@ import alien4cloud.tosca.parser.ParsingException;
 import alien4cloud.tosca.parser.ParsingResult;
 
 import it.reply.orchestrator.dal.entity.Resource;
-import it.reply.orchestrator.dto.CloudProvider;
-import it.reply.orchestrator.dto.cmdb.ImageData;
+import it.reply.orchestrator.dto.cmdb.ComputeService;
+import it.reply.orchestrator.dto.cmdb.Flavor;
+import it.reply.orchestrator.dto.cmdb.Image;
 import it.reply.orchestrator.dto.dynafed.Dynafed;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.policies.ToscaPolicy;
@@ -82,11 +83,11 @@ public interface ToscaService {
    *          the deployment provider.
    * @param parsingResult
    *          the in-memory TOSCA template.
-   * @param cloudProvider
-   *          the chosen cloud provider data.
+   * @param computeService
+   *          the chosen cloud compute service data.
    */
-  public void contextualizeAndReplaceImages(ArchiveRoot parsingResult, CloudProvider cloudProvider,
-      String cloudServiceId, DeploymentProvider deploymentProvider);
+  public void contextualizeAndReplaceImages(ArchiveRoot parsingResult,
+      ComputeService computeService, DeploymentProvider deploymentProvider);
 
   /**
    * Find matches for images data in 'tosca.capabilities.indigo.OperatingSystem' capabilities in the
@@ -94,13 +95,11 @@ public interface ToscaService {
    * 
    * @param parsingResult
    *          the in-memory TOSCA template.
-   * @param cloudProvider
-   *          the chosen cloud provider data.
-   * @param cloudServiceId
-   *          the cloud service of the cloud provider to search for.
+   * @param computeService
+   *          the chosen cloud compute service data.
    */
-  public Map<Boolean, Map<NodeTemplate, ImageData>> contextualizeImages(ArchiveRoot parsingResult,
-      CloudProvider cloudProvider, String cloudServiceId);
+  public Map<Boolean, Map<NodeTemplate, Image>> contextualizeImages(ArchiveRoot parsingResult,
+      ComputeService computeService);
 
   /**
    * Verifies that all the template's required inputs are present in the user's input list.
@@ -250,7 +249,7 @@ public interface ToscaService {
 
   public Collection<NodeTemplate> getNodesOfType(ArchiveRoot archiveRoot, String type);
 
-  public Map<NodeTemplate, ImageData> extractImageRequirements(ArchiveRoot parsingResult);
+  public Map<NodeTemplate, Image> extractImageRequirements(ArchiveRoot parsingResult);
 
   boolean isOfToscaType(NodeTemplate node, String nodeType);
 
@@ -259,5 +258,14 @@ public interface ToscaService {
   void removeRemovalList(NodeTemplate node);
 
   boolean isScalable(NodeTemplate nodeTemplate);
+
+  public Map<NodeTemplate, Flavor> extractFlavorRequirements(ArchiveRoot parsingResult);
+
+  public Map<Boolean, Map<NodeTemplate, Flavor>> contextualizeFlavors(ArchiveRoot parsingResult,
+      ComputeService computeService);
+
+  public void contextualizeAndReplaceFlavors(ArchiveRoot parsingResult,
+      ComputeService computeService,
+      DeploymentProvider deploymentProvider);
 
 }

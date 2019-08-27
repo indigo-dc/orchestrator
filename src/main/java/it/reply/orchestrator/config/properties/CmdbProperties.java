@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ public class CmdbProperties {
 
   @NotNull
   @NonNull
-  private String providerByIdPath = "/provider/id/{providerId}";
+  private String providerByIdPath = "/provider/id/{providerId}?include_docs=true";
 
   @NotNull
   @NonNull
@@ -48,7 +48,7 @@ public class CmdbProperties {
 
   @NotNull
   @NonNull
-  private String serviceByIdPath = "/service/id/{serviceId}";
+  private String serviceByIdPath = "/service/id/{serviceId}?include_docs=true";
 
   @NotNull
   @NonNull
@@ -57,6 +57,6 @@ public class CmdbProperties {
 
   @NotNull
   @NonNull
-  private String imageByIdPath = "/image/id/{imageId}";
+  private String imageByIdPath = "/image/id/{imageId}?include_docs=true";
 
 }

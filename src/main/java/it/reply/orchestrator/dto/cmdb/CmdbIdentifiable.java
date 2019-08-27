@@ -14,32 +14,14 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.config.properties;
-
-import java.net.URI;
-
-import javax.validation.constraints.NotNull;
-
-import lombok.Data;
-import lombok.NoArgsConstructor;
+package it.reply.orchestrator.dto.cmdb;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.validation.annotation.Validated;
 
-@Validated
-@Data
-@ConfigurationProperties(prefix = "monitoring")
-@NoArgsConstructor
-public class MonitoringProperties {
+public interface CmdbIdentifiable {
 
-  @NotNull
   @NonNull
-  private URI url;
+  String getId();
 
-  @NotNull
-  @NonNull
-  private String providerMetricsPath =
-      "/monitoring/adapters/zabbix/zones/indigo/types/infrastructure/groups/{cloudProviderName}";
-
+  void setId(@NonNull String id);
 }

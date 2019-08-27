@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package it.reply.orchestrator.service;
 
 import it.reply.orchestrator.config.properties.CprProperties;
 import it.reply.orchestrator.dto.ranker.CloudProviderRankerRequest;
-import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
+import it.reply.orchestrator.dto.ranker.RankedCloudService;
 import it.reply.orchestrator.exception.service.DeploymentException;
 
 import java.net.URI;
@@ -39,8 +39,8 @@ import org.springframework.web.client.RestTemplate;
 @EnableConfigurationProperties(CprProperties.class)
 public class CloudProviderRankerServiceImpl implements CloudProviderRankerService {
 
-  private static final ParameterizedTypeReference<List<RankedCloudProvider>> RESPONSE_TYPE =
-      new ParameterizedTypeReference<List<RankedCloudProvider>>() {
+  private static final ParameterizedTypeReference<List<RankedCloudService>> RESPONSE_TYPE =
+      new ParameterizedTypeReference<List<RankedCloudService>>() {
       };
 
   private CprProperties cprProperties;
@@ -54,8 +54,8 @@ public class CloudProviderRankerServiceImpl implements CloudProviderRankerServic
   }
 
   @Override
-  public List<RankedCloudProvider>
-      getProviderRanking(CloudProviderRankerRequest cloudProviderRankerRequest) {
+  public List<RankedCloudService> getProviderServicesRanking(
+      CloudProviderRankerRequest cloudProviderRankerRequest) {
 
     URI requestUri = UriBuilder
         .fromUri(cprProperties.getUrl() + cprProperties.getRankPath())

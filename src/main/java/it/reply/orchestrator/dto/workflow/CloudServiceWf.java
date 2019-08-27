@@ -14,32 +14,31 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.config.properties;
+package it.reply.orchestrator.dto.workflow;
 
-import java.net.URI;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import it.reply.orchestrator.dto.cmdb.CloudService;
 
 import javax.validation.constraints.NotNull;
 
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.validation.annotation.Validated;
 
-@Validated
 @Data
-@ConfigurationProperties(prefix = "monitoring")
-@NoArgsConstructor
-public class MonitoringProperties {
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
+@AllArgsConstructor
+@Builder
+public class CloudServiceWf {
 
-  @NotNull
+  @JsonProperty("cloud_service")
   @NonNull
-  private URI url;
-
   @NotNull
-  @NonNull
-  private String providerMetricsPath =
-      "/monitoring/adapters/zabbix/zones/indigo/types/infrastructure/groups/{cloudProviderName}";
+  private CloudService cloudService;
 
 }

@@ -35,7 +35,8 @@ import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
-import it.reply.orchestrator.dto.cmdb.ChronosServiceData.ChronosServiceProperties;
+import it.reply.orchestrator.dto.cmdb.ChronosService;
+import it.reply.orchestrator.dto.cmdb.ChronosService.ChronosServiceProperties;
 import it.reply.orchestrator.dto.deployment.ChronosJobsOrderedIterator;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.mesos.MesosContainer;
@@ -448,8 +449,9 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
             resource -> toscaService.isOfToscaType(resource, ToscaConstants.Nodes.Types.CHRONOS))
         .collect(Collectors.toMap(Resource::getToscaNodeName, res -> res));
 
-    ChronosServiceProperties chronosProperties = chronosClientFactory
-        .getFrameworkProperties(deploymentMessage)
+    ChronosServiceProperties chronosProperties = deploymentMessage
+        .getCloudServicesOrderedIterator()
+        .currentService(ChronosService.class)
         .getProperties();
     
     LinkedHashMap<String, ChronosJob> jobs = new LinkedHashMap<>();

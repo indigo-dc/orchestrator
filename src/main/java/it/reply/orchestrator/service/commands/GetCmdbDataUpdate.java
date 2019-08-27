@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,17 @@
 package it.reply.orchestrator.service.commands;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import it.reply.orchestrator.dal.entity.Deployment;
-import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
+import it.reply.orchestrator.dto.cmdb.CloudProvider;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
-import it.reply.orchestrator.dto.workflow.CloudProvidersOrderedIterator;
+import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.service.CmdbService;
 import it.reply.orchestrator.utils.WorkflowConstants;
+
+import java.util.Set;
 
 import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,19 +43,15 @@ public class GetCmdbDataUpdate extends BaseDeployCommand {
   public void execute(DelegateExecution execution, DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
     CloudProviderEndpoint cloudProviderEndpoint = deployment.getCloudProviderEndpoint();
-    CloudProvider cloudProvider = CloudProvider
-        .builder()
-        .id(deployment.getCloudProviderName())
-        .build();
-    cloudProvider
-        .getCmdbProviderServices()
-        .put(cloudProviderEndpoint.getCpComputeServiceId(), null);
-    cmdbService.fillCloudProviderInfo(cloudProvider);
+    String cloudProviderId = deployment.getCloudProviderName();
+    Set<String> serviceWithSla = Sets.newHashSet(cloudProviderEndpoint.getCpComputeServiceId());
+    CloudProvider cloudProvider = cmdbService
+        .fillCloudProviderInfo(cloudProviderId, serviceWithSla);
 
-    CloudProvidersOrderedIterator cloudProvidersOrderedIterator =
-        new CloudProvidersOrderedIterator(Lists.newArrayList(cloudProvider));
-    cloudProvidersOrderedIterator.next();
-    deploymentMessage.setCloudProvidersOrderedIterator(cloudProvidersOrderedIterator);
+    CloudServicesOrderedIterator cloudServicesOrderedIterator =
+        new CloudServicesOrderedIterator(Lists.newArrayList(cloudProvider.getServices().values()));
+    cloudServicesOrderedIterator.next();
+    deploymentMessage.setCloudServicesOrderedIterator(cloudServicesOrderedIterator);
     deploymentMessage.setChosenCloudProviderEndpoint(cloudProviderEndpoint);
   }
 

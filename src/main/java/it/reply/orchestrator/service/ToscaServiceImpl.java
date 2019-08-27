@@ -39,11 +39,10 @@ import com.google.common.io.ByteStreams;
 
 import it.reply.orchestrator.config.properties.OrchestratorProperties;
 import it.reply.orchestrator.dal.entity.Resource;
-import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudService;
-import it.reply.orchestrator.dto.cmdb.ImageData;
-import it.reply.orchestrator.dto.cmdb.ImageData.ImageDataBuilder;
-import it.reply.orchestrator.dto.cmdb.Type;
+import it.reply.orchestrator.dto.cmdb.ComputeService;
+import it.reply.orchestrator.dto.cmdb.Image;
+import it.reply.orchestrator.dto.cmdb.Image.ImageBuilder;
 import it.reply.orchestrator.dto.dynafed.Dynafed;
 import it.reply.orchestrator.dto.dynafed.Dynafed.DynafedBuilder;
 import it.reply.orchestrator.dto.onedata.OneData;
@@ -86,6 +85,7 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -94,7 +94,10 @@ import java.util.zip.ZipOutputStream;
 
 import javax.annotation.PostConstruct;
 import javax.validation.ValidationException;
+import javax.validation.constraints.NotNull;
 
+import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import org.alien4cloud.tosca.catalog.ArchiveParser;
@@ -363,10 +366,11 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
-  public void contextualizeAndReplaceImages(ArchiveRoot parsingResult, CloudProvider cloudProvider,
-      String cloudServiceId, DeploymentProvider deploymentProvider) {
-    Map<Boolean, Map<NodeTemplate, ImageData>> contextualizedImages =
-        contextualizeImages(parsingResult, cloudProvider, cloudServiceId);
+  public void contextualizeAndReplaceImages(ArchiveRoot parsingResult,
+      ComputeService computeService,
+      DeploymentProvider deploymentProvider) {
+    Map<Boolean, Map<NodeTemplate, Image>> contextualizedImages =
+        contextualizeImages(parsingResult, computeService);
     Preconditions.checkState(contextualizedImages.get(Boolean.FALSE).isEmpty(),
         "Error contextualizing images; images for nodes %s couldn't be contextualized",
         contextualizedImages
@@ -375,13 +379,13 @@ public class ToscaServiceImpl implements ToscaService {
             .stream()
             .map(NodeTemplate::getName)
             .collect(Collectors.toList()));
-    replaceImage(contextualizedImages.get(Boolean.TRUE), cloudProvider, deploymentProvider);
+    replaceImage(contextualizedImages.get(Boolean.TRUE), computeService, deploymentProvider);
   }
 
   @Override
-  public Map<NodeTemplate, ImageData> extractImageRequirements(ArchiveRoot parsingResult) {
+  public Map<NodeTemplate, Image> extractImageRequirements(ArchiveRoot parsingResult) {
 
-    Map<String, Function<ImageDataBuilder, Function<String, ImageDataBuilder>>> 
+    Map<String, Function<ImageBuilder, Function<String, ImageBuilder>>>
         capabilityPropertiesMapping = new HashMap<>();
 
     capabilityPropertiesMapping.put("image",
@@ -403,7 +407,7 @@ public class ToscaServiceImpl implements ToscaService {
     return getNodesOfType(parsingResult, ToscaConstants.Nodes.Types.COMPUTE)
         .stream()
         .map(node -> {
-          ImageDataBuilder imageMetadataBuilder = ImageData.builder();
+          ImageBuilder imageMetadataBuilder = Image.builder();
           this.getNodeCapabilityByName(node, OS_CAPABILITY_NAME)
               .ifPresent(osCapability -> {
                 // We've got an OS capability -> Check the attributes to find best match for the
@@ -423,33 +427,32 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
-  public Map<Boolean, Map<NodeTemplate, ImageData>> contextualizeImages(ArchiveRoot parsingResult,
-      CloudProvider cloudProvider, String cloudServiceId) {
+  public Map<Boolean, Map<NodeTemplate, Image>> contextualizeImages(ArchiveRoot parsingResult,
+      ComputeService computeService) {
     try {
       return extractImageRequirements(parsingResult).entrySet().stream().map(entry -> {
         NodeTemplate node = entry.getKey();
-        ImageData imageMetadata = entry.getValue();
+        Image imageMetadata = entry.getValue();
 
-        final Optional<ImageData> image;
+        final Optional<Image> image;
         // TODO FILTER ON DEPLOYMENT PROVIDER?
         if (isImImageUri(imageMetadata.getImageName())) {
           image = Optional.of(imageMetadata);
         } else {
-          List<ImageData> images = cloudProvider.getCmdbProviderImages()
-              .getOrDefault(cloudServiceId, Collections.emptyList());
+          List<Image> images = computeService.getImages();
           image = getBestImageForCloudProvider(imageMetadata, images);
         }
 
         if (image.isPresent()) {
           // Found a good image -> replace the image attribute with the provider-specific ID
           LOG.debug(
-              "Found image match in <{}> for image metadata <{}>"
+              "Found image match in provider <{}> for image metadata <{}>"
                   + ", provider-specific image id <{}>",
-              cloudProvider.getId(), imageMetadata, image.get().getImageId());
+              computeService.getProviderId(), imageMetadata, image.get().getImageId());
         } else {
           // No image match found -> throw error
           LOG.debug("Failed to found a match in provider <{}> for image metadata <{}>",
-              cloudProvider.getId(), imageMetadata);
+              computeService.getProviderId(), imageMetadata);
         }
         return new SimpleEntry<>(node, image);
       }).collect(Collectors.partitioningBy(entry -> entry.getValue().isPresent(),
@@ -461,8 +464,8 @@ public class ToscaServiceImpl implements ToscaService {
     }
   }
 
-  private void replaceImage(Map<NodeTemplate, ImageData> contextualizedImages,
-      CloudProvider cloudProvider, DeploymentProvider deploymentProvider) {
+  private void replaceImage(Map<NodeTemplate, Image> contextualizedImages,
+      ComputeService cloudService, DeploymentProvider deploymentProvider) {
     contextualizedImages.forEach((node, image) -> {
       Map<String, Capability> capabilities =
           Optional.ofNullable(node.getCapabilities()).orElseGet(() -> {
@@ -482,7 +485,7 @@ public class ToscaServiceImpl implements ToscaService {
         if (isImImageUri(image.getImageName())) {
           imageId = image.getImageName();
         } else {
-          imageId = generateImImageUri(cloudProvider, image);
+          imageId = generateImImageUri(cloudService, image);
         }
       }
       osCapability.getProperties().put("image", new ScalarPropertyValue(imageId));
@@ -508,64 +511,43 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Deprecated
-  private String generateImImageUri(CloudProvider cloudProvider, ImageData image) {
+  private String generateImImageUri(ComputeService cloudService, Image image) {
     try {
-      CloudService cs;
-      if (image.getService() != null
-          && cloudProvider.getCmdbProviderServices().get(image.getService()) != null) {
-        cs = cloudProvider.getCmdbProviderServices().get(image.getService());
-      } else {
-        if (cloudProvider.getCmbdProviderServicesByType(Type.COMPUTE).isEmpty()) {
+      if (image.getService() != null && !image.getService().equals(cloudService.getId())) {
+        throw new DeploymentException(
+            "Compute service " + cloudService + " doesn't match the image " + image);
+      }
+      String host = new URL(cloudService.getEndpoint()).getHost();
+      String imageId = image.getImageId();
+      switch (cloudService.getServiceType()) {
+        case CloudService.OPENSTACK_COMPUTE_SERVICE:
+        case CloudService.OTC_COMPUTE_SERVICE:
+          return String.format("ost://%s/%s", host, imageId);
+        case CloudService.OPENNEBULA_COMPUTE_SERVICE:
+        case CloudService.OPENNEBULA_TOSCA_SERVICE:
+          return String.format("one://%s/%s", host, imageId);
+        case CloudService.AWS_COMPUTE_SERVICE:
+          return String.format("aws://%s", host);
+        case CloudService.AZURE_COMPUTE_SERVICE:
+          return String.format("azr://%s", host);
+        default:
           throw new DeploymentException(
-              "No compute service available fo cloud provider " + cloudProvider.getId());
-        } else {
-          cs = cloudProvider.getCmbdProviderServicesByType(Type.COMPUTE).get(0);
-        }
+              "Unknown IaaSType of cloud service " + cloudService.getId());
       }
-      StringBuilder sb = new StringBuilder();
-
-      if (cs.isOpenStackComputeProviderService() || cs.isOtcComputeProviderService()) {
-        sb
-            .append("ost")
-            .append("://")
-            .append(new URL(cs.getData().getEndpoint()).getHost())
-            .append("/");
-      } else if (cs.isOpenNebulaComputeProviderService() || cs.isOpenNebulaToscaProviderService()) {
-        sb
-            .append("one")
-            .append("://")
-            .append(new URL(cs.getData().getEndpoint()).getHost())
-            .append("/");
-      } else if (cs.isOcciComputeProviderService()) {
-        // DO NOTHING ??
-      } else if (cs.isAwsComputeProviderService()) {
-        sb
-            .append("aws")
-            .append("://");
-      } else if (cs.isAzureComputeProviderService()) {
-        sb
-            .append("azr")
-            .append("://");
-      } else {
-        throw new DeploymentException("Unknown IaaSType of cloud provider " + cloudProvider);
-      }
-
-      sb.append(image.getImageId());
-      return sb.toString();
     } catch (RuntimeException | MalformedURLException ex) {
       LOG.error("Cannot retrieve Compute service host for IM image id generation", ex);
       return image.getImageId();
     }
   }
 
-  protected Optional<ImageData> getBestImageForCloudProvider(ImageData imageMetadata,
-      Collection<ImageData> images) {
+  protected Optional<Image> getBestImageForCloudProvider(Image imageMetadata,
+      Collection<Image> images) {
 
     // Match image name first (for INDIGO specific use case, if the image cannot be found with the
     // specified name it means that a base image + Ansible configuration have to be used -> the
     // base image will be chosen with the other filters and image metadata - architecture, type,
     // distro, version)
-    Optional<ImageData> imageFoundByName = findImageByName(imageMetadata, images);
+    Optional<Image> imageFoundByName = findImageByName(imageMetadata, images);
     if (imageFoundByName.isPresent()) {
       return imageFoundByName;
     } else {
@@ -573,12 +555,12 @@ public class ToscaServiceImpl implements ToscaService {
     }
   }
 
-  protected Optional<ImageData> findImageByName(ImageData requiredImageMetadata,
-      Collection<ImageData> cloudProviderServiceImages) {
+  protected Optional<Image> findImageByName(Image requiredImageMetadata,
+      Collection<Image> cloudProviderServiceImages) {
     String requiredImageName = requiredImageMetadata.getImageName();
     if (requiredImageName != null) {
       LOG.debug("Looking up images by name <{}>", requiredImageName);
-      Optional<ImageData> imageWithName = cloudProviderServiceImages
+      Optional<Image> imageWithName = cloudProviderServiceImages
           .stream()
           .filter(image -> requiredImageMetadata(requiredImageName, image.getImageName()))
           .findFirst();
@@ -616,25 +598,24 @@ public class ToscaServiceImpl implements ToscaService {
     return nameMatch && tagMatch;
   }
 
-  protected Optional<ImageData> findImageByFallbackFields(ImageData requiredImageMetadata,
-      Collection<ImageData> cloudProviderServiceImages) {
+  protected Optional<Image> findImageByFallbackFields(Image requiredImageMetadata,
+      Collection<Image> cloudProviderServiceImages) {
     LOG.debug("Looking up images by fallback metatada");
-    List<Function<ImageData, String>> fallbackFieldExtractors = Lists.newArrayList(
-        ImageData::getType,
-        ImageData::getArchitecture,
-        ImageData::getDistribution,
-        ImageData::getVersion);
+    ArrayList<Filter<Image, ?>> fallbackFieldExtractors = Lists.newArrayList(
+        new Filter<>(Image::getType, String::equalsIgnoreCase),
+        new Filter<>(Image::getArchitecture, String::equalsIgnoreCase),
+        new Filter<>(Image::getDistribution, String::equalsIgnoreCase),
+        new Filter<>(Image::getVersion, String::equalsIgnoreCase)
+    );
 
-    Stream<ImageData> imageStream = cloudProviderServiceImages.stream();
+    Stream<Image> imageStream = cloudProviderServiceImages.stream();
 
     boolean filteredOnSomeField = false;
-    for (Function<ImageData, String> fieldExtractor : fallbackFieldExtractors) {
-      String metadataField = fieldExtractor.apply(requiredImageMetadata);
-      if (metadataField != null) {
+    for (Filter<Image, ?> fieldExtractor : fallbackFieldExtractors) {
+      Stream<Image> newStream = fieldExtractor.filter(requiredImageMetadata, imageStream);
+      if (newStream != null) {
+        imageStream = newStream;
         filteredOnSomeField = true;
-        // if the field is populated for requiredImageMetadata, filter on it
-        imageStream = imageStream
-            .filter(image -> metadataField.equalsIgnoreCase(fieldExtractor.apply(image)));
       }
     }
 
@@ -644,7 +625,26 @@ public class ToscaServiceImpl implements ToscaService {
     } else {
       return imageStream.findFirst();
     }
-    
+  }
+
+  @AllArgsConstructor
+  @RequiredArgsConstructor
+  private static class Filter<O, T> {
+
+    @NonNull
+    @NotNull
+    private Function<O, T> extractor;
+
+    @NonNull
+    @NotNull
+    private BiFunction<T, T, Boolean> evaluator = Objects::equals;
+
+    public Stream<O> filter(O metadata, Stream<O> stream) {
+      return Optional
+          .ofNullable(extractor.apply(metadata))
+          .map(field -> stream.filter(element -> evaluator.apply(field, extractor.apply(element))))
+          .orElse(null);
+    }
   }
 
   private Collection<NodeTemplate> getNodesFromArchiveRoot(ArchiveRoot archiveRoot) {

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,7 @@ import feign.gson.GsonDecoder;
 import feign.gson.GsonEncoder;
 import feign.slf4j.Slf4jLogger;
 
-import it.reply.orchestrator.dto.cmdb.MarathonServiceData;
+import it.reply.orchestrator.dto.cmdb.MarathonService;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -54,7 +54,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 @Service
 public class MarathonClientFactory extends
-    MesosFrameworkClientFactory<MarathonServiceData, Marathon> {
+    MesosFrameworkClientFactory<MarathonService, Marathon> {
 
   private static class DeserializingMarathonErrorDecoder implements ErrorDecoder {
 
@@ -118,11 +118,6 @@ public class MarathonClientFactory extends
           .orElseGet(response::reason);
       return new MarathonException(response.status(), message);
     }
-  }
-
-  @Override
-  protected String getFrameworkName() {
-    return "Marathon";
   }
 
   @Override
