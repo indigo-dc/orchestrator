@@ -17,6 +17,7 @@
 package it.reply.orchestrator.service.security;
 
 import it.reply.orchestrator.config.properties.OidcProperties;
+import it.reply.orchestrator.config.properties.OidcProperties.IamProperties;
 import it.reply.orchestrator.exception.OrchestratorException;
 
 import java.util.Optional;
@@ -101,10 +102,11 @@ public class OAuth2ConfigurationsService {
    */
   public String getAudience(String issuer) {
     oidcProperties.throwIfSecurityDisabled();
-    return Optional
-        .ofNullable(oidcProperties.getIamConfiguration(issuer).get().getAudience())
+    return oidcProperties
+        .getIamConfiguration(issuer)
+        .map(IamProperties::getAudience)
         .orElseThrow(() -> new OrchestratorException(
-            "No audience configuration found for IAM with iss" + issuer));    
+            "No audience configuration found for IAM with iss" + issuer));
   }
 
 }

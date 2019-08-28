@@ -101,7 +101,6 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
       for (Entry<String, IamProperties> iamConfigurationEntry : iamProperties.entrySet()) {
         String issuer = iamConfigurationEntry.getKey();
         IamProperties iamConfiguration = iamConfigurationEntry.getValue();
-        
         ScopedOidcClientProperties orchestratorConfiguration = iamConfiguration.getOrchestrator();
         Assert.notNull(orchestratorConfiguration,
             "Orchestrator OAuth2 client for issuer " + issuer + " must be provided");

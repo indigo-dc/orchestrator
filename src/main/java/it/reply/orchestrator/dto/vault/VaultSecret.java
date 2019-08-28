@@ -16,16 +16,17 @@
 
 package it.reply.orchestrator.dto.vault;
 
+import javax.validation.constraints.NotNull;
+
+import lombok.Data;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
+
+@Data
 public class VaultSecret {
 
-  String value;
+  @NotNull
+  @NonNull
+  private String value;
 
-  public String getValue() {
-    return value;
-  }
-
-  public VaultSecret setValue(String value) {
-    this.value = value;
-    return this;
-  }
 }  

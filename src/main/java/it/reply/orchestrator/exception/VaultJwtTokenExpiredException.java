@@ -18,14 +18,15 @@ package it.reply.orchestrator.exception;
 
 import org.springframework.vault.VaultException;
 
-@SuppressWarnings("serial")
-public class VaultTokenExpiredException extends VaultException {
+public class VaultJwtTokenExpiredException extends VaultException {
 
-  public VaultTokenExpiredException(String msg) {
+  private static final long serialVersionUID = 1L;
+
+  public VaultJwtTokenExpiredException(String msg) {
     super(msg);
   }
 
-  public VaultTokenExpiredException(String msg, Throwable cause) {
+  public VaultJwtTokenExpiredException(String msg, Throwable cause) {
     super(msg, cause);
   }
 }

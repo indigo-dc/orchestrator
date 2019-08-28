@@ -30,6 +30,7 @@ import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.vault.authentication.TokenAuthentication;
 import org.springframework.vault.support.VaultResponse;
 
 import it.reply.orchestrator.Application;
@@ -55,9 +56,9 @@ public class VaultServiceTest {
   
   @Test
   public void testReadSecret() {
-    String token = "s.DQSf698xaTFLtBCY9bG2QdhI";
+    TokenAuthentication token = new TokenAuthentication("s.DQSf698xaTFLtBCY9bG2QdhI");
     String spath = "secret/private/marathon/11e9a30f-f358-0741-a6d8-024283ff312b/password";
-    VaultSecret mypass = (new VaultSecret()).setValue("mypass");
+    VaultSecret mypass = new VaultSecret("mypass");
     
     Mockito.when(vaultService.readSecret(token, spath, VaultSecret.class)).thenReturn(mypass);
 
@@ -66,9 +67,9 @@ public class VaultServiceTest {
   
   @Test
   public void testWriteSecret() {
-    String token = "s.DQSf698xaTFLtBCY9bG2QdhI";
+    TokenAuthentication token = new TokenAuthentication("s.DQSf698xaTFLtBCY9bG2QdhI");
     String spath = "secret/private/marathon/11e9a30f-f358-0741-a6d8-024283ff312b/password";
-    VaultSecret mypass = (new VaultSecret()).setValue("mypass");
+    VaultSecret mypass = new VaultSecret("mypass");
     VaultResponse response = new VaultResponse();
 
     Mockito.when(vaultService.writeSecret(token, spath, mypass)).thenReturn(response);
@@ -80,7 +81,7 @@ public class VaultServiceTest {
   @Test
   public void testListSecrets() {
 
-    String token = "s.DQSf698xaTFLtBCY9bG2QdhI";
+    TokenAuthentication token = new TokenAuthentication("s.DQSf698xaTFLtBCY9bG2QdhI");
     String spath = "secret/private/marathon/11e9a30f-f358-0741-a6d8-024283ff312b";
     List<String> depentries = Arrays.asList("mypass");
 
@@ -94,9 +95,9 @@ public class VaultServiceTest {
   
   @Test
   public void testDeleteSecret() {
-    String token = "s.DQSf698xaTFLtBCY9bG2QdhI";
+    TokenAuthentication token = new TokenAuthentication("s.DQSf698xaTFLtBCY9bG2QdhI");
     String spath = "secret/private/marathon/11e9a30f-f358-0741-a6d8-024283ff312b/password";
-    VaultSecret mypass = (new VaultSecret()).setValue("mypass");
+    VaultSecret mypass = new VaultSecret("mypass");
     vaultService.deleteSecret(token, spath + "/" + mypass.getValue());    
   }
 

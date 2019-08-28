@@ -16,23 +16,28 @@
 
 package it.reply.orchestrator.service;
 
-import java.io.IOException;
+import it.reply.orchestrator.dal.entity.OidcTokenId;
+
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.vault.authentication.ClientAuthentication;
+import org.springframework.vault.authentication.TokenAuthentication;
 import org.springframework.vault.support.VaultResponse;
 
 public interface VaultService {
 
-  public VaultResponse writeSecret(String token, String path, Object secret);
+  public VaultResponse writeSecret(ClientAuthentication token, String path, Object secret);
 
-  public <T> T readSecret(String token, String path, Class<T> type);
+  public <T> T readSecret(ClientAuthentication token, String path, Class<T> type);
 
-  public Map<String,Object> readSecret(String token, String path);
+  public Map<String, Object> readSecret(ClientAuthentication token, String path);
 
-  public void deleteSecret(String token, String path);
+  public void deleteSecret(ClientAuthentication token, String path);
 
-  public List<String> listSecrets(String token, String path);
+  public List<String> listSecrets(ClientAuthentication token, String path);
 
-  public String retrieveToken(String accessToken) throws IOException;
+  public TokenAuthentication retrieveToken(String accessToken);
+
+  public TokenAuthentication retrieveToken(OidcTokenId oidcTokenId);
 }

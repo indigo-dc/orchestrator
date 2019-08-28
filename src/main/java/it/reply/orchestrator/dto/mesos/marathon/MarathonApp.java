@@ -19,9 +19,14 @@ package it.reply.orchestrator.dto.mesos.marathon;
 import it.reply.orchestrator.dto.mesos.MesosTask;
 import it.reply.orchestrator.utils.ToscaConstants;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -29,6 +34,9 @@ import lombok.ToString;
 public class MarathonApp extends MesosTask<MarathonApp> {
 
   private Integer instances;
+
+  @NonNull
+  private Map<String, String> secrets = new HashMap<>();
 
   @Override
   public final String getToscaNodeName() {

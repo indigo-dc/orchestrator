@@ -16,123 +16,126 @@
 
 package it.reply.orchestrator.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import it.reply.orchestrator.config.properties.VaultProperties;
-import it.reply.orchestrator.exception.VaultTokenExpiredException;
+import it.reply.orchestrator.dal.entity.OidcTokenId;
+import it.reply.orchestrator.exception.VaultJwtTokenExpiredException;
+import it.reply.orchestrator.service.security.OAuth2TokenService;
 
-import java.io.IOException;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;
-import org.springframework.vault.VaultException;
+import org.springframework.vault.authentication.ClientAuthentication;
 import org.springframework.vault.authentication.TokenAuthentication;
 import org.springframework.vault.client.VaultEndpoint;
+import org.springframework.vault.client.VaultResponses;
 import org.springframework.vault.core.VaultTemplate;
 import org.springframework.vault.support.VaultResponse;
-import org.springframework.web.client.RestClientException;
+import org.springframework.vault.support.VaultToken;
+import org.springframework.vault.support.VaultTokenResponse;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 @Service
 @EnableConfigurationProperties(VaultProperties.class)
 public class VaultServiceImpl implements VaultService {
 
-  @Autowired
   private VaultProperties vaultProperties;
+  private OAuth2TokenService oauth2TokenService;
+  private RestTemplateBuilder restTemplateBuilder;
 
-  public VaultServiceImpl(VaultProperties vaultProperties) {
+  /**
+   * Creates a new {@link VaultServiceImpl}.
+   *
+   * @param vaultProperties
+   *     the vaultProperties
+   * @param oauth2TokenService
+   *     the oauth2TokenService
+   * @param restTemplateBuilder
+   *     the restTemplateBuilder
+   */
+  public VaultServiceImpl(VaultProperties vaultProperties,
+      OAuth2TokenService oauth2TokenService,
+      RestTemplateBuilder restTemplateBuilder) {
     this.vaultProperties = vaultProperties;
+    this.oauth2TokenService = oauth2TokenService;
+    this.restTemplateBuilder = restTemplateBuilder;
   }
 
-  private VaultTemplate getTemplate(String token) {
+  private VaultTemplate getTemplate(ClientAuthentication token) {
     return new VaultTemplate(VaultEndpoint.create(
         vaultProperties.getUrl(),
         vaultProperties.getPort()),
-        new TokenAuthentication(token));       
+        token);
   }
 
-  public VaultResponse writeSecret(String token, String path, Object secret) {
+  @Override
+  public VaultResponse writeSecret(ClientAuthentication token, String path, Object secret) {
     return getTemplate(token).write(path, secret);
   }
 
-  public <T> T readSecret(String token, String path, Class<T> type) {        
+  @Override
+  public <T> T readSecret(ClientAuthentication token, String path, Class<T> type) {
     return getTemplate(token).read(path, type).getData();
   }
 
-  public Map<String,Object> readSecret(String token, String path) {
+  @Override
+  public Map<String, Object> readSecret(ClientAuthentication token, String path) {
     return getTemplate(token).read(path).getData();
   }
 
-  public void deleteSecret(String token, String path) {
+  @Override
+  public void deleteSecret(ClientAuthentication token, String path) {
     getTemplate(token).delete(path);
   }
 
-  public List<String> listSecrets(String token, String path) {
+  @Override
+  public List<String> listSecrets(ClientAuthentication token, String path) {
     return getTemplate(token).list(path);
   }
 
   /**
    * Retrieve the vault token from the IAM token.
-   * @throws IOException when IO operations fail
    */
-  @SuppressWarnings("unchecked")
-  public String retrieveToken(String accessToken) throws IOException {
-    String exmessage = "Unable to retrieve token for Vault:";
-    String token = "";
+  @Override
+  public TokenAuthentication retrieveToken(String accessToken) {
     VaultEndpoint endpoint = VaultEndpoint.create(
         vaultProperties.getUrl(),
         vaultProperties.getPort());
     URI uri = endpoint.createUri("auth/jwt/login");
 
-    RestTemplate restTemplate = new RestTemplate();
-    
-    String json = "{\"jwt\":\"" + accessToken + "\"}";
-    
-    HttpHeaders headers = new HttpHeaders();
-    headers.setAccept(Arrays.asList(MediaType.APPLICATION_JSON));
-    HttpEntity<String> stringEntity = new HttpEntity<String>(json, headers);
-     
+    RestTemplate restTemplate = restTemplateBuilder.build();
+    Map<String, String> login = new HashMap<>();
+    login.put("jwt", accessToken);
     try {
-      ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.POST,
-          stringEntity, String.class);
-      
-      final int status = response.getStatusCodeValue();
-
-      if (status == 200) {
-        HashMap<String,Object> result =
-            new ObjectMapper().readValue(response.getBody(), HashMap.class);         
-
-        HashMap<String,Object> auth = (HashMap<String,Object>) result.get("auth");
-
-        token = (String) auth.get("client_token");
-      } else {
-        String message = response.getBody();
-        if (status == 400) {
-          if (message.toLowerCase().contains("token is expired")) {
-            throw new VaultTokenExpiredException(
-                String.format("%s accessToken is expired",exmessage));
-          }
+      VaultToken token = restTemplate
+          .postForObject(uri, login, VaultTokenResponse.class)
+          .getToken();
+      return new TokenAuthentication(token);
+    } catch (HttpClientErrorException ex) {
+      if (ex.getRawStatusCode() == 400) {
+        String errorCause = VaultResponses.getError(ex.getResponseBodyAsString());
+        if (errorCause != null && errorCause.contains("token is expired")) {
+          throw new VaultJwtTokenExpiredException(
+              "Unable to retrieve token for Vault: IAM access token is expired");
         }
-        throw new VaultException(String.format("%s %d (%s).", exmessage, status, message));
-      }        
-    } catch (VaultException ve) {            
-      throw ve;
-    } catch (RestClientException e) {      
-      throw new VaultException(String.format("%s %s.", exmessage, e.getMessage()));
+      }
+      throw ex;
     }
-
-    return token;
   }
 
+  /**
+   * Retrieve the vault token from the IAM token identifier.
+   */
+  @Override
+  public TokenAuthentication retrieveToken(OidcTokenId oidcTokenId) {
+    return oauth2TokenService.executeWithClientForResult(
+        oidcTokenId,
+        this::retrieveToken,
+        VaultJwtTokenExpiredException.class::isInstance);
+  }
 }

@@ -29,7 +29,6 @@ import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.EnumUtils;
 import it.reply.orchestrator.utils.ToscaUtils;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -46,7 +45,7 @@ import org.alien4cloud.tosca.normative.types.SizeType;
 import org.jgrapht.graph.DirectedMultigraph;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public abstract class AbstractMesosDeploymentService<T extends MesosTask<T>, S extends Object>
+public abstract class AbstractMesosDeploymentService<T extends MesosTask<T>, S>
     extends AbstractDeploymentProviderService {
 
   private static final String HOST_CAPABILITY_NAME = "host";
@@ -88,10 +87,6 @@ public abstract class AbstractMesosDeploymentService<T extends MesosTask<T>, S e
         .ifPresent(task::setEnv);
 
     ToscaUtils
-        .extractMap(taskNode.getProperties(), "secrets", String.class::cast)
-        .ifPresent(task::setSecrets);
-
-    ToscaUtils
         .extractList(taskNode.getProperties(), "constraints",
             l -> ((List<Object>) l)
                 .stream()
@@ -119,7 +114,7 @@ public abstract class AbstractMesosDeploymentService<T extends MesosTask<T>, S e
         .orElseThrow(() -> new IllegalArgumentException(String.format(
             "Unsupported artifact type for <image> artifact in node <%s> of type <%s>."
                 + " Given <%s>, supported <%s>",
-                taskNode, taskNode.getType(), image.getArtifactType(), supportedTypes)));
+            taskNode, taskNode.getType(), image.getArtifactType(), supportedTypes)));
 
     MesosContainer container = new MesosContainer(containerType);
 
