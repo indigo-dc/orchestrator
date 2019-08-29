@@ -104,7 +104,8 @@ public class VaultServiceImpl implements VaultService {
     HttpEntity<String> stringEntity = new HttpEntity<String>(json, headers);
      
     try {
-      ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.POST, stringEntity, String.class);
+      ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.POST,
+          stringEntity, String.class);
       
       final int status = response.getStatusCodeValue();
 

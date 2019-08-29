@@ -50,7 +50,8 @@ public class CustomOAuth2TemplateFactory {
         oauth2ConfigurationsService.getServerConfiguration(issuer);
     RegisteredClient clientConfiguration =
         oauth2ConfigurationsService.getClientConfiguration(serverConfiguration);
-    return new CustomOAuth2Template(serverConfiguration, clientConfiguration, restTemplateBuilder, oauth2ConfigurationsService.getAudience(issuer));
+    return new CustomOAuth2Template(serverConfiguration, clientConfiguration,
+        restTemplateBuilder, oauth2ConfigurationsService.getAudience(issuer));
 
   }
 }

@@ -93,7 +93,7 @@ public class OAuth2ConfigurationsService {
   }
   
   /**
-   * Get audience
+   * Get audience.
    * 
    * @param issuer
    *          the issuer of the server on which the client has been registered

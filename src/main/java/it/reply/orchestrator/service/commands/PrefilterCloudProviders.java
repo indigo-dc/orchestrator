@@ -120,7 +120,8 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
           .orElseGet(HashMap::new);
       
       List<NodeTemplate> filteredNodes = nodes.entrySet().stream()
-          .filter(node -> toscaService.isOfToscaType(node.getValue(), ToscaConstants.Nodes.Types.MARATHON))
+          .filter(node -> toscaService.isOfToscaType(node.getValue(), 
+              ToscaConstants.Nodes.Types.MARATHON))
           .map(Map.Entry::getValue)
           .collect(Collectors.toList());
 
