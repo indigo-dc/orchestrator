@@ -46,7 +46,7 @@ public class VaultServiceImpl implements VaultService {
 
   private VaultProperties vaultProperties;
   private OAuth2TokenService oauth2TokenService;
-  private RestTemplate restTemplate;
+  private RestTemplateBuilder restTemplateBuilder;
 
   /**
    * Creates a new {@link VaultServiceImpl}.
@@ -63,7 +63,7 @@ public class VaultServiceImpl implements VaultService {
       RestTemplateBuilder restTemplateBuilder) {
     this.vaultProperties = vaultProperties;
     this.oauth2TokenService = oauth2TokenService;
-    this.restTemplate = restTemplateBuilder.build();
+    this.restTemplateBuilder = restTemplateBuilder;
   }
 
   private VaultTemplate getTemplate(ClientAuthentication token) {
@@ -108,6 +108,7 @@ public class VaultServiceImpl implements VaultService {
         vaultProperties.getPort());
     URI uri = endpoint.createUri("auth/jwt/login");
 
+    RestTemplate restTemplate = restTemplateBuilder.build();
     Map<String, String> login = new HashMap<>();
     login.put("jwt", accessToken);
     try {
