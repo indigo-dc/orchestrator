@@ -111,6 +111,13 @@
 			<name>Concept Reply Nexus</name>
 			<url>http://nexusconcept.cloud.reply.eu/content/groups/public</url>
 		</repository>
+		
+	    <repository>
+	        <id>central</id>
+	        <name>artifactory-releases</name>
+	        <url>http://artifactory.recas.ba.infn.it:8081/artifactory/libs-release</url>
+	    </repository>
+
 	</repositories>
 
 
