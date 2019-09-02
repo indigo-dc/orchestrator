@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,6 +55,8 @@ public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData
   public static final String MARATHON_COMPUTE_SERVICE = INDIGO_SERVICE_PREFIX + ".marathon";
   public static final String CHRONOS_COMPUTE_SERVICE = INDIGO_SERVICE_PREFIX + ".chronos";
 
+  public static final String QCG_COMPUTE_SERVICE = "eu.deep.qcg";
+  
   @Builder
   protected CloudService(@NonNull String id, @NonNull CloudServiceData data) {
     super(id, data);
@@ -181,6 +183,20 @@ public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData
     return isServiceOfType(CHRONOS_COMPUTE_SERVICE);
   }
 
+  /**
+   * Get if the the service is a Qcg compute service.
+   *
+   * @return true if the service is a Qcg compute service
+   */
+  @JsonIgnore
+  public boolean isQcgComputeProviderService() {
+    return isServiceOfType(QCG_COMPUTE_SERVICE);
+  }
+  
+  /**
+   * 
+   * @return
+   */
   @JsonIgnore
   public boolean isCredentialsRequired() {
     return isAwsComputeProviderService() || isAzureComputeProviderService()

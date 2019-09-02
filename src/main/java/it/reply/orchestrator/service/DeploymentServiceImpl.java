@@ -246,6 +246,8 @@ public class DeploymentServiceImpl implements DeploymentService {
         return DeploymentType.CHRONOS;
       } else if (toscaService.isOfToscaType(node, ToscaConstants.Nodes.Types.MARATHON)) {
         return DeploymentType.MARATHON;
+      } else if (toscaService.isOfToscaType(node, ToscaConstants.Nodes.QCG)) {
+          return DeploymentType.QCG;
       }
     }
     return DeploymentType.TOSCA;
@@ -257,6 +259,8 @@ public class DeploymentServiceImpl implements DeploymentService {
         return DeploymentType.CHRONOS;
       case MARATHON:
         return DeploymentType.MARATHON;
+      case QCG:
+    	return DeploymentType.QCG;  
       case HEAT:
       case IM:
       default:
@@ -324,7 +328,8 @@ public class DeploymentServiceImpl implements DeploymentService {
     throwIfNotOwned(deployment);
 
     if (deployment.getDeploymentProvider() == DeploymentProvider.CHRONOS
-        || deployment.getDeploymentProvider() == DeploymentProvider.MARATHON) {
+        || deployment.getDeploymentProvider() == DeploymentProvider.MARATHON
+        || deployment.getDeploymentProvider() == DeploymentProvider.QCG) {
       throw new BadRequestException(String.format("%s deployments cannot be updated.",
           deployment.getDeploymentProvider().toString()));
     }
