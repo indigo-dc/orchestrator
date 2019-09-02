@@ -482,8 +482,10 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
   	JobDescriptionExecution execution = new JobDescriptionExecution();
   	execution.setExecutable(qcgjob.getExecutable());    
   	execution.setDirectory(qcgjob.getDirectory());
-    execution.setArgs((ArrayList<String>)((ArrayList<String>)qcgjob.getArgs()).clone());
-  	execution.setEnvironment((HashMap<String,String>)((HashMap<String,String>)qcgjob.getEnvironment()).clone());
+  	if (qcgjob.getArgs()!=null)
+  	  execution.setArgs((ArrayList<String>)((ArrayList<String>)qcgjob.getArgs()).clone());
+  	if (qcgjob.getEnvironment() != null)
+  	  execution.setEnvironment((HashMap<String,String>)((HashMap<String,String>)qcgjob.getEnvironment()).clone());
   	
   	//default remove policy
   	JobWorkingDirectoryPolicy directory_policy = new JobWorkingDirectoryPolicy();
