@@ -16,12 +16,6 @@
 
 package it.reply.orchestrator.service.deployment.providers;
 
-import alien4cloud.model.components.ComplexPropertyValue;
-import alien4cloud.model.components.ListPropertyValue;
-import alien4cloud.model.components.ScalarPropertyValue;
-import alien4cloud.model.topology.NodeTemplate;
-import alien4cloud.model.topology.RelationshipTemplate;
-import alien4cloud.model.topology.Topology;
 import alien4cloud.tosca.model.ArchiveRoot;
 
 import com.google.common.annotations.VisibleForTesting;
@@ -59,6 +53,7 @@ import it.reply.orchestrator.service.deployment.providers.factory.QcgClientFacto
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
+import it.reply.orchestrator.utils.ToscaUtils;
 import it.reply.orchestrator.utils.ToscaConstants.Nodes;
 
 import java.util.ArrayList;
@@ -77,6 +72,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.alien4cloud.tosca.model.templates.NodeTemplate;
+import org.alien4cloud.tosca.model.templates.RelationshipTemplate;
+import org.alien4cloud.tosca.model.templates.Topology;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jgrapht.graph.DirectedMultigraph;
@@ -324,9 +323,6 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
     return true;
   }
 
-  /**
-   * 
-   */  
   @Data
   @NoArgsConstructor(access = AccessLevel.PROTECTED)
   @RequiredArgsConstructor
@@ -371,13 +367,15 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
 
     List<NodeTemplate> orderedQcgJobs = CommonUtils
         .iteratorToStream(orderIterator)
-        .filter(node -> toscaService.isOfToscaType(node, ToscaConstants.Nodes.QCG))
+        .filter(node -> toscaService.isOfToscaType(node, 
+            ToscaConstants.Nodes.Types.QCG))
         .collect(Collectors.toList());
     
     Map<String, Resource> resources = deployment
             .getResources()
             .stream()
-            .filter(resource -> toscaService.isOfToscaType(resource, ToscaConstants.Nodes.QCG))
+            .filter(resource -> toscaService.isOfToscaType(resource,
+                ToscaConstants.Nodes.Types.QCG))
             .collect(Collectors.toMap(Resource::getToscaNodeName, res -> res));
     
     LinkedHashMap<String, QcgJob> jobs = new LinkedHashMap<>();
@@ -385,7 +383,7 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
     List<DeepJob> deepJobs = new ArrayList<>();
     
     for (NodeTemplate qcgNode : orderedQcgJobs) {
-		Resource jobResource = resources.get(qcgNode.getName());
+      Resource jobResource = resources.get(qcgNode.getName());
 	    String id = Optional
 	        .ofNullable(jobResource.getIaasId())
 	        .orElseGet(() -> {
@@ -423,52 +421,41 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
     //TODO  MAP ALL PROPETIES FROM TOSCA
     
     // property: environment_variables
-    toscaService
-    .<ComplexPropertyValue>getTypedNodePropertyByName(taskNode, "environment_variables")
-    .ifPresent(property -> {
-      // Convert Map<String, Object> to Map<String, String>
-      Map<String, String> env = toscaService.parseComplexPropertyValue(property,
-          value -> ((ScalarPropertyValue) value).getValue());
-      qcgjob.setEnvironment(env);
-    });
+    ToscaUtils
+        .extractMap(taskNode.getProperties(), "environment_variables", String.class::cast)
+        .ifPresent(qcgjob::setEnvironment);
     
     // property: executable
-    toscaService
-    .<ScalarPropertyValue>getTypedNodePropertyByName(taskNode, "executable")
-    .map(ScalarPropertyValue::getValue)
-    .map(String::trim)
-    .ifPresent(qcgjob::setExecutable);
+    ToscaUtils
+      .extractScalar(taskNode.getProperties(), "executable")
+      .map(String::trim)
+      .ifPresent(qcgjob::setExecutable);      
 
-	if ("".equals(qcgjob.getExecutable())) { // it must be either null or not empty
-	  throw new ToscaException(String.format(
-	      "<executable> property of node <%s> must not be an empty string", taskNode.getName()));
-	}
+  	if ("".equals(qcgjob.getExecutable())) { // it must be either null or not empty
+  	  throw new ToscaException(String.format(
+  	      "<executable> property of node <%s> must not be an empty string", taskNode.getName()));
+  	}
 
-	// property: directory
-    toscaService
-        .<ScalarPropertyValue>getTypedNodePropertyByName(taskNode, "directory")
-        .ifPresent(property -> qcgjob.setDirectory(property.getValue()));
+	  //property: directory
+    ToscaUtils
+        .extractScalar(taskNode.getProperties(), "directory")
+        .ifPresent(qcgjob::setDirectory);      
     
-	//property: arguments
-    toscaService
-    .<ListPropertyValue>getTypedNodePropertyByName(taskNode, "arguments")
-    .ifPresent(property -> {
-      // Convert List<Object> to List<String>
-      List<String> args = toscaService.parseListPropertyValue(property,
-          item -> ((ScalarPropertyValue) item).getValue());
-      qcgjob.setArgs(args);
-    });
-
+    //property: arguments
+    ToscaUtils
+        .extractList(taskNode.getProperties(), "arguments", String.class::cast)
+        .ifPresent(qcgjob::setArgs);   
+    
     // property: schema
-    toscaService
-        .<ScalarPropertyValue>getTypedNodePropertyByName(taskNode, "schema")
-        .ifPresent(property -> qcgjob.setSchema(property.getValue()));
+    ToscaUtils
+        .extractScalar(taskNode.getProperties(), "schema")
+        .ifPresent(qcgjob::setSchema);      
     
     // property: note
-    toscaService
-        .<ScalarPropertyValue>getTypedNodePropertyByName(taskNode, "note")
-        .ifPresent(property -> qcgjob.setNote(property.getValue()));
-    	
+    ToscaUtils
+        .extractScalar(taskNode.getProperties(), "note")
+        .ifPresent(qcgjob::setNote);    	
+    
     return qcgjob;
   }  
 
@@ -492,23 +479,23 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
     
     JobDescription description = new JobDescription();
     
-	JobDescriptionExecution execution = new JobDescriptionExecution();
-	execution.setExecutable(qcgjob.getExecutable());    
-	execution.setDirectory(qcgjob.getDirectory());
+  	JobDescriptionExecution execution = new JobDescriptionExecution();
+  	execution.setExecutable(qcgjob.getExecutable());    
+  	execution.setDirectory(qcgjob.getDirectory());
     execution.setArgs((ArrayList<String>)((ArrayList<String>)qcgjob.getArgs()).clone());
-	execution.setEnvironment((HashMap<String,String>)((HashMap<String,String>)qcgjob.getEnvironment()).clone());
-	
-	//default remove policy
-	JobWorkingDirectoryPolicy directory_policy = new JobWorkingDirectoryPolicy();
-	directory_policy.setCreate(RemoveConditionCreateMode.OVERWRITE);
-	directory_policy.setRemove(RemoveConditionWhen.NEVER);	
-	
-	execution.setDirectory_policy(directory_policy);
-
-	description.setSchema(qcgjob.getSchema());
-	description.setExecution(execution);
-	description.setNote(qcgjob.getNote());
-	job.setDescription(description);
+  	execution.setEnvironment((HashMap<String,String>)((HashMap<String,String>)qcgjob.getEnvironment()).clone());
+  	
+  	//default remove policy
+  	JobWorkingDirectoryPolicy directory_policy = new JobWorkingDirectoryPolicy();
+  	directory_policy.setCreate(RemoveConditionCreateMode.OVERWRITE);
+  	directory_policy.setRemove(RemoveConditionWhen.NEVER);	
+  	
+  	execution.setDirectory_policy(directory_policy);
+  
+  	description.setSchema(qcgjob.getSchema());
+  	description.setExecution(execution);
+  	description.setNote(qcgjob.getNote());
+  	job.setDescription(description);
     
     job.setOperation_start(qcgjob.getOperation_start());
     job.setResource(qcgjob.getResource());
@@ -548,7 +535,7 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
     Iterator<Resource> topologyIterator = deployment
         .getResources()
         .stream()
-        .filter(resource -> toscaService.isOfToscaType(resource, Nodes.QCG))
+        .filter(resource -> toscaService.isOfToscaType(resource, Nodes.Types.QCG))
         // FIXME it should also not be DELETED
         .filter(resource -> resource.getState() != NodeStates.DELETING)
         .collect(Collectors.toList()).iterator();
@@ -647,17 +634,17 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
   @VisibleForTesting
   protected static JobState getLastState(Job job) {
     
-	//TODO verify logic!
-	  
-	if (job.getErrors() == null || job.getErrors().isEmpty() || job.getErrors() == "null") {
-		if (job.getResubmit() > 0) {
-			return JobState.SUCCESS;
-		} else {
-			return JobState.FRESH;
-		}
-	} else {
-	    return JobState.FAILURE;
-	}
+  	//TODO verify logic!
+  	  
+  	if (job.getErrors() == null || job.getErrors().isEmpty() || job.getErrors() == "null") {
+  		if (job.getResubmit() > 0) {
+  			return JobState.SUCCESS;
+  		} else {
+  			return JobState.FRESH;
+  		}
+  	} else {
+  	    return JobState.FAILURE;
+  	}
   }
 
   public Optional<String> getAdditionalErrorInfoInternal(DeploymentMessage deploymentMessage) {

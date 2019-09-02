@@ -369,7 +369,7 @@ public class QcgServiceTest extends ToscaParserAwareTest {
     Deployment deployment = ControllerTestUtils.createDeployment(isLast ? 1 : 2);
     deployment.setEndpoint(isLast ? "999" : "1000");
     DeploymentMessage dm = generateDeployDmQcg(deployment);
-    deployment.getResources().forEach(resource -> resource.setToscaNodeType(Nodes.QCG));
+    deployment.getResources().forEach(resource -> resource.setToscaNodeType(Nodes.Types.QCG));
 
     String jobId = deployment.getEndpoint();
 

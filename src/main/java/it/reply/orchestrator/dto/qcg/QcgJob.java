@@ -32,7 +32,7 @@ import it.reply.orchestrator.utils.ToscaConstants;
 public class QcgJob {
 
   public final String getToscaNodeName() {
-    return ToscaConstants.Nodes.QCG;
+    return ToscaConstants.Nodes.Types.QCG;
   }  
   
   //

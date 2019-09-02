@@ -246,8 +246,8 @@ public class DeploymentServiceImpl implements DeploymentService {
         return DeploymentType.CHRONOS;
       } else if (toscaService.isOfToscaType(node, ToscaConstants.Nodes.Types.MARATHON)) {
         return DeploymentType.MARATHON;
-      } else if (toscaService.isOfToscaType(node, ToscaConstants.Nodes.QCG)) {
-          return DeploymentType.QCG;
+      } else if (toscaService.isOfToscaType(node, ToscaConstants.Nodes.Types.QCG)) {
+        return DeploymentType.QCG;
       }
     }
     return DeploymentType.TOSCA;
@@ -260,7 +260,7 @@ public class DeploymentServiceImpl implements DeploymentService {
       case MARATHON:
         return DeploymentType.MARATHON;
       case QCG:
-    	return DeploymentType.QCG;  
+        return DeploymentType.QCG;  
       case HEAT:
       case IM:
       default:
