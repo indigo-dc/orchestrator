@@ -698,7 +698,7 @@
             <!-- excluded because I.N.F.N. Copyright -->
             <exclude>src/main/java/it/reply/orchestrator/config/properties/VaultProperties.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/dto/cmdb/QcgServiceData.java</exclude>
-            <exclude>src/main/java/it/reply/orchestrator/dto/deployments/QcgJobsOrderedIterator.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/dto/deployment/QcgJobsOrderedIterator.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/dto/qcg/QcgJob.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/dto/vault/VaultSecret.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/exception/VaultJwtTokenExpiredException.java</exclude>
@@ -706,8 +706,9 @@
             <exclude>src/main/java/it/reply/orchestrator/service/VaultServiceImpl.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/service/deployment/providers/QcgServiceImpl.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/service/deployment/providers/factory/QcgClientFactory.java</exclude>
-            <exclude>src/test/java/it/reply/orchestrator/service/VaultServiceTest.java</exclude></excludes>
+            <exclude>src/test/java/it/reply/orchestrator/service/VaultServiceTest.java</exclude>
             <exclude>src/test/java/it/reply/orchestrator/service/deployment/providers/QcgServiceTest.java</exclude>
+          </excludes>  
         </configuration>
       </plugin>
 
