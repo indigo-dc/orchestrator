@@ -118,9 +118,8 @@ public class ImServiceTest {
   @Mock
   private OAuth2TokenService oauth2TokenService;
 
-  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Before
-  public void setup() throws Exception, ParsingException {
+  public void setup() throws ParsingException {
     MockitoAnnotations.initMocks(this);
     Mockito
         .when(oauth2TokenService.executeWithClientForResult(

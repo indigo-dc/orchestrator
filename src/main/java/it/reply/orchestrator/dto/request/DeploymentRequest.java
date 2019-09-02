@@ -61,9 +61,9 @@ public class DeploymentRequest {
   @Min(value = 1, message = "maxProvidersRetry value, if provided, must be at least of 1")
   private Integer maxProvidersRetry;
 
-  @Builder.Default
   private boolean keepLastAttempt = false;
 
+  @SuppressWarnings("null")
   @Deprecated
   protected DeploymentRequest() {
     parameters = new HashMap<>();

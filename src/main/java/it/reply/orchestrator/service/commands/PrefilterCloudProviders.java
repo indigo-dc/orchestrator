@@ -228,7 +228,7 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
       CloudService mesosFrameworkService,
       Set<CloudService> servicesToDiscard) {
     boolean requiresGpu = toscaService.isMesosGpuRequired(archiveRoot);
-    if (requiresGpu && !((MesosFrameworkServiceData<?>) mesosFrameworkService.getData())
+    if (requiresGpu && !((MesosFrameworkServiceData) mesosFrameworkService.getData())
         .getProperties().isGpuSupport()) {
       LOG.debug(
           "Discarded Mesos framework service {} of provider {} because it doesn't support GPUs",

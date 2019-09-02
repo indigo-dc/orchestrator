@@ -16,8 +16,7 @@
 
 package it.reply.orchestrator.enums;
 
-public enum DeploymentType {
-    
+public enum DeploymentType {    
   CHRONOS,
   MARATHON,
   TOSCA,

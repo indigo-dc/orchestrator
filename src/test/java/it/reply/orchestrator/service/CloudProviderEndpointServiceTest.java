@@ -18,8 +18,8 @@ package it.reply.orchestrator.service;
 
 import com.google.common.collect.ImmutableMap;
 
-//import it.reply.orchestrator.controller.ControllerTestUtils;
-//import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.controller.ControllerTestUtils;
+import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.CloudProviderEndpointBuilder;
@@ -69,7 +69,7 @@ public class CloudProviderEndpointServiceTest {
   @Parameters({"null", "1", "2", "3"})
   @Test
   public void chooseCloudProviderSuccesful(@Nullable Integer maxCpRetries) {
-    //Deployment deployment = ControllerTestUtils.createDeployment();
+    Deployment deployment = ControllerTestUtils.createDeployment();
     RankCloudProvidersMessage rcpm = new RankCloudProvidersMessage();
     rcpm.setCloudProviders(generateCloudProviders());
     rcpm.getRankedCloudProviders().add(RankedCloudProvider
@@ -108,7 +108,7 @@ public class CloudProviderEndpointServiceTest {
   @Parameters({"MARATHON|1", "CHRONOS|1", "TOSCA|2"})
   public void chooseCloudProviderSuccesfulByDeploymentType(DeploymentType deploymentType,
       int expectedSized) {
-    //Deployment deployment = ControllerTestUtils.createDeployment();
+    Deployment deployment = ControllerTestUtils.createDeployment();
     RankCloudProvidersMessage rcpm = new RankCloudProvidersMessage();
     rcpm.setDeploymentType(deploymentType);
     rcpm.setCloudProviders(generateCloudProviders());
@@ -138,7 +138,7 @@ public class CloudProviderEndpointServiceTest {
 
   @Test
   public void chooseCloudProviderNoneRanked() {
-    //Deployment deployment = ControllerTestUtils.createDeployment();
+    Deployment deployment = ControllerTestUtils.createDeployment();
     RankCloudProvidersMessage rcpm = new RankCloudProvidersMessage();
     rcpm.setCloudProviders(generateCloudProviders());
 

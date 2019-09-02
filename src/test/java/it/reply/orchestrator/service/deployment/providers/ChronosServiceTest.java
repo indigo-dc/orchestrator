@@ -109,9 +109,8 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
   @SpyBean
   private ObjectMapper objectMapper;
 
-  @SuppressWarnings({ "rawtypes", "unchecked" })
   @Before
-  public void setup() throws Exception {
+  public void setup() {
     MockitoAnnotations.initMocks(this);
     when(chronosClientFactory.build(any(CloudProviderEndpoint.class), any(String.class)))
         .thenReturn(chronos);

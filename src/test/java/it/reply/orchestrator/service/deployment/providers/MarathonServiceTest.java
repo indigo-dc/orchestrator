@@ -92,9 +92,8 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
   @MockBean
   private Marathon marathonClient;
 
-  @SuppressWarnings({ "unchecked", "rawtypes" })
   @Before
-  public void setup() throws Exception, ParsingException {
+  public void setup() throws ParsingException {
     MockitoAnnotations.initMocks(this);
     Mockito
         .when(oauth2tokenService.executeWithClientForResult(
