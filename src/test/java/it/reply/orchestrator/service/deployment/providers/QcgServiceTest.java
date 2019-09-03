@@ -153,71 +153,6 @@ public class QcgServiceTest extends ToscaParserAwareTest {
         .build();
   }
 
-  /*
-  @Test
-  public void checkOneDataParamsSubstitutionInTemplate() throws Exception {
-    String template = TestUtil.getFileContentAsString(ToscaServiceTest.TEMPLATES_ONEDATA_BASE_DIR
-        + "tosca_onedata_requirements.yaml");
-    Deployment deployment = ControllerTestUtils.createDeployment();
-    deployment.setTemplate(template);
-
-    OneData serviceOd = OneData
-        .builder()
-        .token("service-token")
-        .space("service-space")
-        .onezone("service-onezone.example.com")
-        .path("/service/path/")
-        .selectedOneprovider(OneDataProviderInfo
-            .builder()
-            .endpoint("service-oneprovider.example.com")
-            .build())
-        .serviceSpace(true)
-        .build();
-    OneData userOd = OneData
-        .builder()
-        .token("user-token")
-        .onezone("user-onezone.example.com")
-        .selectedOneprovider(OneDataProviderInfo
-            .builder()
-            .endpoint("user-oneprovider-1.example.com")
-            .build())
-        .build();
-
-    Map<String, OneData> odParameters = ImmutableMap.of(
-        "onedata_service_space", serviceOd,
-        "onedata_space", userOd);
-
-    ArchiveRoot ar = qcgService.prepareTemplate(deployment, odParameters);
-
-    Map<String, NodeTemplate> nodes = ar.getTopology().getNodeTemplates();
-    NodeTemplate qcgJob = nodes.get("qcg_job");
-    Map<String, Object> envVars = CommonUtils
-        .<ComplexPropertyValue>optionalCast(
-            toscaService.getNodePropertyByName(qcgJob, "environment_variables"))
-        .get()
-        .getValue();
-
-    assertThat(((ScalarPropertyValue) envVars.get("ONEDATA_SPACE_TOKEN")).getValue())
-        .isEqualTo(userOd.getToken());
-    assertThat(((ScalarPropertyValue) envVars.get("ONEDATA_SPACE_ONEZONE")).getValue())
-        .isEqualTo(userOd.getOnezone());
-    assertThat(((ScalarPropertyValue) envVars.get("ONEDATA_SPACE_SELECTED_PROVIDER")).getValue())
-        .isEqualTo(userOd.getSelectedOneprovider().getEndpoint());
-    assertThat(((ScalarPropertyValue) envVars.get("ONEDATA_SERVICE_SPACE_TOKEN")).getValue())
-        .isEqualTo(serviceOd.getToken());
-    assertThat(((ScalarPropertyValue) envVars.get("ONEDATA_SERVICE_SPACE_ONEZONE")).getValue())
-        .isEqualTo(serviceOd.getOnezone());
-    assertThat(
-        ((ScalarPropertyValue) envVars.get("ONEDATA_SERVICE_SPACE_SELECTED_PROVIDER")).getValue())
-        .isEqualTo(serviceOd.getSelectedOneprovider().getEndpoint());
-    assertThat(((ScalarPropertyValue) envVars.get("ONEDATA_SERVICE_SPACE_NAME")).getValue())
-        .isEqualTo(serviceOd.getSpace());
-    assertThat(((ScalarPropertyValue) envVars.get("ONEDATA_SERVICE_SPACE_PATH")).getValue())
-        .isEqualTo(serviceOd.getPath());
-
-  }
- */
-  
   @Test
   @Parameters({"0,,FRESH", "1,,SUCCESS", "1,fail,FAILURE", "0,fail,FAILURE"})
   public void getLastState(int successCount, String error, JobState expectedState) {
@@ -439,6 +374,7 @@ public class QcgServiceTest extends ToscaParserAwareTest {
     QcgJobsOrderedIterator topologyIterator = qcgService.getJobsTopologicalOrder(
         dm, deployment);
     topologyIterator.next();
+    
     assertThat(objectMapper.writer(SerializationFeature.INDENT_OUTPUT)
             .writeValueAsString(topologyIterator)).isEqualToNormalizingNewlines(TestUtil
                     .getFileContentAsString(ToscaServiceTest.TEMPLATES_BASE_DIR + "qcg_jobs.json"));

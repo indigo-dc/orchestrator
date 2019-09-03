@@ -118,8 +118,8 @@
       <url>http://nexusconcept.cloud.reply.eu/content/groups/public</url>
     </repository>
  	<repository>
-	   <id>central</id>
-	   <name>artifactory-releases</name>
+	   <id>recas-cloud-artifactory-repository</id>
+	   <name>recas-cloud-artifactory</name>
 	   <url>http://artifactory.cloud.ba.infn.it:8081/artifactory/libs-release</url>
 	</repository>
   </repositories>
