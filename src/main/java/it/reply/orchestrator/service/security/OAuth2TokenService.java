@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -180,17 +180,18 @@ public class OAuth2TokenService {
    * @return the user's organization
    */
   public String getOrganization(OidcTokenId oidcTokenId) {
-    Optional<OidcEntity> oidcEntity = oidcEntityRepository
-        .findByOidcEntityId(oidcTokenId.getOidcEntityId());
-    if (oidcEntity.isPresent()) {
-      return oidcEntity.get().getOrganization();
-    } else {
-      if (oidcProperties.isEnabled()) {
-        throw new DeploymentException("No user associated to deployment token found");
-      } else {
-        return "indigo-dc";
-      }
-    }
+    return Optional
+        .ofNullable(oidcTokenId)
+        .map(OidcTokenId::getOidcEntityId)
+        .flatMap(oidcEntityRepository::findByOidcEntityId)
+        .map(OidcEntity::getOrganization)
+        .orElseGet(() -> {
+          if (oidcProperties.isEnabled()) {
+            throw new DeploymentException("No user associated to deployment token found");
+          } else {
+            return "indigo-dc";
+          }
+        });
   }
 
   /**
