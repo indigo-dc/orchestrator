@@ -58,7 +58,7 @@ public class GetSlamTest extends BaseRankCloudProvidersCommandTest<GetSlam> {
   private OAuth2TokenService oauth2TokenService;
 
   @Before
-  public void setup() {
+  public void setup() throws Exception {
     slamProperties.setUrl(URI.create("https://www.example.com"));
     when(oauth2TokenService.executeWithClientForResult(any(), any(), any()))
         .thenAnswer(y -> ((ThrowingFunction) y.getArguments()[1]).apply("token"));

@@ -16,88 +16,142 @@
 
 package it.reply.orchestrator.service;
 
-import static org.junit.Assert.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
+import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withBadRequest;
+import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
 
-import java.util.Arrays;
-import java.util.List;
+import java.io.IOException;
+import java.net.URI;
+import java.util.HashMap;
+import java.util.Map;
 
-import org.junit.Assert;
 import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.junit4.rules.SpringClassRule;
+import org.springframework.test.context.junit4.rules.SpringMethodRule;
+import org.springframework.test.web.client.MockRestServiceServer;
+import org.springframework.test.web.client.response.DefaultResponseCreator;
 import org.springframework.vault.authentication.TokenAuthentication;
-import org.springframework.vault.support.VaultResponse;
+import org.springframework.vault.client.VaultEndpoint;
+import org.springframework.vault.support.VaultTokenResponse;
+import org.springframework.web.client.HttpClientErrorException;
 
-import it.reply.orchestrator.dto.vault.VaultSecret;
+import it.reply.orchestrator.config.properties.VaultProperties;
+import it.reply.orchestrator.exception.VaultJwtTokenExpiredException;
+import it.reply.orchestrator.service.security.OAuth2TokenService;
+import it.reply.orchestrator.utils.JsonUtils;
+import junitparams.JUnitParamsRunner;
 
-/**
- * Vault Service API test
- * 
- * @author Michele Perniola
- *
- */
-@RunWith(SpringJUnit4ClassRunner.class)
+@RunWith(JUnitParamsRunner.class)
 @RestClientTest(VaultService.class)
 public class VaultServiceTest {
+  
+  @ClassRule
+  public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
 
-  @Mock
+  @Rule
+  public final SpringMethodRule springMethodRule = new SpringMethodRule();
+
+  @Autowired
   private VaultService vaultService;
+
+  @Autowired
+  private VaultProperties vaultProperties;
+  
+  @Autowired
+  private MockRestServiceServer mockServer;
+  
+  @MockBean
+  private OAuth2TokenService oauth2TokenService;
+  
+  
+  private static final String defaultVaultEndpoint = "http://default.vault.com";
+  private static final int defaultVaultPort = 8200;
+  private static final String vaultToken = "s.DQSf698xaTFLtBCY9bG2QdhI";
+  private static final String accessToken = "eyJhbGciOiJub25lIn0.eyJqdGkiOiI0Y2IyNGQ1Ny1kMzRkLTQxZDQtYmZiYy04NzFiN2I0MDRjZDAifQ.";
   
   @Before
   public void setup() {
-    MockitoAnnotations.initMocks(this);
+    vaultProperties.setUrl(defaultVaultEndpoint);
+    vaultProperties.setPort(defaultVaultPort);
   }
   
   @Test
-  public void testReadSecret() {
-    TokenAuthentication token = new TokenAuthentication("s.DQSf698xaTFLtBCY9bG2QdhI");
-    String spath = "secret/private/marathon/11e9a30f-f358-0741-a6d8-024283ff312b/password";
-    VaultSecret mypass = new VaultSecret("mypass");
-    
-    Mockito.when(vaultService.readSecret(token, spath, VaultSecret.class)).thenReturn(mypass);
+  public void testSuccessRetrieveTokenString() throws IOException {
 
-    Assert.assertEquals(vaultService.readSecret(token, spath, VaultSecret.class), mypass);    
+    VaultEndpoint endpoint = VaultEndpoint.create(
+        vaultProperties.getUrl(),
+        vaultProperties.getPort());
+    URI uri = endpoint.createUri("auth/jwt/login");
+    Map<String, Object> auth = new HashMap<String, Object>();
+    auth.put("client_token", vaultToken);
+    VaultTokenResponse response = new VaultTokenResponse();    
+    response.setAuth(auth);
+    TokenAuthentication ta = new TokenAuthentication(vaultToken);    
+    
+    mockServer
+    .expect(requestTo(uri.toString()))
+    .andExpect(method(HttpMethod.POST))
+    .andRespond(
+        withSuccess(JsonUtils.serialize(response), MediaType.APPLICATION_JSON_UTF8));
+    
+    assertThat(vaultService.retrieveToken(accessToken).login().getToken())
+      .isEqualTo(ta.login().getToken());
+    
+    mockServer.verify();
   }
   
   @Test
-  public void testWriteSecret() {
-    TokenAuthentication token = new TokenAuthentication("s.DQSf698xaTFLtBCY9bG2QdhI");
-    String spath = "secret/private/marathon/11e9a30f-f358-0741-a6d8-024283ff312b/password";
-    VaultSecret mypass = new VaultSecret("mypass");
-    VaultResponse response = new VaultResponse();
+  public void testExpiredRetrieveTokenString() throws IOException {
 
-    Mockito.when(vaultService.writeSecret(token, spath, mypass)).thenReturn(response);
+    VaultEndpoint endpoint = VaultEndpoint.create(
+        vaultProperties.getUrl(),
+        vaultProperties.getPort());
+    URI uri = endpoint.createUri("auth/jwt/login");
+    DefaultResponseCreator response = withBadRequest(); 
+    response.body("token is expired");
     
-    assertEquals(vaultService.writeSecret(token, spath, mypass), response);
+    mockServer
+    .expect(requestTo(uri.toString()))
+    .andExpect(method(HttpMethod.POST))
+    .andRespond(response);
     
+    assertThatThrownBy(
+        () -> vaultService.retrieveToken(accessToken))
+        .isInstanceOf(VaultJwtTokenExpiredException.class);
+    
+    mockServer.verify();
+  }
+
+  @Test
+  public void testHttpErrorRetrieveTokenString() throws IOException {
+
+    VaultEndpoint endpoint = VaultEndpoint.create(
+        vaultProperties.getUrl(),
+        vaultProperties.getPort());
+    URI uri = endpoint.createUri("auth/jwt/login");
+    
+    mockServer
+    .expect(requestTo(uri.toString()))
+    .andExpect(method(HttpMethod.POST))
+    .andRespond(withBadRequest());
+    
+    assertThatThrownBy(
+        () -> vaultService.retrieveToken(accessToken))
+        .isInstanceOf(HttpClientErrorException.class);
+    
+    mockServer.verify();
   }
   
-  @Test
-  public void testListSecrets() {
-
-    TokenAuthentication token = new TokenAuthentication("s.DQSf698xaTFLtBCY9bG2QdhI");
-    String spath = "secret/private/marathon/11e9a30f-f358-0741-a6d8-024283ff312b";
-    List<String> depentries = Arrays.asList("mypass");
-
-    assertEquals(depentries.size(), 1);
-
-    Mockito.when(vaultService.listSecrets(token, spath)).thenReturn(depentries);
-    
-    List<String> result = vaultService.listSecrets(token, spath);
-    assertEquals(result, depentries);
-  }
-  
-  @Test
-  public void testDeleteSecret() {
-    TokenAuthentication token = new TokenAuthentication("s.DQSf698xaTFLtBCY9bG2QdhI");
-    String spath = "secret/private/marathon/11e9a30f-f358-0741-a6d8-024283ff312b/password";
-    VaultSecret mypass = new VaultSecret("mypass");
-    vaultService.deleteSecret(token, spath + "/" + mypass.getValue());    
-  }
-
 }
