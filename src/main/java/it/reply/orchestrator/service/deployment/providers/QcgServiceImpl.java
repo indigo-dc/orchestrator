@@ -302,7 +302,7 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
     	Job job = executeWithClientForResult(cloudProviderEndpoint, requestedWithToken,
                 client -> client.getJob(jobId));
       return Optional.ofNullable(job);
-    } catch (RuntimeException | QcgException ex) {
+    } catch (QcgException ex) {
       throw new DeploymentException("Unable to retrieve job " + jobId + " status on Qcg", ex);
     }
   }

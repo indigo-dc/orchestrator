@@ -323,7 +323,7 @@
     </dependency>
 
     <dependency>
-      <groupId>it.infn.ba.indigo</groupId>
+      <groupId>it.infn.ba.deep</groupId>
       <artifactId>chronos-client</artifactId>
       <version>${chronos-client.version}</version>
     </dependency>
