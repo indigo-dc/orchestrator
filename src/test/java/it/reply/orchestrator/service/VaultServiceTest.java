@@ -28,12 +28,11 @@ import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.vault.authentication.TokenAuthentication;
 import org.springframework.vault.support.VaultResponse;
 
-import it.reply.orchestrator.Application;
 import it.reply.orchestrator.dto.vault.VaultSecret;
 
 /**
@@ -43,7 +42,7 @@ import it.reply.orchestrator.dto.vault.VaultSecret;
  *
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@SpringBootTest(classes = Application.class)
+@RestClientTest(VaultService.class)
 public class VaultServiceTest {
 
   @Mock
