@@ -420,9 +420,9 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
     
     //TODO  MAP ALL PROPETIES FROM TOSCA
     
-    // property: environment_variables
+    // property: environment
     ToscaUtils
-        .extractMap(taskNode.getProperties(), "environment_variables", String.class::cast)
+        .extractMap(taskNode.getProperties(), "environment", String.class::cast)
         .ifPresent(qcgjob::setEnvironment);
     
     // property: executable
