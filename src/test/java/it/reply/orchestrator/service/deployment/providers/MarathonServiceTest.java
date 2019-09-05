@@ -93,7 +93,7 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
   private Marathon marathonClient;
 
   @Before
-  public void setup() throws ParsingException {
+  public void setup() throws Exception {
     MockitoAnnotations.initMocks(this);
     Mockito
         .when(oauth2tokenService.executeWithClientForResult(
