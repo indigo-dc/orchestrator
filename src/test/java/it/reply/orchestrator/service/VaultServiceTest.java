@@ -23,21 +23,16 @@ import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.client.ExpectedCount.once;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.header;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
-import static org.springframework.test.web.client.match.MockRestRequestMatchers.queryParam;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.requestTo;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withBadRequest;
 import static org.springframework.test.web.client.response.MockRestResponseCreators.withSuccess;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -51,8 +46,6 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.test.web.client.MockRestServiceServer;
-import org.springframework.test.web.client.response.DefaultResponseCreator;
-import org.springframework.vault.authentication.TokenAuthentication;
 import org.springframework.vault.client.VaultEndpoint;
 import org.springframework.vault.support.VaultTokenResponse;
 import org.springframework.web.client.HttpClientErrorException;
@@ -79,6 +72,9 @@ public class VaultServiceTest {
   @Rule
   public final SpringMethodRule springMethodRule = new SpringMethodRule();
 
+  @MockBean
+  private OAuth2TokenService oauth2TokenService;
+  
   @Autowired
   private VaultService vaultService;
 
@@ -88,8 +84,6 @@ public class VaultServiceTest {
   @Autowired
   private MockRestServiceServer mockServer;
   
-  @MockBean
-  private OAuth2TokenService oauth2TokenService;
   
   private ObjectMapper objectMapper;
   
@@ -117,9 +111,11 @@ public class VaultServiceTest {
     validoidc.setSubject(validsubject);
     oidcTokenId.setOidcEntityId(validoidc);
 
+
     OidcEntityId expiredidc = new OidcEntityId();
     expiredidc.setSubject(expiredsubject);
     expiredOidcTokenId.setOidcEntityId(expiredidc);
+
     
     when(oauth2TokenService
         .executeWithClientForResult(eq(oidcTokenId), any(), any()))
@@ -128,10 +124,6 @@ public class VaultServiceTest {
     when(oauth2TokenService
         .executeWithClientForResult(eq(expiredOidcTokenId), any(), any()))
             .then(a -> ((ThrowingFunction) a.getArguments()[1]).apply(expiredAccessToken));
-    
-    when(oauth2TokenService
-        .getRefreshedAccessToken(expiredOidcTokenId))
-        .thenReturn(validAccessToken);
   }
   
   private URI buildEndpoint() {
@@ -236,18 +228,10 @@ public class VaultServiceTest {
             .string(objectMapper.writeValueAsString(buildLogin(expiredAccessToken))))
         .andRespond(withBadRequest().body("token is expired"));
     
-    mockServer
-        .expect(once(), requestTo(buildEndpoint().toString()))
-        .andExpect(method(HttpMethod.POST))
-        .andExpect(content()
-            .string(objectMapper.writeValueAsString(buildLogin(validAccessToken))))
-        .andRespond(
-          withSuccess(JsonUtils.serialize(buildVaultResponse()), 
-              MediaType.APPLICATION_JSON_UTF8));
-    
     //do test
-    assertThat(vaultService.retrieveToken(expiredOidcTokenId).login().getToken())
-      .isEqualTo(vaultToken);
+    assertThatThrownBy(
+        () -> vaultService.retrieveToken(expiredOidcTokenId))
+        .isInstanceOf(VaultJwtTokenExpiredException.class);
     
     mockServer.verify();
   }
