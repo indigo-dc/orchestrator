@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,9 +17,9 @@
 package it.reply.orchestrator.service;
 
 import it.reply.orchestrator.dal.entity.OidcTokenId;
-import it.reply.orchestrator.dto.CloudProvider;
+import it.reply.orchestrator.dto.cmdb.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudService;
-import it.reply.orchestrator.dto.cmdb.Type;
+import it.reply.orchestrator.dto.cmdb.CloudServiceType;
 import it.reply.orchestrator.dto.dynafed.Dynafed;
 import it.reply.orchestrator.dto.dynafed.Dynafed.Resource;
 import it.reply.orchestrator.dto.dynafed.Metalink;
@@ -31,6 +31,7 @@ import it.reply.orchestrator.service.security.OAuth2TokenService;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.core.UriBuilder;
@@ -83,14 +84,14 @@ public class DynafedServiceImpl {
         .values()
         .stream()
         .flatMap(cloudProvider -> cloudProvider
-            .getCmdbProviderServices()
+            .getServices()
             .values()
             .stream()
             .filter(
-                cloudService -> Type.STORAGE == cloudService.getData().getType() && !cloudService
+                cloudService -> CloudServiceType.STORAGE == cloudService.getType() && !cloudService
                     .isOneProviderStorageService()))
         .collect(Collectors
-            .toMap(cs -> cs.getData().getHostname(), cs -> cs));
+            .toMap(CloudService::getHostname, Function.identity()));
 
     dynafed
         .getFiles()
@@ -127,7 +128,7 @@ public class DynafedServiceImpl {
                 return Dynafed.Resource
                     .builder()
                     .endpoint(url.toString())
-                    .cloudProviderId(storageService.getData().getProviderId())
+                    .cloudProviderId(storageService.getProviderId())
                     .cloudServiceId(storageService.getId())
                     .build();
               })

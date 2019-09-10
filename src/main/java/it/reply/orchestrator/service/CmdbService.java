@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,24 +16,30 @@
 
 package it.reply.orchestrator.service;
 
-import it.reply.orchestrator.dto.CloudProvider;
+import it.reply.orchestrator.dto.cmdb.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudService;
+import it.reply.orchestrator.dto.cmdb.Flavor;
 import it.reply.orchestrator.dto.cmdb.Image;
-import it.reply.orchestrator.dto.cmdb.Provider;
 
 import java.util.List;
+import java.util.Set;
 
 public interface CmdbService {
 
-  public CloudService getServiceById(String id);
+  public CloudProvider getProviderById(String id);
 
-  public Provider getProviderById(String id);
+  public List<CloudService> getServicesByProvider(String providerId);
+
+  public CloudService getServiceById(String id);
 
   public List<Image> getImagesByService(String serviceId);
 
   public Image getImageById(String imageId);
 
-  public CloudProvider fillCloudProviderInfo(CloudProvider cp);
+  public List<Flavor> getFlavorsByService(String serviceId);
 
-  public List<CloudService> getServicesByProvider(String providerId);
+  public Flavor getFlavorById(String flavorId);
+
+  public CloudProvider fillCloudProviderInfo(String providerId, Set<String> servicesWithSla);
+
 }

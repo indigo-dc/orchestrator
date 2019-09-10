@@ -62,7 +62,7 @@ public class OAuth2ConfigurationsService {
     oidcProperties.throwIfSecurityDisabled();
     return Optional.ofNullable(serverConfigurationService.getServerConfiguration(issuer))
         .orElseThrow(() -> new OrchestratorException(
-            "No server configuration found for IAM with iss" + issuer));
+            "No server configuration found for IAM with issuer " + issuer));
   }
 
   /**

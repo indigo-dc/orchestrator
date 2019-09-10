@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,24 +16,79 @@
 
 package it.reply.orchestrator.dto.cmdb;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class Image extends CmdbDataWrapper<Image, ImageData> {
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+public class Image implements CmdbIdentifiable {
 
-  @Builder
-  protected Image(@NonNull String id, @NonNull ImageData data) {
-    super(id, data);
-  }
+  @JsonProperty("id")
+  @Nullable
+  private String id;
 
+  @JsonProperty("image_id")
+  @Nullable
+  private String imageId;
+
+  @JsonProperty("image_name")
+  @Nullable
+  private String imageName;
+
+  @JsonProperty("image_description")
+  @Nullable
+  private String imageDescription;
+
+  @JsonProperty("architecture")
+  @Nullable
+  private String architecture;
+
+  @JsonProperty("type")
+  @Nullable
+  private String type;
+
+  @JsonProperty("distribution")
+  @Nullable
+  private String distribution;
+
+  @JsonProperty("version")
+  @Nullable
+  private String version;
+
+  @JsonProperty("service")
+  @Nullable
+  private String service;
+
+  @JsonProperty("user_name")
+  @Nullable
+  private String userName;
+
+  @JsonProperty("gpu_driver")
+  @Nullable
+  private Boolean gpuDriver;
+
+  @JsonProperty("gpu_driver_version")
+  @Nullable
+  private String gpuDriverVersion;
+
+  @JsonProperty("cuda_support")
+  @Nullable
+  private Boolean cudaSupport;
+
+  @JsonProperty("cuda_version")
+  @Nullable
+  private String cudaVersion;
+
+  @JsonProperty("cuDNN_version")
+  @Nullable
+  private String cuDnnVersion;
 }

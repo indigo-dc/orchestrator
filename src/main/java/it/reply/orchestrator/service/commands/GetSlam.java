@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package it.reply.orchestrator.service.commands;
 
-import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.service.SlamService;
 import it.reply.orchestrator.utils.WorkflowConstants;
@@ -37,28 +36,6 @@ public class GetSlam extends BaseRankCloudProvidersCommand {
     rankCloudProvidersMessage.setSlamPreferences(
         slamService.getCustomerPreferences(rankCloudProvidersMessage.getRequestedWithToken()));
 
-    // Get VO (customer) preferences and SLAs (infer available Cloud Providers from it)
-    rankCloudProvidersMessage
-        .getSlamPreferences()
-        .getSla()
-        .forEach(sla -> {
-          // Create Cloud Provider, add to the list
-          CloudProvider cp = rankCloudProvidersMessage
-              .getCloudProviders()
-              .computeIfAbsent(sla.getCloudProviderId(),
-                  cloudProviderId -> CloudProvider
-                      .builder()
-                      .id(cloudProviderId)
-                      .build());
-
-          // Get provider's services
-          sla
-              .getServices()
-              .forEach(
-                  service -> cp
-                      .getCmdbProviderServices()
-                      .put(service.getServiceId(), null));
-        });
   }
 
   @Override

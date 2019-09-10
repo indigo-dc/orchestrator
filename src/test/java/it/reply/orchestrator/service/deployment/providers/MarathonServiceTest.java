@@ -29,10 +29,11 @@ import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.dto.cmdb.CloudService;
-import it.reply.orchestrator.dto.cmdb.MarathonServiceData;
-import it.reply.orchestrator.dto.cmdb.MarathonServiceData.MarathonServiceProperties;
-import it.reply.orchestrator.dto.cmdb.Type;
+import it.reply.orchestrator.dto.cmdb.MarathonService;
+import it.reply.orchestrator.dto.cmdb.MarathonService.MarathonServiceProperties;
+import it.reply.orchestrator.dto.cmdb.CloudServiceType;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
+import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.function.ThrowingFunction;
@@ -182,22 +183,24 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
     Deployment deployment = generateDeployment();
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
 
-    MarathonServiceData marathonServiceData = MarathonServiceData
+    MarathonService cs = MarathonService
         .marathonBuilder()
         .endpoint("example.com/marathon")
         .serviceType(CloudService.MARATHON_COMPUTE_SERVICE)
         .hostname("example.com")
-        .providerId("TEST")
-        .type(Type.COMPUTE)
+        .providerId("provider-1")
+        .id("provider-1-service-1")
+        .type(CloudServiceType.COMPUTE)
         .properties(MarathonServiceProperties
             .builder()
             .localVolumesHostBasePath("/tmp/")
             .build())
         .build();
 
-    Mockito
-        .when(marathonClientFactory.getFrameworkProperties(dm))
-        .thenReturn(marathonServiceData);
+    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(cs));
+    csi.next();
+    dm.setCloudServicesOrderedIterator(csi);
+
     Mockito
         .when(deploymentRepository.findOne(deployment.getId()))
         .thenReturn(deployment);

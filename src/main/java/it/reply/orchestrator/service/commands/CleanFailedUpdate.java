@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
 package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
+import it.reply.orchestrator.dto.workflow.CloudServiceWf;
+import it.reply.orchestrator.utils.WorkflowConstants;
 import it.reply.orchestrator.utils.WorkflowConstants.Delegate;
 
 import org.flowable.engine.delegate.DelegateExecution;
@@ -32,6 +34,12 @@ public class CleanFailedUpdate extends BaseDeployCommand {
 
   @Override
   public void execute(DelegateExecution execution, DeploymentMessage deploymentMessage) {
+    CloudServiceWf cloudServiceWf = deploymentMessage.getCloudServicesOrderedIterator().current();
+    if (cloudServiceWf.getLastErrorCause() == null) {
+      Exception exception = getRequiredParameter(execution, WorkflowConstants.Param.EXCEPTION,
+          Exception.class);
+      cloudServiceWf.setLastErrorCause(exception.getMessage());
+    }
     getDeploymentProviderService(deploymentMessage).cleanFailedUpdate(deploymentMessage);
   }
 

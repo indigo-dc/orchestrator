@@ -18,7 +18,7 @@ package it.reply.orchestrator.dto.cmdb;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import it.reply.orchestrator.dto.cmdb.MarathonServiceData.MarathonServiceProperties;
+import it.reply.orchestrator.dto.cmdb.MarathonService.MarathonServiceProperties;
 import it.reply.orchestrator.utils.CommonUtils;
 
 import java.util.ArrayList;
@@ -38,19 +38,20 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class MarathonServiceData extends MesosFrameworkServiceData<MarathonServiceProperties> {
+public class MarathonService extends MesosFrameworkService<MarathonServiceProperties> {
 
   @Builder(builderMethodName = "marathonBuilder")
-  public MarathonServiceData(
+  public MarathonService(
+      @NonNull String id,
       @NonNull String serviceType,
       @NonNull String endpoint,
       @NonNull String providerId,
-      @NonNull Type type,
+      @NonNull CloudServiceType type,
       boolean publicService,
       @Nullable String region,
       @NonNull String hostname,
       @NonNull MarathonServiceProperties properties) {
-    super(serviceType, endpoint, providerId, type, publicService, region, hostname, properties);
+    super(id, serviceType, endpoint, providerId, type, publicService, region, hostname, properties);
   }
 
   @Data

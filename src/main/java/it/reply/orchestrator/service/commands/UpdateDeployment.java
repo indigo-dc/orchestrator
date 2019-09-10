@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,27 +17,30 @@
 package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.dal.entity.Deployment;
-import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
+import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
-import it.reply.orchestrator.dto.workflow.CloudProvidersOrderedIterator;
+import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.exception.service.BusinessWorkflowException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.CloudProviderEndpointServiceImpl;
+import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.WorkflowConstants;
 import it.reply.orchestrator.utils.WorkflowConstants.ErrorCode;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,13 +48,12 @@ import org.springframework.stereotype.Component;
 
 /**
  * Choose Cloud Provider and update Deployment/Message with the selected one data.
- * 
- * @author l.biava
- *
  */
 @Component(WorkflowConstants.Delegate.UPDATE_DEPLOYMENT)
 @Slf4j
 public class UpdateDeployment extends BaseDeployCommand {
+
+  private static final String DELIMITER = "\n" + StringUtils.repeat("-", 64) + "\n";
 
   @Autowired
   private CloudProviderEndpointServiceImpl cloudProviderEndpointService;
@@ -63,37 +65,48 @@ public class UpdateDeployment extends BaseDeployCommand {
         getRequiredParameter(execution, WorkflowConstants.Param.RANK_CLOUD_PROVIDERS_MESSAGE,
             RankCloudProvidersMessage.class);
 
-    CloudProvidersOrderedIterator cloudProvidersOrderedIterator = deploymentMessage
-        .getCloudProvidersOrderedIterator();
-    if (cloudProvidersOrderedIterator == null) {
-      cloudProvidersOrderedIterator = cloudProviderEndpointService
+    CloudServicesOrderedIterator servicesIt = deploymentMessage.getCloudServicesOrderedIterator();
+    if (servicesIt == null) {
+      servicesIt = cloudProviderEndpointService
           .generateCloudProvidersOrderedIterator(rankCloudProvidersMessage,
               deploymentMessage.getMaxProvidersRetry());
-      deploymentMessage.setCloudProvidersOrderedIterator(cloudProvidersOrderedIterator);
+      deploymentMessage.setCloudServicesOrderedIterator(servicesIt);
     }
-    if (!cloudProvidersOrderedIterator.hasNext()) {
-      if (cloudProvidersOrderedIterator.getSize() == 0) {
+    if (!servicesIt.hasNext()) {
+      if (servicesIt.getSize() == 0) {
         throw new BusinessWorkflowException(ErrorCode.RUNTIME_ERROR,
             "No cloud providers available to deploy");
       } else {
+        servicesIt.reset();
+        String causes = CommonUtils
+            .iteratorToStream(servicesIt)
+            .map(wfService -> new StringBuilder()
+                .append("Cloud Provider <")
+                .append(wfService.getCloudService().getProviderId())
+                .append(">\nCloud Provider Service <")
+                .append(wfService.getCloudService().getId())
+                .append(">\n\n")
+                .append(wfService.getLastErrorCause()))
+            .collect(Collectors.joining(DELIMITER, DELIMITER, ""));
+
         throw new BusinessWorkflowException(ErrorCode.RUNTIME_ERROR,
-            "Retries on cloud providers exhausted");
+            "Retries on cloud providers exhausted. Error list is:\n" + causes);
       }
     }
-    CloudProvider currentCloudProvider = cloudProvidersOrderedIterator.next();
+    CloudService currentCloudService = servicesIt.next().getCloudService();
     Deployment deployment = getDeployment(deploymentMessage);
 
     boolean isUpdate = Status.UPDATE_IN_PROGRESS == deployment.getStatus();
 
     // Update Deployment
     if (!isUpdate) {
-      deployment.setCloudProviderName(currentCloudProvider.getId());
+      deployment.setCloudProviderName(currentCloudService.getProviderId());
     }
     // FIXME Set/update all required selected CP data
 
     // FIXME Generate CP Endpoint
     CloudProviderEndpoint chosenCloudProviderEndpoint = cloudProviderEndpointService
-        .getCloudProviderEndpoint(currentCloudProvider,
+        .getCloudProviderEndpoint(currentCloudService,
             rankCloudProvidersMessage.getPlacementPolicies(), deploymentMessage.isHybrid());
     deploymentMessage.setChosenCloudProviderEndpoint(chosenCloudProviderEndpoint);
     LOG.debug("Generated Cloud Provider Endpoint is: {}", chosenCloudProviderEndpoint);
@@ -113,15 +126,15 @@ public class UpdateDeployment extends BaseDeployCommand {
     }
 
     DeploymentProvider deploymentProvider = cloudProviderEndpointService
-        .getDeploymentProvider(deploymentMessage.getDeploymentType(), currentCloudProvider);
+        .getDeploymentProvider(deploymentMessage.getDeploymentType(), currentCloudService);
     deployment.setDeploymentProvider(deploymentProvider);
 
-    deploymentMessage.setOneDataParameters(generateOneDataParameters(currentCloudProvider,
+    deploymentMessage.setOneDataParameters(generateOneDataParameters(currentCloudService,
         rankCloudProvidersMessage.getOneDataRequirements()));
   }
 
   protected @NonNull Map<String, OneData> generateOneDataParameters(
-      @NonNull CloudProvider cloudProvider,
+      @NonNull CloudService cloudService,
       @NonNull Map<String, OneData> oneDataRequirements) {
     Map<String, OneData> oneDataParameters = new HashMap<>();
 
@@ -130,7 +143,7 @@ public class UpdateDeployment extends BaseDeployCommand {
           Optional<OneDataProviderInfo> localOneProvider = oneDataRequirement
               .getOneproviders()
               .stream()
-              .filter(oneDataProviderInfo -> cloudProvider.getId()
+              .filter(oneDataProviderInfo -> cloudService.getProviderId()
                   .equals(oneDataProviderInfo.getCloudProviderId()))
               .findAny();
           final OneDataProviderInfo selectedOneProvider;

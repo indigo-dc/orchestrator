@@ -23,12 +23,11 @@ import com.google.common.collect.Lists;
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
-import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.cmdb.CloudService;
-import it.reply.orchestrator.dto.cmdb.CloudServiceData;
-import it.reply.orchestrator.dto.cmdb.ImageData;
-import it.reply.orchestrator.dto.cmdb.Type;
+import it.reply.orchestrator.dto.cmdb.Image;
+import it.reply.orchestrator.dto.cmdb.CloudProvider;
+import it.reply.orchestrator.dto.cmdb.CloudServiceType;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.policies.SlaPlacementPolicy;
@@ -133,8 +132,7 @@ public class PrefilterCloudProvidersTest extends
     when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
         .thenReturn(deployment);
     when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
-    when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
-            Mockito.anyObject()))
+    when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject()))
         .thenReturn(Maps.newHashMap(Boolean.FALSE, new HashMap<>()));
 
     ExecutionEntity execution = new ExecutionEntityBuilder()
@@ -169,8 +167,7 @@ public class PrefilterCloudProvidersTest extends
     when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
         .thenReturn(deployment);
     when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
-    when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
-            Mockito.anyObject()))
+    when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject()))
         .thenReturn(new HashMap<>());
 
     ExecutionEntity execution = new ExecutionEntityBuilder()
@@ -206,8 +203,7 @@ public class PrefilterCloudProvidersTest extends
     when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
         .thenReturn(deployment);
     when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
-    when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
-            Mockito.anyObject()))
+    when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject()))
         .thenReturn(new HashMap<>());
 
     ExecutionEntity execution = new ExecutionEntityBuilder()
@@ -241,8 +237,7 @@ public class PrefilterCloudProvidersTest extends
     when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
         .thenReturn(deployment);
     when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
-    when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
-            Mockito.anyObject()))
+    when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject()))
         .thenReturn(new HashMap<>());
 
     ExecutionEntity execution = new ExecutionEntityBuilder()
@@ -275,11 +270,10 @@ public class PrefilterCloudProvidersTest extends
     when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
         .thenReturn(deployment);
 
-    when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
-            Mockito.anyObject()))
+    when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject()))
         .thenReturn(
             Maps.newHashMap(Boolean.FALSE,
-                Maps.newHashMap(new NodeTemplate(), ImageData.builder().build())));
+                Maps.newHashMap(new NodeTemplate(), Image.builder().build())));
 
     ExecutionEntity execution = new ExecutionEntityBuilder()
         .withMockedVariable(WorkflowConstants.Param.RANK_CLOUD_PROVIDERS_MESSAGE, rankCloudProvidersMessage)
@@ -332,7 +326,8 @@ public class PrefilterCloudProvidersTest extends
     CloudProvider cloudProvider = CloudProvider
         .builder()
         .id("provider-RECAS-BARI")
-        .cmdbProviderServices(cloudServices)
+        .name("provider-RECAS-BARI")
+        .services(cloudServices)
         .build();
     Map<String, CloudProvider> cloudProviders = new HashMap<>();
     cloudProviders.put(cloudProvider.getId(), cloudProvider);
@@ -343,14 +338,11 @@ public class PrefilterCloudProvidersTest extends
     CloudService cloudService = CloudService
         .builder()
         .id("provider-RECAS-BARI")
-        .data(CloudServiceData
-            .builder()
-            .type(Type.STORAGE)
-            .endpoint("http://example.com")
-            .providerId("providerId")
-            .serviceType(CloudService.ONEPROVIDER_STORAGE_SERVICE)
-            .hostname("example.com")
-            .build())
+        .type(CloudServiceType.STORAGE)
+        .endpoint("http://example.com")
+        .providerId("providerId")
+        .serviceType(CloudService.ONEPROVIDER_STORAGE_SERVICE)
+        .hostname("example.com")
         .build();
     Map<String, CloudService> cloudServices = new HashMap<>();
     cloudServices.put(cloudService.getId(), cloudService);

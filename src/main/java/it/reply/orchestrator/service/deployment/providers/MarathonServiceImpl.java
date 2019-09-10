@@ -27,7 +27,8 @@ import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
-import it.reply.orchestrator.dto.cmdb.MarathonServiceData.MarathonServiceProperties;
+import it.reply.orchestrator.dto.cmdb.MarathonService;
+import it.reply.orchestrator.dto.cmdb.MarathonService.MarathonServiceProperties;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.mesos.MesosContainer;
 import it.reply.orchestrator.dto.mesos.MesosContainer.Type;
@@ -200,8 +201,9 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
 
     String groupId = deployment.getId();
 
-    MarathonServiceProperties marathonProperties = marathonClientFactory
-        .getFrameworkProperties(deploymentMessage)
+    MarathonServiceProperties marathonProperties = deploymentMessage
+        .getCloudServicesOrderedIterator()
+        .currentService(MarathonService.class)
         .getProperties();
 
     CommonUtils
@@ -587,8 +589,10 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
           .filter(node -> toscaService.isOfToscaType(node, ToscaConstants.Nodes.Types.MARATHON))
           .collect(Collectors.toList());
 
-      MarathonServiceProperties marathonProperties =
-          marathonClientFactory.getFrameworkProperties(deploymentMessage).getProperties();
+      MarathonServiceProperties marathonProperties = deploymentMessage
+          .getCloudServicesOrderedIterator()
+          .currentService(MarathonService.class)
+          .getProperties();
       RuntimeProperties runtimeProperties = new RuntimeProperties();
       for (NodeTemplate marathonNode : orderedMarathonApps) {
 
