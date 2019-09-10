@@ -81,7 +81,7 @@ public class OAuth2TokenService {
 
   /**
    * Get the current OAuth2 token.
-   * 
+   *
    * @return the OAuth2 token.
    * @throws IllegalStateException
    *           if the security is disabled, the user is not authenticated or the call is made of an
@@ -102,7 +102,7 @@ public class OAuth2TokenService {
 
   /**
    * Retrieve the CLUES IAM information from the OAuth2 access token.
-   * 
+   *
    * @param accessToken
    *          the accessToken
    * @return the CLUES IAM information
@@ -162,7 +162,7 @@ public class OAuth2TokenService {
 
   /**
    * Gets the current OidcEntity if already exists or generates a new one.
-   * 
+   *
    * @return the current OidcEntity
    */
   public OidcEntity getOrGenerateOidcEntityFromCurrentAuth() {
@@ -196,7 +196,7 @@ public class OAuth2TokenService {
 
   /**
    * Exchange an access token and put it in the cache.
-   * 
+   *
    * @return the exchanged grant
    */
   public OidcTokenId exchangeCurrentAccessToken() {
@@ -207,7 +207,7 @@ public class OAuth2TokenService {
 
   /**
    * Refresh an access token and put it into the cache.
-   * 
+   *
    * @param id
    *          the id of the token
    * @return the exchanged grant

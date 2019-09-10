@@ -91,7 +91,7 @@ include::{snippets}/deployment-not-found/http-response.adoc[]
 The Orchestrator adds hypermedia and pagination metadata in the responses.
 
 === Hypermedia
-The Orchestrator uses hypermedia links (atom link) to other resources in the responses. Atom link element defines a reference 
+The Orchestrator uses hypermedia links (atom link) to other resources in the responses. Atom link element defines a reference
 from an entry or feed to a Web resource.
 include::{snippets}/deployment-hypermedia/response-fields.adoc[]
 

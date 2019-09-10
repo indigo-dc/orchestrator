@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -64,7 +64,7 @@ public class AuthenticatedWebSecurityConfig extends BaseWebSecurityConfig {
 
   /**
    * Generates a new ServerConfigurationService.
-   * 
+   *
    * @return the generated ServerConfigurationService
    */
   @Bean
@@ -77,7 +77,7 @@ public class AuthenticatedWebSecurityConfig extends BaseWebSecurityConfig {
 
   /**
    * Generates a new ClientConfigurationService.
-   * 
+   *
    * @return the generated ClientConfigurationService
    */
   @Bean
@@ -108,7 +108,7 @@ public class AuthenticatedWebSecurityConfig extends BaseWebSecurityConfig {
 
   /**
    * Generates a new IntrospectionConfigurationService.
-   * 
+   *
    * @return the generated IntrospectionConfigurationService
    */
   @Bean
@@ -129,7 +129,7 @@ public class AuthenticatedWebSecurityConfig extends BaseWebSecurityConfig {
 
   /**
    * Generates a new ResourceServerTokenServices.
-   * 
+   *
    * @return the generated ResourceServerTokenServices
    */
   @Bean

@@ -107,7 +107,7 @@ public class CloudService implements CmdbIdentifiable {
 
   /**
    * Get if the the service is a OpenStack compute service.
-   * 
+   *
    * @return true if the service is a OpenStack compute service
    */
   @JsonIgnore
@@ -117,7 +117,7 @@ public class CloudService implements CmdbIdentifiable {
 
   /**
    * Get if the the service is a OTC compute service.
-   * 
+   *
    * @return true if the service is a OTC compute service
    */
   @JsonIgnore
@@ -127,7 +127,7 @@ public class CloudService implements CmdbIdentifiable {
 
   /**
    * Get if the the service is a OpenNebula compute service.
-   * 
+   *
    * @return true if the service is a OpenNebula compute service
    */
   @JsonIgnore
@@ -137,7 +137,7 @@ public class CloudService implements CmdbIdentifiable {
 
   /**
    * Get if the the service is a OCCI compute service.
-   * 
+   *
    * @return true if the service is a OCCI compute service
    */
   @JsonIgnore
@@ -147,7 +147,7 @@ public class CloudService implements CmdbIdentifiable {
 
   /**
    * Get if the the service is a AWS compute service.
-   * 
+   *
    * @return true if the service is a AWS compute service
    */
   @JsonIgnore
@@ -157,7 +157,7 @@ public class CloudService implements CmdbIdentifiable {
 
   /**
    * Get if the the service is a OneProvider storage service.
-   * 
+   *
    * @return true if the service is a OneProvider storage service
    */
   @JsonIgnore
@@ -167,7 +167,7 @@ public class CloudService implements CmdbIdentifiable {
 
   /**
    * Get if the the service is a CDMI storage service.
-   * 
+   *
    * @return true if the service is a CDMI storage service
    */
   @JsonIgnore
@@ -177,7 +177,7 @@ public class CloudService implements CmdbIdentifiable {
 
   /**
    * Get if the the service is a OpenNebula TOSCA service.
-   * 
+   *
    * @return true if the service is a OpenNebula TOSCA service
    */
   @JsonIgnore
@@ -187,7 +187,7 @@ public class CloudService implements CmdbIdentifiable {
 
   /**
    * Get if the the service is a Azure compute service.
-   * 
+   *
    * @return true if the service is a Azure compute service
    */
   @JsonIgnore

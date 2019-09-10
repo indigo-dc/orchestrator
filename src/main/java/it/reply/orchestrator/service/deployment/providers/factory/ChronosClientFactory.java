@@ -58,5 +58,4 @@ public class ChronosClientFactory extends MesosFrameworkClientFactory<ChronosSer
         .target(Chronos.class, chronosEndpoint);
   }
 
-
 }

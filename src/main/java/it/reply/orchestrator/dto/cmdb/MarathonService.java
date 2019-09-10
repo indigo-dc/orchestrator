@@ -66,7 +66,7 @@ public class MarathonService extends MesosFrameworkService<MarathonServiceProper
 
     @JsonProperty("secrets_support")
     private boolean secretSupport;
-    
+
     @Builder
     protected MarathonServiceProperties(
         @Nullable String localVolumesHostBasePath,

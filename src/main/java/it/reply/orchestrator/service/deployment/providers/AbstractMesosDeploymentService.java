@@ -59,7 +59,7 @@ public abstract class AbstractMesosDeploymentService<T extends MesosTask<T>, S>
 
   /**
    * Builds a MesosTask.
-   * 
+   *
    * @param graph
    *          the graph of with all nodes
    * @param taskNode

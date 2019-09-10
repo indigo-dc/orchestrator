@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,7 +60,7 @@ public class DeploymentController {
 
   /**
    * Get all deployments.
-   * 
+   *
    * @param pageable
    *          {@Link Pageable}
    * @param pagedAssembler
@@ -90,7 +90,7 @@ public class DeploymentController {
 
   /**
    * Create a deployment.
-   * 
+   *
    * @param request
    *          {@link DeploymentRequest}
    * @return {@link DeploymentResource}
@@ -107,7 +107,7 @@ public class DeploymentController {
 
   /**
    * Update the deployment.
-   * 
+   *
    * @param id
    *          the deployment id
    * @param request
@@ -124,7 +124,7 @@ public class DeploymentController {
 
   /**
    * Get the deployment.
-   * 
+   *
    * @param id
    *          the deployment id
    * @return {@link DeploymentResource}
@@ -141,7 +141,7 @@ public class DeploymentController {
 
   /**
    * Delete the deployment.
-   * 
+   *
    * @param id
    *          the deployment id
    */

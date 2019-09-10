@@ -65,7 +65,7 @@ public class BaseWorkflowMessage {
 
   /**
    * Creates a new BaseWorkflowMessage coping the fields from another one.
-   * 
+   *
    * @param other
    *          the other BaseWorkflowMessage
    */

@@ -50,7 +50,7 @@ public class DeploymentMessage extends BaseWorkflowMessage {
 
   /**
    * Sets the Deployment timeout.
-   * 
+   *
    * @param timeoutMins
    *          the timeout in Minutes
    */

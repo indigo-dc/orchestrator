@@ -132,7 +132,7 @@ capability_types:
         constraints:
           - equal: mesos
 
-  tosca.capabilities.indigo.MesosMaster:        
+  tosca.capabilities.indigo.MesosMaster:
     derived_from: tosca.capabilities.Container
 
   tosca.capabilities.indigo.MesosSlave:
@@ -517,7 +517,7 @@ node_types:
             export_dir: { get_property: [ SELF, export_dir ] }
             galaxy_flavor: { get_property: [ SELF, flavor ] }
             get_refdata: { get_property: [ SELF, reference_data ] }
- 
+
   tosca.nodes.indigo.GalaxyWN:
     derived_from: tosca.nodes.SoftwareComponent
     properties:
@@ -737,7 +737,7 @@ node_types:
         default: 'DIRECT'
         required: false
       refdata_cvmfs_proxy_port:
-        type: integer 
+        type: integer
         description: CernVM-FS proxy port
         default: 80
         required: false
@@ -1311,8 +1311,8 @@ node_types:
       marathon_port:
         required: no
         type: integer
-        default: 8443      
-      tensorflow_image: 
+        default: 8443
+      tensorflow_image:
         required: no
         type: string
         default: 'tensorflow/tensorflow:latest-gpu'
@@ -1341,7 +1341,7 @@ node_types:
           implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/start_tensorflow.yml
           inputs:
             marathon_username: { get_property: [ SELF, marathon_username ] }
-            marathon_password: { get_property: [ SELF, marathon_password ] }      
+            marathon_password: { get_property: [ SELF, marathon_password ] }
             marathon_protocol: { get_property: [ SELF, marathon_protocol ] }
             marathon_host:  { get_property: [ SELF, marathon_host ] }
             marathon_port: { get_property: [ SELF, marathon_port ] }
@@ -1388,11 +1388,11 @@ node_types:
       mesos_username:
         type: string
         required: no
-        default: 'admin'       
+        default: 'admin'
       mesos_password:
         type: string
         required: no
-        default: 'admin'         
+        default: 'admin'
       marathon_enable_ssl:
         type: boolean
         required: no
@@ -1475,7 +1475,7 @@ node_types:
             enable_nfs_share: { get_property: [ SELF, enable_nfs_share ] }
             marathon_enable_gpu_support: { get_property: [ SELF, enable_gpu_support ] }
             mesos_enable_gpu_support: { get_property: [ SELF, enable_gpu_support ] }
-            chronos_enable_gpu_support: { get_property: [ SELF, enable_gpu_support ] }  
+            chronos_enable_gpu_support: { get_property: [ SELF, enable_gpu_support ] }
             wn_ips: { get_property: [ SELF, wn_ips ] }
 
   tosca.nodes.indigo.MesosMaster:
@@ -1549,11 +1549,11 @@ node_types:
         type: string
         required: no
         default: 'https://dodas-tts.cloud.cnaf.infn.it'
-      oneclient_token: 
+      oneclient_token:
         type: string
         required: no
         default: 'dummy'
-      oneprovider_name: 
+      oneprovider_name:
         type: string
         required: no
         default: 'dummy'
@@ -1583,7 +1583,7 @@ node_types:
             cms_input_protocol: { get_property: [ SELF, cms_input_protocol ] }
             marathon_user: { get_property: [ SELF, marathon_username ] }
             marathon_pass: { get_property: [ SELF, marathon_password ] }
-            zookeeper_host_list: { get_property: [ SELF, master_ips ] }            
+            zookeeper_host_list: { get_property: [ SELF, master_ips ] }
             proxy_cache_manager: { get_property: [ SELF, cms_proxycache_token_manager ] }
             proxy_tts: { get_property: [ SELF, watts_endpoint ] }
             proxy_iam_endpoint: { get_property: [ SELF, iam_endpoint ] }
@@ -1764,7 +1764,7 @@ node_types:
       marathon_password:
         type: string
         required: yes
-      enable_consul_sd: 
+      enable_consul_sd:
         type: boolean
         required: false
         default: true
@@ -1811,7 +1811,7 @@ node_types:
         type: string
         required: false
         default: ''
-      spark_swift_auth_url: 
+      spark_swift_auth_url:
         type: string
         required: false
         default: ''
@@ -1819,7 +1819,7 @@ node_types:
         type: string
         required: false
         default: '8080'
-      spark_swift_region: 
+      spark_swift_region:
         type: string
         required: false
         default: ''
@@ -1827,23 +1827,23 @@ node_types:
         type: string
         required: false
         default: ''
-      spark_swift_username: 
+      spark_swift_username:
         type: string
         required: false
         default: ''
-      spark_swift_password: 
+      spark_swift_password:
         type: string
         required: false
         default: ''
-      spark_swift_provider: 
+      spark_swift_provider:
         type: string
         required: false
         default: 'Test'
-      spark_cores_max: 
+      spark_cores_max:
         type: integer
         required: false
         default: '-1'
-      spark_executor_cores: 
+      spark_executor_cores:
         type: integer
         required: false
         default: '-1'
@@ -1851,11 +1851,11 @@ node_types:
         type: scalar-unit.size
         required: false
         default: '0 GB'
-      spark_driver_mem: 
+      spark_driver_mem:
         type: scalar-unit.size
         required: false
         default: '0 GB'
-      spark_driver_cores: 
+      spark_driver_cores:
         type: integer
         required: false
         default: '-1'
@@ -2199,7 +2199,7 @@ node_types:
           inputs:
             jupyterhub_spawner: { get_property: [ SELF, spawner ] }
             jupyterhub_authenticator: { get_property: [ SELF, spawner ] }
-            
+
 
   tosca.nodes.indigo.OnedataSpace:
     derived_from: tosca.nodes.Root
@@ -2268,7 +2268,7 @@ policy_types:
       sla_id:
         required: true
         type: string
-    
+
   tosca.policies.indigo.CredentialsAwareSlaPlacement:
     derived_from: tosca.policies.indigo.SlaPlacement
     properties:

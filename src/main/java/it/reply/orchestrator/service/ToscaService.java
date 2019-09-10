@@ -52,7 +52,7 @@ public interface ToscaService {
   /**
    * Obtain the string TOSCA template representation from the in-memory representation. <br/>
    * <b>WARNING: Some nodes or properties might be missing!! Use at your own risk!</b>
-   * 
+   *
    * @param archiveRoot
    *          the {@link ArchiveRoot} from which serialize the TOSCA template
    * @return the serialized TOSCA template
@@ -64,7 +64,7 @@ public interface ToscaService {
   /**
    * Adds the parameters needed for 'tosca.nodes.indigo.ElasticCluster' nodes (deployment_id,
    * orchestrator_url).
-   * 
+   *
    * @param parsingResult
    *          .
    * @param deploymentId
@@ -78,7 +78,7 @@ public interface ToscaService {
   /**
    * Replace images data in 'tosca.capabilities.indigo.OperatingSystem' capabilities in the TOSCA
    * template with the provider-specific identifier.
-   * 
+   *
    * @param deploymentProvider
    *          the deployment provider.
    * @param parsingResult
@@ -92,7 +92,7 @@ public interface ToscaService {
   /**
    * Find matches for images data in 'tosca.capabilities.indigo.OperatingSystem' capabilities in the
    * TOSCA template with the provider-specific identifier.
-   * 
+   *
    * @param parsingResult
    *          the in-memory TOSCA template.
    * @param computeService
@@ -103,7 +103,7 @@ public interface ToscaService {
 
   /**
    * Verifies that all the template's required inputs are present in the user's input list.
-   * 
+   *
    * @param templateInputs
    *          the templates's defined inputs.
    * @param inputs
@@ -118,7 +118,7 @@ public interface ToscaService {
   /**
    * Replaces TOSCA input functions with the actual input values (user's input values or default
    * ones).
-   * 
+   *
    * @param archiveRoot
    *          the in-memory TOSCA template.
    * @param inputs
@@ -131,7 +131,7 @@ public interface ToscaService {
   /**
    * Parse the TOSCA template (string) and get the in-memory representation.<br/>
    * This also checks for validation errors.
-   * 
+   *
    * @param toscaTemplate
    *          the TOSCA template as string.
    * @return an {@link ArchiveRoot} representing the template.
@@ -146,7 +146,7 @@ public interface ToscaService {
 
   /**
    * As for {@link #parseTemplate(String)} but also validates user's inputs.
-   * 
+   *
    * @param toscaTemplate
    *          the TOSCA template as string.
    * @return an {@link ArchiveRoot} representing the template.
@@ -161,7 +161,7 @@ public interface ToscaService {
 
   /**
    * As for {@link #parseAndValidateTemplate(String, Map)} but also replaces the user's inputs.
-   * 
+   *
    * @param toscaTemplate
    *          the TOSCA template as string.
    * @return an {@link ArchiveRoot} representing the template.
@@ -184,7 +184,7 @@ public interface ToscaService {
   /**
    * Finds all the nodes associated to the given {@link NodeTemplate} with a capability with the
    * given name.
-   * 
+   *
    * @param nodes
    *          the template's node map.
    * @param nodeTemplate
@@ -203,7 +203,7 @@ public interface ToscaService {
 
   /**
    * Get the list of resources to be removed.
-   * 
+   *
    * @param nodeTemplate
    *          {@link NodeTemplate}
    * @return the list of resources to be removed or an empty list
@@ -216,7 +216,7 @@ public interface ToscaService {
 
   /**
    * Extracts OneData requirements (i.e. space, favorite providers, etc) from the TOSCA template.
-   * 
+   *
    * @param archiveRoot
    *          an {@link ArchiveRoot} representing the template.
    * @param inputs
@@ -233,7 +233,7 @@ public interface ToscaService {
 
   /**
    * Extracts the placement policies from the TOSCA template.
-   * 
+   *
    * @param archiveRoot
    *          an {@link ArchiveRoot} representing the template.
    * @return the list of placementPolicies

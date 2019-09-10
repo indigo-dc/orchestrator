@@ -330,7 +330,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     TokenAuthentication vaultToken = vaultService.retrieveToken(requestedWithToken);
 
     //remove vault entries if present
-    String spath = "secret/private/" + deployment.getId(); 
+    String spath = "secret/private/" + deployment.getId();
     List<String> depentries = vaultService.listSecrets(vaultToken, spath);
     if (!depentries.isEmpty()) {
       for (String depentry:depentries) {
@@ -413,15 +413,14 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
         secrets.put(entry.getKey(), source);
 
         //write secret on service
-        String spath = "secret/private/" + deploymentId + "/" + marathonTask.getId() + "/" 
+        String spath = "secret/private/" + deploymentId + "/" + marathonTask.getId() + "/"
             + entry.getKey();
-        
+
         vaultService.writeSecret(vaultToken, spath, new VaultSecret(entry.getValue()));
 
-      }        
+      }
       app.setSecrets(secrets);
     }
-
 
     app.setEnv(marathonEnv);
     app.setInstances(marathonTask.getInstances());

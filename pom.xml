@@ -67,8 +67,9 @@
     <maven-release-plugin.version>2.5.3</maven-release-plugin.version>
     <license-maven-plugin.version>3.0</license-maven-plugin.version>
     <jacoco-maven-plugin.version>0.8.2</jacoco-maven-plugin.version>
-    <checkstyle-plugin.version>3.0.0</checkstyle-plugin.version>
-    <puppycrawl-tools-checkstyle.version>8.10</puppycrawl-tools-checkstyle.version>
+    <checkstyle-plugin.version>3.1.0</checkstyle-plugin.version>
+    <puppycrawl-tools-checkstyle.version>8.24</puppycrawl-tools-checkstyle.version>
+    <editorconfig-maven-plugin.version>0.0.10</editorconfig-maven-plugin.version>
 
     <!-- Dependencies -->
     <guava.version>23.2-jre</guava.version>
@@ -575,6 +576,26 @@
 
     <plugins>
       <plugin>
+        <groupId>org.ec4j.maven</groupId>
+        <artifactId>editorconfig-maven-plugin</artifactId>
+        <version>${editorconfig-maven-plugin.version}</version>
+        <executions>
+          <execution>
+            <id>check-editorconfig</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <excludes>
+            <exclude>**/*.jar</exclude>
+            <exclude>**/*.war</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
+      <plugin>
         <groupId>pl.project13.maven</groupId>
         <artifactId>git-commit-id-plugin</artifactId>
       </plugin>
@@ -612,20 +633,22 @@
         </dependencies>
         <executions>
           <execution>
+            <id>checkstyle</id>
+            <phase>validate</phase>
             <goals>
               <goal>check</goal>
             </goals>
-            <configuration>
-              <consoleOutput>true</consoleOutput>
-              <failsOnError>true</failsOnError>
-              <failOnViolation>true</failOnViolation>
-              <violationSeverity>warning</violationSeverity>
-              <configLocation>
-                ${project.basedir}/tools/maven-checkstyle-plugin/google_checks.xml
-              </configLocation>
-            </configuration>
           </execution>
         </executions>
+        <configuration>
+          <consoleOutput>true</consoleOutput>
+          <failsOnError>true</failsOnError>
+          <failOnViolation>true</failOnViolation>
+          <violationSeverity>warning</violationSeverity>
+          <configLocation>
+            ${project.basedir}/tools/maven-checkstyle-plugin/google_checks.xml
+          </configLocation>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>com.mycila</groupId>
@@ -648,7 +671,8 @@
             <exclude>src/main/java/it/reply/orchestrator/exception/VaultJwtTokenExpiredException.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/service/VaultService.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/service/VaultServiceImpl.java</exclude>
-            <exclude>src/test/java/it/reply/orchestrator/service/VaultServiceTest.java</exclude></excludes>
+            <exclude>src/test/java/it/reply/orchestrator/service/VaultServiceTest.java</exclude>
+          </excludes>
         </configuration>
       </plugin>
 

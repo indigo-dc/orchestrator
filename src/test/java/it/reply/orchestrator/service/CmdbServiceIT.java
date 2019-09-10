@@ -32,7 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * This integration test makes real request to the CMDB APIs.
- * 
+ *
  * @author l.biava
  *
  */

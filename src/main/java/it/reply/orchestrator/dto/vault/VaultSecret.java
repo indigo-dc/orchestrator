@@ -29,4 +29,4 @@ public class VaultSecret {
   @NonNull
   private String value;
 
-}  
+}
