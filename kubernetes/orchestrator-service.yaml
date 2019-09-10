@@ -1,5 +1,5 @@
 #
-# Copyright © 2015-2018 Santer Reply S.p.A.
+# Copyright © 2015-2019 Santer Reply S.p.A.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -16,15 +16,15 @@
 
 apiVersion: v1
 kind: Service
-metadata: 
-  labels: 
+metadata:
+  labels:
     service: orchestrator
-    component: backend    
+    component: backend
   name: orchestrator
-spec: 
+spec:
   ports:
     - port: 8080
-  selector: 
+  selector:
     service: orchestrator
     component: backend
   type: LoadBalancer

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ public class CustomOAuth2Template {
 
   /**
    * * Creates a new OAuth2Template.
-   * 
+   *
    * @param serverConfiguration
    *          the authorization server configuration
    * @param clientConfiguration
@@ -70,7 +70,7 @@ public class CustomOAuth2Template {
 
   /**
    * Exchange an access token for a new grant.
-   * 
+   *
    * @param accessToken
    *          the access token to exchange
    * @param scopes
@@ -87,7 +87,7 @@ public class CustomOAuth2Template {
 
   /**
    * Get a new access token (and maybe a refresh token) from an existing refresh token.
-   * 
+   *
    * @param refreshToken
    *          the refresh token to use
    * @param scopes
@@ -104,7 +104,7 @@ public class CustomOAuth2Template {
 
   /**
    * Introspect an access token or a refresh token.
-   * 
+   *
    * @param token
    *          the token
    * @return the introspection response

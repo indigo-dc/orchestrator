@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -102,7 +102,7 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
 
     /**
      * Generate a ResponseWrapper.
-     * 
+     *
      * @param request
      *          the request
      * @param response
@@ -149,7 +149,7 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
 
     /**
      * Set the uri from a base uri and a query string.
-     * 
+     *
      * @param uri
      *          the base uri without query param
      * @param queryString
@@ -164,7 +164,7 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
 
     /**
      * Set the client ip from a {@link HttpServletRequest}.
-     * 
+     *
      * @param request
      *          the request
      */
@@ -174,7 +174,7 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
 
     /**
      * Set the session from a {@link HttpServletRequest}.
-     * 
+     *
      * @param request
      *          the request
      */
@@ -186,7 +186,7 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
 
     /**
      * Set the user from a {@link HttpServletRequest}.
-     * 
+     *
      * @param request
      *          the request
      */
@@ -196,7 +196,7 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
 
     /**
      * Set the headers from a {@link HttpServletRequest}.
-     * 
+     *
      * @param request
      *          the request
      */
@@ -214,7 +214,7 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
 
     /**
      * Set the payload from a {@link HttpServletRequest}.
-     * 
+     *
      * @param request
      *          the request
      * @param maxPayloadLength
@@ -243,7 +243,7 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
 
     /**
      * Generate an AbstractWrapper.
-     * 
+     *
      * @param request
      *          the request
      * @param maxPayloadLength

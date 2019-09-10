@@ -189,7 +189,6 @@ public class IndigoInputsPreProcessorService {
         });
   }
 
-
   protected void processFunctions(Topology topology, Map<String, ToscaFunction> functions,
       Set<FunctionPropertyValue> processedFunctions) {
 

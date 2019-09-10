@@ -2,7 +2,7 @@ tosca_definitions_version: tosca_simple_yaml_1_0
 
 imports:
   - indigo_custom_types: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/custom_types.yaml
- 
+
 description: >
   TOSCA test for launching a Virtual Elastic Cluster. It will launch
   a single front-end that will be in change of managing the elasticity
@@ -38,7 +38,7 @@ topology_template:
             mem_size: 1 GB
         os:
           properties:
-            type: linux 
+            type: linux
 
     wn_node:
       type: tosca.nodes.indigo.LRMS.WorkerNode.Torque
@@ -51,7 +51,7 @@ topology_template:
             min_instances: 0
       requirements:
         - host: torque_wn
-            
+
     torque_wn:
       type: tosca.nodes.indigo.Compute
       capabilities:
@@ -65,8 +65,8 @@ topology_template:
             mem_size: 1 GB
         os:
           properties:
-            type: linux 
-            #distribution: ubuntu 
+            type: linux
+            #distribution: ubuntu
             #version: 14.04
 
   outputs:

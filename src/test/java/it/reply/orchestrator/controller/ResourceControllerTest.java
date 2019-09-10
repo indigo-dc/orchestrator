@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,13 +60,13 @@ public class ResourceControllerTest {
 
   @Rule
   public final SpringMethodRule springMethodRule = new SpringMethodRule();
-  
+
   @Autowired
   private MockMvc mockMvc;
 
   @MockBean
   private ResourceService resourceService;
-  
+
   @SpyBean
   private BaseResourceAssembler baseResourceAssembler;
 

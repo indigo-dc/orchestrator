@@ -57,7 +57,6 @@ public class ToscaUtils {
     }
   }
 
-
   /**
    * It wraps an object inside an {@link AbstractPropertyValue}.
    *

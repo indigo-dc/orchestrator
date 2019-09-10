@@ -94,7 +94,7 @@ This project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed:
 - Update default monitoring endpoint (#158)
-- Update custom INDIGO TOSCA types (#161) 
+- Update custom INDIGO TOSCA types (#161)
 - Improve DB connection handling during shutdown (#163)
 
 ### Deprecated:

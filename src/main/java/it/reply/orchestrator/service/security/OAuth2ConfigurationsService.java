@@ -52,7 +52,7 @@ public class OAuth2ConfigurationsService {
 
   /**
    * Get a server configuration.
-   * 
+   *
    * @param issuer
    *          the issuer of the server
    * @return the server configuration
@@ -66,7 +66,7 @@ public class OAuth2ConfigurationsService {
 
   /**
    * Get a client configuration.
-   * 
+   *
    * @param serverConfiguration
    *          the server configuration on which the client has been registered
    * @return the client configuration
@@ -81,7 +81,7 @@ public class OAuth2ConfigurationsService {
 
   /**
    * Get a client configuration.
-   * 
+   *
    * @param issuer
    *          the issuer of the server on which the client has been registered
    * @return the client configuration
