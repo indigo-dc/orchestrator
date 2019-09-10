@@ -20,6 +20,6 @@ This command will download the dependencies, compile the code and create a war p
 
 After the previous step, you can build the Docker image of the Orchestrator with the command:
 ```
-docker build -t indigodatacloud/orchestrator docker/ 
+docker build -t indigodatacloud/orchestrator docker/
 ```
 

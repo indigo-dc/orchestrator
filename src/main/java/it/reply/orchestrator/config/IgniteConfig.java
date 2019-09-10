@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ public class IgniteConfig {
 
   /**
    * Generates a new IgniteConfiguration.
-   * 
+   *
    * @return the generated IgniteConfiguration
    */
   @Bean
@@ -72,7 +72,7 @@ public class IgniteConfig {
 
   /**
    * Generates a new Ignite instance.
-   * 
+   *
    * @return the generated Ignite instance
    */
   @Bean(destroyMethod = "close")

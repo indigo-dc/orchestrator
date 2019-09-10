@@ -185,7 +185,6 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
     discardProvidersAndServices(providersToDiscard, servicesToDiscard, rankCloudProvidersMessage);
   }
 
-
   private void discardOnPlacementPolicies(Map<String, ToscaPolicy> placementPolicies,
       Collection<CloudProvider> cloudProviders, List<Sla> slas,
       Set<CloudService> servicesToDiscard) {

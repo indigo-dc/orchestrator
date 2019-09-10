@@ -181,7 +181,7 @@ public class ToscaServiceImpl implements ToscaService {
 
   /**
    * Load normative and non-normative types.
-   * 
+   *
    */
   @PostConstruct
   public void init() throws IOException, FunctionalException {
@@ -221,7 +221,7 @@ public class ToscaServiceImpl implements ToscaService {
 
   /**
    * Utility to zip an inputStream.
-   * 
+   *
    */
   public static void zip(InputStream fileStream, Path outputPath) throws IOException {
     FileUtil.touch(outputPath);
@@ -887,12 +887,12 @@ public class ToscaServiceImpl implements ToscaService {
   public boolean isOfToscaType(NodeTemplate node, String nodeType) {
     return isSubTypeOf(Preconditions.checkNotNull(node).getType(), nodeType);
   }
-  
+
   @Override
   public boolean isOfToscaType(Resource resource, String nodeType) {
     return isSubTypeOf(Preconditions.checkNotNull(resource).getToscaNodeType(), nodeType);
   }
-  
+
   private boolean isSubTypeOf(@Nullable String optionalNodeType, String superNodeType) {
     return Optional
         .ofNullable(optionalNodeType)
@@ -1028,12 +1028,12 @@ public class ToscaServiceImpl implements ToscaService {
         .flatMap(capability -> ToscaUtils
             .extractScalar(capability.getProperties(), "count", IntegerType.class));
   }
-  
+
   @Override
   public boolean isScalable(NodeTemplate nodeTemplate) {
     return getCount(nodeTemplate).isPresent();
   }
-  
+
   @Override
   public Collection<NodeTemplate> getScalableNodes(ArchiveRoot archiveRoot) {
     return getNodesFromArchiveRoot(archiveRoot)

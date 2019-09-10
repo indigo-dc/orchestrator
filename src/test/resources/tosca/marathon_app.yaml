@@ -33,5 +33,5 @@ topology_template:
             volumes: [ 'marathon:/data:rw:dvdi:rexray', '/data:rw' ]
 
   outputs:
-    endpoint: 
+    endpoint:
       value:  { concat: [ { get_attribute : [ marathonapp, load_balancer_ips, 0 ] }, ':', { get_attribute : [ docker_runtime, host, publish_ports, 0, target ] } ] }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import org.springframework.http.HttpStatus;
 /**
  * Exception thrown when the request could not be completed due to a conflict with the current state
  * of the resource.
- * 
+ *
  * @author m.bassi
  *
  */

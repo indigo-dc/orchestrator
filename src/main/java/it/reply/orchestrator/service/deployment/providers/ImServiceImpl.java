@@ -586,9 +586,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   /**
    * Match the {@link Resource} to IM vms.
-   * 
+   *
    * @param infrastructureState
-   * 
+   *
    */
   private void bindResources(DeploymentMessage deploymentMessage,
       InfrastructureState infrastructureState)

@@ -85,7 +85,7 @@ public class ControllerTestUtils {
     deployment.getResources().add(resource);
     return resource;
   }
-  
+
   public static Resource createResource(Deployment deployment) {
     return createResource(UUID.randomUUID().toString(), deployment);
   }

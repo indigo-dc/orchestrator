@@ -62,7 +62,7 @@ public class CommonUtils {
   /**
    * Verify that a <code>@Nullable</code> reference is effectively non null and cast it to a
    * <code>@NonNull</code> reference. If the reference is instead null, a NPE is thrown
-   * 
+   *
    * @param reference
    *          the nullable reference
    * @return the non null reference
@@ -79,7 +79,7 @@ public class CommonUtils {
    * Verify that a <code>@Nullable</code> reference is effectively non null and cast it to a
    * <code>@NonNull</code> reference. If the reference is instead null, the <code>@NonNull</code>
    * default value is returned
-   * 
+   *
    * @param reference
    *          the <code>@Nullable</code> reference
    * @param defaultValue
@@ -99,7 +99,7 @@ public class CommonUtils {
    * Verify that a <code>@Nullable</code> reference is effectively non null and cast it to a
    * <code>@NonNull</code> reference. If the reference is instead null, the <code>@NonNull</code> a
    * default value will be generated through the provided supplier and returned.
-   * 
+   *
    * @param reference
    *          the <code>@Nullable</code> reference
    * @param defaultValueSupplier
@@ -126,7 +126,7 @@ public class CommonUtils {
 
   /**
    * Cast, if present, the object wrapped inside an {@link Optional}.
-   * 
+   *
    * @param optionalObject
    *          the wrapped object
    * @return the casted object wrapped in a Optional
@@ -145,7 +145,7 @@ public class CommonUtils {
   /**
    * Generate a <b>sequential</b> and <b>ordered</b> {@link Stream} from the remaining element of a
    * {@link Iterator}.
-   * 
+   *
    * @param iterator
    *          the iterator from which generate the stream
    * @return the stream
@@ -161,7 +161,7 @@ public class CommonUtils {
 
   /**
    * Check if there is a HTTP request associated to the current thread or not.
-   * 
+   *
    * @return true if inside of a HTTP request, false otherwise
    */
   public static boolean isInHttpRequest() {
@@ -177,7 +177,7 @@ public class CommonUtils {
    * Filter a stream removing all the duplicate elements. The uniqueness is evaluated as
    * <tt>(e==null&nbsp;?&nbsp;e2==null&nbsp;:&nbsp;e.equals(e2))</tt> on the result of the provided
    * mapping function.
-   * 
+   *
    * @param stream
    *          the stream to filter
    * @param mapper
@@ -200,7 +200,7 @@ public class CommonUtils {
    * If the mapped keys contains duplicates (according to {@link Object#equals(Object)}), an
    * {@code IllegalStateException} is thrown when the collection operation is performed.
    * </p>
-   * 
+   *
    * @param keyMapper
    *          a mapping function to produce keys
    * @param valueMapper

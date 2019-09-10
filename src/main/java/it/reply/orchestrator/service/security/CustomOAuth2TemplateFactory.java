@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ public class CustomOAuth2TemplateFactory {
 
   /**
    * Generates a OAuth2Template for a specific issuer.
-   * 
+   *
    * @param issuer
    *          the issuer for which generate the {@link OAuth2Template}
    * @return the OAuth2Template

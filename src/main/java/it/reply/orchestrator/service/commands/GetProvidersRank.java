@@ -76,7 +76,7 @@ public class GetProvidersRank extends BaseRankCloudProvidersCommand {
     List<RankedCloudService> ranking = cloudProviderRankerService.getProviderServicesRanking(cprr);
     rankCloudProvidersMessage.setRankedCloudServices(ranking);
   }
-  
+
   private Monitoring generateMonitoringInfo(RankCloudProvidersMessage rankCloudProvidersMessage,
       String providerId, List<PaasMachine> paasMachines) {
     List<MonitoringService> monitoringServices = paasMachines
@@ -117,7 +117,6 @@ public class GetProvidersRank extends BaseRankCloudProvidersCommand {
         .metrics(metrics)
         .build();
   }
-
 
   @Override
   protected String getErrorMessagePrefix() {
