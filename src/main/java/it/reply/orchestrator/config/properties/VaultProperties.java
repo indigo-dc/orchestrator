@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2019 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,33 +14,30 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.dto.mesos.marathon;
+package it.reply.orchestrator.config.properties;
 
-import it.reply.orchestrator.dto.mesos.MesosTask;
-import it.reply.orchestrator.utils.ToscaConstants;
-
-import java.util.HashMap;
-import java.util.Map;
+import javax.validation.constraints.NotNull;
 
 import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.NoArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.validation.annotation.Validated;
 
+@Validated
 @Data
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
-public class MarathonApp extends MesosTask<MarathonApp> {
+@ConfigurationProperties(prefix = "vault")
+@NoArgsConstructor
+public class VaultProperties {
 
-  private Integer instances;
-
+  @NotNull
   @NonNull
-  private Map<String, String> secrets = new HashMap<>();
+  private String url;
 
-  @Override
-  public final String getToscaNodeName() {
-    return ToscaConstants.Nodes.Types.MARATHON;
-  }
+  @NotNull
+  @NonNull
+  private Integer port;
 
 }
+

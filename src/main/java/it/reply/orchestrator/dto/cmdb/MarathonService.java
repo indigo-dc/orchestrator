@@ -64,6 +64,9 @@ public class MarathonService extends MesosFrameworkService<MarathonServiceProper
     @JsonProperty("load_balancer_ips")
     private List<String> loadBalancerIps = new ArrayList<>();
 
+    @JsonProperty("secrets_support")
+    private boolean secretSupport;
+
     @Builder
     protected MarathonServiceProperties(
         @Nullable String localVolumesHostBasePath,

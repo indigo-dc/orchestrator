@@ -34,6 +34,7 @@ import it.reply.orchestrator.dto.mesos.MesosContainer;
 import it.reply.orchestrator.dto.mesos.MesosContainer.Type;
 import it.reply.orchestrator.dto.mesos.MesosPortMapping;
 import it.reply.orchestrator.dto.mesos.marathon.MarathonApp;
+import it.reply.orchestrator.dto.vault.VaultSecret;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.function.ThrowingConsumer;
@@ -41,10 +42,12 @@ import it.reply.orchestrator.function.ThrowingFunction;
 import it.reply.orchestrator.service.IndigoInputsPreProcessorService;
 import it.reply.orchestrator.service.IndigoInputsPreProcessorService.RuntimeProperties;
 import it.reply.orchestrator.service.ToscaService;
+import it.reply.orchestrator.service.VaultService;
 import it.reply.orchestrator.service.deployment.providers.factory.MarathonClientFactory;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
+import it.reply.orchestrator.utils.ToscaUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -75,6 +78,7 @@ import mesosphere.marathon.client.model.v2.LocalVolume;
 import mesosphere.marathon.client.model.v2.Network;
 import mesosphere.marathon.client.model.v2.Port;
 import mesosphere.marathon.client.model.v2.PortDefinition;
+import mesosphere.marathon.client.model.v2.SecretSource;
 import mesosphere.marathon.client.model.v2.Volume;
 
 import org.alien4cloud.tosca.model.definitions.OutputDefinition;
@@ -90,6 +94,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
+import org.springframework.vault.authentication.TokenAuthentication;
 
 @Service
 @DeploymentProviderQualifier(DeploymentProvider.MARATHON)
@@ -117,6 +122,9 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   @Autowired
   private OAuth2TokenService oauth2TokenService;
 
+  @Autowired
+  private VaultService vaultService;
+
   protected <R> R executeWithClientForResult(CloudProviderEndpoint cloudProviderEndpoint,
       @Nullable OidcTokenId requestedWithToken,
       ThrowingFunction<Marathon, R, MarathonException> function) {
@@ -132,7 +140,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
         client -> consumer.asFunction().apply(client));
   }
 
-  protected Group createGroup(Deployment deployment) {
+  protected Group createGroup(Deployment deployment, OidcTokenId requestedWithToken) {
     ArchiveRoot ar = toscaService
         .prepareTemplate(deployment.getTemplate(), deployment.getParameters());
 
@@ -164,7 +172,8 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
       resources.forEach(resource -> resource.setIaasId(marathonTask.getId()));
       marathonTask.setInstances(resources.size());
 
-      App marathonApp = generateExternalTaskRepresentation(marathonTask);
+      App marathonApp = generateExternalTaskRepresentation(marathonTask, deployment.getId(),
+          requestedWithToken);
       apps.add(marathonApp);
     }
     group.setApps(apps);
@@ -172,10 +181,23 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   }
 
   @Override
+  public MarathonApp buildTask(DirectedMultigraph<NodeTemplate, RelationshipTemplate> graph,
+      NodeTemplate taskNode, String taskId) {
+    MarathonApp task = super.buildTask(graph, taskNode, taskId);
+
+    ToscaUtils
+        .extractMap(taskNode.getProperties(), "secrets", String.class::cast)
+        .ifPresent(task::setSecrets);
+
+    return task;
+  }
+
+  @Override
   public boolean doDeploy(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
+    final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
 
-    Group group = createGroup(deployment);
+    Group group = createGroup(deployment, requestedWithToken);
 
     String groupId = deployment.getId();
 
@@ -215,7 +237,6 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
 
     LOG.info("Creating Marathon App Group for deployment {} with definition:\n{}",
         deployment.getId(), group);
-    final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
     CloudProviderEndpoint cloudProviderEndpoint = deployment.getCloudProviderEndpoint();
     executeWithClient(cloudProviderEndpoint, requestedWithToken,
         client -> client.createGroup(group));
@@ -305,6 +326,20 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
         throw ex;
       }
     }
+
+    TokenAuthentication vaultToken = vaultService.retrieveToken(requestedWithToken);
+
+    //remove vault entries if present
+    String spath = "secret/private/" + deployment.getId();
+    List<String> depentries = vaultService.listSecrets(vaultToken, spath);
+    if (!depentries.isEmpty()) {
+      for (String depentry:depentries) {
+        List<String> entries = vaultService.listSecrets(vaultToken, spath + "/" + depentry);
+        for (String entry:entries) {
+          vaultService.deleteSecret(vaultToken, spath + "/" + depentry + "/" + entry);
+        }
+      }
+    }
     return true;
   }
 
@@ -337,7 +372,13 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   }
 
   @Override
+  @Deprecated
   protected App generateExternalTaskRepresentation(MarathonApp marathonTask) {
+    throw new UnsupportedOperationException();
+  }
+
+  protected App generateExternalTaskRepresentation(MarathonApp marathonTask, String deploymentId,
+      OidcTokenId requestedWithToken) {
     App app = new App();
     String id = marathonTask.getId();
     if (!APP_NAME_VALIDATOR.matcher(id).matches()) {
@@ -353,7 +394,35 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     app.setMem(marathonTask.getMemSize());
     app.setUris(marathonTask.getUris());
     app.setLabels(marathonTask.getLabels());
-    app.setEnv(new HashMap<>(marathonTask.getEnv()));
+
+    Map<String, Object> marathonEnv = new HashMap<>(marathonTask.getEnv());
+
+    // handle secrets
+    if (!marathonTask.getSecrets().isEmpty()) {
+
+      TokenAuthentication vaultToken = vaultService.retrieveToken(requestedWithToken);
+
+      Map<String, SecretSource> secrets = new HashMap<>();
+
+      for (Map.Entry<String, String> entry : marathonTask.getSecrets().entrySet()) {
+        Map<String, String> enventry = new HashMap<>();
+        enventry.put("secret", entry.getKey());
+        marathonEnv.put(entry.getKey(), enventry);
+        SecretSource source = new SecretSource();
+        source.setSource(entry.getKey() + "@value");
+        secrets.put(entry.getKey(), source);
+
+        //write secret on service
+        String spath = "secret/private/" + deploymentId + "/" + marathonTask.getId() + "/"
+            + entry.getKey();
+
+        vaultService.writeSecret(vaultToken, spath, new VaultSecret(entry.getValue()));
+
+      }
+      app.setSecrets(secrets);
+    }
+
+    app.setEnv(marathonEnv);
     app.setInstances(marathonTask.getInstances());
     boolean useGpu = Optional
         .ofNullable(marathonTask.getGpus())

@@ -37,18 +37,24 @@ import it.reply.orchestrator.enums.DeploymentType;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.ToscaService;
+import it.reply.orchestrator.utils.CommonUtils;
+import it.reply.orchestrator.utils.ToscaConstants;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.alien4cloud.tosca.model.templates.NodeTemplate;
+import org.alien4cloud.tosca.model.templates.Topology;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -118,6 +124,7 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
                     if (cloudProviderService instanceof MarathonService) {
                       MarathonService marathonService = (MarathonService) cloudProviderService;
                       discardOnMesosGpuRequirement(ar, marathonService, servicesToDiscard);
+                      discardOnMarathonSecretsRequirement(ar, marathonService, servicesToDiscard);
                     } else {
                       addServiceToDiscard(servicesToDiscard, cloudProviderService);
                     }
@@ -250,6 +257,31 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
           "Discarded Mesos framework service {} of provider {} because it doesn't support GPUs",
           mesosFrameworkService.getId(), mesosFrameworkService.getProviderId());
       addServiceToDiscard(servicesToDiscard, mesosFrameworkService);
+    }
+  }
+
+  protected void discardOnMarathonSecretsRequirement(ArchiveRoot archiveRoot,
+      MarathonService marathonService,
+      Set<CloudService> servicesToDiscard) {
+
+    Map<String, NodeTemplate> nodes = Optional
+        .ofNullable(archiveRoot.getTopology())
+        .map(Topology::getNodeTemplates)
+        .orElseGet(HashMap::new);
+
+    boolean isSecretsRequired = nodes
+        .values()
+        .stream()
+        .filter(node -> toscaService.isOfToscaType(node, ToscaConstants.Nodes.Types.MARATHON))
+        .anyMatch(node -> CommonUtils
+            .getFromOptionalMap(node.getProperties(), "secrets")
+            .isPresent());
+
+    if (isSecretsRequired && !marathonService.getProperties().isSecretSupport()) {
+      LOG.debug(
+          "Discarded Marathon service {} of provider {} because it doesn't support Secrets",
+              marathonService.getId(), marathonService.getProviderId());
+      addServiceToDiscard(servicesToDiscard, marathonService);
     }
   }
 

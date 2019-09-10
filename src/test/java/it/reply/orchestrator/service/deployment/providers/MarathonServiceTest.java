@@ -172,7 +172,7 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
     Deployment deployment = generateDeployment();
 
     Assertions
-        .assertThat(marathonServiceImpl.createGroup(deployment))
+        .assertThat(marathonServiceImpl.createGroup(deployment, null))
         .isEqualToComparingFieldByFieldRecursively(
             ModelUtils.GSON.fromJson(TestUtil.getFileContentAsString(
                 ToscaServiceTest.TEMPLATES_BASE_DIR + "marathon_app.json"), Group.class));

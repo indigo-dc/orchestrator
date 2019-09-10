@@ -48,6 +48,8 @@ public class CustomOAuth2Template {
 
   private RestTemplate restTemplate;
 
+  private String audience;
+
   /**
    * * Creates a new OAuth2Template.
    *
@@ -59,13 +61,15 @@ public class CustomOAuth2Template {
    *          the RestTemplate builder
    */
   public CustomOAuth2Template(@NonNull ServerConfiguration serverConfiguration,
-      @NonNull RegisteredClient clientConfiguration, @NonNull RestTemplateBuilder builder) {
+      @NonNull RegisteredClient clientConfiguration, @NonNull RestTemplateBuilder builder,
+      @NonNull String audience) {
     this.serverConfiguration = serverConfiguration;
     this.clientConfiguration = clientConfiguration;
 
     builder.messageConverters(new FormHttpMessageConverter(), new FormHttpMessageConverter(),
         new MappingJackson2HttpMessageConverter());
     this.restTemplate = builder.build();
+    this.audience = audience;
   }
 
   /**
@@ -82,6 +86,7 @@ public class CustomOAuth2Template {
         generateParams(clientConfiguration.getTokenEndpointAuthMethod());
     params.set("subject_token", accessToken);
     params.set("grant_type", "urn:ietf:params:oauth:grant-type:token-exchange");
+    params.set("audience", audience);
     return postForAccessGrant(params, scopes);
   }
 
@@ -99,6 +104,7 @@ public class CustomOAuth2Template {
         generateParams(clientConfiguration.getTokenEndpointAuthMethod());
     params.set("refresh_token", refreshToken);
     params.set("grant_type", "refresh_token");
+    params.set("audience", audience);
     return postForAccessGrant(params, scopes);
   }
 
