@@ -17,14 +17,9 @@
 package it.reply.orchestrator.service.deployment.providers;
 
 
-//import alien4cloud.model.components.ComplexPropertyValue;
-//import alien4cloud.model.components.ScalarPropertyValue;
-//import alien4cloud.model.topology.NodeTemplate;
-//import alien4cloud.tosca.model.ArchiveRoot;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-//import com.google.common.collect.ImmutableMap;
+
 import com.google.common.collect.Lists;
 
 import it.infn.ba.deep.qcg.client.Qcg;
@@ -32,6 +27,7 @@ import it.infn.ba.deep.qcg.client.model.Job;
 import it.infn.ba.deep.qcg.client.model.JobDescription;
 import it.infn.ba.deep.qcg.client.model.JobDescriptionExecution;
 import it.infn.ba.deep.qcg.client.utils.QcgException;
+
 import it.reply.orchestrator.config.specific.ToscaParserAwareTest;
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
@@ -41,12 +37,11 @@ import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.dto.cmdb.CloudService;
-import it.reply.orchestrator.dto.cmdb.QcgServiceData;
-import it.reply.orchestrator.dto.cmdb.Type;
+import it.reply.orchestrator.dto.cmdb.CloudServiceType;
+import it.reply.orchestrator.dto.cmdb.QcgService;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.deployment.QcgJobsOrderedIterator;
-//import it.reply.orchestrator.dto.onedata.OneData;
-//import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
+import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.function.ThrowingFunction;
@@ -56,12 +51,13 @@ import it.reply.orchestrator.service.deployment.providers.QcgServiceImpl.DeepJob
 import it.reply.orchestrator.service.deployment.providers.QcgServiceImpl.JobState;
 import it.reply.orchestrator.service.deployment.providers.factory.QcgClientFactory;
 import it.reply.orchestrator.util.TestUtil;
-//import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.ToscaConstants.Nodes;
 
 import java.io.IOException;
-//import java.util.Map;
 import java.util.UUID;
+
+import junitparams.JUnitParamsRunner;
+import junitparams.Parameters;
 
 import org.assertj.core.api.AbstractThrowableAssert;
 import org.junit.Before;
@@ -77,8 +73,6 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.web.client.RestTemplate;
 
-import junitparams.JUnitParamsRunner;
-import junitparams.Parameters;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
@@ -361,23 +355,26 @@ public class QcgServiceTest extends ToscaParserAwareTest {
   public void generateJobGraph() throws IOException {
     Deployment deployment = generateDeployment();
     DeploymentMessage dm = generateDeployDmQcg(deployment);
-    QcgServiceData qcgProperties = QcgServiceData
+    QcgService qs = QcgService
         .qcgBuilder()
         .endpoint("http://www.example.com/api")
         .serviceType(CloudService.QCG_COMPUTE_SERVICE)
         .hostname("www.example.com")
-        .providerId("TEST")
-        .type(Type.COMPUTE)
+        .providerId("provider-1")
+        .id("provider-1-service-1")
+        .type(CloudServiceType.COMPUTE)               
         .build();
-    when(qcgClientFactory.getFrameworkProperties(dm)).thenReturn(qcgProperties);
+    
+    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(qs));
+    csi.next();
+    dm.setCloudServicesOrderedIterator(csi);
 
     QcgJobsOrderedIterator topologyIterator = qcgService.getJobsTopologicalOrder(
         dm, deployment);
     topologyIterator.next();
-    
     assertThat(objectMapper.writer(SerializationFeature.INDENT_OUTPUT)
-            .writeValueAsString(topologyIterator)).isEqualToNormalizingNewlines(TestUtil
-                    .getFileContentAsString(ToscaServiceTest.TEMPLATES_BASE_DIR + "qcg_jobs.json"));
+        .writeValueAsString(topologyIterator)).isEqualToNormalizingNewlines(TestUtil
+        .getFileContentAsString(ToscaServiceTest.TEMPLATES_BASE_DIR + "qcg_jobs.json").trim());    
   }
 
   private Deployment generateDeployment() throws IOException {

@@ -16,38 +16,25 @@
 
 package it.reply.orchestrator.service.deployment.providers.factory;
 
+import feign.auth.BasicAuthRequestInterceptor;
 import feign.Feign;
 import feign.Logger.Level;
 import feign.RequestInterceptor;
-//import feign.gson.GsonDecoder;
-//import feign.gson.GsonEncoder;
 import feign.slf4j.Slf4jLogger;
 
 import it.infn.ba.deep.qcg.client.Qcg;
 import it.infn.ba.deep.qcg.client.utils.QcgDecoder;
 import it.infn.ba.deep.qcg.client.utils.QcgEncoder;
 import it.infn.ba.deep.qcg.client.utils.QcgException;
-import it.reply.orchestrator.dto.cmdb.QcgServiceData;
+
+import it.reply.orchestrator.dto.CloudProviderEndpoint;
+
+import java.util.Objects;
 
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
-
-
-import feign.auth.BasicAuthRequestInterceptor;
-
-import it.reply.orchestrator.dto.CloudProviderEndpoint;
-import it.reply.orchestrator.dto.cmdb.CloudService;
-import it.reply.orchestrator.dto.deployment.DeploymentMessage;
-import it.reply.orchestrator.exception.service.DeploymentException;
-
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-
-
-import org.checkerframework.checker.nullness.qual.NonNull;
 
 
 @Slf4j
@@ -113,24 +100,4 @@ public class QcgClientFactory {
 	  return build(cloudProviderEndpoint.getCpEndpoint(), requestInterceptor);
 	}
 
-    /**
-     * Get the framework properties.
-     *
-     * @param deploymentMessage
-     *     the deploymentMessage
-     * @return the framework properties
-     */
-    @NonNull
-    public QcgServiceData getFrameworkProperties(DeploymentMessage deploymentMessage) {
-      String computeServiceId = deploymentMessage.getChosenCloudProviderEndpoint()
-          .getCpComputeServiceId();
-      Map<String, CloudService> cmdbProviderServices = deploymentMessage
-          .getCloudProvidersOrderedIterator().current().getCmdbProviderServices();
-      return (QcgServiceData) Optional.ofNullable(cmdbProviderServices.get(computeServiceId))
-          .map(CloudService::getData)
-          .orElseThrow(() -> new DeploymentException(String
-              .format("No %s instance available for cloud provider service %s", getFrameworkName(),
-                  computeServiceId)));
-    }
- 
 }
