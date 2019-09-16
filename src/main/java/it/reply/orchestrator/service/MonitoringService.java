@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,10 @@
 
 package it.reply.orchestrator.service;
 
-import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.PaaSMetric;
-
-import java.util.List;
+import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.Group;
 
 public interface MonitoringService {
 
-  public List<PaaSMetric> getProviderData(String providerId);
+  public Group getProviderData(String providerId);
 
 }

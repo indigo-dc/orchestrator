@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,6 @@
 
 package it.reply.orchestrator.service;
 
-import alien4cloud.model.components.ScalarPropertyValue;
-import alien4cloud.model.topology.Capability;
-import alien4cloud.model.topology.NodeTemplate;
-import alien4cloud.model.topology.Topology;
 import alien4cloud.tosca.model.ArchiveRoot;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -44,6 +40,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.alien4cloud.tosca.model.definitions.ScalarPropertyValue;
+import org.alien4cloud.tosca.model.templates.Capability;
+import org.alien4cloud.tosca.model.templates.NodeTemplate;
+import org.alien4cloud.tosca.model.templates.Topology;
 import org.assertj.core.util.Lists;
 import org.flowable.engine.impl.ExecutionQueryImpl;
 import org.flowable.engine.impl.RuntimeServiceImpl;
@@ -281,7 +281,6 @@ public class DeploymentServiceTest {
     Capability capability = new Capability();
     capability.setProperties(Maps.newHashMap());
     ScalarPropertyValue countValue = new ScalarPropertyValue("2");
-    countValue.setPrintable(true);
     capability.getProperties().put("count", countValue);
 
     Map<String, Capability> capabilities = Maps.newHashMap();

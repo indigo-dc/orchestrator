@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,7 @@
 
 package it.reply.orchestrator.service.deployment.providers;
 
-import alien4cloud.model.components.ScalarPropertyValue;
-import alien4cloud.model.topology.NodeTemplate;
-import alien4cloud.model.topology.RelationshipTemplate;
-import alien4cloud.model.topology.Topology;
 import alien4cloud.tosca.model.ArchiveRoot;
-import alien4cloud.tosca.normative.IntegerType;
 
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.MoreCollectors;
@@ -40,7 +35,8 @@ import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
-import it.reply.orchestrator.dto.cmdb.ChronosServiceData.ChronosServiceProperties;
+import it.reply.orchestrator.dto.cmdb.ChronosService;
+import it.reply.orchestrator.dto.cmdb.ChronosService.ChronosServiceProperties;
 import it.reply.orchestrator.dto.deployment.ChronosJobsOrderedIterator;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.mesos.MesosContainer;
@@ -61,6 +57,7 @@ import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 import it.reply.orchestrator.utils.ToscaConstants.Nodes;
+import it.reply.orchestrator.utils.ToscaUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -82,6 +79,10 @@ import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.alien4cloud.tosca.model.templates.NodeTemplate;
+import org.alien4cloud.tosca.model.templates.RelationshipTemplate;
+import org.alien4cloud.tosca.model.templates.Topology;
+import org.alien4cloud.tosca.normative.types.IntegerType;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -334,7 +335,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
   /**
    * Deletes all the deployment jobs from Chronos. <br/>
    * Also logs possible errors and updates the deployment status.
-   * 
+   *
    * @param deploymentMessage
    *          the deployment message.
    * @return <tt>true</tt> if all jobs have been deleted, <tt>false</tt> otherwise.
@@ -346,7 +347,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     Iterator<Resource> topologyIterator = deployment
         .getResources()
         .stream()
-        .filter(resource -> toscaService.isOfToscaType(resource, Nodes.CHRONOS))
+        .filter(resource -> toscaService.isOfToscaType(resource, Nodes.Types.CHRONOS))
         // FIXME it should also not be DELETED
         .filter(resource -> resource.getState() != NodeStates.DELETING)
         .collect(Collectors.toList()).iterator();
@@ -438,19 +439,21 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
 
     List<NodeTemplate> orderedChronosJobs = CommonUtils
         .iteratorToStream(orderIterator)
-        .filter(node -> toscaService.isOfToscaType(node, ToscaConstants.Nodes.CHRONOS))
+        .filter(node -> toscaService.isOfToscaType(node, ToscaConstants.Nodes.Types.CHRONOS))
         .collect(Collectors.toList());
 
     Map<String, Resource> resources = deployment
         .getResources()
         .stream()
-        .filter(resource -> toscaService.isOfToscaType(resource, ToscaConstants.Nodes.CHRONOS))
+        .filter(
+            resource -> toscaService.isOfToscaType(resource, ToscaConstants.Nodes.Types.CHRONOS))
         .collect(Collectors.toMap(Resource::getToscaNodeName, res -> res));
 
-    ChronosServiceProperties chronosProperties = chronosClientFactory
-        .getFrameworkProperties(deploymentMessage)
+    ChronosServiceProperties chronosProperties = deploymentMessage
+        .getCloudServicesOrderedIterator()
+        .currentService(ChronosService.class)
         .getProperties();
-    
+
     LinkedHashMap<String, ChronosJob> jobs = new LinkedHashMap<>();
     List<IndigoJob> indigoJobs = new ArrayList<>();
     for (NodeTemplate chronosNode : orderedChronosJobs) {
@@ -524,7 +527,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
 
   /**
    * Computes the Chronos job's state based on current success and error count.
-   * 
+   *
    * @param job
    *          the {@link Job}.
    * @return the {@link JobState}.
@@ -564,23 +567,23 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
       throw new ToscaException(
         "<command> property of node <" + taskNode.getName() + "> must be provided");
     }
-    toscaService
-        .<ScalarPropertyValue>getTypedNodePropertyByName(taskNode, "retries")
-        .ifPresent(property -> job.setRetries(Ints
-            .saturatedCast(toscaService.parseScalarPropertyValue(property, IntegerType.class))));
-    
-    toscaService
-        .<ScalarPropertyValue>getTypedNodePropertyByName(taskNode, "schedule")
-        .ifPresent(property -> job.setSchedule(property.getValue()));
+    ToscaUtils
+        .extractScalar(taskNode.getProperties(), "retries", IntegerType.class)
+        .map(Ints::saturatedCast)
+        .ifPresent(job::setRetries);
 
-    toscaService
-        .<ScalarPropertyValue>getTypedNodePropertyByName(taskNode, "description")
-        .ifPresent(property -> job.setDescription(property.getValue()));
-    
-    toscaService
-        .<ScalarPropertyValue>getTypedNodePropertyByName(taskNode, "epsilon")
-        .ifPresent(property -> job.setEpsilon(property.getValue()));
-    
+    ToscaUtils
+        .extractScalar(taskNode.getProperties(), "schedule")
+        .ifPresent(job::setSchedule);
+
+    ToscaUtils
+        .extractScalar(taskNode.getProperties(), "description")
+        .ifPresent(job::setDescription);
+
+    ToscaUtils
+        .extractScalar(taskNode.getProperties(), "epsilon")
+        .ifPresent(job::setEpsilon);
+
     return job;
   }
 
@@ -593,7 +596,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     chronosJob.setRetries(mesosTask.getRetries());
     chronosJob.setCommand(mesosTask.getCmd());
     chronosJob.setUris(mesosTask.getUris());
-    
+
     chronosJob.setEnvironmentVariables(mesosTask
         .getEnv()
         .entrySet()
@@ -605,7 +608,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
           return envVar;
         })
         .collect(Collectors.toList()));
-    
+
     chronosJob.setCpus(mesosTask.getCpus());
 
     chronosJob.setMem(mesosTask.getMemSize());
@@ -621,7 +624,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     if (chronosJob.getParents().isEmpty()) {
       chronosJob.setParents(null);
     }
-    
+
     mesosTask
         .getContainer()
         .ifPresent(mesosContainer -> {
@@ -650,7 +653,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
           .map(this::generateVolume)
           .collect(Collectors.toList()));
       container.setForcePullImage(mesosContainer.isForcePullImage());
-      if (mesosContainer.isPriviliged()) {
+      if (mesosContainer.isPrivileged()) {
         Parameters param = new Parameters();
         param.setKey("privileged");
         param.setValue("true");
@@ -663,7 +666,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     }
     return container;
   }
-  
+
   private Volume generateVolume(String containerVolumeMount) {
 
     // split the volumeMount string and extract only the non blank strings
@@ -677,7 +680,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
       throw new DeploymentException(
         "Volume mount <" + containerVolumeMount + "> not supported for chronos containers");
     }
-    
+
     Volume volume = new Volume();
     volume.setContainerPath(volumeMountSegments.get(0));
     volume.setMode(volumeMountSegments.get(1).toUpperCase(Locale.US));

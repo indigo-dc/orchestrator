@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 
 package it.reply.orchestrator.service.commands;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Lists;
 
 import it.reply.orchestrator.config.properties.OneDataProperties;
@@ -23,13 +24,15 @@ import it.reply.orchestrator.config.properties.OneDataProperties.ServiceSpacePro
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
-import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
+import it.reply.orchestrator.dto.cmdb.CloudService;
+import it.reply.orchestrator.dto.cmdb.CloudProvider;
+import it.reply.orchestrator.dto.cmdb.CloudServiceType;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
-import it.reply.orchestrator.dto.workflow.CloudProvidersOrderedIterator;
+import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.exception.service.WorkflowException;
 import it.reply.orchestrator.service.CloudProviderEndpointServiceImpl;
 import it.reply.orchestrator.service.OneDataService;
@@ -98,9 +101,21 @@ public class UpdateDeploymentTest extends BaseDeployCommandTest<UpdateDeployment
     RankCloudProvidersMessage rankCloudProvidersMessage = new RankCloudProvidersMessage();
     rankCloudProvidersMessage.setDeploymentId(deployment.getId());
 
+    CloudService cs = CloudService
+        .builder()
+        .endpoint("http://example.com")
+        .providerId("cloud-provider-id-1")
+        .id("cloud-service-id-1")
+        .type(CloudServiceType.COMPUTE)
+        .endpoint("http://example.com")
+        .serviceType("unknown")
+        .hostname("example.com")
+        .build();
     CloudProvider cp = CloudProvider
         .builder()
         .id("cloud-provider-id-1")
+        .name("cloud-provider-name-1")
+        .services(ImmutableMap.of("cloud-service-id-1", cs))
         .build();
 
     Map<String, CloudProvider> map = new HashMap<>();
@@ -112,7 +127,7 @@ public class UpdateDeploymentTest extends BaseDeployCommandTest<UpdateDeployment
 
     when(cloudProviderEndpointServiceImpl
         .generateCloudProvidersOrderedIterator(rankCloudProvidersMessage, null))
-        .thenReturn(new CloudProvidersOrderedIterator(Lists.newArrayList(cp)));
+        .thenReturn(new CloudServicesOrderedIterator(Lists.newArrayList(cs)));
     when(deploymentRepository.findOne(deployment.getId()))
         .thenReturn(deployment);
     doNothing()
@@ -121,7 +136,7 @@ public class UpdateDeploymentTest extends BaseDeployCommandTest<UpdateDeployment
 
     CloudProviderEndpoint chosenCloudProviderEndpoint = dm.getChosenCloudProviderEndpoint();
     dm.setChosenCloudProviderEndpoint(null);
-    when(cloudProviderEndpointServiceImpl.getCloudProviderEndpoint(cp,
+    when(cloudProviderEndpointServiceImpl.getCloudProviderEndpoint(cs,
         rankCloudProvidersMessage.getPlacementPolicies(), false))
         .thenReturn(chosenCloudProviderEndpoint);
 
@@ -138,7 +153,7 @@ public class UpdateDeploymentTest extends BaseDeployCommandTest<UpdateDeployment
   @Test
   public void testCustomExecuteSuccess() {
     DeploymentMessage dm = baseTestCustomExecuteSuccess(new HashMap<>());
-    assertThat(dm.getCloudProvidersOrderedIterator().getSize())
+    assertThat(dm.getCloudServicesOrderedIterator().getSize())
         .isEqualTo(1);
     assertThat(dm.getChosenCloudProviderEndpoint()).isNotNull();
   }

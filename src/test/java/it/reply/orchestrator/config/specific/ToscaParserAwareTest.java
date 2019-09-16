@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import it.reply.orchestrator.service.security.OAuth2TokenService;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.springframework.boot.autoconfigure.aop.AopAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -33,8 +34,14 @@ import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 
 @ActiveProfiles(SpringTestProfile.PROFILE_QUALIFIER)
-@SpringBootTest(classes = { Alien4CloudConfig.class, ToscaServiceImpl.class },
-    properties = "alien4cloud.elasticSearch.clusterName=es-cluster-test")
+@SpringBootTest(
+    classes = {
+        AopAutoConfiguration.class,
+        Alien4CloudConfig.class,
+        ToscaServiceImpl.class,
+    },
+    properties = "alien4cloud.elasticSearch.clusterName=es-cluster-test"
+)
 public abstract class ToscaParserAwareTest {
 
   @ClassRule

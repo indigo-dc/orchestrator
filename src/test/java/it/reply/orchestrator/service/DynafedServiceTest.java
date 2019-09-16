@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,9 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.google.common.collect.Lists;
 
 import it.reply.orchestrator.dal.entity.OidcTokenId;
-import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudService;
-import it.reply.orchestrator.dto.cmdb.CloudServiceData;
-import it.reply.orchestrator.dto.cmdb.Type;
+import it.reply.orchestrator.dto.cmdb.CloudProvider;
+import it.reply.orchestrator.dto.cmdb.CloudServiceType;
 import it.reply.orchestrator.dto.dynafed.Dynafed;
 import it.reply.orchestrator.dto.dynafed.Dynafed.File;
 import it.reply.orchestrator.dto.dynafed.Metalink;
@@ -95,7 +94,7 @@ public class DynafedServiceTest {
   private final static String fileName = "fileName";
 
   @Before
-  public void setup() {
+  public void setup() throws Exception {
 
     when(oauth2TokenService.executeWithClientForResult(eq(oidcTokenId), any(), any()))
         .then(a -> ((ThrowingFunction) a.getArguments()[1]).apply(accessToken));
@@ -218,42 +217,33 @@ public class DynafedServiceTest {
     CloudService storageService = CloudService
         .builder()
         .id("storage-service-id")
-        .data(CloudServiceData
-            .builder()
-            .providerId("cloud-provider-id")
-            .endpoint(goodStorageBasePath)
-            .serviceType(CloudService.CDMI_STORAGE_SERVICE)
-            .type(Type.STORAGE)
-            .hostname(goodStorageHostname)
-            .build())
+        .providerId("cloud-provider-id")
+        .endpoint(goodStorageBasePath)
+        .serviceType(CloudService.CDMI_STORAGE_SERVICE)
+        .type(CloudServiceType.STORAGE)
+        .hostname(goodStorageHostname)
         .build();
     cloudServices.put(storageService.getId(), storageService);
 
     CloudService oneProviderService = CloudService
         .builder()
         .id("oneprovider-service-id")
-        .data(CloudServiceData
-            .builder()
-            .providerId("cloud-provider-id")
-            .endpoint(goodStorageBasePath)
-            .serviceType(CloudService.ONEPROVIDER_STORAGE_SERVICE)
-            .type(Type.STORAGE)
-            .hostname(goodStorageHostname)
-            .build())
+        .providerId("cloud-provider-id")
+        .endpoint(goodStorageBasePath)
+        .serviceType(CloudService.ONEPROVIDER_STORAGE_SERVICE)
+        .type(CloudServiceType.STORAGE)
+        .hostname(goodStorageHostname)
         .build();
     cloudServices.put(oneProviderService.getId(), oneProviderService);
 
     CloudService computeService = CloudService
         .builder()
         .id("compute-service-id")
-        .data(CloudServiceData
-            .builder()
-            .providerId("cloud-provider-id")
-            .endpoint(goodStorageBasePath)
-            .serviceType(CloudService.OPENSTACK_COMPUTE_SERVICE)
-            .type(Type.COMPUTE)
-            .hostname(goodStorageHostname)
-            .build())
+        .providerId("cloud-provider-id")
+        .endpoint(goodStorageBasePath)
+        .serviceType(CloudService.OPENSTACK_COMPUTE_SERVICE)
+        .type(CloudServiceType.COMPUTE)
+        .hostname(goodStorageHostname)
         .build();
     cloudServices.put(oneProviderService.getId(), computeService);
 
@@ -261,7 +251,8 @@ public class DynafedServiceTest {
     CloudProvider cloudProvider = CloudProvider
         .builder()
         .id("cloud-provider-id")
-        .cmdbProviderServices(cloudServices)
+        .name("cloud-provider-name")
+        .services(cloudServices)
         .build();
     cloudProviders.put(cloudProvider.getId(), cloudProvider);
     return cloudProviders;

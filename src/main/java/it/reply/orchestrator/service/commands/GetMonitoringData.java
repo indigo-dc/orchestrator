@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,25 @@
 
 package it.reply.orchestrator.service.commands;
 
-import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.PaaSMetric;
+import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.Group;
+import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.PaasMachine;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
-import it.reply.orchestrator.dto.cmdb.CloudService;
-import it.reply.orchestrator.dto.cmdb.Type;
 import it.reply.orchestrator.service.MonitoringService;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import lombok.extern.slf4j.Slf4j;
 
 import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component(WorkflowConstants.Delegate.GET_MONITORING_DATA)
+@Slf4j
 public class GetMonitoringData extends BaseRankCloudProvidersCommand {
 
   @Autowired
@@ -40,25 +45,22 @@ public class GetMonitoringData extends BaseRankCloudProvidersCommand {
       RankCloudProvidersMessage rankCloudProvidersMessage) {
 
     // Get monitoring data for each Cloud Provider
-    rankCloudProvidersMessage
+    Map<String, List<PaasMachine>> metrics = rankCloudProvidersMessage
         .getCloudProviders()
-        .forEach((cloudProviderId, cloudProvider) -> {
-
-          List<CloudService> computeServices =
-              cloudProvider.getCmbdProviderServicesByType(Type.COMPUTE);
-          // TODO use cloudService field
-          boolean isPublicCloud = computeServices
-              .stream()
-              .parallel()
-              .unordered()
-              .anyMatch(service -> service.getData().isPublicService());
-          if (!isPublicCloud) {
-            List<PaaSMetric> metrics = monitoringService.getProviderData(cloudProviderId);
-            rankCloudProvidersMessage
-                .getCloudProvidersMonitoringData()
-                .put(cloudProviderId, metrics);
+        .keySet()
+        .stream()
+        .map(providerId -> {
+          try {
+            return monitoringService.getProviderData(providerId);
+          } catch (RuntimeException ex) {
+            LOG.warn("Error retrieving monitoring data for provider <{}>", providerId, ex);
+            return null;
           }
-        });
+        })
+        .filter(Objects::nonNull)
+        .collect(Collectors.toMap(Group::getGroupName, Group::getPaasMachines));
+
+    rankCloudProvidersMessage.setCloudProvidersMonitoringData(metrics);
   }
 
   @Override

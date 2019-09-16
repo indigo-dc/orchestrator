@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,19 +18,15 @@ package it.reply.orchestrator.service;
 
 import com.google.common.collect.ImmutableMap;
 
-import it.reply.orchestrator.controller.ControllerTestUtils;
-import it.reply.orchestrator.dal.entity.Deployment;
-import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.CloudProviderEndpointBuilder;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.cmdb.CloudService;
-import it.reply.orchestrator.dto.cmdb.CloudServiceData;
-import it.reply.orchestrator.dto.cmdb.Type;
-import it.reply.orchestrator.dto.deployment.PlacementPolicy;
-import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
-import it.reply.orchestrator.dto.workflow.CloudProvidersOrderedIterator;
+import it.reply.orchestrator.dto.cmdb.CloudProvider;
+import it.reply.orchestrator.dto.cmdb.CloudServiceType;
+import it.reply.orchestrator.dto.ranker.RankedCloudService;
+import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.DeploymentType;
 
@@ -61,46 +57,103 @@ public class CloudProviderEndpointServiceTest {
 
   private Map<String, CloudProvider> generateCloudProviders() {
     return ImmutableMap.of(
-        "provider1", CloudProvider.builder().id("provider1").build(),
-        "provider2", CloudProvider.builder().id("provider2").build(),
-        "provider3", CloudProvider.builder().id("provider3").build());
+        "provider-1", CloudProvider
+            .builder()
+            .id("provider-1")
+            .name("provider-1")
+            .services(ImmutableMap.of(
+                "provider-1-service-1", CloudService
+                    .builder()
+                    .id("provider-1-service-1")
+                    .serviceType("unknownType")
+                    .endpoint("www.example.com")
+                    .providerId("provider-1")
+                    .type(CloudServiceType.COMPUTE)
+                    .hostname("example.com")
+                    .build(),
+                "provider-1-service-2", CloudService
+                    .builder()
+                    .id("provider-1-service-2")
+                    .serviceType("unknownType")
+                    .endpoint("www.example.com")
+                    .providerId("provider-1")
+                    .type(CloudServiceType.COMPUTE)
+                    .hostname("example.com")
+                    .build())
+            ).build(),
+        "provider-2", CloudProvider
+            .builder()
+            .id("provider-2")
+            .name("provider-2")
+            .services(ImmutableMap.of(
+                "provider-2-service-1", CloudService
+                    .builder()
+                    .id("provider-2-service-1")
+                    .serviceType("unknownType")
+                    .endpoint("www.example.com")
+                    .providerId("provider-1")
+                    .type(CloudServiceType.COMPUTE)
+                    .hostname("example.com")
+                    .build(),
+                "provider-2-service-2", CloudService
+                    .builder()
+                    .id("provider-2-service-2")
+                    .serviceType("unknownType")
+                    .endpoint("www.example.com")
+                    .providerId("provider-1")
+                    .type(CloudServiceType.COMPUTE)
+                    .hostname("example.com")
+                    .build())
+            ).build()
+    );
   }
 
   @Parameters({"null", "1", "2", "3"})
   @Test
-  public void chooseCloudProviderSuccesful(@Nullable Integer maxCpRetries) {
-    Deployment deployment = ControllerTestUtils.createDeployment();
+  public void chooseCloudProviderSuccessfull(@Nullable Integer maxCpRetries) {
     RankCloudProvidersMessage rcpm = new RankCloudProvidersMessage();
     rcpm.setCloudProviders(generateCloudProviders());
-    rcpm.getRankedCloudProviders().add(RankedCloudProvider
+    rcpm.getRankedCloudServices().add(RankedCloudService
         .builder()
-        .name("provider1")
+        .provider("provider-1")
+        .serviceId("provider-1-service-1")
         .rank(100)
         .ranked(true)
         .build());
-    rcpm.getRankedCloudProviders().add(RankedCloudProvider
+    rcpm.getRankedCloudServices().add(RankedCloudService
         .builder()
-        .name("provider2") // the good one
+        .provider("provider-1")
+        .serviceId("provider-1-service-2")
         .rank(400)
         .ranked(true)
         .build());
-    rcpm.getRankedCloudProviders().add(RankedCloudProvider
+    rcpm.getRankedCloudServices().add(RankedCloudService
         .builder()
-        .name("provider3")
+        .provider("provider-2")
+        .serviceId("provider-2-service-1")
         .rank(800)
         .ranked(false)
         .build());
+    rcpm.getRankedCloudServices().add(RankedCloudService
+        .builder()
+        .provider("provider-2")
+        .serviceId("provider-2-service-2")
+        .rank(200)
+        .ranked(true)
+        .build());
 
-    CloudProvidersOrderedIterator providersOrderedIterator =
+    CloudServicesOrderedIterator providersOrderedIterator =
         cloudProviderEndpointServiceImpl.generateCloudProvidersOrderedIterator(rcpm, maxCpRetries);
 
     if (maxCpRetries == null) {
       maxCpRetries = Integer.MAX_VALUE;
     }
-    assertThat(providersOrderedIterator.getSize()).isEqualTo(Math.min(2, maxCpRetries));
-    assertThat(providersOrderedIterator.next().getId()).isEqualTo("provider2");
+    assertThat(providersOrderedIterator.getSize()).isEqualTo(Math.min(3, maxCpRetries));
+    assertThat(providersOrderedIterator.next().getCloudService().getId())
+        .isEqualTo("provider-1-service-2");
     if (maxCpRetries > 1) {
-      assertThat(providersOrderedIterator.next().getId()).isEqualTo("provider1");
+      assertThat(providersOrderedIterator.next().getCloudService().getId())
+          .isEqualTo("provider-2-service-2");
     }
   }
 
@@ -108,63 +161,59 @@ public class CloudProviderEndpointServiceTest {
   @Parameters({"MARATHON|1", "CHRONOS|1", "TOSCA|2"})
   public void chooseCloudProviderSuccesfulByDeploymentType(DeploymentType deploymentType,
       int expectedSized) {
-    Deployment deployment = ControllerTestUtils.createDeployment();
     RankCloudProvidersMessage rcpm = new RankCloudProvidersMessage();
     rcpm.setDeploymentType(deploymentType);
     rcpm.setCloudProviders(generateCloudProviders());
-    rcpm.getRankedCloudProviders().add(RankedCloudProvider
+    rcpm.getRankedCloudServices().add(RankedCloudService
         .builder()
-        .name("provider1")
+        .provider("provider-1")
+        .serviceId("provider-1-service-1")
         .rank(100)
         .ranked(true)
         .build());
-    rcpm.getRankedCloudProviders().add(RankedCloudProvider
+    rcpm.getRankedCloudServices().add(RankedCloudService
         .builder()
-        .name("provider2") // the good one
+        .provider("provider-1")
+        .serviceId("provider-1-service-2")
         .rank(400)
         .ranked(true)
         .build());
-    rcpm.getRankedCloudProviders().add(RankedCloudProvider
+    rcpm.getRankedCloudServices().add(RankedCloudService
         .builder()
-        .name("provider3")
+        .provider("provider-2")
+        .serviceId("provider-2-service-1")
+        .rank(800)
+        .ranked(false)
+        .build());
+    rcpm.getRankedCloudServices().add(RankedCloudService
+        .builder()
+        .provider("provider-2")
+        .serviceId("provider-2-service-2")
         .rank(800)
         .ranked(false)
         .build());
 
-    CloudProvidersOrderedIterator providersOrderedIterator =
+    CloudServicesOrderedIterator providersOrderedIterator =
         cloudProviderEndpointServiceImpl.generateCloudProvidersOrderedIterator(rcpm, null);
     assertThat(providersOrderedIterator.getSize()).isEqualTo(expectedSized);
   }
 
   @Test
   public void chooseCloudProviderNoneRanked() {
-    Deployment deployment = ControllerTestUtils.createDeployment();
     RankCloudProvidersMessage rcpm = new RankCloudProvidersMessage();
     rcpm.setCloudProviders(generateCloudProviders());
 
-    rcpm.getRankedCloudProviders().add(RankedCloudProvider
+    rcpm.getRankedCloudServices().add(RankedCloudService
         .builder()
-        .name("provider1")
+        .provider("provider-1")
+        .serviceId("provider-1-service-1")
         .rank(100)
         .ranked(false)
         .build());
-    CloudProvidersOrderedIterator providersOrderedIterator = cloudProviderEndpointServiceImpl
+    CloudServicesOrderedIterator providersOrderedIterator = cloudProviderEndpointServiceImpl
         .generateCloudProvidersOrderedIterator(rcpm, null);
     assertThat(providersOrderedIterator).isEmpty();
 
-  }
-
-  @Test
-  public void getCloudProviderEndpointFailBecauseOfNoComputeService() {
-    CloudProvider chosenCloudProvider = CloudProvider.builder().id("provider-RECAS-BARI").build();
-    Map<String, PlacementPolicy> placementPolicies = new HashMap<>();
-
-    assertThatCode(
-        () -> cloudProviderEndpointServiceImpl.getCloudProviderEndpoint(chosenCloudProvider,
-            placementPolicies, false))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessage(
-                    "No compute Service Available for Cloud Provider : " + chosenCloudProvider);
   }
 
   @Test
@@ -175,22 +224,16 @@ public class CloudProviderEndpointServiceTest {
     CloudService cloudService = CloudService
         .builder()
         .id(UUID.randomUUID().toString())
-        .data(CloudServiceData
-            .builder()
-            .serviceType(serviceType)
-            .endpoint("www.example.com")
-            .providerId("provider-RECAS-BARI")
-            .type(Type.COMPUTE)
-            .hostname("example.com")
-            .build())
+        .serviceType(serviceType)
+        .endpoint("www.example.com")
+        .providerId("provider-RECAS-BARI")
+        .type(CloudServiceType.COMPUTE)
+        .hostname("example.com")
         .build();
-
-    CloudProvider chosenCloudProvider = CloudProvider.builder().id("provider-RECAS-BARI").build();
-    chosenCloudProvider.getCmdbProviderServices().put(cloudService.getId(), cloudService);
 
     CloudProviderEndpointBuilder expected = CloudProviderEndpoint.builder();
     expected
-        .cpEndpoint(cloudService.getData().getEndpoint())
+        .cpEndpoint(cloudService.getEndpoint())
         .cpComputeServiceId(cloudService.getId())
         .iaasType(expectedIaaSType);
     if (hybrid) {
@@ -199,13 +242,13 @@ public class CloudProviderEndpointServiceTest {
       expected.iaasHeaderId(null);
     }
     if (expectedWithImEndpoint) {
-      expected.imEndpoint(cloudService.getData().getEndpoint());
+      expected.imEndpoint(cloudService.getEndpoint());
     } else {
       expected.imEndpoint(null);
     }
 
     CloudProviderEndpoint actual = cloudProviderEndpointServiceImpl
-        .getCloudProviderEndpoint(chosenCloudProvider, new HashMap<>(), hybrid);
+        .getCloudProviderEndpoint(cloudService, new HashMap<>(), hybrid);
     assertThat(expected.build()).isEqualTo(actual);
   }
 
@@ -235,27 +278,21 @@ public class CloudProviderEndpointServiceTest {
     CloudService cloudService = CloudService
         .builder()
         .id(UUID.randomUUID().toString())
-        .data(CloudServiceData
-            .builder()
-            .serviceType("unknownType")
-            .endpoint("www.example.com")
-            .providerId("provider-RECAS-BARI")
-            .type(Type.COMPUTE)
-            .hostname("example.com")
-            .build())
+        .serviceType("unknownType")
+        .endpoint("www.example.com")
+        .providerId("provider-RECAS-BARI")
+        .type(CloudServiceType.COMPUTE)
+        .hostname("example.com")
         .build();
 
-    CloudProvider chosenCloudProvider = CloudProvider.builder().id("provider-RECAS-BARI").build();
-    chosenCloudProvider.getCmdbProviderServices().put(cloudService.getId(), cloudService);
-
     assertThatCode(() -> cloudProviderEndpointServiceImpl
-        .getCloudProviderEndpoint(chosenCloudProvider, new HashMap<>(), false))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessage("Unknown Cloud Provider type: " + cloudService);
+        .getCloudProviderEndpoint(cloudService, new HashMap<>(), false))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Unknown Cloud Provider type: " + cloudService);
   }
 
   @Test
-  @Parameters({ "CHRONOS|CHRONOS", "MARATHON|MARATHON", "TOSCA|IM" })
+  @Parameters({"CHRONOS|CHRONOS", "MARATHON|MARATHON", "TOSCA|IM"})
   public void getDeploymentProviderSuccesful(DeploymentType deploymentType,
       DeploymentProvider expectedDeploymentProvider) {
     assertThat(cloudProviderEndpointServiceImpl.getDeploymentProvider(deploymentType, null))

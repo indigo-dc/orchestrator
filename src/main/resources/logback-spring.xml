@@ -1,56 +1,56 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-	<include resource="org/springframework/boot/logging/logback/defaults.xml" />
-	<property name="LOG_FILE" value="${LOG_FILE:-${LOG_PATH:-${LOG_TEMP:-${java.io.tmpdir:-/tmp}}}/spring.log}" />
-	<include resource="org/springframework/boot/logging/logback/file-appender.xml" />
+  <include resource="org/springframework/boot/logging/logback/defaults.xml" />
+  <property name="LOG_FILE" value="${LOG_FILE:-${LOG_PATH:-${LOG_TEMP:-${java.io.tmpdir:-/tmp}}}/spring.log}" />
+  <include resource="org/springframework/boot/logging/logback/file-appender.xml" />
 
-	<property name="JSON_LOGGING" value="${JSON_LOGGING:-false}" />
-	<if condition='property("JSON_LOGGING").equalsIgnoreCase("true")'>
-		<then>
-			<appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-				<encoder class="net.logstash.logback.encoder.LogstashEncoder">
-					<fieldNames>
-						<levelValue>[ignore]</levelValue>
-						<level>level_value</level>
-					</fieldNames>
-					<throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+  <property name="JSON_LOGGING" value="${JSON_LOGGING:-false}" />
+  <if condition='property("JSON_LOGGING").equalsIgnoreCase("true")'>
+    <then>
+      <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+          <fieldNames>
+            <levelValue>[ignore]</levelValue>
+            <level>level_value</level>
+          </fieldNames>
+          <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
 						<!-- generated class names -->
-						<exclude>\$\$FastClassByCGLIB\$\$</exclude>
-						<exclude>\$\$FastClassBySpringCGLIB\$\$</exclude>
-						<exclude>\$\$EnhancerBySpringCGLIB\$\$</exclude>
-						<exclude>^sun\.reflect\..*\.invoke</exclude>
+            <exclude>\$\$FastClassByCGLIB\$\$</exclude>
+            <exclude>\$\$FastClassBySpringCGLIB\$\$</exclude>
+            <exclude>\$\$EnhancerBySpringCGLIB\$\$</exclude>
+            <exclude>^sun\.reflect\..*\.invoke</exclude>
 						<!-- JDK internals -->
-						<exclude>^com\.sun\.</exclude>
-						<exclude>^sun\.net\.</exclude>
+            <exclude>^com\.sun\.</exclude>
+            <exclude>^sun\.net\.</exclude>
 						<!-- dynamic invocation -->
-						<exclude>^net\.sf\.cglib\.proxy\.MethodProxy\.invoke</exclude>
-						<exclude>^org\.springframework\.cglib\.</exclude>
-						<exclude>^org\.springframework\.transaction\.</exclude>
-						<exclude>^org\.springframework\.validation\.</exclude>
-						<exclude>^org\.springframework\.app\.</exclude>
-						<exclude>^org\.springframework\.aop\.</exclude>
-						<exclude>^java\.lang\.reflect\.Method\.invoke</exclude>
+            <exclude>^net\.sf\.cglib\.proxy\.MethodProxy\.invoke</exclude>
+            <exclude>^org\.springframework\.cglib\.</exclude>
+            <exclude>^org\.springframework\.transaction\.</exclude>
+            <exclude>^org\.springframework\.validation\.</exclude>
+            <exclude>^org\.springframework\.app\.</exclude>
+            <exclude>^org\.springframework\.aop\.</exclude>
+            <exclude>^java\.lang\.reflect\.Method\.invoke</exclude>
 						<!-- Spring plumbing -->
-						<exclude>^org\.springframework\.web\.filter\.</exclude>
+            <exclude>^org\.springframework\.web\.filter\.</exclude>
 						<!-- Tomcat internals -->
-						<exclude>^org\.apache\.tomcat\.</exclude>
-						<exclude>^org\.apache\.catalina\.</exclude>
-						<exclude>^org\.apache\.coyote\.</exclude>
-						<exclude>^java\.util\.concurrent\.ThreadPoolExecutor\.runWorker</exclude>
-						<exclude>^java\.lang\.Thread\.run$</exclude>
+            <exclude>^org\.apache\.tomcat\.</exclude>
+            <exclude>^org\.apache\.catalina\.</exclude>
+            <exclude>^org\.apache\.coyote\.</exclude>
+            <exclude>^java\.util\.concurrent\.ThreadPoolExecutor\.runWorker</exclude>
+            <exclude>^java\.lang\.Thread\.run$</exclude>
 						<!-- Undertow internals -->
-						<exclude>^io\.undertow\.</exclude>
-					</throwableConverter>
-				</encoder>
-			</appender>
-		</then>
-		<else>
-			<include resource="org/springframework/boot/logging/logback/console-appender.xml" />
-		</else>
-	</if>
-	
-	<root level="INFO">
-		<appender-ref ref="CONSOLE" />
+            <exclude>^io\.undertow\.</exclude>
+          </throwableConverter>
+        </encoder>
+      </appender>
+    </then>
+    <else>
+      <include resource="org/springframework/boot/logging/logback/console-appender.xml" />
+    </else>
+  </if>
+
+  <root level="INFO">
+    <appender-ref ref="CONSOLE" />
 <!-- 		<appender-ref ref="FILE" /> -->
-	</root>
+  </root>
 </configuration>

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +16,6 @@
 
 package it.reply.orchestrator.service.deployment.providers;
 
-import alien4cloud.model.components.AbstractPropertyValue;
-import alien4cloud.model.components.ScalarPropertyValue;
-import alien4cloud.model.topology.Capability;
-import alien4cloud.model.topology.NodeTemplate;
-import alien4cloud.model.topology.Topology;
 import alien4cloud.tosca.model.ArchiveRoot;
 
 import com.google.common.base.Strings;
@@ -44,10 +39,10 @@ import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
-import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
+import it.reply.orchestrator.dto.cmdb.ComputeService;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
-import it.reply.orchestrator.dto.workflow.CloudProvidersOrderedIterator;
+import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
@@ -77,6 +72,11 @@ import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.alien4cloud.tosca.model.definitions.AbstractPropertyValue;
+import org.alien4cloud.tosca.model.definitions.ScalarPropertyValue;
+import org.alien4cloud.tosca.model.templates.Capability;
+import org.alien4cloud.tosca.model.templates.NodeTemplate;
+import org.alien4cloud.tosca.model.templates.Topology;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -153,9 +153,11 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       accessToken = oauth2TokenService.getAccessToken(requestedWithToken);
     }
     toscaService.addElasticClusterParameters(ar, deployment.getId(), accessToken);
-    CloudProvider cloudProvider = deploymentMessage.getCloudProvidersOrderedIterator().current();
-    toscaService.contextualizeAndReplaceImages(ar, cloudProvider,
-        chosenCloudProviderEndpoint.getCpComputeServiceId(), DeploymentProvider.IM);
+    ComputeService computeService = deploymentMessage
+        .getCloudServicesOrderedIterator()
+        .currentService(ComputeService.class);
+    toscaService.contextualizeAndReplaceImages(ar, computeService, DeploymentProvider.IM);
+    toscaService.contextualizeAndReplaceFlavors(ar, computeService, DeploymentProvider.IM);
     String imCustomizedTemplate = toscaService.getTemplateFromTopology(ar);
 
     List<CloudProviderEndpoint> cloudProviderEndpoints =
@@ -263,7 +265,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   @Override
   public void cleanFailedDeploy(DeploymentMessage deploymentMessage) {
-    CloudProvidersOrderedIterator iterator = deploymentMessage.getCloudProvidersOrderedIterator();
+    CloudServicesOrderedIterator iterator = deploymentMessage.getCloudServicesOrderedIterator();
     boolean isLastProvider = !iterator.hasNext();
     boolean isKeepLastAttempt = deploymentMessage.isKeepLastAttempt();
     LOG.info("isLastProvider: {} and isKeepLastAttempt: {}", isLastProvider, isKeepLastAttempt);
@@ -400,7 +402,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
               resource.setState(NodeStates.DELETING);
               resourcesToRemove.add(resource);
             });
-            int newCount = toscaService.getCount(newNode).orElse(1);
+            long newCount = toscaService.getCount(newNode).orElse(1L);
             List<Resource> remainingResources = resources
                 .stream()
                 .filter(resource -> resource.getState() != NodeStates.DELETING)
@@ -430,10 +432,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
               && resource.getState() != NodeStates.DELETING)
           .collect(Collectors.toList());
 
-      int newCount = toscaService.getCount(newNode).orElse(1);
+      long newCount = toscaService.getCount(newNode).orElse(1L);
       int oldCount = resources.size();
-      int diff = newCount - oldCount;
-      for (int i = 0; i < diff; i++) {
+      long diff = newCount - oldCount;
+      for (long i = 0; i < diff; i++) {
         Resource resource = new Resource();
         resource.setDeployment(deployment);
         resource.setState(NodeStates.CREATING);
@@ -449,10 +451,12 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       }
     });
 
-    CloudProvider cloudProvider = deploymentMessage.getCloudProvidersOrderedIterator().current();
+    ComputeService computeService = deploymentMessage
+        .getCloudServicesOrderedIterator()
+        .currentService(ComputeService.class);
 
-    toscaService.contextualizeAndReplaceImages(newAr, cloudProvider,
-        chosenCloudProviderEndpoint.getCpComputeServiceId(), DeploymentProvider.IM);
+    toscaService.contextualizeAndReplaceImages(newAr, computeService, DeploymentProvider.IM);
+    toscaService.contextualizeAndReplaceFlavors(newAr, computeService, DeploymentProvider.IM);
 
     // FIXME: There's not check if the Template actually changed!
     deployment.setTemplate(toscaService.updateTemplate(template));
@@ -516,12 +520,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           endpointCapability.setProperties(new HashMap<>());
           return endpointCapability.getProperties();
         });
-    ScalarPropertyValue scalarPropertyValue = new ScalarPropertyValue("PUBLIC");
-    scalarPropertyValue.setPrintable(true);
-    endpointCapabilityProperties.put("network_name", scalarPropertyValue);
-    scalarPropertyValue = new ScalarPropertyValue("false");
-    scalarPropertyValue.setPrintable(true);
-    endpointCapabilityProperties.put("private_ip", scalarPropertyValue);
+    endpointCapabilityProperties.put("network_name", new ScalarPropertyValue("PUBLIC"));
+    endpointCapabilityProperties.put("private_ip", new ScalarPropertyValue("false"));
   }
 
   @Override
@@ -586,9 +586,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   /**
    * Match the {@link Resource} to IM vms.
-   * 
+   *
    * @param infrastructureState
-   * 
+   *
    */
   private void bindResources(DeploymentMessage deploymentMessage,
       InfrastructureState infrastructureState)

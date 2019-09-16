@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,21 +17,71 @@
 package it.reply.orchestrator.dto.cmdb;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
+import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver;
+
+import javax.validation.constraints.NotNull;
 
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
+@Builder
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData> {
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+@JsonTypeInfo(
+    use = JsonTypeInfo.Id.NAME,
+    property = "service_type",
+    visible = true,
+    include = As.EXISTING_PROPERTY
+)
+@JsonTypeIdResolver(CloudServiceResolver.class)
+public class CloudService implements CmdbIdentifiable {
+
+  @JsonProperty("id")
+  @NonNull
+  @NotNull
+  private String id;
+
+  @JsonProperty("service_type")
+  @NonNull
+  @NotNull
+  private String serviceType;
+
+  @JsonProperty("endpoint")
+  @NonNull
+  @NotNull
+  private String endpoint;
+
+  @JsonProperty("provider_id")
+  @NonNull
+  @NotNull
+  private String providerId;
+
+  @JsonProperty("type")
+  @NonNull
+  @NotNull
+  private CloudServiceType type;
+
+  @JsonProperty("is_public_service")
+  private boolean publicService;
+
+  @JsonProperty("region")
+  @Nullable
+  private String region;
+
+  @JsonProperty("hostname")
+  @NonNull
+  @NotNull
+  private String hostname;
 
   private static final String INDIGO_SERVICE_PREFIX = "eu.indigo-datacloud";
   private static final String EGI_SERVICE_PREFIX = "eu.egi.cloud";
@@ -55,110 +105,94 @@ public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData
   public static final String MARATHON_COMPUTE_SERVICE = INDIGO_SERVICE_PREFIX + ".marathon";
   public static final String CHRONOS_COMPUTE_SERVICE = INDIGO_SERVICE_PREFIX + ".chronos";
 
-  @Builder
-  protected CloudService(@NonNull String id, @NonNull CloudServiceData data) {
-    super(id, data);
-  }
-
-  /**
-   * Get if the the service type is the requested one.
-   * 
-   * @param type
-   *          the requested type
-   * @return true if the service type is the requested one, false otherwise
-   */
-  public boolean isServiceOfType(@NonNull String type) {
-    return getData().getServiceType().equals(type);
-  }
-
   /**
    * Get if the the service is a OpenStack compute service.
-   * 
+   *
    * @return true if the service is a OpenStack compute service
    */
   @JsonIgnore
   public boolean isOpenStackComputeProviderService() {
-    return isServiceOfType(OPENSTACK_COMPUTE_SERVICE);
+    return OPENSTACK_COMPUTE_SERVICE.equals(this.serviceType);
   }
 
   /**
    * Get if the the service is a OTC compute service.
-   * 
+   *
    * @return true if the service is a OTC compute service
    */
   @JsonIgnore
   public boolean isOtcComputeProviderService() {
-    return isServiceOfType(OTC_COMPUTE_SERVICE);
+    return OTC_COMPUTE_SERVICE.equals(this.serviceType);
   }
 
   /**
    * Get if the the service is a OpenNebula compute service.
-   * 
+   *
    * @return true if the service is a OpenNebula compute service
    */
   @JsonIgnore
   public boolean isOpenNebulaComputeProviderService() {
-    return isServiceOfType(OPENNEBULA_COMPUTE_SERVICE);
+    return OPENNEBULA_COMPUTE_SERVICE.equals(this.serviceType);
   }
 
   /**
    * Get if the the service is a OCCI compute service.
-   * 
+   *
    * @return true if the service is a OCCI compute service
    */
   @JsonIgnore
   public boolean isOcciComputeProviderService() {
-    return isServiceOfType(OCCI_COMPUTE_SERVICE);
+    return OCCI_COMPUTE_SERVICE.equals(this.serviceType);
   }
 
   /**
    * Get if the the service is a AWS compute service.
-   * 
+   *
    * @return true if the service is a AWS compute service
    */
   @JsonIgnore
   public boolean isAwsComputeProviderService() {
-    return isServiceOfType(AWS_COMPUTE_SERVICE);
+    return AWS_COMPUTE_SERVICE.equals(this.serviceType);
   }
 
   /**
    * Get if the the service is a OneProvider storage service.
-   * 
+   *
    * @return true if the service is a OneProvider storage service
    */
   @JsonIgnore
   public boolean isOneProviderStorageService() {
-    return isServiceOfType(ONEPROVIDER_STORAGE_SERVICE);
+    return ONEPROVIDER_STORAGE_SERVICE.equals(this.serviceType);
   }
 
   /**
    * Get if the the service is a CDMI storage service.
-   * 
+   *
    * @return true if the service is a CDMI storage service
    */
   @JsonIgnore
   public boolean isCdmiStorageProviderService() {
-    return isServiceOfType(CDMI_STORAGE_SERVICE);
+    return CDMI_STORAGE_SERVICE.equals(this.serviceType);
   }
 
   /**
    * Get if the the service is a OpenNebula TOSCA service.
-   * 
+   *
    * @return true if the service is a OpenNebula TOSCA service
    */
   @JsonIgnore
   public boolean isOpenNebulaToscaProviderService() {
-    return isServiceOfType(OPENNEBULA_TOSCA_SERVICE);
+    return OPENNEBULA_TOSCA_SERVICE.equals(this.serviceType);
   }
 
   /**
    * Get if the the service is a Azure compute service.
-   * 
+   *
    * @return true if the service is a Azure compute service
    */
   @JsonIgnore
   public boolean isAzureComputeProviderService() {
-    return isServiceOfType(AZURE_COMPUTE_SERVICE);
+    return AZURE_COMPUTE_SERVICE.equals(this.serviceType);
   }
 
   /**
@@ -168,7 +202,7 @@ public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData
    */
   @JsonIgnore
   public boolean isMarathonComputeProviderService() {
-    return isServiceOfType(MARATHON_COMPUTE_SERVICE);
+    return MARATHON_COMPUTE_SERVICE.equals(this.serviceType);
   }
 
   /**
@@ -178,7 +212,7 @@ public class CloudService extends CmdbDataWrapper<CloudService, CloudServiceData
    */
   @JsonIgnore
   public boolean isChronosComputeProviderService() {
-    return isServiceOfType(CHRONOS_COMPUTE_SERVICE);
+    return CHRONOS_COMPUTE_SERVICE.equals(this.serviceType);
   }
 
   @JsonIgnore

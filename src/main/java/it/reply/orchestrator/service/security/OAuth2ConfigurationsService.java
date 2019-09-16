@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package it.reply.orchestrator.service.security;
 
 import it.reply.orchestrator.config.properties.OidcProperties;
+import it.reply.orchestrator.config.properties.OidcProperties.IamProperties;
 import it.reply.orchestrator.exception.OrchestratorException;
 
 import java.util.Optional;
@@ -52,7 +53,7 @@ public class OAuth2ConfigurationsService {
 
   /**
    * Get a server configuration.
-   * 
+   *
    * @param issuer
    *          the issuer of the server
    * @return the server configuration
@@ -61,12 +62,12 @@ public class OAuth2ConfigurationsService {
     oidcProperties.throwIfSecurityDisabled();
     return Optional.ofNullable(serverConfigurationService.getServerConfiguration(issuer))
         .orElseThrow(() -> new OrchestratorException(
-            "No server configuration found for IAM with iss" + issuer));
+            "No server configuration found for IAM with issuer " + issuer));
   }
 
   /**
    * Get a client configuration.
-   * 
+   *
    * @param serverConfiguration
    *          the server configuration on which the client has been registered
    * @return the client configuration
@@ -81,7 +82,7 @@ public class OAuth2ConfigurationsService {
 
   /**
    * Get a client configuration.
-   * 
+   *
    * @param issuer
    *          the issuer of the server on which the client has been registered
    * @return the client configuration
@@ -90,6 +91,22 @@ public class OAuth2ConfigurationsService {
     oidcProperties.throwIfSecurityDisabled();
     ServerConfiguration serverConfiguration = getServerConfiguration(issuer);
     return getClientConfiguration(serverConfiguration);
+  }
+
+  /**
+   * Get audience.
+   *
+   * @param issuer
+   *          the issuer of the server on which the client has been registered
+   * @return the audience UUID
+   */
+  public String getAudience(String issuer) {
+    oidcProperties.throwIfSecurityDisabled();
+    return oidcProperties
+        .getIamConfiguration(issuer)
+        .map(IamProperties::getAudience)
+        .orElseThrow(() -> new OrchestratorException(
+            "No audience configuration found for IAM with iss" + issuer));
   }
 
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,24 +20,18 @@ import feign.RequestInterceptor;
 import feign.auth.BasicAuthRequestInterceptor;
 
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
-import it.reply.orchestrator.dto.cmdb.CloudService;
-import it.reply.orchestrator.dto.cmdb.MesosFrameworkServiceData;
-import it.reply.orchestrator.dto.deployment.DeploymentMessage;
-import it.reply.orchestrator.exception.service.DeploymentException;
+import it.reply.orchestrator.dto.cmdb.MesosFrameworkService;
 
-import java.util.Map;
 import java.util.Objects;
-import java.util.Optional;
 
 import lombok.AllArgsConstructor;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor
-public abstract class MesosFrameworkClientFactory<V extends MesosFrameworkServiceData, T> {
+public abstract class MesosFrameworkClientFactory<V extends MesosFrameworkService, T> {
 
   /**
    * Generate a new Mesos framework client.
@@ -68,25 +62,4 @@ public abstract class MesosFrameworkClientFactory<V extends MesosFrameworkServic
 
   public abstract T build(String endpoint, RequestInterceptor authInterceptor);
 
-  /**
-   * Get the framework properties.
-   *
-   * @param deploymentMessage
-   *     the deploymentMessage
-   * @return the framework properties
-   */
-  @NonNull
-  public V getFrameworkProperties(DeploymentMessage deploymentMessage) {
-    String computeServiceId = deploymentMessage.getChosenCloudProviderEndpoint()
-        .getCpComputeServiceId();
-    Map<String, CloudService> cmdbProviderServices = deploymentMessage
-        .getCloudProvidersOrderedIterator().current().getCmdbProviderServices();
-    return (V) Optional.ofNullable(cmdbProviderServices.get(computeServiceId))
-        .map(CloudService::getData)
-        .orElseThrow(() -> new DeploymentException(String
-            .format("No %s instance available for cloud provider service %s", getFrameworkName(),
-                computeServiceId)));
-  }
-
-  protected abstract String getFrameworkName();
 }

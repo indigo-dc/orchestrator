@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ public class OidcRefreshToken extends UuidIdentifiable {
 
   /**
    * Generate a OidcRefreshToken from a token id and a grant.
-   * 
+   *
    * @param grant
    *          the grant
    * @param id
@@ -74,7 +74,7 @@ public class OidcRefreshToken extends UuidIdentifiable {
 
   /**
    * Updates the refresh token using the information contained in the access grant.
-   * 
+   *
    * @param grant
    *          the access grant
    */

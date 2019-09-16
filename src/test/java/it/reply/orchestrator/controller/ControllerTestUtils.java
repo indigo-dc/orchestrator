@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -49,7 +49,7 @@ public class ControllerTestUtils {
     deployment.setTask(Task.NONE);
     deployment.setStatus(Status.CREATE_IN_PROGRESS);
     deployment.setCallback("http://localhost");
-    deployment.setTemplate("tosca_definitions_version: tosca_simple_yaml_1_0");
+    deployment.setTemplate("tosca_definitions_version: tosca_simple_yaml_1_0\ntopology_template:");
     createResources(deployment, resourceNumber, false);
     return deployment;
   }
@@ -85,7 +85,7 @@ public class ControllerTestUtils {
     deployment.getResources().add(resource);
     return resource;
   }
-  
+
   public static Resource createResource(Deployment deployment) {
     return createResource(UUID.randomUUID().toString(), deployment);
   }

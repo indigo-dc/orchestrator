@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 
 package it.reply.orchestrator.service.commands;
 
-import alien4cloud.model.topology.NodeTemplate;
 import alien4cloud.tosca.model.ArchiveRoot;
 
 import com.google.common.collect.Lists;
@@ -24,16 +23,15 @@ import com.google.common.collect.Lists;
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
-import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.cmdb.CloudService;
-import it.reply.orchestrator.dto.cmdb.CloudServiceData;
-import it.reply.orchestrator.dto.cmdb.ImageData;
-import it.reply.orchestrator.dto.cmdb.Type;
+import it.reply.orchestrator.dto.cmdb.Image;
+import it.reply.orchestrator.dto.cmdb.CloudProvider;
+import it.reply.orchestrator.dto.cmdb.CloudServiceType;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
-import it.reply.orchestrator.dto.deployment.PlacementPolicy;
-import it.reply.orchestrator.dto.deployment.SlaPlacementPolicy;
 import it.reply.orchestrator.dto.onedata.OneData;
+import it.reply.orchestrator.dto.policies.SlaPlacementPolicy;
+import it.reply.orchestrator.dto.policies.ToscaPolicy;
 import it.reply.orchestrator.dto.slam.Preference;
 import it.reply.orchestrator.dto.slam.PreferenceCustomer;
 import it.reply.orchestrator.dto.slam.Priority;
@@ -47,11 +45,12 @@ import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.util.TestUtil;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
-import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.UUID;
 
+import org.alien4cloud.tosca.model.templates.NodeTemplate;
 import org.assertj.core.util.Maps;
 import org.flowable.engine.impl.persistence.entity.ExecutionEntity;
 import org.junit.Before;
@@ -93,7 +92,7 @@ public class PrefilterCloudProvidersTest extends
 
     when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
         .thenReturn(deployment);
-    
+
     ExecutionEntity execution = new ExecutionEntityBuilder()
         .withMockedVariable(WorkflowConstants.Param.RANK_CLOUD_PROVIDERS_MESSAGE, rankCloudProvidersMessage)
         .build();
@@ -116,8 +115,8 @@ public class PrefilterCloudProvidersTest extends
     rankCloudProvidersMessage.setSlamPreferences(slamPreferences);
 
     // set placement policies
-    Map<String, PlacementPolicy> placementPolicies = new HashMap<>();
-    placementPolicies.put("policy", new SlaPlacementPolicy(new ArrayList<>(), id));
+    Map<String, ToscaPolicy> placementPolicies = new HashMap<>();
+    placementPolicies.put("policy", new SlaPlacementPolicy(new HashSet<>(), id));
     rankCloudProvidersMessage.setPlacementPolicies(placementPolicies);
 
     // set cloud provider
@@ -133,8 +132,7 @@ public class PrefilterCloudProvidersTest extends
     when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
         .thenReturn(deployment);
     when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
-    when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
-            Mockito.anyObject()))
+    when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject()))
         .thenReturn(Maps.newHashMap(Boolean.FALSE, new HashMap<>()));
 
     ExecutionEntity execution = new ExecutionEntityBuilder()
@@ -159,18 +157,17 @@ public class PrefilterCloudProvidersTest extends
 
 
     // set placementPolicies
-    Map<String, PlacementPolicy> placementPolicies = new HashMap<>();
-    placementPolicies.put("policy_1", new SlaPlacementPolicy(new ArrayList<String>(), id));
+    Map<String, ToscaPolicy> placementPolicies = new HashMap<>();
+    placementPolicies.put("policy_1", new SlaPlacementPolicy(new HashSet<>(), id));
     placementPolicies.put("policy_2",
-        new SlaPlacementPolicy(new ArrayList<String>(), UUID.randomUUID().toString()));
+        new SlaPlacementPolicy(new HashSet<>(), UUID.randomUUID().toString()));
 
     rankCloudProvidersMessage.setPlacementPolicies(placementPolicies);
     ArchiveRoot ar = new ArchiveRoot();
     when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
         .thenReturn(deployment);
     when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
-    when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
-            Mockito.anyObject()))
+    when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject()))
         .thenReturn(new HashMap<>());
 
     ExecutionEntity execution = new ExecutionEntityBuilder()
@@ -196,19 +193,17 @@ public class PrefilterCloudProvidersTest extends
     rankCloudProvidersMessage.setSlamPreferences(slamPreferences);
 
     // set placement policies
-    Map<String, PlacementPolicy> placementPolicies = new HashMap<>();
+    Map<String, ToscaPolicy> placementPolicies = new HashMap<>();
     // use another id for launch exception
     String slaId = UUID.randomUUID().toString();
-    placementPolicies.put("policy",
-        new SlaPlacementPolicy(new ArrayList<String>(), slaId));
+    placementPolicies.put("policy", new SlaPlacementPolicy(new HashSet<>(), slaId));
 
     rankCloudProvidersMessage.setPlacementPolicies(placementPolicies);
     ArchiveRoot ar = new ArchiveRoot();
     when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
         .thenReturn(deployment);
     when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
-    when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
-            Mockito.anyObject()))
+    when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject()))
         .thenReturn(new HashMap<>());
 
     ExecutionEntity execution = new ExecutionEntityBuilder()
@@ -234,16 +229,15 @@ public class PrefilterCloudProvidersTest extends
     rankCloudProvidersMessage.setSlamPreferences(slamPreferences);
 
     // set placement policies
-    Map<String, PlacementPolicy> placementPolicies = new HashMap<>();
-    placementPolicies.put("policy", Mockito.mock(PlacementPolicy.class));
+    Map<String, ToscaPolicy> placementPolicies = new HashMap<>();
+    placementPolicies.put("policy", Mockito.mock(ToscaPolicy.class));
     rankCloudProvidersMessage.setPlacementPolicies(placementPolicies);
 
     ArchiveRoot ar = new ArchiveRoot();
     when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
         .thenReturn(deployment);
     when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
-    when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
-            Mockito.anyObject()))
+    when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject()))
         .thenReturn(new HashMap<>());
 
     ExecutionEntity execution = new ExecutionEntityBuilder()
@@ -276,11 +270,10 @@ public class PrefilterCloudProvidersTest extends
     when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
         .thenReturn(deployment);
 
-    when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject(),
-            Mockito.anyObject()))
+    when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject()))
         .thenReturn(
             Maps.newHashMap(Boolean.FALSE,
-                Maps.newHashMap(new NodeTemplate(), ImageData.builder().build())));
+                Maps.newHashMap(new NodeTemplate(), Image.builder().build())));
 
     ExecutionEntity execution = new ExecutionEntityBuilder()
         .withMockedVariable(WorkflowConstants.Param.RANK_CLOUD_PROVIDERS_MESSAGE, rankCloudProvidersMessage)
@@ -333,7 +326,8 @@ public class PrefilterCloudProvidersTest extends
     CloudProvider cloudProvider = CloudProvider
         .builder()
         .id("provider-RECAS-BARI")
-        .cmdbProviderServices(cloudServices)
+        .name("provider-RECAS-BARI")
+        .services(cloudServices)
         .build();
     Map<String, CloudProvider> cloudProviders = new HashMap<>();
     cloudProviders.put(cloudProvider.getId(), cloudProvider);
@@ -344,14 +338,11 @@ public class PrefilterCloudProvidersTest extends
     CloudService cloudService = CloudService
         .builder()
         .id("provider-RECAS-BARI")
-        .data(CloudServiceData
-            .builder()
-            .type(Type.STORAGE)
-            .endpoint("http://example.com")
-            .providerId("providerId")
-            .serviceType(CloudService.ONEPROVIDER_STORAGE_SERVICE)
-            .hostname("example.com")
-            .build())
+        .type(CloudServiceType.STORAGE)
+        .endpoint("http://example.com")
+        .providerId("providerId")
+        .serviceType(CloudService.ONEPROVIDER_STORAGE_SERVICE)
+        .hostname("example.com")
         .build();
     Map<String, CloudService> cloudServices = new HashMap<>();
     cloudServices.put(cloudService.getId(), cloudService);

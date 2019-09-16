@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,9 @@ import static org.junit.Assert.assertEquals;
 
 import it.reply.orchestrator.config.specific.WebAppConfigurationAwareIT;
 import it.reply.orchestrator.dto.cmdb.CloudService;
-import it.reply.orchestrator.dto.cmdb.CloudServiceData;
 import it.reply.orchestrator.dto.cmdb.Image;
-import it.reply.orchestrator.dto.cmdb.Provider;
-import it.reply.orchestrator.dto.cmdb.ProviderData;
-import it.reply.orchestrator.dto.cmdb.Type;
+import it.reply.orchestrator.dto.cmdb.CloudProvider;
+import it.reply.orchestrator.dto.cmdb.CloudServiceType;
 
 import java.util.List;
 
@@ -34,7 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * This integration test makes real request to the CMDB APIs.
- * 
+ *
  * @author l.biava
  *
  */
@@ -51,17 +49,12 @@ public class CmdbServiceIT extends WebAppConfigurationAwareIT {
   public void getServiceTest() throws Exception {
 
     CloudService serviceRecas = service.getServiceById(recasId);
-    CloudServiceData data = CloudServiceData.builder()
+    CloudService service = CloudService.builder()
         .serviceType("eu.egi.cloud.vm-management.openstack")
         .endpoint("https://cloud.recas.ba.infn.it:5000/v3")
         .providerId("provider-RECAS-BARI")
-        .type(Type.COMPUTE)
+        .type(CloudServiceType.COMPUTE)
         .region("recas-cloud")
-        .build();
-
-    CloudService service = CloudService.builder()
-        .id(recasId)
-        .data(data)
         .build();
 
     assertEquals(service, serviceRecas);
@@ -70,14 +63,11 @@ public class CmdbServiceIT extends WebAppConfigurationAwareIT {
   @Test
   @Ignore
   public void getProviderTest() throws Exception {
-    Provider providerRecas = service.getProviderById(recasProviderName);
-    Provider provider = Provider
+    CloudProvider providerRecas = service.getProviderById(recasProviderName);
+    CloudProvider provider = CloudProvider
         .builder()
         .id(recasProviderName)
-        .data(ProviderData
-            .builder()
-            .name("RECAS-BARI")
-            .build())
+        .name("RECAS-BARI")
         .build();
 
     assertEquals(provider, providerRecas);

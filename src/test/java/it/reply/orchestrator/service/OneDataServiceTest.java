@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,10 +21,9 @@ import com.google.common.collect.Lists;
 
 import it.reply.orchestrator.config.properties.OneDataProperties;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
-import it.reply.orchestrator.dto.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudService;
-import it.reply.orchestrator.dto.cmdb.CloudServiceData;
-import it.reply.orchestrator.dto.cmdb.Type;
+import it.reply.orchestrator.dto.cmdb.CloudProvider;
+import it.reply.orchestrator.dto.cmdb.CloudServiceType;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
 import it.reply.orchestrator.dto.onedata.ProviderDetails;
@@ -101,7 +100,7 @@ public class OneDataServiceTest {
   private static final OidcTokenId oidcTokenId = new OidcTokenId();
 
   @Before
-  public void setup() {
+  public void setup() throws Exception {
     oneDataProperties.setOnezoneUrl(URI.create(defaultOneZoneEndpoint));
     oneDataProperties.getServiceSpace().setToken(onedataToken);
     oneDataProperties.getServiceSpace().setName(serviceSpaceName);
@@ -550,14 +549,11 @@ public class OneDataServiceTest {
       CloudService oneProviderService = CloudService
           .builder()
           .id("oneprovider-service-id-" + id)
-          .data(CloudServiceData
-              .builder()
-              .providerId("cloud-provider-id-" + cloudProviderId)
-              .endpoint("provider-id-" + id)
-              .serviceType(CloudService.ONEPROVIDER_STORAGE_SERVICE)
-              .type(Type.STORAGE)
-              .hostname("provider-" + id + ".example.com")
-              .build())
+          .providerId("cloud-provider-id-" + cloudProviderId)
+          .endpoint("provider-id-" + id)
+          .serviceType(CloudService.ONEPROVIDER_STORAGE_SERVICE)
+          .type(CloudServiceType.STORAGE)
+          .hostname("provider-" + id + ".example.com")
           .build();
       cloudServices.put(oneProviderService.getId(), oneProviderService);
     }
@@ -566,7 +562,8 @@ public class OneDataServiceTest {
     CloudProvider cloudProvider = CloudProvider
         .builder()
         .id("cloud-provider-id-" + cloudProviderId)
-        .cmdbProviderServices(cloudServices)
+        .name("cloud-provider-name-" + cloudProviderId)
+        .services(cloudServices)
         .build();
     cloudProviders.put(cloudProvider.getId(), cloudProvider);
     return cloudProviders;

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,7 +81,7 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
 
   /**
    * Run the function if the security is disabled.
-   * 
+   *
    * @param function
    *          the function to run
    */
@@ -122,6 +122,10 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
         } else {
           LOG.warn("No CLUES OAuth2 configuration provided for issuer {}", issuer);
         }
+
+        String audience = iamConfiguration.getAudience();
+        Assert.hasText(audience,
+            "Audience token for issuer " + issuer + " must be provided");
       }
       if (iamProperties.keySet().isEmpty()) {
         LOG.warn("Empty OIDC configuration list provided");
@@ -149,6 +153,10 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
     @Valid
     @NestedConfigurationProperty
     private OidcClientProperties clues;
+
+    @NotNull
+    @NonNull
+    private String audience;
 
     public Optional<OidcClientProperties> getClues() {
       return Optional.ofNullable(clues);

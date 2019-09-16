@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,6 @@ public class MonitoringProperties {
   @NotNull
   @NonNull
   private String providerMetricsPath =
-      "/monitoring/adapters/zabbix/zones/indigo/types/"
-          + "infrastructure/groups/Cloud_Providers/hosts/{cloudProviderName}";
+      "/monitoring/adapters/zabbix/zones/indigo/types/infrastructure/groups/{cloudProviderName}";
 
 }

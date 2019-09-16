@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +16,13 @@
 
 package it.reply.orchestrator.service;
 
-import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.PaaSMetric;
+import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.Group;
+import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.MonitoringWrappedResponsePaas;
 import it.reply.orchestrator.config.properties.MonitoringProperties;
 import it.reply.orchestrator.dto.monitoring.MonitoringResponse;
 import it.reply.orchestrator.exception.service.DeploymentException;
-import it.reply.orchestrator.utils.CommonUtils;
 
 import java.net.URI;
-import java.util.List;
 import java.util.Optional;
 
 import javax.ws.rs.core.UriBuilder;
@@ -50,7 +49,7 @@ public class MonitoringServiceImpl implements MonitoringService {
   }
 
   @Override
-  public List<PaaSMetric> getProviderData(String providerId) {
+  public Group getProviderData(String providerId) {
 
     URI requestUri = UriBuilder
         .fromUri(monitoringProperties.getUrl() + monitoringProperties.getProviderMetricsPath())
@@ -62,14 +61,8 @@ public class MonitoringServiceImpl implements MonitoringService {
           restTemplate.getForEntity(requestUri, MonitoringResponse.class);
       return Optional
           .ofNullable(response.getBody().getResult())
-          .map(CommonUtils::checkNotNull)
-          .map(result -> result.getGroups())
+          .map(MonitoringWrappedResponsePaas::getGroups)
           .flatMap(groups -> groups.stream().findFirst())
-          .map(group -> group.getPaasMachines())
-          .flatMap(paasMachines -> paasMachines.stream().findFirst())
-          .map(paasMachine -> paasMachine.getServices())
-          .flatMap(services -> services.stream().findFirst())
-          .map(service -> service.getPaasMetrics())
           .orElseThrow(() -> new DeploymentException(
               "No metrics available for provider <" + providerId + ">"));
     } catch (RestClientException ex) {

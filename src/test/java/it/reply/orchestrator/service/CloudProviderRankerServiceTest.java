@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import it.reply.orchestrator.config.properties.CprProperties;
 import it.reply.orchestrator.dto.ranker.CloudProviderRankerRequest;
-import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
+import it.reply.orchestrator.dto.ranker.RankedCloudService;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.utils.JsonUtils;
 
@@ -72,18 +72,27 @@ public class CloudProviderRankerServiceTest {
         .andRespond(response);
   }
 
-  public static List<RankedCloudProvider> generateMockedRankedProviders() {
+  public static List<RankedCloudService> generateMockedRankedServices() {
     return Lists.newArrayList(
-        RankedCloudProvider
+        RankedCloudService
             .builder()
-            .name("provider-RECAS-BARI")
-            .rank(2.0f)
+            .provider("provider-RECAS-BARI")
+            .serviceId("provider-RECAS-BARI-service-1")
+            .rank(2)
             .ranked(true)
             .build(),
-        RankedCloudProvider
+        RankedCloudService
             .builder()
-            .name("provider-UPV-GRyCAP")
-            .rank(1.0f)
+            .provider("provider-RECAS-BARI")
+            .serviceId("provider-RECAS-BARI-service-2")
+            .rank(3)
+            .ranked(true)
+            .build(),
+        RankedCloudService
+            .builder()
+            .provider("provider-UPV-GRyCAP")
+            .serviceId("provider-UPV-GRyCAP-service-1")
+            .rank(1)
             .ranked(false)
             .errorReason("Some error reason")
             .build());
@@ -92,12 +101,12 @@ public class CloudProviderRankerServiceTest {
   @Test
   public void doRankRequestSuccessfully() throws JsonProcessingException {
     CloudProviderRankerRequest cprr = CloudProviderRankerRequest.builder().build();
-    List<RankedCloudProvider> providers = generateMockedRankedProviders();
-    mockRequest(cprr, withSuccess(JsonUtils.serialize(providers), MediaType.APPLICATION_JSON));
+    List<RankedCloudService> services = generateMockedRankedServices();
+    mockRequest(cprr, withSuccess(JsonUtils.serialize(services), MediaType.APPLICATION_JSON));
 
-    List<RankedCloudProvider> result = cloudProviderRankerService.getProviderRanking(cprr);
+    List<RankedCloudService> result = cloudProviderRankerService.getProviderServicesRanking(cprr);
 
-    assertThat(result).isEqualTo(providers);
+    assertThat(result).isEqualTo(services);
     mockServer.verify();
   }
 
@@ -106,7 +115,7 @@ public class CloudProviderRankerServiceTest {
     CloudProviderRankerRequest cprr = CloudProviderRankerRequest.builder().build();
     mockRequest(cprr, withServerError());
 
-    assertThatCode(() -> cloudProviderRankerService.getProviderRanking(cprr))
+    assertThatCode(() -> cloudProviderRankerService.getProviderServicesRanking(cprr))
         .isInstanceOf(DeploymentException.class)
         .hasCauseInstanceOf(HttpStatusCodeException.class)
         .hasMessage("Error retrieving cloud provider ranking data; nested exception is "

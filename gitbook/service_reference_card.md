@@ -7,14 +7,11 @@
 * Configuration files location with example or template
   * The configuration parameters are provided through environment variables of the docker run command
 * Logfile locations (and management) and other useful audit information
-  * inside the docker container
-    * `/opt/jboss/wildfly/standalone/log/server.log` (logs are rotated every day)
-  * outside the docker container
-    * logs can be retrieved with the `docker logs` command
+  * logs can be retrieved with the `docker logs` command
 * Open ports
   * `8080` HTTP port
 * Possible unit test of the service
-    * Continuous unit tests are conducted during development via [Jenkins](https://jenkins.indigo-datacloud.eu:8080/me/my-views/view/Orchestrator/job/orchestrator-unittest/).
+  * Continuous unit tests are conducted during development via [Jenkins](https://jenkins.indigo-datacloud.eu/blue/organizations/jenkins/Pipeline-as-code%2Forchestrator/activity).
 * Where is service state held (and can it be rebuilt)
   * The service state is held in two attached DBs; it can be rebuilt from SQL dumps
 * Cron jobs

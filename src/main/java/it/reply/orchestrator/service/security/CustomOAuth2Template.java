@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,9 +48,11 @@ public class CustomOAuth2Template {
 
   private RestTemplate restTemplate;
 
+  private String audience;
+
   /**
    * * Creates a new OAuth2Template.
-   * 
+   *
    * @param serverConfiguration
    *          the authorization server configuration
    * @param clientConfiguration
@@ -59,18 +61,20 @@ public class CustomOAuth2Template {
    *          the RestTemplate builder
    */
   public CustomOAuth2Template(@NonNull ServerConfiguration serverConfiguration,
-      @NonNull RegisteredClient clientConfiguration, @NonNull RestTemplateBuilder builder) {
+      @NonNull RegisteredClient clientConfiguration, @NonNull RestTemplateBuilder builder,
+      @NonNull String audience) {
     this.serverConfiguration = serverConfiguration;
     this.clientConfiguration = clientConfiguration;
 
     builder.messageConverters(new FormHttpMessageConverter(), new FormHttpMessageConverter(),
         new MappingJackson2HttpMessageConverter());
     this.restTemplate = builder.build();
+    this.audience = audience;
   }
 
   /**
    * Exchange an access token for a new grant.
-   * 
+   *
    * @param accessToken
    *          the access token to exchange
    * @param scopes
@@ -82,12 +86,13 @@ public class CustomOAuth2Template {
         generateParams(clientConfiguration.getTokenEndpointAuthMethod());
     params.set("subject_token", accessToken);
     params.set("grant_type", "urn:ietf:params:oauth:grant-type:token-exchange");
+    params.set("audience", audience);
     return postForAccessGrant(params, scopes);
   }
 
   /**
    * Get a new access token (and maybe a refresh token) from an existing refresh token.
-   * 
+   *
    * @param refreshToken
    *          the refresh token to use
    * @param scopes
@@ -99,12 +104,13 @@ public class CustomOAuth2Template {
         generateParams(clientConfiguration.getTokenEndpointAuthMethod());
     params.set("refresh_token", refreshToken);
     params.set("grant_type", "refresh_token");
+    params.set("audience", audience);
     return postForAccessGrant(params, scopes);
   }
 
   /**
    * Introspect an access token or a refresh token.
-   * 
+   *
    * @param token
    *          the token
    * @return the introspection response
