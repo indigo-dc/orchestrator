@@ -20,13 +20,14 @@ import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingException;
 
 import it.reply.orchestrator.config.specific.ToscaParserAwareTest;
-import it.reply.orchestrator.dto.cmdb.ImageData;
+import it.reply.orchestrator.dto.cmdb.Image;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.util.TestUtil;
 import it.reply.orchestrator.utils.ToscaUtils;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -38,6 +39,7 @@ import org.alien4cloud.tosca.model.definitions.PropertyValue;
 import org.alien4cloud.tosca.model.templates.Capability;
 import org.alien4cloud.tosca.model.templates.NodeTemplate;
 import org.alien4cloud.tosca.normative.types.FloatType;
+import org.apache.commons.beanutils.BeanUtils;
 import org.assertj.core.api.Assertions;
 import org.assertj.core.api.OptionalAssert;
 import org.junit.Test;
@@ -239,18 +241,48 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
       "version, 2, null, null",
       "version, 2, 1, 1",
       "version, 2, 2, null",
+      "gpuDriver, false, null, 0",
+      "gpuDriver, false, 1, 1",
+      "gpuDriver, false, 2, 0",
+      "gpuDriver, true, null, 1",
+      "gpuDriver, true, 1, 1",
+      "gpuDriver, true, 2, 1",
+      "gpuDriverVersion, 1, null, 1",
+      "gpuDriverVersion, 1, 1, 1",
+      "gpuDriverVersion, 1, 2, 1",
+      "gpuDriverVersion, 2, null, null",
+      "gpuDriverVersion, 2, 1, 1",
+      "gpuDriverVersion, 2, 2, null",
+      "cudaSupport, false, null, 0",
+      "cudaSupport, false, 1, 1",
+      "cudaSupport, false, 2, 0",
+      "cudaSupport, true, null, 1",
+      "cudaSupport, true, 1, 1",
+      "cudaSupport, true, 2, 1",
+      "cudaVersion, 1, null, 1",
+      "cudaVersion, 1, 1, 1",
+      "cudaVersion, 1, 2, 1",
+      "cudaVersion, 2, null, null",
+      "cudaVersion, 2, 1, 1",
+      "cudaVersion, 2, 2, null",
+      "cuDnnVersion, 1, null, 1",
+      "cuDnnVersion, 1, 1, 1",
+      "cuDnnVersion, 1, 2, 1",
+      "cuDnnVersion, 2, null, null",
+      "cuDnnVersion, 2, 1, 1",
+      "cuDnnVersion, 2, 2, null",
       "null, 1, null, 0",
       "null, 1, 1, 1",
       "null, 1, 2, null"
   })
-  public void checkRequiredImageMetadata(@Nullable String fieldname, String fieldValue,
+  public void checkGetBestImageForCloudProvider(@Nullable String fieldname, Object fieldValue,
       @Nullable String imageName, @Nullable String expectedId)
-      throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException,
-      SecurityException {
-    List<ImageData> images = new ArrayList<>();
+      throws IllegalArgumentException, IllegalAccessException,
+      SecurityException, InvocationTargetException {
+    List<Image> images = new ArrayList<>();
 
     for (int i = 0; i < 2; ++i) {
-      images.add(ImageData
+      images.add(Image
           .builder()
           .imageId(String.valueOf(i))
           .imageName(String.valueOf(i))
@@ -258,24 +290,25 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
           .architecture(String.valueOf(i))
           .distribution(String.valueOf(i))
           .version(String.valueOf(i))
+          .gpuDriver(i != 0)
+          .gpuDriverVersion(String.valueOf(i))
+          .cudaSupport(i != 0)
+          .cudaVersion(String.valueOf(i))
+          .cuDnnVersion(String.valueOf(i))
           .build());
     }
-    ImageData imageMetadata = ImageData.builder().build();
+    Image imageMetadata = Image.builder().build();
     if (imageName != null) {
       imageMetadata.setImageName(imageName);
     }
     if (fieldname != null) {
-      Field field = ImageData.class.getDeclaredField(fieldname);
-      field.setAccessible(true);
-      field.set(imageMetadata, fieldValue);
+      BeanUtils.setProperty(imageMetadata, fieldname, fieldValue);
     }
 
-    OptionalAssert<ImageData> assertion =
-        Assertions.assertThat(toscaService.getBestImageForCloudProvider(imageMetadata, images));
+    OptionalAssert<Image> assertion = Assertions
+        .assertThat(toscaService.getBestImageForCloudProvider(imageMetadata, images));
     if (expectedId != null) {
-      assertion.hasValueSatisfying(image -> {
-        image.getImageId().equals(expectedId);
-      });
+      assertion.map(Image::getImageId).hasValue(expectedId);
     } else {
       assertion.isEmpty();
     }

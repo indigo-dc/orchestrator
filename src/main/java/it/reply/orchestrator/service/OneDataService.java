@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@
 package it.reply.orchestrator.service;
 
 import it.reply.orchestrator.dal.entity.OidcTokenId;
-import it.reply.orchestrator.dto.CloudProvider;
+import it.reply.orchestrator.dto.cmdb.CloudProvider;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.onedata.ProviderDetails;
 import it.reply.orchestrator.dto.onedata.SpaceDetails;

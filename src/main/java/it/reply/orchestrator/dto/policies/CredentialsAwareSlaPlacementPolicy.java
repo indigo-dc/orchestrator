@@ -45,7 +45,6 @@ public class CredentialsAwareSlaPlacementPolicy extends SlaPlacementPolicy {
   @Nullable
   private String tenant;
 
-
   @Deprecated
   protected CredentialsAwareSlaPlacementPolicy() {
     super(Types.CREDENTIALS_AWARE_SLA_PLACEMENT);

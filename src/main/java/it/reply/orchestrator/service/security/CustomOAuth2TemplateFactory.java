@@ -40,7 +40,7 @@ public class CustomOAuth2TemplateFactory {
 
   /**
    * Generates a OAuth2Template for a specific issuer.
-   * 
+   *
    * @param issuer
    *          the issuer for which generate the {@link OAuth2Template}
    * @return the OAuth2Template

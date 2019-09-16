@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import feign.slf4j.Slf4jLogger;
 
 import it.infn.ba.indigo.chronos.client.Chronos;
 import it.infn.ba.indigo.chronos.client.utils.ChronosException;
-import it.reply.orchestrator.dto.cmdb.ChronosServiceData;
+import it.reply.orchestrator.dto.cmdb.ChronosService;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,13 +36,7 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class ChronosClientFactory extends MesosFrameworkClientFactory<ChronosServiceData, Chronos> {
-
-
-  @Override
-  protected String getFrameworkName() {
-    return "Chronos";
-  }
+public class ChronosClientFactory extends MesosFrameworkClientFactory<ChronosService, Chronos> {
 
   @Override
   public Chronos build(String chronosEndpoint, RequestInterceptor authInterceptor) {
@@ -63,6 +57,5 @@ public class ChronosClientFactory extends MesosFrameworkClientFactory<ChronosSer
         })
         .target(Chronos.class, chronosEndpoint);
   }
-
 
 }

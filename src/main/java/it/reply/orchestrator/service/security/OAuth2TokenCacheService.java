@@ -75,7 +75,7 @@ public class OAuth2TokenCacheService {
 
   /**
    * Creates a new OAuth2TokenCacheService.
-   * 
+   *
    * @param ignite
    *          the {@link Ignite} instance.
    */
@@ -97,7 +97,7 @@ public class OAuth2TokenCacheService {
   /**
    * Exchanges an access token, puts the refresh token in DB and the exchanged access token in
    * cache.
-   * 
+   *
    * @param id
    *          the ID of the access token in the cache
    * @param accessToken

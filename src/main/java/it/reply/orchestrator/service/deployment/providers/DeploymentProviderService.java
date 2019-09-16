@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ public interface DeploymentProviderService {
    * It should handle every error internally (i.e. not throwing exceptions) and just return a
    * boolean indicating the result or the failure. <br/>
    * It should also handle the deployment status update internally.
-   * 
+   *
    * @param deploymentMessage
    *          the deployment message.
    * @return <tt>true</tt> if no error happened (<b>this does not mean the deployment is
@@ -51,7 +51,7 @@ public interface DeploymentProviderService {
    * <br/>
    * The method should handle node status update internally, but can throw a DeploymentException to
    * notify an unexpected error during the status check. <br/>
-   * 
+   *
    * @param deploymentMessage
    *          the deployment message.
    * @return <tt>true</tt> if the deployment is ready, <tt>false</tt> otherwise.
@@ -80,7 +80,7 @@ public interface DeploymentProviderService {
    * It should handle every error internally (i.e. not throwing exceptions) and just return a
    * boolean indicating the result or the failure. <br/>
    * It should also handle the deployment status update internally.
-   * 
+   *
    * @param deploymentMessage
    *          the deployment message.
    * @return <tt>true</tt> if no error happened (<b>this does not mean the undeployment is
@@ -96,7 +96,7 @@ public interface DeploymentProviderService {
    * <br/>
    * The method should handle node status update internally, but can throw a DeploymentException to
    * notify an unexpected error during the status check. <br/>
-   * 
+   *
    * @param deploymentMessage
    *          the deployment message.
    * @return <tt>true</tt> if the deployment is deleted, <tt>false</tt> otherwise.

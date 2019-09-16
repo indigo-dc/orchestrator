@@ -35,7 +35,8 @@ import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
-import it.reply.orchestrator.dto.cmdb.ChronosServiceData.ChronosServiceProperties;
+import it.reply.orchestrator.dto.cmdb.ChronosService;
+import it.reply.orchestrator.dto.cmdb.ChronosService.ChronosServiceProperties;
 import it.reply.orchestrator.dto.deployment.ChronosJobsOrderedIterator;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.mesos.MesosContainer;
@@ -334,7 +335,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
   /**
    * Deletes all the deployment jobs from Chronos. <br/>
    * Also logs possible errors and updates the deployment status.
-   * 
+   *
    * @param deploymentMessage
    *          the deployment message.
    * @return <tt>true</tt> if all jobs have been deleted, <tt>false</tt> otherwise.
@@ -448,10 +449,11 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
             resource -> toscaService.isOfToscaType(resource, ToscaConstants.Nodes.Types.CHRONOS))
         .collect(Collectors.toMap(Resource::getToscaNodeName, res -> res));
 
-    ChronosServiceProperties chronosProperties = chronosClientFactory
-        .getFrameworkProperties(deploymentMessage)
+    ChronosServiceProperties chronosProperties = deploymentMessage
+        .getCloudServicesOrderedIterator()
+        .currentService(ChronosService.class)
         .getProperties();
-    
+
     LinkedHashMap<String, ChronosJob> jobs = new LinkedHashMap<>();
     List<IndigoJob> indigoJobs = new ArrayList<>();
     for (NodeTemplate chronosNode : orderedChronosJobs) {
@@ -525,7 +527,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
 
   /**
    * Computes the Chronos job's state based on current success and error count.
-   * 
+   *
    * @param job
    *          the {@link Job}.
    * @return the {@link JobState}.
@@ -594,7 +596,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     chronosJob.setRetries(mesosTask.getRetries());
     chronosJob.setCommand(mesosTask.getCmd());
     chronosJob.setUris(mesosTask.getUris());
-    
+
     chronosJob.setEnvironmentVariables(mesosTask
         .getEnv()
         .entrySet()
@@ -606,7 +608,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
           return envVar;
         })
         .collect(Collectors.toList()));
-    
+
     chronosJob.setCpus(mesosTask.getCpus());
 
     chronosJob.setMem(mesosTask.getMemSize());
@@ -622,7 +624,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     if (chronosJob.getParents().isEmpty()) {
       chronosJob.setParents(null);
     }
-    
+
     mesosTask
         .getContainer()
         .ifPresent(mesosContainer -> {
@@ -664,7 +666,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     }
     return container;
   }
-  
+
   private Volume generateVolume(String containerVolumeMount) {
 
     // split the volumeMount string and extract only the non blank strings
@@ -678,7 +680,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
       throw new DeploymentException(
         "Volume mount <" + containerVolumeMount + "> not supported for chronos containers");
     }
-    
+
     Volume volume = new Volume();
     volume.setContainerPath(volumeMountSegments.get(0));
     volume.setMode(volumeMountSegments.get(1).toUpperCase(Locale.US));

@@ -1,0 +1,5 @@
+*               text eol=lf working-tree-encoding=UTF-8
+
+*.cmd           text eol=crlf working-tree-encoding=UTF-8
+*.java          text eol=lf working-tree-encoding=UTF-8 diff=java
+*.jar           binary

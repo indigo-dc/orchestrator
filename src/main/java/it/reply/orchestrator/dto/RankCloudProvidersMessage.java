@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,10 @@
 
 package it.reply.orchestrator.dto;
 
-import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.PaaSMetric;
+import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.PaasMachine;
+import it.reply.orchestrator.dto.cmdb.CloudProvider;
 import it.reply.orchestrator.dto.deployment.BaseWorkflowMessage;
-import it.reply.orchestrator.dto.ranker.RankedCloudProvider;
+import it.reply.orchestrator.dto.ranker.RankedCloudService;
 import it.reply.orchestrator.dto.slam.SlamPreferences;
 
 import java.util.ArrayList;
@@ -40,17 +41,14 @@ public class RankCloudProvidersMessage extends BaseWorkflowMessage {
 
   private SlamPreferences slamPreferences;
 
-  /**
-   * Cloud providers indexed by ID.
-   */
   @NonNull
   private Map<String, CloudProvider> cloudProviders = new HashMap<>();
 
   @NonNull
-  private Map<String, List<PaaSMetric>> cloudProvidersMonitoringData = new HashMap<>();
+  private Map<String, List<PaasMachine>> cloudProvidersMonitoringData = new HashMap<>();
 
   @NonNull
-  private List<RankedCloudProvider> rankedCloudProviders = new ArrayList<>();
+  private List<RankedCloudService> rankedCloudServices = new ArrayList<>();
 
   @Tolerate
   public RankCloudProvidersMessage(BaseWorkflowMessage baseWorkflowMessage) {

@@ -123,7 +123,7 @@ public class Alien4CloudConfig {
 
   /**
    * Creates a PropertySourcesPlaceholderConfigurer from the Alien4Cloud Properties.
-   * 
+   *
    * @param alienProperties
    *          the Alien4Cloud properties
    * @param environment

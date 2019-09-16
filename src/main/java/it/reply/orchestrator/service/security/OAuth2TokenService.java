@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,7 +81,7 @@ public class OAuth2TokenService {
 
   /**
    * Get the current OAuth2 token.
-   * 
+   *
    * @return the OAuth2 token.
    * @throws IllegalStateException
    *           if the security is disabled, the user is not authenticated or the call is made of an
@@ -102,7 +102,7 @@ public class OAuth2TokenService {
 
   /**
    * Retrieve the CLUES IAM information from the OAuth2 access token.
-   * 
+   *
    * @param accessToken
    *          the accessToken
    * @return the CLUES IAM information
@@ -162,7 +162,7 @@ public class OAuth2TokenService {
 
   /**
    * Gets the current OidcEntity if already exists or generates a new one.
-   * 
+   *
    * @return the current OidcEntity
    */
   public OidcEntity getOrGenerateOidcEntityFromCurrentAuth() {
@@ -180,22 +180,23 @@ public class OAuth2TokenService {
    * @return the user's organization
    */
   public String getOrganization(OidcTokenId oidcTokenId) {
-    Optional<OidcEntity> oidcEntity = oidcEntityRepository
-        .findByOidcEntityId(oidcTokenId.getOidcEntityId());
-    if (oidcEntity.isPresent()) {
-      return oidcEntity.get().getOrganization();
-    } else {
-      if (oidcProperties.isEnabled()) {
-        throw new DeploymentException("No user associated to deployment token found");
-      } else {
-        return "indigo-dc";
-      }
-    }
+    return Optional
+        .ofNullable(oidcTokenId)
+        .map(OidcTokenId::getOidcEntityId)
+        .flatMap(oidcEntityRepository::findByOidcEntityId)
+        .map(OidcEntity::getOrganization)
+        .orElseGet(() -> {
+          if (oidcProperties.isEnabled()) {
+            throw new DeploymentException("No user associated to deployment token found");
+          } else {
+            return "indigo-dc";
+          }
+        });
   }
 
   /**
    * Exchange an access token and put it in the cache.
-   * 
+   *
    * @return the exchanged grant
    */
   public OidcTokenId exchangeCurrentAccessToken() {
@@ -206,7 +207,7 @@ public class OAuth2TokenService {
 
   /**
    * Refresh an access token and put it into the cache.
-   * 
+   *
    * @param id
    *          the id of the token
    * @return the exchanged grant

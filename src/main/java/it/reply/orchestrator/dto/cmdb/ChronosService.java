@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,7 @@
 
 package it.reply.orchestrator.dto.cmdb;
 
-import it.reply.orchestrator.dto.cmdb.ChronosServiceData.ChronosServiceProperties;
+import it.reply.orchestrator.dto.cmdb.ChronosService.ChronosServiceProperties;
 import it.reply.orchestrator.utils.CommonUtils;
 
 import java.util.ArrayList;
@@ -34,19 +34,20 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class ChronosServiceData extends MesosFrameworkServiceData<ChronosServiceProperties> {
+public class ChronosService extends MesosFrameworkService<ChronosServiceProperties> {
 
   @Builder(builderMethodName = "chronosBuilder")
-  public ChronosServiceData(
+  public ChronosService(
+      @NonNull String id,
       @NonNull String serviceType,
       @NonNull String endpoint,
       @NonNull String providerId,
-      @NonNull Type type,
+      @NonNull CloudServiceType type,
       boolean publicService,
       @Nullable String region,
       @NonNull String hostname,
       @NonNull ChronosServiceProperties properties) {
-    super(serviceType, endpoint, providerId, type, publicService, region, hostname, properties);
+    super(id, serviceType, endpoint, providerId, type, publicService, region, hostname, properties);
   }
 
   @Data

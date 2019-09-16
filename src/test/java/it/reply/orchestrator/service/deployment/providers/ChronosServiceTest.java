@@ -34,14 +34,15 @@ import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
-import it.reply.orchestrator.dto.cmdb.ChronosServiceData;
-import it.reply.orchestrator.dto.cmdb.ChronosServiceData.ChronosServiceProperties;
+import it.reply.orchestrator.dto.cmdb.ChronosService;
+import it.reply.orchestrator.dto.cmdb.ChronosService.ChronosServiceProperties;
 import it.reply.orchestrator.dto.cmdb.CloudService;
-import it.reply.orchestrator.dto.cmdb.Type;
+import it.reply.orchestrator.dto.cmdb.CloudServiceType;
 import it.reply.orchestrator.dto.deployment.ChronosJobsOrderedIterator;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
+import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.function.ThrowingFunction;
@@ -382,26 +383,30 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
   public void generateJobGraph() throws IOException {
     Deployment deployment = generateDeployment();
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
-    ChronosServiceData chronosProperties = ChronosServiceData
+    ChronosService cs = ChronosService
         .chronosBuilder()
         .endpoint("example.com/chronos")
         .serviceType(CloudService.CHRONOS_COMPUTE_SERVICE)
         .hostname("example.com")
-        .providerId("TEST")
-        .type(Type.COMPUTE)
+        .providerId("provider-1")
+        .id("provider-1-service-1")
+        .type(CloudServiceType.COMPUTE)
         .properties(ChronosServiceProperties
             .builder()
             .localVolumesHostBasePath("/tmp/")
             .build())
         .build();
-    when(chronosClientFactory.getFrameworkProperties(dm)).thenReturn(chronosProperties);
+
+    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(cs));
+    csi.next();
+    dm.setCloudServicesOrderedIterator(csi);
 
     ChronosJobsOrderedIterator topologyIterator = chronosService.getJobsTopologicalOrder(
         dm, deployment);
     topologyIterator.next();
     assertThat(objectMapper.writer(SerializationFeature.INDENT_OUTPUT)
         .writeValueAsString(topologyIterator)).isEqualToNormalizingNewlines(TestUtil
-        .getFileContentAsString(ToscaServiceTest.TEMPLATES_BASE_DIR + "chronos_2_jobs.json"));
+        .getFileContentAsString(ToscaServiceTest.TEMPLATES_BASE_DIR + "chronos_2_jobs.json").trim());
   }
 
   private Deployment generateDeployment() throws IOException {

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ public class EnumUtils {
 
   /**
    * Retrieve a enum value from its class and a user defined predicate.
-   * 
+   *
    * @param enumClass
    *          the class of the enum
    * @param predicate
@@ -51,7 +51,7 @@ public class EnumUtils {
   /**
    * Collect all the enums represented by a class in a List of objects returned by a mapper
    * function.
-   * 
+   *
    * @param enumClass
    *          enums the class
    * @param mapper
@@ -69,12 +69,12 @@ public class EnumUtils {
    * <p>
    * Retrieve a enum value from its name and its class.
    * </p>
-   * 
+   *
    * <p>
    * The enum must extends {@link Named}, and the name value should be the one that would be
    * returned from {@link Named#getName()}.
    * </p>
-   * 
+   *
    * @param enumClass
    *          the class of the enum
    * @param name
@@ -91,16 +91,16 @@ public class EnumUtils {
    * <p>
    * Retrieve a enum value from its name and its class.
    * </p>
-   * 
+   *
    * <p>
    * The enum must extends {@link Named}, and the name value should be the one that would be
    * returned from {@link Named#getName()}.
    * </p>
-   * 
+   *
    * <p>
    * If no enum is found a {@link NoSuchElementException} will be thrown.
    * </p>
-   * 
+   *
    * @param enumClass
    *          the class of the enum
    * @param name
@@ -116,16 +116,16 @@ public class EnumUtils {
    * <p>
    * Retrieve a enum value from its name and its class.
    * </p>
-   * 
+   *
    * <p>
    * The enum must extends {@link Named}, and the name value should be the one that would be
    * returned from {@link Named#getName()}.
    * </p>
-   * 
+   *
    * <p>
    * If no enum is found the default value will be returned.
    * </p>
-   * 
+   *
    * @param enumClass
    *          the class of the enum
    * @param name

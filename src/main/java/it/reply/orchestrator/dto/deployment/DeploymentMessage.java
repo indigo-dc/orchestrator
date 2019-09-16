@@ -18,7 +18,7 @@ package it.reply.orchestrator.dto.deployment;
 
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.onedata.OneData;
-import it.reply.orchestrator.dto.workflow.CloudProvidersOrderedIterator;
+import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -50,7 +50,7 @@ public class DeploymentMessage extends BaseWorkflowMessage {
 
   /**
    * Sets the Deployment timeout.
-   * 
+   *
    * @param timeoutMins
    *          the timeout in Minutes
    */
@@ -75,7 +75,7 @@ public class DeploymentMessage extends BaseWorkflowMessage {
   private boolean skipPollInterval;
 
   @Nullable
-  private CloudProvidersOrderedIterator cloudProvidersOrderedIterator;
+  private CloudServicesOrderedIterator cloudServicesOrderedIterator;
 
   @Nullable
   private CloudProviderEndpoint chosenCloudProviderEndpoint;

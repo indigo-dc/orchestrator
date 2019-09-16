@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,30 +16,39 @@
 
 package it.reply.orchestrator.dto.cmdb;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 import javax.validation.constraints.NotNull;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-public abstract class CmdbDataWrapper<U extends CmdbDataWrapper<U, T>, T> {
+public class MesosFrameworkService<T extends MesosFrameworkServiceProperties> extends
+    CloudService {
 
-  @JsonProperty("_id")
   @NonNull
   @NotNull
-  private String id;
+  private T properties;
 
-  @JsonProperty("data")
-  @NonNull
-  @NotNull
-  private T data;
-
+  public MesosFrameworkService(
+      @NonNull String id,
+      @NonNull String serviceType,
+      @NonNull String endpoint,
+      @NonNull String providerId,
+      @NonNull CloudServiceType type,
+      boolean publicService,
+      @Nullable String region,
+      @NonNull String hostname,
+      @NonNull T properties) {
+    super(id, serviceType, endpoint, providerId, type, publicService, region, hostname);
+    this.properties = properties;
+  }
 }

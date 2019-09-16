@@ -21,8 +21,9 @@ import alien4cloud.tosca.parser.ParsingException;
 import alien4cloud.tosca.parser.ParsingResult;
 
 import it.reply.orchestrator.dal.entity.Resource;
-import it.reply.orchestrator.dto.CloudProvider;
-import it.reply.orchestrator.dto.cmdb.ImageData;
+import it.reply.orchestrator.dto.cmdb.ComputeService;
+import it.reply.orchestrator.dto.cmdb.Flavor;
+import it.reply.orchestrator.dto.cmdb.Image;
 import it.reply.orchestrator.dto.dynafed.Dynafed;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.policies.ToscaPolicy;
@@ -51,7 +52,7 @@ public interface ToscaService {
   /**
    * Obtain the string TOSCA template representation from the in-memory representation. <br/>
    * <b>WARNING: Some nodes or properties might be missing!! Use at your own risk!</b>
-   * 
+   *
    * @param archiveRoot
    *          the {@link ArchiveRoot} from which serialize the TOSCA template
    * @return the serialized TOSCA template
@@ -63,7 +64,7 @@ public interface ToscaService {
   /**
    * Adds the parameters needed for 'tosca.nodes.indigo.ElasticCluster' nodes (deployment_id,
    * orchestrator_url).
-   * 
+   *
    * @param parsingResult
    *          .
    * @param deploymentId
@@ -77,34 +78,32 @@ public interface ToscaService {
   /**
    * Replace images data in 'tosca.capabilities.indigo.OperatingSystem' capabilities in the TOSCA
    * template with the provider-specific identifier.
-   * 
+   *
    * @param deploymentProvider
    *          the deployment provider.
    * @param parsingResult
    *          the in-memory TOSCA template.
-   * @param cloudProvider
-   *          the chosen cloud provider data.
+   * @param computeService
+   *          the chosen cloud compute service data.
    */
-  public void contextualizeAndReplaceImages(ArchiveRoot parsingResult, CloudProvider cloudProvider,
-      String cloudServiceId, DeploymentProvider deploymentProvider);
+  public void contextualizeAndReplaceImages(ArchiveRoot parsingResult,
+      ComputeService computeService, DeploymentProvider deploymentProvider);
 
   /**
    * Find matches for images data in 'tosca.capabilities.indigo.OperatingSystem' capabilities in the
    * TOSCA template with the provider-specific identifier.
-   * 
+   *
    * @param parsingResult
    *          the in-memory TOSCA template.
-   * @param cloudProvider
-   *          the chosen cloud provider data.
-   * @param cloudServiceId
-   *          the cloud service of the cloud provider to search for.
+   * @param computeService
+   *          the chosen cloud compute service data.
    */
-  public Map<Boolean, Map<NodeTemplate, ImageData>> contextualizeImages(ArchiveRoot parsingResult,
-      CloudProvider cloudProvider, String cloudServiceId);
+  public Map<Boolean, Map<NodeTemplate, Image>> contextualizeImages(ArchiveRoot parsingResult,
+      ComputeService computeService);
 
   /**
    * Verifies that all the template's required inputs are present in the user's input list.
-   * 
+   *
    * @param templateInputs
    *          the templates's defined inputs.
    * @param inputs
@@ -119,7 +118,7 @@ public interface ToscaService {
   /**
    * Replaces TOSCA input functions with the actual input values (user's input values or default
    * ones).
-   * 
+   *
    * @param archiveRoot
    *          the in-memory TOSCA template.
    * @param inputs
@@ -132,7 +131,7 @@ public interface ToscaService {
   /**
    * Parse the TOSCA template (string) and get the in-memory representation.<br/>
    * This also checks for validation errors.
-   * 
+   *
    * @param toscaTemplate
    *          the TOSCA template as string.
    * @return an {@link ArchiveRoot} representing the template.
@@ -147,7 +146,7 @@ public interface ToscaService {
 
   /**
    * As for {@link #parseTemplate(String)} but also validates user's inputs.
-   * 
+   *
    * @param toscaTemplate
    *          the TOSCA template as string.
    * @return an {@link ArchiveRoot} representing the template.
@@ -162,7 +161,7 @@ public interface ToscaService {
 
   /**
    * As for {@link #parseAndValidateTemplate(String, Map)} but also replaces the user's inputs.
-   * 
+   *
    * @param toscaTemplate
    *          the TOSCA template as string.
    * @return an {@link ArchiveRoot} representing the template.
@@ -185,7 +184,7 @@ public interface ToscaService {
   /**
    * Finds all the nodes associated to the given {@link NodeTemplate} with a capability with the
    * given name.
-   * 
+   *
    * @param nodes
    *          the template's node map.
    * @param nodeTemplate
@@ -204,7 +203,7 @@ public interface ToscaService {
 
   /**
    * Get the list of resources to be removed.
-   * 
+   *
    * @param nodeTemplate
    *          {@link NodeTemplate}
    * @return the list of resources to be removed or an empty list
@@ -217,7 +216,7 @@ public interface ToscaService {
 
   /**
    * Extracts OneData requirements (i.e. space, favorite providers, etc) from the TOSCA template.
-   * 
+   *
    * @param archiveRoot
    *          an {@link ArchiveRoot} representing the template.
    * @param inputs
@@ -234,7 +233,7 @@ public interface ToscaService {
 
   /**
    * Extracts the placement policies from the TOSCA template.
-   * 
+   *
    * @param archiveRoot
    *          an {@link ArchiveRoot} representing the template.
    * @return the list of placementPolicies
@@ -250,7 +249,7 @@ public interface ToscaService {
 
   public Collection<NodeTemplate> getNodesOfType(ArchiveRoot archiveRoot, String type);
 
-  public Map<NodeTemplate, ImageData> extractImageRequirements(ArchiveRoot parsingResult);
+  public Map<NodeTemplate, Image> extractImageRequirements(ArchiveRoot parsingResult);
 
   boolean isOfToscaType(NodeTemplate node, String nodeType);
 
@@ -259,5 +258,14 @@ public interface ToscaService {
   void removeRemovalList(NodeTemplate node);
 
   boolean isScalable(NodeTemplate nodeTemplate);
+
+  public Map<NodeTemplate, Flavor> extractFlavorRequirements(ArchiveRoot parsingResult);
+
+  public Map<Boolean, Map<NodeTemplate, Flavor>> contextualizeFlavors(ArchiveRoot parsingResult,
+      ComputeService computeService);
+
+  public void contextualizeAndReplaceFlavors(ArchiveRoot parsingResult,
+      ComputeService computeService,
+      DeploymentProvider deploymentProvider);
 
 }

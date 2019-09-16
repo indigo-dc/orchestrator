@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,8 +17,6 @@
 package it.reply.orchestrator.dto.ranker;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import it.reply.monitoringpillar.domain.dsl.monitoring.pillar.wrapper.paas.PaaSMetric;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,13 +40,12 @@ public class Monitoring {
   @NotNull
   private String provider;
 
-  @JsonProperty("metrics")
+  @JsonProperty("services")
   @Builder.Default
-  private List<PaaSMetric> metrics = new ArrayList<>();
+  private List<MonitoringService> services = new ArrayList<>();
 
-  @SuppressWarnings("null")
   @Deprecated
   protected Monitoring() {
-    metrics = new ArrayList<>();
+    services = new ArrayList<>();
   }
 }

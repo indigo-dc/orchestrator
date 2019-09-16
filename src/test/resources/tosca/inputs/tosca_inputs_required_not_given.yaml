@@ -7,7 +7,7 @@ topology_template:
 
   inputs:
     cpus:
-      type: integer      
+      type: integer
       description: Number of CPUs for the server.
       constraints:
         - valid_values: [ 1, 2, 4, 8 ]
