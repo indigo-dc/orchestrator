@@ -314,4 +314,37 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
     }
   }
 
+	@Test
+	public void checkHybridDeploymentSetting() throws Exception {
+		String template = TestUtil.getFileContentAsString(TEMPLATES_BASE_DIR + "tosca_hybrid_before_create.yaml");
+		ArchiveRoot ar = toscaService.getArchiveRootFromTemplate(template).getResult();
+		ArchiveRoot arNew = toscaService.setHybridDeployment(ar);
+
+		Assertions.assertThat(toscaService.getNodesOfType(arNew, "tosca.nodes.indigo.VR.CentralPoint")).size().isOne();
+		NodeTemplate centralPointNode = arNew.getTopology().getNodeTemplates().get("indigovr_cp");
+		Assertions.assertThat(centralPointNode.getRelationships().get("host").getTarget()).isEqualTo("lrms_server");
+
+		template = TestUtil.getFileContentAsString(TEMPLATES_BASE_DIR + "tosca_hybrid_before_create2.yaml");
+		ar = toscaService.getArchiveRootFromTemplate(template).getResult();
+		arNew = toscaService.setHybridDeployment(ar);
+
+		Assertions.assertThat(toscaService.getNodesOfType(arNew, "tosca.nodes.indigo.VR.CentralPoint")).size().isOne();
+		centralPointNode = arNew.getTopology().getNodeTemplates().get("indigovr_cp");
+		Assertions.assertThat(centralPointNode.getRelationships().get("host").getTarget()).isEqualTo("lrms_server");
+	}
+
+
+	@Test
+	public void checkHybridUpdateDeploymentSetting() throws Exception {
+		String template = TestUtil.getFileContentAsString(TEMPLATES_BASE_DIR + "tosca_hybrid_before_update.yaml");
+		ArchiveRoot ar = toscaService.getArchiveRootFromTemplate(template).getResult();
+		ArchiveRoot arNew = toscaService.setHybridUpdateDeployment(ar);
+
+		Assertions.assertThat(toscaService.getNodesOfType(arNew, "tosca.nodes.indigo.VR.CentralPoint")).size().isOne();
+		Assertions.assertThat(toscaService.getNodesOfType(arNew, "tosca.nodes.indigo.VR.Client")).size().isOne();
+
+		NodeTemplate indigoVRNode = arNew.getTopology().getNodeTemplates().get("indigovr_client");
+		Assertions.assertThat(indigoVRNode.getRelationships().get("central_point").getTarget()).isEqualTo("indigovr_cp");
+	}
+
 }

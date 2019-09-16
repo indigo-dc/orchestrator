@@ -145,6 +145,11 @@ public class ToscaServiceImpl implements ToscaService {
 
   public static final String HOST_CAPABILITY_NAME = "host";
 
+  public static final String REQUIREMENT_DEPENDENCY_CAPABILITY = "tosca.capabilities.Node";
+  public static final String REQUIREMENT_DEPENDENCY_RELATIONSHIP = "tosca.relationships.DependsOn";
+  public static final String REQUIREMENT_HOST_CAPABILITY = "tosca.capabilities.Container";
+  public static final String REQUIREMENT_HOST_RELATIONSHIP = "tosca.relationships.HostedOn";
+
   @Autowired
   private ApplicationContext ctx;
 
@@ -1178,6 +1183,145 @@ public class ToscaServiceImpl implements ToscaService {
       }
     }
     return graph;
+  }
+
+  // set a new capability of a node, params: name and type of the capability, the
+  // node
+  public void setNodeCapability(NodeTemplate node, String typeCapability, String nameCapability) {
+    Map<String, Capability> capabilities = Optional.ofNullable(node.getCapabilities()).orElseGet(() -> {
+      node.setCapabilities(new HashMap<>());
+      return node.getCapabilities();
+    });
+    capabilities.computeIfAbsent(nameCapability, key -> {
+      Capability capability = new Capability();
+      capability.setType(typeCapability);
+      return capability;
+    });
+  }
+
+  // set a new requirement of a node, params: name, target and type of the
+  // requirement, the node
+  public void setNodeRequirement(NodeTemplate node, String nameRequirement, String targetRequirement,
+      String typeRequirement) {
+    Map<String, RelationshipTemplate> req = Optional.ofNullable(node.getRelationships()).orElseGet(() -> {
+      node.setRelationships(new HashMap<>());
+      return node.getRelationships();
+    });
+    req.computeIfAbsent(nameRequirement, key -> {
+      RelationshipTemplate rt = new RelationshipTemplate();
+      rt.setRequirementName(nameRequirement);
+      rt.setTarget(targetRequirement);
+      rt.setTargetedCapabilityName(nameRequirement);
+      rt.setType(typeRequirement);
+      return rt;
+    });
+
+    // req.put("", rt);
+  }
+
+  @Override
+  public ArchiveRoot setHybridDeployment(ArchiveRoot ar) {
+    // check if exist a centralpoint node, if not create it
+    if (getNodesOfType(ar, ToscaConstants.Nodes.Types.CENTRAL_POINT).isEmpty()) {
+      NodeTemplate cp = new NodeTemplate();
+      cp.setType(ToscaConstants.Nodes.Types.CENTRAL_POINT);
+      cp.setName("indigovr_cp");
+      this.setNodeCapability(cp, REQUIREMENT_DEPENDENCY_CAPABILITY, "dependency");
+      ar.getTopology().getNodeTemplates().put("indigovr_cp", cp);
+    }
+
+    getNodesOfType(ar, ToscaConstants.Nodes.Types.CENTRAL_POINT).stream().forEach(centralPointNode -> {
+      getNodesOfType(ar, ToscaConstants.Nodes.Types.ELASTIC_CLUSTER).stream().forEach(elasticClusterNode -> {
+        elasticClusterNode.getRelationships().forEach((s, r) -> {
+          if (r.getRequirementName().contains("lrms")) {
+            NodeTemplate lrmsNode = ar.getTopology().getNodeTemplates().get(r.getTarget());
+            this.setNodeRequirement(lrmsNode, "dependency", centralPointNode.getName(),
+                REQUIREMENT_DEPENDENCY_RELATIONSHIP);
+
+            lrmsNode.getRelationships().forEach((s1, r1) -> {
+              if (r1.getRequirementName().contains("host")) {
+                NodeTemplate hostNode = ar.getTopology().getNodeTemplates().get(r1.getTarget());
+
+                Map<String, Capability> capabilities = Optional.ofNullable(hostNode.getCapabilities())
+                    .orElseGet(() -> {
+                      hostNode.setCapabilities(new HashMap<>());
+                      return hostNode.getCapabilities();
+                    });
+                Capability endpointCapability = capabilities.computeIfAbsent("endpoint", key -> {
+                  Capability capability = new Capability();
+                  capability.setType("tosca.capabilities.indigo.Endpoint");
+                  return capability;
+                });
+                Map<String, AbstractPropertyValue> endpointCapabilityProperties = Optional
+                    .ofNullable(endpointCapability.getProperties()).orElseGet(() -> {
+                      endpointCapability.setProperties(new HashMap<>());
+                      return endpointCapability.getProperties();
+                    });
+                endpointCapabilityProperties.put("network_name", new ScalarPropertyValue("PUBLIC"));
+
+                Map<String, Object> openvpnProp = new HashMap<>();
+                ComplexPropertyValue openvpnPropProperty = new ComplexPropertyValue(openvpnProp);
+                openvpnProp.put("protocol", "udp");
+                openvpnProp.put("source", "1194");
+
+                Map<String, Object> portProp = new HashMap<>();
+                ComplexPropertyValue portPropProperty = new ComplexPropertyValue(portProp);
+                endpointCapabilityProperties.put("ports", portPropProperty);
+                portProp.put("openvpn", openvpnPropProperty);
+                String hostName = hostNode.getName();
+                this.setNodeRequirement(centralPointNode, "host", hostName,
+                    REQUIREMENT_HOST_RELATIONSHIP);
+              }
+            });
+          }
+        });
+        LOG.debug(this.getTemplateFromTopology(ar));
+      });
+    });
+    return ar;
+  }
+
+  @Override
+  public ArchiveRoot setHybridUpdateDeployment(ArchiveRoot ar) {
+    // check if exist aToscaConstants.Nodes.Types.CENTRAL_POINT, if not create it
+    if (getNodesOfType(ar, ToscaConstants.Nodes.Types.CENTRAL_POINT).isEmpty()) {
+      setHybridDeployment(ar);
+    }
+  // check if exist a tosca.nodes.indigo.VR.Client node, if not create it
+    if (getNodesOfType(ar, "tosca.nodes.indigo.VR.Client").isEmpty()) {
+      NodeTemplate vrC = new NodeTemplate();
+      vrC.setType("tosca.nodes.indigo.VR.Client");
+      vrC.setName("indigovr_client");
+      this.setNodeCapability(vrC, REQUIREMENT_DEPENDENCY_CAPABILITY, "dependency");
+      ar.getTopology().getNodeTemplates().put("indigovr_client", vrC);
+    }
+    getNodesOfType(ar, ToscaConstants.Nodes.Types.CENTRAL_POINT).stream().forEach(centralPointNode -> {
+      getNodesOfType(ar, "tosca.nodes.indigo.VR.Client").stream().forEach(node -> {
+        getNodesOfType(ar, ToscaConstants.Nodes.Types.ELASTIC_CLUSTER).stream().forEach(elasticClusterNode -> {
+          elasticClusterNode.getRelationships().forEach((s, r) -> {
+            if (r.getRequirementName().contains("wn")) {
+              NodeTemplate wnNode = ar.getTopology().getNodeTemplates().get(r.getTarget());
+              // add requirement : dependency: nameVrClient
+              this.setNodeRequirement(wnNode, "dependency", node.getName(),
+                  REQUIREMENT_DEPENDENCY_RELATIONSHIP);
+              wnNode.getRelationships().forEach((s1, r1) -> {
+                if (r1.getRequirementName().contains("host")) {
+                  // add at vrC : requirement : host : (lrms_wn)
+                  // : central_point : (indigovr_cp)
+                  this.setNodeRequirement(node, "host", r1.getTarget(), REQUIREMENT_HOST_RELATIONSHIP);
+                  this.setNodeCapability(centralPointNode, "tosca.capabilities.Endpoint", "central_point");
+                  this.setNodeRequirement(node, "central_point", centralPointNode.getName(), REQUIREMENT_DEPENDENCY_RELATIONSHIP);
+                }
+                ;
+              });
+            }
+            ;
+          });
+        });
+      });
+    });
+    LOG.debug(this.getTemplateFromTopology(ar));
+    return ar;
   }
 
 }

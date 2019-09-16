@@ -158,11 +158,14 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         .currentService(ComputeService.class);
     toscaService.contextualizeAndReplaceImages(ar, computeService, DeploymentProvider.IM);
     toscaService.contextualizeAndReplaceFlavors(ar, computeService, DeploymentProvider.IM);
-    String imCustomizedTemplate = toscaService.getTemplateFromTopology(ar);
 
     List<CloudProviderEndpoint> cloudProviderEndpoints =
         deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
 
+   if(toscaService.isHybridDeployment(ar)){
+    toscaService.setHybridDeployment(ar);
+   }
+   String imCustomizedTemplate = toscaService.getTemplateFromTopology(ar);
     // Deploy on IM
     try {
       String infrastructureId =
@@ -351,6 +354,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     }
 
     updateResources(deployment, deployment.getStatus());
+    if(toscaService.isHybridDeployment(newAr)){
+      toscaService.setHybridUpdateDeployment(newAr);
+    }
 
     Map<String, NodeTemplate> newNodes =
         Optional
