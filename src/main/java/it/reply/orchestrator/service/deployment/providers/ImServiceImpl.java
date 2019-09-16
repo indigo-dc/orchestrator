@@ -162,10 +162,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     List<CloudProviderEndpoint> cloudProviderEndpoints =
         deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
 
-   if(toscaService.isHybridDeployment(ar)){
-    toscaService.setHybridDeployment(ar);
-   }
-   String imCustomizedTemplate = toscaService.getTemplateFromTopology(ar);
+    if (toscaService.isHybridDeployment(ar)) {
+      toscaService.setHybridDeployment(ar);
+    }
+    String imCustomizedTemplate = toscaService.getTemplateFromTopology(ar);
     // Deploy on IM
     try {
       String infrastructureId =
@@ -354,7 +354,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     }
 
     updateResources(deployment, deployment.getStatus());
-    if(toscaService.isHybridDeployment(newAr)){
+    if (toscaService.isHybridDeployment(newAr)) {
       toscaService.setHybridUpdateDeployment(newAr);
     }
 
