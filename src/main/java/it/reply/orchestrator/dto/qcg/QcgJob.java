@@ -16,39 +16,35 @@
 
 package it.reply.orchestrator.dto.qcg;
 
-import lombok.Data;
+import it.reply.orchestrator.utils.ToscaConstants;
 
 import java.util.List;
 import java.util.Map;
 
-import it.reply.orchestrator.utils.ToscaConstants;
-
-/**
- * Internal model for Qcg Job object
- * 
- */
+import lombok.Data;
 
 @Data
 public class QcgJob {
 
   public final String getToscaNodeName() {
     return ToscaConstants.Nodes.Types.QCG;
-  }  
-  
-  //
-  
-  public QcgJob() {
-	  attributes = null;
-	  args = null;
-	  environment = null;
-	  cpus = null;
-	  exit_code = null;
-	  resubmit = null;
-	  created_work_dir = null;	  
   }
-  
+
+  /**
+   * Creates the QcgJob object.
+   */
+  public QcgJob() {
+    attributes = null;
+    args = null;
+    environment = null;
+    cpus = null;
+    exitcode = null;
+    resubmit = null;
+    createdworkdir = null;
+  }
+
   private String id;
-  private Map<String,String> attributes; // ??
+  private Map<String, String> attributes; // ??
   private String user;
   private String state;
   private String operation;
@@ -57,31 +53,30 @@ public class QcgJob {
   private String directory;
   private String executable;
   private List<String> args;
-  private Map<String,String> environment;
+  private Map<String, String> environment;
   private String schema;
 
-  private String operation_start;
+  private String operationstart;
   private String resource;
   private String queue;
-  private String local_user;
-  private String local_group;
-  private String local_id;
-  private String submit_time;
-  private String start_time;
-  private String finish_time;
-  private String updated_time;
+  private String localuser;
+  private String localgroup;
+  private String localid;
+  private String submittime;
+  private String starttime;
+  private String finishtime;
+  private String updatedtime;
   private String eta;
   private String nodes;
   private Integer cpus;
-  private Integer exit_code;
+  private Integer exitcode;
   private String errors;
   private Integer resubmit;
-  private String work_dir;
-  private Boolean created_work_dir;
-  private String last_seen;
-  
+  private String workdir;
+  private Boolean createdworkdir;
+  private String lastseen;
+
   // orchestrator fields
   private String taskId;
-  
-  
+
 }

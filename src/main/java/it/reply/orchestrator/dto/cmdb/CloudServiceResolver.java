@@ -25,6 +25,7 @@ import static it.reply.orchestrator.dto.cmdb.CloudService.OPENNEBULA_COMPUTE_SER
 import static it.reply.orchestrator.dto.cmdb.CloudService.OPENNEBULA_TOSCA_SERVICE;
 import static it.reply.orchestrator.dto.cmdb.CloudService.OPENSTACK_COMPUTE_SERVICE;
 import static it.reply.orchestrator.dto.cmdb.CloudService.OTC_COMPUTE_SERVICE;
+import static it.reply.orchestrator.dto.cmdb.CloudService.QCG_COMPUTE_SERVICE;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.fasterxml.jackson.databind.DatabindContext;
@@ -59,6 +60,9 @@ public class CloudServiceResolver extends TypeIdResolverBase {
         break;
       case CHRONOS_COMPUTE_SERVICE:
         subType = ChronosService.class;
+        break;
+      case QCG_COMPUTE_SERVICE:
+        subType = QcgService.class;
         break;
       case OCCI_COMPUTE_SERVICE:
       case OPENNEBULA_COMPUTE_SERVICE:

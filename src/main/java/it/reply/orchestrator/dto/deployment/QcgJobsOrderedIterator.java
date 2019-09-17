@@ -16,7 +16,6 @@
 
 package it.reply.orchestrator.dto.deployment;
 
-
 import it.reply.orchestrator.dto.workflow.WorkflowListIterator;
 import it.reply.orchestrator.service.deployment.providers.QcgServiceImpl.DeepJob;
 

@@ -226,10 +226,6 @@ public class CloudService implements CmdbIdentifiable {
     return QCG_COMPUTE_SERVICE.equals(this.serviceType);
   }
   
-  /**
-   * 
-   * @return
-   */
   @JsonIgnore
   public boolean isCredentialsRequired() {
     return isAwsComputeProviderService() || isAzureComputeProviderService()

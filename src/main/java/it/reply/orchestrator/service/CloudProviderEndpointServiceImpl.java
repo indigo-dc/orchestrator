@@ -145,7 +145,7 @@ public class CloudProviderEndpointServiceImpl {
     } else if (computeService.isMarathonComputeProviderService()) {
       iaasType = IaaSType.MARATHON;
     } else if (computeService.isQcgComputeProviderService()) {
-        iaasType = IaaSType.QCG;
+      iaasType = IaaSType.QCG;
     } else {
       throw new IllegalArgumentException("Unknown Cloud Provider type: " + computeService);
     }
@@ -183,7 +183,7 @@ public class CloudProviderEndpointServiceImpl {
       case MARATHON:
         return DeploymentProvider.MARATHON;
       case QCG:
-    	return DeploymentProvider.QCG;
+        return DeploymentProvider.QCG;
       case TOSCA:
         return DeploymentProvider.IM;
       default:

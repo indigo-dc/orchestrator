@@ -16,7 +16,6 @@
 
 package it.reply.orchestrator.dto.cmdb;
 
-
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
