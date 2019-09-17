@@ -1335,10 +1335,8 @@ public class ToscaServiceImpl implements ToscaService {
                           this.setNodeRequirement(node, "central_point", centralPointNode.getName(),
                               REQUIREMENT_DEPENDENCY_RELATIONSHIP);
                         }
-                        ;
                       });
                     }
-                    ;
                   });
                 });
           });

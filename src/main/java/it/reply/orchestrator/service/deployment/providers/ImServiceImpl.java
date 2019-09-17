@@ -452,9 +452,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         }
         resourceRepository.save(resource);
       }
-      if (toscaService.isScalable(newNode) && newResourcesOnDifferentService) {
-        setHybridNetworkingProperties(newNode);
-      }
     });
 
     ComputeService computeService = deploymentMessage
@@ -505,29 +502,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   @Override
   public void cleanFailedUpdate(DeploymentMessage deploymentMessage) {
     // DO NOTHING
-  }
-
-  private void setHybridNetworkingProperties(NodeTemplate node) {
-    Map<String, Capability> capabilities =
-        Optional.ofNullable(node.getCapabilities()).orElseGet(() -> {
-          node.setCapabilities(new HashMap<>());
-          return node.getCapabilities();
-        });
-    // The node doesn't have an OS Capability -> need to add a dummy one to hold a
-    // random image for underlying deployment systems
-    Capability endpointCapability = capabilities.computeIfAbsent("endpoint", key -> {
-      LOG.debug("Generating default endpoint capability for node <{}>", node.getName());
-      Capability capability = new Capability();
-      capability.setType("tosca.capabilities.indigo.Endpoint");
-      return capability;
-    });
-    Map<String, AbstractPropertyValue> endpointCapabilityProperties =
-        Optional.ofNullable(endpointCapability.getProperties()).orElseGet(() -> {
-          endpointCapability.setProperties(new HashMap<>());
-          return endpointCapability.getProperties();
-        });
-    endpointCapabilityProperties.put("network_name", new ScalarPropertyValue("PUBLIC"));
-    endpointCapabilityProperties.put("private_ip", new ScalarPropertyValue("false"));
   }
 
   @Override
