@@ -14,4 +14,3 @@ topology_template:
       type: tosca.nodes.indigo.Qcg.Job
       properties:
         executable: /usr/bin/date
- 

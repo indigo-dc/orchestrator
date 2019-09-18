@@ -119,9 +119,9 @@
       <url>http://nexusconcept.cloud.reply.eu/content/groups/public</url>
     </repository>
     <repository>
-       <id>recas-cloud-artifactory-repository</id>
-       <name>recas-cloud-artifactory</name>
-       <url>http://artifactory.cloud.ba.infn.it:8081/artifactory/libs-release</url>
+      <id>recas-cloud-artifactory-repository</id>
+      <name>recas-cloud-artifactory</name>
+      <url>http://artifactory.cloud.ba.infn.it:8081/artifactory/libs-release</url>
     </repository>
   </repositories>
 
@@ -330,9 +330,9 @@
     </dependency>
 
     <dependency>
-        <groupId>it.infn.ba.deep</groupId>
-        <artifactId>deep-qcg-client</artifactId>
-        <version>${deep-qcg-client.version}</version>
+      <groupId>it.infn.ba.deep</groupId>
+      <artifactId>deep-qcg-client</artifactId>
+      <version>${deep-qcg-client.version}</version>
     </dependency>
 
     <dependency>
@@ -689,8 +689,8 @@
             <exclude>src/main/java/it/reply/orchestrator/service/VaultServiceImpl.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/service/deployment/providers/QcgServiceImpl.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/service/deployment/providers/factory/QcgClientFactory.java</exclude>
-            <exclude>src/test/java/it/reply/orchestrator/service/VaultServiceTest.java</exclude>
             <exclude>src/test/java/it/reply/orchestrator/service/deployment/providers/QcgServiceTest.java</exclude>
+            <exclude>src/test/java/it/reply/orchestrator/service/VaultServiceTest.java</exclude>
           </excludes>
         </configuration>
       </plugin>
