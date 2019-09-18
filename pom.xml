@@ -124,7 +124,7 @@
 	   <url>http://artifactory.cloud.ba.infn.it:8081/artifactory/libs-release</url>
 	</repository>
   </repositories>
-  	
+
   <dependencies>
 
     <dependency>
@@ -584,37 +584,30 @@
             <tagNameFormat>v@{project.version}</tagNameFormat>
           </configuration>
         </plugin>
-	    <plugin>
-	      <groupId>org.ec4j.maven</groupId>
-	      <artifactId>editorconfig-maven-plugin</artifactId>
-	      <version>${editorconfig-maven-plugin.version}</version>
-	      <executions>
-	        <execution>
-	          <id>check-editorconfig</id>
-	          <phase>validate</phase>
-	          <goals>
-	            <goal>check</goal>
-	          </goals>
-	        </execution>
-	      </executions>
-	      <configuration>
-	        <excludes>
-	          <exclude>**/*.jar</exclude>
-	          <exclude>**/*.war</exclude>
-	        </excludes>
-	      </configuration>
-	      <dependencies>
-		 	<dependency>
-		  	  <groupId>org.ec4j.maven</groupId>
-		   	  <artifactId>editorconfig-maven-plugin</artifactId>
-		   	  <version>${editorconfig-maven-plugin.version}</version>
-	  	  	</dependency>
-	      </dependencies>
-	    </plugin>
       </plugins>
     </pluginManagement>
 
     <plugins>
+      <plugin>
+        <groupId>org.ec4j.maven</groupId>
+        <artifactId>editorconfig-maven-plugin</artifactId>
+        <version>${editorconfig-maven-plugin.version}</version>
+        <executions>
+          <execution>
+            <id>check-editorconfig</id>
+            <phase>validate</phase>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+        <configuration>
+          <excludes>
+            <exclude>**/*.jar</exclude>
+            <exclude>**/*.war</exclude>
+          </excludes>
+        </configuration>
+      </plugin>
       <plugin>
         <groupId>pl.project13.maven</groupId>
         <artifactId>git-commit-id-plugin</artifactId>

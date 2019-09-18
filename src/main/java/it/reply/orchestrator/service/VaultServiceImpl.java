@@ -26,8 +26,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;
@@ -44,7 +42,6 @@ import org.springframework.web.client.RestTemplate;
 
 @Service
 @EnableConfigurationProperties(VaultProperties.class)
-@Slf4j
 public class VaultServiceImpl implements VaultService {
 
   private VaultProperties vaultProperties;
@@ -113,7 +110,6 @@ public class VaultServiceImpl implements VaultService {
 
     Map<String, String> login = new HashMap<>();
     login.put("jwt", accessToken);
-    LOG.debug("Retrieving token for Vault with access Token:{}",accessToken);
     try {
       VaultToken token = restTemplate
           .postForObject(uri, login, VaultTokenResponse.class)
@@ -126,15 +122,14 @@ public class VaultServiceImpl implements VaultService {
           throw new VaultJwtTokenExpiredException(
               "Unable to retrieve token for Vault: IAM access token is expired");
         }
-        LOG.debug("Retrieving token for Vault:{} - {}",ex.getMessage(), errorCause);      
       }
       throw ex;
     }
   }
-  
+
   /**
    * Retrieve the vault token from the IAM token identifier.
-   */  
+   */
   @Override
   public TokenAuthentication retrieveToken(OidcTokenId oidcTokenId) {
     return oauth2TokenService.executeWithClientForResult(
@@ -142,5 +137,4 @@ public class VaultServiceImpl implements VaultService {
         this::retrieveToken,
         VaultJwtTokenExpiredException.class::isInstance);
   }
-  
 }
