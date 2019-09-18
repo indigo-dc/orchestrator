@@ -141,7 +141,7 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
                   case QCG:
                     if (!(cloudProviderService instanceof QcgService)) {
                       addServiceToDiscard(servicesToDiscard, cloudProviderService);
-                    } 
+                    }
                     break;
                   default:
                     throw new DeploymentException("Unknown Deployment Type: " + type);

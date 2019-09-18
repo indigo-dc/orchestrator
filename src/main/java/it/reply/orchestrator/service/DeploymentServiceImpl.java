@@ -260,7 +260,7 @@ public class DeploymentServiceImpl implements DeploymentService {
       case MARATHON:
         return DeploymentType.MARATHON;
       case QCG:
-        return DeploymentType.QCG;  
+        return DeploymentType.QCG;
       case HEAT:
       case IM:
       default:

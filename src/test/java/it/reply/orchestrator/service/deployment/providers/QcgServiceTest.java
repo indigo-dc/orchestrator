@@ -108,21 +108,21 @@ public class QcgServiceTest extends ToscaParserAwareTest {
 
   @SpyBean
   private ObjectMapper objectMapper;
-  
+
   @Spy
   protected RestTemplate restTemplate;
-  
+
   @SuppressWarnings({ "unchecked", "rawtypes" })
   @Before
   public void setup() throws Exception {
-	  
+
     MockitoAnnotations.initMocks(this);
-    
+
     when(qcgClientFactory.build(any(CloudProviderEndpoint.class), any(String.class)))
         .thenReturn(qcg);
-    
+
 //    Job resp1 = (new JobDecoder()).decode("{\"id\":\"999\",\"attributes\":{},\"user\":\"default-user\",\"state\":\"FINISHED\",\"operation\":null,\"note\":\"3c915645-5402-471c-b9c6-dcc84a114ae6\",\"description\":{\"note\":\"3c915645-5402-471c-b9c6-dcc84a114ae6\",\"execution\":{\"directory\":\"/qcg/${QCGNCOMP_JOB_ID}\",\"executable\":\"/usr/bin/date\",\"environment\":{\"USER\":\"slurm_user\",\"QCGNCOMP_JOB_ID\":\"999\",\"QCGNCOMP_JOB_SECRET_AUTH\":\"0a05ef399fc54112abae2b9b1eb4bff8\"},\"directory_policy\":{\"create\":\"OVERWRITE\",\"remove\":\"NEVER\"}}},\"operation_start\":null,\"resource\":null,\"queue\":\"normal\",\"local_user\":\"slurm_user\",\"local_group\":null,\"local_id\":\"53\",\"submit_time\":\"2019-06-07T12:55:23.912772Z\",\"start_time\":\"2019-06-07T12:55:25Z\",\"finish_time\":\"2019-06-07T12:55:25Z\",\"updated_time\":\"2019-06-07T12:55:29.468312Z\",\"eta\":null,\"nodes\":\"c1\",\"cpus\":1,\"exit_code\":0,\"errors\":null,\"resubmit\":1,\"work_dir\":\"/qcg/999\",\"created_work_dir\":true,\"last_seen\":\"2019-06-07T12:55:29.466927Z\"}");
-    
+
     Mockito
         .when(oauth2tokenService.executeWithClientForResult(
             Mockito.any(), Mockito.any(), Mockito.any()))
@@ -132,10 +132,10 @@ public class QcgServiceTest extends ToscaParserAwareTest {
 //                return resp1;
 //            }
 //        });
-    
+
 
   }
-  
+
   private CloudProviderEndpoint generateCloudProviderEndpoint() {
     return CloudProviderEndpoint
         .builder()
@@ -166,7 +166,7 @@ public class QcgServiceTest extends ToscaParserAwareTest {
 
     Job job = new Job();
     job.setCpus(1);
-    
+
     JobDescription description = new JobDescription();
     JobDescriptionExecution execution = new JobDescriptionExecution();
     execution.setExecutable("/usr/bin/printf");
@@ -249,7 +249,7 @@ public class QcgServiceTest extends ToscaParserAwareTest {
     execution.setExecutable("/usr/bin/printf");
     description.setExecution(execution);
     job.setDescription(description);
-    
+
     /*Job updated =*/ qcgService
     	.createJobOnQcg(generateCloudProviderEndpoint(), null, new DeepJob(job,"toscaName"));
     verify(qcg, times(1)).createJob(job.getDescription());
@@ -264,7 +264,7 @@ public class QcgServiceTest extends ToscaParserAwareTest {
     execution.setExecutable("/usr/bin/printf");
     description.setExecution(execution);
     job.setDescription(description);
-    
+
     doThrow(new QcgException(500, "some message")).when(qcg).createJob(job.getDescription());
 
     assertThatCode(
@@ -339,7 +339,7 @@ public class QcgServiceTest extends ToscaParserAwareTest {
         .updateOnSuccess(deployment.getId());
   }
 
-  
+
   @Test
   public void finalizeDeployTestUpdateOnSuccess() {
     Deployment deployment = ControllerTestUtils.createDeployment();
@@ -362,9 +362,9 @@ public class QcgServiceTest extends ToscaParserAwareTest {
         .hostname("www.example.com")
         .providerId("provider-1")
         .id("provider-1-service-1")
-        .type(CloudServiceType.COMPUTE)               
+        .type(CloudServiceType.COMPUTE)
         .build();
-    
+
     CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(qs));
     csi.next();
     dm.setCloudServicesOrderedIterator(csi);
@@ -374,7 +374,7 @@ public class QcgServiceTest extends ToscaParserAwareTest {
     topologyIterator.next();
     assertThat(objectMapper.writer(SerializationFeature.INDENT_OUTPUT)
         .writeValueAsString(topologyIterator)).isEqualToNormalizingNewlines(TestUtil
-        .getFileContentAsString(ToscaServiceTest.TEMPLATES_BASE_DIR + "qcg_jobs.json").trim());    
+        .getFileContentAsString(ToscaServiceTest.TEMPLATES_BASE_DIR + "qcg_jobs.json").trim());
   }
 
   private Deployment generateDeployment() throws IOException {
@@ -400,7 +400,7 @@ public class QcgServiceTest extends ToscaParserAwareTest {
 
     return deployment;
   }
-  
+
   private DeploymentMessage generateDeployDmQcg(Deployment deployment) {
 	  DeploymentMessage dm = new DeploymentMessage();
 	  dm.setDeploymentId(deployment.getId());
@@ -411,9 +411,8 @@ public class QcgServiceTest extends ToscaParserAwareTest {
 	      .iaasType(IaaSType.QCG)
 	      .build();
 	  dm.setChosenCloudProviderEndpoint(chosenCloudProviderEndpoint);
-	  deployment.setCloudProviderEndpoint(chosenCloudProviderEndpoint);    
+	  deployment.setCloudProviderEndpoint(chosenCloudProviderEndpoint);
 	  return dm;
   }
 
-  
 }

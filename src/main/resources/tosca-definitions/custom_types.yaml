@@ -2085,7 +2085,7 @@ node_types:
         entry_schema:
           type: string
         description: A map of string representing environment settings
-        
+
   tosca.nodes.indigo.Qcg.Job:
     derived_from: tosca.nodes.indigo.Batch.Job
     properties:

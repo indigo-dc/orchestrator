@@ -387,8 +387,8 @@ public class DeploymentServiceTest {
         .getResources()
         .forEach(resource -> Mockito.verify(resourceRepository).save(resource));
   }
-  
-  
+
+
   @Test
   public void deleteDeploymentNotFound() throws Exception {
     Mockito.when(deploymentRepository.findOne("id")).thenReturn(null);

@@ -111,7 +111,7 @@ public class CloudProviderEndpoint {
 
   /**
    * Generates a list with all the CloudProviderEndpoint of the deployments.
-   * 
+   *
    * @return the list
    */
   @JsonIgnore

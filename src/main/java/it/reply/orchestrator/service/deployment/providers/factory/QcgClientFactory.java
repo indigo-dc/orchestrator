@@ -56,7 +56,7 @@ public class QcgClientFactory {
     return Feign.builder().encoder(new QcgEncoder()).decoder(new QcgDecoder())
         .logger(new Slf4jLogger(Qcg.class))
         .logLevel(Level.FULL)
-        .errorDecoder((methodKey, response) -> new QcgException(response.status(), 
+        .errorDecoder((methodKey, response) -> new QcgException(response.status(),
             response.reason()))
         .requestInterceptor(authInterceptor).requestInterceptor(template -> {
           template.header(HttpHeaders.ACCEPT, "application/json");
@@ -72,7 +72,7 @@ public class QcgClientFactory {
    */
   public Qcg build(CloudProviderEndpoint cloudProviderEndpoint, String accessToken) {
     final RequestInterceptor requestInterceptor;
-    if (cloudProviderEndpoint.getUsername() != null 
+    if (cloudProviderEndpoint.getUsername() != null
         || cloudProviderEndpoint.getPassword() != null) {
       Objects.requireNonNull(cloudProviderEndpoint.getUsername(), "Username must be provided");
       Objects.requireNonNull(cloudProviderEndpoint.getPassword(), "Password must be provided");
