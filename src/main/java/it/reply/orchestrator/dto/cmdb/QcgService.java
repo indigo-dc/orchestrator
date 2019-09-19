@@ -43,7 +43,3 @@ public class QcgService extends  CloudService {
     super(id, serviceType, endpoint, providerId, type, publicService, region, hostname);
   }
 }
-
-
-
-

@@ -25,5 +25,4 @@ public enum DeploymentType {
   public static boolean isMesosDeployment(DeploymentType deploymentType) {
     return deploymentType == CHRONOS || deploymentType == DeploymentType.MARATHON;
   }
-
 }

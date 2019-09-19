@@ -118,12 +118,8 @@
       <name>Concept Reply Nexus</name>
       <url>http://nexusconcept.cloud.reply.eu/content/groups/public</url>
     </repository>
-    <repository>
-      <id>recas-cloud-artifactory-repository</id>
-      <name>recas-cloud-artifactory</name>
-      <url>http://artifactory.cloud.ba.infn.it:8081/artifactory/libs-release</url>
-    </repository>
   </repositories>
+
 
   <dependencies>
 
@@ -370,7 +366,6 @@
       <optional>true</optional>
       <version>${org.projectlombok.version}</version>
     </dependency>
-
     <dependency>
       <groupId>org.checkerframework</groupId>
       <artifactId>checker-qual</artifactId>
@@ -391,7 +386,6 @@
       <artifactId>janino</artifactId>
       <scope>runtime</scope>
     </dependency>
-
 
     <!-- test -->
     <dependency>
@@ -417,7 +411,6 @@
       <version>${spring-test-dbunit.version}</version>
       <scope>test</scope>
     </dependency>
-
     <dependency>
       <groupId>org.dbunit</groupId>
       <artifactId>dbunit</artifactId>
@@ -440,6 +433,7 @@
     </dependency>
 
   </dependencies>
+
 
   <profiles>
     <profile>
