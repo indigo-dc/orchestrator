@@ -52,7 +52,8 @@ public class CloudProviderEndpoint {
     OTC,
     AZURE,
     CHRONOS,
-    MARATHON;
+    MARATHON,
+    QCG;
   }
 
   @Nullable

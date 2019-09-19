@@ -82,6 +82,7 @@
     <alien4cloud.version>2.1.0-DEEP-1.0.0-SNAPSHOT</alien4cloud.version>
     <chronos-client.version>0.0.1</chronos-client.version>
     <marathon-client.version>0.6.2</marathon-client.version>
+    <deep-qcg-client.version>1.0.0</deep-qcg-client.version>
     <org.springframework.vault.version>1.1.3.RELEASE</org.springframework.vault.version>
     <ignite.version>2.3.0</ignite.version>
     <java-uuid-generator.version>3.1.3</java-uuid-generator.version>
@@ -322,6 +323,12 @@
       <groupId>it.infn.ba.indigo</groupId>
       <artifactId>chronos-client</artifactId>
       <version>${chronos-client.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>it.infn.ba.deep</groupId>
+      <artifactId>deep-qcg-client</artifactId>
+      <version>${deep-qcg-client.version}</version>
     </dependency>
 
     <dependency>
@@ -667,10 +674,16 @@
             <exclude>docker/*.war</exclude>
             <!-- excluded because I.N.F.N. Copyright -->
             <exclude>src/main/java/it/reply/orchestrator/config/properties/VaultProperties.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/dto/cmdb/QcgService.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/dto/deployment/QcgJobsOrderedIterator.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/dto/qcg/QcgJob.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/dto/vault/VaultSecret.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/exception/VaultJwtTokenExpiredException.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/service/VaultService.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/service/VaultServiceImpl.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/service/deployment/providers/QcgServiceImpl.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/service/deployment/providers/factory/QcgClientFactory.java</exclude>
+            <exclude>src/test/java/it/reply/orchestrator/service/deployment/providers/QcgServiceTest.java</exclude>
             <exclude>src/test/java/it/reply/orchestrator/service/VaultServiceTest.java</exclude>
           </excludes>
         </configuration>
