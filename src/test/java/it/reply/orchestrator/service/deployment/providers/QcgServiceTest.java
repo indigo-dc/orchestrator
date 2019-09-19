@@ -121,19 +121,10 @@ public class QcgServiceTest extends ToscaParserAwareTest {
     when(qcgClientFactory.build(any(CloudProviderEndpoint.class), any(String.class)))
         .thenReturn(qcg);
 
-//    Job resp1 = (new JobDecoder()).decode("{\"id\":\"999\",\"attributes\":{},\"user\":\"default-user\",\"state\":\"FINISHED\",\"operation\":null,\"note\":\"3c915645-5402-471c-b9c6-dcc84a114ae6\",\"description\":{\"note\":\"3c915645-5402-471c-b9c6-dcc84a114ae6\",\"execution\":{\"directory\":\"/qcg/${QCGNCOMP_JOB_ID}\",\"executable\":\"/usr/bin/date\",\"environment\":{\"USER\":\"slurm_user\",\"QCGNCOMP_JOB_ID\":\"999\",\"QCGNCOMP_JOB_SECRET_AUTH\":\"0a05ef399fc54112abae2b9b1eb4bff8\"},\"directory_policy\":{\"create\":\"OVERWRITE\",\"remove\":\"NEVER\"}}},\"operation_start\":null,\"resource\":null,\"queue\":\"normal\",\"local_user\":\"slurm_user\",\"local_group\":null,\"local_id\":\"53\",\"submit_time\":\"2019-06-07T12:55:23.912772Z\",\"start_time\":\"2019-06-07T12:55:25Z\",\"finish_time\":\"2019-06-07T12:55:25Z\",\"updated_time\":\"2019-06-07T12:55:29.468312Z\",\"eta\":null,\"nodes\":\"c1\",\"cpus\":1,\"exit_code\":0,\"errors\":null,\"resubmit\":1,\"work_dir\":\"/qcg/999\",\"created_work_dir\":true,\"last_seen\":\"2019-06-07T12:55:29.466927Z\"}");
-
     Mockito
         .when(oauth2tokenService.executeWithClientForResult(
             Mockito.any(), Mockito.any(), Mockito.any()))
     	        .thenAnswer(y -> ((ThrowingFunction) y.getArguments()[1]).apply("token"));
-//        .thenAnswer(new Answer<Job>() {
-//            public Job answer(InvocationOnMock invocation) throws Throwable {
-//                return resp1;
-//            }
-//        });
-
-
   }
 
   private CloudProviderEndpoint generateCloudProviderEndpoint() {
