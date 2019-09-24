@@ -564,7 +564,7 @@ node_types:
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/galaxy/galaxy_wn_configure_tooldeps.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/devel_deep/artifacts/galaxy/galaxy_wn_configure_tooldeps.yml
           inputs:
             galaxy_front_end_ip: { get_property: [ SELF, front_end_ip ] }
             export_dir: { get_property: [ SELF, export_dir ] }
