@@ -39,10 +39,10 @@ public class MiscController {
 
   @Autowired
   private ServerProperties serverProperties;
-  
+
   @Autowired
   private ConfigurationService configurationService;
-  
+
   @ResponseStatus(HttpStatus.OK)
   @RequestMapping(value = "/", method = RequestMethod.GET)
   public String getRoot() {
@@ -54,14 +54,14 @@ public class MiscController {
       produces = MediaType.APPLICATION_JSON_VALUE)
   public CharSequence getConfiguration() {
     SystemEndpoints enpoints = configurationService.getConfiguration();
-    
-    ObjectMapper Obj = new ObjectMapper(); 
 
-    try { 
-      // get SystemEndpoints object as a json string 
-      return  Obj.writeValueAsString(enpoints); 
-    } catch (IOException ex) { 
+    ObjectMapper Obj = new ObjectMapper();
+
+    try {
+      // get SystemEndpoints object as a json string
+      return  Obj.writeValueAsString(enpoints);
+    } catch (IOException ex) {
       throw new OrchestratorException("Error serializing system endpoints", ex);
-    }     
+    }
   }
 }
