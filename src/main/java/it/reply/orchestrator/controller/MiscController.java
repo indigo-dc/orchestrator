@@ -54,7 +54,7 @@ public class MiscController {
    * @return endpoints.
    */
   @ResponseStatus(HttpStatus.OK)
-  @GetMapping(path="/configuration",
+  @GetMapping(path = "/configuration",
       produces = MediaType.APPLICATION_JSON_VALUE)
   public CharSequence getConfiguration() {
     SystemEndpoints enpoints = configurationService.getConfiguration();
