@@ -52,15 +52,13 @@ public class ConfigurationServiceImpl implements ConfigurationService {
    * return system configuration endpoints.
    */
   public SystemEndpoints getConfiguration() {
-    SystemEndpoints enpoints = new SystemEndpoints(
+    return new SystemEndpoints(
         cprProperties.getUrl(),
         slamProperties.getUrl(),
         cmdbProperties.getUrl(),
         imProperties.getUrl(),
         monitoringProperties.getUrl(),
         vaultProperties.getUrl());
-
-    return enpoints;
   }
 
 }
