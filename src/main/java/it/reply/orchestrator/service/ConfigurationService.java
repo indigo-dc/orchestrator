@@ -14,28 +14,11 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.config.properties;
+package it.reply.orchestrator.service;
 
-import java.net.URI;
+import it.reply.orchestrator.dto.SystemEndpoints;
 
-import javax.validation.constraints.NotNull;
+public interface ConfigurationService {
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.validation.annotation.Validated;
-
-@Validated
-@Data
-@ConfigurationProperties(prefix = "vault")
-@NoArgsConstructor
-public class VaultProperties {
-
-  @NotNull
-  @NonNull
-  private URI url;
-
+  public SystemEndpoints getConfiguration();
 }
-

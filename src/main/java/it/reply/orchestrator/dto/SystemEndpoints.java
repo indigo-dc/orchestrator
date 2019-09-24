@@ -14,28 +14,46 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.config.properties;
+package it.reply.orchestrator.dto;
+
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
 import java.net.URI;
 
-import javax.validation.constraints.NotNull;
-
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.validation.annotation.Validated;
 
-@Validated
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+
 @Data
-@ConfigurationProperties(prefix = "vault")
-@NoArgsConstructor
-public class VaultProperties {
+@AllArgsConstructor(access = AccessLevel.PUBLIC)
+public class SystemEndpoints {
 
-  @NotNull
   @NonNull
-  private URI url;
+  @JsonProperty("cpr_url")
+  private URI cprurl;
+
+  @NonNull
+  @JsonProperty("slam_url")
+  private URI slamurl;
+
+  @NonNull
+  @JsonProperty("cdb_url")
+  private URI cmdburl;
+
+  @NonNull
+  @JsonProperty("im_url")
+  private URI imurl;
+
+  @NonNull
+  @JsonProperty("monitoring_url")
+  private URI monitoringurl;
+
+  @NonNull
+  @JsonProperty("vault_url")
+  private URI vaulturl;
 
 }
-
