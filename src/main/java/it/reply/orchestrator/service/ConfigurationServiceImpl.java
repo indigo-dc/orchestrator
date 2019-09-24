@@ -27,7 +27,6 @@ import it.reply.orchestrator.dto.SystemEndpoints;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-
 @Service
 public class ConfigurationServiceImpl implements ConfigurationService {
 
@@ -49,7 +48,9 @@ public class ConfigurationServiceImpl implements ConfigurationService {
   @Autowired
   private VaultProperties vaultProperties;
 
-
+  /**
+   * return system configuration endpoints.
+   */
   public SystemEndpoints getConfiguration() {
     SystemEndpoints enpoints = new SystemEndpoints(
         cprProperties.getUrl(),

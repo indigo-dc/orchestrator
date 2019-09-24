@@ -33,7 +33,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-
 @RestController
 public class MiscController {
 
@@ -49,17 +48,21 @@ public class MiscController {
     return serverProperties.getDisplayName();
   }
 
+  /**
+   * return orchestrator endpoints configuration.
+   * @return endpoints.
+   */
   @ResponseStatus(HttpStatus.OK)
   @RequestMapping(value = "/configuration", method = RequestMethod.GET,
       produces = MediaType.APPLICATION_JSON_VALUE)
   public CharSequence getConfiguration() {
     SystemEndpoints enpoints = configurationService.getConfiguration();
 
-    ObjectMapper Obj = new ObjectMapper();
+    ObjectMapper mapper = new ObjectMapper();
 
     try {
       // get SystemEndpoints object as a json string
-      return  Obj.writeValueAsString(enpoints);
+      return  mapper.writeValueAsString(enpoints);
     } catch (IOException ex) {
       throw new OrchestratorException("Error serializing system endpoints", ex);
     }

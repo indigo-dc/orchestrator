@@ -16,17 +16,15 @@
 
 package it.reply.orchestrator.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.net.URI;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
-import java.net.URI;
-
 import org.checkerframework.checker.nullness.qual.NonNull;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
-
 
 @Data
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
