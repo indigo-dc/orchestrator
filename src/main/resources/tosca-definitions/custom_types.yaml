@@ -225,7 +225,7 @@ node_types:
     interfaces:
       Standard:
         create:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/mysql/mysql_db_configure.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mysql/mysql_db_configure.yml
           inputs:
             db_password: { get_property: [ SELF, password ] }
             db_name: { get_property: [ SELF, name ] }
@@ -253,9 +253,9 @@ node_types:
         valid_source_types: [ tosca.nodes.Database.MySQL ]
     interfaces:
       Standard:
-        create: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/mysql/mysql_install.yml
+        create: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mysql/mysql_install.yml
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/mysql/mysql_configure.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mysql/mysql_configure.yml
           inputs:
             root_password: { get_property: [ SELF, root_password ] }
             port: { get_property: [ SELF, port ] }
@@ -267,9 +267,9 @@ node_types:
     interfaces:
       Standard:
         create:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/apache/apache_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/apache/apache_install.yml
         start:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/apache/apache_start.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/apache/apache_start.yml
 
 # INDIGO non normative types
 
@@ -293,7 +293,7 @@ node_types:
     interfaces:
       Standard:
         create:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/mysql/mysql_db_configure.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mysql/mysql_db_configure.yml
           inputs:
             db_password: { get_property: [ SELF, password ] }
             db_name: { get_property: [ SELF, name ] }
@@ -346,12 +346,12 @@ node_types:
         default: Linux      668c875e-9a39-4dc0-a710-17c41376c1e0
     artifacts:
       zabbix_agent_role:
-        file: indigo-dc.zabbix-agent,master
+        file: indigo-dc.zabbix-agent
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/zabbix/zabbix_agent_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/zabbix/zabbix_agent_install.yml
           inputs:
             zabbix_server: { get_property: [ SELF, zabbix_server ] }
             zabbix_server_port: { get_property: [ SELF, zabbix_server_port ] }
@@ -417,15 +417,15 @@ node_types:
           relationship: tosca.relationships.HostedOn
     artifacts:
       nfs_role:
-        file: indigo-dc.nfs,master
+        file: indigo-dc.nfs
         type: tosca.artifacts.AnsibleGalaxy.role
       galaxy_role:
-        file: indigo-dc.galaxycloud,master
+        file: indigo-dc.galaxycloud
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/galaxy/galaxy_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/galaxy/galaxy_install.yml
           inputs:
             galaxy_install_path: { get_property: [ SELF, install_path ] }
             galaxy_user: { get_property: [ SELF, user ] }
@@ -476,18 +476,18 @@ node_types:
         default: []
     artifacts:
       nfs_role:
-        file: indigo-dc.nfs,master
+        file: indigo-dc.nfs
         type: tosca.artifacts.AnsibleGalaxy.role
       galaxy_os_role:
-        file: indigo-dc.galaxycloud-os,master
+        file: indigo-dc.galaxycloud-os
         type: tosca.artifacts.AnsibleGalaxy.role
       galaxy_role:
-        file: indigo-dc.galaxycloud,master
+        file: indigo-dc.galaxycloud
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/galaxy/galaxy_os_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/galaxy/galaxy_os_install.yml
           inputs:
             storage_encryption: { get_property: [ SELF, storage_encryption ] }
             vault_url: { get_property: [ SELF, vault_url ] }
@@ -511,18 +511,18 @@ node_types:
     derived_from: tosca.nodes.indigo.GalaxyPortalAndStorage
     artifacts:
       nfs_role:
-        file: indigo-dc.nfs,master
+        file: indigo-dc.nfs
         type: tosca.artifacts.AnsibleGalaxy.role
       galaxy_os_role:
-        file: indigo-dc.galaxycloud-os,master
+        file: indigo-dc.galaxycloud-os
         type: tosca.artifacts.AnsibleGalaxy.role
       galaxy_role_fastconfig:
-        file: indigo-dc.galaxycloud-fastconfig,master
+        file: indigo-dc.galaxycloud-fastconfig
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/galaxy/galaxy_fastconfig.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/galaxy/galaxy_fastconfig.yml
           inputs:
             storage_encryption: { get_property: [ SELF, storage_encryption ] }
             vault_url: { get_property: [ SELF, vault_url ] }
@@ -564,7 +564,7 @@ node_types:
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/galaxy/galaxy_wn_configure.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/galaxy/galaxy_wn_configure.yml
           inputs:
             galaxy_front_end_ip: { get_property: [ SELF, front_end_ip ] }
             export_dir: { get_property: [ SELF, export_dir ] }
@@ -623,15 +623,15 @@ node_types:
           relationship: tosca.relationships.HostedOn
     artifacts:
       os_role:
-        file: indigo-dc.galaxycloud-os,master
+        file: indigo-dc.galaxycloud-os
         type: tosca.artifacts.AnsibleGalaxy.role
       cvmfs_role:
-        file: indigo-dc.cvmfs-client,master
+        file: indigo-dc.cvmfs-client
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/galaxy/galaxy_wn_configure_cvmfs.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/galaxy/galaxy_wn_configure_cvmfs.yml
           inputs:
             galaxy_front_end_ip: { get_property: [ SELF, front_end_ip ] }
             export_dir: { get_property: [ SELF, export_dir ] }
@@ -677,12 +677,12 @@ node_types:
           relationship: tosca.relationships.HostedOn
     artifacts:
       galaxy_role:
-        file: indigo-dc.galaxycloud-tools,master
+        file: indigo-dc.galaxycloud-tools
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/galaxy/galaxy_tools_configure.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/galaxy/galaxy_tools_configure.yml
           inputs:
             galaxy_flavor: { get_property: [ SELF, flavor ] }
             galaxy_admin_api_key: { get_property: [ HOST, admin_api_key ] }
@@ -746,15 +746,15 @@ node_types:
           relationship: tosca.relationships.HostedOn
     artifacts:
       cvmfs_role:
-        file: indigo-dc.cvmfs-client,master
+        file: indigo-dc.cvmfs-client
         type: tosca.artifacts.AnsibleGalaxy.role
       galaxy_role:
-        file: indigo-dc.galaxycloud-refdata,master
+        file: indigo-dc.galaxycloud-refdata
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/galaxy/galaxy_redfata_configure.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/galaxy/galaxy_redfata_configure.yml
           inputs:
             get_refdata: { get_property: [ SELF, reference_data ] }
             refdata_cvmfs_configuration: { get_property: [ SELF, refdata_cvmfs_configuration ] }
@@ -770,21 +770,21 @@ node_types:
     derived_from: tosca.nodes.indigo.GalaxyPortalAndStorage
     artifacts:
       nfs_role:
-        file: indigo-dc.nfs,master
+        file: indigo-dc.nfs
         type: tosca.artifacts.AnsibleGalaxy.role
       galaxy_os_role:
-        file: indigo-dc.galaxycloud-os,master
+        file: indigo-dc.galaxycloud-os
         type: tosca.artifacts.AnsibleGalaxy.role
       docker_role:
-        file: indigo-dc.docker,master
+        file: indigo-dc.docker
         type: tosca.artifacts.AnsibleGalaxy.role
       galaxy_role_docker:
-        file: indigo-dc.galaxycloud_docker,master
+        file: indigo-dc.galaxycloud_docker
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/galaxy/galaxy_docker.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/galaxy/galaxy_docker.yml
           inputs:
             storage_encryption: { get_property: [ SELF, storage_encryption ] }
             vault_url: { get_property: [ SELF, vault_url ] }
@@ -838,12 +838,12 @@ node_types:
           relationship: tosca.relationships.HostedOn
     artifacts:
       galaxy_role:
-        file: indigo-dc.tesk,master
+        file: indigo-dc.tesk
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/ga4gh_cloud_apis/tesk_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/ga4gh_cloud_apis/tesk_install.yml
           inputs:
             auth_mode: { get_property: [ SELF, auth_mode ] }
             mount_ftp: { get_property: [ SELF, mount_ftp ] }
@@ -893,7 +893,6 @@ node_types:
           protocol: http
           user: admin
           token: password
-          token_type: password
         required: false
       chronos_credentials:
         type: tosca.datatypes.Credential
@@ -902,7 +901,6 @@ node_types:
           protocol: http
           user: admin
           token: password
-          token_type: password
         required: false
       mesos_credentials:
         type: tosca.datatypes.Credential
@@ -911,7 +909,6 @@ node_types:
           protocol: http
           user: admin
           token: password
-          token_type: password
         required: false
       hybrid:
         type: boolean
@@ -930,15 +927,15 @@ node_types:
         required: false
     artifacts:
       clues_role:
-        file: indigo-dc.clues,master
+        file: indigo-dc.clues
         type: tosca.artifacts.AnsibleGalaxy.role
       im_role:
-        file: grycap.im,master
+        file: grycap.im
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         create:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/ec3/ec3_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/ec3/ec3_install.yml
           inputs:
             clues_secret_token: { get_property: [ SELF, secret_token ] }
             clues_queue_system: { get_property: [ SELF, lrms, type ] }
@@ -995,7 +992,7 @@ node_types:
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/lrms/torque/torque_wn_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/lrms/torque/torque_wn_install.yml
           inputs:
             torque_front_end_ip: { get_property: [ SELF, front_end_ip ] }
             wn_hybrid_cluster:  { get_property: [ SELF, hybrid] }
@@ -1006,18 +1003,18 @@ node_types:
       icon: /images/slurm.png
     artifacts:
       slurm_role:
-        file: indigo-dc.slurm,master
+        file: indigo-dc.slurm
         type: tosca.artifacts.AnsibleGalaxy.role
       nfs_role:
-        file: indigo-dc.nfs,master
+        file: indigo-dc.nfs
         type: tosca.artifacts.AnsibleGalaxy.role
       openvpn_role:
-        file: indigo-dc.indigovr,mtu_1400
+        file: indigo-dc.openvpn
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/lrms/slurm/slurm_wn_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/lrms/slurm/slurm_wn_install.yml
           inputs:
             slurm_front_end_ip: { get_property: [ SELF, front_end_ip ] }
             wn_hybrid_cluster:  { get_property: [ SELF, hybrid] }
@@ -1030,15 +1027,15 @@ node_types:
         file: indigo-dc.slurm,cons_res
         type: tosca.artifacts.AnsibleGalaxy.role
       nfs_role:
-        file: indigo-dc.nfs,master
+        file: indigo-dc.nfs
         type: tosca.artifacts.AnsibleGalaxy.role
       openvpn_role:
-        file: indigo-dc.indigovr,mtu_1400
+        file: indigo-dc.openvpn
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/lrms/slurm/slurm_wn_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/lrms/slurm/slurm_wn_install.yml
           inputs:
             slurm_front_end_ip: { get_property: [ SELF, front_end_ip ] }
             wn_hybrid_cluster:  { get_property: [ SELF, hybrid] }
@@ -1076,7 +1073,7 @@ node_types:
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/lrms/torque/torque_fe_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/lrms/torque/torque_fe_install.yml
           inputs:
             torque_wn_ips: { get_property: [ SELF, wn_ips ] }
             fe_hybrid_cluster:  { get_property: [ SELF, hybrid] }
@@ -1093,13 +1090,13 @@ node_types:
         default: -1
     artifacts:
       slurm_role:
-        file: indigo-dc.slurm,master
+        file: indigo-dc.slurm
         type: tosca.artifacts.AnsibleGalaxy.role
       nfs_role:
-        file: indigo-dc.nfs,master
+        file: indigo-dc.nfs
         type: tosca.artifacts.AnsibleGalaxy.role
       openvpn_role:
-        file: indigo-dc.indigovr,mtu_1400
+        file: indigo-dc.openvpn
         type: tosca.artifacts.AnsibleGalaxy.role
     capabilities:
         lrms:
@@ -1107,7 +1104,7 @@ node_types:
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/lrms/slurm/slurm_fe_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/lrms/slurm/slurm_fe_install.yml
           inputs:
             wn_num: { get_property: [ SELF, wn_num ] }
             wn_ips: { get_property: [ SELF, wn_ips ] }
@@ -1121,10 +1118,10 @@ node_types:
         file: indigo-dc.slurm,cons_res
         type: tosca.artifacts.AnsibleGalaxy.role
       nfs_role:
-        file: indigo-dc.nfs,master
+        file: indigo-dc.nfs
         type: tosca.artifacts.AnsibleGalaxy.role
       openvpn_role:
-        file: indigo-dc.indigovr,mtu_1400
+        file: indigo-dc.openvpn
         type: tosca.artifacts.AnsibleGalaxy.role
     capabilities:
         lrms:
@@ -1132,7 +1129,7 @@ node_types:
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/lrms/slurm/slurm_fe_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/lrms/slurm/slurm_fe_install.yml
           inputs:
             wn_num: { get_property: [ SELF, wn_num ] }
             wn_ips: { get_property: [ SELF, wn_ips ] }
@@ -1161,6 +1158,8 @@ node_types:
       command:
         required: no
         type: string
+        constraints:
+          - min_length: 1
       uris:
         required: no
         type: list
@@ -1171,13 +1170,6 @@ node_types:
         type: map
         entry_schema:
           type: string
-      constraints:
-        required: no
-        type: list
-        entry_schema:
-          type: list
-          entry_schema:
-            type: string
       secrets:
         required: no
         type: map
@@ -1216,6 +1208,8 @@ node_types:
       command:
         required: yes
         type: string
+        constraints:
+          - min_length: 1
       description:
         required: no
         type: string
@@ -1341,12 +1335,12 @@ node_types:
         default: 'indigodatacloudapps/dariah-repository:web'
     artifacts:
       dariahrepo_role:
-        file: indigo-dc.dariahrepo,master
+        file: indigo-dc.dariahrepo
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         create:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/mesos/dariahrepo-setup.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/dariahrepo-setup.yml
           inputs:
             marathon_password: { get_property: [ SELF, marathon_password ] }
             dariahrepo_app_cache_cpus: { get_property: [ SELF, cache_cpus ] }
@@ -1428,7 +1422,7 @@ node_types:
     interfaces:
       Standard:
         create:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/mesos/start_tensorflow.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/start_tensorflow.yml
           inputs:
             marathon_username: { get_property: [ SELF, marathon_username ] }
             marathon_password: { get_property: [ SELF, marathon_password ] }
@@ -1528,34 +1522,31 @@ node_types:
         default: false
     artifacts:
       docker_agent_role:
-        file: indigo-dc.docker,master
+        file: indigo-dc.docker
         #file: git+https://github.com/indigo-dc/ansible-role-docker.git,deep-dev
         type: tosca.artifacts.AnsibleGalaxy.role
       consul_agent_role:
-        file: indigo-dc.consul,master
+        file: indigo-dc.consul
         type: tosca.artifacts.AnsibleGalaxy.role
       zookeeper_agent_role:
-        file: indigo-dc.zookeeper,master
+        file: indigo-dc.zookeeper
         type: tosca.artifacts.AnsibleGalaxy.role
       mesos_agent_role:
-        file: indigo-dc.mesos,master
+        file: indigo-dc.mesos
         type: tosca.artifacts.AnsibleGalaxy.role
       marathon_agent_role:
-        file: indigo-dc.marathon,master
+        file: indigo-dc.marathon
         type: tosca.artifacts.AnsibleGalaxy.role
       chronos_agent_role:
-        file: indigo-dc.chronos,master
+        file: indigo-dc.chronos
         type: tosca.artifacts.AnsibleGalaxy.role
       nfs_role:
-        file: indigo-dc.nfs,master
-        type: tosca.artifacts.AnsibleGalaxy.role
-      openvpn_role:
-        file: indigo-dc.indigovr,mtu_1400
+        file: indigo-dc.nfs
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/mesos/mesos_master_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/mesos_master_install.yml
           inputs:
             mesos_masters_list_ips: { get_property: [ SELF, mesos_masters_list ] }
             mesos_authenticate_http: { get_property: [ SELF, mesos_authenticate_http ] }
@@ -1574,7 +1565,6 @@ node_types:
             mesos_enable_gpu_support: { get_property: [ SELF, enable_gpu_support ] }
             chronos_enable_gpu_support: { get_property: [ SELF, enable_gpu_support ] }
             wn_ips: { get_property: [ SELF, wn_ips ] }
-            fe_hybrid_cluster:  { get_property: [ SELF, hybrid] }
 
   tosca.nodes.indigo.MesosMaster:
     derived_from: tosca.nodes.indigo.LRMS.FrontEnd.Mesos
@@ -1664,12 +1654,12 @@ node_types:
           type: string
     artifacts:
       cms_config_role:
-        file: indigo-dc.cms_config,master
+        file: indigo-dc.cms_config
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         start:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/mesos/cms_services_start.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/cms_services_start.yml
           inputs:
             cms_config_mysquid_host: { get_property: [ SELF, mysquid_host ] }
             cms_config_proxycache_host: { get_property: [ SELF, proxycache_host ] }
@@ -1728,32 +1718,27 @@ node_types:
         default: false
     artifacts:
       docker_agent_role:
-        file: indigo-dc.docker,master
+        file: indigo-dc.docker
         type: tosca.artifacts.AnsibleGalaxy.role
       consul_agent_role:
-        file: indigo-dc.consul,master
+        file: indigo-dc.consul
         type: tosca.artifacts.AnsibleGalaxy.role
       mesos_agent_role:
-        file: indigo-dc.mesos,master
+        file: indigo-dc.mesos
         type: tosca.artifacts.AnsibleGalaxy.role
       nfs_role:
-        file: indigo-dc.nfs,master
-        type: tosca.artifacts.AnsibleGalaxy.role
-      openvpn_role:
-        file: indigo-dc.indigovr,mtu_1400
+        file: indigo-dc.nfs
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         create:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/mesos/mesos_slave_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/mesos_slave_install.yml
           inputs:
             mesos_masters_list_ips: { get_property: [ SELF, master_ips ] }
             enable_nfs_share: { get_property: [ SELF, enable_nfs_share ] }
             enable_consul_sd: { get_property: [ SELF, enable_consul_sd ] }
             mesos_enable_gpu_support: { get_property: [ SELF, enable_gpu_support ] }
             front_end_ip: { get_property: [ SELF, front_end_ip ] }
-            public_front_end_ip: { get_property: [ SELF, public_front_end_ip ] }
-            wn_hybrid_cluster:  { get_property: [ SELF, hybrid] }
 
   tosca.nodes.indigo.MesosSlave:
     derived_from: tosca.nodes.indigo.LRMS.WorkerNode.Mesos
@@ -1766,12 +1751,12 @@ node_types:
         required: yes
     artifacts:
       oneclient_role:
-        file: indigo-dc.oneclient,master
+        file: indigo-dc.oneclient
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/onedata/cms_oneclient.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/oneclient/artifacts/onedata/cms_oneclient.yml
           inputs:
             oneclient_pkg: { get_property: [ SELF, oneclient_pkg ] }
 
@@ -1829,12 +1814,12 @@ node_types:
         required: no
     artifacts:
       cms_config_role:
-        file: indigo-dc.cms_config,master
+        file: indigo-dc.cms_config
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/mesos/cms_wn_configure.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/cms_wn_configure.yml
           inputs:
             cms_config_mysquid_host: { get_property: [ SELF, mysquid_host ] }
             cms_config_proxycache_host: { get_property: [ SELF, proxycache_host ] }
@@ -1879,34 +1864,25 @@ node_types:
         type: boolean
         required: false
         default: true
-      hybrid:
-        type: boolean
-        description: Flag to specify that this ElasticCluster will work in a hybrid environment
-        default: false
-        required: false
     artifacts:
       docker_agent_role:
-        file: indigo-dc.docker,master
+        file: indigo-dc.docker
         type: tosca.artifacts.AnsibleGalaxy.role
       consul_agent_role:
-        file: indigo-dc.consul,master
+        file: indigo-dc.consul
         type: tosca.artifacts.AnsibleGalaxy.role
       marathon_lb_role:
-        file: indigo-dc.marathon-lb,master
-        type: tosca.artifacts.AnsibleGalaxy.role
-      openvpn_role:
-        file: indigo-dc.indigovr,mtu_1400
+        file: indigo-dc.marathon-lb
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         create:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/mesos/mesos_lb_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/mesos_lb_install.yml
           inputs:
             enable_consul_sd: { get_property: [ SELF, enable_consul_sd ] }
             master_ips: { get_property: [ SELF, master_ips ] }
             marathon_username: { get_property: [ SELF, marathon_username ] }
             marathon_password: { get_property: [ SELF, marathon_password ] }
-            lb_hybrid_cluster: { get_property: [ SELF, hybrid ] }
     requirements:
       - host:
           capability: tosca.capabilities.Container
@@ -1983,12 +1959,12 @@ node_types:
         default: '-1'
     artifacts:
       spark_mesos_role:
-        file: indigo-dc.spark-mesos,master
+        file: indigo-dc.spark-mesos
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         create:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/mesos/spark_mesos_setup.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/mesos/spark_mesos_setup.yml
           inputs:
             marathon_password: { get_property: [ SELF, marathon_password ] }
             zookeeper_peers: { get_property: [ SELF, zookeeper_peers ] }
@@ -2045,12 +2021,12 @@ node_types:
       icon: /images/hadoop-master.jpg
     artifacts:
       hadoop_role:
-        file: indigo-dc.hadoop,master
+        file: indigo-dc.hadoop
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/hadoop/hadoop_master_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/hadoop/hadoop_master_install.yml
           inputs:
             hadoop_master_ip: { get_attribute: [ HOST, private_address, 0 ] }
 
@@ -2064,12 +2040,12 @@ node_types:
         type: string
     artifacts:
       hadoop_role:
-        file: indigo-dc.hadoop,master
+        file: indigo-dc.hadoop
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/hadoop/hadoop_wn_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/hadoop/hadoop_wn_install.yml
           inputs:
             hadoop_master_ip: { get_property: [ SELF, master_ip ] }
 
@@ -2086,12 +2062,12 @@ node_types:
         - valid_values: [ disvis, powerfit ]
     artifacts:
       galaxy_role:
-        file: indigo-dc.disvis-powerfit,master
+        file: indigo-dc.disvis-powerfit
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/haddock/haddock_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/haddock/haddock_install.yml
           inputs:
             haddock_app_name: { get_property: [ SELF, haddock_app_name ] }
 
@@ -2123,12 +2099,12 @@ node_types:
     derived_from: tosca.nodes.SoftwareComponent
     artifacts:
       galaxy_role:
-        file: indigo-dc.eubiosteo,master
+        file: indigo-dc.eubiosteo
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/eubiosteo/eubiosteo_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/eubiosteo/eubiosteo_install.yml
 
   tosca.nodes.indigo.Ambertools:
     derived_from: tosca.nodes.SoftwareComponent
@@ -2136,12 +2112,12 @@ node_types:
       icon: /images/amber.jpg
     artifacts:
       galaxy_role:
-        file: indigo-dc.ambertools,master
+        file: indigo-dc.ambertools
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/ambertools/ambertools_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/ambertools/ambertools_install.yml
 
   tosca.nodes.indigo.Kepler:
     derived_from: tosca.nodes.SoftwareComponent
@@ -2149,12 +2125,12 @@ node_types:
       icon: /images/kepler.jpeg
     artifacts:
       galaxy_role:
-        file: indigo-dc.kepler,master
+        file: indigo-dc.kepler
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/kepler/kepler_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/kepler/kepler_install.yml
 
   tosca.nodes.indigo.OphidiaServer:
     derived_from: tosca.nodes.SoftwareComponent
@@ -2170,18 +2146,18 @@ node_types:
         default: []
     artifacts:
       ophidia_role:
-        file: indigo-dc.ophidia-cluster,master
+        file: indigo-dc.ophidia-cluster
         type: tosca.artifacts.AnsibleGalaxy.role
       slurm_role:
-        file: indigo-dc.slurm,master
+        file: indigo-dc.slurm
         type: tosca.artifacts.AnsibleGalaxy.role
       nfs_role:
-        file: indigo-dc.nfs,master
+        file: indigo-dc.nfs
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/ophidia/ophidia_server_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/ophidia/ophidia_server_install.yml
           inputs:
             ophidia_io_ips: { get_property: [ SELF, io_ips ] }
 
@@ -2196,18 +2172,18 @@ node_types:
         required: true
     artifacts:
       ophidia_role:
-        file: indigo-dc.ophidia-cluster,master
+        file: indigo-dc.ophidia-cluster
         type: tosca.artifacts.AnsibleGalaxy.role
       slurm_role:
-        file: indigo-dc.slurm,master
+        file: indigo-dc.slurm
         type: tosca.artifacts.AnsibleGalaxy.role
       nfs_role:
-        file: indigo-dc.nfs,master
+        file: indigo-dc.nfs
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/ophidia/ophidia_io_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/ophidia/ophidia_io_install.yml
           inputs:
             ophidia_server_ip: { get_property: [ SELF, server_ip ] }
 
@@ -2283,22 +2259,21 @@ node_types:
       icon: /images/kubernetesWN.png
     artifacts:
       kube_role:
-        file: indigo-dc.kubernetes,master
+        file: indigo-dc.kubernetes
         type: tosca.artifacts.AnsibleGalaxy.role
       nfs_role:
-        file: indigo-dc.nfs,master
+        file: indigo-dc.nfs
         type: tosca.artifacts.AnsibleGalaxy.role
       openvpn_role:
-        file: indigo-dc.indigovr,mtu_1400
+        file: indigo-dc.openvpn
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/lrms/kubernetes/kube_wn_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/lrms/kubernetes/kube_wn_install.yml
           inputs:
             kube_front_end_ip: { get_property: [ SELF, front_end_ip ] }
             wn_hybrid_cluster:  { get_property: [ SELF, hybrid] }
-            kube_public_front_end_ip: { get_property: [ SELF, public_front_end_ip ] }
 
   tosca.nodes.indigo.LRMS.FrontEnd.Kubernetes:
     derived_from: tosca.nodes.indigo.LRMS.FrontEnd
@@ -2315,13 +2290,13 @@ node_types:
         default: some_insecure_token
     artifacts:
       kube_role:
-        file: indigo-dc.kubernetes,master
+        file: indigo-dc.kubernetes
         type: tosca.artifacts.AnsibleGalaxy.role
       nfs_role:
-        file: indigo-dc.nfs,master
+        file: indigo-dc.nfs
         type: tosca.artifacts.AnsibleGalaxy.role
       openvpn_role:
-        file: indigo-dc.indigovr,mtu_1400
+        file: indigo-dc.openvpn
         type: tosca.artifacts.AnsibleGalaxy.role
     capabilities:
         lrms:
@@ -2329,7 +2304,7 @@ node_types:
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/lrms/kubernetes/kube_fe_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/lrms/kubernetes/kube_fe_install.yml
           inputs:
             kube_front_end_ip: { get_attribute: [ HOST, private_address, 0 ] }
             fe_hybrid_cluster:  { get_property: [ SELF, hybrid] }
@@ -2355,15 +2330,16 @@ node_types:
         - valid_values: [ local, dummy ]
     artifacts:
       kube_role:
-        file: indigo-dc.jupyterhub,master
+        file: indigo-dc.jupyterhub
         type: tosca.artifacts.AnsibleGalaxy.role
     interfaces:
       Standard:
         configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/jupyter/jupyterhub_install.yml
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/jupyter/jupyterhub_install.yml
           inputs:
             jupyterhub_spawner: { get_property: [ SELF, spawner ] }
             jupyterhub_authenticator: { get_property: [ SELF, spawner ] }
+
 
   tosca.nodes.indigo.OnedataSpace:
     derived_from: tosca.nodes.Root
@@ -2424,57 +2400,6 @@ node_types:
       type:
         type: string
         required: false
-
-  tosca.nodes.indigo.VR.CentralPoint:
-    derived_from: tosca.nodes.SoftwareComponent
-    artifacts:
-      indigovr_role:
-        file: indigo-dc.indigovr,mtu_1400
-        type: tosca.artifacts.AnsibleGalaxy.role
-    capabilities:
-      central_point:
-        type: tosca.capabilities.Endpoint
-        valid_source_types: [tosca.nodes.indigo.VR.Client, tosca.nodes.indigo.VR.VRouter]
-    interfaces:
-      Standard:
-        configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/indigovr/central_point_install.yml
-
-  tosca.nodes.indigo.VR.Client:
-    derived_from: tosca.nodes.SoftwareComponent
-    artifacts:
-      indigovr_role:
-        file: indigo-dc.indigovr,mtu_1400
-        type: tosca.artifacts.AnsibleGalaxy.role
-    requirements:
-      - central_point:
-          capability: tosca.capabilities.Endpoint
-          node: tosca.nodes.indigo.VR.CentralPoint
-          relationship: tosca.relationships.DependsOn
-    interfaces:
-      Standard:
-        configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/indigovr/standalone_install.yml
-          inputs:
-            INDIGOVR_CENTRALPOINT_IP: { get_attribute: [ SELF, central_point, ip_address ] }
-
-  tosca.nodes.indigo.VR.VRouter:
-    derived_from: tosca.nodes.SoftwareComponent
-    artifacts:
-      indigovr_role:
-        file: indigo-dc.indigovr,mtu_1400
-        type: tosca.artifacts.AnsibleGalaxy.role
-    requirements:
-      - central_point:
-          capability: tosca.capabilities.Endpoint
-          node: tosca.nodes.indigo.VR.CentralPoint
-          relationship: tosca.relationships.DependsOn
-    interfaces:
-      Standard:
-        configure:
-          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/v4.0.0/artifacts/indigovr/vrouter_install.yml
-          inputs:
-            INDIGOVR_CENTRALPOINT_IP: { get_attribute: [ SELF, central_point, ip_address ] }
 
 policy_types:
   tosca.policies.indigo.SlaPlacement:
