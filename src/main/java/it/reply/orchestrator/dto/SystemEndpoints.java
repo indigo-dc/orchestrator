@@ -32,26 +32,26 @@ public class SystemEndpoints {
 
   @NonNull
   @JsonProperty("cpr_url")
-  private URI cprurl;
+  private URI cprUrl;
 
   @NonNull
   @JsonProperty("slam_url")
-  private URI slamurl;
+  private URI slamUrl;
 
   @NonNull
   @JsonProperty("cdb_url")
-  private URI cmdburl;
+  private URI cmdbUrl;
 
   @NonNull
   @JsonProperty("im_url")
-  private URI imurl;
+  private URI imUrl;
 
   @NonNull
   @JsonProperty("monitoring_url")
-  private URI monitoringurl;
+  private URI monitoringUrl;
 
   @NonNull
   @JsonProperty("vault_url")
-  private URI vaulturl;
+  private URI vaultUrl;
 
 }

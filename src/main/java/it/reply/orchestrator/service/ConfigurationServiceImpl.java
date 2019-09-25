@@ -50,6 +50,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
 
   /**
    * return system configuration endpoints.
+   * return system configuration endpoints.
    */
   public SystemEndpoints getConfiguration() {
     return new SystemEndpoints(
