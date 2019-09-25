@@ -75,7 +75,7 @@ public class ConfigurationServiceTest {
   @Autowired
   private MonitoringProperties monitoringProperties;
 
-  @Autowired 
+  @Autowired
   private SlamProperties slamProperties;
 
   @Autowired
