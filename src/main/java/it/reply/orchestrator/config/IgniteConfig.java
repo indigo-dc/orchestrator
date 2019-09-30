@@ -16,12 +16,13 @@
 
 package it.reply.orchestrator.config;
 
+import it.reply.orchestrator.config.properties.OrchestratorProperties;
+
 import java.util.Objects;
 
 import javax.cache.configuration.Factory;
 import javax.transaction.TransactionManager;
 
-import it.reply.orchestrator.config.properties.OrchestratorProperties;
 import lombok.AllArgsConstructor;
 
 import org.apache.ignite.Ignite;
@@ -59,11 +60,11 @@ public class IgniteConfig {
    * @return the generated IgniteConfiguration
    */
   @Bean
-  public IgniteConfiguration igniteConfiguration(OrchestratorProperties orchestratorProperties,
-      JtaTransactionManager transactionManager) {
+  public IgniteConfiguration igniteConfiguration(JtaTransactionManager transactionManager,
+      OrchestratorProperties orchestratorProperties) {
 
-    TransactionConfiguration txCfg = new TransactionConfiguration()
-      .setTxManagerFactory(new TransactionManagerFactory(transactionManager.getTransactionManager()));
+    TransactionConfiguration txCfg = new TransactionConfiguration().setTxManagerFactory(
+        new TransactionManagerFactory(transactionManager.getTransactionManager()));
 
     IgniteConfiguration igniteConfiguration = new IgniteConfiguration()
         .setGridLogger(new Slf4jLogger())
@@ -73,7 +74,8 @@ public class IgniteConfig {
         .setMetricsLogFrequency(0);
 
     if (!orchestratorProperties.isClustered()) {
-      TcpDiscoverySpi discoverySpi = new TcpDiscoverySpi().setIpFinder(new TcpDiscoveryVmIpFinder(true));
+      TcpDiscoverySpi discoverySpi = new TcpDiscoverySpi()
+          .setIpFinder(new TcpDiscoveryVmIpFinder(true));
       igniteConfiguration = igniteConfiguration.setDiscoverySpi(discoverySpi);
     }
     return igniteConfiguration;
