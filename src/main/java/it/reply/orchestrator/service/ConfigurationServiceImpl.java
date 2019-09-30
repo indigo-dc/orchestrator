@@ -49,17 +49,19 @@ public class ConfigurationServiceImpl implements ConfigurationService {
   private VaultProperties vaultProperties;
 
   /**
-   * return system configuration endpoints.
-   * return system configuration endpoints.
+   * Return the system configuration endpoints.
+   * @return the configuration endpoints
    */
   public SystemEndpoints getConfiguration() {
-    return new SystemEndpoints(
-        cprProperties.getUrl(),
-        slamProperties.getUrl(),
-        cmdbProperties.getUrl(),
-        imProperties.getUrl(),
-        monitoringProperties.getUrl(),
-        vaultProperties.getUrl());
+    return SystemEndpoints
+        .builder()
+        .cprUrl(cprProperties.getUrl())
+        .slamUrl(slamProperties.getUrl())
+        .cmdbUrl(cmdbProperties.getUrl())
+        .imUrl(imProperties.getUrl())
+        .monitoringUrl(monitoringProperties.getUrl())
+        .vaultUrl(vaultProperties.getUrl())
+        .build();
   }
 
 }

@@ -20,14 +20,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.net.URI;
 
-import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 @Data
-@AllArgsConstructor(access = AccessLevel.PUBLIC)
+@Builder
 public class SystemEndpoints {
 
   @NonNull

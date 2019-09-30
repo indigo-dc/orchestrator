@@ -25,88 +25,83 @@ import it.reply.orchestrator.config.properties.VaultProperties;
 import it.reply.orchestrator.dto.SystemEndpoints;
 import junitparams.JUnitParamsRunner;
 
-import java.net.URI;
-import java.net.URISyntaxException;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.when;
 
-import org.junit.Assert;
+import java.net.URI;
+
 import org.junit.Before;
-import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.client.RestClientTest;
-import org.springframework.test.context.ContextConfiguration;
-import org.springframework.test.context.junit4.rules.SpringClassRule;
-import org.springframework.test.context.junit4.rules.SpringMethodRule;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.MockitoJUnit;
+import org.mockito.junit.MockitoRule;
 
 @RunWith(JUnitParamsRunner.class)
-@RestClientTest(ConfigurationService.class)
-@ContextConfiguration(classes = {ConfigurationServiceImpl.class, CprProperties.class,
-    ImProperties.class, MonitoringProperties.class, CmdbProperties.class,
-    SlamProperties.class, VaultProperties.class})
 public class ConfigurationServiceTest {
 
-  private static final String CPRURL = "https://cpr.test.it";
-  private static final String SLAMURL = "https://slam.test.it";
-  private static final String CMBDURL = "https://cmdb.test.it";
-  private static final String IMURL = "https://im.test.it";
-  private static final String MONITORINGURL = "https://monitoring.test.it";
-  private static final String VAULTURL = "https://vault.test.it:8200";
-
-  @ClassRule
-  public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
+  private static final URI CPR_URL = URI.create("https://cpr.test.it");
+  private static final URI SLAM_URL = URI.create("https://slam.test.it");
+  private static final URI CMDB_URL = URI.create("https://cmdb.test.it");
+  private static final URI IM_URL = URI.create("https://im.test.it");
+  private static final URI MONITORING_URL = URI.create("https://monitoring.test.it");
+  private static final URI VAULT_URL = URI.create("https://vault.test.it:8200");
 
   @Rule
-  public final SpringMethodRule springMethodRule = new SpringMethodRule();
+  public MockitoRule rule = MockitoJUnit.rule();
 
-  @Autowired
-  private ConfigurationService configurationService;
+  @InjectMocks
+  private ConfigurationServiceImpl configurationService;
 
-  @Autowired
+  @Mock
   private CmdbProperties cmdbProperties;
 
-  @Autowired
+  @Mock
   private CprProperties cprProperties;
 
-  @Autowired
+  @Mock
   private ImProperties imProperties;
 
-  @Autowired
+  @Mock
   private MonitoringProperties monitoringProperties;
 
-  @Autowired
+  @Mock
   private SlamProperties slamProperties;
 
-  @Autowired
+  @Mock
   private VaultProperties vaultProperties;
 
   @Before
-  public void setup() throws URISyntaxException {
-    cmdbProperties.setUrl(new URI(CMBDURL));
-    cprProperties.setUrl(new URI(CPRURL));
-    imProperties.setUrl(new URI(IMURL));
-    monitoringProperties.setUrl(new URI(MONITORINGURL));
-    slamProperties.setUrl(new URI(SLAMURL));
-    vaultProperties.setUrl(new URI(VAULTURL));
+  public void setup() {
+    when(cmdbProperties.getUrl()).thenReturn(CMDB_URL);
+    when(cprProperties.getUrl()).thenReturn(CPR_URL);
+    when(imProperties.getUrl()).thenReturn(IM_URL);
+    when(monitoringProperties.getUrl()).thenReturn(MONITORING_URL);
+    when(slamProperties.getUrl()).thenReturn(SLAM_URL);
+    when(vaultProperties.getUrl()).thenReturn(VAULT_URL);
   }
 
   @Test
-  public void getConfiguration() throws URISyntaxException {
+  public void getConfiguration() {
 
-    SystemEndpoints endpoint = createTestEndpoint();
+    SystemEndpoints endpoints = createTestEndpoint();
 
-    Assert.assertEquals(configurationService.getConfiguration(), endpoint);
+    assertThat(configurationService.getConfiguration())
+        .isEqualTo(endpoints);
   }
 
-  private SystemEndpoints createTestEndpoint() throws URISyntaxException {
-    return new SystemEndpoints(
-        new URI(CPRURL),
-        new URI(SLAMURL),
-        new URI(CMBDURL),
-        new URI(IMURL),
-        new URI(MONITORINGURL),
-        new URI(VAULTURL));
+  private SystemEndpoints createTestEndpoint() {
+    return SystemEndpoints
+      .builder()
+      .cprUrl(CPR_URL)
+      .slamUrl(SLAM_URL)
+      .cmdbUrl(CMDB_URL)
+      .imUrl(IM_URL)
+      .monitoringUrl(MONITORING_URL)
+      .vaultUrl(VAULT_URL)
+      .build();
   }
 
 }
