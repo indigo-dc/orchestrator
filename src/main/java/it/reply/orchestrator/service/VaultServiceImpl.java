@@ -67,9 +67,8 @@ public class VaultServiceImpl implements VaultService {
   }
 
   private VaultTemplate getTemplate(ClientAuthentication token) {
-    return new VaultTemplate(VaultEndpoint.create(
-        vaultProperties.getUrl(),
-        vaultProperties.getPort()),
+    return new VaultTemplate(VaultEndpoint.from(
+        vaultProperties.getUrl()),
         token);
   }
 
@@ -103,9 +102,8 @@ public class VaultServiceImpl implements VaultService {
    */
   @Override
   public TokenAuthentication retrieveToken(String accessToken) {
-    VaultEndpoint endpoint = VaultEndpoint.create(
-        vaultProperties.getUrl(),
-        vaultProperties.getPort());
+    VaultEndpoint endpoint = VaultEndpoint.from(
+        vaultProperties.getUrl());
     URI uri = endpoint.createUri("auth/jwt/login");
 
     Map<String, String> login = new HashMap<>();

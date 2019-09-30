@@ -87,8 +87,7 @@ public class VaultServiceTest {
 
   private ObjectMapper objectMapper;
 
-  private static final String defaultVaultEndpoint = "http://default.vault.com";
-  private static final int defaultVaultPort = 8200;
+  private static final String defaultVaultEndpoint = "https://default.vault.com:8200";
   private static final String vaultToken = "s.DQSf698xaTFLtBCY9bG2QdhI";
   private static final String validAccessToken = "eyJhbGciOiJub25lIn0.eyJqdGkiOiI0Y2IyNGQ1Ny1kMzRkLTQxZDQtYmZiYy04NzFiN2I0MDRjZDAifQ.";
   private static final String expiredAccessToken = "eyJhbGciOiJub25lIn0.fyJqdGkiOiI0Y2IyNGQ1Ny1kMzRkLTQxZDQtYmZiYy04NzFiN2I0MDRjZDAifQ.";
@@ -103,8 +102,7 @@ public class VaultServiceTest {
   @SuppressWarnings({ "unchecked", "rawtypes" })
   @Before
   public void setup() throws Exception {
-    vaultProperties.setUrl(defaultVaultEndpoint);
-    vaultProperties.setPort(defaultVaultPort);
+    vaultProperties.setUrl(new URI(defaultVaultEndpoint));
     objectMapper = new ObjectMapper();
 
     OidcEntityId validoidc = new OidcEntityId();
@@ -127,9 +125,8 @@ public class VaultServiceTest {
   }
 
   private URI buildEndpoint() {
-    VaultEndpoint endpoint = VaultEndpoint.create(
-        vaultProperties.getUrl(),
-        vaultProperties.getPort());
+    VaultEndpoint endpoint = VaultEndpoint.from(
+        vaultProperties.getUrl());
       URI uri = endpoint.createUri("auth/jwt/login");
       return uri;
   }

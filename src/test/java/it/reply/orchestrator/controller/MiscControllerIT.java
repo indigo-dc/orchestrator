@@ -61,4 +61,9 @@ public class MiscControllerIT extends WebAppConfigurationAwareIT {
     mockMvc.perform(get("/info").accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
   }
 
+  @Test
+  public void getConfiguration() throws Exception {
+    mockMvc.perform(get("/configuration").accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
+  }
+
 }
