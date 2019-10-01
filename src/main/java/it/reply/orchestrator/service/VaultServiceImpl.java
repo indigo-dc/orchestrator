@@ -26,6 +26,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;
@@ -42,6 +44,7 @@ import org.springframework.web.client.RestTemplate;
 
 @Service
 @EnableConfigurationProperties(VaultProperties.class)
+@Slf4j
 public class VaultServiceImpl implements VaultService {
 
   private VaultProperties vaultProperties;
@@ -116,9 +119,13 @@ public class VaultServiceImpl implements VaultService {
     } catch (HttpClientErrorException ex) {
       if (ex.getRawStatusCode() == 400) {
         String errorCause = VaultResponses.getError(ex.getResponseBodyAsString());
-        if (errorCause != null && errorCause.contains("token is expired")) {
-          throw new VaultJwtTokenExpiredException(
-              "Unable to retrieve token for Vault: IAM access token is expired");
+        if (errorCause != null) {
+          if (errorCause.contains("expired")) {
+            throw new VaultJwtTokenExpiredException(
+                "Unable to retrieve token for Vault: IAM access token is expired");
+          } else {
+            LOG.debug("Got response 400 with error cause:\n{}", errorCause);
+          }
         }
       }
       throw ex;
