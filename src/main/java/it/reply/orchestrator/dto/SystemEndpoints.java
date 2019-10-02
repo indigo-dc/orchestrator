@@ -38,7 +38,7 @@ public class SystemEndpoints {
   private URI slamUrl;
 
   @NonNull
-  @JsonProperty("cdb_url")
+  @JsonProperty("cmdb_url")
   private URI cmdbUrl;
 
   @NonNull
