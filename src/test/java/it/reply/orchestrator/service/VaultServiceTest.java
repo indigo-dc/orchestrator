@@ -87,7 +87,6 @@ public class VaultServiceTest {
   @Autowired
   private MockRestServiceServer mockServer;
 
-
   private ObjectMapper objectMapper;
 
   private static final String defaultVaultEndpoint = "https://default.vault.com:8200";
