@@ -19,6 +19,7 @@ package it.reply.orchestrator.service;
 import it.reply.orchestrator.config.properties.VaultProperties;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.exception.VaultJwtTokenExpiredException;
+import it.reply.orchestrator.exception.VaultServiceNotAvailableException;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 
 import java.net.URI;
@@ -70,8 +71,11 @@ public class VaultServiceImpl implements VaultService {
   }
 
   private VaultTemplate getTemplate(ClientAuthentication token) {
-    return new VaultTemplate(VaultEndpoint.from(
-        vaultProperties.getUrl()),
+    URI vaulturi = vaultProperties.getUrl();
+    if (!vaultProperties.isEnabled() || vaulturi == null) {
+      throw new VaultServiceNotAvailableException();
+    }    
+    return new VaultTemplate(VaultEndpoint.from(vaulturi),
         token);
   }
 
@@ -105,15 +109,18 @@ public class VaultServiceImpl implements VaultService {
    */
   @Override
   public TokenAuthentication retrieveToken(String accessToken) {
-    VaultEndpoint endpoint = VaultEndpoint.from(
-        vaultProperties.getUrl());
-    URI uri = endpoint.createUri("auth/jwt/login");
+    URI vaulturi = vaultProperties.getUrl();
+    if (!vaultProperties.isEnabled() || vaulturi == null) {
+      throw new VaultServiceNotAvailableException();
+    }
+    VaultEndpoint endpoint = VaultEndpoint.from(vaulturi);
+    URI authuri = endpoint.createUri("auth/jwt/login");
 
     Map<String, String> login = new HashMap<>();
     login.put("jwt", accessToken);
     try {
       VaultToken token = restTemplate
-          .postForObject(uri, login, VaultTokenResponse.class)
+          .postForObject(authuri, login, VaultTokenResponse.class)
           .getToken();
       return new TokenAuthentication(token);
     } catch (HttpClientErrorException ex) {

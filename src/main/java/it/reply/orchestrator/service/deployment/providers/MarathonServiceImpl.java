@@ -36,6 +36,7 @@ import it.reply.orchestrator.dto.mesos.MesosPortMapping;
 import it.reply.orchestrator.dto.mesos.marathon.MarathonApp;
 import it.reply.orchestrator.dto.vault.VaultSecret;
 import it.reply.orchestrator.enums.DeploymentProvider;
+import it.reply.orchestrator.exception.VaultServiceNotAvailableException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.function.ThrowingConsumer;
 import it.reply.orchestrator.function.ThrowingFunction;
@@ -327,18 +328,24 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
       }
     }
 
-    TokenAuthentication vaultToken = vaultService.retrieveToken(requestedWithToken);
-
-    //remove vault entries if present
-    String spath = "secret/private/" + deployment.getId();
-    List<String> depentries = vaultService.listSecrets(vaultToken, spath);
-    if (!depentries.isEmpty()) {
-      for (String depentry:depentries) {
-        List<String> entries = vaultService.listSecrets(vaultToken, spath + "/" + depentry);
-        for (String entry:entries) {
-          vaultService.deleteSecret(vaultToken, spath + "/" + depentry + "/" + entry);
+    try {
+      TokenAuthentication vaultToken = vaultService.retrieveToken(requestedWithToken);
+  
+      //remove vault entries if present
+      String spath = "secret/private/" + deployment.getId();
+      List<String> depentries = vaultService.listSecrets(vaultToken, spath);
+      if (!depentries.isEmpty()) {
+        for (String depentry:depentries) {
+          List<String> entries = vaultService.listSecrets(vaultToken, spath + "/" + depentry);
+          for (String entry:entries) {
+            vaultService.deleteSecret(vaultToken, spath + "/" + depentry + "/" + entry);
+          }
         }
       }
+    } catch (VaultServiceNotAvailableException ex) {
+      // skip gracefully if vault not implemented
+    } catch (Exception ee) {
+      throw ee;
     }
     return true;
   }
@@ -399,27 +406,34 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
 
     // handle secrets
     if (!marathonTask.getSecrets().isEmpty()) {
-
-      TokenAuthentication vaultToken = vaultService.retrieveToken(requestedWithToken);
-
-      Map<String, SecretSource> secrets = new HashMap<>();
-
-      for (Map.Entry<String, String> entry : marathonTask.getSecrets().entrySet()) {
-        Map<String, String> enventry = new HashMap<>();
-        enventry.put("secret", entry.getKey());
-        marathonEnv.put(entry.getKey(), enventry);
-        SecretSource source = new SecretSource();
-        source.setSource(entry.getKey() + "@value");
-        secrets.put(entry.getKey(), source);
-
-        //write secret on service
-        String spath = "secret/private/" + deploymentId + "/" + marathonTask.getId() + "/"
-            + entry.getKey();
-
-        vaultService.writeSecret(vaultToken, spath, new VaultSecret(entry.getValue()));
-
+      try {
+        TokenAuthentication vaultToken = vaultService.retrieveToken(requestedWithToken);
+  
+        Map<String, SecretSource> secrets = new HashMap<>();
+  
+        for (Map.Entry<String, String> entry : marathonTask.getSecrets().entrySet()) {
+          Map<String, String> enventry = new HashMap<>();
+          enventry.put("secret", entry.getKey());
+          marathonEnv.put(entry.getKey(), enventry);
+          SecretSource source = new SecretSource();
+          source.setSource(entry.getKey() + "@value");
+          secrets.put(entry.getKey(), source);
+  
+          //write secret on service
+          String spath = "secret/private/" + deploymentId + "/" + marathonTask.getId() + "/"
+              + entry.getKey();
+  
+          vaultService.writeSecret(vaultToken, spath, new VaultSecret(entry.getValue()));
+  
+        }
+        app.setSecrets(secrets);
+      } catch (VaultServiceNotAvailableException ex) {
+        LOG.debug("Vault service not enabled but secret present in template for deployment {}",
+            deploymentId);
+        throw new IllegalArgumentException("Secrets support not enabled");
+      } catch (Exception ee) {
+        throw ee;
       }
-      app.setSecrets(secrets);
     }
 
     app.setEnv(marathonEnv);
