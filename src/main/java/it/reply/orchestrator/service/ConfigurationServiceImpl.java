@@ -61,6 +61,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
         .imUrl(imProperties.getUrl())
         .monitoringUrl(monitoringProperties.getUrl())
         .vaultUrl(vaultProperties.getUrl())
+        .vaultEnabled(vaultProperties.isEnabled())
         .build();
   }
 

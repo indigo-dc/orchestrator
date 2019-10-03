@@ -49,8 +49,9 @@ public class SystemEndpoints {
   @JsonProperty("monitoring_url")
   private URI monitoringUrl;
 
-  @NonNull
   @JsonProperty("vault_url")
   private URI vaultUrl;
 
+  @JsonProperty("vault_enabled")
+  private boolean vaultEnabled;
 }
