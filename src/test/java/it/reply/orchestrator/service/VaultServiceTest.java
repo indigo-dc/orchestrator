@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.client.ExpectedCount.never;
 import static org.springframework.test.web.client.ExpectedCount.once;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.content;
 import static org.springframework.test.web.client.match.MockRestRequestMatchers.method;
@@ -30,6 +31,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -57,6 +59,7 @@ import it.reply.orchestrator.config.properties.VaultProperties;
 import it.reply.orchestrator.dal.entity.OidcEntityId;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.exception.VaultJwtTokenExpiredException;
+import it.reply.orchestrator.exception.VaultServiceNotAvailableException;
 import it.reply.orchestrator.function.ThrowingFunction;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.JsonUtils;
@@ -102,19 +105,15 @@ public class VaultServiceTest {
   @SuppressWarnings({ "unchecked", "rawtypes" })
   @Before
   public void setup() throws Exception {
-    vaultProperties.setUrl(new URI(defaultVaultEndpoint));
-    vaultProperties.setEnabled(true);
     objectMapper = new ObjectMapper();
 
     OidcEntityId validoidc = new OidcEntityId();
     validoidc.setSubject(validsubject);
     oidcTokenId.setOidcEntityId(validoidc);
 
-
     OidcEntityId expiredidc = new OidcEntityId();
     expiredidc.setSubject(expiredsubject);
     expiredOidcTokenId.setOidcEntityId(expiredidc);
-
 
     when(oauth2TokenService
         .executeWithClientForResult(eq(oidcTokenId), any(), any()))
@@ -146,8 +145,19 @@ public class VaultServiceTest {
     return response;
   }
 
+  private void setActiveEndpoint() throws  URISyntaxException {
+    vaultProperties.setUrl(new URI(defaultVaultEndpoint));
+    vaultProperties.setEnabled(true);
+  }
+
+  private void setInactiveEndpoint() throws  URISyntaxException {
+    vaultProperties.setUrl(new URI(defaultVaultEndpoint));
+    vaultProperties.setEnabled(false);
+  }
+
   @Test
-  public void testSuccessRetrieveTokenString() throws IOException {
+  public void testSuccessRetrieveTokenString() throws IOException, URISyntaxException {
+    setActiveEndpoint();
     //mock server
     mockServer
     .expect(once(), requestTo(buildEndpoint().toString()))
@@ -165,7 +175,8 @@ public class VaultServiceTest {
   }
 
   @Test
-  public void testExpiredRetrieveTokenString() throws IOException {
+  public void testExpiredRetrieveTokenString() throws IOException, URISyntaxException {
+    setActiveEndpoint();
     //mock server
     mockServer
         .expect(once(), requestTo(buildEndpoint().toString()))
@@ -182,7 +193,8 @@ public class VaultServiceTest {
   }
 
   @Test
-  public void testHttpErrorRetrieveTokenString()  throws IOException {
+  public void testHttpErrorRetrieveTokenString() throws IOException, URISyntaxException {
+    setActiveEndpoint();
     //mock server
     mockServer
         .expect(once(), requestTo(buildEndpoint().toString()))
@@ -199,7 +211,8 @@ public class VaultServiceTest {
   }
 
   @Test
-  public void testSuccessRetrieveTokenOidc() throws JsonProcessingException {
+  public void testSuccessRetrieveTokenOidc() throws JsonProcessingException, URISyntaxException {
+    setActiveEndpoint();
     //mock server
     mockServer
         .expect(once(), requestTo(buildEndpoint().toString()))
@@ -217,7 +230,8 @@ public class VaultServiceTest {
   }
 
   @Test
-  public void testExpiredRetrieveTokenOidc() throws JsonProcessingException {
+  public void testExpiredRetrieveTokenOidc() throws JsonProcessingException, URISyntaxException {
+    setActiveEndpoint();
     //mock server
     mockServer
         .expect(once(), requestTo(buildEndpoint().toString()))
@@ -234,4 +248,23 @@ public class VaultServiceTest {
     mockServer.verify();
   }
 
+  @Test
+  public void testInactiveVaultService() throws JsonProcessingException, URISyntaxException {
+    setInactiveEndpoint();
+    //mock server
+    mockServer
+        .expect(never(), requestTo(buildEndpoint().toString()))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(content()
+            .string(objectMapper.writeValueAsString(buildLogin(validAccessToken))))
+        .andRespond(withSuccess(JsonUtils.serialize(buildVaultResponse()),
+            MediaType.APPLICATION_JSON_UTF8));
+
+    //do test
+    assertThatThrownBy(
+        () -> vaultService.retrieveToken(oidcTokenId).login().getToken())
+        .isInstanceOf(VaultServiceNotAvailableException.class);
+
+    mockServer.verify();
+  }
 }
