@@ -103,6 +103,7 @@ public class VaultServiceTest {
   @Before
   public void setup() throws Exception {
     vaultProperties.setUrl(new URI(defaultVaultEndpoint));
+    vaultProperties.setEnabled(true);
     objectMapper = new ObjectMapper();
 
     OidcEntityId validoidc = new OidcEntityId();
