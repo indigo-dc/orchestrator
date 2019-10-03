@@ -74,7 +74,7 @@ public class VaultServiceImpl implements VaultService {
     URI vaulturi = vaultProperties.getUrl();
     if (!vaultProperties.isEnabled() || vaulturi == null) {
       throw new VaultServiceNotAvailableException();
-    }    
+    }
     return new VaultTemplate(VaultEndpoint.from(vaulturi),
         token);
   }
