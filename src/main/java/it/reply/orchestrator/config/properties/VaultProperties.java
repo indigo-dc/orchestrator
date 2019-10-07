@@ -16,6 +16,8 @@
 
 package it.reply.orchestrator.config.properties;
 
+import com.google.common.base.Preconditions;
+
 import java.net.URI;
 
 import lombok.Data;
@@ -24,8 +26,6 @@ import lombok.NoArgsConstructor;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
-
-import com.google.common.base.Preconditions;
 
 @Validated
 @Data
