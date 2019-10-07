@@ -37,6 +37,7 @@ import it.reply.orchestrator.dto.mesos.marathon.MarathonApp;
 import it.reply.orchestrator.dto.vault.VaultSecret;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.VaultServiceNotAvailableException;
+import it.reply.orchestrator.exception.service.BusinessWorkflowException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.function.ThrowingConsumer;
 import it.reply.orchestrator.function.ThrowingFunction;
@@ -49,6 +50,7 @@ import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 import it.reply.orchestrator.utils.ToscaUtils;
+import it.reply.orchestrator.utils.WorkflowConstants.ErrorCode;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -426,11 +428,9 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
         }
         app.setSecrets(secrets);
       } catch (VaultServiceNotAvailableException ex) {
-        LOG.debug("Vault service not enabled but secret present in template for deployment {}",
+        LOG.warn("Vault service not enabled but secret present in template for deployment {}",
             deploymentId);
-        throw new IllegalArgumentException("Secrets support not enabled");
-      } catch (Exception ee) {
-        throw ee;
+        throw new BusinessWorkflowException(ErrorCode.RUNTIME_ERROR, "Secrets support not enabled", ex);
       }
     }
 
