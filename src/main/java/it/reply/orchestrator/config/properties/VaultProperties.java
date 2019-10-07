@@ -18,24 +18,31 @@ package it.reply.orchestrator.config.properties;
 
 import java.net.URI;
 
-import javax.validation.constraints.NotNull;
-
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.validation.annotation.Validated;
+
+import com.google.common.base.Preconditions;
 
 @Validated
 @Data
 @ConfigurationProperties(prefix = "vault")
 @NoArgsConstructor
-public class VaultProperties {
+public class VaultProperties implements InitializingBean {
 
   private URI url;
 
   private boolean enabled;
+
+  @Override
+  public void afterPropertiesSet() throws Exception {
+    if (enabled) {
+      Preconditions.checkNotNull(url);
+    }
+  }
 
 }
 

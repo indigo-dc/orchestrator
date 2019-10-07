@@ -109,7 +109,7 @@ public class VaultServiceImpl implements VaultService {
   @Override
   public TokenAuthentication retrieveToken(String accessToken) {
     URI vaultUri = vaultProperties.getUrl();
-    if (!vaultProperties.isEnabled() || vaultUri == null) {
+    if (!vaultProperties.isEnabled()) {
       throw new VaultServiceNotAvailableException();
     }
     VaultEndpoint endpoint = VaultEndpoint.from(vaultUri);
