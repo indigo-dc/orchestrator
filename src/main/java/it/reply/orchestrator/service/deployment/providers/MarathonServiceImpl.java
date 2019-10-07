@@ -430,7 +430,8 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
       } catch (VaultServiceNotAvailableException ex) {
         LOG.warn("Vault service not enabled but secret present in template for deployment {}",
             deploymentId);
-        throw new BusinessWorkflowException(ErrorCode.RUNTIME_ERROR, "Secrets support not enabled", ex);
+        throw new BusinessWorkflowException(ErrorCode.RUNTIME_ERROR, 
+            "Secrets support not enabled", ex);
       }
     }
 
