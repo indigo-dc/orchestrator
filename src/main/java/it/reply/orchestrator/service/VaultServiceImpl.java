@@ -71,12 +71,11 @@ public class VaultServiceImpl implements VaultService {
   }
 
   private VaultTemplate getTemplate(ClientAuthentication token) {
-    URI vaulturi = vaultProperties.getUrl();
-    if (!vaultProperties.isEnabled() || vaulturi == null) {
+    URI vaultUri = vaultProperties.getUrl();
+    if (!vaultProperties.isEnabled() || vaultUri == null) {
       throw new VaultServiceNotAvailableException();
     }
-    return new VaultTemplate(VaultEndpoint.from(vaulturi),
-        token);
+    return new VaultTemplate(VaultEndpoint.from(vaultUri), token);
   }
 
   @Override
@@ -109,18 +108,18 @@ public class VaultServiceImpl implements VaultService {
    */
   @Override
   public TokenAuthentication retrieveToken(String accessToken) {
-    URI vaulturi = vaultProperties.getUrl();
-    if (!vaultProperties.isEnabled() || vaulturi == null) {
+    URI vaultUri = vaultProperties.getUrl();
+    if (!vaultProperties.isEnabled() || vaultUri == null) {
       throw new VaultServiceNotAvailableException();
     }
-    VaultEndpoint endpoint = VaultEndpoint.from(vaulturi);
-    URI authuri = endpoint.createUri("auth/jwt/login");
+    VaultEndpoint endpoint = VaultEndpoint.from(vaultUri);
+    URI authUri = endpoint.createUri("auth/jwt/login");
 
     Map<String, String> login = new HashMap<>();
     login.put("jwt", accessToken);
     try {
       VaultToken token = restTemplate
-          .postForObject(authuri, login, VaultTokenResponse.class)
+          .postForObject(authUri, login, VaultTokenResponse.class)
           .getToken();
       return new TokenAuthentication(token);
     } catch (HttpClientErrorException ex) {
@@ -131,7 +130,7 @@ public class VaultServiceImpl implements VaultService {
             throw new VaultJwtTokenExpiredException(
                 "Unable to retrieve token for Vault: IAM access token is expired");
           } else {
-            LOG.debug("Got response 400 with error cause:\n{}", errorCause);
+            LOG.warn("Got response 400 with error cause:\n{}", errorCause);
           }
         }
       }

@@ -344,8 +344,6 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
       }
     } catch (VaultServiceNotAvailableException ex) {
       // skip gracefully if vault not implemented
-    } catch (Exception ee) {
-      throw ee;
     }
     return true;
   }

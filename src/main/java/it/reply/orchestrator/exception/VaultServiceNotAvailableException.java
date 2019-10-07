@@ -20,10 +20,10 @@ import org.springframework.vault.VaultException;
 
 public class VaultServiceNotAvailableException extends VaultException {
 
-  public VaultServiceNotAvailableException() {
-    super("Vault service not available.");
-  }
-
   private static final long serialVersionUID = 1L;
+
+  public VaultServiceNotAvailableException() {
+    super("Vault service is disabled.");
+  }
 
 }
