@@ -86,7 +86,7 @@ public class VaultServiceImpl implements VaultService {
   }
 
   private VaultTemplate getTemplate(URI uri, ClientAuthentication token) {
-    return new VaultTemplate(getEndpoint(), token);
+    return new VaultTemplate(getEndpoint(uri), token);
   }
 
   @Override
