@@ -80,7 +80,7 @@ public class ConfigurationServiceTest {
     when(imProperties.getUrl()).thenReturn(IM_URL);
     when(monitoringProperties.getUrl()).thenReturn(MONITORING_URL);
     when(slamProperties.getUrl()).thenReturn(SLAM_URL);
-    when(vaultProperties.getUrl()).thenReturn(VAULT_URL);
+    when(vaultProperties.getUri()).thenReturn(VAULT_URL);
   }
 
   @Test

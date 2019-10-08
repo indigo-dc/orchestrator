@@ -18,6 +18,7 @@ package it.reply.orchestrator.service;
 
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Map;
 
@@ -40,4 +41,21 @@ public interface VaultService {
   public TokenAuthentication retrieveToken(String accessToken);
 
   public TokenAuthentication retrieveToken(OidcTokenId oidcTokenId);
+
+  public VaultResponse writeSecret(URI uri, ClientAuthentication token, String path, Object secret);
+
+  public <T> T readSecret(URI uri, ClientAuthentication token, String path, Class<T> type);
+
+  public Map<String, Object> readSecret(URI uri, ClientAuthentication token, String path);
+
+  public void deleteSecret(URI uri, ClientAuthentication token, String path);
+
+  public List<String> listSecrets(URI uri, ClientAuthentication token, String path);
+
+  public TokenAuthentication retrieveToken(URI uri, String accessToken);
+
+  public TokenAuthentication retrieveToken(URI uri, OidcTokenId oidcTokenId);
+
+  public URI getServiceUri();
+
 }

@@ -21,8 +21,12 @@ import it.reply.orchestrator.controller.ResourceController;
 import it.reply.orchestrator.controller.TemplateController;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.OidcEntity;
+import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.utils.CommonUtils;
 
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.hateoas.core.DummyInvocationUtils;
@@ -43,6 +47,32 @@ public class DeploymentResourceAssembler
     return getDeploymentResource(entity);
   }
 
+  @SuppressWarnings("rawtypes")
+  private CloudProviderEndpointResource
+      getCloudProviderEndpointResource(CloudProviderEndpoint endpoint) {
+    if (endpoint != null) {
+      Map<String, CloudProviderEndpointResource> hybridCloudProviderEndpointsResource =
+          new HashMap<>();
+      Map<String, CloudProviderEndpoint> hybridCloudProviderEndpoints =
+          endpoint.getHybridCloudProviderEndpoints();
+      if (hybridCloudProviderEndpoints != null) {
+        Iterator it = endpoint.getHybridCloudProviderEndpoints().entrySet().iterator();
+        while (it.hasNext()) {
+          Map.Entry pair = (Map.Entry)it.next();
+          hybridCloudProviderEndpointsResource.put((String)pair.getKey(),
+              getCloudProviderEndpointResource((CloudProviderEndpoint)pair.getValue()));
+        }
+      }
+      return new CloudProviderEndpointResource(endpoint.getCpEndpoint(),
+          endpoint.getCpComputeServiceId(),
+          endpoint.getVaultEndpoint(),
+          endpoint.getIaasType(),
+          hybridCloudProviderEndpointsResource);
+    } else {
+      return null;
+    }
+  }
+
   private DeploymentResource getDeploymentResource(Deployment entity) {
 
     DeploymentResource resource = DeploymentResource.builder()
@@ -53,6 +83,7 @@ public class DeploymentResourceAssembler
         .status(entity.getStatus())
         .statusReason(entity.getStatusReason())
         .cloudProviderName(entity.getCloudProviderName())
+        .cloudProviderEndpoint(getCloudProviderEndpointResource(entity.getCloudProviderEndpoint()))
         .task(entity.getTask())
         .outputs(entity.getOutputs())
         .callback(entity.getCallback())

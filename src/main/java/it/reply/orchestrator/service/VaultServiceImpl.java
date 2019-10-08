@@ -70,12 +70,28 @@ public class VaultServiceImpl implements VaultService {
     this.restTemplate = restTemplateBuilder.build();
   }
 
-  private VaultTemplate getTemplate(ClientAuthentication token) {
-    URI vaultUri = vaultProperties.getUrl();
-    if (!vaultProperties.isEnabled() || vaultUri == null) {
+  private VaultEndpoint getEndpoint() {
+    if (vaultProperties.getUri()==null) {
       throw new VaultServiceNotAvailableException();
     }
-    return new VaultTemplate(VaultEndpoint.from(vaultUri), token);
+    return VaultEndpoint.from(vaultProperties.getUri());
+  }
+
+  private VaultEndpoint getEndpoint(URI vaultUri) {
+    return VaultEndpoint.from(vaultUri);
+  }
+
+  private VaultTemplate getTemplate(ClientAuthentication token) {
+    return new VaultTemplate(getEndpoint(), token);
+  }
+
+  private VaultTemplate getTemplate(URI uri, ClientAuthentication token) {
+    return new VaultTemplate(getEndpoint(), token);
+  }
+
+  @Override
+  public URI getServiceUri() {
+    return vaultProperties.getUri();
   }
 
   @Override
@@ -108,13 +124,7 @@ public class VaultServiceImpl implements VaultService {
    */
   @Override
   public TokenAuthentication retrieveToken(String accessToken) {
-    URI vaultUri = vaultProperties.getUrl();
-    if (!vaultProperties.isEnabled()) {
-      throw new VaultServiceNotAvailableException();
-    }
-    VaultEndpoint endpoint = VaultEndpoint.from(vaultUri);
-    URI authUri = endpoint.createUri("auth/jwt/login");
-
+    URI authUri = getEndpoint().createUri("auth/jwt/login");
     Map<String, String> login = new HashMap<>();
     login.put("jwt", accessToken);
     try {
@@ -148,4 +158,70 @@ public class VaultServiceImpl implements VaultService {
         this::retrieveToken,
         VaultJwtTokenExpiredException.class::isInstance);
   }
+
+  @Override
+  public VaultResponse writeSecret(URI uri, ClientAuthentication token, String path, Object secret) {
+    return getTemplate(uri, token).write(path, secret);
+  }
+
+  @Override
+  public <T> T readSecret(URI uri, ClientAuthentication token, String path, Class<T> type) {
+    return getTemplate(uri, token).read(path, type).getData();
+  }
+
+  @Override
+  public Map<String, Object> readSecret(URI uri, ClientAuthentication token, String path) {
+    return getTemplate(uri, token).read(path).getData();
+  }
+
+  @Override
+  public void deleteSecret(URI uri, ClientAuthentication token, String path) {
+    getTemplate(uri, token).delete(path);
+  }
+
+  @Override
+  public List<String> listSecrets(URI uri, ClientAuthentication token, String path) {
+    return getTemplate(uri, token).list(path);
+  }
+
+  /**
+   * Retrieve the vault token from the IAM token.
+   */
+  @Override
+  public TokenAuthentication retrieveToken(URI uri, String accessToken) {
+    URI authUri = getEndpoint(uri).createUri("auth/jwt/login");
+    Map<String, String> login = new HashMap<>();
+    login.put("jwt", accessToken);
+    try {
+      VaultToken token = restTemplate
+          .postForObject(authUri, login, VaultTokenResponse.class)
+          .getToken();
+      return new TokenAuthentication(token);
+    } catch (HttpClientErrorException ex) {
+      if (ex.getRawStatusCode() == 400) {
+        String errorCause = VaultResponses.getError(ex.getResponseBodyAsString());
+        if (errorCause != null) {
+          if (errorCause.contains("expired")) {
+            throw new VaultJwtTokenExpiredException(
+                "Unable to retrieve token for Vault: IAM access token is expired");
+          } else {
+            LOG.warn("Got response 400 with error cause:\n{}", errorCause);
+          }
+        }
+      }
+      throw ex;
+    }
+  }
+
+  /**
+   * Retrieve the vault token from the IAM token identifier.
+   */
+  @Override
+  public TokenAuthentication retrieveToken(URI uri, OidcTokenId oidcTokenId) {
+    return oauth2TokenService.executeWithClientForResult(
+        oidcTokenId,
+        this::retrieveToken,
+        VaultJwtTokenExpiredException.class::isInstance);
+  }
+
 }

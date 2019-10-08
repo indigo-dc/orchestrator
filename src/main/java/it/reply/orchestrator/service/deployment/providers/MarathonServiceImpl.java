@@ -52,6 +52,7 @@ import it.reply.orchestrator.utils.ToscaConstants;
 import it.reply.orchestrator.utils.ToscaUtils;
 import it.reply.orchestrator.utils.WorkflowConstants.ErrorCode;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -241,6 +242,8 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     LOG.info("Creating Marathon App Group for deployment {} with definition:\n{}",
         deployment.getId(), group);
     CloudProviderEndpoint cloudProviderEndpoint = deployment.getCloudProviderEndpoint();
+    cloudProviderEndpoint.setVaultEndpoint(vaultService.getServiceUri().toString());
+    deployment.setCloudProviderEndpoint(cloudProviderEndpoint);
     executeWithClient(cloudProviderEndpoint, requestedWithToken,
         client -> client.createGroup(group));
     return true;
@@ -330,23 +333,24 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
       }
     }
 
-    try {
-      TokenAuthentication vaultToken = vaultService.retrieveToken(requestedWithToken);
-
-      //remove vault entries if present
+    String vaultUri = cloudProviderEndpoint.getVaultEndpoint();
+    if (StringUtils.isNotEmpty(vaultUri)) {
+      URI uri = URI.create(vaultUri);
+      TokenAuthentication vaultToken = vaultService.retrieveToken(uri, requestedWithToken);
+      //search for vault entries
       String spath = "secret/private/" + deployment.getId();
-      List<String> depentries = vaultService.listSecrets(vaultToken, spath);
+      List<String> depentries = vaultService.listSecrets(uri, vaultToken, spath);
+      //remove vault entries if present
       if (!depentries.isEmpty()) {
         for (String depentry:depentries) {
-          List<String> entries = vaultService.listSecrets(vaultToken, spath + "/" + depentry);
+          List<String> entries = vaultService.listSecrets(uri, vaultToken, spath + "/" + depentry);
           for (String entry:entries) {
-            vaultService.deleteSecret(vaultToken, spath + "/" + depentry + "/" + entry);
+            vaultService.deleteSecret(uri, vaultToken, spath + "/" + depentry + "/" + entry);
           }
         }
       }
-    } catch (VaultServiceNotAvailableException ex) {
-      // skip gracefully if vault not implemented
     }
+
     return true;
   }
 

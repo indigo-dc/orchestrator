@@ -22,13 +22,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import it.reply.orchestrator.config.specific.WebAppConfigurationAwareIT;
 
 import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
-import org.springframework.restdocs.JUnitRestDocumentation;
-import org.springframework.restdocs.mockmvc.MockMvcRestDocumentation;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
@@ -40,15 +37,10 @@ public class ConfigurationEndpointTest extends WebAppConfigurationAwareIT {
 
   private MockMvc mockMvc;
 
-  @Rule
-  public JUnitRestDocumentation restDocumentation =
-      new JUnitRestDocumentation("target/generated-snippets");
-
   @Before
   public void before() {
     this.mockMvc = MockMvcBuilders
         .webAppContextSetup(this.wac)
-        .apply(MockMvcRestDocumentation.documentationConfiguration(this.restDocumentation))
         .build();
   }
 
