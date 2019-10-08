@@ -71,7 +71,7 @@ public class VaultServiceImpl implements VaultService {
   }
 
   private VaultEndpoint getEndpoint() {
-    if (vaultProperties.getUri()==null) {
+    if (vaultProperties.getUri() == null) {
       throw new VaultServiceNotAvailableException();
     }
     return VaultEndpoint.from(vaultProperties.getUri());
