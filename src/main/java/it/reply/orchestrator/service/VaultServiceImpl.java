@@ -100,8 +100,19 @@ public class VaultServiceImpl implements VaultService {
   }
 
   @Override
+  public VaultResponse writeSecret(URI uri, ClientAuthentication token, String path,
+      Object secret) {
+    return getTemplate(uri, token).write(path, secret);
+  }
+
+  @Override
   public <T> T readSecret(ClientAuthentication token, String path, Class<T> type) {
     return getTemplate(token).read(path, type).getData();
+  }
+
+  @Override
+  public <T> T readSecret(URI uri, ClientAuthentication token, String path, Class<T> type) {
+    return getTemplate(uri, token).read(path, type).getData();
   }
 
   @Override
@@ -110,13 +121,28 @@ public class VaultServiceImpl implements VaultService {
   }
 
   @Override
+  public Map<String, Object> readSecret(URI uri, ClientAuthentication token, String path) {
+    return getTemplate(uri, token).read(path).getData();
+  }
+
+  @Override
   public void deleteSecret(ClientAuthentication token, String path) {
     getTemplate(token).delete(path);
   }
 
   @Override
+  public void deleteSecret(URI uri, ClientAuthentication token, String path) {
+    getTemplate(uri, token).delete(path);
+  }
+
+  @Override
   public List<String> listSecrets(ClientAuthentication token, String path) {
     return getTemplate(token).list(path);
+  }
+
+  @Override
+  public List<String> listSecrets(URI uri, ClientAuthentication token, String path) {
+    return getTemplate(uri, token).list(path);
   }
 
   /**
@@ -149,42 +175,6 @@ public class VaultServiceImpl implements VaultService {
   }
 
   /**
-   * Retrieve the vault token from the IAM token identifier.
-   */
-  @Override
-  public TokenAuthentication retrieveToken(OidcTokenId oidcTokenId) {
-    return oauth2TokenService.executeWithClientForResult(
-        oidcTokenId,
-        this::retrieveToken,
-        VaultJwtTokenExpiredException.class::isInstance);
-  }
-
-  @Override
-  public VaultResponse writeSecret(URI uri, ClientAuthentication token, String path, Object secret) {
-    return getTemplate(uri, token).write(path, secret);
-  }
-
-  @Override
-  public <T> T readSecret(URI uri, ClientAuthentication token, String path, Class<T> type) {
-    return getTemplate(uri, token).read(path, type).getData();
-  }
-
-  @Override
-  public Map<String, Object> readSecret(URI uri, ClientAuthentication token, String path) {
-    return getTemplate(uri, token).read(path).getData();
-  }
-
-  @Override
-  public void deleteSecret(URI uri, ClientAuthentication token, String path) {
-    getTemplate(uri, token).delete(path);
-  }
-
-  @Override
-  public List<String> listSecrets(URI uri, ClientAuthentication token, String path) {
-    return getTemplate(uri, token).list(path);
-  }
-
-  /**
    * Retrieve the vault token from the IAM token.
    */
   @Override
@@ -211,6 +201,17 @@ public class VaultServiceImpl implements VaultService {
       }
       throw ex;
     }
+  }
+
+  /**
+   * Retrieve the vault token from the IAM token identifier.
+   */
+  @Override
+  public TokenAuthentication retrieveToken(OidcTokenId oidcTokenId) {
+    return oauth2TokenService.executeWithClientForResult(
+        oidcTokenId,
+        this::retrieveToken,
+        VaultJwtTokenExpiredException.class::isInstance);
   }
 
   /**
