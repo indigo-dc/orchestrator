@@ -32,9 +32,11 @@ import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.function.ThrowingConsumer;
 import it.reply.orchestrator.function.ThrowingFunction;
+import it.reply.orchestrator.function.ThrowingFunction2p;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.JwtUtils;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -249,6 +251,43 @@ public class OAuth2TokenService {
         if (tokenRefreshEvaluator.test(ex)) {
           String refreshedAccessToken = getRefreshedAccessToken(oidcTokenId);
           return function.apply(refreshedAccessToken);
+        } else {
+          throw ex;
+        }
+      }
+    }
+  }
+
+  /**
+   * Execute a {@link ThrowingFunction2p}, handling the OAuth2 token.
+   *
+   * @param uri
+   *     the URI passed as first parameter to function
+   * @param oidcTokenId
+   *     the token ID
+   * @param function
+   *     the {@link ThrowingFunction}
+   * @param tokenRefreshEvaluator
+   *     function evaluating whether a refresh token needs to be retrieved
+   * @return the {@link ThrowingFunction} result
+   * @throws E
+   *     the exception thrown by the {@link ThrowingFunction}
+   */
+  public <R, E extends Exception> R executeUriWithClientForResult(
+      URI uri,
+      @Nullable OidcTokenId oidcTokenId,
+      ThrowingFunction2p<URI, String, R, E> function,
+      Predicate<Exception> tokenRefreshEvaluator) throws E {
+    if (!oidcProperties.isEnabled()) {
+      return function.apply(null, null);
+    } else {
+      String accessToken = getAccessToken(CommonUtils.checkNotNull(oidcTokenId));
+      try {
+        return function.apply(uri, accessToken);
+      } catch (Exception ex) {
+        if (tokenRefreshEvaluator.test(ex)) {
+          String refreshedAccessToken = getRefreshedAccessToken(oidcTokenId);
+          return function.apply(uri, refreshedAccessToken);
         } else {
           throw ex;
         }

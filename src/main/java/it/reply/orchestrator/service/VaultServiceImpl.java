@@ -145,12 +145,7 @@ public class VaultServiceImpl implements VaultService {
     return getTemplate(uri, token).list(path);
   }
 
-  /**
-   * Retrieve the vault token from the IAM token.
-   */
-  @Override
-  public TokenAuthentication retrieveToken(String accessToken) {
-    URI authUri = getEndpoint().createUri("auth/jwt/login");
+  private TokenAuthentication retrieveToken(String accessToken, URI authUri) {
     Map<String, String> login = new HashMap<>();
     login.put("jwt", accessToken);
     try {
@@ -178,29 +173,18 @@ public class VaultServiceImpl implements VaultService {
    * Retrieve the vault token from the IAM token.
    */
   @Override
+  public TokenAuthentication retrieveToken(String accessToken) {
+    URI authUri = getEndpoint().createUri("auth/jwt/login");
+    return retrieveToken(accessToken, authUri);
+  }
+
+  /**
+   * Retrieve the vault token from the IAM token using passed Vault server URI.
+   */
+  @Override
   public TokenAuthentication retrieveToken(URI uri, String accessToken) {
     URI authUri = getEndpoint(uri).createUri("auth/jwt/login");
-    Map<String, String> login = new HashMap<>();
-    login.put("jwt", accessToken);
-    try {
-      VaultToken token = restTemplate
-          .postForObject(authUri, login, VaultTokenResponse.class)
-          .getToken();
-      return new TokenAuthentication(token);
-    } catch (HttpClientErrorException ex) {
-      if (ex.getRawStatusCode() == 400) {
-        String errorCause = VaultResponses.getError(ex.getResponseBodyAsString());
-        if (errorCause != null) {
-          if (errorCause.contains("expired")) {
-            throw new VaultJwtTokenExpiredException(
-                "Unable to retrieve token for Vault: IAM access token is expired");
-          } else {
-            LOG.warn("Got response 400 with error cause:\n{}", errorCause);
-          }
-        }
-      }
-      throw ex;
-    }
+    return retrieveToken(accessToken, authUri);
   }
 
   /**
@@ -215,11 +199,12 @@ public class VaultServiceImpl implements VaultService {
   }
 
   /**
-   * Retrieve the vault token from the IAM token identifier.
+   * Retrieve the vault token from the IAM token identifier using passed Vault server URI.
    */
   @Override
   public TokenAuthentication retrieveToken(URI uri, OidcTokenId oidcTokenId) {
-    return oauth2TokenService.executeWithClientForResult(
+    return oauth2TokenService.executeUriWithClientForResult(
+        uri,
         oidcTokenId,
         this::retrieveToken,
         VaultJwtTokenExpiredException.class::isInstance);
