@@ -266,8 +266,8 @@ public class CloudProviderEndpointServiceTest {
         new Object[]{"eu.egi.cloud.vm-management.opennebula", true, IaaSType.OPENNEBULA, false},
         new Object[]{"eu.indigo-datacloud.im-tosca.opennebula", false, IaaSType.OPENNEBULA, true},
         new Object[]{"eu.indigo-datacloud.im-tosca.opennebula", true, IaaSType.OPENNEBULA, false},
-        new Object[]{"eu.egi.cloud.vm-management.openstack", false, IaaSType.OPENSTACK, false},
-        new Object[]{"eu.egi.cloud.vm-management.openstack", true, IaaSType.OPENSTACK, false},
+        new Object[]{"org.openstack.nova", false, IaaSType.OPENSTACK, false},
+        new Object[]{"org.openstack.nova", true, IaaSType.OPENSTACK, false},
         new Object[]{"eu.indigo-datacloud.marathon", false, IaaSType.MARATHON, false},
         new Object[]{"eu.indigo-datacloud.chronos", false, IaaSType.CHRONOS, false},
     };
