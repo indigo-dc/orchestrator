@@ -26,6 +26,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -70,33 +71,18 @@ public class VaultServiceImpl implements VaultService {
     this.restTemplate = restTemplateBuilder.build();
   }
 
-  private VaultEndpoint getEndpoint() {
-    if (vaultProperties.getUri() == null) {
-      throw new VaultServiceNotAvailableException();
-    }
-    return VaultEndpoint.from(vaultProperties.getUri());
+  private URI getSystemVaultUri() {
+    return getServiceUri()
+        .orElseThrow(() -> new VaultServiceNotAvailableException());
   }
 
-  private VaultEndpoint getEndpoint(URI vaultUri) {
-    return VaultEndpoint.from(vaultUri);
-  }
-
-  private VaultTemplate getTemplate(ClientAuthentication token) {
-    return new VaultTemplate(getEndpoint(), token);
+  @Override
+  public Optional<URI> getServiceUri() {
+    return Optional.ofNullable(vaultProperties.getUrl());
   }
 
   private VaultTemplate getTemplate(URI uri, ClientAuthentication token) {
-    return new VaultTemplate(getEndpoint(uri), token);
-  }
-
-  @Override
-  public URI getServiceUri() {
-    return vaultProperties.getUri();
-  }
-
-  @Override
-  public VaultResponse writeSecret(ClientAuthentication token, String path, Object secret) {
-    return getTemplate(token).write(path, secret);
+    return new VaultTemplate(VaultEndpoint.from(uri), token);
   }
 
   @Override
@@ -106,8 +92,8 @@ public class VaultServiceImpl implements VaultService {
   }
 
   @Override
-  public <T> T readSecret(ClientAuthentication token, String path, Class<T> type) {
-    return getTemplate(token).read(path, type).getData();
+  public VaultResponse writeSecret(ClientAuthentication token, String path, Object secret) {
+    return this.writeSecret(getSystemVaultUri(), token, path, secret);
   }
 
   @Override
@@ -116,8 +102,8 @@ public class VaultServiceImpl implements VaultService {
   }
 
   @Override
-  public Map<String, Object> readSecret(ClientAuthentication token, String path) {
-    return getTemplate(token).read(path).getData();
+  public <T> T readSecret(ClientAuthentication token, String path, Class<T> type) {
+    return this.readSecret(getSystemVaultUri(), token, path, type);
   }
 
   @Override
@@ -126,8 +112,8 @@ public class VaultServiceImpl implements VaultService {
   }
 
   @Override
-  public void deleteSecret(ClientAuthentication token, String path) {
-    getTemplate(token).delete(path);
+  public Map<String, Object> readSecret(ClientAuthentication token, String path) {
+    return this.readSecret(getSystemVaultUri(), token, path);
   }
 
   @Override
@@ -136,8 +122,8 @@ public class VaultServiceImpl implements VaultService {
   }
 
   @Override
-  public List<String> listSecrets(ClientAuthentication token, String path) {
-    return getTemplate(token).list(path);
+  public void deleteSecret(ClientAuthentication token, String path) {
+    this.deleteSecret(getSystemVaultUri(), token, path);
   }
 
   @Override
@@ -145,12 +131,22 @@ public class VaultServiceImpl implements VaultService {
     return getTemplate(uri, token).list(path);
   }
 
-  private TokenAuthentication retrieveToken(String accessToken, URI authUri) {
+  @Override
+  public List<String> listSecrets(ClientAuthentication token, String path) {
+    return this.listSecrets(getSystemVaultUri(), token, path);
+  }
+
+  /**
+   * Retrieve the vault token from the IAM token using passed Vault server URI.
+   */
+  @Override
+  public TokenAuthentication retrieveToken(URI uri, String accessToken) {
+    uri = VaultEndpoint.from(uri).createUri("auth/jwt/login");
     Map<String, String> login = new HashMap<>();
     login.put("jwt", accessToken);
     try {
       VaultToken token = restTemplate
-          .postForObject(authUri, login, VaultTokenResponse.class)
+          .postForObject(uri, login, VaultTokenResponse.class)
           .getToken();
       return new TokenAuthentication(token);
     } catch (HttpClientErrorException ex) {
@@ -174,28 +170,7 @@ public class VaultServiceImpl implements VaultService {
    */
   @Override
   public TokenAuthentication retrieveToken(String accessToken) {
-    URI authUri = getEndpoint().createUri("auth/jwt/login");
-    return retrieveToken(accessToken, authUri);
-  }
-
-  /**
-   * Retrieve the vault token from the IAM token using passed Vault server URI.
-   */
-  @Override
-  public TokenAuthentication retrieveToken(URI uri, String accessToken) {
-    URI authUri = getEndpoint(uri).createUri("auth/jwt/login");
-    return retrieveToken(accessToken, authUri);
-  }
-
-  /**
-   * Retrieve the vault token from the IAM token identifier.
-   */
-  @Override
-  public TokenAuthentication retrieveToken(OidcTokenId oidcTokenId) {
-    return oauth2TokenService.executeWithClientForResult(
-        oidcTokenId,
-        this::retrieveToken,
-        VaultJwtTokenExpiredException.class::isInstance);
+    return retrieveToken(getSystemVaultUri(), accessToken);
   }
 
   /**
@@ -203,11 +178,18 @@ public class VaultServiceImpl implements VaultService {
    */
   @Override
   public TokenAuthentication retrieveToken(URI uri, OidcTokenId oidcTokenId) {
-    return oauth2TokenService.executeUriWithClientForResult(
-        uri,
+    return oauth2TokenService.executeWithClientForResult(
         oidcTokenId,
-        this::retrieveToken,
+        accessToken -> this.retrieveToken(uri, accessToken),
         VaultJwtTokenExpiredException.class::isInstance);
+  }
+
+  /**
+   * Retrieve the vault token from the IAM token identifier.
+   */
+  @Override
+  public TokenAuthentication retrieveToken(OidcTokenId oidcTokenId) {
+    return this.retrieveToken(getSystemVaultUri(), oidcTokenId);
   }
 
 }

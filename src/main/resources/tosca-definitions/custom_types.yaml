@@ -1170,11 +1170,6 @@ node_types:
         type: map
         entry_schema:
           type: string
-      secrets:
-        required: no
-        type: map
-        entry_schema:
-          type: string
       constraints:
         required: no
         type: list
@@ -1449,6 +1444,11 @@ node_types:
         required: no
         type: boolean
         default: true
+      secrets:
+        required: no
+        type: map
+        entry_schema:
+          type: string
 
 
   tosca.nodes.indigo.LRMS.FrontEnd.Mesos:
@@ -2400,6 +2400,57 @@ node_types:
       type:
         type: string
         required: false
+
+  tosca.nodes.indigo.DEEPaaScont:
+    derived_from: tosca.nodes.SoftwareComponent
+    metadata:
+      icon: /images/deep.png
+    properties:
+      dockerhub_img:
+        type: string
+        description: docker image from Docker Hub to deploy
+        required: yes
+      rclone_conf:
+        type: string
+        description: rclone.conf location
+        required: no
+        default: "/srv/.rclone.conf"
+      rclone_url:
+        type: string
+        description: remote storage link to access via webdav
+        default: ""
+        required: no
+      rclone_vendor:
+        type: string
+        description: rclone vendor
+        required: no
+        default: "nextcloud"
+      rclone_user:
+        type: string
+        description: rclone user to access remote storage
+        required: no
+        default: ""
+      rclone_password:
+        type: string
+        description: rclone user password
+        required: no
+        default: ""
+    artifacts:
+      docker_role:
+        file: grycap.docker
+        type: tosca.artifacts.AnsibleGalaxy.role
+    interfaces:
+      Standard:
+        configure:
+          implementation: https://raw.githubusercontent.com/indigo-dc/tosca-types/master/artifacts/deepaas/deepaas_cont.yml
+          inputs:
+            deepaas_dockerhub_img: { get_property: [ SELF, dockerhub_img ] }
+            deepaas_rclone_conf: { get_property: [ SELF, rclone_conf ] }
+            deepaas_rclone_type: webdav
+            deepaas_rclone_url: { get_property: [ SELF, rclone_url ] }
+            deepaas_rclone_vendor: { get_property: [ SELF, rclone_vendor ] }
+            deepaas_rclone_user: { get_property: [ SELF, rclone_user ] }
+            deepaas_rclone_pass: { get_property: [ SELF, rclone_password ] }
 
 policy_types:
   tosca.policies.indigo.SlaPlacement:

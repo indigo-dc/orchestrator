@@ -242,8 +242,9 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     LOG.info("Creating Marathon App Group for deployment {} with definition:\n{}",
         deployment.getId(), group);
     CloudProviderEndpoint cloudProviderEndpoint = deployment.getCloudProviderEndpoint();
-    cloudProviderEndpoint.setVaultEndpoint(vaultService.getServiceUri().toString());
-    deployment.setCloudProviderEndpoint(cloudProviderEndpoint);
+    vaultService.getServiceUri()
+        .map(URI::toString)
+        .ifPresent(cloudProviderEndpoint::setVaultEndpoint);
     executeWithClient(cloudProviderEndpoint, requestedWithToken,
         client -> client.createGroup(group));
     return true;

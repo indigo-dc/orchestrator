@@ -60,7 +60,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
         .cmdbUrl(cmdbProperties.getUrl())
         .imUrl(imProperties.getUrl())
         .monitoringUrl(monitoringProperties.getUrl())
-        .vaultUrl(vaultProperties.getUri())
+        .vaultUrl(vaultProperties.getUrl())
         .build();
   }
 

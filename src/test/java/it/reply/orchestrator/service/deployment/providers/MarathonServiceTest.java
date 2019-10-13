@@ -46,6 +46,7 @@ import it.reply.orchestrator.util.TestUtil;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -217,7 +218,7 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
         .thenReturn(marathonClient);
     Mockito
         .when(vaultService.getServiceUri())
-        .thenReturn(new URI(defaultVaultEndpoint));
+        .thenReturn(Optional.of(new URI(defaultVaultEndpoint)));
     Assertions
         .assertThat(marathonServiceImpl.doDeploy(dm))
         .isTrue();

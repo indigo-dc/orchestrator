@@ -21,6 +21,7 @@ import java.net.URI;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Data
@@ -28,7 +29,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @NoArgsConstructor
 public class VaultProperties {
 
-  private URI uri;
+  @Nullable
+  private URI url;
 
 }
 

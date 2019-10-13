@@ -24,6 +24,7 @@ import lombok.Builder;
 import lombok.Data;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Data
 @Builder
@@ -49,9 +50,8 @@ public class SystemEndpoints {
   @JsonProperty("monitoring_url")
   private URI monitoringUrl;
 
+  @Nullable
   @JsonProperty("vault_url")
   private URI vaultUrl;
 
-  @JsonProperty("vault_enabled")
-  private boolean vaultEnabled;
 }

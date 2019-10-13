@@ -681,7 +681,6 @@
             <exclude>src/main/java/it/reply/orchestrator/dto/vault/VaultSecret.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/exception/VaultJwtTokenExpiredException.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/exception/VaultServiceNotAvailableException.java</exclude>
-            <exclude>src/main/java/it/reply/orchestrator/function/ThrowingFunction2p.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/resource/CloudProviderEndpointResource.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/service/ConfigurationService.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/service/ConfigurationServiceImpl.java</exclude>
