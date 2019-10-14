@@ -39,10 +39,14 @@ import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.function.ThrowingFunction;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.ToscaServiceTest;
+import it.reply.orchestrator.service.VaultService;
 import it.reply.orchestrator.service.deployment.providers.factory.MarathonClientFactory;
 import it.reply.orchestrator.util.TestUtil;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -91,7 +95,12 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
   private MarathonClientFactory marathonClientFactory;
 
   @MockBean
+  private VaultService vaultService;
+
+  @MockBean
   private Marathon marathonClient;
+
+  private static final String defaultVaultEndpoint = "https://default.vault.com:8200";
 
   @Before
   public void setup() throws Exception {
@@ -179,7 +188,7 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
   }
 
   @Test
-  public void testDoDeploy() throws IOException {
+  public void testDoDeploy() throws IOException, URISyntaxException {
     Deployment deployment = generateDeployment();
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
 
@@ -207,7 +216,9 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
     Mockito
         .when(marathonClientFactory.build(deployment.getCloudProviderEndpoint(), "token"))
         .thenReturn(marathonClient);
-
+    Mockito
+        .when(vaultService.getServiceUri())
+        .thenReturn(Optional.of(new URI(defaultVaultEndpoint)));
     Assertions
         .assertThat(marathonServiceImpl.doDeploy(dm))
         .isTrue();

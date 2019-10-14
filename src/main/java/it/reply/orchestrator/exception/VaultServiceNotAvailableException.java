@@ -14,23 +14,16 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.config.properties;
+package it.reply.orchestrator.exception;
 
-import java.net.URI;
+import org.springframework.vault.VaultException;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
+public class VaultServiceNotAvailableException extends VaultException {
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+  private static final long serialVersionUID = 1L;
 
-@Data
-@ConfigurationProperties(prefix = "vault")
-@NoArgsConstructor
-public class VaultProperties {
-
-  @Nullable
-  private URI url;
+  public VaultServiceNotAvailableException() {
+    super("Vault service is disabled.");
+  }
 
 }
-

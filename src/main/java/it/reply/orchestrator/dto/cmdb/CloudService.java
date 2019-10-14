@@ -89,7 +89,7 @@ public class CloudService implements CmdbIdentifiable {
   private static final String COMPUTE_SERVICE_PREFIX = EGI_SERVICE_PREFIX + ".vm-management";
   private static final String STORAGE_SERVICE_PREFIX = EGI_SERVICE_PREFIX + ".storage-management";
 
-  public static final String OPENSTACK_COMPUTE_SERVICE = COMPUTE_SERVICE_PREFIX + ".openstack";
+  public static final String OPENSTACK_COMPUTE_SERVICE = "org.openstack.nova";
   public static final String OPENNEBULA_COMPUTE_SERVICE = COMPUTE_SERVICE_PREFIX + ".opennebula";
   public static final String OCCI_COMPUTE_SERVICE = COMPUTE_SERVICE_PREFIX + ".occi";
   public static final String AWS_COMPUTE_SERVICE = "com.amazonaws.ec2";

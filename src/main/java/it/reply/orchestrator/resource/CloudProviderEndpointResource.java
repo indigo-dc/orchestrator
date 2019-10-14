@@ -14,44 +14,47 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.dto;
+package it.reply.orchestrator.resource;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 
-import java.net.URI;
+import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 
+import java.util.HashMap;
+import java.util.Map;
+
+import javax.validation.constraints.NotNull;
+
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Data
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Builder
-public class SystemEndpoints {
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+public class CloudProviderEndpointResource {
 
   @NonNull
-  @JsonProperty("cpr_url")
-  private URI cprUrl;
+  @NotNull
+  private String cpEndpoint;
 
   @NonNull
-  @JsonProperty("slam_url")
-  private URI slamUrl;
+  @NotNull
+  private String cpComputeServiceId;
+
+  private String vaultUri;
 
   @NonNull
-  @JsonProperty("cmdb_url")
-  private URI cmdbUrl;
+  @NotNull
+  private IaaSType deploymentType;
 
   @NonNull
-  @JsonProperty("im_url")
-  private URI imUrl;
-
-  @NonNull
-  @JsonProperty("monitoring_url")
-  private URI monitoringUrl;
-
-  @Nullable
-  @JsonProperty("vault_url")
-  private URI vaultUrl;
+  @NotNull
+  @Builder.Default
+  private Map<String, CloudProviderEndpointResource> hybridCloudProviderEndpoints = new HashMap<>();
 
 }

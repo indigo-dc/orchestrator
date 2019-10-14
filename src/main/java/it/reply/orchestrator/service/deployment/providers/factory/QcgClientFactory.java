@@ -19,7 +19,6 @@ package it.reply.orchestrator.service.deployment.providers.factory;
 import feign.Feign;
 import feign.Logger.Level;
 import feign.RequestInterceptor;
-import feign.auth.BasicAuthRequestInterceptor;
 import feign.slf4j.Slf4jLogger;
 
 import it.infn.ba.deep.qcg.client.Qcg;
@@ -71,18 +70,17 @@ public class QcgClientFactory {
     RequestInterceptor requestInterceptor = requestTemplate -> {
       // TODO remove test token ad resume standard implementation
       requestTemplate.header(HttpHeaders.AUTHORIZATION,
-          "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6ImRlZmF1bHQta2lkIn0."
-              + "eyJzdWIiOiJkZWZhdWx0LXVzZSIsImlzcyI6ImRlZmF1bHQtaXNzdWVyIiwiaWF0"
-              + "IjoxNTYxNTQ0MTA3LCJleHAiOjE1NzAxODQxMDcsImF0dHJzIjp7ImxvY2FsX3Vz"
-              + "ZXIiOiJ1bmtub3duIn0sInBlcm1zIjp7Im93bmVyIjpbInN0YXR1cyIsImNhbmNl"
-              + "bCJdLCJzeXN0ZW0iOlsic3VibWl0IiwicmVzb3VyY2VzIiwiYWRtaW4iLCJzY2hl"
-              + "bWEiXSwiYWRtaW4iOlsidXBkYXRlIiwic3RhdHVzIiwiY2FuY2VsIl19fQ.jW3k5"
-              + "jOALPOlxWf7FFjYds0Fs4-bfTdBvBYJxvcgowG-IQbq3KWEX5mrT-8-wc5SzZ9Bl"
-              + "7XDr-xx45bxcc0dziGtf05X5MrpxKnQu5q2b9_7w75zM4ijOXnNHLupPSx--rS2Z"
-              + "5kctN77oIe3_2S0E5L_ewClKWltO6k7SQIZBmDWPk4TFfbIehYXaOsHsA0oR7hdR"
-              + "HKlhMN-hfjZjcmik0jwJR0_oIf7ZS-psVOOCXJ1HK-2UWxj4Hj-P0-FCRAKldMAf"
-              + "gChiwcAWJ-Fdp5rWCSg9ZLdI918-gxNvfofrHevKu4XXhlyYsAzm2PNaJSH0TMV3"
-              + "T5oSNBWa0iw5r-flA");
+          "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6ImRlZmF1bHQta2lkIn0.e"
+              + "yJzdWIiOiJkZWZhdWx0LXVzZSIsImlzcyI6ImRlZmF1bHQtaXNzdWVyIiwiaWF0Ij"
+              + "oxNTcwNTIzMTIzLCJleHAiOjE1NzkxNjMxMjMsImF0dHJzIjp7ImxvY2FsX3VzZXI"
+              + "iOiJ1bmtub3duIn0sInBlcm1zIjp7Im93bmVyIjpbInN0YXR1cyIsImNhbmNlbCJd"
+              + "LCJzeXN0ZW0iOlsic3VibWl0IiwicmVzb3VyY2VzIiwiYWRtaW4iLCJzY2hlbWEiX"
+              + "SwiYWRtaW4iOlsidXBkYXRlIiwic3RhdHVzIiwiY2FuY2VsIl19fQ.e1zvno3Z99S"
+              + "9TCESOq40V3BG5bhgpuntQS5S2dIRFFpMnMfJlvGXaNe60JbmrH3Ps7muzAIYQ2Cr"
+              + "hjurblklFBfKIYqO5fT3nWrbHCqwwm8ArHxcUbZAzWSoDIFmPdIpJRG69oE0B6KcS"
+              + "Vs9I96tD9gl6H605NLyR8LC8UgkhVceVEKQbufj5A6QcR2XiQx3oHGEDLk2KlV4XN"
+              + "Jlt28-SJcd71FObtnXGwcCKBVblCZ75AUYLZeDU0gObRT0objw2y7kxpu2YSF9wVi"
+              + "Q2AzAIkfFCJP5HEqRjTVq5SsxNyK0sqEmXcjgbwoMFrfpr8WBj3ynO_f18gEBnwSO3H8vYQ");
       // .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
     };
     return build(cloudProviderEndpoint.getCpEndpoint(), requestInterceptor);

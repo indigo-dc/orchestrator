@@ -88,6 +88,9 @@ public class CloudProviderEndpoint {
   @JsonProperty
   private String iaasHeaderId;
 
+  @Nullable
+  private String vaultEndpoint;
+
   @NonNull
   @NotNull
   @Builder.Default

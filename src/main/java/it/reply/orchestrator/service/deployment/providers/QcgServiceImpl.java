@@ -617,8 +617,4 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
     return Optional.empty();
   }
 
-  protected QcgJob createInternalTaskRepresentation() {
-    return new QcgJob();
-  }
-
 }

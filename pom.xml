@@ -680,12 +680,15 @@
             <exclude>src/main/java/it/reply/orchestrator/dto/qcg/QcgJob.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/dto/vault/VaultSecret.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/exception/VaultJwtTokenExpiredException.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/exception/VaultServiceNotAvailableException.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/resource/CloudProviderEndpointResource.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/service/ConfigurationService.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/service/ConfigurationServiceImpl.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/service/VaultService.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/service/VaultServiceImpl.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/service/deployment/providers/QcgServiceImpl.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/service/deployment/providers/factory/QcgClientFactory.java</exclude>
+            <exclude>src/test/java/it/reply/orchestrator/controller/ConfigurationEndpointTest.java</exclude>
             <exclude>src/test/java/it/reply/orchestrator/service/deployment/providers/QcgServiceTest.java</exclude>
             <exclude>src/test/java/it/reply/orchestrator/service/ConfigurationServiceTest.java</exclude>
             <exclude>src/test/java/it/reply/orchestrator/service/VaultServiceTest.java</exclude>
