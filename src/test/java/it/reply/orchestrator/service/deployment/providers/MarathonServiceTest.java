@@ -151,7 +151,7 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
     runtime.setDeployment(deployment);
     runtime.setId("1");
     runtime.setState(NodeStates.INITIAL);
-    runtime.setToscaNodeName("docker_runtime");
+    runtime.setToscaNodeName("Docker");
     runtime.setToscaNodeType("tosca.nodes.indigo.Container.Runtime.Docker");
     deployment.getResources().add(runtime);
 
@@ -159,18 +159,18 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
     app.setDeployment(deployment);
     app.setId("2");
     app.setState(NodeStates.INITIAL);
-    app.setToscaNodeName("marathonapp");
+    app.setToscaNodeName("marathon");
     app.setToscaNodeType("tosca.nodes.indigo.Container.Application.Docker.Marathon");
     app.addRequiredResource(runtime);
     deployment.getResources().add(app);
 
     Mockito
-        .when(resourceRepository.findByToscaNodeNameAndDeployment_id("docker_runtime",
+        .when(resourceRepository.findByToscaNodeNameAndDeployment_id("Docker",
             deployment.getId()))
         .thenReturn(Lists.newArrayList(runtime));
 
     Mockito
-        .when(resourceRepository.findByToscaNodeNameAndDeployment_id("marathonapp",
+        .when(resourceRepository.findByToscaNodeNameAndDeployment_id("marathon",
             deployment.getId()))
         .thenReturn(Lists.newArrayList(app));
     return deployment;
