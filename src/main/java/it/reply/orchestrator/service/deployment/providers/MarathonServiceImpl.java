@@ -191,8 +191,8 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     MarathonApp task = super.buildTask(graph, taskNode, taskId);
 
     ToscaUtils
-    .extractScalar(taskNode.getProperties(), "enable_https", BooleanType.class)
-    .ifPresent(task::setEnableHttps);
+        .extractScalar(taskNode.getProperties(), "enable_https", BooleanType.class)
+        .ifPresent(task::setEnableHttps);
 
     ToscaUtils
         .extractMap(taskNode.getProperties(), "secrets", String.class::cast)
@@ -510,7 +510,8 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
               for (int cp = 0; cp < ports.size(); cp++) {
                 marathonApp.getLabels().put(
                     String.format("HAPROXY_%d_BACKEND_HEAD", cp),
-                    "\nbackend {backend}\n  balance {balance}\n  mode http\n  http-request add-header X-Forwarded-Proto https\n");
+                    "\nbackend {backend}\n  balance {balance}\n  mode http\n  "
+                    + "http-request add-header X-Forwarded-Proto https\n");
                 marathonApp.getLabels().put(
                     String.format("HAPROXY_%d_SSL_CERT", cp),
                     "/etc/ssl/cert.pem");
