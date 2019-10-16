@@ -89,6 +89,7 @@ import org.alien4cloud.tosca.model.definitions.OutputDefinition;
 import org.alien4cloud.tosca.model.templates.NodeTemplate;
 import org.alien4cloud.tosca.model.templates.RelationshipTemplate;
 import org.alien4cloud.tosca.model.templates.Topology;
+import org.alien4cloud.tosca.normative.types.BooleanType;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -188,6 +189,10 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   public MarathonApp buildTask(DirectedMultigraph<NodeTemplate, RelationshipTemplate> graph,
       NodeTemplate taskNode, String taskId) {
     MarathonApp task = super.buildTask(graph, taskNode, taskId);
+
+    ToscaUtils
+    .extractScalar(taskNode.getProperties(), "enable_https", BooleanType.class)
+    .ifPresent(task::setEnableHttps);
 
     ToscaUtils
         .extractMap(taskNode.getProperties(), "secrets", String.class::cast)
@@ -499,8 +504,20 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
                   return portDefinition;
                 }).collect(Collectors.toList()));
           }
+          if (ports.size() > 0) {
+            marathonApp.getLabels().put("HAPROXY_GROUP", "external");
+            if (marathonTask.isEnableHttps()) {
+              for (int cp = 0; cp < ports.size(); cp++) {
+                marathonApp.getLabels().put(
+                    String.format("HAPROXY_%d_BACKEND_HEAD", cp),
+                    "\nbackend {backend}\n  balance {balance}\n  mode http\n  http-request add-header X-Forwarded-Proto https\n");
+                marathonApp.getLabels().put(
+                    String.format("HAPROXY_%d_SSL_CERT", cp),
+                    "/etc/ssl/cert.pem");
+              }
+            }
+          }
         });
-
   }
 
   private Port generatePort(MesosPortMapping portMapping) {

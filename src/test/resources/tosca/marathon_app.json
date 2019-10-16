@@ -1,7 +1,7 @@
 {
   "apps": [
     {
-      "id": "marathonapp",
+      "id": "marathon",
       "instances": 1,
       "cpus": 1.0,
       "mem": 1000.0,
@@ -42,7 +42,9 @@
       },
       "env": {},
       "labels": {
-        "HAPROXY_GROUP": "external"
+        "HAPROXY_GROUP": "external",
+        "HAPROXY_0_BACKEND_HEAD": "\nbackend {backend}\n  balance {balance}\n  mode http\n  http-request add-header X-Forwarded-Proto https\n",
+        "HAPROXY_0_SSL_CERT": "/etc/ssl/cert.pem"
       }
     }
   ]
