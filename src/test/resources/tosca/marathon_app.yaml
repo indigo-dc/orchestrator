@@ -33,4 +33,4 @@ topology_template:
 
   outputs:
     endpoint:
-      value:  { concat: [ { get_attribute : [ marathonapp, load_balancer_ips, 0 ] }, ':', { get_attribute : [ Docker, host, publish_ports, 0, target ] } ] }
+      value:  { concat: [ { get_attribute : [ marathon, load_balancer_ips, 0 ] }, ':', { get_attribute : [ Docker, host, publish_ports, 0, target ] } ] }
