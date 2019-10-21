@@ -150,7 +150,7 @@ public class CloudProviderEndpointServiceTest {
     }
     assertThat(providersOrderedIterator.getSize()).isEqualTo(Math.min(3, maxCpRetries));
     assertThat(providersOrderedIterator.next().getCloudService().getId())
-        .isEqualTo("provider-1-service-2");
+        .isEqualTo("provider-1-service-1");
     if (maxCpRetries > 1) {
       assertThat(providersOrderedIterator.next().getCloudService().getId())
           .isEqualTo("provider-2-service-2");
