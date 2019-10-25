@@ -40,6 +40,8 @@ public class ToscaConstants {
       public static final String ONEDATA_SPACE = BASE_INDIGO_NAME + "OnedataSpace";
       public static final String ONEDATA_SERVICE_SPACE = BASE_INDIGO_NAME + "OnedataServiceSpace";
       public static final String DYNAFED = BASE_INDIGO_NAME + "Dynafed";
+      public static final String CENTRAL_POINT = BASE_INDIGO_NAME + "VR.CentralPoint";
+
     }
   }
 
