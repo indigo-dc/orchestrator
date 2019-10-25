@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2019 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,11 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.enums;
+package it.reply.orchestrator.service;
 
-public enum DeploymentProvider {
+import it.reply.orchestrator.dto.SystemEndpoints;
 
-  IM,
-  HEAT,
-  CHRONOS,
-  MARATHON,
-  QCG;
+public interface ConfigurationService {
 
+  public SystemEndpoints getConfiguration();
 }

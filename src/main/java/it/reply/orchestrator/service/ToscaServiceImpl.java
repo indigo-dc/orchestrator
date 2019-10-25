@@ -925,7 +925,7 @@ public class ToscaServiceImpl implements ToscaService {
         .stream()
         .anyMatch(node -> getNodeCapabilityByName(node, "host")
             .flatMap(capability -> ToscaUtils
-                .extractScalar(node.getProperties(), "num_gpus", IntegerType.class))
+                .extractScalar(capability.getProperties(), "num_gpus", IntegerType.class))
             .filter(value -> value > 0)
             .isPresent());
   }

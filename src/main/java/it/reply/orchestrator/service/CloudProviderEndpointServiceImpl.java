@@ -80,7 +80,7 @@ public class CloudProviderEndpointServiceImpl {
               // Choose the ones ranked
               .filter(RankedCloudService::isRanked)
               // and with the highest rank
-              .sorted(Comparator.comparing(RankedCloudService::getRank).reversed())
+              .sorted(Comparator.comparing(RankedCloudService::getRank))
               .map(RankedCloudService::getServiceId)
               .map(cloudServices::get)
               .filter(Objects::nonNull);
@@ -144,6 +144,8 @@ public class CloudProviderEndpointServiceImpl {
       iaasType = IaaSType.CHRONOS;
     } else if (computeService.isMarathonComputeProviderService()) {
       iaasType = IaaSType.MARATHON;
+    } else if (computeService.isQcgComputeProviderService()) {
+      iaasType = IaaSType.QCG;
     } else {
       throw new IllegalArgumentException("Unknown Cloud Provider type: " + computeService);
     }
@@ -180,6 +182,8 @@ public class CloudProviderEndpointServiceImpl {
         return DeploymentProvider.CHRONOS;
       case MARATHON:
         return DeploymentProvider.MARATHON;
+      case QCG:
+        return DeploymentProvider.QCG;
       case TOSCA:
         return DeploymentProvider.IM;
       default:

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2019 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,35 +14,32 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.dto.mesos.marathon;
+package it.reply.orchestrator.dto.cmdb;
 
-import it.reply.orchestrator.dto.mesos.MesosTask;
-import it.reply.orchestrator.utils.ToscaConstants;
-
-import java.util.HashMap;
-import java.util.Map;
-
+import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.ToString;
+import lombok.NoArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@ToString(callSuper = true)
-public class MarathonApp extends MesosTask<MarathonApp> {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+public class QcgService extends  CloudService {
 
-  private Integer instances;
-
-  @NonNull
-  private Map<String, String> secrets = new HashMap<>();
-
-  private boolean enableHttps = false;
-
-  @Override
-  public final String getToscaNodeName() {
-    return ToscaConstants.Nodes.Types.MARATHON;
+  @Builder(builderMethodName = "qcgBuilder")
+  public QcgService(
+      @NonNull String id,
+      @NonNull String serviceType,
+      @NonNull String endpoint,
+      @NonNull String providerId,
+      @NonNull CloudServiceType type,
+      boolean publicService,
+      @Nullable String region,
+      @NonNull String hostname) {
+    super(id, serviceType, endpoint, providerId, type, publicService, region, hostname);
   }
-
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2019 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,29 +14,27 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.config.properties;
+package it.reply.orchestrator.dto.deployment;
 
-import java.net.URI;
+import it.reply.orchestrator.dto.workflow.WorkflowListIterator;
+import it.reply.orchestrator.service.deployment.providers.QcgServiceImpl.DeepJob;
 
-import javax.validation.constraints.NotNull;
+import java.util.List;
 
-import lombok.Data;
+import lombok.AccessLevel;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.validation.annotation.Validated;
 
-@Validated
-@Data
-@ConfigurationProperties(prefix = "orchestrator")
-@NoArgsConstructor
-public class OrchestratorProperties {
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@ToString(callSuper = true)
+@EqualsAndHashCode(callSuper = true)
+public class QcgJobsOrderedIterator extends WorkflowListIterator<DeepJob> {
 
-  @NotNull
-  @NonNull
-  private URI url;
-
-  private boolean clustered = false;
+  public QcgJobsOrderedIterator(@NonNull List<DeepJob> items) {
+    super(items);
+  }
 
 }

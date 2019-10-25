@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2019 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,29 +14,44 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.config.properties;
+package it.reply.orchestrator.dto;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.net.URI;
 
-import javax.validation.constraints.NotNull;
-
+import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.validation.annotation.Validated;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-@Validated
 @Data
-@ConfigurationProperties(prefix = "orchestrator")
-@NoArgsConstructor
-public class OrchestratorProperties {
+@Builder
+public class SystemEndpoints {
 
-  @NotNull
   @NonNull
-  private URI url;
+  @JsonProperty("cpr_url")
+  private URI cprUrl;
 
-  private boolean clustered = false;
+  @NonNull
+  @JsonProperty("slam_url")
+  private URI slamUrl;
+
+  @NonNull
+  @JsonProperty("cmdb_url")
+  private URI cmdbUrl;
+
+  @NonNull
+  @JsonProperty("im_url")
+  private URI imUrl;
+
+  @NonNull
+  @JsonProperty("monitoring_url")
+  private URI monitoringUrl;
+
+  @Nullable
+  @JsonProperty("vault_url")
+  private URI vaultUrl;
 
 }

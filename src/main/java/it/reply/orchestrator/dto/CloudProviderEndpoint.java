@@ -52,7 +52,8 @@ public class CloudProviderEndpoint {
     OTC,
     AZURE,
     CHRONOS,
-    MARATHON;
+    MARATHON,
+    QCG;
   }
 
   @Nullable
@@ -86,6 +87,9 @@ public class CloudProviderEndpoint {
   @Nullable
   @JsonProperty
   private String iaasHeaderId;
+
+  @Nullable
+  private String vaultEndpoint;
 
   @NonNull
   @NotNull

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2019 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,14 +14,16 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.enums;
+package it.reply.orchestrator.exception;
 
-public enum DeploymentProvider {
+import org.springframework.vault.VaultException;
 
-  IM,
-  HEAT,
-  CHRONOS,
-  MARATHON,
-  QCG;
+public class VaultServiceNotAvailableException extends VaultException {
+
+  private static final long serialVersionUID = 1L;
+
+  public VaultServiceNotAvailableException() {
+    super("Vault service is disabled.");
+  }
 
 }

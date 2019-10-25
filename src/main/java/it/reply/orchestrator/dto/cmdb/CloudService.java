@@ -89,7 +89,7 @@ public class CloudService implements CmdbIdentifiable {
   private static final String COMPUTE_SERVICE_PREFIX = EGI_SERVICE_PREFIX + ".vm-management";
   private static final String STORAGE_SERVICE_PREFIX = EGI_SERVICE_PREFIX + ".storage-management";
 
-  public static final String OPENSTACK_COMPUTE_SERVICE = COMPUTE_SERVICE_PREFIX + ".openstack";
+  public static final String OPENSTACK_COMPUTE_SERVICE = "org.openstack.nova";
   public static final String OPENNEBULA_COMPUTE_SERVICE = COMPUTE_SERVICE_PREFIX + ".opennebula";
   public static final String OCCI_COMPUTE_SERVICE = COMPUTE_SERVICE_PREFIX + ".occi";
   public static final String AWS_COMPUTE_SERVICE = "com.amazonaws.ec2";
@@ -104,6 +104,7 @@ public class CloudService implements CmdbIdentifiable {
 
   public static final String MARATHON_COMPUTE_SERVICE = INDIGO_SERVICE_PREFIX + ".marathon";
   public static final String CHRONOS_COMPUTE_SERVICE = INDIGO_SERVICE_PREFIX + ".chronos";
+  public static final String QCG_COMPUTE_SERVICE = "eu.deep.qcg";
 
   /**
    * Get if the the service is a OpenStack compute service.
@@ -213,6 +214,16 @@ public class CloudService implements CmdbIdentifiable {
   @JsonIgnore
   public boolean isChronosComputeProviderService() {
     return CHRONOS_COMPUTE_SERVICE.equals(this.serviceType);
+  }
+
+  /**
+   * Get if the the service is a Qcg compute service.
+   *
+   * @return true if the service is a Qcg compute service
+   */
+  @JsonIgnore
+  public boolean isQcgComputeProviderService() {
+    return QCG_COMPUTE_SERVICE.equals(this.serviceType);
   }
 
   @JsonIgnore
