@@ -40,6 +40,8 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 public class CmdbServiceIT extends WebAppConfigurationAwareIT {
 
+  private final String flavorId = "5f94fc673a476e2a9fa63c713000b45b";
+  private final String imageId = "a8f0d13b52dca71703d23f7c7d6a23b0";
   private final String recasId = "4401ac5dc8cfbbb737b0a02575e6f4bc";
   private final String tenantId = "8a5377c6-a7f4-4d1c-a4cd-074ab92b6035";
   private final String organisationId = "8a5377c6-a7f4-4d1c-a4cd-074ab92b6035";
@@ -93,6 +95,13 @@ public class CmdbServiceIT extends WebAppConfigurationAwareIT {
 
   @Test
   @Ignore
+  public void getTenantByIdTest() throws Exception {
+
+    Tenant tenant = service.getTenantById(tenantId);
+  }
+
+  @Test
+  @Ignore
   public void getImageForTenantTest() throws Exception {
 
     List<Image> images = service.getImagesByTenant(tenantId);
@@ -111,8 +120,23 @@ public class CmdbServiceIT extends WebAppConfigurationAwareIT {
 
   @Test
   @Ignore
+  public void getImageByIdTest() throws Exception {
+
+    Image image = service.getImageById(imageId);
+  }
+
+  @Test
+  @Ignore
   public void getFlavorForTenantTest() throws Exception {
 
     List<Flavor> flavors = service.getFlavorsByTenant(tenantId);
   }
+
+  @Test
+  @Ignore
+  public void getFlavorByIdTest() throws Exception {
+
+    Flavor flavor = service.getFlavorById(flavorId);
+  }
+
 }
