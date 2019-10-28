@@ -25,6 +25,7 @@ import it.reply.orchestrator.dto.cmdb.CloudProvider;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.service.CmdbService;
+import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
 import java.util.Set;
@@ -39,14 +40,19 @@ public class GetCmdbDataUpdate extends BaseDeployCommand {
   @Autowired
   private CmdbService cmdbService;
 
+  @Autowired
+  private OAuth2TokenService oauth2TokenService;
+
   @Override
   public void execute(DelegateExecution execution, DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
     CloudProviderEndpoint cloudProviderEndpoint = deployment.getCloudProviderEndpoint();
     String cloudProviderId = deployment.getCloudProviderName();
     Set<String> serviceWithSla = Sets.newHashSet(cloudProviderEndpoint.getCpComputeServiceId());
+    String organisation = oauth2TokenService.getOrganization(
+        deploymentMessage.getRequestedWithToken());
     CloudProvider cloudProvider = cmdbService
-        .fillCloudProviderInfo(cloudProviderId, serviceWithSla);
+        .fillCloudProviderInfo(cloudProviderId, serviceWithSla, organisation);
 
     CloudServicesOrderedIterator cloudServicesOrderedIterator =
         new CloudServicesOrderedIterator(Lists.newArrayList(cloudProvider.getServices().values()));

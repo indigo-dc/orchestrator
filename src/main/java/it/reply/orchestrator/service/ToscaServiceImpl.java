@@ -668,10 +668,6 @@ public class ToscaServiceImpl implements ToscaService {
   @Deprecated
   private String generateImImageUri(ComputeService cloudService, Image image) {
     try {
-      if (image.getService() != null && !image.getService().equals(cloudService.getId())) {
-        throw new DeploymentException(
-            "Compute service " + cloudService + " doesn't match the image " + image);
-      }
       String host = new URL(cloudService.getEndpoint()).getHost();
       String imageId = image.getImageId();
       switch (cloudService.getServiceType()) {

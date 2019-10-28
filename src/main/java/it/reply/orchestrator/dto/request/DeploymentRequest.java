@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,6 +61,7 @@ public class DeploymentRequest {
   @Min(value = 1, message = "maxProvidersRetry value, if provided, must be at least of 1")
   private Integer maxProvidersRetry;
 
+  @Builder.Default
   private boolean keepLastAttempt = false;
 
   @SuppressWarnings("null")

@@ -52,8 +52,22 @@ public class CmdbProperties {
 
   @NotNull
   @NonNull
-  private String imagesByServiceIdPath =
-      "/service/id/{serviceId}/has_many/images?include_docs=true";
+  private String tenantsByServiceIdPath =
+      "/service/id/{serviceId}/has_many/tenants?include_docs=true";
+
+  @NotNull
+  @NonNull
+  private String tenantsByOrganizationIdPath =
+      "/tenant/filters/iam_organisation/{organisationId}?include_docs=true";
+
+  @NotNull
+  @NonNull
+  private String tenantByIdPath = "/tenant/id/{tenantId}?include_docs=true";
+
+  @NotNull
+  @NonNull
+  private String imagesByTenantIdPath =
+      "/tenant/id/{tenantId}/has_many/images?include_docs=true";
 
   @NotNull
   @NonNull
@@ -61,8 +75,8 @@ public class CmdbProperties {
 
   @NotNull
   @NonNull
-  private String flavorsByServiceIdPath =
-      "/service/id/{serviceId}/has_many/flavors?include_docs=true";
+  private String flavorsByTenantIdPath =
+      "/tenant/id/{tenantId}/has_many/flavors?include_docs=true";
 
   @NotNull
   @NonNull
