@@ -55,8 +55,6 @@ import org.springframework.web.client.RestTemplate;
 @EnableConfigurationProperties(CmdbProperties.class)
 public class CmdbServiceImpl implements CmdbService {
 
-  private String organisation;
-
   private static final ParameterizedTypeReference<CmdbDataWrapper<CloudProvider>>
       PROVIDER_RESPONSE_TYPE =
       new ParameterizedTypeReference<CmdbDataWrapper<CloudProvider>>() {
@@ -254,14 +252,38 @@ public class CmdbServiceImpl implements CmdbService {
   @Override
   public CloudProvider fillCloudProviderInfo(String providerId,
       Set<String> servicesWithSla, String organisation) {
-    this.organisation = organisation;
     // Get provider's data
     CloudProvider provider = getProviderById(providerId);
 
     Map<String, CloudService> services = getServicesByProvider(providerId)
         .stream()
         .filter(cs -> !(cs instanceof ComputeService) || servicesWithSla.contains(cs.getId()))
-        .map(this::fillComputeServiceData)
+        .map(cloudService -> {
+          if (cloudService instanceof ComputeService) {
+            String prId = cloudService.getProviderId();
+            String serviceId = cloudService.getId();
+            ComputeService computeService = (ComputeService) cloudService;
+            List<Tenant> serviceTenants = getTenantsByService(serviceId);
+            List<Tenant> organisationTenants = getTenantsByOrganisation(organisation);
+            List<Tenant> tenantList = serviceTenants.stream()
+                .distinct()
+                .filter(organisationTenants::contains)
+                .collect(Collectors.toList());
+            List<Image> imageList = new ArrayList<>();
+            List<Flavor> flavorList = new ArrayList<>();
+            for (Tenant tenant : tenantList) {
+              imageList.addAll(getImagesByTenant(tenant.getId()));
+              flavorList.addAll(getFlavorsByTenant(tenant.getId()));
+            }
+            LOG.debug("Image list for service <{}> of provider <{}>: <{}>",
+                Arrays.toString(imageList.toArray()), serviceId, prId);
+            computeService.setImages(imageList);
+            LOG.debug("Flavor list for service <{}> of provider <{}>: <{}>",
+                Arrays.toString(flavorList.toArray()), serviceId, prId);
+            computeService.setFlavors(flavorList);
+          }
+          return cloudService;
+        })
         .collect(Collectors.toMap(CloudService::getId, Function.identity()));
 
     provider.setServices(services);
@@ -315,34 +337,6 @@ public class CmdbServiceImpl implements CmdbService {
           "Error loading info for tenant <" + tenantId + "> from CMDB.",
           ex);
     }
-  }
-
-  private CloudService fillComputeServiceData(CloudService cloudService) {
-    if (cloudService instanceof ComputeService) {
-      String providerId = cloudService.getProviderId();
-      String serviceId = cloudService.getId();
-      ComputeService computeService = (ComputeService) cloudService;
-      List<Tenant> serviceTenants = getTenantsByService(serviceId);
-      List<Tenant> organisationTenants = getTenantsByOrganisation(organisation);
-      List<Tenant> tenantList = serviceTenants.stream()
-          .distinct()
-          .filter(organisationTenants::contains)
-          .collect(Collectors.toList());
-      List<Image> imageList = new ArrayList<Image>();
-      List<Flavor> flavorList = new ArrayList<Flavor>();
-      for (Tenant tenant : tenantList) {
-        imageList.addAll(getImagesByTenant(tenant.getId()));
-        flavorList.addAll(getFlavorsByTenant(tenant.getId()));
-      }
-      LOG.debug("Image list for service <{}> of provider <{}>: <{}>",
-          Arrays.toString(imageList.toArray()), serviceId, providerId);
-      computeService.setImages(imageList);
-      LOG.debug("Flavor list for service <{}> of provider <{}>: <{}>",
-          Arrays.toString(flavorList.toArray()), serviceId, providerId);
-      computeService.setFlavors(flavorList);
-
-    }
-    return cloudService;
   }
 
 }

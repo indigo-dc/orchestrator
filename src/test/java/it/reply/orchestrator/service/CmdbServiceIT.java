@@ -20,9 +20,11 @@ import static org.junit.Assert.assertEquals;
 
 import it.reply.orchestrator.config.specific.WebAppConfigurationAwareIT;
 import it.reply.orchestrator.dto.cmdb.CloudService;
-import it.reply.orchestrator.dto.cmdb.Image;
 import it.reply.orchestrator.dto.cmdb.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudServiceType;
+import it.reply.orchestrator.dto.cmdb.Flavor;
+import it.reply.orchestrator.dto.cmdb.Image;
+import it.reply.orchestrator.dto.cmdb.Tenant;
 
 import java.util.List;
 
@@ -39,6 +41,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 public class CmdbServiceIT extends WebAppConfigurationAwareIT {
 
   private final String recasId = "4401ac5dc8cfbbb737b0a02575e6f4bc";
+  private final String tenantId = "8a5377c6-a7f4-4d1c-a4cd-074ab92b6035";
+  private final String organisationId = "8a5377c6-a7f4-4d1c-a4cd-074ab92b6035";
   private final String recasProviderName = "provider-RECAS-BARI";
 
   @Autowired
@@ -75,9 +79,23 @@ public class CmdbServiceIT extends WebAppConfigurationAwareIT {
 
   @Test
   @Ignore
-  public void getImageForServiceTest() throws Exception {
+  public void getTenantsByServiceTest() throws Exception {
 
-    //List<Image> recasImages = service.getImagesByService(recasId);
+    List<Tenant> tenants = service.getTenantsByService(recasId);
+  }
+
+  @Test
+  @Ignore
+  public void getTenantsByOrganisationTest() throws Exception {
+
+    List<Tenant> tenants = service.getTenantsByOrganisation(organisationId);
+  }
+
+  @Test
+  @Ignore
+  public void getImageForTenantTest() throws Exception {
+
+    List<Image> images = service.getImagesByTenant(tenantId);
 
     // ProviderData data =
     // new ProviderData().withId("476").withPrimaryKey("83757G0").withName("RECAS-BARI")
@@ -91,4 +109,10 @@ public class CmdbServiceIT extends WebAppConfigurationAwareIT {
 
   }
 
+  @Test
+  @Ignore
+  public void getFlavorForTenantTest() throws Exception {
+
+    List<Flavor> flavors = service.getFlavorsByTenant(tenantId);
+  }
 }

@@ -274,7 +274,7 @@ public class IntegrationTestUtil {
             "}",
             MediaType.APPLICATION_JSON));
 
-    // Tenants: Organization deep-hdc
+    // Tenants: Organization 8a5377c6-a7f4-4d1c-a4cd-074ab92b6035
     mockServer
         .expect(requestTo(baseUrl
             + "/tenant/filters/iam_organisation/8a5377c6-a7f4-4d1c-a4cd-074ab92b6035?include_docs=true"))
@@ -336,7 +336,7 @@ public class IntegrationTestUtil {
             "}",
             MediaType.APPLICATION_JSON));
 
-    // Images: Tenant deep-hdc on provider-RECAS-BARI
+    // Images: Tenant 8a5377c6-a7f4-4d1c-a4cd-074ab92b6035 on provider-RECAS-BARI
     mockServer
         .expect(requestTo(baseUrl
             + "/tenant/id/8a5377c6-a7f4-4d1c-a4cd-074ab92b6035/has_many/images?include_docs=true"))
@@ -408,7 +408,7 @@ public class IntegrationTestUtil {
             "}",
             MediaType.APPLICATION_JSON));
 
-    // Flavor: Tenant deep-hdc  on provider-RECAS-BARI
+    // Flavor: Tenant 8a5377c6-a7f4-4d1c-a4cd-074ab92b6035 on provider-RECAS-BARI
     mockServer
         .expect(requestTo(baseUrl
             + "/tenant/id/8a5377c6-a7f4-4d1c-a4cd-074ab92b6035/has_many/flavors?include_docs=true"))
