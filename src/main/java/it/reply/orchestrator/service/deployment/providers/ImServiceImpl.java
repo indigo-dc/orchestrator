@@ -145,8 +145,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         toscaService.prepareTemplate(deployment.getTemplate(), deployment.getParameters());
 
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
-    final CloudProviderEndpoint chosenCloudProviderEndpoint =
-        deploymentMessage.getChosenCloudProviderEndpoint();
 
     String accessToken = null;
     if (oidcProperties.isEnabled()) {

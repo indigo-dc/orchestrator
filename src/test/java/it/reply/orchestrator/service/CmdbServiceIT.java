@@ -77,7 +77,7 @@ public class CmdbServiceIT extends WebAppConfigurationAwareIT {
   @Ignore
   public void getImageForServiceTest() throws Exception {
 
-    List<Image> recasImages = service.getImagesByService(recasId);
+    //List<Image> recasImages = service.getImagesByService(recasId);
 
     // ProviderData data =
     // new ProviderData().withId("476").withPrimaryKey("83757G0").withName("RECAS-BARI")

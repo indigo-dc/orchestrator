@@ -79,7 +79,7 @@ public class CloudProviderEndpointServiceImpl {
               .stream()
               // Choose the ones ranked
               .filter(RankedCloudService::isRanked)
-              // and with the highest rank
+              // and with the best rank
               .sorted(Comparator.comparing(RankedCloudService::getRank))
               .map(RankedCloudService::getServiceId)
               .map(cloudServices::get)
