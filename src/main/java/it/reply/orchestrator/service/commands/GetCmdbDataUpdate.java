@@ -52,7 +52,7 @@ public class GetCmdbDataUpdate extends BaseDeployCommand {
     String organisation = oauth2TokenService.getOrganization(
         deploymentMessage.getRequestedWithToken());
     CloudProvider cloudProvider = cmdbService
-        .fillCloudProviderInfo(cloudProviderId, serviceWithSla, organisation);
+        .fillCloudProviderInfo(cloudProviderId, serviceWithSla, organisation, true);
 
     CloudServicesOrderedIterator cloudServicesOrderedIterator =
         new CloudServicesOrderedIterator(Lists.newArrayList(cloudProvider.getServices().values()));

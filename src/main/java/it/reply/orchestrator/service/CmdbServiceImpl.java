@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.core.UriBuilder;
@@ -251,13 +252,21 @@ public class CmdbServiceImpl implements CmdbService {
 
   @Override
   public CloudProvider fillCloudProviderInfo(String providerId,
-      Set<String> servicesWithSla, String organisation) {
+      Set<String> servicesWithSla, String organisation, boolean isUpdate) {
     // Get provider's data
     CloudProvider provider = getProviderById(providerId);
+    // Workaround implemented for update cycle; Service Type fixed to ComputeService
+    // TODO improve logic, handle all type of services
+    Predicate<? super CloudService> p;
+    if (!isUpdate) {
+      p = cs -> !(cs instanceof ComputeService) || servicesWithSla.contains(cs.getId());
+    } else {
+      p = cs -> cs instanceof ComputeService && servicesWithSla.contains(cs.getId());
+    }
 
     Map<String, CloudService> services = getServicesByProvider(providerId)
         .stream()
-        .filter(cs -> !(cs instanceof ComputeService) || servicesWithSla.contains(cs.getId()))
+        .filter(p)
         .map(cloudService -> {
           if (cloudService instanceof ComputeService) {
             String prId = cloudService.getProviderId();

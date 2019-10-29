@@ -69,7 +69,7 @@ public class GetCmdbDataDeploy extends BaseRankCloudProvidersCommand {
         .entrySet()
         .stream()
         .map(entry -> cmdbService.fillCloudProviderInfo(entry.getKey(),
-            entry.getValue(), organisation))
+            entry.getValue(), organisation, false))
         .collect(Collectors.toMap(CloudProvider::getId, Function.identity()));
     rankCloudProvidersMessage.setCloudProviders(cloudProviders);
 
