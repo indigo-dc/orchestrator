@@ -81,7 +81,7 @@ public class CloudProviderEndpointServiceImpl {
     if (maxProvidersRetry != null) {
       orderedCloudServices = orderedCloudServices.limit(maxProvidersRetry);
     }
-    
+
     return new CloudServicesOrderedIterator(orderedCloudServices.collect(Collectors.toList()));
   }
 
