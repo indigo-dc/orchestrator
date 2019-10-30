@@ -48,6 +48,6 @@ public interface CmdbService {
   public Flavor getFlavorById(String flavorId);
 
   public CloudProvider fillCloudProviderInfo(String providerId,
-      Set<String> servicesWithSla, String organisation, boolean isUpdate);
+      Set<String> servicesWithSla, String organisation);
 
 }
