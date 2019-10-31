@@ -127,14 +127,14 @@ By default the REST APIs are not authenticated; if you want to enable the IAM in
         * **Description**: The Orchestrator OAuth2 client ID
      * `orchestrator.client-secret`
         * **Description**: The Orchestrator OAuth2 client secret
+     * `audience`
+       * **Description**: A freely generated string (e.g. a UUID) used to exchange tokens with Vault Server   
  5. If you have a Clues client registered in the IAM, you can configure the following parameters:
     * `clues.client-id`
        * **Description**: The CLUES OAuth2 client ID
     * `clues.client-secret`
        * **Description**: The CLUES OAuth2 client secret
- 6. Additionally, if you intend to use Vault to share secrets, you haveto configure the audience uuid parameter:
-    * `audience`
-       * **Description**: A freely generated UUID used to exchange tokens with Vault Server
+    
 
 Please make reference to the [IAM guide](https://indigo-dc.gitbooks.io/iam/content) for further information on how to register the Orchestrator as protected resource server.
 
@@ -163,10 +163,16 @@ To enable this functionality you need to configure the following parameters:
     * **Default value**: `/`
 
 ### Configure Vault (optional)
-The Orchestrator allows, during the deployment of a Marathon service, to use a Vault server for storing and exchanging passwords and other sensitive data through the use of 'secrets'. Functionality is optional; to enable it, simply configure the Vault server endpoint using the following parameter:
+The Orchestrator allows, during the deployment of a Marathon service, to use a Vault server for storing and exchanging passwords and other sensitive data through the use of 'secrets'. This functionality is optional; to enable it, you have to configure the Vault server endpoint using the following parameter:
 
  * `VAULT_URL`
     * **Description**: The Vault Service endpoint (if used)
     * **Format**: http://{host}:{port}
     * **Default value**: none
     * **Example value**: https://vault.cloud.ba.infn.it:8200
+
+The Vault server has to provide the following configurations:
+- Key/Value Secrets Engine Version 1 enabled on path `secret/`;
+- JWT auth backend enabled and configured with IAM;
+- jwt role defined with the Orchestrator `audience` included in the `bound_audiences`;
+- policy which grants *write* capabilities to the path `secret/private`. 
