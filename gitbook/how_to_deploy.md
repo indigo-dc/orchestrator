@@ -132,7 +132,7 @@ By default the REST APIs are not authenticated; if you want to enable the IAM in
        * **Description**: The CLUES OAuth2 client ID
     * `clues.client-secret`
        * **Description**: The CLUES OAuth2 client secret
- 6. Additionally, if you intend to use Vault to share secrets, you haveto configure the audience uuid parameter: 
+ 6. Additionally, if you intend to use Vault to share secrets, you haveto configure the audience uuid parameter:
     * `audience`
        * **Description**: A freely generated UUID used to exchange tokens with Vault Server
 
