@@ -83,3 +83,14 @@ With this release 2 major configuration changes have been introduced:
 Additionally, a way to import self-signed certificates has been added. Please check to the [deployment guide](./how_to_deploy.md) to learn more about this feature.
 #### Upgrading to v2.1.1-FINAL
 No action required.
+### UPGRADING TO v2.2.x
+#### Upgrading to v2.2.0-FINAL
+It is necessary to delete all the elements in the database tables 'oidc\_entity' and 'oidc\_refresh\_token' using the commands like:
+
+mysql>use orchestrator;
+
+mysql>delete from oidc\_entity;
+
+mysql>delete from oidc\_refresh\_token;
+
+Add the 'audience' property to iam-properties; is a freely generated uuid used to exchange tokens with Vault.
