@@ -254,10 +254,9 @@ public class CmdbServiceImpl implements CmdbService {
       Set<String> servicesWithSla, String organisation) {
     // Get provider's data
     CloudProvider provider = getProviderById(providerId);
-
     Map<String, CloudService> services = getServicesByProvider(providerId)
         .stream()
-        .filter(cs -> !(cs instanceof ComputeService) || servicesWithSla.contains(cs.getId()))
+        .filter(cs -> servicesWithSla.contains(cs.getId()))
         .map(cloudService -> {
           if (cloudService instanceof ComputeService) {
             String prId = cloudService.getProviderId();

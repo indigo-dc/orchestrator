@@ -158,7 +158,7 @@ public class CloudProviderEndpointServiceTest {
   }
 
   @Test
-  @Parameters({"MARATHON|1", "CHRONOS|1", "TOSCA|2"})
+  @Parameters({"MARATHON|2", "CHRONOS|2", "TOSCA|2"})
   public void chooseCloudProviderSuccesfulByDeploymentType(DeploymentType deploymentType,
       int expectedSized) {
     RankCloudProvidersMessage rcpm = new RankCloudProvidersMessage();
