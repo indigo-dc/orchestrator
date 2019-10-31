@@ -128,13 +128,13 @@ By default the REST APIs are not authenticated; if you want to enable the IAM in
      * `orchestrator.client-secret`
         * **Description**: The Orchestrator OAuth2 client secret
      * `audience`
-       * **Description**: A freely generated string (e.g. a UUID) used to exchange tokens with Vault Server   
+       * **Description**: A freely generated string (e.g. a UUID) used to exchange tokens with Vault Server
  5. If you have a Clues client registered in the IAM, you can configure the following parameters:
     * `clues.client-id`
        * **Description**: The CLUES OAuth2 client ID
     * `clues.client-secret`
        * **Description**: The CLUES OAuth2 client secret
-    
+
 
 Please make reference to the [IAM guide](https://indigo-dc.gitbooks.io/iam/content) for further information on how to register the Orchestrator as protected resource server.
 
@@ -175,4 +175,4 @@ The Vault server has to provide the following configurations:
 - Key/Value Secrets Engine Version 1 enabled on path `secret/`;
 - JWT auth backend enabled and configured with IAM;
 - jwt role defined with the Orchestrator `audience` included in the `bound_audiences`;
-- policy which grants *write* capabilities to the path `secret/private`. 
+- policy which grants *write* capabilities to the path `secret/private`.
