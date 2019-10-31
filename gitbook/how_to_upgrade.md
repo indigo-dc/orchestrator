@@ -83,3 +83,17 @@ With this release 2 major configuration changes have been introduced:
 Additionally, a way to import self-signed certificates has been added. Please check to the [deployment guide](./how_to_deploy.md) to learn more about this feature.
 #### Upgrading to v2.1.1-FINAL
 No action required.
+### UPGRADING TO v2.2.x
+#### Upgrading to v2.2.0-FINAL
+The following steps are necessary for the upgrade:
+
+- delete all the tokens/refresh tokens stored in the orchestrator DB (database tables 'oidc\_entity' and 'oidc\_refresh\_token'), e.g. using commands like:
+
+```
+mysql>use orchestrator;
+
+mysql>delete from oidc_entity;
+
+mysql>delete from oidc_refresh_token;
+```
+- add the 'audience' property (mandatory) to iam-properties in `application.yml` (see [Configure IAM integration](how_to_deploy.md#configure-iam-integration-optional)); this can be a user-defined string. We recommend to generate a uuid.
