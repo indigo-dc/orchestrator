@@ -348,7 +348,12 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     }
 
     updateResources(deployment, deployment.getStatus());
-    if (toscaService.isHybridDeployment(newAr)) {
+
+    boolean newResourcesOnDifferentService = !chosenCloudProviderEndpoint
+            .getCpComputeServiceId()
+            .equals(deployment.getCloudProviderEndpoint().getCpComputeServiceId());
+
+    if (newResourcesOnDifferentService) {
       toscaService.setHybridUpdateDeployment(newAr);
     }
 
@@ -417,10 +422,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
             }
           }
         });
-
-    boolean newResourcesOnDifferentService = !chosenCloudProviderEndpoint
-        .getCpComputeServiceId()
-        .equals(deployment.getCloudProviderEndpoint().getCpComputeServiceId());
 
     newNodes.forEach((name, newNode) -> {
 

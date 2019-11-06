@@ -1163,6 +1163,8 @@ node_types:
       command:
         required: no
         type: string
+        constraints:
+          - min_length: 1
       uris:
         required: no
         type: list
@@ -1180,11 +1182,6 @@ node_types:
           type: list
           entry_schema:
             type: string
-      secrets:
-        required: no
-        type: map
-        entry_schema:
-          type: string
       constraints:
         required: no
         type: list
@@ -1218,6 +1215,8 @@ node_types:
       command:
         required: yes
         type: string
+        constraints:
+          - min_length: 1
       description:
         required: no
         type: string
@@ -1461,6 +1460,11 @@ node_types:
         required: no
         type: boolean
         default: false
+      secrets:
+        required: no
+        type: map
+        entry_schema:
+          type: string
     artifacts:
       image:
         file: ""
