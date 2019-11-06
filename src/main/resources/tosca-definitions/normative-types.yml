@@ -17,9 +17,10 @@
 ##########################################################################
 tosca_definitions_version: tosca_simple_yaml_1_0
 
-template_author: OASIS
-template_name: tosca-normative-types
-template_version: 1.0.0
+metadata:
+  template_author: OASIS
+  template_name: tosca-normative-types
+  template_version: 1.0.0
 
 ##########################################################################
 # Node Type.
