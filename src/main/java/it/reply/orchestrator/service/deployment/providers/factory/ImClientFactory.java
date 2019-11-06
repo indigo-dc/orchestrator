@@ -273,14 +273,9 @@ public class ImClientFactory {
         .collect(Collectors.joining("\\n"));
     LOG.trace("IM auth header: {}", imHeader);
 
-    String imUrl = null;
-    if (cloudProviderEndpoints.size() == 1) {
-      // use im local endpoint only if not hybrid (and if available)
-      imUrl = cloudProviderEndpoints.get(0).getImEndpoint();
-    }
-    if (imUrl == null) {
-      imUrl = imProperties.getUrl().toString();
-    }
+    String imUrl = Optional
+            .ofNullable(cloudProviderEndpoints.get(0).getImEndpoint())
+            .orElseGet(() -> imProperties.getUrl().toString());
 
     return new InfrastructureManager(imUrl, imHeader);
   }

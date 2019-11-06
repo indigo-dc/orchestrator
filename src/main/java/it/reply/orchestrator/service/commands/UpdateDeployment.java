@@ -118,6 +118,8 @@ public class UpdateDeployment extends BaseDeployCommand {
     } else {
       Optional<String> iaasheaderId = chosenCloudProviderEndpoint.getIaasHeaderId();
       if (deploymentMessage.isHybrid() && iaasheaderId.isPresent()) { // hybrid update
+        chosenCloudProviderEndpoint
+            .setImEndpoint(deployment.getCloudProviderEndpoint().getImEndpoint());
         deployment
             .getCloudProviderEndpoint()
             .getHybridCloudProviderEndpoints()

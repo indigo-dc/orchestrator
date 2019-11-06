@@ -16,6 +16,7 @@
 
 package it.reply.orchestrator.service;
 
+import it.reply.orchestrator.config.properties.ImProperties;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.CloudProviderEndpointBuilder;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
@@ -40,11 +41,15 @@ import java.util.stream.Stream;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
 public class CloudProviderEndpointServiceImpl {
+
+  @Autowired
+  private ImProperties imProperties;
 
   /**
    * Generates the {@link CloudServicesOrderedIterator}.
@@ -99,7 +104,7 @@ public class CloudProviderEndpointServiceImpl {
   public CloudProviderEndpoint getCloudProviderEndpoint(CloudService computeService,
       Map<String, ToscaPolicy> placementPolicies, boolean isHybrid) {
 
-    String imEndpoint = null;
+    String imEndpoint = imProperties.getUrl().toString();
     CloudProviderEndpointBuilder cpe = CloudProviderEndpoint.builder();
 
     ///////////////////////////////
@@ -149,13 +154,7 @@ public class CloudProviderEndpointServiceImpl {
     cpe.region(computeService.getRegion());
     cpe.iaasType(iaasType);
     cpe.imEndpoint(imEndpoint);
-
-    if (isHybrid) {
-      // generate and set IM iaasHeaderId
-      cpe.iaasHeaderId(computeService.getId());
-      // default to PaaS Level IM
-      cpe.imEndpoint(null);
-    }
+    cpe.iaasHeaderId(computeService.getId());
 
     return cpe.build();
   }
