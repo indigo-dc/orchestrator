@@ -39,7 +39,9 @@ public class QcgService extends  CloudService {
       @NonNull CloudServiceType type,
       boolean publicService,
       @Nullable String region,
-      @NonNull String hostname) {
-    super(id, serviceType, endpoint, providerId, type, publicService, region, hostname);
+      @NonNull String hostname,
+      @Nullable String parentServiceId) {
+    super(id, serviceType, endpoint, providerId, type, publicService, region, hostname,
+            parentServiceId);
   }
 }
