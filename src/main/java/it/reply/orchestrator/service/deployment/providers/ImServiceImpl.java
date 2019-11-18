@@ -559,6 +559,15 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     return false;
   }
 
+  @Override
+  public void doProviderTimeout(DeploymentMessage deploymentMessage) {
+    if (!deploymentMessage.isPollComplete()) {
+      throw new BusinessWorkflowException(ErrorCode.CLOUD_PROVIDER_ERROR,
+          "Error executing request to IM",
+          new DeploymentException("IM provider timeout during deployment"));
+    }
+  }
+
   /**
    * Match the {@link Resource} to IM vms.
    *

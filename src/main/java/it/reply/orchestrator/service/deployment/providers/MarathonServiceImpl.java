@@ -673,4 +673,9 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     // DO NOTHING
   }
 
+  @Override
+  public void doProviderTimeout(DeploymentMessage deploymentMessage) throws DeploymentException {
+    throw new DeploymentException("Timeout during deployment");
+  }
+
 }

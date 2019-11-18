@@ -250,6 +250,10 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     // DO NOTHING
   }
 
+  @Override
+  public void doProviderTimeout(DeploymentMessage deploymentMessage) {
+  }
+
   /**
    * Gets the Job status.
    *

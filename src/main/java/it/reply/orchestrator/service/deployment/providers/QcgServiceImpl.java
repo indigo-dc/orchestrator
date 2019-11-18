@@ -316,6 +316,10 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
     return true;
   }
 
+  @Override
+  public void doProviderTimeout(DeploymentMessage deploymentMessage) {
+  }
+
   @Data
   @NoArgsConstructor(access = AccessLevel.PROTECTED)
   @RequiredArgsConstructor

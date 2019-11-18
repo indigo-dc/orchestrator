@@ -72,7 +72,20 @@ public class DeploymentMessage extends BaseWorkflowMessage {
   private boolean createComplete;
   private boolean deleteComplete;
   private boolean pollComplete;
-  private boolean skipPollInterval;
+  private boolean skipPollInterval;    
+
+  @NonNull
+  @NotNull
+  private String providerTimeout = MAX_TIMEOUT.toString();
+
+  public void setProviderTimeoutInMins(Integer timeoutMins) {
+    this.providerTimeout = Optional
+        .ofNullable(timeoutMins)
+        .map(value -> Instant.now().plus(Duration.ofMinutes(value)))
+        .filter(value -> value.isBefore(MAX_TIMEOUT))
+        .orElse(MAX_TIMEOUT)
+        .toString();
+  }
 
   @Nullable
   private CloudServicesOrderedIterator cloudServicesOrderedIterator;

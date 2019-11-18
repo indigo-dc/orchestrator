@@ -106,6 +106,8 @@ public interface DeploymentProviderService {
   public boolean isUndeployed(DeploymentMessage deploymentMessage);
 
   public void finalizeUndeploy(DeploymentMessage deploymentMessage);
+  
+  public void doProviderTimeout(DeploymentMessage deploymentMessage);
 
   public Optional<String> getAdditionalErrorInfo(DeploymentMessage deploymentMessage);
 
