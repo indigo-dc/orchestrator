@@ -55,8 +55,8 @@ import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 import it.reply.orchestrator.utils.ToscaConstants.Nodes;
-import it.reply.orchestrator.utils.WorkflowConstants.ErrorCode;
 import it.reply.orchestrator.utils.ToscaUtils;
+import it.reply.orchestrator.utils.WorkflowConstants.ErrorCode;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -326,7 +326,6 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
         new DeploymentException("Qcg service timeout during deployment"));
     }
   }
-
 
   @Data
   @NoArgsConstructor(access = AccessLevel.PROTECTED)

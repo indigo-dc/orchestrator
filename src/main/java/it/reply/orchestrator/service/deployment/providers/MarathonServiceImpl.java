@@ -48,8 +48,8 @@ import it.reply.orchestrator.service.VaultService;
 import it.reply.orchestrator.service.deployment.providers.factory.MarathonClientFactory;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
-import it.reply.orchestrator.utils.ToscaConstants;
 import it.reply.orchestrator.utils.ToscaUtils;
+import it.reply.orchestrator.utils.ToscaConstants;
 import it.reply.orchestrator.utils.WorkflowConstants.ErrorCode;
 
 import java.net.URI;
@@ -350,7 +350,8 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
         //remove vault entries if present
         if (!depentries.isEmpty()) {
           for (String depentry:depentries) {
-            List<String> entries = vaultService.listSecrets(uri, vaultToken, spath + "/" + depentry);
+            List<String> entries = vaultService.listSecrets(uri, vaultToken, spath + "/"
+                + depentry);
             for (String entry:entries) {
               vaultService.deleteSecret(uri, vaultToken, spath + "/" + depentry + "/" + entry);
             }
@@ -684,7 +685,8 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
       Iterator<App> iterator = apps.iterator();
       while (iterator.hasNext()) {
         App app = (App)iterator.next();
-        if (app.getLastTaskFailure() != null && !StringUtils.isEmpty(app.getLastTaskFailure().getMessage())) {
+        if (app.getLastTaskFailure() != null && !StringUtils.isEmpty(app.getLastTaskFailure()
+            .getMessage())) {
           sb.append(app.getLastTaskFailure().getMessage());
           sb.append('\n');
         }

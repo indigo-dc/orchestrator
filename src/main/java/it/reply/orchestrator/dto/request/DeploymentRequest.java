@@ -58,7 +58,8 @@ public class DeploymentRequest {
   private Integer timeoutMins;
 
   @Nullable
-  @Min(value = 1, message = "Provider timeout value, if provided, must be at least of 1 minute and equal or less than timeoutMins")
+  @Min(value = 1, message = "Provider timeout value, if provided, must be at least of 1 minute and"
+      + " equal or less than timeoutMins")
   private Integer providerTimeoutMins;
 
   @Nullable

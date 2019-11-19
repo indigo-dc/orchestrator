@@ -78,6 +78,12 @@ public class DeploymentMessage extends BaseWorkflowMessage {
   @NotNull
   private String providerTimeout = MAX_TIMEOUT.toString();
 
+  /**
+   * Sets the Deployment per provider timeout.
+   *
+   * @param timeoutMins
+   *          the timeout in Minutes
+   */
   public void setProviderTimeoutInMins(Integer timeoutMins) {
     this.providerTimeout = Optional
         .ofNullable(timeoutMins)
