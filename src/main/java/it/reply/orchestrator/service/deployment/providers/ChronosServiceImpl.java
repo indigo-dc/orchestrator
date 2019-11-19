@@ -45,6 +45,7 @@ import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Task;
+import it.reply.orchestrator.exception.service.BusinessWorkflowException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.function.ThrowingConsumer;
@@ -57,6 +58,7 @@ import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 import it.reply.orchestrator.utils.ToscaConstants.Nodes;
+import it.reply.orchestrator.utils.WorkflowConstants.ErrorCode;
 import it.reply.orchestrator.utils.ToscaUtils;
 
 import java.util.ArrayList;
@@ -247,11 +249,16 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
 
   @Override
   public void cleanFailedDeploy(DeploymentMessage deploymentMessage) {
-    // DO NOTHING
+    doUndeploy(deploymentMessage);
   }
 
   @Override
   public void doProviderTimeout(DeploymentMessage deploymentMessage) {
+    if (!deploymentMessage.isPollComplete()) {
+      throw new BusinessWorkflowException(ErrorCode.CLOUD_PROVIDER_ERROR,
+          "Error executing request to Chronos service",
+          new DeploymentException("Chronos service timeout during deployment"));
+    }
   }
 
   /**

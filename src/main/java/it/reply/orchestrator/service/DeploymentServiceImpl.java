@@ -199,8 +199,8 @@ public class DeploymentServiceImpl implements DeploymentService {
         .extractDyanfedRequirements(parsingResult, request.getParameters());
     deploymentMessage.setDynafedRequirements(dyanfedRequirements);
 
-    deploymentMessage.setTimeoutInMins(request.getTimeoutMins());    
-    deploymentMessage.setProviderTimeoutInMins(request.getProviderTimeoutMins());    
+    deploymentMessage.setTimeoutInMins(request.getTimeoutMins());
+    deploymentMessage.setProviderTimeoutInMins(request.getProviderTimeoutMins());
 
     deploymentMessage.setMaxProvidersRetry(request.getMaxProvidersRetry());
     deploymentMessage.setKeepLastAttempt(request.isKeepLastAttempt());
@@ -377,7 +377,7 @@ public class DeploymentServiceImpl implements DeploymentService {
     deploymentMessage.setDynafedRequirements(dyanfedRequirements);
 
     deploymentMessage.setTimeoutInMins(request.getTimeoutMins());
-    deploymentMessage.setProviderTimeoutInMins(request.getProviderTimeoutMins());    
+    deploymentMessage.setProviderTimeoutInMins(request.getProviderTimeoutMins());
 
     deploymentMessage.setMaxProvidersRetry(request.getMaxProvidersRetry());
     deploymentMessage.setKeepLastAttempt(request.isKeepLastAttempt());
