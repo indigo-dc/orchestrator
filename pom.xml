@@ -687,6 +687,7 @@
             <exclude>src/main/java/it/reply/orchestrator/service/ConfigurationServiceImpl.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/service/VaultService.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/service/VaultServiceImpl.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/service/commands/ProviderTimeout.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/service/deployment/providers/QcgServiceImpl.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/service/deployment/providers/factory/QcgClientFactory.java</exclude>
             <exclude>src/test/java/it/reply/orchestrator/controller/ConfigurationEndpointTest.java</exclude>
