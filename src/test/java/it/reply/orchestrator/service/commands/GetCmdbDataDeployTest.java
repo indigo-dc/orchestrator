@@ -17,8 +17,14 @@
 package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.config.properties.CmdbProperties;
+import it.reply.orchestrator.dal.entity.OidcEntityId;
+import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.service.CmdbServiceImpl;
+import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.util.IntegrationTestUtil;
+
+import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.when;
 
 import java.net.URI;
 
@@ -26,9 +32,15 @@ import org.assertj.core.api.Assertions;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Spy;
 
+
 public class GetCmdbDataDeployTest extends BaseRankCloudProvidersCommandTest<GetCmdbDataDeploy> {
+
+  private static final String oidcSubject = "55555555-6666-7777-8888-999999999990";
+  private static final String oidcIssuer = "RECAS";
+  private static final OidcTokenId oidcTokenId = new OidcTokenId();
 
   @Spy
   @InjectMocks
@@ -37,6 +49,9 @@ public class GetCmdbDataDeployTest extends BaseRankCloudProvidersCommandTest<Get
   @Spy
   private CmdbProperties cmdbProperties;
 
+  @Mock
+  private OAuth2TokenService oauth2TokenService;
+
   public GetCmdbDataDeployTest() {
     super(new GetCmdbDataDeploy());
   }
@@ -44,6 +59,15 @@ public class GetCmdbDataDeployTest extends BaseRankCloudProvidersCommandTest<Get
   @Before
   public void setup() {
     cmdbProperties.setUrl(URI.create("https://www.example.com"));
+
+    OidcEntityId oeid = new OidcEntityId();
+    oeid.setSubject(oidcSubject);
+    oeid.setIssuer(oidcIssuer);
+    oidcTokenId.setOidcEntityId(oeid);
+
+    when(oauth2TokenService
+        .getOrganization(eq(oidcTokenId)))
+        .thenReturn("8a5377c6-a7f4-4d1c-a4cd-074ab92b6035");
   }
 
   @Test
@@ -52,7 +76,107 @@ public class GetCmdbDataDeployTest extends BaseRankCloudProvidersCommandTest<Get
     IntegrationTestUtil.mockCmdb(mockServer, cmdbProperties.getUrl());
 
     String serializedRankCloudProvidersMessage =
-        "{\"deploymentId\":\"mmd34483-d937-4578-bfdb-ebe196bf82dd\",\"slamPreferences\":{\"preferences\":[{\"customer\":\"indigo-dc\",\"preferences\":[{\"service_type\":\"compute\",\"priority\":[{\"sla_id\":\"4401ac5dc8cfbbb737b0a02575ee53f6\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e81d9b\",\"weight\":0.5},{\"sla_id\":\"4401ac5dc8cfbbb737b0a02575ee3b58\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"weight\":0.5}]}],\"id\":\"4401ac5dc8cfbbb737b0a02575ee0e55\"}],\"sla\":[{\"customer\":\"indigo-dc\",\"provider\":\"provider-UPV-GRyCAP\",\"start_date\":\"11.01.2016+15:50:00\",\"end_date\":\"11.02.2016+15:50:00\",\"services\":[{\"type\":\"compute\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e81d9b\",\"targets\":[{\"type\":\"public_ip\",\"unit\":\"none\",\"restrictions\":{\"total_guaranteed\":10}}]}],\"id\":\"4401ac5dc8cfbbb737b0a02575ee3b58\"},{\"customer\":\"indigo-dc\",\"provider\":\"provider-RECAS-BARI\",\"start_date\":\"11.01.2016+15:50:00\",\"end_date\":\"11.02.2016+15:50:00\",\"services\":[{\"type\":\"compute\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"targets\":[{\"type\":\"computing_time\",\"unit\":\"h\",\"restrictions\":{\"total_guaranteed\":200}}]}],\"id\":\"4401ac5dc8cfbbb737b0a02575ee53f6\"}]},\"cloudProviders\":{\"provider-RECAS-BARI\":{\"id\":\"provider-RECAS-BARI\",\"cmdbProviderData\":null,\"cmdbProviderServices\":{\"4401ac5dc8cfbbb737b0a02575e6f4bc\":null},\"cmdbProviderImages\":{}},\"provider-UPV-GRyCAP\":{\"id\":\"provider-UPV-GRyCAP\",\"cmdbProviderData\":null,\"cmdbProviderServices\":{\"4401ac5dc8cfbbb737b0a02575e81d9b\":null},\"cmdbProviderImages\":{}}},\"cloudProvidersMonitoringData\":{},\"rankedCloudProviders\":[]}";
+        "{\n" +
+        "  \"requestedWithToken\": {\n" +
+        "    \"clientsId\": [],\n" +
+        "    \"oidcEntityId\": {\n" +
+        "      \"issuer\": \"RECAS\",\n" +
+        "      \"subject\": \"55555555-6666-7777-8888-999999999990\"\n" +
+        "    }\n" +
+        "  },\n" +
+        "  \"deploymentId\": \"mmd34483-d937-4578-bfdb-ebe196bf82dd\",\n" +
+        "  \"slamPreferences\": {\n" +
+        "    \"preferences\": [\n" +
+        "      {\n" +
+        "        \"customer\": \"indigo-dc\",\n" +
+        "        \"preferences\": [\n" +
+        "          {\n" +
+        "            \"service_type\": \"compute\",\n" +
+        "            \"priority\": [\n" +
+        "              {\n" +
+        "                \"sla_id\": \"4401ac5dc8cfbbb737b0a02575ee53f6\",\n" +
+        "                \"service_id\": \"4401ac5dc8cfbbb737b0a02575e81d9b\",\n" +
+        "                \"weight\": 0.5\n" +
+        "              },\n" +
+        "              {\n" +
+        "                \"sla_id\": \"4401ac5dc8cfbbb737b0a02575ee3b58\",\n" +
+        "                \"service_id\": \"4401ac5dc8cfbbb737b0a02575e6f4bc\",\n" +
+        "                \"weight\": 0.5\n" +
+        "              }\n" +
+        "            ]\n" +
+        "          }\n" +
+        "        ],\n" +
+        "        \"id\": \"4401ac5dc8cfbbb737b0a02575ee0e55\"\n" +
+        "      }\n" +
+        "    ],\n" +
+        "    \"sla\": [\n" +
+        "      {\n" +
+        "        \"customer\": \"indigo-dc\",\n" +
+        "        \"provider\": \"provider-UPV-GRyCAP\",\n" +
+        "        \"start_date\": \"11.01.2016+15:50:00\",\n" +
+        "        \"end_date\": \"11.02.2016+15:50:00\",\n" +
+        "        \"services\": [\n" +
+        "          {\n" +
+        "            \"type\": \"compute\",\n" +
+        "            \"service_id\": \"4401ac5dc8cfbbb737b0a02575e81d9b\",\n" +
+        "            \"targets\": [\n" +
+        "              {\n" +
+        "                \"type\": \"public_ip\",\n" +
+        "                \"unit\": \"none\",\n" +
+        "                \"restrictions\": {\n" +
+        "                  \"total_guaranteed\": 10\n" +
+        "                }\n" +
+        "              }\n" +
+        "            ]\n" +
+        "          }\n" +
+        "        ],\n" +
+        "        \"id\": \"4401ac5dc8cfbbb737b0a02575ee3b58\"\n" +
+        "      },\n" +
+        "      {\n" +
+        "        \"customer\": \"indigo-dc\",\n" +
+        "        \"provider\": \"provider-RECAS-BARI\",\n" +
+        "        \"start_date\": \"11.01.2016+15:50:00\",\n" +
+        "        \"end_date\": \"11.02.2016+15:50:00\",\n" +
+        "        \"services\": [\n" +
+        "          {\n" +
+        "            \"type\": \"compute\",\n" +
+        "            \"service_id\": \"4401ac5dc8cfbbb737b0a02575e6f4bc\",\n" +
+        "            \"targets\": [\n" +
+        "              {\n" +
+        "                \"type\": \"computing_time\",\n" +
+        "                \"unit\": \"h\",\n" +
+        "                \"restrictions\": {\n" +
+        "                  \"total_guaranteed\": 200\n" +
+        "                }\n" +
+        "              }\n" +
+        "            ]\n" +
+        "          }\n" +
+        "        ],\n" +
+        "        \"id\": \"4401ac5dc8cfbbb737b0a02575ee53f6\"\n" +
+        "      }\n" +
+        "    ]\n" +
+        "  },\n" +
+        "  \"cloudProviders\": {\n" +
+        "    \"provider-RECAS-BARI\": {\n" +
+        "      \"id\": \"provider-RECAS-BARI\",\n" +
+        "      \"cmdbProviderData\": null,\n" +
+        "      \"cmdbProviderServices\": {\n" +
+        "        \"4401ac5dc8cfbbb737b0a02575e6f4bc\": null\n" +
+        "      },\n" +
+        "      \"cmdbProviderImages\": {}\n" +
+        "    },\n" +
+        "    \"provider-UPV-GRyCAP\": {\n" +
+        "      \"id\": \"provider-UPV-GRyCAP\",\n" +
+        "      \"cmdbProviderData\": null,\n" +
+        "      \"cmdbProviderServices\": {\n" +
+        "        \"4401ac5dc8cfbbb737b0a02575e81d9b\": null\n" +
+        "      },\n" +
+        "      \"cmdbProviderImages\": {}\n" +
+        "    }\n" +
+        "  },\n" +
+        "  \"cloudProvidersMonitoringData\": {},\n" +
+        "  \"rankedCloudProviders\": []\n" +
+        "}";
 
     Assertions
         .assertThatCode(() -> execute(serializedRankCloudProvidersMessage))

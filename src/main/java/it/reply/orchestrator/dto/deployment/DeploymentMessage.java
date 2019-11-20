@@ -64,6 +64,9 @@ public class DeploymentMessage extends BaseWorkflowMessage {
   }
 
   @Nullable
+  private QcgJobsOrderedIterator qcgJobsIterator;
+
+  @Nullable
   private ChronosJobsOrderedIterator chronosJobsIterator;
 
   private boolean createComplete;

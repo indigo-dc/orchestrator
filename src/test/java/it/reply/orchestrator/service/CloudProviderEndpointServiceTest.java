@@ -150,7 +150,7 @@ public class CloudProviderEndpointServiceTest {
     }
     assertThat(providersOrderedIterator.getSize()).isEqualTo(Math.min(3, maxCpRetries));
     assertThat(providersOrderedIterator.next().getCloudService().getId())
-        .isEqualTo("provider-1-service-2");
+        .isEqualTo("provider-1-service-1");
     if (maxCpRetries > 1) {
       assertThat(providersOrderedIterator.next().getCloudService().getId())
           .isEqualTo("provider-2-service-2");
@@ -158,7 +158,7 @@ public class CloudProviderEndpointServiceTest {
   }
 
   @Test
-  @Parameters({"MARATHON|1", "CHRONOS|1", "TOSCA|2"})
+  @Parameters({"MARATHON|2", "CHRONOS|2", "TOSCA|2"})
   public void chooseCloudProviderSuccesfulByDeploymentType(DeploymentType deploymentType,
       int expectedSized) {
     RankCloudProvidersMessage rcpm = new RankCloudProvidersMessage();
@@ -266,8 +266,8 @@ public class CloudProviderEndpointServiceTest {
         new Object[]{"eu.egi.cloud.vm-management.opennebula", true, IaaSType.OPENNEBULA, false},
         new Object[]{"eu.indigo-datacloud.im-tosca.opennebula", false, IaaSType.OPENNEBULA, true},
         new Object[]{"eu.indigo-datacloud.im-tosca.opennebula", true, IaaSType.OPENNEBULA, false},
-        new Object[]{"eu.egi.cloud.vm-management.openstack", false, IaaSType.OPENSTACK, false},
-        new Object[]{"eu.egi.cloud.vm-management.openstack", true, IaaSType.OPENSTACK, false},
+        new Object[]{"org.openstack.nova", false, IaaSType.OPENSTACK, false},
+        new Object[]{"org.openstack.nova", true, IaaSType.OPENSTACK, false},
         new Object[]{"eu.indigo-datacloud.marathon", false, IaaSType.MARATHON, false},
         new Object[]{"eu.indigo-datacloud.chronos", false, IaaSType.CHRONOS, false},
     };

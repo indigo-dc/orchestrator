@@ -38,6 +38,8 @@ public class MarathonApp extends MesosTask<MarathonApp> {
   @NonNull
   private Map<String, String> secrets = new HashMap<>();
 
+  private boolean enableHttps = false;
+
   @Override
   public final String getToscaNodeName() {
     return ToscaConstants.Nodes.Types.MARATHON;

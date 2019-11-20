@@ -43,7 +43,7 @@ public class MonitoringService {
   @NotNull
   private String serviceId;
 
-  @JsonProperty("parent_service_id")
+  @JsonProperty("service_parent_id")
   @Nullable
   private String parentServiceId;
 

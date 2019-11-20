@@ -19,12 +19,16 @@ package it.reply.orchestrator.service;
 import it.reply.orchestrator.config.properties.VaultProperties;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.exception.VaultJwtTokenExpiredException;
+import it.reply.orchestrator.exception.VaultServiceNotAvailableException;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 
 import java.net.URI;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -42,6 +46,7 @@ import org.springframework.web.client.RestTemplate;
 
 @Service
 @EnableConfigurationProperties(VaultProperties.class)
+@Slf4j
 public class VaultServiceImpl implements VaultService {
 
   private VaultProperties vaultProperties;
@@ -66,48 +71,77 @@ public class VaultServiceImpl implements VaultService {
     this.restTemplate = restTemplateBuilder.build();
   }
 
-  private VaultTemplate getTemplate(ClientAuthentication token) {
-    return new VaultTemplate(VaultEndpoint.create(
-        vaultProperties.getUrl(),
-        vaultProperties.getPort()),
-        token);
+  private URI getSystemVaultUri() {
+    return getServiceUri()
+        .orElseThrow(() -> new VaultServiceNotAvailableException());
+  }
+
+  @Override
+  public Optional<URI> getServiceUri() {
+    return Optional.ofNullable(vaultProperties.getUrl());
+  }
+
+  private VaultTemplate getTemplate(URI uri, ClientAuthentication token) {
+    return new VaultTemplate(VaultEndpoint.from(uri), token);
+  }
+
+  @Override
+  public VaultResponse writeSecret(URI uri, ClientAuthentication token, String path,
+      Object secret) {
+    return getTemplate(uri, token).write(path, secret);
   }
 
   @Override
   public VaultResponse writeSecret(ClientAuthentication token, String path, Object secret) {
-    return getTemplate(token).write(path, secret);
+    return this.writeSecret(getSystemVaultUri(), token, path, secret);
+  }
+
+  @Override
+  public <T> T readSecret(URI uri, ClientAuthentication token, String path, Class<T> type) {
+    return getTemplate(uri, token).read(path, type).getData();
   }
 
   @Override
   public <T> T readSecret(ClientAuthentication token, String path, Class<T> type) {
-    return getTemplate(token).read(path, type).getData();
+    return this.readSecret(getSystemVaultUri(), token, path, type);
+  }
+
+  @Override
+  public Map<String, Object> readSecret(URI uri, ClientAuthentication token, String path) {
+    return getTemplate(uri, token).read(path).getData();
   }
 
   @Override
   public Map<String, Object> readSecret(ClientAuthentication token, String path) {
-    return getTemplate(token).read(path).getData();
+    return this.readSecret(getSystemVaultUri(), token, path);
+  }
+
+  @Override
+  public void deleteSecret(URI uri, ClientAuthentication token, String path) {
+    getTemplate(uri, token).delete(path);
   }
 
   @Override
   public void deleteSecret(ClientAuthentication token, String path) {
-    getTemplate(token).delete(path);
+    this.deleteSecret(getSystemVaultUri(), token, path);
+  }
+
+  @Override
+  public List<String> listSecrets(URI uri, ClientAuthentication token, String path) {
+    return getTemplate(uri, token).list(path);
   }
 
   @Override
   public List<String> listSecrets(ClientAuthentication token, String path) {
-    return getTemplate(token).list(path);
+    return this.listSecrets(getSystemVaultUri(), token, path);
   }
 
   /**
-   * Retrieve the vault token from the IAM token.
+   * Retrieve the vault token from the IAM token using passed Vault server URI.
    */
   @Override
-  public TokenAuthentication retrieveToken(String accessToken) {
-    VaultEndpoint endpoint = VaultEndpoint.create(
-        vaultProperties.getUrl(),
-        vaultProperties.getPort());
-    URI uri = endpoint.createUri("auth/jwt/login");
-
+  public TokenAuthentication retrieveToken(URI uri, String accessToken) {
+    uri = VaultEndpoint.from(uri).createUri("auth/jwt/login");
     Map<String, String> login = new HashMap<>();
     login.put("jwt", accessToken);
     try {
@@ -118,9 +152,13 @@ public class VaultServiceImpl implements VaultService {
     } catch (HttpClientErrorException ex) {
       if (ex.getRawStatusCode() == 400) {
         String errorCause = VaultResponses.getError(ex.getResponseBodyAsString());
-        if (errorCause != null && errorCause.contains("token is expired")) {
-          throw new VaultJwtTokenExpiredException(
-              "Unable to retrieve token for Vault: IAM access token is expired");
+        if (errorCause != null) {
+          if (errorCause.contains("expired")) {
+            throw new VaultJwtTokenExpiredException(
+                "Unable to retrieve token for Vault: IAM access token is expired");
+          } else {
+            LOG.warn("Got response 400 with error cause:\n{}", errorCause);
+          }
         }
       }
       throw ex;
@@ -128,13 +166,30 @@ public class VaultServiceImpl implements VaultService {
   }
 
   /**
+   * Retrieve the vault token from the IAM token.
+   */
+  @Override
+  public TokenAuthentication retrieveToken(String accessToken) {
+    return retrieveToken(getSystemVaultUri(), accessToken);
+  }
+
+  /**
+   * Retrieve the vault token from the IAM token identifier using passed Vault server URI.
+   */
+  @Override
+  public TokenAuthentication retrieveToken(URI uri, OidcTokenId oidcTokenId) {
+    return oauth2TokenService.executeWithClientForResult(
+        oidcTokenId,
+        accessToken -> this.retrieveToken(uri, accessToken),
+        VaultJwtTokenExpiredException.class::isInstance);
+  }
+
+  /**
    * Retrieve the vault token from the IAM token identifier.
    */
   @Override
   public TokenAuthentication retrieveToken(OidcTokenId oidcTokenId) {
-    return oauth2TokenService.executeWithClientForResult(
-        oidcTokenId,
-        this::retrieveToken,
-        VaultJwtTokenExpiredException.class::isInstance);
+    return this.retrieveToken(getSystemVaultUri(), oidcTokenId);
   }
+
 }

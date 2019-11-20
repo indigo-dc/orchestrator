@@ -27,6 +27,7 @@ import it.reply.orchestrator.dto.cmdb.CloudServiceType;
 import it.reply.orchestrator.dto.cmdb.ComputeService;
 import it.reply.orchestrator.dto.cmdb.MarathonService;
 import it.reply.orchestrator.dto.cmdb.MesosFrameworkService;
+import it.reply.orchestrator.dto.cmdb.QcgService;
 import it.reply.orchestrator.dto.dynafed.Dynafed;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.policies.SlaPlacementPolicy;
@@ -134,6 +135,11 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
                       ChronosService chronosService = (ChronosService) cloudProviderService;
                       discardOnMesosGpuRequirement(ar, chronosService, servicesToDiscard);
                     } else {
+                      addServiceToDiscard(servicesToDiscard, cloudProviderService);
+                    }
+                    break;
+                  case QCG:
+                    if (!(cloudProviderService instanceof QcgService)) {
                       addServiceToDiscard(servicesToDiscard, cloudProviderService);
                     }
                     break;

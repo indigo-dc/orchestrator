@@ -16,28 +16,21 @@
 
 package it.reply.orchestrator.config.properties;
 
-import javax.validation.constraints.NotNull;
+import java.net.URI;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.validation.annotation.Validated;
 
-@Validated
 @Data
 @ConfigurationProperties(prefix = "vault")
 @NoArgsConstructor
 public class VaultProperties {
 
-  @NotNull
-  @NonNull
-  private String url;
-
-  @NotNull
-  @NonNull
-  private Integer port;
+  @Nullable
+  private URI url;
 
 }
 

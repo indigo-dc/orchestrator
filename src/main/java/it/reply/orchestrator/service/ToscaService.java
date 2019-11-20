@@ -259,6 +259,10 @@ public interface ToscaService {
 
   boolean isScalable(NodeTemplate nodeTemplate);
 
+  public ArchiveRoot setHybridDeployment(ArchiveRoot ar);
+
+  public ArchiveRoot setHybridUpdateDeployment(ArchiveRoot ar);
+
   public Map<NodeTemplate, Flavor> extractFlavorRequirements(ArchiveRoot parsingResult);
 
   public Map<Boolean, Map<NodeTemplate, Flavor>> contextualizeFlavors(ArchiveRoot parsingResult,
