@@ -54,7 +54,7 @@ The Orchestrator Docker image exposes the `8080 TCP` port; please remember to
 This is the list of additional parameters that allows to configure the orchestrator behavior.
 
  * `ORCHESTRATOR_URL`
-    * **Description**: Self reference to the orchestrator REST interface
+    * **Description**: Self reference to the Orchestrator REST interface
     * **Format**: http://{host}:{port}
     * **Default value**: http://localhost:8080
  * `IM_URL`
@@ -100,7 +100,7 @@ By default the REST APIs are not authenticated; if you want to enable the IAM in
  2. Retrieve the _**client id**_ and the _**client secret**_
  3. Retrieve the _**issuer**_ value of the IAM from its WebFinger endpoint `https://{iam-url}/.well-known/openid-configuration`
  4. Provide a file called `application.yml` and mount it (via docker bind-mounting) on `/orchestrator/application.yml`.
- Inside the file you need to provide the following configuration:
+    Inside the file you need to provide the following configuration:
 
      ```yaml
       oidc:
@@ -113,24 +113,28 @@ By default the REST APIs are not authenticated; if you want to enable the IAM in
            clues:
              client-id: '{client-id}'
              client-secret: '{client-secret}'
+           audience: '{audience-uuid}'
      ```
-    with, as parameters
-    * `oidc.enabled`
-       * **Description**: Determines if the OAuth2 authentication and authorization is enabled
-       * **Format**: `true` or `false`
-       * **Default value**: `false`
-    * `{issuer}`
-       * **Description**: The issuer value of the IAM to which the orchestrator has been registered
-       * **Default value**: `https://iam-test.indigo-datacloud.eu/`
-    * `orchestrator.client-id`
-       * **Description**: The Orchestrator OAuth2 client ID
-    * `orchestrator.client-secret`
-       * **Description**: The Orchestrator OAuth2 client secret
- 5. Additionally, if you have a Clues client registered in the IAM, you can configure the following parameters:
+     with, as parameters
+     * `oidc.enabled`
+        * **Description**: Determines if the OAuth2 authentication and authorization is enabled
+        * **Format**: `true` or `false`
+        * **Default value**: `false`
+     * `{issuer}`
+        * **Description**: The issuer value of the IAM to which the orchestrator has been registered
+        * **Default value**: `https://iam-test.indigo-datacloud.eu/`
+     * `orchestrator.client-id`
+        * **Description**: The Orchestrator OAuth2 client ID
+     * `orchestrator.client-secret`
+        * **Description**: The Orchestrator OAuth2 client secret
+     * `audience`
+       * **Description**: A freely generated string (e.g. a UUID) used to exchange tokens with Vault Server
+ 5. If you have a Clues client registered in the IAM, you can configure the following parameters:
     * `clues.client-id`
        * **Description**: The CLUES OAuth2 client ID
     * `clues.client-secret`
        * **Description**: The CLUES OAuth2 client secret
+
 
 Please make reference to the [IAM guide](https://indigo-dc.gitbooks.io/iam/content) for further information on how to register the Orchestrator as protected resource server.
 
@@ -157,3 +161,18 @@ To enable this functionality you need to configure the following parameters:
  * `ONEDATA_SERVICE_SPACE_BASE_FOLDER_PATH`
     * **Description**: The path (relative to the space one) to the folder that will host the files
     * **Default value**: `/`
+
+### Configure Vault (optional)
+The Orchestrator allows, during the deployment of a Marathon service, to use a Vault server for storing and exchanging passwords and other sensitive data through the use of 'secrets'. This functionality is optional; to enable it, you have to configure the Vault server endpoint using the following parameter:
+
+ * `VAULT_URL`
+    * **Description**: The Vault Service endpoint (if used)
+    * **Format**: http://{host}:{port}
+    * **Default value**: none
+    * **Example value**: https://vault.cloud.ba.infn.it:8200
+
+The Vault server has to provide the following configurations:
+- Key/Value Secrets Engine Version 1 enabled on path `secret/`;
+- JWT auth backend enabled and configured with IAM;
+- jwt role defined with the Orchestrator `audience` included in the `bound_audiences`;
+- policy which grants *write* capabilities to the path `secret/private`.

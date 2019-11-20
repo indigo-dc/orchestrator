@@ -359,6 +359,37 @@ public class DeploymentServiceTest {
   }
 
   @Test
+  public void createQcgDeploymentSuccessful() throws Exception {
+    DeploymentRequest deploymentRequest = DeploymentRequest
+        .builder()
+        .template("template")
+        .build();
+
+    String nodeName1 = "job1";
+    String nodeType = "tosca.nodes.indigo.Qcg.Job";
+
+    Map<String, NodeTemplate> nts = Maps.newHashMap();
+    NodeTemplate nt = new NodeTemplate();
+    nt.setType(nodeType);
+    nt.setName(nodeName1);
+    nts.put(nodeName1, nt);
+
+    Deployment returneDeployment = basecreateDeploymentSuccessful(deploymentRequest, nts);
+
+    assertThat(returneDeployment.getResources())
+        .extracting(Resource::getToscaNodeName)
+        .containsExactlyInAnyOrder(nodeName1);
+    assertThat(returneDeployment.getResources()).allSatisfy(resource -> {
+      assertThat(resource.getToscaNodeType()).isEqualTo(nodeType);
+    });
+
+    returneDeployment
+        .getResources()
+        .forEach(resource -> Mockito.verify(resourceRepository).save(resource));
+  }
+
+
+  @Test
   public void deleteDeploymentNotFound() throws Exception {
     Mockito.when(deploymentRepository.findOne("id")).thenReturn(null);
 

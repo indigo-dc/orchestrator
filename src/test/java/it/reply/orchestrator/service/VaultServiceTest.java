@@ -30,6 +30,7 @@ import static org.springframework.test.web.client.response.MockRestResponseCreat
 
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -84,11 +85,10 @@ public class VaultServiceTest {
   @Autowired
   private MockRestServiceServer mockServer;
 
-
   private ObjectMapper objectMapper;
 
-  private static final String defaultVaultEndpoint = "http://default.vault.com";
-  private static final int defaultVaultPort = 8200;
+  private static final String defaultVaultEndpoint = "https://default.vault.com:8200";
+  private static final String customVaultEndpoint = "https://custom.vault.com:8200";
   private static final String vaultToken = "s.DQSf698xaTFLtBCY9bG2QdhI";
   private static final String validAccessToken = "eyJhbGciOiJub25lIn0.eyJqdGkiOiI0Y2IyNGQ1Ny1kMzRkLTQxZDQtYmZiYy04NzFiN2I0MDRjZDAifQ.";
   private static final String expiredAccessToken = "eyJhbGciOiJub25lIn0.fyJqdGkiOiI0Y2IyNGQ1Ny1kMzRkLTQxZDQtYmZiYy04NzFiN2I0MDRjZDAifQ.";
@@ -100,22 +100,24 @@ public class VaultServiceTest {
   private static final OidcTokenId oidcTokenId = new OidcTokenId();
   private static final OidcTokenId expiredOidcTokenId = new OidcTokenId();
 
+  private URI defaultVaultUri;
+  private URI customVaultUri;
+
   @SuppressWarnings({ "unchecked", "rawtypes" })
   @Before
   public void setup() throws Exception {
-    vaultProperties.setUrl(defaultVaultEndpoint);
-    vaultProperties.setPort(defaultVaultPort);
     objectMapper = new ObjectMapper();
+    defaultVaultUri = new URI(defaultVaultEndpoint);
+    vaultProperties.setUrl(defaultVaultUri);
+    customVaultUri = new URI(customVaultEndpoint);
 
     OidcEntityId validoidc = new OidcEntityId();
     validoidc.setSubject(validsubject);
     oidcTokenId.setOidcEntityId(validoidc);
 
-
     OidcEntityId expiredidc = new OidcEntityId();
     expiredidc.setSubject(expiredsubject);
     expiredOidcTokenId.setOidcEntityId(expiredidc);
-
 
     when(oauth2TokenService
         .executeWithClientForResult(eq(oidcTokenId), any(), any()))
@@ -124,14 +126,18 @@ public class VaultServiceTest {
     when(oauth2TokenService
         .executeWithClientForResult(eq(expiredOidcTokenId), any(), any()))
             .then(a -> ((ThrowingFunction) a.getArguments()[1]).apply(expiredAccessToken));
+
+  }
+
+  private URI buildEndpoint(URI baseUri) {
+    VaultEndpoint endpoint = VaultEndpoint.from(
+        baseUri);
+      URI uri = endpoint.createUri("auth/jwt/login");
+      return uri;
   }
 
   private URI buildEndpoint() {
-    VaultEndpoint endpoint = VaultEndpoint.create(
-        vaultProperties.getUrl(),
-        vaultProperties.getPort());
-      URI uri = endpoint.createUri("auth/jwt/login");
-      return uri;
+    return this.buildEndpoint(vaultProperties.getUrl());
   }
 
   private Map<String, String> buildLogin(String token) {
@@ -148,8 +154,13 @@ public class VaultServiceTest {
     return response;
   }
 
+  private void setEndpoint() throws  URISyntaxException {
+    vaultProperties.setUrl(new URI(defaultVaultEndpoint));
+  }
+
   @Test
-  public void testSuccessRetrieveTokenString() throws IOException {
+  public void testSuccessRetrieveTokenString() throws IOException, URISyntaxException {
+    setEndpoint();
     //mock server
     mockServer
     .expect(once(), requestTo(buildEndpoint().toString()))
@@ -167,7 +178,26 @@ public class VaultServiceTest {
   }
 
   @Test
-  public void testExpiredRetrieveTokenString() throws IOException {
+  public void testSuccessUriRetrieveTokenString() throws IOException, URISyntaxException {
+    //mock server
+    mockServer
+    .expect(once(), requestTo(buildEndpoint(customVaultUri).toString()))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(content()
+            .string(objectMapper.writeValueAsString(buildLogin(validAccessToken))))
+        .andRespond(
+          withSuccess(JsonUtils.serialize(buildVaultResponse()),
+              MediaType.APPLICATION_JSON_UTF8));
+    //do test
+    assertThat(vaultService.retrieveToken(customVaultUri, validAccessToken).login().getToken())
+      .isEqualTo(vaultToken);
+
+    mockServer.verify();
+  }
+
+  @Test
+  public void testExpiredRetrieveTokenString() throws IOException, URISyntaxException {
+    setEndpoint();
     //mock server
     mockServer
         .expect(once(), requestTo(buildEndpoint().toString()))
@@ -184,7 +214,25 @@ public class VaultServiceTest {
   }
 
   @Test
-  public void testHttpErrorRetrieveTokenString()  throws IOException {
+  public void testExpiredUriRetrieveTokenString() throws IOException, URISyntaxException {
+    //mock server
+    mockServer
+        .expect(once(), requestTo(buildEndpoint(customVaultUri).toString()))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(content()
+            .string(objectMapper.writeValueAsString(buildLogin(expiredAccessToken))))
+        .andRespond(withBadRequest().body("token is expired"));
+    // do test
+    assertThatThrownBy(
+      () -> vaultService.retrieveToken(customVaultUri, expiredAccessToken))
+      .isInstanceOf(VaultJwtTokenExpiredException.class);
+
+    mockServer.verify();
+  }
+
+  @Test
+  public void testHttpErrorRetrieveTokenString() throws IOException, URISyntaxException {
+    setEndpoint();
     //mock server
     mockServer
         .expect(once(), requestTo(buildEndpoint().toString()))
@@ -201,7 +249,8 @@ public class VaultServiceTest {
   }
 
   @Test
-  public void testSuccessRetrieveTokenOidc() throws JsonProcessingException {
+  public void testSuccessRetrieveTokenOidc() throws JsonProcessingException, URISyntaxException {
+    setEndpoint();
     //mock server
     mockServer
         .expect(once(), requestTo(buildEndpoint().toString()))
@@ -219,7 +268,26 @@ public class VaultServiceTest {
   }
 
   @Test
-  public void testExpiredRetrieveTokenOidc() throws JsonProcessingException {
+  public void testSuccessUriRetrieveTokenOidc() throws JsonProcessingException, URISyntaxException {
+    //mock server
+    mockServer
+        .expect(once(), requestTo(buildEndpoint(customVaultUri).toString()))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(content()
+            .string(objectMapper.writeValueAsString(buildLogin(validAccessToken))))
+        .andRespond(
+          withSuccess(JsonUtils.serialize(buildVaultResponse()),
+              MediaType.APPLICATION_JSON_UTF8));
+    //do test
+    assertThat(vaultService.retrieveToken(customVaultUri, oidcTokenId).login().getToken())
+      .isEqualTo(vaultToken);
+
+    mockServer.verify();
+  }
+
+  @Test
+  public void testExpiredRetrieveTokenOidc() throws JsonProcessingException, URISyntaxException {
+    setEndpoint();
     //mock server
     mockServer
         .expect(once(), requestTo(buildEndpoint().toString()))
@@ -231,6 +299,24 @@ public class VaultServiceTest {
     //do test
     assertThatThrownBy(
         () -> vaultService.retrieveToken(expiredOidcTokenId))
+        .isInstanceOf(VaultJwtTokenExpiredException.class);
+
+    mockServer.verify();
+  }
+
+  @Test
+  public void testExpiredUriRetrieveTokenOidc() throws JsonProcessingException, URISyntaxException {
+    //mock server
+    mockServer
+        .expect(once(), requestTo(buildEndpoint(customVaultUri).toString()))
+        .andExpect(method(HttpMethod.POST))
+        .andExpect(content()
+            .string(objectMapper.writeValueAsString(buildLogin(expiredAccessToken))))
+        .andRespond(withBadRequest().body("token is expired"));
+
+    //do test
+    assertThatThrownBy(
+        () -> vaultService.retrieveToken(customVaultUri, expiredOidcTokenId))
         .isInstanceOf(VaultJwtTokenExpiredException.class);
 
     mockServer.verify();

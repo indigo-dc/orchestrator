@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,7 +75,6 @@ public abstract class BaseJavaDelegate implements JavaDelegate {
 
   protected abstract void customExecute(DelegateExecution execution);
 
-  @SuppressWarnings("unchecked")
   protected <C> Optional<C> getOptionalParameter(DelegateExecution execution,
       String parameterName, Class<C> clazz) {
     Object variable = execution.getVariable(parameterName, false);

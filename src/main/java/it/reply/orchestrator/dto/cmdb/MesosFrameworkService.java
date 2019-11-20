@@ -38,6 +38,29 @@ public class MesosFrameworkService<T extends MesosFrameworkServiceProperties> ex
   @NotNull
   private T properties;
 
+  /**
+   * Create a new MesosFrameworkService.
+   * @param id
+   *     the id of the service
+   * @param serviceType
+   *     the serviceType of the service
+   * @param endpoint
+   *     the endpoint of the service
+   * @param providerId
+   *     the providerId of the service
+   * @param type
+   *     the type of the service
+   * @param publicService
+   *     the publicService of the service
+   * @param region
+   *     the region of the service
+   * @param hostname
+   *     the hostname of the service
+   * @param parentServiceId
+   *     the parentServiceId of the service
+   * @param properties
+   *     the properties of the service
+   */
   public MesosFrameworkService(
       @NonNull String id,
       @NonNull String serviceType,
@@ -47,8 +70,10 @@ public class MesosFrameworkService<T extends MesosFrameworkServiceProperties> ex
       boolean publicService,
       @Nullable String region,
       @NonNull String hostname,
+      @Nullable String parentServiceId,
       @NonNull T properties) {
-    super(id, serviceType, endpoint, providerId, type, publicService, region, hostname);
+    super(id, serviceType, endpoint, providerId, type, publicService, region, hostname,
+            parentServiceId);
     this.properties = properties;
   }
 }

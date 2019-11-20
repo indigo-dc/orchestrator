@@ -101,7 +101,7 @@ public class GetProvidersRank extends BaseRankCloudProvidersCommand {
         .getFromOptionalMap(rankCloudProvidersMessage.getCloudProviders(), providerId)
         .map(CloudProvider::getServices)
         .map(cloudServices -> cloudServices.get(serviceId))
-        .map(CloudService::getId)
+        .map(CloudService::getParentServiceId)
         .orElse(null);
     List<PaaSMetric> metrics = paasMachine
         .getServices()

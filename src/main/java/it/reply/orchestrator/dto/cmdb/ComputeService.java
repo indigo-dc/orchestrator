@@ -82,9 +82,11 @@ public class ComputeService extends CloudService {
       boolean publicService,
       @Nullable String region,
       @NonNull String hostname,
+      @Nullable String parentServiceId,
       @NonNull List<Image> images,
       @NonNull List<Flavor> flavors) {
-    super(id, serviceType, endpoint, providerId, type, publicService, region, hostname);
+    super(id, serviceType, endpoint, providerId, type, publicService, region, hostname,
+            parentServiceId);
     this.images = CommonUtils.notNullOrDefaultValue(images, ArrayList::new);
     this.flavors = CommonUtils.notNullOrDefaultValue(flavors, ArrayList::new);
   }

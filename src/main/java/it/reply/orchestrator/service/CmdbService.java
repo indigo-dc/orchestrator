@@ -20,6 +20,7 @@ import it.reply.orchestrator.dto.cmdb.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.Flavor;
 import it.reply.orchestrator.dto.cmdb.Image;
+import it.reply.orchestrator.dto.cmdb.Tenant;
 
 import java.util.List;
 import java.util.Set;
@@ -32,14 +33,21 @@ public interface CmdbService {
 
   public CloudService getServiceById(String id);
 
-  public List<Image> getImagesByService(String serviceId);
+  public List<Image> getImagesByTenant(String tenantId);
 
   public Image getImageById(String imageId);
 
-  public List<Flavor> getFlavorsByService(String serviceId);
+  public List<Flavor> getFlavorsByTenant(String tenantId);
+
+  public List<Tenant> getTenantsByService(String serviceId);
+
+  public List<Tenant> getTenantsByOrganisation(String organisationId);
+
+  public Tenant getTenantById(String tenantId);
 
   public Flavor getFlavorById(String flavorId);
 
-  public CloudProvider fillCloudProviderInfo(String providerId, Set<String> servicesWithSla);
+  public CloudProvider fillCloudProviderInfo(String providerId,
+      Set<String> servicesWithSla, String organisation);
 
 }

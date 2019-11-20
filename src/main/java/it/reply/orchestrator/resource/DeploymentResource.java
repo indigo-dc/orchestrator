@@ -64,6 +64,9 @@ public class DeploymentResource extends AbstractResource {
   private String cloudProviderName;
 
   @Nullable
+  private CloudProviderEndpointResource cloudProviderEndpoint;
+
+  @Nullable
   private OidcEntityId createdBy;
 
   @Builder
@@ -71,6 +74,7 @@ public class DeploymentResource extends AbstractResource {
       @Nullable Date updateTime, @Nullable String physicalId, @Nullable Status status,
       @Nullable String statusReason, @Nullable Map<String, Object> outputs, @Nullable Task task,
       @Nullable String callback, @Nullable String cloudProviderName,
+      @Nullable CloudProviderEndpointResource cloudProviderEndpoint,
       @Nullable OidcEntityId createdBy) {
     super(uuid, creationTime, updateTime, physicalId);
     this.status = status;
@@ -79,6 +83,7 @@ public class DeploymentResource extends AbstractResource {
     this.task = task;
     this.callback = callback;
     this.cloudProviderName = cloudProviderName;
+    this.cloudProviderEndpoint = cloudProviderEndpoint;
     this.createdBy = createdBy;
   }
 

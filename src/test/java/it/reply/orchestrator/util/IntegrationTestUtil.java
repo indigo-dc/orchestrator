@@ -34,7 +34,78 @@ public class IntegrationTestUtil {
 
   public static void mockSlam(MockRestServiceServer mockServer, URI baseUrl) throws Exception {
     String response =
-        "{\"preferences\":[{\"customer\":\"indigo-dc\",\"preferences\":[{\"service_type\":\"compute\",\"priority\":[{\"sla_id\":\"4401ac5dc8cfbbb737b0a02575ee53f6\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e81d9b\",\"weight\":0.5},{\"sla_id\":\"4401ac5dc8cfbbb737b0a02575ee3b58\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"weight\":0.5}]}],\"id\":\"4401ac5dc8cfbbb737b0a02575ee0e55\"}],\"sla\":[{\"customer\":\"indigo-dc\",\"provider\":\"provider-UPV-GRyCAP\",\"start_date\":\"11.01.2016+15:50:00\",\"end_date\":\"11.02.2016+15:50:00\",\"services\":[{\"type\":\"compute\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e81d9b\",\"targets\":[{\"type\":\"public_ip\",\"unit\":\"none\",\"restrictions\":{\"total_limit\":100,\"total_guaranteed\":10}}]}],\"id\":\"4401ac5dc8cfbbb737b0a02575ee3b58\"},{\"customer\":\"indigo-dc\",\"provider\":\"provider-RECAS-BARI\",\"start_date\":\"11.01.2016+15:50:00\",\"end_date\":\"11.02.2016+15:50:00\",\"services\":[{\"type\":\"compute\",\"service_id\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"targets\":[{\"type\":\"computing_time\",\"unit\":\"h\",\"restrictions\":{\"total_guaranteed\":200}}]}],\"id\":\"4401ac5dc8cfbbb737b0a02575ee53f6\"}]}";
+        "{\n" +
+        "  \"preferences\": [\n" +
+        "    {\n" +
+        "      \"customer\": \"indigo-dc\",\n" +
+        "      \"preferences\": [\n" +
+        "        {\n" +
+        "          \"service_type\": \"compute\",\n" +
+        "          \"priority\": [\n" +
+        "            {\n" +
+        "              \"sla_id\": \"4401ac5dc8cfbbb737b0a02575ee53f6\",\n" +
+        "              \"service_id\": \"4401ac5dc8cfbbb737b0a02575e81d9b\",\n" +
+        "              \"weight\": 0.5\n" +
+        "            },\n" +
+        "            {\n" +
+        "              \"sla_id\": \"4401ac5dc8cfbbb737b0a02575ee3b58\",\n" +
+        "              \"service_id\": \"4401ac5dc8cfbbb737b0a02575e6f4bc\",\n" +
+        "              \"weight\": 0.5\n" +
+        "            }\n" +
+        "          ]\n" +
+        "        }\n" +
+        "      ],\n" +
+        "      \"id\": \"4401ac5dc8cfbbb737b0a02575ee0e55\"\n" +
+        "    }\n" +
+        "  ],\n" +
+        "  \"sla\": [\n" +
+        "    {\n" +
+        "      \"customer\": \"indigo-dc\",\n" +
+        "      \"provider\": \"provider-UPV-GRyCAP\",\n" +
+        "      \"start_date\": \"11.01.2016+15:50:00\",\n" +
+        "      \"end_date\": \"11.02.2016+15:50:00\",\n" +
+        "      \"services\": [\n" +
+        "        {\n" +
+        "          \"type\": \"compute\",\n" +
+        "          \"service_id\": \"4401ac5dc8cfbbb737b0a02575e81d9b\",\n" +
+        "          \"targets\": [\n" +
+        "            {\n" +
+        "              \"type\": \"public_ip\",\n" +
+        "              \"unit\": \"none\",\n" +
+        "              \"restrictions\": {\n" +
+        "                \"total_limit\": 100,\n" +
+        "                \"total_guaranteed\": 10\n" +
+        "              }\n" +
+        "            }\n" +
+        "          ]\n" +
+        "        }\n" +
+        "      ],\n" +
+        "      \"id\": \"4401ac5dc8cfbbb737b0a02575ee3b58\"\n" +
+        "    },\n" +
+        "    {\n" +
+        "      \"customer\": \"indigo-dc\",\n" +
+        "      \"provider\": \"provider-RECAS-BARI\",\n" +
+        "      \"start_date\": \"11.01.2016+15:50:00\",\n" +
+        "      \"end_date\": \"11.02.2016+15:50:00\",\n" +
+        "      \"services\": [\n" +
+        "        {\n" +
+        "          \"type\": \"compute\",\n" +
+        "          \"service_id\": \"4401ac5dc8cfbbb737b0a02575e6f4bc\",\n" +
+        "          \"targets\": [\n" +
+        "            {\n" +
+        "              \"type\": \"computing_time\",\n" +
+        "              \"unit\": \"h\",\n" +
+        "              \"restrictions\": {\n" +
+        "                \"total_guaranteed\": 200\n" +
+        "              }\n" +
+        "            }\n" +
+        "          ]\n" +
+        "        }\n" +
+        "      ],\n" +
+        "      \"id\": \"4401ac5dc8cfbbb737b0a02575ee53f6\"\n" +
+        "    }\n" +
+        "  ]\n" +
+        "}";
 
     mockServer.expect(requestTo(baseUrl + "/preferences/indigo-dc"))
         .andExpect(method(HttpMethod.GET))
@@ -46,7 +117,21 @@ public class IntegrationTestUtil {
     mockServer.expect(requestTo(baseUrl + "/provider/id/provider-RECAS-BARI?include_docs=true"))
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess(
-            "{\"_id\":\"provider-RECAS-BARI\",\"_rev\":\"1-c7dbe4d8be30aa4c0f14d3ad0411d962\",\"data\":{\"id\":\"476\",\"primary_key\":\"83757G0\",\"name\":\"RECAS-BARI\",\"country\":\"Italy\",\"country_code\":\"IT\",\"roc\":\"NGI_IT\",\"subgrid\":\"\",\"giis_url\":\"ldap://cloud-bdii.recas.ba.infn.it:2170/GLUE2DomainID=RECAS-BARI,o=glue\"},\"type\":\"provider\"}",
+            "{\n" +
+            "  \"_id\": \"provider-RECAS-BARI\",\n" +
+            "  \"_rev\": \"1-c7dbe4d8be30aa4c0f14d3ad0411d962\",\n" +
+            "  \"data\": {\n" +
+            "    \"id\": \"476\",\n" +
+            "    \"primary_key\": \"83757G0\",\n" +
+            "    \"name\": \"RECAS-BARI\",\n" +
+            "    \"country\": \"Italy\",\n" +
+            "    \"country_code\": \"IT\",\n" +
+            "    \"roc\": \"NGI_IT\",\n" +
+            "    \"subgrid\": \"\",\n" +
+            "    \"giis_url\": \"ldap://cloud-bdii.recas.ba.infn.it:2170/GLUE2DomainID=RECAS-BARI,o=glue\"\n" +
+            "  },\n" +
+            "  \"type\": \"provider\"\n" +
+            "}",
             MediaType.APPLICATION_JSON));
 
     // Service: Compute on provider-RECAS-BARI
@@ -55,32 +140,397 @@ public class IntegrationTestUtil {
             baseUrl + "/provider/id/provider-RECAS-BARI/has_many/services?include_docs=true"))
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess(
-            "{\"total_rows\":60,\"offset\":49,\"rows\":[{\"id\":\"4401ac5dc8cfbbb737b0a025758cfd60\",\"key\":[\"provider-RECAS-BARI\",\"services\"],\"value\":{\"sitename\":\"RECAS-BARI\",\"provider_id\":\"provider-RECAS-BARI\",\"hostname\":\"cloud.recas.ba.infn.it\",\"type\":\"compute\"},\"doc\":{\"_id\":\"4401ac5dc8cfbbb737b0a025758cfd60\",\"_rev\":\"2-6540bc334d76090c53399c7bd5bc0aae\",\"data\":{\"primary_key\":\"8015G0\",\"hostname\":\"cloud.recas.ba.infn.it\",\"gocdb_portal_url\":\"https://goc.egi.eu/portal/index.php?Page_Type=Service&id=8015\",\"hostdn\":\"/C=IT/O=INFN/OU=Host/L=Bari/CN=cloud.recas.ba.infn.it\",\"beta\":\"N\",\"service_type\":\"eu.egi.cloud.vm-management.occi\",\"core\":null,\"in_production\":\"Y\",\"node_monitored\":\"Y\",\"sitename\":\"RECAS-BARI\",\"country_name\":\"Italy\",\"country_code\":\"IT\",\"roc_name\":\"NGI_IT\",\"scopes\":{\"scope\":[\"EGI\",\"wlcg\",\"lhcb\"]},\"extensions\":null,\"type\":\"compute\",\"provider_id\":\"provider-RECAS-BARI\",\"endpoint\":\"http://cloud.recas.ba.infn.it:8787/occi\"},\"type\":\"service\"}},{\"id\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"key\":[\"provider-RECAS-BARI\",\"services\"],\"value\":{\"provider_id\":\"provider-RECAS-BARI\",\"type\":\"compute\"},\"doc\":{\"_id\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"_rev\":\"1-256d36283315ea9bb045e6d5038657b6\",\"data\":{\"service_type\":\"eu.egi.cloud.vm-management.openstack\",\"endpoint\":\"http://cloud.recas.ba.infn.it:5000/v2.0\",\"provider_id\":\"provider-RECAS-BARI\",\"type\":\"compute\"},\"type\":\"service\"}},{\"id\":\"7efc59c5db69ea67c5100de0f73ab567\",\"key\":[\"provider-RECAS-BARI\",\"services\"],\"value\":{\"provider_id\":\"provider-RECAS-BARI\",\"type\":\"storage\"},\"doc\":{\"_id\":\"7efc59c5db69ea67c5100de0f73ab567\",\"_rev\":\"4-6e2921c359fb76118616e26c7de76397\",\"data\":{\"service_type\":\"eu.egi.cloud.storage-management.oneprovider\",\"endpoint\":\"E1u8A4FgR6C1UgbD2JOoP9OQIG43q-zDsXkx1PoaaI4\",\"provider_id\":\"provider-RECAS-BARI\",\"type\":\"storage\"},\"type\":\"service\"}}]}",
+            "{\n" +
+            "  \"total_rows\": 60,\n" +
+            "  \"offset\": 49,\n" +
+            "  \"rows\": [\n" +
+            "    {\n" +
+            "      \"id\": \"4401ac5dc8cfbbb737b0a025758cfd60\",\n" +
+            "      \"key\": [\n" +
+            "        \"provider-RECAS-BARI\",\n" +
+            "        \"services\"\n" +
+            "      ],\n" +
+            "      \"value\": {\n" +
+            "        \"sitename\": \"RECAS-BARI\",\n" +
+            "        \"provider_id\": \"provider-RECAS-BARI\",\n" +
+            "        \"hostname\": \"cloud.recas.ba.infn.it\",\n" +
+            "        \"type\": \"compute\"\n" +
+            "      },\n" +
+            "      \"doc\": {\n" +
+            "        \"_id\": \"4401ac5dc8cfbbb737b0a025758cfd60\",\n" +
+            "        \"_rev\": \"2-6540bc334d76090c53399c7bd5bc0aae\",\n" +
+            "        \"data\": {\n" +
+            "          \"primary_key\": \"8015G0\",\n" +
+            "          \"hostname\": \"cloud.recas.ba.infn.it\",\n" +
+            "          \"gocdb_portal_url\": \"https://goc.egi.eu/portal/index.php?Page_Type=Service&id=8015\",\n" +
+            "          \"hostdn\": \"/C=IT/O=INFN/OU=Host/L=Bari/CN=cloud.recas.ba.infn.it\",\n" +
+            "          \"beta\": \"N\",\n" +
+            "          \"service_type\": \"eu.egi.cloud.vm-management.occi\",\n" +
+            "          \"core\": null,\n" +
+            "          \"in_production\": \"Y\",\n" +
+            "          \"node_monitored\": \"Y\",\n" +
+            "          \"sitename\": \"RECAS-BARI\",\n" +
+            "          \"country_name\": \"Italy\",\n" +
+            "          \"country_code\": \"IT\",\n" +
+            "          \"roc_name\": \"NGI_IT\",\n" +
+            "          \"scopes\": {\n" +
+            "            \"scope\": [\n" +
+            "              \"EGI\",\n" +
+            "              \"wlcg\",\n" +
+            "              \"lhcb\"\n" +
+            "            ]\n" +
+            "          },\n" +
+            "          \"extensions\": null,\n" +
+            "          \"type\": \"compute\",\n" +
+            "          \"provider_id\": \"provider-RECAS-BARI\",\n" +
+            "          \"endpoint\": \"http://cloud.recas.ba.infn.it:8787/occi\"\n" +
+            "        },\n" +
+            "        \"type\": \"service\"\n" +
+            "      }\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"id\": \"4401ac5dc8cfbbb737b0a02575e6f4bc\",\n" +
+            "      \"key\": [\n" +
+            "        \"provider-RECAS-BARI\",\n" +
+            "        \"services\"\n" +
+            "      ],\n" +
+            "      \"value\": {\n" +
+            "        \"provider_id\": \"provider-RECAS-BARI\",\n" +
+            "        \"type\": \"compute\"\n" +
+            "      },\n" +
+            "      \"doc\": {\n" +
+            "        \"_id\": \"4401ac5dc8cfbbb737b0a02575e6f4bc\",\n" +
+            "        \"_rev\": \"1-256d36283315ea9bb045e6d5038657b6\",\n" +
+            "        \"data\": {\n" +
+            "          \"service_type\": \"org.openstack.nova\",\n" +
+            "          \"endpoint\": \"http://cloud.recas.ba.infn.it:5000/v2.0\",\n" +
+            "          \"provider_id\": \"provider-RECAS-BARI\",\n" +
+            "          \"type\": \"compute\"\n" +
+            "        },\n" +
+            "        \"type\": \"service\"\n" +
+            "      }\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"id\": \"7efc59c5db69ea67c5100de0f73ab567\",\n" +
+            "      \"key\": [\n" +
+            "        \"provider-RECAS-BARI\",\n" +
+            "        \"services\"\n" +
+            "      ],\n" +
+            "      \"value\": {\n" +
+            "        \"provider_id\": \"provider-RECAS-BARI\",\n" +
+            "        \"type\": \"storage\"\n" +
+            "      },\n" +
+            "      \"doc\": {\n" +
+            "        \"_id\": \"7efc59c5db69ea67c5100de0f73ab567\",\n" +
+            "        \"_rev\": \"4-6e2921c359fb76118616e26c7de76397\",\n" +
+            "        \"data\": {\n" +
+            "          \"service_type\": \"eu.egi.cloud.storage-management.oneprovider\",\n" +
+            "          \"endpoint\": \"E1u8A4FgR6C1UgbD2JOoP9OQIG43q-zDsXkx1PoaaI4\",\n" +
+            "          \"provider_id\": \"provider-RECAS-BARI\",\n" +
+            "          \"type\": \"storage\"\n" +
+            "        },\n" +
+            "        \"type\": \"service\"\n" +
+            "      }\n" +
+            "    }\n" +
+            "  ]\n" +
+            "}",
             MediaType.APPLICATION_JSON));
 
-    // Images: Compute service on provider-RECAS-BARI
+    // Tenants: Compute service on provider-RECAS-BARI
     mockServer
         .expect(requestTo(baseUrl
-            + "/service/id/4401ac5dc8cfbbb737b0a02575e6f4bc/has_many/images?include_docs=true"))
+            + "/service/id/4401ac5dc8cfbbb737b0a02575e6f4bc/has_many/tenants?include_docs=true"))
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess(
-            "{\n  \"total_rows\": 44,\n  \"offset\": 3,\n  \"rows\": [\n    {\n      \"id\": \"7efc59c5db69ea67c5100de0f726d41e\",\n      \"key\": [\n        \"4401ac5dc8cfbbb737b0a02575e6f4bc\",\n        \"images\"\n      ],\n      \"value\": {\n        \"image_id\": \"303d8324-69a7-4372-be24-1d68703affd7\",\n        \"image_name\": \"indigodatacloud/ubuntu-sshd:14.04-devel\",\n        \"service\": \"4401ac5dc8cfbbb737b0a02575e6f4bc\"\n      },\n      \"doc\": {\n        \"_id\": \"7efc59c5db69ea67c5100de0f726d41e\",\n        \"_rev\": \"1-583b38e80f989b7f39b8ddd5d28c4c76\",\n        \"type\": \"image\",\n        \"data\": {\n          \"image_id\": \"303d8324-69a7-4372-be24-1d68703affd7\",\n          \"image_name\": \"indigodatacloud/ubuntu-sshd:14.04-devel\",\n          \"architecture\": \"x86_64\",\n          \"type\": \"linux\",\n          \"distribution\": \"ubuntu\",\n          \"version\": \"14.04\",\n          \"service\": \"4401ac5dc8cfbbb737b0a02575e6f4bc\"\n        }\n      }\n    },\n    {\n      \"id\": \"7efc59c5db69ea67c5100de0f726e0a0\",\n      \"key\": [\n        \"4401ac5dc8cfbbb737b0a02575e6f4bc\",\n        \"images\"\n      ],\n      \"value\": {\n        \"image_id\": \"0de96743-4a12-4470-b8b2-6dc260977a40\",\n        \"image_name\": \"indigodatacloud/centos-sshd:7-devel\",\n        \"service\": \"4401ac5dc8cfbbb737b0a02575e6f4bc\"\n      },\n      \"doc\": {\n        \"_id\": \"7efc59c5db69ea67c5100de0f726e0a0\",\n        \"_rev\": \"1-948dae5f4b7e1096036af3f0cca37f89\",\n        \"type\": \"image\",\n        \"data\": {\n          \"image_id\": \"0de96743-4a12-4470-b8b2-6dc260977a40\",\n          \"image_name\": \"indigodatacloud/centos-sshd:7-devel\",\n          \"architecture\": \"x86_64\",\n          \"type\": \"linux\",\n          \"distribution\": \"centos\",\n          \"version\": \"7\",\n          \"service\": \"4401ac5dc8cfbbb737b0a02575e6f4bc\"\n        }\n      }\n    }\n  ]\n}",
+            "{\n" +
+            "  \"total_rows\": 264,\n" +
+            "  \"offset\": 263,\n" +
+            "  \"rows\": [\n" +
+            "    {\n" +
+            "      \"id\": \"8a5377c6-a7f4-4d1c-a4cd-074ab92b6035\",\n" +
+            "      \"key\": [\n" +
+            "        \"RECAS-BARI_6be36515-aa38-44ec-905e-be9df893bd95\",\n" +
+            "        \"tenants\"\n" +
+            "      ],\n" +
+            "      \"value\": {\n" +
+            "        \"tenant_id\": \"78d9ecb64353402bb621b569891c633a\",\n" +
+            "        \"tenant_name\": \"DEEP_DEMO\",\n" +
+            "        \"service\": \"RECAS-BARI_6be36515-aa38-44ec-905e-be9df893bd95\",\n" +
+            "        \"iam_organisation\": \"deep-hdc\"\n" +
+            "      },\n" +
+            "      \"doc\": {\n" +
+            "        \"_id\": \"8a5377c6-a7f4-4d1c-a4cd-074ab92b6035\",\n" +
+            "        \"_rev\": \"32-2d1d8159db1d9e5361e6b537644054e5\",\n" +
+            "        \"type\": \"tenant\",\n" +
+            "        \"data\": {\n" +
+            "          \"iam_organisation\": \"deep-hdc\",\n" +
+            "          \"tenant_id\": \"78d9ecb64353402bb621b569891c633a\",\n" +
+            "          \"service\": \"RECAS-BARI_6be36515-aa38-44ec-905e-be9df893bd95\",\n" +
+            "          \"tenant_name\": \"DEEP_DEMO\"\n" +
+            "        }\n" +
+            "      }\n" +
+            "    }\n" +
+            "  ]\n" +
+            "}",
             MediaType.APPLICATION_JSON));
 
-    // Flavor: Compute service on provider-RECAS-BARI
+    // Tenants: Organization 8a5377c6-a7f4-4d1c-a4cd-074ab92b6035
     mockServer
         .expect(requestTo(baseUrl
-            + "/service/id/4401ac5dc8cfbbb737b0a02575e6f4bc/has_many/flavors?include_docs=true"))
+            + "/tenant/filters/iam_organisation/8a5377c6-a7f4-4d1c-a4cd-074ab92b6035?include_docs=true"))
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess(
-            "{\"total_rows\":147,\"offset\":0,\"rows\":[{\"id\":\"5f94fc673a476e2a9fa63c713000b45b\",\"key\":[\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"flavors\"],\"value\":{\"flavor_id\":\"7\",\"flavor_name\":\"small\",\"service\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\"},\"doc\":{\"_id\":\"5f94fc673a476e2a9fa63c713000b45b\",\"_rev\":\"1-0de347bde54f5dc2fe44606fc42553f7\",\"type\":\"flavor\",\"data\":{\"gpu_vendor\":null,\"service\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"num_gpus\":0,\"tenant_id\":\"5f94fc673a476e2a9fa63c713000acda\",\"ram\":2048,\"num_vcpus\":1,\"flavor_id\":\"7\",\"tenant_name\":\"DEEP_DEMO\",\"gpu_model\":null,\"disk\":20,\"flavor_name\":\"small\"}}},{\"id\":\"5f94fc673a476e2a9fa63c713000bd0f\",\"key\":[\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"flavors\"],\"value\":{\"flavor_id\":\"8\",\"flavor_name\":\"medium\",\"service\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\"},\"doc\":{\"_id\":\"5f94fc673a476e2a9fa63c713000bd0f\",\"_rev\":\"1-ab7cd100475d996cac5cb078e8579f1a\",\"type\":\"flavor\",\"data\":{\"gpu_vendor\":null,\"service\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"num_gpus\":0,\"tenant_id\":\"5f94fc673a476e2a9fa63c713000acda\",\"ram\":4096,\"num_vcpus\":2,\"flavor_id\":\"8\",\"tenant_name\":\"DEEP_DEMO\",\"gpu_model\":null,\"disk\":20,\"flavor_name\":\"medium\"}}},{\"id\":\"5f94fc673a476e2a9fa63c713000cc17\",\"key\":[\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"flavors\"],\"value\":{\"flavor_id\":\"9\",\"flavor_name\":\"large\",\"service\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\"},\"doc\":{\"_id\":\"5f94fc673a476e2a9fa63c713000cc17\",\"_rev\":\"1-9bbae4c4e42e3b4a5b14de72a20379ac\",\"type\":\"flavor\",\"data\":{\"gpu_vendor\":null,\"service\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"num_gpus\":0,\"tenant_id\":\"5f94fc673a476e2a9fa63c713000acda\",\"ram\":8192,\"num_vcpus\":4,\"flavor_id\":\"9\",\"tenant_name\":\"DEEP_DEMO\",\"gpu_model\":null,\"disk\":20,\"flavor_name\":\"large\"}}}]}",
+            "{\n" +
+            "  \"total_rows\": 803,\n" +
+            "  \"offset\": 795,\n" +
+            "  \"rows\": [\n" +
+            "    {\n" +
+            "      \"id\": \"891970a2-58c0-4cee-be10-b162ff44a0c1\",\n" +
+            "      \"key\": [\n" +
+            "        \"tenant\",\n" +
+            "        \"iam_organisation\",\n" +
+            "        \"deep-hdc\"\n" +
+            "      ],\n" +
+            "      \"value\": {\n" +
+            "        \"tenant_id\": \"36fb9668c47148d9b1bedba88eb2460a\",\n" +
+            "        \"tenant_name\": \"deep-hybrid-datacloud.eu\",\n" +
+            "        \"iam_organisation\": \"deep-hdc\"\n" +
+            "      },\n" +
+            "      \"doc\": {\n" +
+            "        \"_id\": \"891970a2-58c0-4cee-be10-b162ff44a0c1\",\n" +
+            "        \"_rev\": \"35-5c69984370d9723ca1ad5b58a7037db5\",\n" +
+            "        \"type\": \"tenant\",\n" +
+            "        \"data\": {\n" +
+            "          \"iam_organisation\": \"deep-hdc\",\n" +
+            "          \"tenant_id\": \"36fb9668c47148d9b1bedba88eb2460a\",\n" +
+            "          \"service\": \"IFCA-LCG2_9fe3a4b5-095d-4ca0-9a25-61f37c3f1081\",\n" +
+            "          \"tenant_name\": \"deep-hybrid-datacloud.eu\"\n" +
+            "        }\n" +
+            "      }\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"id\": \"8a5377c6-a7f4-4d1c-a4cd-074ab92b6035\",\n" +
+            "      \"key\": [\n" +
+            "        \"tenant\",\n" +
+            "        \"iam_organisation\",\n" +
+            "        \"deep-hdc\"\n" +
+            "      ],\n" +
+            "      \"value\": {\n" +
+            "        \"tenant_id\": \"78d9ecb64353402bb621b569891c633a\",\n" +
+            "        \"tenant_name\": \"DEEP_DEMO\",\n" +
+            "        \"iam_organisation\": \"deep-hdc\"\n" +
+            "      },\n" +
+            "      \"doc\": {\n" +
+            "        \"_id\": \"8a5377c6-a7f4-4d1c-a4cd-074ab92b6035\",\n" +
+            "        \"_rev\": \"32-2d1d8159db1d9e5361e6b537644054e5\",\n" +
+            "        \"type\": \"tenant\",\n" +
+            "        \"data\": {\n" +
+            "          \"iam_organisation\": \"deep-hdc\",\n" +
+            "          \"tenant_id\": \"78d9ecb64353402bb621b569891c633a\",\n" +
+            "          \"service\": \"RECAS-BARI_6be36515-aa38-44ec-905e-be9df893bd95\",\n" +
+            "          \"tenant_name\": \"DEEP_DEMO\"\n" +
+            "        }\n" +
+            "      }\n" +
+            "    }\n" +
+            "  ]\n" +
+            "}",
+            MediaType.APPLICATION_JSON));
+
+    // Images: Tenant 8a5377c6-a7f4-4d1c-a4cd-074ab92b6035 on provider-RECAS-BARI
+    mockServer
+        .expect(requestTo(baseUrl
+            + "/tenant/id/8a5377c6-a7f4-4d1c-a4cd-074ab92b6035/has_many/images?include_docs=true"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess(
+            "{\n" +
+            "  \"total_rows\": 264,\n" +
+            "  \"offset\": 231,\n" +
+            "  \"rows\": [\n" +
+            "    {\n" +
+            "      \"id\": \"a8f0d13b52dca71703d23f7c7d6a23b0\",\n" +
+            "      \"key\": [\n" +
+            "        \"8a5377c6-a7f4-4d1c-a4cd-074ab92b6035\",\n" +
+            "        \"images\"\n" +
+            "      ],\n" +
+            "      \"value\": {\n" +
+            "        \"image_id\": \"303d8324-69a7-4372-be24-1d68703affd7\",\n" +
+            "        \"image_name\": \"Ubuntu 14.04.3 LTS\",\n" +
+            "        \"tenant_id\": \"8a5377c6-a7f4-4d1c-a4cd-074ab92b6035\"\n" +
+            "      },\n" +
+            "      \"doc\": {\n" +
+            "        \"_id\": \"a8f0d13b52dca71703d23f7c7d6a23b0\",\n" +
+            "        \"_rev\": \"33-469105457d542af7e009e5c4dafa8f6f\",\n" +
+            "        \"type\": \"image\",\n" +
+            "        \"data\": {\n" +
+            "          \"image_marketplace_id\": \"http://cloud.recas.ba.infn.it:9292/v2/images/303d8324-69a7-4372-be24-1d68703affd7/file\",\n" +
+            "          \"service\": \"https://cloud.recas.ba.infn.it:5000/v3\",\n" +
+            "          \"gpu_driver\": false,\n" +
+            "          \"tenant_id\": \"8a5377c6-a7f4-4d1c-a4cd-074ab92b6035\",\n" +
+            "          \"image_name\": \"Ubuntu 14.04.3 LTS\",\n" +
+            "          \"image_id\": \"303d8324-69a7-4372-be24-1d68703affd7\",\n" +
+            "          \"architecture\": \"x86_64\",\n" +
+            "          \"tenant_name\": \"DEEP_DEMO\",\n" +
+            "          \"type\": \"Linux\",\n" +
+            "          \"cuda_support\": false\n" +
+            "        }\n" +
+            "      }\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"id\": \"a8f0d13b52dca71703d23f7c7d6a30d2\",\n" +
+            "      \"key\": [\n" +
+            "        \"8a5377c6-a7f4-4d1c-a4cd-074ab92b6035\",\n" +
+            "        \"images\"\n" +
+            "      ],\n" +
+            "      \"value\": {\n" +
+            "        \"image_id\": \"399a8e3e-3f49-47e8-806b-ee7251fd1e03\",\n" +
+            "        \"image_name\": \"ubuntu-16.04-vmi\",\n" +
+            "        \"tenant_id\": \"8a5377c6-a7f4-4d1c-a4cd-074ab92b6035\"\n" +
+            "      },\n" +
+            "      \"doc\": {\n" +
+            "        \"_id\": \"a8f0d13b52dca71703d23f7c7d6a30d2\",\n" +
+            "        \"_rev\": \"33-e1aecde6780b9c15615a898df7027ee5\",\n" +
+            "        \"type\": \"image\",\n" +
+            "        \"data\": {\n" +
+            "          \"image_marketplace_id\": \"http://cloud.recas.ba.infn.it:9292/v2/images/399a8e3e-3f49-47e8-806b-ee7251fd1e03/file\",\n" +
+            "          \"service\": \"https://cloud.recas.ba.infn.it:5000/v3\",\n" +
+            "          \"gpu_driver\": false,\n" +
+            "          \"tenant_id\": \"8a5377c6-a7f4-4d1c-a4cd-074ab92b6035\",\n" +
+            "          \"image_name\": \"ubuntu-16.04-vmi\",\n" +
+            "          \"image_id\": \"399a8e3e-3f49-47e8-806b-ee7251fd1e03\",\n" +
+            "          \"architecture\": \"x86_64\",\n" +
+            "          \"tenant_name\": \"DEEP_DEMO\",\n" +
+            "          \"type\": \"Linux\",\n" +
+            "          \"cuda_support\": false\n" +
+            "        }\n" +
+            "      }\n" +
+            "    }\n" +
+            "  ]\n" +
+            "}",
+            MediaType.APPLICATION_JSON));
+
+    // Flavor: Tenant 8a5377c6-a7f4-4d1c-a4cd-074ab92b6035 on provider-RECAS-BARI
+    mockServer
+        .expect(requestTo(baseUrl
+            + "/tenant/id/8a5377c6-a7f4-4d1c-a4cd-074ab92b6035/has_many/flavors?include_docs=true"))
+        .andExpect(method(HttpMethod.GET))
+        .andRespond(withSuccess(
+            "{\n" +
+            "  \"total_rows\": 147,\n" +
+            "  \"offset\": 0,\n" +
+            "  \"rows\": [\n" +
+            "    {\n" +
+            "      \"id\": \"5f94fc673a476e2a9fa63c713000b45b\",\n" +
+            "      \"key\": [\n" +
+            "        \"4401ac5dc8cfbbb737b0a02575e6f4bc\",\n" +
+            "        \"flavors\"\n" +
+            "      ],\n" +
+            "      \"value\": {\n" +
+            "        \"flavor_id\": \"7\",\n" +
+            "        \"flavor_name\": \"small\",\n" +
+            "        \"service\": \"4401ac5dc8cfbbb737b0a02575e6f4bc\"\n" +
+            "      },\n" +
+            "      \"doc\": {\n" +
+            "        \"_id\": \"5f94fc673a476e2a9fa63c713000b45b\",\n" +
+            "        \"_rev\": \"1-0de347bde54f5dc2fe44606fc42553f7\",\n" +
+            "        \"type\": \"flavor\",\n" +
+            "        \"data\": {\n" +
+            "          \"gpu_vendor\": null,\n" +
+            "          \"service\": \"4401ac5dc8cfbbb737b0a02575e6f4bc\",\n" +
+            "          \"num_gpus\": 0,\n" +
+            "          \"tenant_id\": \"5f94fc673a476e2a9fa63c713000acda\",\n" +
+            "          \"ram\": 2048,\n" +
+            "          \"num_vcpus\": 1,\n" +
+            "          \"flavor_id\": \"7\",\n" +
+            "          \"tenant_name\": \"DEEP_DEMO\",\n" +
+            "          \"gpu_model\": null,\n" +
+            "          \"disk\": 20,\n" +
+            "          \"flavor_name\": \"small\"\n" +
+            "        }\n" +
+            "      }\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"id\": \"5f94fc673a476e2a9fa63c713000bd0f\",\n" +
+            "      \"key\": [\n" +
+            "        \"4401ac5dc8cfbbb737b0a02575e6f4bc\",\n" +
+            "        \"flavors\"\n" +
+            "      ],\n" +
+            "      \"value\": {\n" +
+            "        \"flavor_id\": \"8\",\n" +
+            "        \"flavor_name\": \"medium\",\n" +
+            "        \"service\": \"4401ac5dc8cfbbb737b0a02575e6f4bc\"\n" +
+            "      },\n" +
+            "      \"doc\": {\n" +
+            "        \"_id\": \"5f94fc673a476e2a9fa63c713000bd0f\",\n" +
+            "        \"_rev\": \"1-ab7cd100475d996cac5cb078e8579f1a\",\n" +
+            "        \"type\": \"flavor\",\n" +
+            "        \"data\": {\n" +
+            "          \"gpu_vendor\": null,\n" +
+            "          \"service\": \"4401ac5dc8cfbbb737b0a02575e6f4bc\",\n" +
+            "          \"num_gpus\": 0,\n" +
+            "          \"tenant_id\": \"5f94fc673a476e2a9fa63c713000acda\",\n" +
+            "          \"ram\": 4096,\n" +
+            "          \"num_vcpus\": 2,\n" +
+            "          \"flavor_id\": \"8\",\n" +
+            "          \"tenant_name\": \"DEEP_DEMO\",\n" +
+            "          \"gpu_model\": null,\n" +
+            "          \"disk\": 20,\n" +
+            "          \"flavor_name\": \"medium\"\n" +
+            "        }\n" +
+            "      }\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"id\": \"5f94fc673a476e2a9fa63c713000cc17\",\n" +
+            "      \"key\": [\n" +
+            "        \"4401ac5dc8cfbbb737b0a02575e6f4bc\",\n" +
+            "        \"flavors\"\n" +
+            "      ],\n" +
+            "      \"value\": {\n" +
+            "        \"flavor_id\": \"9\",\n" +
+            "        \"flavor_name\": \"large\",\n" +
+            "        \"service\": \"4401ac5dc8cfbbb737b0a02575e6f4bc\"\n" +
+            "      },\n" +
+            "      \"doc\": {\n" +
+            "        \"_id\": \"5f94fc673a476e2a9fa63c713000cc17\",\n" +
+            "        \"_rev\": \"1-9bbae4c4e42e3b4a5b14de72a20379ac\",\n" +
+            "        \"type\": \"flavor\",\n" +
+            "        \"data\": {\n" +
+            "          \"gpu_vendor\": null,\n" +
+            "          \"service\": \"4401ac5dc8cfbbb737b0a02575e6f4bc\",\n" +
+            "          \"num_gpus\": 0,\n" +
+            "          \"tenant_id\": \"5f94fc673a476e2a9fa63c713000acda\",\n" +
+            "          \"ram\": 8192,\n" +
+            "          \"num_vcpus\": 4,\n" +
+            "          \"flavor_id\": \"9\",\n" +
+            "          \"tenant_name\": \"DEEP_DEMO\",\n" +
+            "          \"gpu_model\": null,\n" +
+            "          \"disk\": 20,\n" +
+            "          \"flavor_name\": \"large\"\n" +
+            "        }\n" +
+            "      }\n" +
+            "    }\n" +
+            "  ]\n" +
+            "}",
             MediaType.APPLICATION_JSON));
 
     // Provider: provider-UPV-GRyCAP
     mockServer.expect(requestTo(baseUrl + "/provider/id/provider-UPV-GRyCAP?include_docs=true"))
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess(
-            "{\"_id\":\"provider-UPV-GRyCAP\",\"_rev\":\"1-0a5ba48b2d6e0c26d36b0e3e81175352\",\"data\":{\"id\":\"458\",\"primary_key\":\"135G0\",\"name\":\"UPV-GRyCAP\",\"country\":\"Spain\",\"country_code\":\"ES\",\"roc\":\"NGI_IBERGRID\",\"subgrid\":\"\",\"giis_url\":\"ldap://ngiesbdii.i3m.upv.es:2170/mds-vo-name=UPV-GRyCAP,o=grid\"},\"type\":\"provider\"}",
+            "{\n" +
+            "  \"_id\": \"provider-UPV-GRyCAP\",\n" +
+            "  \"_rev\": \"1-0a5ba48b2d6e0c26d36b0e3e81175352\",\n" +
+            "  \"data\": {\n" +
+            "    \"id\": \"458\",\n" +
+            "    \"primary_key\": \"135G0\",\n" +
+            "    \"name\": \"UPV-GRyCAP\",\n" +
+            "    \"country\": \"Spain\",\n" +
+            "    \"country_code\": \"ES\",\n" +
+            "    \"roc\": \"NGI_IBERGRID\",\n" +
+            "    \"subgrid\": \"\",\n" +
+            "    \"giis_url\": \"ldap://ngiesbdii.i3m.upv.es:2170/mds-vo-name=UPV-GRyCAP,o=grid\"\n" +
+            "  },\n" +
+            "  \"type\": \"provider\"\n" +
+            "}",
             MediaType.APPLICATION_JSON));
 
     // Service: Compute on provider-UPV-GRyCAP
@@ -89,25 +539,139 @@ public class IntegrationTestUtil {
             baseUrl + "/provider/id/provider-UPV-GRyCAP/has_many/services?include_docs=true"))
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess(
-            "{\"total_rows\":60,\"offset\":55,\"rows\":[{\"id\":\"4401ac5dc8cfbbb737b0a025758d6e05\",\"key\":[\"provider-UPV-GRyCAP\",\"services\"],\"value\":{\"sitename\":\"UPV-GRyCAP\",\"provider_id\":\"provider-UPV-GRyCAP\",\"hostname\":\"fc-one.i3m.upv.es\",\"type\":\"compute\"},\"doc\":{\"_id\":\"4401ac5dc8cfbbb737b0a025758d6e05\",\"_rev\":\"2-5f5a496ffa93b98cedc8b19b16224763\",\"data\":{\"primary_key\":\"5973G0\",\"hostname\":\"fc-one.i3m.upv.es\",\"gocdb_portal_url\":\"https://goc.egi.eu/portal/index.php?Page_Type=Service&id=5973\",\"hostdn\":\"/DC=es/DC=irisgrid/O=cesga/CN=host/fc-one.i3m.upv.es\",\"host_os\":\"Ubuntu 12.04\",\"host_arch\":\"x86_64\",\"beta\":\"N\",\"service_type\":\"eu.egi.cloud.vm-management.occi\",\"host_ip\":\"158.42.104.226\",\"core\":null,\"in_production\":\"Y\",\"node_monitored\":\"Y\",\"sitename\":\"UPV-GRyCAP\",\"country_name\":\"Spain\",\"country_code\":\"ES\",\"roc_name\":\"NGI_IBERGRID\",\"scopes\":{\"scope\":\"EGI\"},\"extensions\":null,\"type\":\"compute\",\"provider_id\":\"provider-UPV-GRyCAP\",\"endpoint\":\"https://fc-one.i3m.upv.es:11443/\"},\"type\":\"service\"}},{\"id\":\"4401ac5dc8cfbbb737b0a02575e8040f\",\"key\":[\"provider-UPV-GRyCAP\",\"services\"],\"value\":{\"provider_id\":\"provider-UPV-GRyCAP\",\"type\":\"compute\"},\"doc\":{\"_id\":\"4401ac5dc8cfbbb737b0a02575e8040f\",\"_rev\":\"2-be00f87438604f04d353233daabc562c\",\"data\":{\"service_type\":\"eu.egi.cloud.vm-management.occi\",\"endpoint\":\"http://onedock.i3m.upv.es:11443\",\"provider_id\":\"provider-UPV-GRyCAP\",\"type\":\"compute\"},\"type\":\"service\"}},{\"id\":\"4401ac5dc8cfbbb737b0a02575e81d9b\",\"key\":[\"provider-UPV-GRyCAP\",\"services\"],\"value\":{\"provider_id\":\"provider-UPV-GRyCAP\",\"type\":\"compute\"},\"doc\":{\"_id\":\"4401ac5dc8cfbbb737b0a02575e81d9b\",\"_rev\":\"3-cb010c6d67f8d723777a777d96ae70ff\",\"data\":{\"service_type\":\"eu.egi.cloud.vm-management.opennebula\",\"endpoint\":\"http://onedock.i3m.upv.es:2633/\",\"provider_id\":\"provider-UPV-GRyCAP\",\"type\":\"compute\"},\"type\":\"service\"}},{\"id\":\"7efc59c5db69ea67c5100de0f73981be\",\"key\":[\"provider-UPV-GRyCAP\",\"services\"],\"value\":{\"provider_id\":\"provider-UPV-GRyCAP\",\"type\":\"compute\"},\"doc\":{\"_id\":\"7efc59c5db69ea67c5100de0f73981be\",\"_rev\":\"1-d75826f3a04af0d843d6d7ee48fc4ce4\",\"data\":{\"service_type\":\"eu.egi.cloud.vm-management.opennebula\",\"endpoint\":\"http://onecloud.i3m.upv.es:2633/\",\"provider_id\":\"provider-UPV-GRyCAP\",\"type\":\"compute\"},\"type\":\"service\"}}]}",
+            "{\n" +
+            "  \"total_rows\": 60,\n" +
+            "  \"offset\": 55,\n" +
+            "  \"rows\": [\n" +
+            "    {\n" +
+            "      \"id\": \"4401ac5dc8cfbbb737b0a025758d6e05\",\n" +
+            "      \"key\": [\n" +
+            "        \"provider-UPV-GRyCAP\",\n" +
+            "        \"services\"\n" +
+            "      ],\n" +
+            "      \"value\": {\n" +
+            "        \"sitename\": \"UPV-GRyCAP\",\n" +
+            "        \"provider_id\": \"provider-UPV-GRyCAP\",\n" +
+            "        \"hostname\": \"fc-one.i3m.upv.es\",\n" +
+            "        \"type\": \"compute\"\n" +
+            "      },\n" +
+            "      \"doc\": {\n" +
+            "        \"_id\": \"4401ac5dc8cfbbb737b0a025758d6e05\",\n" +
+            "        \"_rev\": \"2-5f5a496ffa93b98cedc8b19b16224763\",\n" +
+            "        \"data\": {\n" +
+            "          \"primary_key\": \"5973G0\",\n" +
+            "          \"hostname\": \"fc-one.i3m.upv.es\",\n" +
+            "          \"gocdb_portal_url\": \"https://goc.egi.eu/portal/index.php?Page_Type=Service&id=5973\",\n" +
+            "          \"hostdn\": \"/DC=es/DC=irisgrid/O=cesga/CN=host/fc-one.i3m.upv.es\",\n" +
+            "          \"host_os\": \"Ubuntu 12.04\",\n" +
+            "          \"host_arch\": \"x86_64\",\n" +
+            "          \"beta\": \"N\",\n" +
+            "          \"service_type\": \"eu.egi.cloud.vm-management.occi\",\n" +
+            "          \"host_ip\": \"158.42.104.226\",\n" +
+            "          \"core\": null,\n" +
+            "          \"in_production\": \"Y\",\n" +
+            "          \"node_monitored\": \"Y\",\n" +
+            "          \"sitename\": \"UPV-GRyCAP\",\n" +
+            "          \"country_name\": \"Spain\",\n" +
+            "          \"country_code\": \"ES\",\n" +
+            "          \"roc_name\": \"NGI_IBERGRID\",\n" +
+            "          \"scopes\": {\n" +
+            "            \"scope\": \"EGI\"\n" +
+            "          },\n" +
+            "          \"extensions\": null,\n" +
+            "          \"type\": \"compute\",\n" +
+            "          \"provider_id\": \"provider-UPV-GRyCAP\",\n" +
+            "          \"endpoint\": \"https://fc-one.i3m.upv.es:11443/\"\n" +
+            "        },\n" +
+            "        \"type\": \"service\"\n" +
+            "      }\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"id\": \"4401ac5dc8cfbbb737b0a02575e8040f\",\n" +
+            "      \"key\": [\n" +
+            "        \"provider-UPV-GRyCAP\",\n" +
+            "        \"services\"\n" +
+            "      ],\n" +
+            "      \"value\": {\n" +
+            "        \"provider_id\": \"provider-UPV-GRyCAP\",\n" +
+            "        \"type\": \"compute\"\n" +
+            "      },\n" +
+            "      \"doc\": {\n" +
+            "        \"_id\": \"4401ac5dc8cfbbb737b0a02575e8040f\",\n" +
+            "        \"_rev\": \"2-be00f87438604f04d353233daabc562c\",\n" +
+            "        \"data\": {\n" +
+            "          \"service_type\": \"eu.egi.cloud.vm-management.occi\",\n" +
+            "          \"endpoint\": \"http://onedock.i3m.upv.es:11443\",\n" +
+            "          \"provider_id\": \"provider-UPV-GRyCAP\",\n" +
+            "          \"type\": \"compute\"\n" +
+            "        },\n" +
+            "        \"type\": \"service\"\n" +
+            "      }\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"id\": \"4401ac5dc8cfbbb737b0a02575e81d9b\",\n" +
+            "      \"key\": [\n" +
+            "        \"provider-UPV-GRyCAP\",\n" +
+            "        \"services\"\n" +
+            "      ],\n" +
+            "      \"value\": {\n" +
+            "        \"provider_id\": \"provider-UPV-GRyCAP\",\n" +
+            "        \"type\": \"compute\"\n" +
+            "      },\n" +
+            "      \"doc\": {\n" +
+            "        \"_id\": \"4401ac5dc8cfbbb737b0a02575e81d9b\",\n" +
+            "        \"_rev\": \"3-cb010c6d67f8d723777a777d96ae70ff\",\n" +
+            "        \"data\": {\n" +
+            "          \"service_type\": \"eu.egi.cloud.vm-management.opennebula\",\n" +
+            "          \"endpoint\": \"http://onedock.i3m.upv.es:2633/\",\n" +
+            "          \"provider_id\": \"provider-UPV-GRyCAP\",\n" +
+            "          \"type\": \"compute\"\n" +
+            "        },\n" +
+            "        \"type\": \"service\"\n" +
+            "      }\n" +
+            "    },\n" +
+            "    {\n" +
+            "      \"id\": \"7efc59c5db69ea67c5100de0f73981be\",\n" +
+            "      \"key\": [\n" +
+            "        \"provider-UPV-GRyCAP\",\n" +
+            "        \"services\"\n" +
+            "      ],\n" +
+            "      \"value\": {\n" +
+            "        \"provider_id\": \"provider-UPV-GRyCAP\",\n" +
+            "        \"type\": \"compute\"\n" +
+            "      },\n" +
+            "      \"doc\": {\n" +
+            "        \"_id\": \"7efc59c5db69ea67c5100de0f73981be\",\n" +
+            "        \"_rev\": \"1-d75826f3a04af0d843d6d7ee48fc4ce4\",\n" +
+            "        \"data\": {\n" +
+            "          \"service_type\": \"eu.egi.cloud.vm-management.opennebula\",\n" +
+            "          \"endpoint\": \"http://onecloud.i3m.upv.es:2633/\",\n" +
+            "          \"provider_id\": \"provider-UPV-GRyCAP\",\n" +
+            "          \"type\": \"compute\"\n" +
+            "        },\n" +
+            "        \"type\": \"service\"\n" +
+            "      }\n" +
+            "    }\n" +
+            "  ]\n" +
+            "}",
             MediaType.APPLICATION_JSON));
 
-    // Images: Compute service on provider-UPV-GRyCAP
+    // Tenants: Compute service on provider-RECAS-BARI
     mockServer
         .expect(requestTo(baseUrl
-            + "/service/id/4401ac5dc8cfbbb737b0a02575e81d9b/has_many/images?include_docs=true"))
+            + "/service/id/4401ac5dc8cfbbb737b0a02575e81d9b/has_many/tenants?include_docs=true"))
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess(
-            "{\n  \"total_rows\": 42,\n  \"offset\": 0,\n  \"rows\": [\n    {\n      \"id\": \"7efc59c5db69ea67c5100de0f7236866\",\n      \"key\": [\n        \"4401ac5dc8cfbbb737b0a02575e81d9b\",\n        \"images\"\n      ],\n      \"value\": {\n        \"image_id\": \"1\",\n        \"image_name\": \"indigodatacloud/ubuntu-sshd:14.04-devel\",\n        \"service\": \"4401ac5dc8cfbbb737b0a02575e81d9b\"\n      },\n      \"doc\": {\n        \"_id\": \"7efc59c5db69ea67c5100de0f7236866\",\n        \"_rev\": \"2-105db8faf961d5aa0a215b67942c1821\",\n        \"type\": \"image\",\n        \"data\": {\n          \"image_id\": \"1\",\n          \"image_name\": \"indigodatacloud/ubuntu-sshd:14.04-devel\",\n          \"architecture\": \"x86_64\",\n          \"type\": \"linux\",\n          \"distribution\": \"ubuntu\",\n          \"version\": \"14.04\",\n          \"service\": \"4401ac5dc8cfbbb737b0a02575e81d9b\"\n        }\n      }\n    },\n    {\n      \"id\": \"7efc59c5db69ea67c5100de0f724f37a\",\n      \"key\": [\n        \"4401ac5dc8cfbbb737b0a02575e81d9b\",\n        \"images\"\n      ],\n      \"value\": {\n        \"image_id\": \"1\",\n        \"image_name\": \"image-create-test\",\n        \"service\": \"4401ac5dc8cfbbb737b0a02575e81d9b\"\n      },\n      \"doc\": {\n        \"_id\": \"7efc59c5db69ea67c5100de0f724f37a\",\n        \"_rev\": \"1-c9bf9d0d3f69738da930d97b8002b2c4\",\n        \"type\": \"image\",\n        \"data\": {\n          \"image_id\": \"1\",\n          \"image_name\": \"image-create-test\",\n          \"architecture\": \"x86_64\",\n          \"type\": \"linux\",\n          \"distribution\": \"ubuntu\",\n          \"version\": \"14.04\",\n          \"service\": \"4401ac5dc8cfbbb737b0a02575e81d9b\"\n        }\n      }\n    },\n    {\n      \"id\": \"7efc59c5db69ea67c5100de0f72580e9\",\n      \"key\": [\n        \"4401ac5dc8cfbbb737b0a02575e81d9b\",\n        \"images\"\n      ],\n      \"value\": {\n        \"image_id\": \"xxx\",\n        \"image_name\": \"image-create-test\",\n        \"service\": \"4401ac5dc8cfbbb737b0a02575e81d9b\"\n      },\n      \"doc\": {\n        \"_id\": \"7efc59c5db69ea67c5100de0f72580e9\",\n        \"_rev\": \"1-180d402f4985bbd00692937a9bcf717c\",\n        \"type\": \"image\",\n        \"data\": {\n          \"image_id\": \"xxx\",\n          \"image_name\": \"image-create-test\",\n          \"architecture\": \"x86_64\",\n          \"type\": \"linux\",\n          \"distribution\": \"ubuntu\",\n          \"version\": \"14.04\",\n          \"service\": \"4401ac5dc8cfbbb737b0a02575e81d9b\"\n        }\n      }\n    }\n  ]\n}",
+            "{}",
             MediaType.APPLICATION_JSON));
 
-    // Flavors: Compute service on provider-UPV-GRyCAP
+    // Tenants: Organization deep-hdc
     mockServer
         .expect(requestTo(baseUrl
-            + "/service/id/4401ac5dc8cfbbb737b0a02575e81d9b/has_many/flavors?include_docs=true"))
+            + "/tenant/filters/iam_organisation/8a5377c6-a7f4-4d1c-a4cd-074ab92b6035?include_docs=true"))
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess(
-            "{\"total_rows\":147,\"offset\":0,\"rows\":[{\"id\":\"5f94fc673a476e2a9fa63c713000b45b\",\"key\":[\"c25c6582-7021-43a6-9982-4401ac5dc8cfbbb737b0a02575e81d9b\",\"flavors\"],\"value\":{\"flavor_id\":\"7\",\"flavor_name\":\"small\",\"service\":\"c25c6582-7021-43a6-9982-4401ac5dc8cfbbb737b0a02575e81d9b\"},\"doc\":{\"_id\":\"5f94fc673a476e2a9fa63c713000b45b\",\"_rev\":\"1-0de347bde54f5dc2fe44606fc42553f7\",\"type\":\"flavor\",\"data\":{\"gpu_vendor\":null,\"service\":\"c25c6582-7021-43a6-9982-4401ac5dc8cfbbb737b0a02575e81d9b\",\"num_gpus\":0,\"tenant_id\":\"5f94fc673a476e2a9fa63c713000acda\",\"ram\":2048,\"num_vcpus\":1,\"flavor_id\":\"7\",\"tenant_name\":\"DEEP_DEMO\",\"gpu_model\":null,\"disk\":20,\"flavor_name\":\"small\"}}},{\"id\":\"5f94fc673a476e2a9fa63c713000bd0f\",\"key\":[\"c25c6582-7021-43a6-9982-4401ac5dc8cfbbb737b0a02575e81d9b\",\"flavors\"],\"value\":{\"flavor_id\":\"8\",\"flavor_name\":\"medium\",\"service\":\"c25c6582-7021-43a6-9982-4401ac5dc8cfbbb737b0a02575e81d9b\"},\"doc\":{\"_id\":\"5f94fc673a476e2a9fa63c713000bd0f\",\"_rev\":\"1-ab7cd100475d996cac5cb078e8579f1a\",\"type\":\"flavor\",\"data\":{\"gpu_vendor\":null,\"service\":\"c25c6582-7021-43a6-9982-4401ac5dc8cfbbb737b0a02575e81d9b\",\"num_gpus\":0,\"tenant_id\":\"5f94fc673a476e2a9fa63c713000acda\",\"ram\":4096,\"num_vcpus\":2,\"flavor_id\":\"8\",\"tenant_name\":\"DEEP_DEMO\",\"gpu_model\":null,\"disk\":20,\"flavor_name\":\"medium\"}}},{\"id\":\"5f94fc673a476e2a9fa63c713000cc17\",\"key\":[\"c25c6582-7021-43a6-9982-4401ac5dc8cfbbb737b0a02575e81d9b\",\"flavors\"],\"value\":{\"flavor_id\":\"9\",\"flavor_name\":\"large\",\"service\":\"c25c6582-7021-43a6-9982-4401ac5dc8cfbbb737b0a02575e81d9b\"},\"doc\":{\"_id\":\"5f94fc673a476e2a9fa63c713000cc17\",\"_rev\":\"1-9bbae4c4e42e3b4a5b14de72a20379ac\",\"type\":\"flavor\",\"data\":{\"gpu_vendor\":null,\"service\":\"c25c6582-7021-43a6-9982-4401ac5dc8cfbbb737b0a02575e81d9b\",\"num_gpus\":0,\"tenant_id\":\"5f94fc673a476e2a9fa63c713000acda\",\"ram\":8192,\"num_vcpus\":4,\"flavor_id\":\"9\",\"tenant_name\":\"DEEP_DEMO\",\"gpu_model\":null,\"disk\":20,\"flavor_name\":\"large\"}}}]}",
+            "{}",
             MediaType.APPLICATION_JSON));
 
   }
@@ -119,14 +683,1308 @@ public class IntegrationTestUtil {
     mockServer.expect(requestTo(baseUrl + "/monitoring/adapters/zabbix/zones/indigo/types/"
           + "infrastructure/groups/provider-RECAS-BARI")).andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess(
-            "{\"meta\":{\"status\":200,\"additionalProperties\":{}},\"result\":{\"groups\":[{\"groupName\":\"provider-RECAS-BARI\",\"paasMachines\":[{\"machineName\":\"4401ac5dc8cfbbb737b0a02575e6f4bc\",\"ip\":\"127.0.0.1\",\"serviceCategory\":\"eu.egi.cloud.vm-management.openstack\",\"serviceId\":\"IaaS_provider-RECAS-BARI_4401ac5dc8cfbbb737b0a02575e6f4bc\",\"services\":[{\"serviceName\":\"\",\"paasMetrics\":[{\"metricName\":\"clear_responseTime\",\"metricKey\":\"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..clear_responseTime\",\"metricValue\":34272.0,\"metricTime\":\"03-09-201916:20:08\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"clear_result\",\"metricKey\":\"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..clear_result\",\"metricValue\":1.0,\"metricTime\":\"03-09-201916:20:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"clear_status\",\"metricKey\":\"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..clear_status\",\"metricValue\":204.0,\"metricTime\":\"03-09-201916:20:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"create_responseTime\",\"metricKey\":\"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..create_responseTime\",\"metricValue\":711.0,\"metricTime\":\"03-09-201916:20:08\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"create_result\",\"metricKey\":\"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..create_result\",\"metricValue\":1.0,\"metricTime\":\"03-09-201916:20:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"create_status\",\"metricKey\":\"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..create_status\",\"metricValue\":200.0,\"metricTime\":\"03-09-201916:20:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"delete_responseTime\",\"metricKey\":\"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..delete_responseTime\",\"metricValue\":856.0,\"metricTime\":\"03-09-201916:20:08\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"delete_result\",\"metricKey\":\"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..delete_result\",\"metricValue\":1.0,\"metricTime\":\"03-09-201916:20:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"delete_status\",\"metricKey\":\"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..delete_status\",\"metricValue\":200.0,\"metricTime\":\"03-09-201916:20:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"openstack_responseTime\",\"metricKey\":\"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..openstack_responseTime\",\"metricValue\":0.0,\"metricTime\":\"Instantnullbecausenometricswerereturnedinthelast24hs\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"openstack_result\",\"metricKey\":\"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..openstack_result\",\"metricValue\":0.0,\"metricTime\":\"Instantnullbecausenometricswerereturnedinthelast24hs\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"openstack_status\",\"metricKey\":\"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..openstack_status\",\"metricValue\":0.0,\"metricTime\":\"Instantnullbecausenometricswerereturnedinthelast24hs\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"run_responseTime\",\"metricKey\":\"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..run_responseTime\",\"metricValue\":393.0,\"metricTime\":\"03-09-201916:20:08\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"run_result\",\"metricKey\":\"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..run_result\",\"metricValue\":1.0,\"metricTime\":\"03-09-201916:20:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"run_status\",\"metricKey\":\"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..run_status\",\"metricValue\":200.0,\"metricTime\":\"03-09-201916:20:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]}]}]},{\"machineName\":\"61b5f554-c44c-4dcc-8373-3dade70b1901\",\"ip\":\"127.0.0.1\",\"serviceCategory\":\"eu.indigo-datacloud.mesos\",\"serviceId\":\"IaaS_provider-RECAS-BARI_61b5f554-c44c-4dcc-8373-3dade70b1901\",\"services\":[{\"serviceName\":\"\",\"paasMetrics\":[{\"metricName\":\"master.cpus_percent\",\"metricKey\":\"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.cpus_percent\",\"metricValue\":0.0556,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.cpus_total\",\"metricKey\":\"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.cpus_total\",\"metricValue\":72.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.cpus_used\",\"metricKey\":\"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.cpus_used\",\"metricValue\":4.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.disk_percent\",\"metricKey\":\"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.disk_percent\",\"metricValue\":0.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.disk_total\",\"metricKey\":\"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.disk_total\",\"metricValue\":3952957.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.disk_used\",\"metricKey\":\"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.disk_used\",\"metricValue\":0.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.dropped_messages\",\"metricKey\":\"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.dropped_messages\",\"metricValue\":13.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.elected\",\"metricKey\":\"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.elected\",\"metricValue\":1.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.frameworks_disconnected\",\"metricKey\":\"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.frameworks_disconnected\",\"metricValue\":0.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.frameworks_inactive\",\"metricKey\":\"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.frameworks_inactive\",\"metricValue\":0.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.gpus_percent\",\"metricKey\":\"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.gpus_percent\",\"metricValue\":0.6667,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.gpus_total\",\"metricKey\":\"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.gpus_total\",\"metricValue\":3.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.gpus_used\",\"metricKey\":\"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.gpus_used\",\"metricValue\":2.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.mem_percent\",\"metricKey\":\"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.mem_percent\",\"metricValue\":0.0639,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.mem_total\",\"metricKey\":\"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.mem_total\",\"metricValue\":320265.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.mem_used\",\"metricKey\":\"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.mem_used\",\"metricValue\":20480.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.slaves_active\",\"metricKey\":\"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.slaves_active\",\"metricValue\":2.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.tasks_lost\",\"metricKey\":\"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.tasks_lost\",\"metricValue\":0.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.uptime_secs\",\"metricKey\":\"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.uptime_secs\",\"metricValue\":9012352.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"secs\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]}]}]},{\"machineName\":\"8922daf1-1a53-41b4-9f18-7ed536b44f20\",\"ip\":\"127.0.0.1\",\"serviceCategory\":\"eu.indigo-datacloud.marathon\",\"serviceId\":\"IaaS_provider-RECAS-BARI_8922daf1-1a53-41b4-9f18-7ed536b44f20\",\"services\":[{\"serviceName\":\"\",\"paasMetrics\":[{\"metricName\":\"clear_responseTime\",\"metricKey\":\"provider-RECAS-BARI.8922daf1-1a53-41b4-9f18-7ed536b44f20..clear_responseTime\",\"metricValue\":132.0,\"metricTime\":\"03-09-201915:30:08\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"clear_result\",\"metricKey\":\"provider-RECAS-BARI.8922daf1-1a53-41b4-9f18-7ed536b44f20..clear_result\",\"metricValue\":1.0,\"metricTime\":\"03-09-201915:30:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"clear_status\",\"metricKey\":\"provider-RECAS-BARI.8922daf1-1a53-41b4-9f18-7ed536b44f20..clear_status\",\"metricValue\":404.0,\"metricTime\":\"03-09-201915:30:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"create_responseTime\",\"metricKey\":\"provider-RECAS-BARI.8922daf1-1a53-41b4-9f18-7ed536b44f20..create_responseTime\",\"metricValue\":110.0,\"metricTime\":\"03-09-201915:30:08\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"create_result\",\"metricKey\":\"provider-RECAS-BARI.8922daf1-1a53-41b4-9f18-7ed536b44f20..create_result\",\"metricValue\":1.0,\"metricTime\":\"03-09-201915:30:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"create_status\",\"metricKey\":\"provider-RECAS-BARI.8922daf1-1a53-41b4-9f18-7ed536b44f20..create_status\",\"metricValue\":200.0,\"metricTime\":\"03-09-201915:30:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"delete_responseTime\",\"metricKey\":\"provider-RECAS-BARI.8922daf1-1a53-41b4-9f18-7ed536b44f20..delete_responseTime\",\"metricValue\":51.0,\"metricTime\":\"03-09-201915:30:08\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"delete_result\",\"metricKey\":\"provider-RECAS-BARI.8922daf1-1a53-41b4-9f18-7ed536b44f20..delete_result\",\"metricValue\":1.0,\"metricTime\":\"03-09-201915:30:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"delete_status\",\"metricKey\":\"provider-RECAS-BARI.8922daf1-1a53-41b4-9f18-7ed536b44f20..delete_status\",\"metricValue\":200.0,\"metricTime\":\"03-09-201915:30:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"run_responseTime\",\"metricKey\":\"provider-RECAS-BARI.8922daf1-1a53-41b4-9f18-7ed536b44f20..run_responseTime\",\"metricValue\":20.0,\"metricTime\":\"03-09-201915:30:08\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"run_result\",\"metricKey\":\"provider-RECAS-BARI.8922daf1-1a53-41b4-9f18-7ed536b44f20..run_result\",\"metricValue\":1.0,\"metricTime\":\"03-09-201915:30:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"run_status\",\"metricKey\":\"provider-RECAS-BARI.8922daf1-1a53-41b4-9f18-7ed536b44f20..run_status\",\"metricValue\":200.0,\"metricTime\":\"03-09-201915:30:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]}]}]},{\"machineName\":\"8490545c-f5ec-4330-9116-604dc0084caa\",\"ip\":\"127.0.0.1\",\"serviceCategory\":\"eu.indigo-datacloud.chronos\",\"serviceId\":\"IaaS_provider-RECAS-BARI_8490545c-f5ec-4330-9116-604dc0084caa\",\"services\":[{\"serviceName\":\"\",\"paasMetrics\":[{\"metricName\":\"clear_responseTime\",\"metricKey\":\"provider-RECAS-BARI.8490545c-f5ec-4330-9116-604dc0084caa..clear_responseTime\",\"metricValue\":200.0,\"metricTime\":\"03-09-201916:15:03\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"clear_result\",\"metricKey\":\"provider-RECAS-BARI.8490545c-f5ec-4330-9116-604dc0084caa..clear_result\",\"metricValue\":1.0,\"metricTime\":\"03-09-201916:15:03\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"clear_status\",\"metricKey\":\"provider-RECAS-BARI.8490545c-f5ec-4330-9116-604dc0084caa..clear_status\",\"metricValue\":404.0,\"metricTime\":\"03-09-201916:15:03\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"create_responseTime\",\"metricKey\":\"provider-RECAS-BARI.8490545c-f5ec-4330-9116-604dc0084caa..create_responseTime\",\"metricValue\":110.0,\"metricTime\":\"03-09-201916:15:03\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"create_result\",\"metricKey\":\"provider-RECAS-BARI.8490545c-f5ec-4330-9116-604dc0084caa..create_result\",\"metricValue\":1.0,\"metricTime\":\"03-09-201916:15:03\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"create_status\",\"metricKey\":\"provider-RECAS-BARI.8490545c-f5ec-4330-9116-604dc0084caa..create_status\",\"metricValue\":200.0,\"metricTime\":\"03-09-201916:15:03\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"delete_responseTime\",\"metricKey\":\"provider-RECAS-BARI.8490545c-f5ec-4330-9116-604dc0084caa..delete_responseTime\",\"metricValue\":15.0,\"metricTime\":\"03-09-201916:15:03\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"delete_result\",\"metricKey\":\"provider-RECAS-BARI.8490545c-f5ec-4330-9116-604dc0084caa..delete_result\",\"metricValue\":1.0,\"metricTime\":\"03-09-201916:15:03\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"delete_status\",\"metricKey\":\"provider-RECAS-BARI.8490545c-f5ec-4330-9116-604dc0084caa..delete_status\",\"metricValue\":200.0,\"metricTime\":\"03-09-201916:15:03\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"run_responseTime\",\"metricKey\":\"provider-RECAS-BARI.8490545c-f5ec-4330-9116-604dc0084caa..run_responseTime\",\"metricValue\":13.0,\"metricTime\":\"03-09-201916:15:03\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"run_result\",\"metricKey\":\"provider-RECAS-BARI.8490545c-f5ec-4330-9116-604dc0084caa..run_result\",\"metricValue\":1.0,\"metricTime\":\"03-09-201916:15:03\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"run_status\",\"metricKey\":\"provider-RECAS-BARI.8490545c-f5ec-4330-9116-604dc0084caa..run_status\",\"metricValue\":200.0,\"metricTime\":\"03-09-201916:15:03\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]}]}]}]}]},\"additionalProperties\":{}}",
+            "{\n" +
+            "  \"meta\": {\n" +
+            "    \"status\": 200,\n" +
+            "    \"additionalProperties\": {}\n" +
+            "  },\n" +
+            "  \"result\": {\n" +
+            "    \"groups\": [\n" +
+            "      {\n" +
+            "        \"groupName\": \"provider-RECAS-BARI\",\n" +
+            "        \"paasMachines\": [\n" +
+            "          {\n" +
+            "            \"machineName\": \"4401ac5dc8cfbbb737b0a02575e6f4bc\",\n" +
+            "            \"ip\": \"127.0.0.1\",\n" +
+            "            \"serviceCategory\": \"org.openstack.nova\",\n" +
+            "            \"serviceId\": \"IaaS_provider-RECAS-BARI_4401ac5dc8cfbbb737b0a02575e6f4bc\",\n" +
+            "            \"services\": [\n" +
+            "              {\n" +
+            "                \"serviceName\": \"\",\n" +
+            "                \"paasMetrics\": [\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"clear_responseTime\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..clear_responseTime\",\n" +
+            "                    \"metricValue\": 34272,\n" +
+            "                    \"metricTime\": \"03-09-201916:20:08\",\n" +
+            "                    \"metricUnit\": \"ms\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"clear_result\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..clear_result\",\n" +
+            "                    \"metricValue\": 1,\n" +
+            "                    \"metricTime\": \"03-09-201916:20:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"clear_status\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..clear_status\",\n" +
+            "                    \"metricValue\": 204,\n" +
+            "                    \"metricTime\": \"03-09-201916:20:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"create_responseTime\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..create_responseTime\",\n" +
+            "                    \"metricValue\": 711,\n" +
+            "                    \"metricTime\": \"03-09-201916:20:08\",\n" +
+            "                    \"metricUnit\": \"ms\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"create_result\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..create_result\",\n" +
+            "                    \"metricValue\": 1,\n" +
+            "                    \"metricTime\": \"03-09-201916:20:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"create_status\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..create_status\",\n" +
+            "                    \"metricValue\": 200,\n" +
+            "                    \"metricTime\": \"03-09-201916:20:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"delete_responseTime\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..delete_responseTime\",\n" +
+            "                    \"metricValue\": 856,\n" +
+            "                    \"metricTime\": \"03-09-201916:20:08\",\n" +
+            "                    \"metricUnit\": \"ms\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"delete_result\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..delete_result\",\n" +
+            "                    \"metricValue\": 1,\n" +
+            "                    \"metricTime\": \"03-09-201916:20:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"delete_status\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..delete_status\",\n" +
+            "                    \"metricValue\": 200,\n" +
+            "                    \"metricTime\": \"03-09-201916:20:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"openstack_responseTime\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..openstack_responseTime\",\n" +
+            "                    \"metricValue\": 0,\n" +
+            "                    \"metricTime\": \"Instantnullbecausenometricswerereturnedinthelast24hs\",\n" +
+            "                    \"metricUnit\": \"ms\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"openstack_result\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..openstack_result\",\n" +
+            "                    \"metricValue\": 0,\n" +
+            "                    \"metricTime\": \"Instantnullbecausenometricswerereturnedinthelast24hs\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"openstack_status\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..openstack_status\",\n" +
+            "                    \"metricValue\": 0,\n" +
+            "                    \"metricTime\": \"Instantnullbecausenometricswerereturnedinthelast24hs\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"run_responseTime\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..run_responseTime\",\n" +
+            "                    \"metricValue\": 393,\n" +
+            "                    \"metricTime\": \"03-09-201916:20:08\",\n" +
+            "                    \"metricUnit\": \"ms\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"run_result\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..run_result\",\n" +
+            "                    \"metricValue\": 1,\n" +
+            "                    \"metricTime\": \"03-09-201916:20:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"run_status\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.4401ac5dc8cfbbb737b0a02575e6f4bc..run_status\",\n" +
+            "                    \"metricValue\": 200,\n" +
+            "                    \"metricTime\": \"03-09-201916:20:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  }\n" +
+            "                ]\n" +
+            "              }\n" +
+            "            ]\n" +
+            "          },\n" +
+            "          {\n" +
+            "            \"machineName\": \"61b5f554-c44c-4dcc-8373-3dade70b1901\",\n" +
+            "            \"ip\": \"127.0.0.1\",\n" +
+            "            \"serviceCategory\": \"eu.indigo-datacloud.mesos\",\n" +
+            "            \"serviceId\": \"IaaS_provider-RECAS-BARI_61b5f554-c44c-4dcc-8373-3dade70b1901\",\n" +
+            "            \"services\": [\n" +
+            "              {\n" +
+            "                \"serviceName\": \"\",\n" +
+            "                \"paasMetrics\": [\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.cpus_percent\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.cpus_percent\",\n" +
+            "                    \"metricValue\": 0.0556,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.cpus_total\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.cpus_total\",\n" +
+            "                    \"metricValue\": 72,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.cpus_used\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.cpus_used\",\n" +
+            "                    \"metricValue\": 4,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.disk_percent\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.disk_percent\",\n" +
+            "                    \"metricValue\": 0,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.disk_total\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.disk_total\",\n" +
+            "                    \"metricValue\": 3952957,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.disk_used\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.disk_used\",\n" +
+            "                    \"metricValue\": 0,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.dropped_messages\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.dropped_messages\",\n" +
+            "                    \"metricValue\": 13,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.elected\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.elected\",\n" +
+            "                    \"metricValue\": 1,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.frameworks_disconnected\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.frameworks_disconnected\",\n" +
+            "                    \"metricValue\": 0,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.frameworks_inactive\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.frameworks_inactive\",\n" +
+            "                    \"metricValue\": 0,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.gpus_percent\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.gpus_percent\",\n" +
+            "                    \"metricValue\": 0.6667,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.gpus_total\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.gpus_total\",\n" +
+            "                    \"metricValue\": 3,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.gpus_used\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.gpus_used\",\n" +
+            "                    \"metricValue\": 2,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.mem_percent\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.mem_percent\",\n" +
+            "                    \"metricValue\": 0.0639,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.mem_total\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.mem_total\",\n" +
+            "                    \"metricValue\": 320265,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.mem_used\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.mem_used\",\n" +
+            "                    \"metricValue\": 20480,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.slaves_active\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.slaves_active\",\n" +
+            "                    \"metricValue\": 2,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.tasks_lost\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.tasks_lost\",\n" +
+            "                    \"metricValue\": 0,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.uptime_secs\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.61b5f554-c44c-4dcc-8373-3dade70b1901..master.uptime_secs\",\n" +
+            "                    \"metricValue\": 9012352,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"secs\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  }\n" +
+            "                ]\n" +
+            "              }\n" +
+            "            ]\n" +
+            "          },\n" +
+            "          {\n" +
+            "            \"machineName\": \"8922daf1-1a53-41b4-9f18-7ed536b44f20\",\n" +
+            "            \"ip\": \"127.0.0.1\",\n" +
+            "            \"serviceCategory\": \"eu.indigo-datacloud.marathon\",\n" +
+            "            \"serviceId\": \"IaaS_provider-RECAS-BARI_8922daf1-1a53-41b4-9f18-7ed536b44f20\",\n" +
+            "            \"services\": [\n" +
+            "              {\n" +
+            "                \"serviceName\": \"\",\n" +
+            "                \"paasMetrics\": [\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"clear_responseTime\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.8922daf1-1a53-41b4-9f18-7ed536b44f20..clear_responseTime\",\n" +
+            "                    \"metricValue\": 132,\n" +
+            "                    \"metricTime\": \"03-09-201915:30:08\",\n" +
+            "                    \"metricUnit\": \"ms\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"clear_result\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.8922daf1-1a53-41b4-9f18-7ed536b44f20..clear_result\",\n" +
+            "                    \"metricValue\": 1,\n" +
+            "                    \"metricTime\": \"03-09-201915:30:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"clear_status\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.8922daf1-1a53-41b4-9f18-7ed536b44f20..clear_status\",\n" +
+            "                    \"metricValue\": 404,\n" +
+            "                    \"metricTime\": \"03-09-201915:30:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"create_responseTime\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.8922daf1-1a53-41b4-9f18-7ed536b44f20..create_responseTime\",\n" +
+            "                    \"metricValue\": 110,\n" +
+            "                    \"metricTime\": \"03-09-201915:30:08\",\n" +
+            "                    \"metricUnit\": \"ms\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"create_result\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.8922daf1-1a53-41b4-9f18-7ed536b44f20..create_result\",\n" +
+            "                    \"metricValue\": 1,\n" +
+            "                    \"metricTime\": \"03-09-201915:30:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"create_status\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.8922daf1-1a53-41b4-9f18-7ed536b44f20..create_status\",\n" +
+            "                    \"metricValue\": 200,\n" +
+            "                    \"metricTime\": \"03-09-201915:30:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"delete_responseTime\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.8922daf1-1a53-41b4-9f18-7ed536b44f20..delete_responseTime\",\n" +
+            "                    \"metricValue\": 51,\n" +
+            "                    \"metricTime\": \"03-09-201915:30:08\",\n" +
+            "                    \"metricUnit\": \"ms\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"delete_result\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.8922daf1-1a53-41b4-9f18-7ed536b44f20..delete_result\",\n" +
+            "                    \"metricValue\": 1,\n" +
+            "                    \"metricTime\": \"03-09-201915:30:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"delete_status\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.8922daf1-1a53-41b4-9f18-7ed536b44f20..delete_status\",\n" +
+            "                    \"metricValue\": 200,\n" +
+            "                    \"metricTime\": \"03-09-201915:30:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"run_responseTime\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.8922daf1-1a53-41b4-9f18-7ed536b44f20..run_responseTime\",\n" +
+            "                    \"metricValue\": 20,\n" +
+            "                    \"metricTime\": \"03-09-201915:30:08\",\n" +
+            "                    \"metricUnit\": \"ms\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"run_result\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.8922daf1-1a53-41b4-9f18-7ed536b44f20..run_result\",\n" +
+            "                    \"metricValue\": 1,\n" +
+            "                    \"metricTime\": \"03-09-201915:30:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"run_status\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.8922daf1-1a53-41b4-9f18-7ed536b44f20..run_status\",\n" +
+            "                    \"metricValue\": 200,\n" +
+            "                    \"metricTime\": \"03-09-201915:30:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  }\n" +
+            "                ]\n" +
+            "              }\n" +
+            "            ]\n" +
+            "          },\n" +
+            "          {\n" +
+            "            \"machineName\": \"8490545c-f5ec-4330-9116-604dc0084caa\",\n" +
+            "            \"ip\": \"127.0.0.1\",\n" +
+            "            \"serviceCategory\": \"eu.indigo-datacloud.chronos\",\n" +
+            "            \"serviceId\": \"IaaS_provider-RECAS-BARI_8490545c-f5ec-4330-9116-604dc0084caa\",\n" +
+            "            \"services\": [\n" +
+            "              {\n" +
+            "                \"serviceName\": \"\",\n" +
+            "                \"paasMetrics\": [\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"clear_responseTime\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.8490545c-f5ec-4330-9116-604dc0084caa..clear_responseTime\",\n" +
+            "                    \"metricValue\": 200,\n" +
+            "                    \"metricTime\": \"03-09-201916:15:03\",\n" +
+            "                    \"metricUnit\": \"ms\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"clear_result\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.8490545c-f5ec-4330-9116-604dc0084caa..clear_result\",\n" +
+            "                    \"metricValue\": 1,\n" +
+            "                    \"metricTime\": \"03-09-201916:15:03\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"clear_status\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.8490545c-f5ec-4330-9116-604dc0084caa..clear_status\",\n" +
+            "                    \"metricValue\": 404,\n" +
+            "                    \"metricTime\": \"03-09-201916:15:03\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"create_responseTime\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.8490545c-f5ec-4330-9116-604dc0084caa..create_responseTime\",\n" +
+            "                    \"metricValue\": 110,\n" +
+            "                    \"metricTime\": \"03-09-201916:15:03\",\n" +
+            "                    \"metricUnit\": \"ms\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"create_result\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.8490545c-f5ec-4330-9116-604dc0084caa..create_result\",\n" +
+            "                    \"metricValue\": 1,\n" +
+            "                    \"metricTime\": \"03-09-201916:15:03\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"create_status\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.8490545c-f5ec-4330-9116-604dc0084caa..create_status\",\n" +
+            "                    \"metricValue\": 200,\n" +
+            "                    \"metricTime\": \"03-09-201916:15:03\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"delete_responseTime\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.8490545c-f5ec-4330-9116-604dc0084caa..delete_responseTime\",\n" +
+            "                    \"metricValue\": 15,\n" +
+            "                    \"metricTime\": \"03-09-201916:15:03\",\n" +
+            "                    \"metricUnit\": \"ms\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"delete_result\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.8490545c-f5ec-4330-9116-604dc0084caa..delete_result\",\n" +
+            "                    \"metricValue\": 1,\n" +
+            "                    \"metricTime\": \"03-09-201916:15:03\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"delete_status\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.8490545c-f5ec-4330-9116-604dc0084caa..delete_status\",\n" +
+            "                    \"metricValue\": 200,\n" +
+            "                    \"metricTime\": \"03-09-201916:15:03\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"run_responseTime\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.8490545c-f5ec-4330-9116-604dc0084caa..run_responseTime\",\n" +
+            "                    \"metricValue\": 13,\n" +
+            "                    \"metricTime\": \"03-09-201916:15:03\",\n" +
+            "                    \"metricUnit\": \"ms\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"run_result\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.8490545c-f5ec-4330-9116-604dc0084caa..run_result\",\n" +
+            "                    \"metricValue\": 1,\n" +
+            "                    \"metricTime\": \"03-09-201916:15:03\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"run_status\",\n" +
+            "                    \"metricKey\": \"provider-RECAS-BARI.8490545c-f5ec-4330-9116-604dc0084caa..run_status\",\n" +
+            "                    \"metricValue\": 200,\n" +
+            "                    \"metricTime\": \"03-09-201916:15:03\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  }\n" +
+            "                ]\n" +
+            "              }\n" +
+            "            ]\n" +
+            "          }\n" +
+            "        ]\n" +
+            "      }\n" +
+            "    ]\n" +
+            "  },\n" +
+            "  \"additionalProperties\": {}\n" +
+            "}",
             MediaType.APPLICATION_JSON));
 
     // provider-UPV-GRyCAP
     mockServer.expect(requestTo(baseUrl + "/monitoring/adapters/zabbix/zones/indigo/types/"
           + "infrastructure/groups/provider-UPV-GRyCAP")).andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess(
-            "{\"meta\":{\"status\":200,\"additionalProperties\":{}},\"result\":{\"groups\":[{\"groupName\":\"provider-UPV-GRyCAP\",\"paasMachines\":[{\"machineName\":\"4401ac5dc8cfbbb737b0a02575e81d9b\",\"ip\":\"127.0.0.1\",\"serviceCategory\":\"eu.egi.cloud.vm-management.openstack\",\"serviceId\":\"IaaS_provider-UPV-GRyCAP_4401ac5dc8cfbbb737b0a02575e81d9b\",\"services\":[{\"serviceName\":\"\",\"paasMetrics\":[{\"metricName\":\"clear_responseTime\",\"metricKey\":\"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..clear_responseTime\",\"metricValue\":34272.0,\"metricTime\":\"03-09-201916:20:08\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"clear_result\",\"metricKey\":\"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..clear_result\",\"metricValue\":1.0,\"metricTime\":\"03-09-201916:20:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"clear_status\",\"metricKey\":\"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..clear_status\",\"metricValue\":204.0,\"metricTime\":\"03-09-201916:20:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"create_responseTime\",\"metricKey\":\"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..create_responseTime\",\"metricValue\":711.0,\"metricTime\":\"03-09-201916:20:08\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"create_result\",\"metricKey\":\"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..create_result\",\"metricValue\":1.0,\"metricTime\":\"03-09-201916:20:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"create_status\",\"metricKey\":\"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..create_status\",\"metricValue\":200.0,\"metricTime\":\"03-09-201916:20:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"delete_responseTime\",\"metricKey\":\"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..delete_responseTime\",\"metricValue\":856.0,\"metricTime\":\"03-09-201916:20:08\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"delete_result\",\"metricKey\":\"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..delete_result\",\"metricValue\":1.0,\"metricTime\":\"03-09-201916:20:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"delete_status\",\"metricKey\":\"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..delete_status\",\"metricValue\":200.0,\"metricTime\":\"03-09-201916:20:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"openstack_responseTime\",\"metricKey\":\"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..openstack_responseTime\",\"metricValue\":0.0,\"metricTime\":\"Instantnullbecausenometricswerereturnedinthelast24hs\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"openstack_result\",\"metricKey\":\"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..openstack_result\",\"metricValue\":0.0,\"metricTime\":\"Instantnullbecausenometricswerereturnedinthelast24hs\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"openstack_status\",\"metricKey\":\"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..openstack_status\",\"metricValue\":0.0,\"metricTime\":\"Instantnullbecausenometricswerereturnedinthelast24hs\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"run_responseTime\",\"metricKey\":\"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..run_responseTime\",\"metricValue\":393.0,\"metricTime\":\"03-09-201916:20:08\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"run_result\",\"metricKey\":\"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..run_result\",\"metricValue\":1.0,\"metricTime\":\"03-09-201916:20:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"run_status\",\"metricKey\":\"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..run_status\",\"metricValue\":200.0,\"metricTime\":\"03-09-201916:20:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]}]}]},{\"machineName\":\"61b5f554-c44c-4dcc-8373-3dade70b1901\",\"ip\":\"127.0.0.1\",\"serviceCategory\":\"eu.indigo-datacloud.mesos\",\"serviceId\":\"IaaS_provider-UPV-GRyCAP_61b5f554-c44c-4dcc-8373-3dade70b1901\",\"services\":[{\"serviceName\":\"\",\"paasMetrics\":[{\"metricName\":\"master.cpus_percent\",\"metricKey\":\"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.cpus_percent\",\"metricValue\":0.0556,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.cpus_total\",\"metricKey\":\"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.cpus_total\",\"metricValue\":72.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.cpus_used\",\"metricKey\":\"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.cpus_used\",\"metricValue\":4.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.disk_percent\",\"metricKey\":\"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.disk_percent\",\"metricValue\":0.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.disk_total\",\"metricKey\":\"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.disk_total\",\"metricValue\":3952957.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.disk_used\",\"metricKey\":\"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.disk_used\",\"metricValue\":0.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.dropped_messages\",\"metricKey\":\"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.dropped_messages\",\"metricValue\":13.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.elected\",\"metricKey\":\"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.elected\",\"metricValue\":1.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.frameworks_disconnected\",\"metricKey\":\"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.frameworks_disconnected\",\"metricValue\":0.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.frameworks_inactive\",\"metricKey\":\"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.frameworks_inactive\",\"metricValue\":0.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.gpus_percent\",\"metricKey\":\"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.gpus_percent\",\"metricValue\":0.6667,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.gpus_total\",\"metricKey\":\"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.gpus_total\",\"metricValue\":3.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.gpus_used\",\"metricKey\":\"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.gpus_used\",\"metricValue\":2.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.mem_percent\",\"metricKey\":\"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.mem_percent\",\"metricValue\":0.0639,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.mem_total\",\"metricKey\":\"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.mem_total\",\"metricValue\":320265.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.mem_used\",\"metricKey\":\"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.mem_used\",\"metricValue\":20480.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.slaves_active\",\"metricKey\":\"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.slaves_active\",\"metricValue\":2.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.tasks_lost\",\"metricKey\":\"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.tasks_lost\",\"metricValue\":0.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"master.uptime_secs\",\"metricKey\":\"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.uptime_secs\",\"metricValue\":9012352.0,\"metricTime\":\"03-09-201916:00:08\",\"metricUnit\":\"secs\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]}]}]},{\"machineName\":\"8922daf1-1a53-41b4-9f18-7ed536b44f20\",\"ip\":\"127.0.0.1\",\"serviceCategory\":\"eu.indigo-datacloud.marathon\",\"serviceId\":\"IaaS_provider-UPV-GRyCAP_8922daf1-1a53-41b4-9f18-7ed536b44f20\",\"services\":[{\"serviceName\":\"\",\"paasMetrics\":[{\"metricName\":\"clear_responseTime\",\"metricKey\":\"provider-UPV-GRyCAP.8922daf1-1a53-41b4-9f18-7ed536b44f20..clear_responseTime\",\"metricValue\":132.0,\"metricTime\":\"03-09-201915:30:08\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"clear_result\",\"metricKey\":\"provider-UPV-GRyCAP.8922daf1-1a53-41b4-9f18-7ed536b44f20..clear_result\",\"metricValue\":1.0,\"metricTime\":\"03-09-201915:30:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"clear_status\",\"metricKey\":\"provider-UPV-GRyCAP.8922daf1-1a53-41b4-9f18-7ed536b44f20..clear_status\",\"metricValue\":404.0,\"metricTime\":\"03-09-201915:30:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"create_responseTime\",\"metricKey\":\"provider-UPV-GRyCAP.8922daf1-1a53-41b4-9f18-7ed536b44f20..create_responseTime\",\"metricValue\":110.0,\"metricTime\":\"03-09-201915:30:08\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"create_result\",\"metricKey\":\"provider-UPV-GRyCAP.8922daf1-1a53-41b4-9f18-7ed536b44f20..create_result\",\"metricValue\":1.0,\"metricTime\":\"03-09-201915:30:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"create_status\",\"metricKey\":\"provider-UPV-GRyCAP.8922daf1-1a53-41b4-9f18-7ed536b44f20..create_status\",\"metricValue\":200.0,\"metricTime\":\"03-09-201915:30:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"delete_responseTime\",\"metricKey\":\"provider-UPV-GRyCAP.8922daf1-1a53-41b4-9f18-7ed536b44f20..delete_responseTime\",\"metricValue\":51.0,\"metricTime\":\"03-09-201915:30:08\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"delete_result\",\"metricKey\":\"provider-UPV-GRyCAP.8922daf1-1a53-41b4-9f18-7ed536b44f20..delete_result\",\"metricValue\":1.0,\"metricTime\":\"03-09-201915:30:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"delete_status\",\"metricKey\":\"provider-UPV-GRyCAP.8922daf1-1a53-41b4-9f18-7ed536b44f20..delete_status\",\"metricValue\":200.0,\"metricTime\":\"03-09-201915:30:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"run_responseTime\",\"metricKey\":\"provider-UPV-GRyCAP.8922daf1-1a53-41b4-9f18-7ed536b44f20..run_responseTime\",\"metricValue\":20.0,\"metricTime\":\"03-09-201915:30:08\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"run_result\",\"metricKey\":\"provider-UPV-GRyCAP.8922daf1-1a53-41b4-9f18-7ed536b44f20..run_result\",\"metricValue\":1.0,\"metricTime\":\"03-09-201915:30:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"run_status\",\"metricKey\":\"provider-UPV-GRyCAP.8922daf1-1a53-41b4-9f18-7ed536b44f20..run_status\",\"metricValue\":200.0,\"metricTime\":\"03-09-201915:30:08\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]}]}]},{\"machineName\":\"8490545c-f5ec-4330-9116-604dc0084caa\",\"ip\":\"127.0.0.1\",\"serviceCategory\":\"eu.indigo-datacloud.chronos\",\"serviceId\":\"IaaS_provider-UPV-GRyCAP_8490545c-f5ec-4330-9116-604dc0084caa\",\"services\":[{\"serviceName\":\"\",\"paasMetrics\":[{\"metricName\":\"clear_responseTime\",\"metricKey\":\"provider-UPV-GRyCAP.8490545c-f5ec-4330-9116-604dc0084caa..clear_responseTime\",\"metricValue\":200.0,\"metricTime\":\"03-09-201916:15:03\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"clear_result\",\"metricKey\":\"provider-UPV-GRyCAP.8490545c-f5ec-4330-9116-604dc0084caa..clear_result\",\"metricValue\":1.0,\"metricTime\":\"03-09-201916:15:03\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"clear_status\",\"metricKey\":\"provider-UPV-GRyCAP.8490545c-f5ec-4330-9116-604dc0084caa..clear_status\",\"metricValue\":404.0,\"metricTime\":\"03-09-201916:15:03\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"create_responseTime\",\"metricKey\":\"provider-UPV-GRyCAP.8490545c-f5ec-4330-9116-604dc0084caa..create_responseTime\",\"metricValue\":110.0,\"metricTime\":\"03-09-201916:15:03\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"create_result\",\"metricKey\":\"provider-UPV-GRyCAP.8490545c-f5ec-4330-9116-604dc0084caa..create_result\",\"metricValue\":1.0,\"metricTime\":\"03-09-201916:15:03\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"create_status\",\"metricKey\":\"provider-UPV-GRyCAP.8490545c-f5ec-4330-9116-604dc0084caa..create_status\",\"metricValue\":200.0,\"metricTime\":\"03-09-201916:15:03\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"delete_responseTime\",\"metricKey\":\"provider-UPV-GRyCAP.8490545c-f5ec-4330-9116-604dc0084caa..delete_responseTime\",\"metricValue\":15.0,\"metricTime\":\"03-09-201916:15:03\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"delete_result\",\"metricKey\":\"provider-UPV-GRyCAP.8490545c-f5ec-4330-9116-604dc0084caa..delete_result\",\"metricValue\":1.0,\"metricTime\":\"03-09-201916:15:03\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"delete_status\",\"metricKey\":\"provider-UPV-GRyCAP.8490545c-f5ec-4330-9116-604dc0084caa..delete_status\",\"metricValue\":200.0,\"metricTime\":\"03-09-201916:15:03\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"run_responseTime\",\"metricKey\":\"provider-UPV-GRyCAP.8490545c-f5ec-4330-9116-604dc0084caa..run_responseTime\",\"metricValue\":13.0,\"metricTime\":\"03-09-201916:15:03\",\"metricUnit\":\"ms\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"run_result\",\"metricKey\":\"provider-UPV-GRyCAP.8490545c-f5ec-4330-9116-604dc0084caa..run_result\",\"metricValue\":1.0,\"metricTime\":\"03-09-201916:15:03\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]},{\"metricName\":\"run_status\",\"metricKey\":\"provider-UPV-GRyCAP.8490545c-f5ec-4330-9116-604dc0084caa..run_status\",\"metricValue\":200.0,\"metricTime\":\"03-09-201916:15:03\",\"metricUnit\":\"\",\"paasThresholds\":[],\"historyClocks\":[],\"historyValues\":[]}]}]}]}]},\"additionalProperties\":{}}",
+            "{\n" +
+            "  \"meta\": {\n" +
+            "    \"status\": 200,\n" +
+            "    \"additionalProperties\": {}\n" +
+            "  },\n" +
+            "  \"result\": {\n" +
+            "    \"groups\": [\n" +
+            "      {\n" +
+            "        \"groupName\": \"provider-UPV-GRyCAP\",\n" +
+            "        \"paasMachines\": [\n" +
+            "          {\n" +
+            "            \"machineName\": \"4401ac5dc8cfbbb737b0a02575e81d9b\",\n" +
+            "            \"ip\": \"127.0.0.1\",\n" +
+            "            \"serviceCategory\": \"org.openstack.nova\",\n" +
+            "            \"serviceId\": \"IaaS_provider-UPV-GRyCAP_4401ac5dc8cfbbb737b0a02575e81d9b\",\n" +
+            "            \"services\": [\n" +
+            "              {\n" +
+            "                \"serviceName\": \"\",\n" +
+            "                \"paasMetrics\": [\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"clear_responseTime\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..clear_responseTime\",\n" +
+            "                    \"metricValue\": 34272,\n" +
+            "                    \"metricTime\": \"03-09-201916:20:08\",\n" +
+            "                    \"metricUnit\": \"ms\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"clear_result\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..clear_result\",\n" +
+            "                    \"metricValue\": 1,\n" +
+            "                    \"metricTime\": \"03-09-201916:20:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"clear_status\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..clear_status\",\n" +
+            "                    \"metricValue\": 204,\n" +
+            "                    \"metricTime\": \"03-09-201916:20:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"create_responseTime\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..create_responseTime\",\n" +
+            "                    \"metricValue\": 711,\n" +
+            "                    \"metricTime\": \"03-09-201916:20:08\",\n" +
+            "                    \"metricUnit\": \"ms\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"create_result\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..create_result\",\n" +
+            "                    \"metricValue\": 1,\n" +
+            "                    \"metricTime\": \"03-09-201916:20:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"create_status\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..create_status\",\n" +
+            "                    \"metricValue\": 200,\n" +
+            "                    \"metricTime\": \"03-09-201916:20:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"delete_responseTime\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..delete_responseTime\",\n" +
+            "                    \"metricValue\": 856,\n" +
+            "                    \"metricTime\": \"03-09-201916:20:08\",\n" +
+            "                    \"metricUnit\": \"ms\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"delete_result\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..delete_result\",\n" +
+            "                    \"metricValue\": 1,\n" +
+            "                    \"metricTime\": \"03-09-201916:20:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"delete_status\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..delete_status\",\n" +
+            "                    \"metricValue\": 200,\n" +
+            "                    \"metricTime\": \"03-09-201916:20:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"openstack_responseTime\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..openstack_responseTime\",\n" +
+            "                    \"metricValue\": 0,\n" +
+            "                    \"metricTime\": \"Instantnullbecausenometricswerereturnedinthelast24hs\",\n" +
+            "                    \"metricUnit\": \"ms\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"openstack_result\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..openstack_result\",\n" +
+            "                    \"metricValue\": 0,\n" +
+            "                    \"metricTime\": \"Instantnullbecausenometricswerereturnedinthelast24hs\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"openstack_status\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..openstack_status\",\n" +
+            "                    \"metricValue\": 0,\n" +
+            "                    \"metricTime\": \"Instantnullbecausenometricswerereturnedinthelast24hs\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"run_responseTime\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..run_responseTime\",\n" +
+            "                    \"metricValue\": 393,\n" +
+            "                    \"metricTime\": \"03-09-201916:20:08\",\n" +
+            "                    \"metricUnit\": \"ms\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"run_result\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..run_result\",\n" +
+            "                    \"metricValue\": 1,\n" +
+            "                    \"metricTime\": \"03-09-201916:20:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"run_status\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.4401ac5dc8cfbbb737b0a02575e81d9b..run_status\",\n" +
+            "                    \"metricValue\": 200,\n" +
+            "                    \"metricTime\": \"03-09-201916:20:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  }\n" +
+            "                ]\n" +
+            "              }\n" +
+            "            ]\n" +
+            "          },\n" +
+            "          {\n" +
+            "            \"machineName\": \"61b5f554-c44c-4dcc-8373-3dade70b1901\",\n" +
+            "            \"ip\": \"127.0.0.1\",\n" +
+            "            \"serviceCategory\": \"eu.indigo-datacloud.mesos\",\n" +
+            "            \"serviceId\": \"IaaS_provider-UPV-GRyCAP_61b5f554-c44c-4dcc-8373-3dade70b1901\",\n" +
+            "            \"services\": [\n" +
+            "              {\n" +
+            "                \"serviceName\": \"\",\n" +
+            "                \"paasMetrics\": [\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.cpus_percent\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.cpus_percent\",\n" +
+            "                    \"metricValue\": 0.0556,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.cpus_total\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.cpus_total\",\n" +
+            "                    \"metricValue\": 72,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.cpus_used\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.cpus_used\",\n" +
+            "                    \"metricValue\": 4,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.disk_percent\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.disk_percent\",\n" +
+            "                    \"metricValue\": 0,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.disk_total\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.disk_total\",\n" +
+            "                    \"metricValue\": 3952957,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.disk_used\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.disk_used\",\n" +
+            "                    \"metricValue\": 0,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.dropped_messages\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.dropped_messages\",\n" +
+            "                    \"metricValue\": 13,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.elected\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.elected\",\n" +
+            "                    \"metricValue\": 1,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.frameworks_disconnected\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.frameworks_disconnected\",\n" +
+            "                    \"metricValue\": 0,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.frameworks_inactive\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.frameworks_inactive\",\n" +
+            "                    \"metricValue\": 0,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.gpus_percent\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.gpus_percent\",\n" +
+            "                    \"metricValue\": 0.6667,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.gpus_total\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.gpus_total\",\n" +
+            "                    \"metricValue\": 3,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.gpus_used\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.gpus_used\",\n" +
+            "                    \"metricValue\": 2,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.mem_percent\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.mem_percent\",\n" +
+            "                    \"metricValue\": 0.0639,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.mem_total\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.mem_total\",\n" +
+            "                    \"metricValue\": 320265,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.mem_used\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.mem_used\",\n" +
+            "                    \"metricValue\": 20480,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.slaves_active\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.slaves_active\",\n" +
+            "                    \"metricValue\": 2,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.tasks_lost\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.tasks_lost\",\n" +
+            "                    \"metricValue\": 0,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"master.uptime_secs\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.61b5f554-c44c-4dcc-8373-3dade70b1901..master.uptime_secs\",\n" +
+            "                    \"metricValue\": 9012352,\n" +
+            "                    \"metricTime\": \"03-09-201916:00:08\",\n" +
+            "                    \"metricUnit\": \"secs\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  }\n" +
+            "                ]\n" +
+            "              }\n" +
+            "            ]\n" +
+            "          },\n" +
+            "          {\n" +
+            "            \"machineName\": \"8922daf1-1a53-41b4-9f18-7ed536b44f20\",\n" +
+            "            \"ip\": \"127.0.0.1\",\n" +
+            "            \"serviceCategory\": \"eu.indigo-datacloud.marathon\",\n" +
+            "            \"serviceId\": \"IaaS_provider-UPV-GRyCAP_8922daf1-1a53-41b4-9f18-7ed536b44f20\",\n" +
+            "            \"services\": [\n" +
+            "              {\n" +
+            "                \"serviceName\": \"\",\n" +
+            "                \"paasMetrics\": [\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"clear_responseTime\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.8922daf1-1a53-41b4-9f18-7ed536b44f20..clear_responseTime\",\n" +
+            "                    \"metricValue\": 132,\n" +
+            "                    \"metricTime\": \"03-09-201915:30:08\",\n" +
+            "                    \"metricUnit\": \"ms\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"clear_result\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.8922daf1-1a53-41b4-9f18-7ed536b44f20..clear_result\",\n" +
+            "                    \"metricValue\": 1,\n" +
+            "                    \"metricTime\": \"03-09-201915:30:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"clear_status\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.8922daf1-1a53-41b4-9f18-7ed536b44f20..clear_status\",\n" +
+            "                    \"metricValue\": 404,\n" +
+            "                    \"metricTime\": \"03-09-201915:30:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"create_responseTime\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.8922daf1-1a53-41b4-9f18-7ed536b44f20..create_responseTime\",\n" +
+            "                    \"metricValue\": 110,\n" +
+            "                    \"metricTime\": \"03-09-201915:30:08\",\n" +
+            "                    \"metricUnit\": \"ms\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"create_result\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.8922daf1-1a53-41b4-9f18-7ed536b44f20..create_result\",\n" +
+            "                    \"metricValue\": 1,\n" +
+            "                    \"metricTime\": \"03-09-201915:30:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"create_status\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.8922daf1-1a53-41b4-9f18-7ed536b44f20..create_status\",\n" +
+            "                    \"metricValue\": 200,\n" +
+            "                    \"metricTime\": \"03-09-201915:30:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"delete_responseTime\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.8922daf1-1a53-41b4-9f18-7ed536b44f20..delete_responseTime\",\n" +
+            "                    \"metricValue\": 51,\n" +
+            "                    \"metricTime\": \"03-09-201915:30:08\",\n" +
+            "                    \"metricUnit\": \"ms\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"delete_result\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.8922daf1-1a53-41b4-9f18-7ed536b44f20..delete_result\",\n" +
+            "                    \"metricValue\": 1,\n" +
+            "                    \"metricTime\": \"03-09-201915:30:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"delete_status\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.8922daf1-1a53-41b4-9f18-7ed536b44f20..delete_status\",\n" +
+            "                    \"metricValue\": 200,\n" +
+            "                    \"metricTime\": \"03-09-201915:30:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"run_responseTime\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.8922daf1-1a53-41b4-9f18-7ed536b44f20..run_responseTime\",\n" +
+            "                    \"metricValue\": 20,\n" +
+            "                    \"metricTime\": \"03-09-201915:30:08\",\n" +
+            "                    \"metricUnit\": \"ms\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"run_result\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.8922daf1-1a53-41b4-9f18-7ed536b44f20..run_result\",\n" +
+            "                    \"metricValue\": 1,\n" +
+            "                    \"metricTime\": \"03-09-201915:30:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"run_status\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.8922daf1-1a53-41b4-9f18-7ed536b44f20..run_status\",\n" +
+            "                    \"metricValue\": 200,\n" +
+            "                    \"metricTime\": \"03-09-201915:30:08\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  }\n" +
+            "                ]\n" +
+            "              }\n" +
+            "            ]\n" +
+            "          },\n" +
+            "          {\n" +
+            "            \"machineName\": \"8490545c-f5ec-4330-9116-604dc0084caa\",\n" +
+            "            \"ip\": \"127.0.0.1\",\n" +
+            "            \"serviceCategory\": \"eu.indigo-datacloud.chronos\",\n" +
+            "            \"serviceId\": \"IaaS_provider-UPV-GRyCAP_8490545c-f5ec-4330-9116-604dc0084caa\",\n" +
+            "            \"services\": [\n" +
+            "              {\n" +
+            "                \"serviceName\": \"\",\n" +
+            "                \"paasMetrics\": [\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"clear_responseTime\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.8490545c-f5ec-4330-9116-604dc0084caa..clear_responseTime\",\n" +
+            "                    \"metricValue\": 200,\n" +
+            "                    \"metricTime\": \"03-09-201916:15:03\",\n" +
+            "                    \"metricUnit\": \"ms\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"clear_result\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.8490545c-f5ec-4330-9116-604dc0084caa..clear_result\",\n" +
+            "                    \"metricValue\": 1,\n" +
+            "                    \"metricTime\": \"03-09-201916:15:03\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"clear_status\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.8490545c-f5ec-4330-9116-604dc0084caa..clear_status\",\n" +
+            "                    \"metricValue\": 404,\n" +
+            "                    \"metricTime\": \"03-09-201916:15:03\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"create_responseTime\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.8490545c-f5ec-4330-9116-604dc0084caa..create_responseTime\",\n" +
+            "                    \"metricValue\": 110,\n" +
+            "                    \"metricTime\": \"03-09-201916:15:03\",\n" +
+            "                    \"metricUnit\": \"ms\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"create_result\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.8490545c-f5ec-4330-9116-604dc0084caa..create_result\",\n" +
+            "                    \"metricValue\": 1,\n" +
+            "                    \"metricTime\": \"03-09-201916:15:03\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"create_status\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.8490545c-f5ec-4330-9116-604dc0084caa..create_status\",\n" +
+            "                    \"metricValue\": 200,\n" +
+            "                    \"metricTime\": \"03-09-201916:15:03\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"delete_responseTime\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.8490545c-f5ec-4330-9116-604dc0084caa..delete_responseTime\",\n" +
+            "                    \"metricValue\": 15,\n" +
+            "                    \"metricTime\": \"03-09-201916:15:03\",\n" +
+            "                    \"metricUnit\": \"ms\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"delete_result\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.8490545c-f5ec-4330-9116-604dc0084caa..delete_result\",\n" +
+            "                    \"metricValue\": 1,\n" +
+            "                    \"metricTime\": \"03-09-201916:15:03\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"delete_status\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.8490545c-f5ec-4330-9116-604dc0084caa..delete_status\",\n" +
+            "                    \"metricValue\": 200,\n" +
+            "                    \"metricTime\": \"03-09-201916:15:03\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"run_responseTime\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.8490545c-f5ec-4330-9116-604dc0084caa..run_responseTime\",\n" +
+            "                    \"metricValue\": 13,\n" +
+            "                    \"metricTime\": \"03-09-201916:15:03\",\n" +
+            "                    \"metricUnit\": \"ms\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"run_result\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.8490545c-f5ec-4330-9116-604dc0084caa..run_result\",\n" +
+            "                    \"metricValue\": 1,\n" +
+            "                    \"metricTime\": \"03-09-201916:15:03\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  },\n" +
+            "                  {\n" +
+            "                    \"metricName\": \"run_status\",\n" +
+            "                    \"metricKey\": \"provider-UPV-GRyCAP.8490545c-f5ec-4330-9116-604dc0084caa..run_status\",\n" +
+            "                    \"metricValue\": 200,\n" +
+            "                    \"metricTime\": \"03-09-201916:15:03\",\n" +
+            "                    \"metricUnit\": \"\",\n" +
+            "                    \"paasThresholds\": [],\n" +
+            "                    \"historyClocks\": [],\n" +
+            "                    \"historyValues\": []\n" +
+            "                  }\n" +
+            "                ]\n" +
+            "              }\n" +
+            "            ]\n" +
+            "          }\n" +
+            "        ]\n" +
+            "      }\n" +
+            "    ]\n" +
+            "  },\n" +
+            "  \"additionalProperties\": {}\n" +
+            "}",
             MediaType.APPLICATION_JSON));
   }
 

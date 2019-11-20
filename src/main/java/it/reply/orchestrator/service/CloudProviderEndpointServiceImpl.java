@@ -67,27 +67,21 @@ public class CloudProviderEndpointServiceImpl {
         .flatMap(Collection::stream)
         .collect(Collectors.toMap(CloudService::getId, Function.identity()));
 
-    Stream<CloudService> orderedCloudServices;
-    if (DeploymentType.isMesosDeployment(rankCloudProvidersMessage.getDeploymentType())) {
-      // TODO now the first service its selected since they have already been filtered.
-      // It needs to be improved
-      orderedCloudServices = cloudServices.values().stream().limit(1);
-    } else {
-      orderedCloudServices =
-          rankCloudProvidersMessage
-              .getRankedCloudServices()
-              .stream()
-              // Choose the ones ranked
-              .filter(RankedCloudService::isRanked)
-              // and with the highest rank
-              .sorted(Comparator.comparing(RankedCloudService::getRank).reversed())
-              .map(RankedCloudService::getServiceId)
-              .map(cloudServices::get)
-              .filter(Objects::nonNull);
-      if (maxProvidersRetry != null) {
-        orderedCloudServices = orderedCloudServices.limit(maxProvidersRetry);
-      }
+    Stream<CloudService> orderedCloudServices =
+        rankCloudProvidersMessage
+            .getRankedCloudServices()
+            .stream()
+            // Choose the ones ranked
+            .filter(RankedCloudService::isRanked)
+            // and with the best rank
+            .sorted(Comparator.comparing(RankedCloudService::getRank))
+            .map(RankedCloudService::getServiceId)
+            .map(cloudServices::get)
+            .filter(Objects::nonNull);
+    if (maxProvidersRetry != null) {
+      orderedCloudServices = orderedCloudServices.limit(maxProvidersRetry);
     }
+
     return new CloudServicesOrderedIterator(orderedCloudServices.collect(Collectors.toList()));
   }
 
@@ -144,6 +138,8 @@ public class CloudProviderEndpointServiceImpl {
       iaasType = IaaSType.CHRONOS;
     } else if (computeService.isMarathonComputeProviderService()) {
       iaasType = IaaSType.MARATHON;
+    } else if (computeService.isQcgComputeProviderService()) {
+      iaasType = IaaSType.QCG;
     } else {
       throw new IllegalArgumentException("Unknown Cloud Provider type: " + computeService);
     }
@@ -180,6 +176,8 @@ public class CloudProviderEndpointServiceImpl {
         return DeploymentProvider.CHRONOS;
       case MARATHON:
         return DeploymentProvider.MARATHON;
+      case QCG:
+        return DeploymentProvider.QCG;
       case TOSCA:
         return DeploymentProvider.IM;
       default:

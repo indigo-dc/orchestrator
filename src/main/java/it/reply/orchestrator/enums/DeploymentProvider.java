@@ -21,6 +21,7 @@ public enum DeploymentProvider {
   IM,
   HEAT,
   CHRONOS,
-  MARATHON;
+  MARATHON,
+  QCG;
 
 }
