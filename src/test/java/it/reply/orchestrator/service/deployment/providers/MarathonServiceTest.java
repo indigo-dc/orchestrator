@@ -59,6 +59,7 @@ import mesosphere.marathon.client.model.v2.GetAppResponse;
 import mesosphere.marathon.client.model.v2.Group;
 import mesosphere.marathon.client.model.v2.HealthCheck;
 import mesosphere.marathon.client.model.v2.LocalVolume;
+import mesosphere.marathon.client.model.v2.TaskFailure;
 import mesosphere.marathon.client.model.v2.VersionedApp;
 import mesosphere.marathon.client.model.v2.Volume;
 
@@ -282,29 +283,19 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
   }
 
   @Test
-  @Parameters({"true", "false"})
-  public void doProviderTimeoutSuccessful(boolean isComplete) throws IOException {
+  @Parameters({"true,false", "false,false", "false,true"})
+  public void doProviderTimeoutSuccessful(boolean isComplete, boolean hasTaskFailure) throws IOException {
     Deployment deployment = generateDeployment();
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
     dm.setPollComplete(isComplete);
 
     VersionedApp app = new VersionedApp();
     app.setId("appId");
-
-    app.setDeployments(IntStream
-        .range(0, 1)
-        .mapToObj(i -> new mesosphere.marathon.client.model.v2.App.Deployment())
-        .collect(Collectors.toList()));
-
-    app.setInstances(1);
-
-    app.setHealthChecks(IntStream
-        .range(0, 1)
-        .mapToObj(i -> new HealthCheck())
-        .collect(Collectors.toList()));
-
-    app.setTasksRunning(1);
-    app.setTasksHealthy(1);
+    if (hasTaskFailure) {
+      TaskFailure tf = new TaskFailure();
+      tf.setMessage("Task Failure Message");
+      app.setLastTaskFailure(tf);
+    }
 
     Group group = new Group();
     group.setId(deployment.getId());
@@ -332,11 +323,19 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
     AbstractThrowableAssert<?, ? extends Throwable> assertion = assertThatCode(
         () -> marathonServiceImpl.doProviderTimeout(dm));
     if (!isComplete) {
-      assertion.isInstanceOf(BusinessWorkflowException.class)
-          .hasCauseExactlyInstanceOf(DeploymentException.class)
-          .hasMessage("Error executing request to Marathon service;"
-              + " nested exception is it.reply.orchestrator.exception.service."
-              + "DeploymentException: Deployment timeout");
+      if (!hasTaskFailure) {
+        assertion.isInstanceOf(BusinessWorkflowException.class)
+            .hasCauseExactlyInstanceOf(DeploymentException.class)
+            .hasMessage("Error executing request to Marathon service;"
+                + " nested exception is it.reply.orchestrator.exception.service."
+                + "DeploymentException: Deployment timeout");
+      } else {
+        assertion.isInstanceOf(BusinessWorkflowException.class)
+        .hasCauseExactlyInstanceOf(DeploymentException.class)
+        .hasMessage("Error executing request to Marathon service;"
+            + " nested exception is it.reply.orchestrator.exception.service."
+            + "DeploymentException: Deployment timeout: Task Failure Message\n");
+      }
     } else {
       assertion.doesNotThrowAnyException();
     }
