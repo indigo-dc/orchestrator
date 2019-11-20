@@ -348,13 +348,11 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
         String spath = "secret/private/" + deployment.getId();
         List<String> depentries = vaultService.listSecrets(uri, vaultToken, spath);
         //remove vault entries if present
-        if (!depentries.isEmpty()) {
-          for (String depentry:depentries) {
-            List<String> entries = vaultService.listSecrets(uri, vaultToken, spath + "/"
-                + depentry);
-            for (String entry:entries) {
-              vaultService.deleteSecret(uri, vaultToken, spath + "/" + depentry + "/" + entry);
-            }
+        for (String depentry:depentries) {
+          List<String> entries = vaultService.listSecrets(uri, vaultToken, spath + "/"
+              + depentry);
+          for (String entry:entries) {
+            vaultService.deleteSecret(uri, vaultToken, spath + "/" + depentry + "/" + entry);
           }
         }
       }
@@ -684,7 +682,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
       StringBuilder sb = new StringBuilder();
       Iterator<App> iterator = apps.iterator();
       while (iterator.hasNext()) {
-        App app = (App)iterator.next();
+        App app = iterator.next();
         if (app.getLastTaskFailure() != null && !StringUtils.isEmpty(app.getLastTaskFailure()
             .getMessage())) {
           sb.append(app.getLastTaskFailure().getMessage());
