@@ -29,8 +29,11 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 
+import lombok.AccessLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.Setter;
 import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -55,6 +58,7 @@ public class DeploymentMessage extends BaseWorkflowMessage {
    *          the timeout in Minutes
    */
   public void setTimeoutInMins(Integer timeoutMins) {
+    this.timeoutAsInt = timeoutMins;
     this.timeout = Optional
         .ofNullable(timeoutMins)
         .map(value -> Instant.now().plus(Duration.ofMinutes(value)))
@@ -85,6 +89,11 @@ public class DeploymentMessage extends BaseWorkflowMessage {
    *          the timeout in Minutes
    */
   public void setProviderTimeoutInMins(Integer timeoutMins) {
+    if (this.timeoutAsInt != null && timeoutMins != null) {
+      if (timeoutMins > this.timeoutAsInt) {
+        timeoutMins = this.timeoutAsInt;
+      }
+    }
     this.providerTimeout = Optional
         .ofNullable(timeoutMins)
         .map(value -> Instant.now().plus(Duration.ofMinutes(value)))
@@ -109,5 +118,10 @@ public class DeploymentMessage extends BaseWorkflowMessage {
   private Integer maxProvidersRetry;
 
   private boolean keepLastAttempt = false;
+
+  @Nullable
+  @Getter(AccessLevel.NONE)
+  @Setter(AccessLevel.NONE)
+  private Integer timeoutAsInt = null;
 
 }
