@@ -91,14 +91,15 @@ public class DeploymentMessage extends BaseWorkflowMessage {
   public void setProviderTimeoutInMins(Integer timeoutMins) {
     if (this.timeoutAsInt != null && timeoutMins != null
         && timeoutMins > this.timeoutAsInt) {
-      timeoutMins = this.timeoutAsInt;
+      this.providerTimeout = this.timeout.toString();
+    } else {
+      this.providerTimeout = Optional
+          .ofNullable(timeoutMins)
+          .map(value -> Instant.now().plus(Duration.ofMinutes(value)))
+          .filter(value -> value.isBefore(MAX_TIMEOUT))
+          .orElse(MAX_TIMEOUT)
+          .toString();
     }
-    this.providerTimeout = Optional
-        .ofNullable(timeoutMins)
-        .map(value -> Instant.now().plus(Duration.ofMinutes(value)))
-        .filter(value -> value.isBefore(MAX_TIMEOUT))
-        .orElse(MAX_TIMEOUT)
-        .toString();
   }
 
   @Nullable
