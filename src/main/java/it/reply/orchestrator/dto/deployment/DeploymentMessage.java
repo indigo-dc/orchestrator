@@ -89,10 +89,9 @@ public class DeploymentMessage extends BaseWorkflowMessage {
    *          the timeout in Minutes
    */
   public void setProviderTimeoutInMins(Integer timeoutMins) {
-    if (this.timeoutAsInt != null && timeoutMins != null) {
-      if (timeoutMins > this.timeoutAsInt) {
+    if (this.timeoutAsInt != null && timeoutMins != null
+        && timeoutMins > this.timeoutAsInt) {
         timeoutMins = this.timeoutAsInt;
-      }
     }
     this.providerTimeout = Optional
         .ofNullable(timeoutMins)
