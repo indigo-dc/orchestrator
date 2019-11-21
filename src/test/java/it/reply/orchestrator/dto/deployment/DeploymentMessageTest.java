@@ -18,7 +18,7 @@ package it.reply.orchestrator.dto.deployment;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-
+import java.util.concurrent.TimeUnit;
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 import org.junit.Test;
@@ -29,11 +29,12 @@ public class DeploymentMessageTest {
 
   @Test
   @Parameters({"1,1", "1,3", "3,1"})
-  public void testSetProviderTimeoutInMins(int timeout, int providerTimeout) {
+  public void testSetProviderTimeoutInMins(int timeout, int providerTimeout) throws InterruptedException {
     DeploymentMessage dm = new DeploymentMessage();
     dm.setTimeoutInMins(timeout);
+    TimeUnit.SECONDS.sleep(1);
     dm.setProviderTimeoutInMins(providerTimeout);
-    if (providerTimeout >= timeout) {
+    if (providerTimeout > timeout) {
       assertThat(dm.getProviderTimeout()).isEqualTo(dm.getTimeout());
     } else {
       assertThat(dm.getProviderTimeout()).isNotEqualTo(dm.getTimeout());
