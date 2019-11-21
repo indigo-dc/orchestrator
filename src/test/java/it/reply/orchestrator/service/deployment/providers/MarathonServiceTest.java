@@ -283,7 +283,7 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
   }
 
   @Test
-  @Parameters({"true,false", "false,false", "false,true"})
+  @Parameters({"true,false", "true,true", "false,false", "false,true"})
   public void doProviderTimeoutSuccessful(boolean isComplete, boolean hasTaskFailure) throws IOException {
     Deployment deployment = generateDeployment();
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);

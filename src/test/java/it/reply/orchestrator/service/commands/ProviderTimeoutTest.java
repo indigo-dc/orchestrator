@@ -44,6 +44,6 @@ public class ProviderTimeoutTest  extends BaseDeployCommandTest<ProviderTimeout>
     command.execute(execution);
 
     verify(deploymentProviderService, times(1)).doProviderTimeout(dm);
-
   }
+
 }
