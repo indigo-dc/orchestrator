@@ -33,7 +33,7 @@ public class DeploymentMessageTest {
     DeploymentMessage dm = new DeploymentMessage();
     dm.setTimeoutInMins(timeout);
     dm.setProviderTimeoutInMins(providerTimeout);
-    if (providerTimeout > timeout) {
+    if (providerTimeout >= timeout) {
       assertThat(dm.getProviderTimeout()).isEqualTo(dm.getTimeout());
     } else {
       assertThat(dm.getProviderTimeout()).isNotEqualTo(dm.getTimeout());
