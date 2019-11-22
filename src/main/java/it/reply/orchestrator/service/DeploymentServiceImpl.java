@@ -164,6 +164,33 @@ public class DeploymentServiceImpl implements DeploymentService {
     }
   }
 
+  private void populateFromRequestData(DeploymentRequest request,
+      ArchiveRoot parsingResult, DeploymentMessage deploymentMessage) {
+    Map<String, OneData> odRequirements = toscaService
+        .extractOneDataRequirements(parsingResult, request.getParameters());
+    deploymentMessage.setOneDataRequirements(odRequirements);
+
+    Map<String, Dynafed> dyanfedRequirements = toscaService
+        .extractDyanfedRequirements(parsingResult, request.getParameters());
+    deploymentMessage.setDynafedRequirements(dyanfedRequirements);
+
+    @Nullable
+    Integer timeoutInMins = request.getTimeoutMins();
+    @Nullable
+    Integer providerTimeoutInMins = request.getProviderTimeoutMins();
+
+    if (timeoutInMins != null && providerTimeoutInMins != null
+        && providerTimeoutInMins > timeoutInMins) {
+      throw new BadRequestException("ProviderTimeout must be <= Timeout");
+    }
+
+    deploymentMessage.setTimeoutInMins(timeoutInMins);
+    deploymentMessage.setProviderTimeoutInMins(providerTimeoutInMins);
+
+    deploymentMessage.setMaxProvidersRetry(request.getMaxProvidersRetry());
+    deploymentMessage.setKeepLastAttempt(request.isKeepLastAttempt());
+  }
+
   @Override
   @Transactional
   public Deployment createDeployment(DeploymentRequest request) {
@@ -193,29 +220,7 @@ public class DeploymentServiceImpl implements DeploymentService {
     // Build deployment message
     DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType);
 
-    Map<String, OneData> odRequirements = toscaService
-        .extractOneDataRequirements(parsingResult, request.getParameters());
-    deploymentMessage.setOneDataRequirements(odRequirements);
-
-    Map<String, Dynafed> dyanfedRequirements = toscaService
-        .extractDyanfedRequirements(parsingResult, request.getParameters());
-    deploymentMessage.setDynafedRequirements(dyanfedRequirements);
-
-    @Nullable
-    Integer timeoutInMins = request.getTimeoutMins();
-    @Nullable
-    Integer providerTimeoutInMins = request.getProviderTimeoutMins();
-
-    if (timeoutInMins != null && providerTimeoutInMins != null
-        && providerTimeoutInMins > timeoutInMins) {
-      throw new BadRequestException("ProviderTimeout must be <= Timeout");
-    }
-
-    deploymentMessage.setTimeoutInMins(timeoutInMins);
-    deploymentMessage.setProviderTimeoutInMins(providerTimeoutInMins);
-
-    deploymentMessage.setMaxProvidersRetry(request.getMaxProvidersRetry());
-    deploymentMessage.setKeepLastAttempt(request.isKeepLastAttempt());
+    populateFromRequestData(request, parsingResult,  deploymentMessage);
 
     Map<String, ToscaPolicy> placementPolicies = toscaService
         .extractPlacementPolicies(parsingResult);
@@ -380,29 +385,7 @@ public class DeploymentServiceImpl implements DeploymentService {
         toscaService.extractPlacementPolicies(parsingResult);
     deploymentMessage.setPlacementPolicies(placementPolicies);
 
-    Map<String, OneData> odRequirements = toscaService
-        .extractOneDataRequirements(parsingResult, request.getParameters());
-    deploymentMessage.setOneDataRequirements(odRequirements);
-
-    Map<String, Dynafed> dyanfedRequirements = toscaService
-        .extractDyanfedRequirements(parsingResult, request.getParameters());
-    deploymentMessage.setDynafedRequirements(dyanfedRequirements);
-
-    @Nullable
-    Integer timeoutInMins = request.getTimeoutMins();
-    @Nullable
-    Integer providerTimeoutInMins = request.getProviderTimeoutMins();
-
-    if (timeoutInMins != null && providerTimeoutInMins != null
-        && providerTimeoutInMins > timeoutInMins) {
-      throw new BadRequestException("ProviderTimeout must be <= Timeout");
-    }
-
-    deploymentMessage.setTimeoutInMins(timeoutInMins);
-    deploymentMessage.setProviderTimeoutInMins(providerTimeoutInMins);
-
-    deploymentMessage.setMaxProvidersRetry(request.getMaxProvidersRetry());
-    deploymentMessage.setKeepLastAttempt(request.isKeepLastAttempt());
+    populateFromRequestData(request, parsingResult,  deploymentMessage);
 
     ProcessInstance pi = wfService
         .createProcessInstanceBuilder()

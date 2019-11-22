@@ -29,11 +29,8 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 import javax.validation.constraints.NotNull;
 
-import lombok.AccessLevel;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
 import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -47,6 +44,7 @@ public class DeploymentMessage extends BaseWorkflowMessage {
   // private static final Instant MAX_TIMEOUT = Instant.parse("9999-12-31T23:59:59.999Z");
   private static final Instant MAX_TIMEOUT = Instant.parse("2038-01-19T03:14:07.999Z");
   private static final Integer MAX_PROVIDER_TIMEOUT = 14400;
+  private static final String TIME_FORMAT = "PT%dM";
 
   @NonNull
   @NotNull
@@ -80,7 +78,7 @@ public class DeploymentMessage extends BaseWorkflowMessage {
 
   @NonNull
   @NotNull
-  private String providerTimeout = String.format("PT%dM", MAX_PROVIDER_TIMEOUT);
+  private String providerTimeout = String.format(TIME_FORMAT, MAX_PROVIDER_TIMEOUT);
 
   /**
    * Sets the Deployment per provider timeout.
@@ -91,9 +89,8 @@ public class DeploymentMessage extends BaseWorkflowMessage {
   public void setProviderTimeoutInMins(Integer timeoutMins) {
     this.providerTimeout = Optional
         .ofNullable(timeoutMins)
-        .map(value -> String.format("PT%dM", value.intValue()))
-        .orElse(String.format("PT%dM", MAX_PROVIDER_TIMEOUT))
-        .toString();
+        .map(value -> String.format(TIME_FORMAT, value))
+        .orElse(String.format(TIME_FORMAT, MAX_PROVIDER_TIMEOUT));
   }
 
   @Nullable
