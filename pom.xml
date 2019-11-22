@@ -691,7 +691,6 @@
             <exclude>src/main/java/it/reply/orchestrator/service/deployment/providers/QcgServiceImpl.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/service/deployment/providers/factory/QcgClientFactory.java</exclude>
             <exclude>src/test/java/it/reply/orchestrator/controller/ConfigurationEndpointTest.java</exclude>
-            <exclude>src/test/java/it/reply/orchestrator/dto/deployment/DeploymentMessageTest.java</exclude>
             <exclude>src/test/java/it/reply/orchestrator/service/commands/ProviderTimeoutTest.java</exclude>
             <exclude>src/test/java/it/reply/orchestrator/service/deployment/providers/QcgServiceTest.java</exclude>
             <exclude>src/test/java/it/reply/orchestrator/service/ConfigurationServiceTest.java</exclude>

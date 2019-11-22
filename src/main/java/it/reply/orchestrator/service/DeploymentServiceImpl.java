@@ -58,6 +58,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
+import javax.annotation.Nullable;
+
 import lombok.extern.slf4j.Slf4j;
 
 import org.alien4cloud.tosca.model.templates.NodeTemplate;
@@ -199,8 +201,18 @@ public class DeploymentServiceImpl implements DeploymentService {
         .extractDyanfedRequirements(parsingResult, request.getParameters());
     deploymentMessage.setDynafedRequirements(dyanfedRequirements);
 
-    deploymentMessage.setTimeoutInMins(request.getTimeoutMins());
-    deploymentMessage.setProviderTimeoutInMins(request.getProviderTimeoutMins());
+    @Nullable
+    Integer timeoutInMins = request.getTimeoutMins();
+    @Nullable
+    Integer providerTimeoutInMins = request.getProviderTimeoutMins();
+
+    if (timeoutInMins != null && providerTimeoutInMins != null
+        && providerTimeoutInMins > timeoutInMins) {
+      throw new BadRequestException("ProviderTimeout must be <= Timeout");
+    }
+
+    deploymentMessage.setTimeoutInMins(timeoutInMins);
+    deploymentMessage.setProviderTimeoutInMins(providerTimeoutInMins);
 
     deploymentMessage.setMaxProvidersRetry(request.getMaxProvidersRetry());
     deploymentMessage.setKeepLastAttempt(request.isKeepLastAttempt());
@@ -376,8 +388,18 @@ public class DeploymentServiceImpl implements DeploymentService {
         .extractDyanfedRequirements(parsingResult, request.getParameters());
     deploymentMessage.setDynafedRequirements(dyanfedRequirements);
 
-    deploymentMessage.setTimeoutInMins(request.getTimeoutMins());
-    deploymentMessage.setProviderTimeoutInMins(request.getProviderTimeoutMins());
+    @Nullable
+    Integer timeoutInMins = request.getTimeoutMins();
+    @Nullable
+    Integer providerTimeoutInMins = request.getProviderTimeoutMins();
+
+    if (timeoutInMins != null && providerTimeoutInMins != null
+        && providerTimeoutInMins > timeoutInMins) {
+      throw new BadRequestException("ProviderTimeout must be <= Timeout");
+    }
+
+    deploymentMessage.setTimeoutInMins(timeoutInMins);
+    deploymentMessage.setProviderTimeoutInMins(providerTimeoutInMins);
 
     deploymentMessage.setMaxProvidersRetry(request.getMaxProvidersRetry());
     deploymentMessage.setKeepLastAttempt(request.isKeepLastAttempt());

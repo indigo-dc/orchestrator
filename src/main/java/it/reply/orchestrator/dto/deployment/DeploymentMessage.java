@@ -46,6 +46,7 @@ public class DeploymentMessage extends BaseWorkflowMessage {
   // Max value allowed by SQL
   // private static final Instant MAX_TIMEOUT = Instant.parse("9999-12-31T23:59:59.999Z");
   private static final Instant MAX_TIMEOUT = Instant.parse("2038-01-19T03:14:07.999Z");
+  private static final Integer MAX_PROVIDER_TIMEOUT = 14400;
 
   @NonNull
   @NotNull
@@ -58,7 +59,6 @@ public class DeploymentMessage extends BaseWorkflowMessage {
    *          the timeout in Minutes
    */
   public void setTimeoutInMins(Integer timeoutMins) {
-    this.timeoutAsInt = timeoutMins;
     this.timeout = Optional
         .ofNullable(timeoutMins)
         .map(value -> Instant.now().plus(Duration.ofMinutes(value)))
@@ -80,7 +80,7 @@ public class DeploymentMessage extends BaseWorkflowMessage {
 
   @NonNull
   @NotNull
-  private String providerTimeout = MAX_TIMEOUT.toString();
+  private String providerTimeout = String.format("PT%dM", MAX_PROVIDER_TIMEOUT);
 
   /**
    * Sets the Deployment per provider timeout.
@@ -89,17 +89,11 @@ public class DeploymentMessage extends BaseWorkflowMessage {
    *          the timeout in Minutes
    */
   public void setProviderTimeoutInMins(Integer timeoutMins) {
-    if (this.timeoutAsInt != null && timeoutMins != null
-        && timeoutMins > this.timeoutAsInt) {
-      this.providerTimeout = this.timeout.toString();
-    } else {
-      this.providerTimeout = Optional
-          .ofNullable(timeoutMins)
-          .map(value -> Instant.now().plus(Duration.ofMinutes(value)))
-          .filter(value -> value.isBefore(MAX_TIMEOUT))
-          .orElse(MAX_TIMEOUT)
-          .toString();
-    }
+    this.providerTimeout = Optional
+        .ofNullable(timeoutMins)
+        .map(value -> String.format("PT%dM", value.intValue()))
+        .orElse(String.format("PT%dM", MAX_PROVIDER_TIMEOUT))
+        .toString();
   }
 
   @Nullable
@@ -118,10 +112,5 @@ public class DeploymentMessage extends BaseWorkflowMessage {
   private Integer maxProvidersRetry;
 
   private boolean keepLastAttempt = false;
-
-  @Nullable
-  @Getter(AccessLevel.NONE)
-  @Setter(AccessLevel.NONE)
-  private Integer timeoutAsInt = null;
 
 }
