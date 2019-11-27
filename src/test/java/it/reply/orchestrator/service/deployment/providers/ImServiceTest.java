@@ -539,7 +539,7 @@ public class ImServiceTest {
   }
 
   @Test
-  public void doProviderTimeoutSuccessful(boolean isComplete) {
+  public void doProviderTimeoutSuccessful() {
     Deployment deployment = ControllerTestUtils.createDeployment(2);
     deployment.setDeploymentProvider(DeploymentProvider.IM);
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
