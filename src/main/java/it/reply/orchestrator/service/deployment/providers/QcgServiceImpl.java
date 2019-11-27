@@ -320,11 +320,9 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
 
   @Override
   public void doProviderTimeout(DeploymentMessage deploymentMessage) {
-    if (!deploymentMessage.isPollComplete()) {
-      throw new BusinessWorkflowException(ErrorCode.CLOUD_PROVIDER_ERROR,
-        "Error executing request to Qcg service",
-        new DeploymentException("Qcg service timeout during deployment"));
-    }
+    throw new BusinessWorkflowException(ErrorCode.CLOUD_PROVIDER_ERROR,
+      "Error executing request to Qcg service",
+      new DeploymentException("Qcg service timeout during deployment"));
   }
 
   @Data

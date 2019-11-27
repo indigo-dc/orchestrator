@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright © 2015-2018 Santer Reply S.p.A.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+
 <definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:flowable="http://flowable.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.flowable.org/processdef">
   <signal id="deploymentUpdated" name="deploymentUpdated" flowable:scope="processInstance"></signal>
   <process id="Deploy" name="Deploy" isExecutable="true">
@@ -8,7 +24,11 @@
       <startEvent id="sid-A02B51BB-2563-491F-9940-EDFC999314FC" isInterrupting="true">
         <errorEventDefinition errorRef="RuntimeError"></errorEventDefinition>
       </startEvent>
-      <serviceTask id="sid-A165FF62-D490-4C23-B755-4BAF7B7BF533" name="Handle Error" flowable:async="true" flowable:delegateExpression="${handleError}"></serviceTask>
+      <serviceTask id="sid-A165FF62-D490-4C23-B755-4BAF7B7BF533" name="Handle Error" flowable:async="true" flowable:delegateExpression="${handleError}">
+        <extensionElements>
+          <flowable:failedJobRetryTimeCycle>R</flowable:failedJobRetryTimeCycle>
+        </extensionElements>
+      </serviceTask>      
       <serviceTask id="sid-72E32115-652B-4A23-9577-FCD35FC58043" name="Notify" flowable:async="true" flowable:delegateExpression="${notify}"></serviceTask>
       <endEvent id="sid-6A4BC039-403A-417E-B9A2-41E6A9C87D9F"></endEvent>
       <sequenceFlow id="sid-F769952B-6572-4DF6-A0F7-9CE925851290" sourceRef="sid-A02B51BB-2563-491F-9940-EDFC999314FC" targetRef="sid-A165FF62-D490-4C23-B755-4BAF7B7BF533"></sequenceFlow>

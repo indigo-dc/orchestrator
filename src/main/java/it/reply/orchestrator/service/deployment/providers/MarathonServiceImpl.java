@@ -675,30 +675,28 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
 
   @Override
   public void doProviderTimeout(DeploymentMessage deploymentMessage) throws DeploymentException {
-    if (!deploymentMessage.isPollComplete()) {
-      Deployment deployment = getDeployment(deploymentMessage);
-      Group group = getPolulatedGroup(deploymentMessage, deployment);
-      Collection<App> apps = Optional.ofNullable(group.getApps()).orElseGet(ArrayList::new);
-      StringBuilder sb = new StringBuilder();
-      Iterator<App> iterator = apps.iterator();
-      while (iterator.hasNext()) {
-        App app = iterator.next();
-        if (app.getLastTaskFailure() != null && !StringUtils.isEmpty(app.getLastTaskFailure()
-            .getMessage())) {
-          sb.append(app.getLastTaskFailure().getMessage());
-          sb.append('\n');
-        }
+    Deployment deployment = getDeployment(deploymentMessage);
+    Group group = getPolulatedGroup(deploymentMessage, deployment);
+    Collection<App> apps = Optional.ofNullable(group.getApps()).orElseGet(ArrayList::new);
+    StringBuilder sb = new StringBuilder();
+    Iterator<App> iterator = apps.iterator();
+    while (iterator.hasNext()) {
+      App app = iterator.next();
+      if (app.getLastTaskFailure() != null && !StringUtils.isEmpty(app.getLastTaskFailure()
+          .getMessage())) {
+        sb.append(app.getLastTaskFailure().getMessage());
+        sb.append('\n');
       }
-      if (sb.length() > 0) {
-        sb.insert(0, "Deployment timeout: ");
-      } else {
-        sb.append("Deployment timeout");
-      }
-
-      throw new BusinessWorkflowException(ErrorCode.CLOUD_PROVIDER_ERROR,
-          "Error executing request to Marathon service",
-          new DeploymentException(sb.toString()));
     }
+    if (sb.length() > 0) {
+      sb.insert(0, "Deployment timeout: ");
+    } else {
+      sb.append("Deployment timeout");
+    }
+
+    throw new BusinessWorkflowException(ErrorCode.CLOUD_PROVIDER_ERROR,
+        "Error executing request to Marathon service",
+        new DeploymentException(sb.toString()));
   }
 
 }

@@ -254,11 +254,9 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
 
   @Override
   public void doProviderTimeout(DeploymentMessage deploymentMessage) {
-    if (!deploymentMessage.isPollComplete()) {
-      throw new BusinessWorkflowException(ErrorCode.CLOUD_PROVIDER_ERROR,
-          "Error executing request to Chronos service",
-          new DeploymentException("Chronos service timeout during deployment"));
-    }
+    throw new BusinessWorkflowException(ErrorCode.CLOUD_PROVIDER_ERROR,
+        "Error executing request to Chronos service",
+        new DeploymentException("Chronos service timeout during deployment"));
   }
 
   /**
