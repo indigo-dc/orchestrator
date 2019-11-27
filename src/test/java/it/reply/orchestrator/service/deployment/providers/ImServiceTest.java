@@ -539,24 +539,18 @@ public class ImServiceTest {
   }
 
   @Test
-  @Parameters({"true", "false"})
   public void doProviderTimeoutSuccessful(boolean isComplete) {
     Deployment deployment = ControllerTestUtils.createDeployment(2);
     deployment.setDeploymentProvider(DeploymentProvider.IM);
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
-    dm.setPollComplete(isComplete);
 
     AbstractThrowableAssert<?, ? extends Throwable> assertion = assertThatCode(
         () -> imService.doProviderTimeout(dm));
-    if (!isComplete) {
-      assertion.isInstanceOf(BusinessWorkflowException.class)
-          .hasCauseExactlyInstanceOf(DeploymentException.class)
-          .hasMessage("Error executing request to IM;"
-              + " nested exception is it.reply.orchestrator.exception.service."
-              + "DeploymentException: IM provider timeout during deployment");
-    } else {
-      assertion.doesNotThrowAnyException();
-    }
+    assertion.isInstanceOf(BusinessWorkflowException.class)
+        .hasCauseExactlyInstanceOf(DeploymentException.class)
+        .hasMessage("Error executing request to IM;"
+            + " nested exception is it.reply.orchestrator.exception.service."
+            + "DeploymentException: IM provider timeout during deployment");
   }
 
   @Test
