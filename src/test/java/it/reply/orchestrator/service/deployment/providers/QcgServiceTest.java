@@ -299,24 +299,18 @@ public class QcgServiceTest extends ToscaParserAwareTest {
   }
 
   @Test
-  @Parameters({"true", "false"})
-  public void doProviderTimeoutSuccessful(boolean isComplete) {
+  public void doProviderTimeoutSuccessful() {
     Deployment deployment = ControllerTestUtils.createDeployment(1);
     deployment.setEndpoint("999");
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
-    dm.setPollComplete(isComplete);
 
     AbstractThrowableAssert<?, ? extends Throwable> assertion = assertThatCode(
         () -> qcgService.doProviderTimeout(dm));
-    if (!isComplete) {
-      assertion.isInstanceOf(BusinessWorkflowException.class)
-          .hasCauseExactlyInstanceOf(DeploymentException.class)
-          .hasMessage("Error executing request to Qcg service;"
-              + " nested exception is it.reply.orchestrator.exception.service."
-              + "DeploymentException: Qcg service timeout during deployment");
-    } else {
-      assertion.doesNotThrowAnyException();
-    }
+    assertion.isInstanceOf(BusinessWorkflowException.class)
+        .hasCauseExactlyInstanceOf(DeploymentException.class)
+        .hasMessage("Error executing request to Qcg service;"
+            + " nested exception is it.reply.orchestrator.exception.service."
+            + "DeploymentException: Qcg service timeout during deployment");
   }
 
   @Test

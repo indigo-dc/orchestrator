@@ -283,11 +283,10 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
   }
 
   @Test
-  @Parameters({"true,false", "true,true", "false,false", "false,true"})
-  public void doProviderTimeoutSuccessful(boolean isComplete, boolean hasTaskFailure) throws IOException {
+  @Parameters({"true", "false"})
+  public void doProviderTimeoutSuccessful(boolean hasTaskFailure) throws IOException {
     Deployment deployment = generateDeployment();
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
-    dm.setPollComplete(isComplete);
 
     VersionedApp app = new VersionedApp();
     app.setId("appId");
@@ -322,22 +321,18 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
 
     AbstractThrowableAssert<?, ? extends Throwable> assertion = assertThatCode(
         () -> marathonServiceImpl.doProviderTimeout(dm));
-    if (!isComplete) {
-      if (!hasTaskFailure) {
-        assertion.isInstanceOf(BusinessWorkflowException.class)
-            .hasCauseExactlyInstanceOf(DeploymentException.class)
-            .hasMessage("Error executing request to Marathon service;"
-                + " nested exception is it.reply.orchestrator.exception.service."
-                + "DeploymentException: Deployment timeout");
-      } else {
-        assertion.isInstanceOf(BusinessWorkflowException.class)
-        .hasCauseExactlyInstanceOf(DeploymentException.class)
-        .hasMessage("Error executing request to Marathon service;"
-            + " nested exception is it.reply.orchestrator.exception.service."
-            + "DeploymentException: Deployment timeout: Task Failure Message\n");
-      }
+    if (!hasTaskFailure) {
+      assertion.isInstanceOf(BusinessWorkflowException.class)
+          .hasCauseExactlyInstanceOf(DeploymentException.class)
+          .hasMessage("Error executing request to Marathon service;"
+              + " nested exception is it.reply.orchestrator.exception.service."
+              + "DeploymentException: Deployment timeout");
     } else {
-      assertion.doesNotThrowAnyException();
+      assertion.isInstanceOf(BusinessWorkflowException.class)
+      .hasCauseExactlyInstanceOf(DeploymentException.class)
+      .hasMessage("Error executing request to Marathon service;"
+          + " nested exception is it.reply.orchestrator.exception.service."
+          + "DeploymentException: Deployment timeout: Task Failure Message\n");
     }
   }
 
