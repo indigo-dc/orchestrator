@@ -28,7 +28,7 @@
         <extensionElements>
           <flowable:failedJobRetryTimeCycle>R</flowable:failedJobRetryTimeCycle>
         </extensionElements>
-      </serviceTask>      
+      </serviceTask>
       <serviceTask id="sid-72E32115-652B-4A23-9577-FCD35FC58043" name="Notify" flowable:async="true" flowable:delegateExpression="${notify}"></serviceTask>
       <endEvent id="sid-6A4BC039-403A-417E-B9A2-41E6A9C87D9F"></endEvent>
       <sequenceFlow id="sid-F769952B-6572-4DF6-A0F7-9CE925851290" sourceRef="sid-A02B51BB-2563-491F-9940-EDFC999314FC" targetRef="sid-A165FF62-D490-4C23-B755-4BAF7B7BF533"></sequenceFlow>
