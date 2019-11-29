@@ -34,7 +34,6 @@ import es.upv.i3m.grycap.im.pojo.InfrastructureUris;
 import es.upv.i3m.grycap.im.pojo.ResponseError;
 import es.upv.i3m.grycap.im.pojo.VirtualMachineInfo;
 import es.upv.i3m.grycap.im.rest.client.BodyContentType;
-
 import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
@@ -51,6 +50,7 @@ import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.OrchestratorException;
+import it.reply.orchestrator.exception.service.BusinessWorkflowException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.function.ThrowingFunction;
@@ -71,6 +71,7 @@ import java.util.stream.IntStream;
 
 import org.alien4cloud.tosca.model.templates.NodeTemplate;
 import org.alien4cloud.tosca.model.templates.Topology;
+import org.assertj.core.api.AbstractThrowableAssert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -84,6 +85,7 @@ import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static it.reply.orchestrator.dto.cmdb.CloudService.OPENSTACK_COMPUTE_SERVICE;
 import static org.mockito.Mockito.*;
@@ -534,6 +536,21 @@ public class ImServiceTest {
         .extracting(Resource::getState)
         .allMatch(NodeStates.STARTED::equals);
     assertThat(dm.isPollComplete()).isFalse();
+  }
+
+  @Test
+  public void doProviderTimeoutSuccessful() {
+    Deployment deployment = ControllerTestUtils.createDeployment(2);
+    deployment.setDeploymentProvider(DeploymentProvider.IM);
+    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
+
+    AbstractThrowableAssert<?, ? extends Throwable> assertion = assertThatCode(
+        () -> imService.doProviderTimeout(dm));
+    assertion.isInstanceOf(BusinessWorkflowException.class)
+        .hasCauseExactlyInstanceOf(DeploymentException.class)
+        .hasMessage("Error executing request to IM;"
+            + " nested exception is it.reply.orchestrator.exception.service."
+            + "DeploymentException: IM provider timeout during deployment");
   }
 
   @Test

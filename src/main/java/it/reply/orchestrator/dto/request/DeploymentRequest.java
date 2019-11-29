@@ -54,8 +54,13 @@ public class DeploymentRequest {
   private String callback;
 
   @Nullable
-  @Min(value = 1, message = "Timeout value, if provided, must be at least of 1 minute")
+  @Min(value = 1, message = "Overall timeout value, if provided, must be at least of 1 minute")
   private Integer timeoutMins;
+
+  @Nullable
+  @Min(value = 1, message = "Provider timeout value, if provided, must be at least of 1 minute and"
+      + " equal or less than timeoutMins")
+  private Integer providerTimeoutMins;
 
   @Nullable
   @Min(value = 1, message = "maxProvidersRetry value, if provided, must be at least of 1")

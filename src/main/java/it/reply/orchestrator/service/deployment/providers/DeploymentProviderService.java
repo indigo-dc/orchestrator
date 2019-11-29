@@ -107,6 +107,8 @@ public interface DeploymentProviderService {
 
   public void finalizeUndeploy(DeploymentMessage deploymentMessage);
 
+  public void doProviderTimeout(DeploymentMessage deploymentMessage);
+
   public Optional<String> getAdditionalErrorInfo(DeploymentMessage deploymentMessage);
 
 }

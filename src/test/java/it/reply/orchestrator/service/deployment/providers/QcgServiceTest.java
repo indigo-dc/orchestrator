@@ -27,7 +27,6 @@ import it.infn.ba.deep.qcg.client.model.Job;
 import it.infn.ba.deep.qcg.client.model.JobDescription;
 import it.infn.ba.deep.qcg.client.model.JobDescriptionExecution;
 import it.infn.ba.deep.qcg.client.utils.QcgException;
-
 import it.reply.orchestrator.config.specific.ToscaParserAwareTest;
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
@@ -43,6 +42,7 @@ import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.deployment.QcgJobsOrderedIterator;
 import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.enums.NodeStates;
+import it.reply.orchestrator.exception.service.BusinessWorkflowException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.function.ThrowingFunction;
 import it.reply.orchestrator.service.ToscaServiceImpl;
@@ -281,6 +281,36 @@ public class QcgServiceTest extends ToscaParserAwareTest {
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
 
     assertThat(qcgService.isUndeployed(dm)).isTrue();
+  }
+
+  @Test
+  public void doCleanFailedDeploySuccessful() throws QcgException {
+    Deployment deployment = ControllerTestUtils.createDeployment(1);
+    deployment.setEndpoint("999");
+    DeploymentMessage dm = generateDeployDmQcg(deployment);
+    deployment.getResources().forEach(resource -> resource.setToscaNodeType(Nodes.Types.QCG));
+
+    String jobId = deployment.getEndpoint();
+
+    when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
+
+    qcgService.cleanFailedDeploy(dm);
+    verify(qcg, times(1)).deleteJob(jobId);
+  }
+
+  @Test
+  public void doProviderTimeoutSuccessful() {
+    Deployment deployment = ControllerTestUtils.createDeployment(1);
+    deployment.setEndpoint("999");
+    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
+
+    AbstractThrowableAssert<?, ? extends Throwable> assertion = assertThatCode(
+        () -> qcgService.doProviderTimeout(dm));
+    assertion.isInstanceOf(BusinessWorkflowException.class)
+        .hasCauseExactlyInstanceOf(DeploymentException.class)
+        .hasMessage("Error executing request to Qcg service;"
+            + " nested exception is it.reply.orchestrator.exception.service."
+            + "DeploymentException: Qcg service timeout during deployment");
   }
 
   @Test

@@ -58,6 +58,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -326,37 +327,36 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   @Override
   public boolean doUndeploy(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
-
-    String groupId = deployment.getId();
-    final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
     CloudProviderEndpoint cloudProviderEndpoint = deployment.getCloudProviderEndpoint();
-    try {
-      executeWithClient(cloudProviderEndpoint, requestedWithToken,
-          client -> client.deleteGroup(groupId, true));
-    } catch (MarathonException ex) {
-      if (HttpStatus.NOT_FOUND.value() != ex.getStatus()) {
-        throw ex;
+    if (cloudProviderEndpoint != null) {
+      String groupId = deployment.getId();
+      final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
+      try {
+        executeWithClient(cloudProviderEndpoint, requestedWithToken,
+            client -> client.deleteGroup(groupId, true));
+      } catch (MarathonException ex) {
+        if (HttpStatus.NOT_FOUND.value() != ex.getStatus()) {
+          throw ex;
+        }
       }
-    }
-
-    String vaultUri = cloudProviderEndpoint.getVaultEndpoint();
-    if (StringUtils.isNotEmpty(vaultUri)) {
-      URI uri = URI.create(vaultUri);
-      TokenAuthentication vaultToken = vaultService.retrieveToken(uri, requestedWithToken);
-      //search for vault entries
-      String spath = "secret/private/" + deployment.getId();
-      List<String> depentries = vaultService.listSecrets(uri, vaultToken, spath);
-      //remove vault entries if present
-      if (!depentries.isEmpty()) {
+      //delete secrets if present
+      String vaultUri = cloudProviderEndpoint.getVaultEndpoint();
+      if (StringUtils.isNotEmpty(vaultUri)) {
+        URI uri = URI.create(vaultUri);
+        TokenAuthentication vaultToken = vaultService.retrieveToken(uri, requestedWithToken);
+        //search for vault entries
+        String spath = "secret/private/" + deployment.getId();
+        List<String> depentries = vaultService.listSecrets(uri, vaultToken, spath);
+        //remove vault entries if present
         for (String depentry:depentries) {
-          List<String> entries = vaultService.listSecrets(uri, vaultToken, spath + "/" + depentry);
+          List<String> entries = vaultService.listSecrets(uri, vaultToken, spath + "/"
+              + depentry);
           for (String entry:entries) {
             vaultService.deleteSecret(uri, vaultToken, spath + "/" + depentry + "/" + entry);
           }
         }
       }
     }
-
     return true;
   }
 
@@ -670,7 +670,33 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
 
   @Override
   public void cleanFailedDeploy(DeploymentMessage deploymentMessage) {
-    // DO NOTHING
+    doUndeploy(deploymentMessage);
+  }
+
+  @Override
+  public void doProviderTimeout(DeploymentMessage deploymentMessage) throws DeploymentException {
+    Deployment deployment = getDeployment(deploymentMessage);
+    Group group = getPolulatedGroup(deploymentMessage, deployment);
+    Collection<App> apps = Optional.ofNullable(group.getApps()).orElseGet(ArrayList::new);
+    StringBuilder sb = new StringBuilder();
+    Iterator<App> iterator = apps.iterator();
+    while (iterator.hasNext()) {
+      App app = iterator.next();
+      if (app.getLastTaskFailure() != null && !StringUtils.isEmpty(app.getLastTaskFailure()
+          .getMessage())) {
+        sb.append(app.getLastTaskFailure().getMessage());
+        sb.append('\n');
+      }
+    }
+    if (sb.length() > 0) {
+      sb.insert(0, "Deployment timeout: ");
+    } else {
+      sb.append("Deployment timeout");
+    }
+
+    throw new BusinessWorkflowException(ErrorCode.CLOUD_PROVIDER_ERROR,
+        "Error executing request to Marathon service",
+        new DeploymentException(sb.toString()));
   }
 
 }

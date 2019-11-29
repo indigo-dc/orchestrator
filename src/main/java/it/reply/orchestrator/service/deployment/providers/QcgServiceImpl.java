@@ -42,6 +42,7 @@ import it.reply.orchestrator.dto.qcg.QcgJob;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Task;
+import it.reply.orchestrator.exception.service.BusinessWorkflowException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.function.ThrowingConsumer;
@@ -55,6 +56,7 @@ import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 import it.reply.orchestrator.utils.ToscaConstants.Nodes;
 import it.reply.orchestrator.utils.ToscaUtils;
+import it.reply.orchestrator.utils.WorkflowConstants.ErrorCode;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -237,7 +239,7 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
 
   @Override
   public void cleanFailedDeploy(DeploymentMessage deploymentMessage) {
-    // DO NOTHING
+    doUndeploy(deploymentMessage);
   }
 
   /**
@@ -312,8 +314,15 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
 
   @Override
   public boolean isUndeployed(DeploymentMessage deploymentMessage) throws DeploymentException {
-    // Nothing to wait here... All the jobs are delete immediately.
+    // Nothing to wait here... All the jobs are deleted immediately.
     return true;
+  }
+
+  @Override
+  public void doProviderTimeout(DeploymentMessage deploymentMessage) {
+    throw new BusinessWorkflowException(ErrorCode.CLOUD_PROVIDER_ERROR,
+      "Error executing request to Qcg service",
+      new DeploymentException("Qcg service timeout during deployment"));
   }
 
   @Data

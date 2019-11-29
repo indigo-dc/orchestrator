@@ -44,6 +44,7 @@ import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
 import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.enums.NodeStates;
+import it.reply.orchestrator.exception.service.BusinessWorkflowException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.function.ThrowingFunction;
 import it.reply.orchestrator.service.ToscaServiceImpl;
@@ -320,6 +321,34 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
 
     assertThat(chronosService.isUndeployed(dm)).isTrue();
+  }
+
+  @Test
+  public void doCleanFailedDeploySuccessful() throws ChronosException {
+    Deployment deployment = ControllerTestUtils.createDeployment(1);
+    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
+    deployment.getResources().forEach(resource -> resource.setToscaNodeType(Nodes.Types.CHRONOS));
+
+    String jobName = deployment.getResources().stream().findFirst().get().getId();
+
+    when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
+
+    chronosService.cleanFailedDeploy(dm);
+    verify(chronos, times(1)).deleteJob(jobName);
+  }
+
+  @Test
+  public void doProviderTimeoutSuccessful() {
+    Deployment deployment = ControllerTestUtils.createDeployment(1);
+    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
+
+    AbstractThrowableAssert<?, ? extends Throwable> assertion = assertThatCode(
+        () -> chronosService.doProviderTimeout(dm));
+    assertion.isInstanceOf(BusinessWorkflowException.class)
+        .hasCauseExactlyInstanceOf(DeploymentException.class)
+        .hasMessage("Error executing request to Chronos service;"
+            + " nested exception is it.reply.orchestrator.exception.service."
+            + "DeploymentException: Chronos service timeout during deployment");
   }
 
   @Test
