@@ -140,8 +140,8 @@ public class DeploymentServiceImpl implements DeploymentService {
       OidcEntity requester = oauth2TokenService.generateOidcEntityFromCurrentAuth();
       String issuer = requester.getOidcEntityId().getIssuer();
       String group = oidcProperties.getIamProperties().get(issuer).getAdmingroup();
-      IndigoOAuth2Authentication autentication = oauth2TokenService.getCurrentAuthentication();
-      IndigoUserInfo userInfo = (IndigoUserInfo) autentication.getUserInfo();
+      IndigoOAuth2Authentication authentication = oauth2TokenService.getCurrentAuthentication();
+      IndigoUserInfo userInfo = (IndigoUserInfo) authentication.getUserInfo();
       if (userInfo != null) {
         isAdmin = userInfo.getGroups().contains(group);
       }
