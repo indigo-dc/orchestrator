@@ -24,6 +24,7 @@ import com.google.common.collect.Maps;
 import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.entity.OidcEntityId;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
@@ -117,7 +118,7 @@ public class DeploymentServiceTest {
     List<Deployment> deployments = ControllerTestUtils.createDeployments(5);
 
     Mockito
-        .when(deploymentRepository.findAll((Pageable) null))
+        .when(deploymentRepository.findAllByOwner((OidcEntityId)null, (Pageable) null))
         .thenReturn(new PageImpl<Deployment>(deployments));
 
     Page<Deployment> pagedDeployment = deploymentService.getDeployments(null, null);
@@ -132,7 +133,7 @@ public class DeploymentServiceTest {
     List<Deployment> deployments = ControllerTestUtils.createDeployments(10);
 
     Mockito
-        .when(deploymentRepository.findAll(pageable))
+        .when(deploymentRepository.findAllByOwner((OidcEntityId)null,pageable))
         .thenReturn(new PageImpl<Deployment>(deployments));
 
     Page<Deployment> pagedDeployment = deploymentService.getDeployments(pageable, null);

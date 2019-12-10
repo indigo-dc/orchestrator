@@ -34,6 +34,8 @@ import it.reply.orchestrator.dto.dynafed.Dynafed;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.policies.ToscaPolicy;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
+import it.reply.orchestrator.dto.security.IndigoOAuth2Authentication;
+import it.reply.orchestrator.dto.security.IndigoUserInfo;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.DeploymentType;
 import it.reply.orchestrator.enums.NodeStates;
@@ -105,39 +107,51 @@ public class DeploymentServiceImpl implements DeploymentService {
   @Transactional(readOnly = true)
   public Page<Deployment> getDeployments(Pageable pageable, String owner) {
     if (owner == null) {
-      if (oidcProperties.isEnabled()) {
+      if (oidcProperties.isEnabled() && isAdmin()) {
         OidcEntity requester = oauth2TokenService.generateOidcEntityFromCurrentAuth();
         return deploymentRepository.findAll(requester, pageable);
-      } else {
-        return deploymentRepository.findAll(pageable);
       }
+      owner = "me";
+    }
+    OidcEntityId ownerId;
+    if ("me".equals(owner)) {
+      ownerId = oauth2TokenService.generateOidcEntityIdFromCurrentAuth();
     } else {
-      OidcEntityId ownerId;
-      if ("me".equals(owner)) {
-        ownerId = oauth2TokenService.generateOidcEntityIdFromCurrentAuth();
+      Matcher matcher = OWNER_PATTERN.matcher(owner);
+      if (isAdmin() && matcher.matches()) {
+        ownerId = new OidcEntityId();
+        ownerId.setSubject(matcher.group(1));
+        ownerId.setIssuer(matcher.group(2));
       } else {
-        Matcher matcher = OWNER_PATTERN.matcher(owner);
-        if (matcher.matches()) {
-          ownerId = new OidcEntityId();
-          ownerId.setSubject(matcher.group(1));
-          ownerId.setIssuer(matcher.group(2));
-        } else {
-          throw new BadRequestException("Value " + owner + " for param createdBy is illegal");
-        }
-      }
-      if (oidcProperties.isEnabled()) {
-        OidcEntity requester = oauth2TokenService.generateOidcEntityFromCurrentAuth();
-        return deploymentRepository.findAllByOwner(requester, ownerId, pageable);
-      } else {
-        return deploymentRepository.findAllByOwner(ownerId, pageable);
+        throw new BadRequestException("Value " + owner + " for param createdBy is illegal");
       }
     }
+    if (oidcProperties.isEnabled()) {
+      OidcEntity requester = oauth2TokenService.generateOidcEntityFromCurrentAuth();
+      return deploymentRepository.findAllByOwner(requester, ownerId, pageable);
+    } else {
+      return deploymentRepository.findAllByOwner(ownerId, pageable);
+    }
+  }
+
+  private boolean isAdmin() {
+    boolean isAdmin = false;
+    if (oidcProperties.isEnabled()) {
+      OidcEntity requester = oauth2TokenService.generateOidcEntityFromCurrentAuth();
+      String issuer = requester.getOidcEntityId().getIssuer();
+      String group = oidcProperties.getIamProperties().get(issuer).getAdmingroup();
+      IndigoOAuth2Authentication autentication = oauth2TokenService.getCurrentAuthentication();
+      IndigoUserInfo userInfo = (IndigoUserInfo) autentication.getUserInfo();
+      if (userInfo != null) {
+        isAdmin = userInfo.getGroups().contains(group);
+      }
+    }
+    return isAdmin;
   }
 
   @Override
   @Transactional(readOnly = true)
   public Deployment getDeployment(String uuid) {
-
     Deployment deployment = null;
     if (oidcProperties.isEnabled()) {
       OidcEntity requester = oauth2TokenService.generateOidcEntityFromCurrentAuth();
