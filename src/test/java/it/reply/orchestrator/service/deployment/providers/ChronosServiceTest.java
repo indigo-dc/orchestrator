@@ -126,8 +126,6 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
         .iaasType(IaaSType.CHRONOS)
         .cpEndpoint("example.com/chronos")
         .cpComputeServiceId("chronos-service-id")
-        .password("password")
-        .username("username")
         .build();
   }
 

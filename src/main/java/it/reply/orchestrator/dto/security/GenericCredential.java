@@ -14,32 +14,32 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.dto.policies;
+package it.reply.orchestrator.dto.security;
 
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
-import it.reply.orchestrator.utils.ToscaConstants.Policies;
+import javax.validation.constraints.NotNull;
 
-import java.util.Set;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Data;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
-@JsonTypeInfo(
-    use = JsonTypeInfo.Id.NAME,
-    property = "type",
-    defaultImpl = GenericToscaPolicy.class
-)
-@JsonSubTypes({
-    @JsonSubTypes.Type(
-        value = SlaPlacementPolicy.class,
-        name = Policies.Types.SLA_PLACEMENT
-    )
-})
-public interface ToscaPolicy {
+@Data
+@AllArgsConstructor(access = AccessLevel.PUBLIC)
+@JsonInclude(JsonInclude.Include.NON_EMPTY)
+public class GenericCredential implements GenericCredentialInterface {
 
-  @NonNull Set<String> getTargets();
+  @JsonProperty("username")
+  @NonNull
+  @NotNull
+  private String username;
 
-  @NonNull String getType();
+  @JsonProperty("password")
+  @NonNull
+  @NotNull
+  private String password;
 
 }

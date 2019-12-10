@@ -17,6 +17,7 @@
 package it.reply.orchestrator.service;
 
 import it.reply.orchestrator.dal.entity.OidcTokenId;
+import it.reply.orchestrator.dto.vault.TokenAuthenticationExtended;
 
 import java.net.URI;
 import java.util.List;
@@ -30,6 +31,8 @@ import org.springframework.vault.support.VaultResponse;
 public interface VaultService {
 
   public Optional<URI> getServiceUri();
+
+  public String getServicePath();
 
   public VaultResponse writeSecret(ClientAuthentication token, String path, Object secret);
 
@@ -52,12 +55,12 @@ public interface VaultService {
 
   public List<String> listSecrets(URI uri, ClientAuthentication token, String path);
 
-  public TokenAuthentication retrieveToken(String accessToken);
+  public TokenAuthenticationExtended retrieveToken(String accessToken);
 
-  public TokenAuthentication retrieveToken(URI uri, String accessToken);
+  public TokenAuthenticationExtended retrieveToken(URI uri, String accessToken);
 
-  public TokenAuthentication retrieveToken(OidcTokenId oidcTokenId);
+  public TokenAuthenticationExtended retrieveToken(OidcTokenId oidcTokenId);
 
-  public TokenAuthentication retrieveToken(URI uri, OidcTokenId oidcTokenId);
+  public TokenAuthenticationExtended retrieveToken(URI uri, OidcTokenId oidcTokenId);
 
 }
