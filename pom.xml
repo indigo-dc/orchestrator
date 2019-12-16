@@ -674,6 +674,7 @@
             <exclude>docker/*.war</exclude>
             <!-- excluded because I.N.F.N. Copyright -->
             <exclude>src/main/java/it/reply/orchestrator/config/properties/VaultProperties.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/controller/ConfigurationController.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/dto/SystemEndpoints.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/dto/cmdb/QcgService.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/dto/cmdb/Tenant.java</exclude>
@@ -690,7 +691,7 @@
             <exclude>src/main/java/it/reply/orchestrator/service/commands/ProviderTimeout.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/service/deployment/providers/QcgServiceImpl.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/service/deployment/providers/factory/QcgClientFactory.java</exclude>
-            <exclude>src/test/java/it/reply/orchestrator/controller/ConfigurationEndpointTest.java</exclude>
+            <exclude>src/test/java/it/reply/orchestrator/controller/ConfigurationControllerTest.java</exclude>
             <exclude>src/test/java/it/reply/orchestrator/service/commands/ProviderTimeoutTest.java</exclude>
             <exclude>src/test/java/it/reply/orchestrator/service/deployment/providers/QcgServiceTest.java</exclude>
             <exclude>src/test/java/it/reply/orchestrator/service/ConfigurationServiceTest.java</exclude>

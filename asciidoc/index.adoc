@@ -110,10 +110,10 @@ include::{snippets}/deployment-pagination/response-fields.adoc[]
 
 In order to use this APIs the REST client must authenticate via OAuth2 bearer token (RFC 6750)
 
-==== Example request
+=== Example request
 include::{snippets}/deployments/curl-request.adoc[]
 
-==== Authentication header
+=== Authentication header
 include::{snippets}/authentication/request-headers.adoc[]
 
 [[resources-deployment]]
@@ -149,9 +149,6 @@ include::{snippets}/deployments/http-response.adoc[]
 
 
 
-
-
-
 [[resources-create-deployment]]
 === Create deployment
 
@@ -173,8 +170,6 @@ include::{snippets}/create-deployment/response-fields.adoc[]
 ==== Example response
 
 include::{snippets}/create-deployment/http-response.adoc[]
-
-
 
 
 
@@ -201,6 +196,7 @@ include::{snippets}/deployment/http-response.adoc[]
 
 
 
+
 [[resources-update-deployment]]
 === Update deployment
 
@@ -216,6 +212,8 @@ include::{snippets}/update-deployment/http-request.adoc[]
 ==== Example response
 
 include::{snippets}/update-deployment/http-response.adoc[]
+
+
 
 
 
@@ -255,6 +253,9 @@ include::{snippets}/get-template/http-request.adoc[]
 ==== Example response
 
 include::{snippets}/get-template/http-response.adoc[]
+
+
+
 
 
 [[resources-resource]]
@@ -302,3 +303,33 @@ include::{snippets}/get-resource/response-fields.adoc[]
 ==== Example response
 
 include::{snippets}/get-resource/http-response.adoc[]
+
+
+
+
+
+
+[[overview-configuration]]
+== Configuration
+
+This REST resource represents a TOSCA node of the template.
+
+[[configuration-configuration]]
+=== Get configuration
+
+A `GET` request is used to retrieve the endpoints of the services used by the Orchestrator.
+
+==== Example request
+
+include::{snippets}/configuration/curl-request.adoc[]
+
+include::{snippets}/configuration/http-request.adoc[]
+
+==== Response structure
+
+include::{snippets}/configuration/response-fields.adoc[]
+
+==== Example response
+
+include::{snippets}/configuration/http-response.adoc[]
+

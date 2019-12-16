@@ -126,6 +126,10 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
         String audience = iamConfiguration.getAudience();
         Assert.hasText(audience,
             "Audience token for issuer " + issuer + " must be provided");
+
+        String admingroup = iamConfiguration.getAdmingroup();
+        Assert.hasText(admingroup,
+            "Administrator group for issuer " + issuer + " must be specified");
       }
       if (iamProperties.keySet().isEmpty()) {
         LOG.warn("Empty OIDC configuration list provided");
@@ -157,6 +161,9 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
     @NotNull
     @NonNull
     private String audience;
+
+    @Nullable
+    private String admingroup;
 
     public Optional<OidcClientProperties> getClues() {
       return Optional.ofNullable(clues);

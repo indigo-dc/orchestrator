@@ -114,6 +114,7 @@ By default the REST APIs are not authenticated; if you want to enable the IAM in
              client-id: '{client-id}'
              client-secret: '{client-secret}'
            audience: '{audience-uuid}'
+           admingroup: '{admin-group}'
      ```
      with, as parameters
      * `oidc.enabled`
@@ -129,6 +130,9 @@ By default the REST APIs are not authenticated; if you want to enable the IAM in
         * **Description**: The Orchestrator OAuth2 client secret
      * `audience`
        * **Description**: A freely generated string (e.g. a UUID) used to exchange tokens with Vault Server
+     * `admingroup`
+       * **Description**: The name of the group of users with administrator privileges
+       * **Default value**: orchestrator-admins
  5. If you have a Clues client registered in the IAM, you can configure the following parameters:
     * `clues.client-id`
        * **Description**: The CLUES OAuth2 client ID
