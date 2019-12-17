@@ -51,10 +51,10 @@ public class CredentialProviderService implements CredentialProviderServiceInter
       LOG.error("SeriviceId is empty");
     }
     URI vaultServiceUri;
-    try {
-      vaultServiceUri = vaultService.getServiceUri().get();
-    } catch (NoSuchElementException  e) {
+    if (vaultService.getServiceUri() == null) {
       throw new DeploymentException("Vault service is not configured. Service uri is not present");
+    } else {
+      vaultServiceUri = vaultService.getServiceUri().get();
     }
 
     TokenAuthenticationExtended vaultToken =
