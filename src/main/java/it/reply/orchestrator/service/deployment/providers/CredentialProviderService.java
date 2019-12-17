@@ -23,6 +23,7 @@ import it.reply.orchestrator.service.VaultService;
 
 import java.net.URI;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -50,17 +51,17 @@ public class CredentialProviderService implements CredentialProviderServiceInter
     if (serviceId == null || serviceId.isEmpty()) {
       LOG.error("SeriviceId is empty");
     }
-    URI vaultServiceUri;
-    if (vaultService.getServiceUri() == null) {
+    Optional<URI> vaultServiceUri = vaultService.getServiceUri();
+    if (!vaultServiceUri.isPresent()) {
       throw new DeploymentException("Vault service is not configured. Service uri is not present");
-    } else {
-      vaultServiceUri = vaultService.getServiceUri().get();
     }
-
     TokenAuthenticationExtended vaultToken =
-        (TokenAuthenticationExtended) vaultService.retrieveToken(vaultServiceUri, accessToken);
+        (TokenAuthenticationExtended) vaultService.retrieveToken(
+            vaultServiceUri.get(),
+            accessToken
+            );
 
-    String pathVaultComplete = vaultServiceUri
+    String pathVaultComplete = vaultServiceUri.get()
         + "/v1/secret/data/"
         + vaultToken.getEntityId()
         + vaultService.getServicePath()
