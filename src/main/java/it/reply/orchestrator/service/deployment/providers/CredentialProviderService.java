@@ -50,7 +50,10 @@ public class CredentialProviderService implements CredentialProviderServiceInter
     }
 
     TokenAuthenticationExtended vaultToken =
-        (TokenAuthenticationExtended) vaultService.retrieveToken(vaultService.getServiceUri().get(), accessToken);
+        (TokenAuthenticationExtended) vaultService.retrieveToken(
+            vaultService.getServiceUri().get(),
+            accessToken
+            );
 
     String pathVaultComplete = vaultService.getServiceUri().get()
         + "/v1/secret/data/"
