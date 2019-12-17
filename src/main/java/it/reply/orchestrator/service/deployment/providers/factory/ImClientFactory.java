@@ -33,8 +33,8 @@ import it.reply.orchestrator.dal.entity.OidcEntityId;
 import it.reply.orchestrator.dal.repository.OidcEntityRepository;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
-import it.reply.orchestrator.dto.security.GenericCredential;
-import it.reply.orchestrator.dto.security.GenericCredentialWithTenant;
+import it.reply.orchestrator.dto.security.GenericServiceCredential;
+import it.reply.orchestrator.dto.security.GenericServiceCredentialWithTenant;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.deployment.providers.CredentialProviderService;
@@ -119,8 +119,8 @@ public class ImClientFactory {
   protected AmazonEc2Credentials getAwsAuthHeader(CloudProviderEndpoint cloudProviderEndpoint,
       String accessToken) {
     // Get credential from vault Service
-    GenericCredential imCred = credProvServ.credentialProvider(
-        cloudProviderEndpoint.getCpComputeServiceId(), accessToken, GenericCredential.class);
+    GenericServiceCredential imCred = credProvServ.credentialProvider(
+        cloudProviderEndpoint.getCpComputeServiceId(), accessToken, GenericServiceCredential.class);
 
     return cloudProviderEndpoint
         .getIaasHeaderId()
@@ -132,9 +132,9 @@ public class ImClientFactory {
 
   protected AzureCredentials getAzureAuthHeader(CloudProviderEndpoint cloudProviderEndpoint,
       String accessToken) {
-    GenericCredentialWithTenant imCred =
+    GenericServiceCredentialWithTenant imCred =
         credProvServ.credentialProvider(cloudProviderEndpoint.getCpComputeServiceId(), accessToken,
-            GenericCredentialWithTenant.class);
+            GenericServiceCredentialWithTenant.class);
 
     return cloudProviderEndpoint
         .getIaasHeaderId()
@@ -168,9 +168,9 @@ public class ImClientFactory {
     if (!endpointMatcher.matches()) {
       throw new DeploymentException("Wrong OS endpoint format: " + endpoint);
     } else {
-      GenericCredentialWithTenant imCred =
+      GenericServiceCredentialWithTenant imCred =
           credProvServ.credentialProvider(cloudProviderEndpoint.getCpComputeServiceId(),
-              accessToken, GenericCredentialWithTenant.class);
+              accessToken, GenericServiceCredentialWithTenant.class);
       String username = imCred.getUsername();
       String password = imCred.getPassword();
       String tenant = imCred.getTenant();

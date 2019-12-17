@@ -21,7 +21,7 @@ import feign.auth.BasicAuthRequestInterceptor;
 
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.cmdb.MesosFrameworkService;
-import it.reply.orchestrator.dto.security.GenericCredential;
+import it.reply.orchestrator.dto.security.GenericServiceCredential;
 import it.reply.orchestrator.service.deployment.providers.CredentialProviderService;
 
 import java.util.Objects;
@@ -48,10 +48,6 @@ public abstract class MesosFrameworkClientFactory<V extends MesosFrameworkServic
    */
   public T build(CloudProviderEndpoint cloudProviderEndpoint, String accessToken) {
     final RequestInterceptor requestInterceptor;
-
-    GenericCredential imCred = credProvServ.credentialProvider(
-        cloudProviderEndpoint.getCpComputeServiceId(), accessToken, GenericCredential.class);
-
     if (accessToken != null) {
       Objects.requireNonNull(accessToken, "Access Token must not be null");
       requestInterceptor = requestTemplate -> {
@@ -59,6 +55,11 @@ public abstract class MesosFrameworkClientFactory<V extends MesosFrameworkServic
             .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
       };
     } else {
+      GenericServiceCredential imCred = credProvServ.credentialProvider(
+          cloudProviderEndpoint.getCpComputeServiceId(),
+          accessToken,
+          GenericServiceCredential.class
+          );
       requestInterceptor =
           new BasicAuthRequestInterceptor(imCred.getUsername(), imCred.getPassword());
     }

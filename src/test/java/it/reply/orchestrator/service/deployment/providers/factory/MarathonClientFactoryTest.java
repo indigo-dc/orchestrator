@@ -18,8 +18,8 @@ package it.reply.orchestrator.service.deployment.providers.factory;
 
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
-import it.reply.orchestrator.dto.security.GenericCredential;
-import it.reply.orchestrator.dto.security.GenericCredentialWithTenant;
+import it.reply.orchestrator.dto.security.GenericServiceCredential;
+import it.reply.orchestrator.dto.security.GenericServiceCredentialWithTenant;
 import it.reply.orchestrator.service.deployment.providers.CredentialProviderService;
 
 import java.net.URISyntaxException;
@@ -79,8 +79,8 @@ public class MarathonClientFactoryTest {
     String serviceId = cloudProviderEndpoint.getCpComputeServiceId();
 
     Mockito
-        .when(credProvServ.credentialProvider(serviceId, "token", GenericCredential.class))
-        .thenReturn(new GenericCredentialWithTenant("username", "password", "tenant"));
+        .when(credProvServ.credentialProvider(serviceId, "token", GenericServiceCredential.class))
+        .thenReturn(new GenericServiceCredentialWithTenant("username", "password", "tenant"));
 
     assertThat(clientFactory.build(cloudProviderEndpoint, "token"))
         .extracting("h.target.url")

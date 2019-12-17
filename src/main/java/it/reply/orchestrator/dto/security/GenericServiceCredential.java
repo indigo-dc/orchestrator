@@ -30,7 +30,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 @Data
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class GenericCredential implements GenericCredentialInterface {
+public class GenericServiceCredential implements ServiceCredential {
 
   @JsonProperty("username")
   @NonNull

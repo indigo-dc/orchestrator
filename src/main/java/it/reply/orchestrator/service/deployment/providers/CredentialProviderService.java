@@ -16,58 +16,11 @@
 
 package it.reply.orchestrator.service.deployment.providers;
 
-import it.reply.orchestrator.dto.security.GenericCredentialInterface;
-import it.reply.orchestrator.dto.vault.TokenAuthenticationExtended;
-import it.reply.orchestrator.exception.service.DeploymentException;
-import it.reply.orchestrator.service.VaultService;
+import it.reply.orchestrator.dto.security.ServiceCredential;
 
-import java.net.URI;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+public interface CredentialProviderService {
 
-import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-@Slf4j
-@Service
-public class CredentialProviderService implements CredentialProviderServiceInterface {
-
-  @Autowired
-  private VaultService vaultService;
-
-  /**
-   * Get credentials stored in vault service.
-   *
-   * @param  serviceId  is CpComputeServiceId of cloud provider
-   * @param  accessToken with audience
-   * @param  clazz type of return class
-   * @return GenericCredential or GenericCredentialWithTenant
-   */
-  public <T extends GenericCredentialInterface> T credentialProvider(String serviceId,
-      String accessToken, Class<T> clazz) {
-
-    if (serviceId == null || serviceId.isEmpty()) {
-      LOG.error("SeriviceId is empty");
-    }
-    Optional<URI> vaultServiceUri = vaultService.getServiceUri();
-    if (!vaultServiceUri.isPresent()) {
-      throw new DeploymentException("Vault service is not configured. Service uri is not present");
-    }
-    TokenAuthenticationExtended vaultToken =
-        (TokenAuthenticationExtended) vaultService.retrieveToken(
-            vaultServiceUri.get(),
-            accessToken
-            );
-
-    String pathVaultComplete = vaultServiceUri.get()
-        + "/v1/secret/data/"
-        + vaultToken.getEntityId()
-        + vaultService.getServicePath()
-        + serviceId;
-
-    return vaultService.readSecret(vaultToken, pathVaultComplete, clazz);
-  }
+  public <T extends ServiceCredential> T credentialProvider(String serviceId,
+      String accessToken, Class<T> clazz);
 
 }

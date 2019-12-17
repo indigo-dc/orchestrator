@@ -16,14 +16,13 @@
 
 package it.reply.orchestrator.service.security;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import it.reply.orchestrator.dto.security.GenericCredentialWithTenant;
+import it.reply.orchestrator.dto.security.GenericServiceCredentialWithTenant;
 import it.reply.orchestrator.dto.vault.TokenAuthenticationExtended;
 import it.reply.orchestrator.dto.vault.VaultTokenExtended;
 import it.reply.orchestrator.service.VaultService;
-import it.reply.orchestrator.service.deployment.providers.CredentialProviderService;
+import it.reply.orchestrator.service.deployment.providers.CredentialProviderServiceImpl;
 
 import java.io.IOException;
 import java.net.URI;
@@ -56,7 +55,7 @@ public class GenericCredentialProviderTest {
   private static final String defaultVaultEndpoint = "https://default.vault.com:8200";
 
   @InjectMocks
-  private CredentialProviderService credProvServ;
+  private CredentialProviderServiceImpl credProvServ;
 
   @MockBean
   private VaultService vaultService;
@@ -80,22 +79,22 @@ public class GenericCredentialProviderTest {
         .when(vaultService.retrieveToken(new URI(defaultVaultEndpoint), "accessToken"))
         .thenReturn(tokenExt);
 
-    GenericCredentialWithTenant genCredWTen =
-        new GenericCredentialWithTenant("username", "password", "tenant");
+    GenericServiceCredentialWithTenant genCredWTen =
+        new GenericServiceCredentialWithTenant("username", "password", "tenant");
 
     Mockito
         .when(vaultService.readSecret(tokenExt,
             "https://default.vault.com:8200/v1/secret/data/entityIdnullcom.amazonaws.ec2",
-            GenericCredentialWithTenant.class))
+            GenericServiceCredentialWithTenant.class))
         .thenReturn(genCredWTen);
 
-    GenericCredentialWithTenant imCred = credProvServ.credentialProvider("com.amazonaws.ec2",
-        "accessToken", GenericCredentialWithTenant.class);
+    GenericServiceCredentialWithTenant imCred = credProvServ.credentialProvider("com.amazonaws.ec2",
+        "accessToken", GenericServiceCredentialWithTenant.class);
 
-    assertNotNull(imCred);
-    assertEquals(imCred.getUsername(), "username");
-    assertEquals(imCred.getPassword(), "password");
-    assertEquals(imCred.getTenant(), "tenant");
+    assertThat(imCred).isNotNull();
+    assertThat(imCred.getUsername()).isEqualTo("username");
+    assertThat(imCred.getPassword()).isEqualTo("password");
+    assertThat(imCred.getTenant()).isEqualTo("tenant");
   }
 
 }

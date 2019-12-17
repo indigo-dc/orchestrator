@@ -33,8 +33,8 @@ import it.reply.orchestrator.dal.entity.OidcEntityId;
 import it.reply.orchestrator.dal.repository.OidcEntityRepository;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
-import it.reply.orchestrator.dto.security.GenericCredential;
-import it.reply.orchestrator.dto.security.GenericCredentialWithTenant;
+import it.reply.orchestrator.dto.security.GenericServiceCredential;
+import it.reply.orchestrator.dto.security.GenericServiceCredentialWithTenant;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.deployment.providers.CredentialProviderService;
 import it.reply.orchestrator.utils.CommonUtils;
@@ -189,8 +189,8 @@ public class ImClientFactoryTest {
     String serviceId = cloudProviderEndpoint.getCpComputeServiceId();
 
     Mockito
-        .when(credProvServ.credentialProvider(serviceId, iamToken, GenericCredential.class))
-        .thenReturn(new GenericCredential("username", "password"));
+        .when(credProvServ.credentialProvider(serviceId, iamToken, GenericServiceCredential.class))
+        .thenReturn(new GenericServiceCredential("username", "password"));
 
     String iaasAuthHeader =
         "id = " + (headerId != null ? headerId : "ec2")
@@ -214,8 +214,8 @@ public class ImClientFactoryTest {
 
     Mockito
         .when(
-            credProvServ.credentialProvider(serviceId, iamToken, GenericCredentialWithTenant.class))
-        .thenReturn(new GenericCredentialWithTenant("username", "password", "subscription_id"));
+            credProvServ.credentialProvider(serviceId, iamToken, GenericServiceCredentialWithTenant.class))
+        .thenReturn(new GenericServiceCredentialWithTenant("username", "password", "subscription_id"));
 
     String iaasAuthHeader =
         "id = " + (headerId != null ? headerId : "azure")
@@ -238,8 +238,8 @@ public class ImClientFactoryTest {
 
     Mockito
         .when(
-            credProvServ.credentialProvider(serviceId, iamToken, GenericCredentialWithTenant.class))
-        .thenReturn(new GenericCredentialWithTenant("034 domain-info", "password", "eu-de"));
+            credProvServ.credentialProvider(serviceId, iamToken, GenericServiceCredentialWithTenant.class))
+        .thenReturn(new GenericServiceCredentialWithTenant("034 domain-info", "password", "eu-de"));
 
 
     String iaasAuthHeader = "id = " + (headerId != null ? headerId : "ost")
@@ -264,8 +264,8 @@ public class ImClientFactoryTest {
 
     Mockito
         .when(
-            credProvServ.credentialProvider(serviceId, iamToken, GenericCredentialWithTenant.class))
-        .thenReturn(new GenericCredentialWithTenant("username", "password", "domain-info"));
+            credProvServ.credentialProvider(serviceId, iamToken, GenericServiceCredentialWithTenant.class))
+        .thenReturn(new GenericServiceCredentialWithTenant("username", "password", "domain-info"));
 
     String iaasAuthHeader = "id = " + (headerId != null ? headerId : "ost")
         + " ; type = OpenStack ; domain = domain-info ; username = username ; password = password ; tenant = eu-de ; "
@@ -289,8 +289,8 @@ public class ImClientFactoryTest {
 
     Mockito
         .when(
-            credProvServ.credentialProvider(serviceId, iamToken, GenericCredentialWithTenant.class))
-        .thenReturn(new GenericCredentialWithTenant("username", "password", "domain-info"));
+            credProvServ.credentialProvider(serviceId, iamToken, GenericServiceCredentialWithTenant.class))
+        .thenReturn(new GenericServiceCredentialWithTenant("username", "password", "domain-info"));
 
     String iaasAuthHeader = "id = " + (headerId != null ? headerId : "ost")
         + " ; type = OpenStack ; domain = domain-info ; username = username ; password = password ; tenant = eu-de ; "
