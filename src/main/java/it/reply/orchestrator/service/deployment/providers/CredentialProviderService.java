@@ -18,9 +18,11 @@ package it.reply.orchestrator.service.deployment.providers;
 
 import it.reply.orchestrator.dto.security.GenericCredentialInterface;
 import it.reply.orchestrator.dto.vault.TokenAuthenticationExtended;
+import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.VaultService;
 
 import java.net.URI;
+import java.util.NoSuchElementException;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -48,14 +50,17 @@ public class CredentialProviderService implements CredentialProviderServiceInter
     if (serviceId == null || serviceId.isEmpty()) {
       LOG.error("SeriviceId is empty");
     }
+    URI vaultServiceUri;
+    try {
+      vaultServiceUri = vaultService.getServiceUri().get();
+    } catch (NoSuchElementException  e) {
+      throw new DeploymentException("Vault service is not configured. Service uri is not present");
+    }
 
     TokenAuthenticationExtended vaultToken =
-        (TokenAuthenticationExtended) vaultService.retrieveToken(
-            vaultService.getServiceUri().get(),
-            accessToken
-            );
+        (TokenAuthenticationExtended) vaultService.retrieveToken(vaultServiceUri, accessToken);
 
-    String pathVaultComplete = vaultService.getServiceUri().get()
+    String pathVaultComplete = vaultServiceUri
         + "/v1/secret/data/"
         + vaultToken.getEntityId()
         + vaultService.getServicePath()
