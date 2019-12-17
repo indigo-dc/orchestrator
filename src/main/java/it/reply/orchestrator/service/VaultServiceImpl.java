@@ -19,7 +19,6 @@ package it.reply.orchestrator.service;
 import it.reply.orchestrator.config.properties.VaultProperties;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dto.vault.TokenAuthenticationExtended;
-import it.reply.orchestrator.dto.vault.VaultTokenExtended;
 import it.reply.orchestrator.dto.vault.VaultTokenResponseExtended;
 import it.reply.orchestrator.exception.VaultJwtTokenExpiredException;
 import it.reply.orchestrator.exception.VaultServiceNotAvailableException;
@@ -37,13 +36,10 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.vault.authentication.ClientAuthentication;
-import org.springframework.vault.authentication.TokenAuthentication;
 import org.springframework.vault.client.VaultEndpoint;
 import org.springframework.vault.client.VaultResponses;
 import org.springframework.vault.core.VaultTemplate;
 import org.springframework.vault.support.VaultResponse;
-import org.springframework.vault.support.VaultToken;
-import org.springframework.vault.support.VaultTokenResponse;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 

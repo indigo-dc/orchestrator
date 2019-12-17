@@ -41,7 +41,6 @@ import it.reply.orchestrator.service.deployment.providers.CredentialProviderServ
 import it.reply.orchestrator.utils.CommonUtils;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;

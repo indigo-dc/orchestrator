@@ -25,7 +25,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.vault.authentication.ClientAuthentication;
-import org.springframework.vault.authentication.TokenAuthentication;
 import org.springframework.vault.support.VaultResponse;
 
 public interface VaultService {

@@ -22,7 +22,6 @@ import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.VaultService;
 
 import java.net.URI;
-import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import lombok.extern.slf4j.Slf4j;
