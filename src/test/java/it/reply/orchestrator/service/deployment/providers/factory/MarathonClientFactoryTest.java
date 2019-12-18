@@ -80,7 +80,7 @@ public class MarathonClientFactoryTest {
 
     Mockito
         .when(credProvServ.credentialProvider(serviceId, "token", GenericServiceCredential.class))
-        .thenReturn(new GenericServiceCredentialWithTenant("username", "password", "tenant"));
+        .thenReturn(new GenericServiceCredential("username", "password"));
 
     assertThat(clientFactory.build(cloudProviderEndpoint, "token"))
         .extracting("h.target.url")

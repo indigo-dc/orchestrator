@@ -20,7 +20,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import it.reply.orchestrator.dto.security.GenericServiceCredentialWithTenant;
 import it.reply.orchestrator.dto.vault.TokenAuthenticationExtended;
-import it.reply.orchestrator.dto.vault.VaultTokenExtended;
 import it.reply.orchestrator.service.VaultService;
 import it.reply.orchestrator.service.deployment.providers.CredentialProviderServiceImpl;
 
@@ -40,6 +39,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
+import org.springframework.vault.support.VaultToken;
 
 import junitparams.JUnitParamsRunner;
 
@@ -73,7 +73,7 @@ public class GenericCredentialProviderTest {
         .thenReturn(Optional.of(new URI(defaultVaultEndpoint)));
 
     TokenAuthenticationExtended tokenExt = new TokenAuthenticationExtended(
-        new VaultTokenExtended("vaultToken".toCharArray()), "entityId");
+        VaultToken.of("vaultToken".toCharArray()), "entityId");
 
     Mockito
         .when(vaultService.retrieveToken(new URI(defaultVaultEndpoint), "accessToken"))
