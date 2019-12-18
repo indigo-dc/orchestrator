@@ -110,12 +110,45 @@ public class ImClientFactoryTest {
             .cpEndpoint("https://host:5000/v3")
             .cpComputeServiceId(UUID.randomUUID().toString())
             .iaasHeaderId(headerId)
+            .iamEnabled(true)
             .build();
 
     String iaasAuthHeader =
         "id = " + (headerId != null ? headerId : "ost")
             + " ; type = OpenStack ; tenant = oidc ; username = oidc-organization ; password = "
             + iamToken
+            + " ; host = https://host:5000 ; auth_version = 3.x_oidc_access_token";
+
+    OidcEntity entity = new OidcEntity();
+    entity.setOidcEntityId(OidcEntityId.fromAccesToken(iamToken));
+    entity.setOrganization("oidc-organization");
+    when(oidcEntityRepository.findByOidcEntityId(entity.getOidcEntityId()))
+        .thenReturn(Optional.of(entity));
+    testGetClient(cloudProviderEndpoint, ImClientFactoryTest.paasImUrl, iaasAuthHeader);
+  }
+
+  @Test
+  @Parameters({ "custom_id", "null" })
+  public void testGetClientOstNoIam(@Nullable String headerId) {
+    CloudProviderEndpoint cloudProviderEndpoint =
+        CloudProviderEndpoint
+            .builder()
+            .iaasType(IaaSType.OPENSTACK)
+            .cpEndpoint("https://host:5000/v3")
+            .cpComputeServiceId(UUID.randomUUID().toString())
+            .iaasHeaderId(headerId)
+            .iamEnabled(false)
+            .build();
+
+    String serviceId = cloudProviderEndpoint.getCpComputeServiceId();
+
+    Mockito
+    .when(credProvServ.credentialProvider(serviceId, iamToken, GenericServiceCredentialWithTenant.class))
+    .thenReturn(new GenericServiceCredentialWithTenant("username", "password", "tenant"));
+
+    String iaasAuthHeader =
+        "id = " + (headerId != null ? headerId : "ost")
+            + " ; type = OpenStack ; tenant = tenant ; username = username ; password = password"
             + " ; host = https://host:5000 ; auth_version = 3.x_oidc_access_token";
 
     OidcEntity entity = new OidcEntity();
@@ -139,11 +172,42 @@ public class ImClientFactoryTest {
         .cpComputeServiceId(UUID.randomUUID().toString())
         .iaasHeaderId(headerId)
         .imEndpoint(localImEndpoint)
+        .iamEnabled(true)
         .build();
 
     String iaasAuthHeader =
         "id = " + (headerId != null ? headerId : "one")
             + " ; type = OpenNebula ; host = https://host ; token = " + iamToken;
+    testGetClient(cloudProviderEndpoint, (localImEndpoint != null ? localImEndpoint : paasImUrl),
+        iaasAuthHeader);
+  }
+
+  @Test
+  @Parameters({ "custom_id, https://local.im",
+      "custom_id, null",
+      "null, https://local.im",
+      "null, null" })
+  public void testGetClientOneNoIam(@Nullable String headerId, @Nullable String localImEndpoint) {
+    CloudProviderEndpoint cloudProviderEndpoint = CloudProviderEndpoint
+        .builder()
+        .iaasType(IaaSType.OPENNEBULA)
+        .cpEndpoint("https://host")
+        .cpComputeServiceId(UUID.randomUUID().toString())
+        .iaasHeaderId(headerId)
+        .imEndpoint(localImEndpoint)
+        .iamEnabled(false)
+        .build();
+
+    String serviceId = cloudProviderEndpoint.getCpComputeServiceId();
+
+    Mockito
+    .when(credProvServ.credentialProvider(serviceId, iamToken, GenericServiceCredential.class))
+    .thenReturn(new GenericServiceCredential("username", "password"));
+
+    String iaasAuthHeader =
+        "id = " + (headerId != null ? headerId : "one")
+            + " ; type = OpenNebula ; host = https://host"
+            + " ; username = username ; password = password";
     testGetClient(cloudProviderEndpoint, (localImEndpoint != null ? localImEndpoint : paasImUrl),
         iaasAuthHeader);
   }
@@ -157,6 +221,7 @@ public class ImClientFactoryTest {
         .cpComputeServiceId(UUID.randomUUID().toString())
         .iaasHeaderId("one1")
         .imEndpoint("https://local.im1")
+        .iamEnabled(true)
         .build();
 
     CloudProviderEndpoint cloudProviderEndpoint2 = CloudProviderEndpoint
@@ -166,11 +231,53 @@ public class ImClientFactoryTest {
         .cpComputeServiceId(UUID.randomUUID().toString())
         .iaasHeaderId("one2")
         .imEndpoint("https://local.im2")
+        .iamEnabled(true)
         .build();
-
     String iaasAuthHeader =
         "id = one1 ; type = OpenNebula ; host = https://host1 ; token = " + iamToken +
             "\\nid = one2 ; type = OpenNebula ; host = https://host2 ; token = " + iamToken;
+    testGetClient(Lists.newArrayList(cloudProviderEndpoint1, cloudProviderEndpoint2), paasImUrl,
+        iaasAuthHeader);
+  }
+
+  @Test
+  public void testMultipleOneWithLocalImNoIam() {
+    CloudProviderEndpoint cloudProviderEndpoint1 = CloudProviderEndpoint
+        .builder()
+        .iaasType(IaaSType.OPENNEBULA)
+        .cpEndpoint("https://host1")
+        .cpComputeServiceId(UUID.randomUUID().toString())
+        .iaasHeaderId("one1")
+        .imEndpoint("https://local.im1")
+        .iamEnabled(false)
+        .build();
+
+    CloudProviderEndpoint cloudProviderEndpoint2 = CloudProviderEndpoint
+        .builder()
+        .iaasType(IaaSType.OPENNEBULA)
+        .cpEndpoint("https://host2")
+        .cpComputeServiceId(UUID.randomUUID().toString())
+        .iaasHeaderId("one2")
+        .imEndpoint("https://local.im2")
+        .iamEnabled(false)
+        .build();
+
+    String serviceId1 = cloudProviderEndpoint1.getCpComputeServiceId();
+    String serviceId2 = cloudProviderEndpoint2.getCpComputeServiceId();
+
+    Mockito
+    .when(credProvServ.credentialProvider(serviceId1, iamToken, GenericServiceCredential.class))
+    .thenReturn(new GenericServiceCredential("username", "password"));
+
+    Mockito
+    .when(credProvServ.credentialProvider(serviceId2, iamToken, GenericServiceCredential.class))
+    .thenReturn(new GenericServiceCredential("username2", "password2"));
+
+    String iaasAuthHeader =
+        "id = one1 ; type = OpenNebula ; host = https://host1 ;"
+        + " username = username ; password = password"
+        + "\\nid = one2 ; type = OpenNebula ; host = https://host2 ;"
+        + " username = username2 ; password = password2";
     testGetClient(Lists.newArrayList(cloudProviderEndpoint1, cloudProviderEndpoint2), paasImUrl,
         iaasAuthHeader);
   }
@@ -310,6 +417,7 @@ public class ImClientFactoryTest {
     oidcProperties.setEnabled(true);
 
     InfrastructureManager result = imClientFactory.build(cloudProviderEndpoints, iamToken);
+
     Assertions
         .assertThat(result)
         .extracting("imClient")

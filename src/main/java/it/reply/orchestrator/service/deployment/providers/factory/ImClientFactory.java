@@ -79,40 +79,80 @@ public class ImClientFactory {
     if (!matcher.matches()) {
       throw new DeploymentException("Wrong OS endpoint format: " + endpoint);
     } else {
-      String organization = oidcEntityRepository
-          .findByOidcEntityId(OidcEntityId.fromAccesToken(accessToken))
-          .orElseThrow(
-              () -> new DeploymentException("No user associated to deployment token found"))
-          .getOrganization();
-      endpoint = matcher.group(1);
-      OpenStackCredentials cred = cloudProviderEndpoint
-          .getIaasHeaderId()
-          .map(OpenStackCredentials::buildCredentials)
-          .orElseGet(OpenStackCredentials::buildCredentials)
-          .withTenant("oidc")
-          .withUsername(organization)
-          .withPassword(accessToken)
-          .withHost(endpoint);
-      cloudProviderEndpoint
-          .getRegion()
-          .ifPresent(cred::withServiceRegion);
-      if ("v2".equals(matcher.group(2))) {
-        throw new DeploymentException("Openstack keystone v2 not supported");
+      if (cloudProviderEndpoint.isIamEnabled()) {
+        String organization = oidcEntityRepository
+            .findByOidcEntityId(OidcEntityId.fromAccesToken(accessToken))
+            .orElseThrow(
+                () -> new DeploymentException("No user associated to deployment token found"))
+            .getOrganization();
+        endpoint = matcher.group(1);
+        OpenStackCredentials cred = cloudProviderEndpoint
+            .getIaasHeaderId()
+            .map(OpenStackCredentials::buildCredentials)
+            .orElseGet(OpenStackCredentials::buildCredentials)
+            .withTenant("oidc")
+            .withUsername(organization)
+            .withPassword(accessToken)
+            .withHost(endpoint);
+        cloudProviderEndpoint
+            .getRegion()
+            .ifPresent(cred::withServiceRegion);
+        if ("v2".equals(matcher.group(2))) {
+          throw new DeploymentException("Openstack keystone v2 not supported");
+        } else {
+          cred.withAuthVersion(OpenStackAuthVersion.PASSWORD_3_X_TOKEN);
+        }
+        return cred;
       } else {
-        cred.withAuthVersion(OpenStackAuthVersion.PASSWORD_3_X_TOKEN);
+        GenericServiceCredentialWithTenant imCred =
+            credProvServ.credentialProvider(cloudProviderEndpoint.getCpComputeServiceId(),
+                accessToken,
+                GenericServiceCredentialWithTenant.class);
+        endpoint = matcher.group(1);
+        OpenStackCredentials cred = cloudProviderEndpoint
+            .getIaasHeaderId()
+            .map(OpenStackCredentials::buildCredentials)
+            .orElseGet(OpenStackCredentials::buildCredentials)
+            .withTenant(imCred.getTenant())
+            .withUsername(imCred.getUsername())
+            .withPassword(imCred.getPassword())
+            .withHost(endpoint);
+        cloudProviderEndpoint
+            .getRegion()
+            .ifPresent(cred::withServiceRegion);
+        if ("v2".equals(matcher.group(2))) {
+          throw new DeploymentException("Openstack keystone v2 not supported");
+        } else {
+          cred.withAuthVersion(OpenStackAuthVersion.PASSWORD_3_X_TOKEN);
+        }
+        return cred;
       }
-      return cred;
     }
   }
 
   protected OpenNebulaCredentials getOpenNebulaAuthHeader(
       CloudProviderEndpoint cloudProviderEndpoint, @NonNull String accessToken) {
-    return cloudProviderEndpoint
-        .getIaasHeaderId()
-        .map(OpenNebulaCredentials::buildCredentials)
-        .orElseGet(OpenNebulaCredentials::buildCredentials)
-        .withHost(cloudProviderEndpoint.getCpEndpoint())
-        .withToken(accessToken);
+    if (cloudProviderEndpoint.isIamEnabled()) {
+      return cloudProviderEndpoint
+          .getIaasHeaderId()
+          .map(OpenNebulaCredentials::buildCredentials)
+          .orElseGet(OpenNebulaCredentials::buildCredentials)
+          .withHost(cloudProviderEndpoint.getCpEndpoint())
+          .withToken(accessToken);
+    } else {
+      GenericServiceCredential imCred = credProvServ.credentialProvider(
+          cloudProviderEndpoint.getCpComputeServiceId(),
+          accessToken,
+          GenericServiceCredential.class);
+
+      return cloudProviderEndpoint
+          .getIaasHeaderId()
+          .map(OpenNebulaCredentials::buildCredentials)
+          .orElseGet(OpenNebulaCredentials::buildCredentials)
+          .withHost(cloudProviderEndpoint.getCpEndpoint())
+          .withUsername(imCred.getUsername())
+          .withPassword(imCred.getPassword());
+    }
   }
 
   protected AmazonEc2Credentials getAwsAuthHeader(CloudProviderEndpoint cloudProviderEndpoint,

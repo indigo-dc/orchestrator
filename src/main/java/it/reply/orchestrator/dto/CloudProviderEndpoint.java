@@ -1,4 +1,5 @@
 /*
+
  * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -84,6 +85,9 @@ public class CloudProviderEndpoint {
   @NotNull
   @Builder.Default
   private Map<String, CloudProviderEndpoint> hybridCloudProviderEndpoints = new HashMap<>();
+
+  @JsonProperty
+  private boolean iamEnabled;
 
   @SuppressWarnings("null")
   @Deprecated

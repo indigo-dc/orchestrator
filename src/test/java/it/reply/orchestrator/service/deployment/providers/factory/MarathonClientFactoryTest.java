@@ -67,7 +67,7 @@ public class MarathonClientFactoryTest {
   }
 
   @Test
-  public void testgetClientSuccessful() throws URISyntaxException {
+  public void testgetClientSuccessfulNoIam() throws URISyntaxException {
 
     CloudProviderEndpoint cloudProviderEndpoint = CloudProviderEndpoint
         .builder()
@@ -88,12 +88,47 @@ public class MarathonClientFactoryTest {
   }
 
   @Test
+  public void testgetClientSuccessful() throws URISyntaxException {
+
+    CloudProviderEndpoint cloudProviderEndpoint = CloudProviderEndpoint
+        .builder()
+        .cpEndpoint("http://example.com")
+        .cpComputeServiceId(UUID.randomUUID().toString())
+        .iaasType(IaaSType.MARATHON)
+        .iamEnabled(true)
+        .build();
+
+    String serviceId = cloudProviderEndpoint.getCpComputeServiceId();
+
+    Mockito
+        .when(credProvServ.credentialProvider(serviceId, "token", GenericServiceCredential.class))
+        .thenReturn(new GenericServiceCredential("username", "password"));
+
+    assertThat(clientFactory.build(cloudProviderEndpoint, "token"))
+        .extracting("h.target.url")
+        .containsOnly("http://example.com");
+  }
+
+  @Test
+  public void testgetClientErrorNoIam() {
+    CloudProviderEndpoint cloudProviderEndpoint = CloudProviderEndpoint
+        .builder()
+        .cpEndpoint("http://example.com")
+        .cpComputeServiceId(UUID.randomUUID().toString())
+        .iaasType(IaaSType.MARATHON)
+        .build();
+    assertThatThrownBy(() -> clientFactory.build(cloudProviderEndpoint, null))
+        .isInstanceOf(NullPointerException.class);
+  }
+
+  @Test
   public void testgetClientError() {
     CloudProviderEndpoint cloudProviderEndpoint = CloudProviderEndpoint
         .builder()
         .cpEndpoint("http://example.com")
         .cpComputeServiceId(UUID.randomUUID().toString())
         .iaasType(IaaSType.MARATHON)
+        .iamEnabled(true)
         .build();
     assertThatThrownBy(() -> clientFactory.build(cloudProviderEndpoint, null))
         .isInstanceOf(NullPointerException.class);
