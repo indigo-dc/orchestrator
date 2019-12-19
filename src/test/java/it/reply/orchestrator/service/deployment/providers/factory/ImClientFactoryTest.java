@@ -149,7 +149,7 @@ public class ImClientFactoryTest {
     String iaasAuthHeader =
         "id = " + (headerId != null ? headerId : "ost")
             + " ; type = OpenStack ; tenant = tenant ; username = username ; password = password"
-            + " ; host = https://host:5000 ; auth_version = 3.x_oidc_access_token";
+            + " ; host = https://host:5000 ; auth_version = 3.x_password";
 
     OidcEntity entity = new OidcEntity();
     entity.setOidcEntityId(OidcEntityId.fromAccesToken(iamToken));
