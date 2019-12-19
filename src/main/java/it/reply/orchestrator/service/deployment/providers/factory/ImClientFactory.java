@@ -60,9 +60,6 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public class ImClientFactory {
 
-  @Autowired
-  private CredentialProviderService credProvServ;
-
   private static final Pattern OS_ENDPOINT_PATTERN =
       Pattern.compile("(https?:\\/\\/[^\\/]+)(?:\\/(?:([^\\/]+)\\/?)?)?");
 
@@ -71,6 +68,8 @@ public class ImClientFactory {
   private ImProperties imProperties;
 
   private OidcEntityRepository oidcEntityRepository;
+
+  private CredentialProviderService credProvServ;
 
   protected OpenStackCredentials getOpenStackAuthHeader(CloudProviderEndpoint cloudProviderEndpoint,
       @NonNull String accessToken) {
@@ -121,9 +120,9 @@ public class ImClientFactory {
             .getRegion()
             .ifPresent(cred::withServiceRegion);
         if ("v2".equals(matcher.group(2))) {
-          throw new DeploymentException("Openstack keystone v2 not supported");
+          cred.withAuthVersion(OpenStackAuthVersion.PASSWORD_2_0);
         } else {
-          cred.withAuthVersion(OpenStackAuthVersion.PASSWORD_3_X_TOKEN);
+          cred.withAuthVersion(OpenStackAuthVersion.PASSWORD_3_X);
         }
         return cred;
       }
