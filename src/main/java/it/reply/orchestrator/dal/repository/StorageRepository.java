@@ -23,7 +23,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface StorageRepository extends JpaRepository<StoragePathEntity, String> {
-  
+
   public String findByStoragePath(String storagePath);
 
 }

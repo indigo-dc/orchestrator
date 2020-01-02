@@ -21,13 +21,13 @@ import it.reply.orchestrator.dal.entity.StoragePathEntity;
 import java.util.List;
 
 public interface StorageService {
-  
+
   public StoragePathEntity addStoragePath(String storagePath);
-  
+
   public StoragePathEntity removeStoragePath(String storagePath);
-  
+
   public boolean exists(String storagePath);
-  
+
   public List<StoragePathEntity> getStoragePathList();
 
 }

@@ -31,13 +31,14 @@ import lombok.Setter;
 })
 @Getter
 @Setter
-@AllArgsConstructor 
+@AllArgsConstructor
 public class StoragePathEntity extends AbstractResourceEntity {
 
   @Column(nullable = false)
   private String storagePath;
-  
+
   public StoragePathEntity() {
-    
+
   }
+
 }

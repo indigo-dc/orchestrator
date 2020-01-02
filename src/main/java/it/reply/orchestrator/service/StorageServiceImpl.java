@@ -32,11 +32,11 @@ public class StorageServiceImpl implements StorageService {
 
   @Autowired
   StorageRepository storageRepository;
-  
+
   @Override
   public StoragePathEntity addStoragePath(String storagePath) {
     StoragePathEntity entity = new StoragePathEntity(storagePath);
-    if(!exists(storagePath)) {
+    if (!exists(storagePath)) {
       storageRepository.save(entity);
       return entity;
     }

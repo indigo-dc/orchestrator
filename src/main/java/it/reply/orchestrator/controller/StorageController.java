@@ -16,6 +16,8 @@
 
 package it.reply.orchestrator.controller;
 
+import groovy.util.ResourceException;
+
 import it.reply.orchestrator.dal.entity.StoragePathEntity;
 import it.reply.orchestrator.dto.request.PathRequest;
 import it.reply.orchestrator.service.StorageService;
@@ -29,26 +31,25 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import groovy.util.ResourceException;
-
 @RestController
 public class StorageController {
-  
+
   @Autowired
   private StorageService storageService;
-  
+
   /**
    * Add a watchable storage path.
-   * @throws ResourceException 
-   * 
+   * @throws ResourceException
+   *
    */
   @ResponseStatus(HttpStatus.CREATED)
   @RequestMapping(value = "/storage", method = RequestMethod.POST,
       produces = MediaType.APPLICATION_JSON_VALUE)
-  public StoragePathEntity addStoragePath(@RequestBody PathRequest storagePath) throws ResourceException {
-    
+  public StoragePathEntity addStoragePath(@RequestBody PathRequest storagePath)
+      throws ResourceException {
+
     StoragePathEntity stPath = storageService.addStoragePath(storagePath.getStoragePath());
-    if(stPath!=null) {
+    if (stPath != null) {
       return stPath;
     } else {
       throw new ResourceException("already exists");
