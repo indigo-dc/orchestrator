@@ -20,9 +20,11 @@ import it.reply.orchestrator.dal.entity.StoragePathEntity;
 
 import java.util.List;
 
+import groovy.util.ResourceException;
+
 public interface StorageService {
 
-  public StoragePathEntity addStoragePath(String storagePath);
+  public StoragePathEntity addStoragePath(String storagePath) throws ResourceException;
 
   public StoragePathEntity removeStoragePath(String storagePath);
 

@@ -26,6 +26,8 @@ import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import groovy.util.ResourceException;
+
 @Service
 @AllArgsConstructor
 public class StorageServiceImpl implements StorageService {
@@ -34,11 +36,15 @@ public class StorageServiceImpl implements StorageService {
   StorageRepository storageRepository;
 
   @Override
-  public StoragePathEntity addStoragePath(String storagePath) {
+  public StoragePathEntity addStoragePath(String storagePath) throws ResourceException {
     StoragePathEntity entity = new StoragePathEntity(storagePath);
     if (!exists(storagePath)) {
-      storageRepository.save(entity);
-      return entity;
+      StoragePathEntity outEntity = storageRepository.save(entity);
+      if ( outEntity != null ) {
+        return outEntity;
+      } else {
+        throw new ResourceException();
+      }
     }
     return null;
   }
