@@ -16,6 +16,8 @@
 
 package it.reply.orchestrator.service;
 
+import groovy.util.ResourceException;
+
 import it.reply.orchestrator.dal.entity.StoragePathEntity;
 import it.reply.orchestrator.dal.repository.StorageRepository;
 
@@ -25,8 +27,6 @@ import lombok.AllArgsConstructor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import groovy.util.ResourceException;
 
 @Service
 @AllArgsConstructor
@@ -40,7 +40,7 @@ public class StorageServiceImpl implements StorageService {
     StoragePathEntity entity = new StoragePathEntity(storagePath);
     if (!exists(storagePath)) {
       StoragePathEntity outEntity = storageRepository.save(entity);
-      if ( outEntity != null ) {
+      if (outEntity != null) {
         return outEntity;
       } else {
         throw new ResourceException();

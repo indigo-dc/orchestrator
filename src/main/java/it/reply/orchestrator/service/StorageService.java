@@ -16,11 +16,11 @@
 
 package it.reply.orchestrator.service;
 
+import groovy.util.ResourceException;
+
 import it.reply.orchestrator.dal.entity.StoragePathEntity;
 
 import java.util.List;
-
-import groovy.util.ResourceException;
 
 public interface StorageService {
 
