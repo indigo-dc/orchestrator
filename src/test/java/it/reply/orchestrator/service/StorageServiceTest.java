@@ -17,7 +17,7 @@ import static org.mockito.Matchers.any;
 
 public class StorageServiceTest {
 
-  
+
   @ClassRule
   public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
 

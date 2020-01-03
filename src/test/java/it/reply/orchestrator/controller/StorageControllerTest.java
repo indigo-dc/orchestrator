@@ -47,7 +47,7 @@ public class StorageControllerTest {
 
     PathRequest pathRequest = new PathRequest();
     pathRequest.setStoragePath("http://www.site1.com/storagepath/*");
-    
+
     Mockito.when(storageService.addStoragePath("http://www.site1.com/storagepath/*"))
     .thenReturn(null);
 
@@ -62,13 +62,13 @@ public class StorageControllerTest {
             .andReturn();
 
   }
-  
+
   @Test
   public void addStoragePathNew() throws Exception {
 
     PathRequest pathRequest = new PathRequest();
     pathRequest.setStoragePath("http://www.site1.com/storagepath/*");
-    
+
     Mockito.when(storageService.addStoragePath("http://www.site1.com/storagepath/*"))
     .thenReturn(new StoragePathEntity("http://www.site1.com/storagepath/*"));
 
