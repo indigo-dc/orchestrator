@@ -87,7 +87,7 @@ public class CloudService implements CmdbIdentifiable {
   @Nullable
   private String parentServiceId;
 
-  @JsonProperty("iamEnabled")
+  @JsonProperty("iam_enabled")
   private boolean iamEnabled;
 
   private static final String INDIGO_SERVICE_PREFIX = "eu.indigo-datacloud";

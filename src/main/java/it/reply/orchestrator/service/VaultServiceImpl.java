@@ -143,6 +143,7 @@ public class VaultServiceImpl implements VaultService {
     uri = VaultEndpoint.from(uri).createUri("auth/jwt/login");
     Map<String, String> login = new HashMap<>();
     login.put("jwt", accessToken);
+    login.put("role", vaultProperties.getRole());
     try {
       VaultTokenResponseExtended token = restTemplate
           .postForObject(uri, login, VaultTokenResponseExtended.class);

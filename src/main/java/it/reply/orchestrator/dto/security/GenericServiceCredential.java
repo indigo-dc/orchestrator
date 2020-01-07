@@ -42,4 +42,7 @@ public class GenericServiceCredential implements ServiceCredential {
   @NotNull
   private String password;
 
+  public GenericServiceCredential() {
+  }
+
 }

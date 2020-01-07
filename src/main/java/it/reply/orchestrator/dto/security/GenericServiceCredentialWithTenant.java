@@ -44,4 +44,7 @@ public class GenericServiceCredentialWithTenant extends GenericServiceCredential
   @Getter
   private String tenant;
 
+  public GenericServiceCredentialWithTenant() {
+  }
+
 }
