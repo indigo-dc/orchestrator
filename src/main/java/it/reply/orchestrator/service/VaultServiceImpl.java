@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 I.N.F.N.
+ * Copyright © 2020 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -143,6 +143,7 @@ public class VaultServiceImpl implements VaultService {
     uri = VaultEndpoint.from(uri).createUri("auth/jwt/login");
     Map<String, String> login = new HashMap<>();
     login.put("jwt", accessToken);
+    login.put("role", vaultProperties.getRole());
     try {
       VaultTokenResponseExtended token = restTemplate
           .postForObject(uri, login, VaultTokenResponseExtended.class);
