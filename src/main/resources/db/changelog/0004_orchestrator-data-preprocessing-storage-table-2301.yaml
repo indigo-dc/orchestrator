@@ -1,0 +1,23 @@
+databaseChangeLog:
+- changeSet:
+    id: 0004_orchestrator-data-preprocessing-storage-table-2301
+    author: a.lapshynov
+    comment: >
+      Create table for data preprocessing managing
+    changes:
+      - sql:
+          dbms: mysql
+          sql: >
+            CREATE TABLE `storage_path_entity` (
+              `id` varchar(36) NOT NULL,
+              `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              `updated_at` timestamp NULL DEFAULT NULL,
+              `version` bigint(20) NOT NULL,
+              `storage_path` varchar(255) NOT NULL,
+              `callback` varchar(255),
+              `status` varchar(255),
+              `template` longtext NOT NULL,
+              PRIMARY KEY (`id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+          
+            
