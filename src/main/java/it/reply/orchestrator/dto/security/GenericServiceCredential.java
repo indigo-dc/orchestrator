@@ -43,6 +43,8 @@ public class GenericServiceCredential implements ServiceCredential {
   private String password;
 
   public GenericServiceCredential() {
+    this.username = "";
+    this.password = "";
   }
 
 }

@@ -45,6 +45,7 @@ public class GenericServiceCredentialWithTenant extends GenericServiceCredential
   private String tenant;
 
   public GenericServiceCredentialWithTenant() {
+    this.tenant = "";
   }
 
 }
