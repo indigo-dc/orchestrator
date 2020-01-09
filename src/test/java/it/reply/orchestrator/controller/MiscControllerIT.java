@@ -45,6 +45,7 @@ public class MiscControllerIT extends WebAppConfigurationAwareIT {
 
   @Before
   public void before() {
+    String temp = "";
     this.mockMvc = MockMvcBuilders
         .webAppContextSetup(this.wac)
         .apply(MockMvcRestDocumentation.documentationConfiguration(this.restDocumentation))
@@ -58,6 +59,7 @@ public class MiscControllerIT extends WebAppConfigurationAwareIT {
 
   @Test
   public void getInfo() throws Exception {
+    String temp = "";
     mockMvc.perform(get("/info").accept(MediaType.APPLICATION_JSON)).andExpect(status().isOk());
   }
 

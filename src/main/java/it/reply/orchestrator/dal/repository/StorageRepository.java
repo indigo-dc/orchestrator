@@ -19,11 +19,16 @@ package it.reply.orchestrator.dal.repository;
 import it.reply.orchestrator.dal.entity.StoragePathEntity;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface StorageRepository extends JpaRepository<StoragePathEntity, String> {
 
-  public String findByStoragePath(String storagePath);
+  @Query("select s "
+      + "from #{#entityName} s "
+      + "where s.storagePath = ?#{#storagePath}")
+  public StoragePathEntity findByStoragePath(@Param("storagePath") String storagePath);
 
 }

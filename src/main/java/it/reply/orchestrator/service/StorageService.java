@@ -24,7 +24,8 @@ import java.util.List;
 
 public interface StorageService {
 
-  public StoragePathEntity addStoragePath(String storagePath) throws ResourceException;
+  public StoragePathEntity addStoragePath(String storagePath, String template)
+      throws ResourceException;
 
   public StoragePathEntity removeStoragePath(String storagePath);
 

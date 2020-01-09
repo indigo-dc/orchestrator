@@ -16,14 +16,19 @@
 
 package it.reply.orchestrator.dal.entity;
 
+import javax.persistence.Basic;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Index;
+import javax.persistence.Lob;
 import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Entity
 @Table(indexes = {
@@ -32,13 +37,23 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
+@NoArgsConstructor
 public class StoragePathEntity extends AbstractResourceEntity {
 
   @Column(nullable = false)
   private String storagePath;
 
-  public StoragePathEntity() {
+  @Lob
+  @Basic
+  @Column(nullable = false)
+  private String template;
 
-  }
+  @Column
+  @Nullable
+  private String callback;
+
+  @Column
+  @Nullable
+  private String status;
 
 }

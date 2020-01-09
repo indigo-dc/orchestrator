@@ -16,6 +16,9 @@
 
 package it.reply.orchestrator.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Matchers.any;
+
 import it.reply.orchestrator.dal.entity.StoragePathEntity;
 import it.reply.orchestrator.dal.repository.StorageRepository;
 
@@ -27,9 +30,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
-
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Matchers.any;
 
 public class StorageServiceTest {
 
@@ -53,9 +53,9 @@ public class StorageServiceTest {
     .thenReturn(null);
 
     Mockito.when(storageRepository.save(any(StoragePathEntity.class)))
-    .thenReturn(new StoragePathEntity("stringUrl1"));
+    .thenReturn(new StoragePathEntity("stringUrl1", "template1", null, null));
 
-    assertThat(storageService.addStoragePath("stringUrl1")!=(null));
+    assertThat(storageService.addStoragePath("stringUrl1", "template1")!=(null));
 
   }
 
@@ -63,12 +63,12 @@ public class StorageServiceTest {
   public void addStoragePathExisting() throws Exception {
 
     Mockito.when(storageRepository.findByStoragePath("stringUrl1"))
-    .thenReturn("stringUrl1");
+    .thenReturn(new StoragePathEntity("stringUrl1", "template1", null, null));
 
-    Mockito.when(storageRepository.save(new StoragePathEntity("stringUrl1")))
-    .thenReturn(new StoragePathEntity("stringUrl1"));
+    Mockito.when(storageRepository.save(new StoragePathEntity("stringUrl1", "template1", null, null)))
+    .thenReturn(new StoragePathEntity("stringUrl1", "template1", null, null));
 
-    assertThat(storageService.addStoragePath("stringUrl1") == null);
+    assertThat(storageService.addStoragePath("stringUrl1", "template1") == null);
 
   }
 

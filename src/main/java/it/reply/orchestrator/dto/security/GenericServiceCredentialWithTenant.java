@@ -24,11 +24,13 @@ import javax.validation.constraints.NotNull;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @Data
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class GenericServiceCredentialWithTenant extends GenericServiceCredential {
 
@@ -43,9 +45,5 @@ public class GenericServiceCredentialWithTenant extends GenericServiceCredential
   @NotNull
   @Getter
   private String tenant;
-
-  public GenericServiceCredentialWithTenant() {
-    this.tenant = "";
-  }
 
 }

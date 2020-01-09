@@ -36,8 +36,9 @@ public class StorageServiceImpl implements StorageService {
   StorageRepository storageRepository;
 
   @Override
-  public StoragePathEntity addStoragePath(String storagePath) throws ResourceException {
-    StoragePathEntity entity = new StoragePathEntity(storagePath);
+  public StoragePathEntity addStoragePath(String storagePath, String template)
+      throws ResourceException {
+    StoragePathEntity entity = new StoragePathEntity(storagePath, template, "", "");
     if (!exists(storagePath)) {
       StoragePathEntity outEntity = storageRepository.save(entity);
       if (outEntity != null) {

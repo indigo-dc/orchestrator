@@ -63,8 +63,9 @@ public class StorageControllerTest {
 
     PathRequest pathRequest = new PathRequest();
     pathRequest.setStoragePath("http://www.site1.com/storagepath/*");
+    pathRequest.setTemplate("template1");
 
-    Mockito.when(storageService.addStoragePath("http://www.site1.com/storagepath/*"))
+    Mockito.when(storageService.addStoragePath("http://www.site1.com/storagepath/*", "template1"))
     .thenReturn(null);
 
     MvcResult result =
@@ -84,9 +85,10 @@ public class StorageControllerTest {
 
     PathRequest pathRequest = new PathRequest();
     pathRequest.setStoragePath("http://www.site1.com/storagepath/*");
+    pathRequest.setTemplate("template");
 
-    Mockito.when(storageService.addStoragePath("http://www.site1.com/storagepath/*"))
-    .thenReturn(new StoragePathEntity("http://www.site1.com/storagepath/*"));
+    Mockito.when(storageService.addStoragePath("http://www.site1.com/storagepath/*", "template"))
+    .thenReturn(new StoragePathEntity("http://www.site1.com/storagepath/*", "template", null, null));
 
     MvcResult result =
         mockMvc.perform(post("/storage")

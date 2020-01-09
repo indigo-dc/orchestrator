@@ -24,12 +24,14 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 @Data
 @Builder
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
+@NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class PathRequest {
 
@@ -37,7 +39,8 @@ public class PathRequest {
   @NonNull
   private String storagePath;
 
-  public PathRequest() {
-  }
+  @NotNull(message = "Template must be provided")
+  @NonNull
+  private String template;
 
 }
