@@ -118,7 +118,6 @@
       <name>INDIGO-DC repository</name>
       <url>https://repository.indigo-datacloud.eu/repository/maven-public</url>
     </repository>
-
   </repositories>
 
 
