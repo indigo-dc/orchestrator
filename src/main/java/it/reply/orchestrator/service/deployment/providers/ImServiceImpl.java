@@ -26,6 +26,7 @@ import com.google.common.collect.Multimap;
 import es.upv.i3m.grycap.im.InfrastructureManager;
 import es.upv.i3m.grycap.im.exceptions.ImClientErrorException;
 import es.upv.i3m.grycap.im.exceptions.ImClientException;
+import es.upv.i3m.grycap.im.exceptions.ImClientServerErrorException;
 import es.upv.i3m.grycap.im.pojo.InfrastructureState;
 import es.upv.i3m.grycap.im.pojo.Property;
 import es.upv.i3m.grycap.im.pojo.ResponseError;
@@ -284,10 +285,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
       try {
         executeWithClient(cloudProviderEndpoints, requestedWithToken,
-            client -> client.destroyInfrastructure(deploymentEndpoint));
+            client -> client.destroyInfrastructureAsync(deploymentEndpoint));
         deployment.setEndpoint(null);
       } catch (ImClientErrorException exception) {
-        if (!getImResponseError(exception).is404Error()) {
+        if (!exception.getResponseError().is404Error()) {
           throw handleImClientException(exception);
         }
       } catch (ImClientException exception) {
@@ -514,10 +515,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
       try {
         executeWithClient(cloudProviderEndpoints, requestedWithToken,
-            client -> client.destroyInfrastructure(deploymentEndpoint));
+            client -> client.destroyInfrastructureAsync(deploymentEndpoint));
 
       } catch (ImClientErrorException exception) {
-        if (!getImResponseError(exception).is404Error()) {
+        if (!exception.getResponseError().is404Error()) {
           throw handleImClientException(exception);
         }
       } catch (ImClientException exception) {
@@ -547,8 +548,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
       LOG.debug(infrastructureState.getFormattedInfrastructureStateString());
     } catch (ImClientErrorException exception) {
-      ResponseError error = getImResponseError(exception);
-      if (error.is404Error()) {
+      if (exception.getResponseError().is404Error()) {
         return true;
       } else {
         throw handleImClientException(exception);
@@ -636,25 +636,18 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     }
   }
 
-  private ResponseError getImResponseError(ImClientErrorException exception) {
-    return exception.getResponseError();
-  }
-
   private RuntimeException handleImClientException(ImClientException ex) {
-    if (ex instanceof ImClientErrorException) {
-      ResponseError responseError = getImResponseError((ImClientErrorException) ex);
-      String errorMessage = responseError.getMessage();
-      if (Strings.nullToEmpty(errorMessage).startsWith("Error Creating Inf.")) {
-        return new BusinessWorkflowException(ErrorCode.CLOUD_PROVIDER_ERROR,
-            responseError.getFormattedErrorMessage(),
-            ex);
-      } else {
-        return new DeploymentException(
-            "Error executing request to IM\n" + responseError.getFormattedErrorMessage(), ex);
-      }
-    } else {
-      return new DeploymentException("Error executing request to IM", ex);
+    if (ex instanceof ImClientServerErrorException) {
+      ResponseError responseError = ((ImClientServerErrorException) ex).getResponseError();
+      return new BusinessWorkflowException(ErrorCode.CLOUD_PROVIDER_ERROR,
+          responseError.getFormattedErrorMessage(),
+          ex);
+    } else if (ex instanceof ImClientErrorException) {
+      ResponseError responseError = ((ImClientErrorException) ex).getResponseError();
+      return new DeploymentException(
+          "Error executing request to IM\n" + responseError.getFormattedErrorMessage(), ex);
     }
+    return new DeploymentException("Error executing request to IM", ex);
   }
 
   @Override
