@@ -119,11 +119,6 @@
       <url>https://repository.indigo-datacloud.eu/repository/maven-public</url>
     </repository>
 
-    <repository>
-      <id>central</id>
-      <name>recas-cloud-artifactory-releases</name>
-      <url>http://artifactory.cloud.ba.infn.it:8081/artifactory/libs-release</url>
-    </repository>
   </repositories>
 
 
