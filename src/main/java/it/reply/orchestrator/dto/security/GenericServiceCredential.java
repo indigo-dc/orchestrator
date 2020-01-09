@@ -24,11 +24,13 @@ import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 
 @Data
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
+@NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public class GenericServiceCredential implements ServiceCredential {
 
@@ -41,10 +43,5 @@ public class GenericServiceCredential implements ServiceCredential {
   @NonNull
   @NotNull
   private String password;
-
-  public GenericServiceCredential() {
-    this.username = "";
-    this.password = "";
-  }
 
 }
