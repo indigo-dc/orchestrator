@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,6 +34,7 @@ import it.reply.orchestrator.dto.mesos.MesosContainer;
 import it.reply.orchestrator.dto.mesos.MesosContainer.Type;
 import it.reply.orchestrator.dto.mesos.MesosPortMapping;
 import it.reply.orchestrator.dto.mesos.marathon.MarathonApp;
+import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.vault.VaultSecret;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.VaultServiceNotAvailableException;
@@ -146,9 +147,30 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
         client -> consumer.asFunction().apply(client));
   }
 
-  protected Group createGroup(Deployment deployment, OidcTokenId requestedWithToken) {
-    ArchiveRoot ar = toscaService
-        .prepareTemplate(deployment.getTemplate(), deployment.getParameters());
+  protected ArchiveRoot prepareTemplate(Deployment deployment,
+      RuntimeProperties runtimeProperties) {
+    Map<String, Object> inputs = deployment.getParameters();
+    ArchiveRoot ar = toscaService.parseAndValidateTemplate(deployment.getTemplate(), inputs);
+    indigoInputsPreProcessorService.processInputAttributes(ar, inputs, runtimeProperties);
+    return ar;
+  }
+
+  protected Group createGroup(DeploymentMessage deploymentMessage, OidcTokenId requestedWithToken) {
+
+    Map<String, OneData> odParameters = deploymentMessage.getOneDataParameters();
+    RuntimeProperties runtimeProperties = new RuntimeProperties();
+    odParameters.forEach((nodeName, odParameter) -> {
+      runtimeProperties.put(odParameter.getOnezone(), nodeName, "onezone");
+      runtimeProperties.put(odParameter.getToken(), nodeName, "token");
+      runtimeProperties
+        .put(odParameter.getSelectedOneprovider().getEndpoint(), nodeName, "selected_provider");
+      if (odParameter.isServiceSpace()) {
+        runtimeProperties.put(odParameter.getSpace(), nodeName, "space");
+        runtimeProperties.put(odParameter.getPath(), nodeName, "path");
+      }
+    });
+    Deployment deployment = getDeployment(deploymentMessage);
+    ArchiveRoot ar = prepareTemplate(deployment, runtimeProperties);
 
     Map<String, NodeTemplate> nodes = Optional
         .ofNullable(ar.getTopology())
@@ -207,7 +229,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     Deployment deployment = getDeployment(deploymentMessage);
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
 
-    Group group = createGroup(deployment, requestedWithToken);
+    Group group = createGroup(deploymentMessage, requestedWithToken);
 
     String groupId = deployment.getId();
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package it.reply.orchestrator.service;
 import it.reply.orchestrator.config.properties.CmdbProperties;
 import it.reply.orchestrator.dto.cmdb.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudService;
+import it.reply.orchestrator.dto.cmdb.CloudServiceType;
 import it.reply.orchestrator.dto.cmdb.CmdbIdentifiable;
 import it.reply.orchestrator.dto.cmdb.ComputeService;
 import it.reply.orchestrator.dto.cmdb.Flavor;
@@ -256,7 +257,8 @@ public class CmdbServiceImpl implements CmdbService {
     CloudProvider provider = getProviderById(providerId);
     Map<String, CloudService> services = getServicesByProvider(providerId)
         .stream()
-        .filter(cs -> servicesWithSla.contains(cs.getId()))
+        .filter(cs -> servicesWithSla.contains(cs.getId())
+            || cs.getType().equals(CloudServiceType.STORAGE))
         .map(cloudService -> {
           if (cloudService instanceof ComputeService) {
             String prId = cloudService.getProviderId();

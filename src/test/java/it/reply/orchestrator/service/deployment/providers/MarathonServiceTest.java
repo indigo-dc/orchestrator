@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -182,9 +182,11 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
   @Test
   public void testCreateGroup() throws IOException {
     Deployment deployment = generateDeployment();
-
-    Assertions
-        .assertThat(marathonServiceImpl.createGroup(deployment, null))
+    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
+    Mockito
+    .when(deploymentRepository.findOne(deployment.getId()))
+    .thenReturn(deployment);    Assertions
+        .assertThat(marathonServiceImpl.createGroup(dm, null))
         .isEqualToComparingFieldByFieldRecursively(
             ModelUtils.GSON.fromJson(TestUtil.getFileContentAsString(
                 ToscaServiceTest.TEMPLATES_BASE_DIR + "marathon_app.json"), Group.class));

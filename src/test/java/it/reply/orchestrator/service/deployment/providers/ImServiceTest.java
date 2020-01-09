@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -283,7 +283,7 @@ public class ImServiceTest {
 
     imService.cleanFailedDeploy(dm);
     Mockito.verify(infrastructureManager, Mockito.times(deleteExpectedToBeCalled ? 1 : 0))
-        .destroyInfrastructure("endpoint");
+        .destroyInfrastructureAsync("endpoint");
   }
 
   @Test
@@ -591,7 +591,7 @@ public class ImServiceTest {
         .build(Mockito.anyListOf(CloudProviderEndpoint.class), Mockito.any());
     ResponseError responseError = new ResponseError(null, 405);
     Mockito.doThrow(new ImClientErrorException(responseError)).when(infrastructureManager)
-        .destroyInfrastructure(Mockito.any(String.class));
+        .destroyInfrastructureAsync(Mockito.any(String.class));
     Mockito.doNothing().when(deploymentStatusHelper).updateOnError(Mockito.anyString(), Mockito.anyString());
 
     assertThatThrownBy(() -> imService.doUndeploy(dm)).isInstanceOf(DeploymentException.class);
@@ -615,7 +615,7 @@ public class ImServiceTest {
     Mockito.doNothing().when(deploymentStatusHelper).updateOnError(Mockito.anyString(), Mockito.anyString());
 
     Mockito.doThrow(new NullPointerException()).when(infrastructureManager)
-        .destroyInfrastructure(Mockito.any(String.class));
+        .destroyInfrastructureAsync(Mockito.any(String.class));
 
     assertThatThrownBy(() -> imService.doUndeploy(dm)).isInstanceOf(NullPointerException.class);
   }
