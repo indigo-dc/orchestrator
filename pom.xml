@@ -95,6 +95,7 @@
     <junit-params.version>1.1.0</junit-params.version>
     <org.projectlombok.version>1.16.20</org.projectlombok.version>
     <javax.ws.rs-api.version>2.0.1</javax.ws.rs-api.version>
+    <jorg.glassfish.jersey.core.version>2.22.2</jorg.glassfish.jersey.core.version>
   </properties>
 
   <distributionManagement>
@@ -418,6 +419,7 @@
       <version>${spring-test-dbunit.version}</version>
       <scope>test</scope>
     </dependency>
+
     <dependency>
       <groupId>org.dbunit</groupId>
       <artifactId>dbunit</artifactId>
@@ -436,6 +438,13 @@
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
+      <groupId>org.glassfish.jersey.core</groupId>
+      <artifactId>jersey-common</artifactId>
+      <version>${jorg.glassfish.jersey.core.version}</version>
       <scope>test</scope>
     </dependency>
 
