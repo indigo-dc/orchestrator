@@ -280,7 +280,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   }
 
   @Override
-  public boolean isDeployed(DeploymentMessage deploymentMessage) throws DeploymentException {
+  public boolean isDeployed(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
 
     Group group = getPolulatedGroup(deploymentMessage, deployment);
@@ -299,8 +299,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   @Deprecated
   // TODO remove it and use just getGroup with embed params (requires marathon client version >
   // 6.0.0)
-  private Group getPolulatedGroup(DeploymentMessage deploymentMessage, Deployment deployment)
-      throws MarathonException {
+  private Group getPolulatedGroup(DeploymentMessage deploymentMessage, Deployment deployment) {
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
     CloudProviderEndpoint cloudProviderEndpoint = deployment.getCloudProviderEndpoint();
     String groupId = deployment.getId();
@@ -383,7 +382,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   }
 
   @Override
-  public boolean isUndeployed(DeploymentMessage deploymentMessage) throws DeploymentException {
+  public boolean isUndeployed(DeploymentMessage deploymentMessage) {
     boolean isUndeployed = false;
     Deployment deployment = getDeployment(deploymentMessage);
     String groupId = deployment.getId();
@@ -696,7 +695,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   }
 
   @Override
-  public void doProviderTimeout(DeploymentMessage deploymentMessage) throws DeploymentException {
+  public void doProviderTimeout(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
     Group group = getPolulatedGroup(deploymentMessage, deployment);
     Collection<App> apps = Optional.ofNullable(group.getApps()).orElseGet(ArrayList::new);

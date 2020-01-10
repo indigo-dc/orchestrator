@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,15 @@ import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
+import it.reply.orchestrator.dto.onedata.OneData;
 
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 public class TestUtil {
@@ -45,6 +48,8 @@ public class TestUtil {
         .build();
     dm.setChosenCloudProviderEndpoint(chosenCloudProviderEndpoint);
     deployment.setCloudProviderEndpoint(chosenCloudProviderEndpoint);
+    Map<String, OneData> oneDataParameters = new HashMap<>();
+    dm.setOneDataParameters(oneDataParameters);
     return dm;
   }
 

@@ -54,6 +54,7 @@ import java.util.stream.IntStream;
 
 import mesosphere.client.common.ModelUtils;
 import mesosphere.marathon.client.Marathon;
+import mesosphere.marathon.client.MarathonException;
 import mesosphere.marathon.client.model.v2.ExternalVolume;
 import mesosphere.marathon.client.model.v2.GetAppResponse;
 import mesosphere.marathon.client.model.v2.Group;
@@ -184,8 +185,9 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
     Deployment deployment = generateDeployment();
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
     Mockito
-    .when(deploymentRepository.findOne(deployment.getId()))
-    .thenReturn(deployment);    Assertions
+        .when(deploymentRepository.findOne(deployment.getId()))
+        .thenReturn(deployment);
+    Assertions
         .assertThat(marathonServiceImpl.createGroup(dm, null))
         .isEqualToComparingFieldByFieldRecursively(
             ModelUtils.GSON.fromJson(TestUtil.getFileContentAsString(
@@ -227,6 +229,38 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
     Assertions
         .assertThat(marathonServiceImpl.doDeploy(dm))
         .isTrue();
+  }
+
+  @Test
+  @Parameters({"true","false"})
+  public void testIsUndeployed(boolean expected) {
+    Deployment deployment = new Deployment();
+    deployment.setId(UUID.randomUUID().toString());
+    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
+    Mockito
+        .when(deploymentRepository.findOne(deployment.getId()))
+        .thenReturn(deployment);
+    Mockito
+        .when(marathonClientFactory.build(deployment.getCloudProviderEndpoint(), "token"))
+        .thenReturn(marathonClient);
+    VersionedApp app = new VersionedApp();
+    app.setId("appId");
+    Group group = new Group();
+    group.setId(deployment.getId());
+    group.setApps(Lists.newArrayList(app));
+
+    if (!expected) {
+      Mockito
+          .when(marathonClient.getGroup(deployment.getId()))
+          .thenReturn(group);
+    } else {
+      Mockito
+          .when(marathonClient.getGroup(deployment.getId()))
+          .thenThrow(new MarathonException(404, "Deployment not found"));
+    }
+    Assertions
+        .assertThat(marathonServiceImpl.isUndeployed(dm))
+        .isEqualTo(expected);
   }
 
   @Test

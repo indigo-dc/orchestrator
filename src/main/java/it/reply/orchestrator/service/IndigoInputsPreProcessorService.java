@@ -296,7 +296,7 @@ public class IndigoInputsPreProcessorService {
       Optional
           .ofNullable(nodeTemplate.getInterfaces())
           .orElseGet(Collections::emptyMap)
-          .forEach((interfaceName, toscaInterface) -> {
+          .forEach((interfaceName, toscaInterface) ->
             Optional
                 .ofNullable(toscaInterface.getOperations())
                 .orElseGet(Collections::emptyMap)
@@ -304,8 +304,7 @@ public class IndigoInputsPreProcessorService {
                     (operationName, operation) -> processProperties(functions, processedFunctions,
                         operation.getInputParameters(),
                         String.format("node_templates[%s][interfaces][%s][inputs][%s]", nodeName,
-                            interfaceName, operationName)));
-          });
+                            interfaceName, operationName))));
 
     });
   }
