@@ -27,6 +27,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.hibernate.validator.constraints.URL;
 
 @Data
 @Builder
@@ -39,8 +41,13 @@ public class PathRequest {
   @NonNull
   private String storagePath;
 
-  @NotNull(message = "Template must be provided")
+  @NotNull(message = "A TOSCA template must be provided")
   @NonNull
   private String template;
+
+  @Nullable
+  @URL(message = "Callback value, if provided, must be a valid HTTP or HTTPS URL",
+      regexp = "^https?\\:.*")
+  private String callback;
 
 }

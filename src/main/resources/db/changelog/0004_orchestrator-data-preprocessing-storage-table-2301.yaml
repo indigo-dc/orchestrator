@@ -1,21 +1,58 @@
 databaseChangeLog:
+- property:
+    name: TEXT.type
+    value: TEXT
+    dbms: mysql,postgresql
+- property:
+    name: TEXT.type
+    value: VARCHAR(65535)
+    dbms: h2
 - changeSet:
     id: 0004_orchestrator-data-preprocessing-storage-table-2301
     author: a.lapshynov
     comment: >
       Create table for data preprocessing managing
     changes:
-      - sql:
-          dbms: mysql
-          sql: >
-            CREATE TABLE `storage_path_entity` (
-              `id` varchar(36) NOT NULL,
-              `created_at` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
-              `updated_at` timestamp NULL DEFAULT NULL,
-              `version` bigint(20) NOT NULL,
-              `storage_path` varchar(255) NOT NULL,
-              `callback` varchar(255),
-              `status` varchar(255),
-              `template` longtext NOT NULL,
-              PRIMARY KEY (`id`)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: id
+            type: VARCHAR(36)
+        - column:
+            constraints:
+              nullable: false
+            name: created_at
+            type: TIMESTAMP(6)
+        - column:
+            name: updated_at
+            type: TIMESTAMP(6)
+        - column:
+            constraints:
+              nullable: false
+            name: version
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: storage_path
+            type: VARCHAR(255)
+        - column:
+            name: callback
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: status
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: template
+            type: CLOB
+        tableName: storage_path_entity
+    - addPrimaryKey:
+        columnNames: id
+        constraintName: pk__storage_path_entity
+        tableName: storage_path_entity
