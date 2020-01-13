@@ -155,8 +155,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     return ar;
   }
 
-  protected Group createGroup(DeploymentMessage deploymentMessage, OidcTokenId requestedWithToken) {
-
+  protected RuntimeProperties getOneDataProperties(DeploymentMessage deploymentMessage) {
     Map<String, OneData> odParameters = deploymentMessage.getOneDataParameters();
     RuntimeProperties runtimeProperties = new RuntimeProperties();
     odParameters.forEach((nodeName, odParameter) -> {
@@ -169,8 +168,13 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
         runtimeProperties.put(odParameter.getPath(), nodeName, "path");
       }
     });
+    return runtimeProperties;
+  }
+
+  protected Group createGroup(DeploymentMessage deploymentMessage, OidcTokenId requestedWithToken) {
+
     Deployment deployment = getDeployment(deploymentMessage);
-    ArchiveRoot ar = prepareTemplate(deployment, runtimeProperties);
+    ArchiveRoot ar = prepareTemplate(deployment, getOneDataProperties(deploymentMessage));
 
     Map<String, NodeTemplate> nodes = Optional
         .ofNullable(ar.getTopology())
@@ -296,9 +300,11 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     return isDeployed;
   }
 
+  /**
+   * @deprecated (remove it and use just getGroup with embed params
+   *              - requires Marathon client version > 6.0.0)
+   */
   @Deprecated
-  // TODO remove it and use just getGroup with embed params (requires marathon client version >
-  // 6.0.0)
   private Group getPolulatedGroup(DeploymentMessage deploymentMessage, Deployment deployment) {
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
     CloudProviderEndpoint cloudProviderEndpoint = deployment.getCloudProviderEndpoint();
@@ -614,9 +620,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   @Override
   public void finalizeDeploy(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
-
-    ArchiveRoot ar = toscaService
-        .prepareTemplate(deployment.getTemplate(), deployment.getParameters());
+    ArchiveRoot ar = prepareTemplate(deployment, getOneDataProperties(deploymentMessage));
 
     Map<String, OutputDefinition> outputs = Optional
         .ofNullable(ar.getTopology())
