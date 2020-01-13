@@ -300,10 +300,6 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     return isDeployed;
   }
 
-  /**
-   * @deprecated (remove it and use just getGroup with embed params
-   *              - requires Marathon client version > 6.0.0)
-   */
   @Deprecated
   private Group getPolulatedGroup(DeploymentMessage deploymentMessage, Deployment deployment) {
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
