@@ -85,8 +85,9 @@ public class CloudProviderEndpoint {
   @Builder.Default
   private Map<String, CloudProviderEndpoint> hybridCloudProviderEndpoints = new HashMap<>();
 
+  @Builder.Default
   @JsonProperty
-  private boolean iamEnabled;
+  private boolean iamEnabled = true;
 
   @SuppressWarnings("null")
   @Deprecated
