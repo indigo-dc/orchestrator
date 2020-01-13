@@ -678,9 +678,9 @@ public class ToscaServiceImpl implements ToscaService {
         case CloudService.OPENNEBULA_TOSCA_SERVICE:
           return String.format("one://%s/%s", host, imageId);
         case CloudService.AWS_COMPUTE_SERVICE:
-          return String.format("aws://%s", host);
+          return String.format("aws://%s", imageId);
         case CloudService.AZURE_COMPUTE_SERVICE:
-          return String.format("azr://%s", host);
+          return String.format("azr://%s", imageId);
         default:
           throw new DeploymentException(
               "Unknown IaaSType of cloud service " + cloudService.getId());
