@@ -141,6 +141,16 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
     marathonServiceImpl.generateVolume("local/path:/var/lib/mysql:rw");
   }
 
+  @Test(expected = UnsupportedOperationException.class)
+  public void testdoUpdateFail() {
+    marathonServiceImpl.doUpdate(null, null);
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void testCleanFailedUpdateFail() {
+    marathonServiceImpl.cleanFailedUpdate(null);
+  }
+
   private Deployment generateDeployment() throws IOException {
     Deployment deployment = ControllerTestUtils.createDeployment();
     deployment.setCloudProviderEndpoint(CloudProviderEndpoint.builder()
@@ -194,11 +204,7 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
                 ToscaServiceTest.TEMPLATES_BASE_DIR + "marathon_app.json"), Group.class));
   }
 
-  @Test
-  public void testDoDeploy() throws IOException, URISyntaxException {
-    Deployment deployment = generateDeployment();
-    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
-
+  private MarathonService buildService() {
     MarathonService cs = MarathonService
         .marathonBuilder()
         .endpoint("example.com/marathon")
@@ -212,6 +218,40 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
             .localVolumesHostBasePath("/tmp/")
             .build())
         .build();
+    return cs;
+  }
+
+  @Test
+  public void testDoUndeploy() throws IOException, URISyntaxException {
+    Deployment deployment = generateDeployment();
+    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
+
+    MarathonService cs = buildService();
+
+    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(cs));
+    csi.next();
+    dm.setCloudServicesOrderedIterator(csi);
+
+    Mockito
+        .when(deploymentRepository.findOne(deployment.getId()))
+        .thenReturn(deployment);
+    Mockito
+        .when(marathonClientFactory.build(deployment.getCloudProviderEndpoint(), "token"))
+        .thenReturn(marathonClient);
+    Mockito
+        .when(vaultService.getServiceUri())
+        .thenReturn(Optional.of(new URI(defaultVaultEndpoint)));
+    Assertions
+    .assertThat(marathonServiceImpl.doUndeploy(dm))
+    .isTrue();    
+  }
+
+  @Test
+  public void testDoDeploy() throws IOException, URISyntaxException {
+    Deployment deployment = generateDeployment();
+    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
+
+    MarathonService cs = buildService();
 
     CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(cs));
     csi.next();

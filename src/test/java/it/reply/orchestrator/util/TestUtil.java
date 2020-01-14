@@ -21,13 +21,16 @@ import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.onedata.OneData;
+import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
 
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -49,6 +52,27 @@ public class TestUtil {
     dm.setChosenCloudProviderEndpoint(chosenCloudProviderEndpoint);
     deployment.setCloudProviderEndpoint(chosenCloudProviderEndpoint);
     Map<String, OneData> oneDataParameters = new HashMap<>();
+    OneDataProviderInfo providerInfo = OneDataProviderInfo
+        .builder()
+        .cloudProviderId("provider-1")
+        .cloudServiceId(UUID.randomUUID().toString())
+        .endpoint("http://example.onedata.com")
+        .id("test")
+        .build();
+    List<OneDataProviderInfo> oneproviders = new ArrayList<OneDataProviderInfo>();
+    oneproviders.add(providerInfo);
+    OneData parameter = OneData
+        .builder()
+        .oneproviders(oneproviders)
+        .onezone("test")
+        .path("/tmp/")
+        .selectedOneprovider(providerInfo)
+        .serviceSpace(true)
+        .smartScheduling(false)
+        .space("test")
+        .token("0123456789-onedata-token")
+        .build();
+    oneDataParameters.put("provider-1", parameter);
     dm.setOneDataParameters(oneDataParameters);
     return dm;
   }
