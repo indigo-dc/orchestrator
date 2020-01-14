@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,15 +18,21 @@ package it.reply.orchestrator;
 
 import java.util.TimeZone;
 
+import org.springframework.amqp.rabbit.annotation.EnableRabbit;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.web.ErrorMvcAutoConfiguration;
 
 @SpringBootApplication(exclude = ErrorMvcAutoConfiguration.class)
+@EnableRabbit
 public class Application {
-
+  
   public static void main(String[] args) {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+    System.setProperty("http.proxyHost", "proxy.reply.it");
+    System.setProperty("http.proxyPort", "8080");
+    System.setProperty("https.proxyHost", "proxy.reply.it");
+    System.setProperty("https.proxyPort", "8080");
     SpringApplication.run(Application.class, args);
   }
 

@@ -21,7 +21,9 @@ import groovy.util.ResourceException;
 import it.reply.orchestrator.dal.entity.StoragePathEntity;
 import it.reply.orchestrator.dal.repository.StorageRepository;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import lombok.AllArgsConstructor;
 
@@ -36,11 +38,13 @@ public class StorageServiceImpl implements StorageService {
   StorageRepository storageRepository;
 
   @Override
-  public StoragePathEntity addStoragePath(String storagePath, String template)
+  public StoragePathEntity addStoragePath(StoragePathEntity storagePathEntity)
       throws ResourceException {
-    StoragePathEntity entity = new StoragePathEntity(storagePath, template, "", "");
-    if (!exists(storagePath)) {
-      StoragePathEntity outEntity = storageRepository.save(entity);
+    
+    //Map<String, Object> parameters = new HashMap<>();
+
+    if (!exists(storagePathEntity.getStoragePath())) {
+      StoragePathEntity outEntity = storageRepository.save(storagePathEntity);
       if (outEntity != null) {
         return outEntity;
       } else {
@@ -64,6 +68,11 @@ public class StorageServiceImpl implements StorageService {
   @Override
   public List<StoragePathEntity> getStoragePathList() {
     return storageRepository.findAll();
+  }
+
+  @Override
+  public StoragePathEntity getEntityByPath(String storagePath) {
+    return storageRepository.findByStoragePath(storagePath);
   }
 
 }

@@ -16,11 +16,20 @@
 
 package it.reply.orchestrator.dal.entity;
 
+import it.reply.orchestrator.dal.util.ObjectToJsonConverter;
+
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.persistence.Basic;
 import javax.persistence.Column;
+import javax.persistence.Convert;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Index;
 import javax.persistence.Lob;
+import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
 
 import lombok.AllArgsConstructor;
@@ -52,8 +61,14 @@ public class StoragePathEntity extends AbstractResourceEntity {
   @Nullable
   private String callback;
 
-  @Column
-  @Nullable
-  private String status;
+  @Column(nullable = false)
+  private String deploymentId;
+
+  @ElementCollection(fetch = FetchType.EAGER, targetClass = String.class)
+  @MapKeyColumn(name = "name")
+  @Column(name = "value", table = "deployment_parameter", nullable = false,
+      columnDefinition = "TEXT")
+  @Convert(attributeName = "value.", converter = ObjectToJsonConverter.class)
+  private Map<String, Object> parameters = new HashMap<>();
 
 }

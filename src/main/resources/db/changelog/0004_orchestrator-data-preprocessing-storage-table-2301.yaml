@@ -44,8 +44,8 @@ databaseChangeLog:
         - column:
             constraints:
               nullable: false
-            name: status
-            type: VARCHAR(255)
+            name: deployment_id
+            type: VARCHAR(36)
         - column:
             constraints:
               nullable: false
@@ -56,3 +56,12 @@ databaseChangeLog:
         columnNames: id
         constraintName: pk__storage_path_entity
         tableName: storage_path_entity
+    - addColumn:
+      catalogName: cat
+      columns:
+      - column:
+            constraints:
+              nullable: true
+            name: trigger_id
+            type: VARCHAR(36)
+        tableName: deployment

@@ -84,6 +84,9 @@ public class Deployment extends AbstractResourceEntity {
 
   @Nullable
   private String callback;
+  
+  @Nullable
+  private String triggerId;
 
   @Lob
   @Basic
