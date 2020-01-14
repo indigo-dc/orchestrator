@@ -302,17 +302,17 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
 
   /**
    * Retrieve Group informations.
-   * 
+   *
    * @param deploymentMessage    the deployment message.
    * @param deployment           the deployment object.
    * @return                     the Group object.
-   * 
+   *
    * @deprecated (remove it and use just getGroup with embed params
    *              - requires Marathon client version > 6.0.0)
    */
   @Deprecated
   private Group getPolulatedGroup(DeploymentMessage deploymentMessage, Deployment deployment) {
-    
+
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
     CloudProviderEndpoint cloudProviderEndpoint = deployment.getCloudProviderEndpoint();
     String groupId = deployment.getId();

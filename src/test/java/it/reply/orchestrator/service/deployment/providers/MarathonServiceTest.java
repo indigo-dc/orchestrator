@@ -243,7 +243,7 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
         .thenReturn(Optional.of(new URI(defaultVaultEndpoint)));
     Assertions
     .assertThat(marathonServiceImpl.doUndeploy(dm))
-    .isTrue();    
+    .isTrue();
   }
 
   @Test
