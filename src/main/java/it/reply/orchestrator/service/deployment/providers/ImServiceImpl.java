@@ -43,6 +43,7 @@ import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.cmdb.ComputeService;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
+import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
@@ -52,7 +53,9 @@ import it.reply.orchestrator.exception.service.BusinessWorkflowException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.function.ThrowingConsumer;
 import it.reply.orchestrator.function.ThrowingFunction;
+import it.reply.orchestrator.service.IndigoInputsPreProcessorService;
 import it.reply.orchestrator.service.ToscaService;
+import it.reply.orchestrator.service.IndigoInputsPreProcessorService.RuntimeProperties;
 import it.reply.orchestrator.service.deployment.providers.factory.ImClientFactory;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
@@ -93,6 +96,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   private ResourceRepository resourceRepository;
 
   @Autowired
+  private IndigoInputsPreProcessorService indigoInputsPreProcessorService;
+
+  @Autowired
   private OidcProperties oidcProperties;
 
   @Autowired
@@ -125,6 +131,26 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         .isPresent();
   }
 
+  protected ArchiveRoot prepareTemplate(Deployment deployment,
+      DeploymentMessage deploymentMessage) {
+    Map<String, OneData> odParameters = deploymentMessage.getOneDataParameters();
+    RuntimeProperties runtimeProperties = new RuntimeProperties();
+    odParameters.forEach((nodeName, odParameter) -> {
+      runtimeProperties.put(odParameter.getOnezone(), nodeName, "onezone");
+      runtimeProperties.put(odParameter.getToken(), nodeName, "token");
+      runtimeProperties
+        .put(odParameter.getSelectedOneprovider().getEndpoint(), nodeName, "selected_provider");
+      if (odParameter.isServiceSpace()) {
+        runtimeProperties.put(odParameter.getSpace(), nodeName, "space");
+        runtimeProperties.put(odParameter.getPath(), nodeName, "path");
+      }
+    });
+    Map<String, Object> inputs = deployment.getParameters();
+    ArchiveRoot ar = toscaService.parseAndValidateTemplate(deployment.getTemplate(), inputs);
+    indigoInputsPreProcessorService.processInputAttributes(ar, inputs, runtimeProperties);
+    return ar;
+  }
+
   @Override
   public boolean doDeploy(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
@@ -138,8 +164,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     // Update status of the deployment
     deployment.setTask(Task.DEPLOYER);
 
-    ArchiveRoot ar =
-        toscaService.prepareTemplate(deployment.getTemplate(), deployment.getParameters());
+    ArchiveRoot ar = prepareTemplate(deployment, deploymentMessage);
 
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
 
@@ -306,7 +331,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     final CloudProviderEndpoint chosenCloudProviderEndpoint =
         deploymentMessage.getChosenCloudProviderEndpoint();
 
-    ArchiveRoot newAr = toscaService.prepareTemplate(template, deployment.getParameters());
+    ArchiveRoot newAr = prepareTemplate(deployment, deploymentMessage);
 
     String accessToken = null;
     if (oidcProperties.isEnabled()) {

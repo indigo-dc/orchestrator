@@ -148,14 +148,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   }
 
   protected ArchiveRoot prepareTemplate(Deployment deployment,
-      RuntimeProperties runtimeProperties) {
-    Map<String, Object> inputs = deployment.getParameters();
-    ArchiveRoot ar = toscaService.parseAndValidateTemplate(deployment.getTemplate(), inputs);
-    indigoInputsPreProcessorService.processInputAttributes(ar, inputs, runtimeProperties);
-    return ar;
-  }
-
-  protected RuntimeProperties getOneDataProperties(DeploymentMessage deploymentMessage) {
+      DeploymentMessage deploymentMessage) {
     Map<String, OneData> odParameters = deploymentMessage.getOneDataParameters();
     RuntimeProperties runtimeProperties = new RuntimeProperties();
     odParameters.forEach((nodeName, odParameter) -> {
@@ -168,13 +161,16 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
         runtimeProperties.put(odParameter.getPath(), nodeName, "path");
       }
     });
-    return runtimeProperties;
+    Map<String, Object> inputs = deployment.getParameters();
+    ArchiveRoot ar = toscaService.parseAndValidateTemplate(deployment.getTemplate(), inputs);
+    indigoInputsPreProcessorService.processInputAttributes(ar, inputs, runtimeProperties);
+    return ar;
   }
 
   protected Group createGroup(DeploymentMessage deploymentMessage, OidcTokenId requestedWithToken) {
 
     Deployment deployment = getDeployment(deploymentMessage);
-    ArchiveRoot ar = prepareTemplate(deployment, getOneDataProperties(deploymentMessage));
+    ArchiveRoot ar = prepareTemplate(deployment, deploymentMessage);
 
     Map<String, NodeTemplate> nodes = Optional
         .ofNullable(ar.getTopology())
@@ -627,7 +623,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   @Override
   public void finalizeDeploy(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
-    ArchiveRoot ar = prepareTemplate(deployment, getOneDataProperties(deploymentMessage));
+    ArchiveRoot ar = prepareTemplate(deployment, deploymentMessage);
 
     Map<String, OutputDefinition> outputs = Optional
         .ofNullable(ar.getTopology())
