@@ -59,7 +59,6 @@ pipeline {
             }
         }
 
-        /*
         stage('Dependency check') {
             agent {
                 label 'docker-build'
@@ -70,7 +69,7 @@ pipeline {
             }
             post {
                 always {
-                    OWASPDependencyCheckPublish()
+                    OWASPDependencyCheckPublish(report='**/dependency-check-report.xml')
                     HTMLReport("$WORKSPACE/orchestrator/src",
                                'dependency-check-report.html',
                                'OWASP Dependency Report')
@@ -78,7 +77,6 @@ pipeline {
                 }
             }
         }
-        */
 
         stage('Metrics') {
             agent {
