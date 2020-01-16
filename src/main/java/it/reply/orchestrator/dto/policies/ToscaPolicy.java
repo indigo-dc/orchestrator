@@ -34,10 +34,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
     @JsonSubTypes.Type(
         value = SlaPlacementPolicy.class,
         name = Policies.Types.SLA_PLACEMENT
-    ),
-    @JsonSubTypes.Type(
-        value = CredentialsAwareSlaPlacementPolicy.class,
-        name = Policies.Types.CREDENTIALS_AWARE_SLA_PLACEMENT
     )
 })
 public interface ToscaPolicy {

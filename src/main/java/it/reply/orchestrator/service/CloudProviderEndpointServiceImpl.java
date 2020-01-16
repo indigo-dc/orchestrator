@@ -22,7 +22,6 @@ import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.cmdb.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudService;
-import it.reply.orchestrator.dto.policies.CredentialsAwareSlaPlacementPolicy;
 import it.reply.orchestrator.dto.policies.ToscaPolicy;
 import it.reply.orchestrator.dto.ranker.RankedCloudService;
 import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
@@ -102,22 +101,6 @@ public class CloudProviderEndpointServiceImpl {
     String imEndpoint = null;
     CloudProviderEndpointBuilder cpe = CloudProviderEndpoint.builder();
 
-    ///////////////////////////////
-    // TODO Improve and move somewhere else
-    placementPolicies
-        .values()
-        .stream()
-        .filter(CredentialsAwareSlaPlacementPolicy.class::isInstance)
-        .map(CredentialsAwareSlaPlacementPolicy.class::cast)
-        .filter(policy -> policy.getServicesId().contains(computeService.getId()))
-        .findFirst()
-        .ifPresent(policy -> {
-          cpe.username(policy.getUsername());
-          cpe.password(policy.getPassword());
-          cpe.tenant(policy.getTenant());
-        });
-    ///////////////////////////////
-
     final IaaSType iaasType;
     if (computeService.isOpenStackComputeProviderService()) {
       iaasType = IaaSType.OPENSTACK;
@@ -149,6 +132,7 @@ public class CloudProviderEndpointServiceImpl {
     cpe.region(computeService.getRegion());
     cpe.iaasType(iaasType);
     cpe.imEndpoint(imEndpoint);
+    cpe.iamEnabled(computeService.isIamEnabled());
 
     if (isHybrid) {
       // generate and set IM iaasHeaderId
