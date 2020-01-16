@@ -71,9 +71,10 @@ public class MesosFrameworkService<T extends MesosFrameworkServiceProperties> ex
       @Nullable String region,
       @NonNull String hostname,
       @Nullable String parentServiceId,
-      @NonNull T properties) {
+      @NonNull T properties,
+      boolean iamEnabled) {
     super(id, serviceType, endpoint, providerId, type, publicService, region, hostname,
-            parentServiceId);
+            parentServiceId, iamEnabled);
     this.properties = properties;
   }
 }

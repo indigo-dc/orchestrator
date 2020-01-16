@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 I.N.F.N.
+ * Copyright © 2015-2019 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,27 +14,22 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.config.properties;
+package it.reply.orchestrator.dto.vault;
 
-import java.net.URI;
+import org.springframework.vault.authentication.TokenAuthentication;
+import org.springframework.vault.support.VaultToken;
 
-import lombok.Data;
-import lombok.NoArgsConstructor;
+public class TokenAuthenticationExtended extends TokenAuthentication {
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+  private String entityId;
 
-@Data
-@ConfigurationProperties(prefix = "vault")
-@NoArgsConstructor
-public class VaultProperties {
+  public TokenAuthenticationExtended(VaultToken token, String entityId) {
+    super(token);
+    this.entityId = entityId;
+  }
 
-  @Nullable
-  private URI url;
-
-  private String path = "/services_credential/";
-
-  private String role;
+  public String getEntityId() {
+    return entityId;
+  }
 
 }
-

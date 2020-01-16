@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,14 +32,12 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.ToString;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Data
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-@ToString(exclude = "password")
 @Builder
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 public class CloudProviderEndpoint {
@@ -76,15 +74,6 @@ public class CloudProviderEndpoint {
   private String region;
 
   @Nullable
-  private String username;
-
-  @Nullable
-  private String password;
-
-  @Nullable
-  private String tenant;
-
-  @Nullable
   @JsonProperty
   private String iaasHeaderId;
 
@@ -95,6 +84,10 @@ public class CloudProviderEndpoint {
   @NotNull
   @Builder.Default
   private Map<String, CloudProviderEndpoint> hybridCloudProviderEndpoints = new HashMap<>();
+
+  @Builder.Default
+  @JsonProperty
+  private boolean iamEnabled = true;
 
   @SuppressWarnings("null")
   @Deprecated

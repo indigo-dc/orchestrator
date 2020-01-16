@@ -29,6 +29,7 @@ import feign.gson.GsonEncoder;
 import feign.slf4j.Slf4jLogger;
 
 import it.reply.orchestrator.dto.cmdb.MarathonService;
+import it.reply.orchestrator.service.deployment.providers.CredentialProviderService;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -55,6 +56,10 @@ import org.springframework.stereotype.Service;
 @Service
 public class MarathonClientFactory extends
     MesosFrameworkClientFactory<MarathonService, Marathon> {
+
+  public MarathonClientFactory(CredentialProviderService credProvServ) {
+    super(credProvServ);
+  }
 
   private static class DeserializingMarathonErrorDecoder implements ErrorDecoder {
 

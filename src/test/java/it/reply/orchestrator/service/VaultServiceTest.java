@@ -143,6 +143,7 @@ public class VaultServiceTest {
   private Map<String, String> buildLogin(String token) {
     Map<String, String> login = new HashMap<>();
     login.put("jwt", token);
+    login.put("role", vaultProperties.getRole());
     return login;
   }
 
