@@ -21,11 +21,14 @@ import feign.auth.BasicAuthRequestInterceptor;
 
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.cmdb.MesosFrameworkService;
+import it.reply.orchestrator.dto.security.GenericServiceCredential;
+import it.reply.orchestrator.service.deployment.providers.CredentialProviderService;
 
 import java.util.Objects;
 
 import lombok.AllArgsConstructor;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
@@ -33,29 +36,31 @@ import org.springframework.stereotype.Service;
 @AllArgsConstructor
 public abstract class MesosFrameworkClientFactory<V extends MesosFrameworkService, T> {
 
+  @Autowired
+  private CredentialProviderService credProvServ;
+
   /**
    * Generate a new Mesos framework client.
    *
-   * @param cloudProviderEndpoint
-   *     the framework endpoint
-   * @param accessToken
-   *     the access token
+   * @param cloudProviderEndpoint the framework endpoint
+   * @param accessToken the access token
    * @return the new client
    */
   public T build(CloudProviderEndpoint cloudProviderEndpoint, String accessToken) {
     final RequestInterceptor requestInterceptor;
-    if (cloudProviderEndpoint.getUsername() != null
-        || cloudProviderEndpoint.getPassword() != null) {
-      Objects.requireNonNull(cloudProviderEndpoint.getUsername(), "Username must be provided");
-      Objects.requireNonNull(cloudProviderEndpoint.getPassword(), "Password must be provided");
-      requestInterceptor = new BasicAuthRequestInterceptor(cloudProviderEndpoint.getUsername(),
-          cloudProviderEndpoint.getPassword());
-    } else {
-      Objects.requireNonNull(accessToken, "Access Token must not be null");
+    Objects.requireNonNull(accessToken, "Access Token must not be null");
+    if (cloudProviderEndpoint.isIamEnabled()) {
       requestInterceptor = requestTemplate -> {
-        requestTemplate
-            .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
+        requestTemplate.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
       };
+    } else {
+      GenericServiceCredential imCred = credProvServ.credentialProvider(
+          cloudProviderEndpoint.getCpComputeServiceId(),
+          accessToken,
+          GenericServiceCredential.class
+          );
+      requestInterceptor =
+          new BasicAuthRequestInterceptor(imCred.getUsername(), imCred.getPassword());
     }
     return build(cloudProviderEndpoint.getCpEndpoint(), requestInterceptor);
   }

@@ -133,8 +133,6 @@ public class QcgServiceTest extends ToscaParserAwareTest {
         .iaasType(IaaSType.QCG)
         .cpEndpoint("http://www.example.com/api")
         .cpComputeServiceId("qcg-service-id")
-        .password("password")
-        .username("username")
         .build();
   }
 
