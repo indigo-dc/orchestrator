@@ -24,6 +24,9 @@ import java.util.Map;
 
 public class OneDataUtils {
 
+  private OneDataUtils() {    
+  }
+
   /**
    * Extract OneData parameters from DeploymentMessage.
    *

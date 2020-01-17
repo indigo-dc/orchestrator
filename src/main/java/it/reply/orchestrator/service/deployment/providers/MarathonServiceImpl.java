@@ -34,7 +34,6 @@ import it.reply.orchestrator.dto.mesos.MesosContainer;
 import it.reply.orchestrator.dto.mesos.MesosContainer.Type;
 import it.reply.orchestrator.dto.mesos.MesosPortMapping;
 import it.reply.orchestrator.dto.mesos.marathon.MarathonApp;
-import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.vault.VaultSecret;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.VaultServiceNotAvailableException;
