@@ -59,6 +59,7 @@ import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.deployment.providers.factory.ImClientFactory;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
+import it.reply.orchestrator.utils.OneDataUtils;
 import it.reply.orchestrator.utils.WorkflowConstants.ErrorCode;
 
 import java.util.ArrayList;
@@ -131,20 +132,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         .isPresent();
   }
 
-  protected ArchiveRoot prepareTemplate(Deployment deployment,
+  protected ArchiveRoot prepareTemplate(Deployment deployment, 
       DeploymentMessage deploymentMessage) {
-    Map<String, OneData> odParameters = deploymentMessage.getOneDataParameters();
-    RuntimeProperties runtimeProperties = new RuntimeProperties();
-    odParameters.forEach((nodeName, odParameter) -> {
-      runtimeProperties.put(odParameter.getOnezone(), nodeName, "onezone");
-      runtimeProperties.put(odParameter.getToken(), nodeName, "token");
-      runtimeProperties
-        .put(odParameter.getSelectedOneprovider().getEndpoint(), nodeName, "selected_provider");
-      if (odParameter.isServiceSpace()) {
-        runtimeProperties.put(odParameter.getSpace(), nodeName, "space");
-        runtimeProperties.put(odParameter.getPath(), nodeName, "path");
-      }
-    });
+    RuntimeProperties runtimeProperties = 
+        OneDataUtils.getOneDataRuntimeProperties(deploymentMessage);
     Map<String, Object> inputs = deployment.getParameters();
     ArchiveRoot ar = toscaService.parseAndValidateTemplate(deployment.getTemplate(), inputs);
     indigoInputsPreProcessorService.processInputAttributes(ar, inputs, runtimeProperties);

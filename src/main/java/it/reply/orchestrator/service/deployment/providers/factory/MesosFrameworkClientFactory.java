@@ -50,9 +50,8 @@ public abstract class MesosFrameworkClientFactory<V extends MesosFrameworkServic
     final RequestInterceptor requestInterceptor;
     Objects.requireNonNull(accessToken, "Access Token must not be null");
     if (cloudProviderEndpoint.isIamEnabled()) {
-      requestInterceptor = requestTemplate -> {
+      requestInterceptor = requestTemplate ->
         requestTemplate.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
-      };
     } else {
       GenericServiceCredential imCred = credProvServ.credentialProvider(
           cloudProviderEndpoint.getCpComputeServiceId(),
