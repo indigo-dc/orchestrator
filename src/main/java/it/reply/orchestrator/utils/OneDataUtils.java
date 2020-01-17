@@ -24,7 +24,7 @@ import java.util.Map;
 
 public class OneDataUtils {
 
-  private OneDataUtils() {    
+  private OneDataUtils() {
   }
 
   /**
