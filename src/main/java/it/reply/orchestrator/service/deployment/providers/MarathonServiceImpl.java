@@ -150,7 +150,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
 
   protected ArchiveRoot prepareTemplate(Deployment deployment,
       DeploymentMessage deploymentMessage) {
-    RuntimeProperties runtimeProperties = 
+    RuntimeProperties runtimeProperties =
         OneDataUtils.getOneDataRuntimeProperties(deploymentMessage);
     Map<String, Object> inputs = deployment.getParameters();
     ArchiveRoot ar = toscaService.parseAndValidateTemplate(deployment.getTemplate(), inputs);

@@ -132,9 +132,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         .isPresent();
   }
 
-  protected ArchiveRoot prepareTemplate(Deployment deployment, 
+  protected ArchiveRoot prepareTemplate(Deployment deployment,
       DeploymentMessage deploymentMessage) {
-    RuntimeProperties runtimeProperties = 
+    RuntimeProperties runtimeProperties =
         OneDataUtils.getOneDataRuntimeProperties(deploymentMessage);
     Map<String, Object> inputs = deployment.getParameters();
     ArchiveRoot ar = toscaService.parseAndValidateTemplate(deployment.getTemplate(), inputs);

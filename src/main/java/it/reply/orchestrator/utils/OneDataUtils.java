@@ -26,7 +26,7 @@ public class OneDataUtils {
 
   /**
    * Extract OneData parameters from DeploymentMessage.
-   * 
+   *
    * @param deploymentMessage the DeploymentMessageObject
    * @return oneData parameters as RuntimeProperties
    */
