@@ -43,20 +43,19 @@ public class AmqpListener implements MessageListener {
   public void onMessage(Message message) {
     System.out.println("Received Message onMessage: " + new String(message.getBody()));
     
+    //TODO watching path may finish with *.csv or xxx.csv 
     StoragePathEntity entity = storageService.getEntityByPath(new String(message.getBody()));
     
     if( entity!=null ) {
-      
-      //TODO parameters from where?
-      Map<String, Object> parameters = new HashMap<>();
     
       DeploymentRequest request = DeploymentRequest
           .builder()
-          .parameters(parameters)
+          .parameters(entity.getParameters())
           .template(entity.getTemplate())
           .callback(entity.getCallback())
           .build();
-      deploymentService.createDeployment(request);
+      String temp = "";
+      //deploymentService.createDeployment(request);
     }
     
   }
