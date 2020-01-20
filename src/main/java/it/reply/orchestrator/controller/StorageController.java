@@ -48,10 +48,13 @@ public class StorageController {
   public StoragePathEntity addStoragePath(@RequestBody PathRequest storagePath)
       throws ResourceException {
 
-    StoragePathEntity stPath = storageService.addStoragePath(
-        storagePath.getStoragePath(),
-        storagePath.getTemplate()
-        );
+    StoragePathEntity storagePathEntity = new StoragePathEntity();
+    storagePathEntity.setStoragePath(storagePath.getStoragePath());
+    storagePathEntity.setTemplate(storagePath.getTemplate());
+    //TODO setDeploymentId from somewhere if needed
+    //storagePathEntity.setDeploymentId( ? );
+
+    StoragePathEntity stPath = storageService.addStoragePath(storagePathEntity);
     if (stPath != null) {
       return stPath;
     } else {

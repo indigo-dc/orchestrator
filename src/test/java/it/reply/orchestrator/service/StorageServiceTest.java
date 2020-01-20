@@ -51,7 +51,7 @@ public class StorageServiceTest {
 
   @Test
   public void addStoragePathNew() throws Exception {
-    
+
     Map<String, Object> parameters = new HashMap<>();
 
     Mockito.when(storageRepository.findByStoragePath("stringUrl1"))
@@ -60,13 +60,17 @@ public class StorageServiceTest {
     Mockito.when(storageRepository.save(any(StoragePathEntity.class)))
     .thenReturn(new StoragePathEntity("stringUrl1", "template1", null, null, parameters));
 
-    assertThat(storageService.addStoragePath("stringUrl1", "template1")!=(null));
+    StoragePathEntity storagePathEntity = new StoragePathEntity();
+    storagePathEntity.setStoragePath("stringUrl1");
+    storagePathEntity.setTemplate("template1");
+
+    assertThat(storageService.addStoragePath(storagePathEntity)!=(null));
 
   }
 
   @Test
   public void addStoragePathExisting() throws Exception {
-    
+
     Map<String, Object> parameters = new HashMap<>();
 
     Mockito.when(storageRepository.findByStoragePath("stringUrl1"))
@@ -75,7 +79,11 @@ public class StorageServiceTest {
     Mockito.when(storageRepository.save(new StoragePathEntity("stringUrl1", "template1", null, null, parameters)))
     .thenReturn(new StoragePathEntity("stringUrl1", "template1", null, null, parameters));
 
-    assertThat(storageService.addStoragePath("stringUrl1", "template1") == null);
+    StoragePathEntity storagePathEntity = new StoragePathEntity();
+    storagePathEntity.setStoragePath("stringUrl1");
+    storagePathEntity.setTemplate("template1");
+
+    assertThat(storageService.addStoragePath(storagePathEntity) == null);
 
   }
 

@@ -16,14 +16,10 @@
 
 package it.reply.orchestrator.config.amqp;
 
-
 import it.reply.orchestrator.dal.entity.StoragePathEntity;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.service.DeploymentService;
 import it.reply.orchestrator.service.StorageService;
-
-import java.util.HashMap;
-import java.util.Map;
 
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageListener;
@@ -32,22 +28,22 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class AmqpListener implements MessageListener {
-  
+
   @Autowired
   private StorageService storageService;
-  
+
   @Autowired
   private DeploymentService deploymentService;
 
   @Override
   public void onMessage(Message message) {
     System.out.println("Received Message onMessage: " + new String(message.getBody()));
-    
-    //TODO watching path may finish with *.csv or xxx.csv 
+
+    //TODO watching path may finish with *.csv or xxx.csv
     StoragePathEntity entity = storageService.getEntityByPath(new String(message.getBody()));
-    
-    if( entity!=null ) {
-    
+
+    if(entity != null) {
+
       DeploymentRequest request = DeploymentRequest
           .builder()
           .parameters(entity.getParameters())
@@ -57,6 +53,6 @@ public class AmqpListener implements MessageListener {
       String temp = "";
       //deploymentService.createDeployment(request);
     }
-    
+
   }
 }

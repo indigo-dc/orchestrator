@@ -43,7 +43,7 @@ databaseChangeLog:
             type: VARCHAR(255)
         - column:
             constraints:
-              nullable: false
+              nullable: true
             name: deployment_id
             type: VARCHAR(36)
         - column:
@@ -65,3 +65,35 @@ databaseChangeLog:
             name: trigger_id
             type: VARCHAR(36)
         tableName: deployment
+    - createIndex:
+      columns:
+      - column:
+            name: deployment_id
+        indexName: FKdb70f14942f55de7587ac375f
+        tableName: workflow_reference
+    - createIndex:
+      columns:
+      - column:
+            name: trigger_id
+        indexName: FKa00b27913548e4c0608a40ebb
+        tableName: deployment
+    - addForeignKeyConstraint:
+        baseColumnNames: deployment_id
+        baseTableName: storage_path_entity
+        constraintName: deployment_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: deployment
+    - addForeignKeyConstraint:
+        baseColumnNames: trigger_id
+        baseTableName: deployment
+        constraintName: trigger_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: storage_path_entity

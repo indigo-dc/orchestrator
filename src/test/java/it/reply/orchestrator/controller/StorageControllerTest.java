@@ -26,6 +26,9 @@ import it.reply.orchestrator.dto.request.PathRequest;
 import it.reply.orchestrator.service.StorageService;
 import it.reply.orchestrator.utils.JsonUtils;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
@@ -65,7 +68,11 @@ public class StorageControllerTest {
     pathRequest.setStoragePath("http://www.site1.com/storagepath/*");
     pathRequest.setTemplate("template1");
 
-    Mockito.when(storageService.addStoragePath("http://www.site1.com/storagepath/*", "template1"))
+    StoragePathEntity storagePathEntity = new StoragePathEntity();
+    storagePathEntity.setStoragePath("http://www.site1.com/storagepath/*");
+    storagePathEntity.setTemplate("template1");
+
+    Mockito.when(storageService.addStoragePath(storagePathEntity))
     .thenReturn(null);
 
     MvcResult result =
@@ -85,10 +92,14 @@ public class StorageControllerTest {
 
     PathRequest pathRequest = new PathRequest();
     pathRequest.setStoragePath("http://www.site1.com/storagepath/*");
-    pathRequest.setTemplate("template");
+    pathRequest.setTemplate("template1");
 
-    Mockito.when(storageService.addStoragePath("http://www.site1.com/storagepath/*", "template"))
-    .thenReturn(new StoragePathEntity("http://www.site1.com/storagepath/*", "template", null, null));
+    StoragePathEntity storagePathEntity = new StoragePathEntity();
+    storagePathEntity.setStoragePath("http://www.site1.com/storagepath/*");
+    storagePathEntity.setTemplate("template1");
+
+    Mockito.when(storageService.addStoragePath(storagePathEntity))
+    .thenReturn(new StoragePathEntity("http://www.site1.com/storagepath/*", "template1", null, null, new HashMap()));
 
     MvcResult result =
         mockMvc.perform(post("/storage")
@@ -98,6 +109,7 @@ public class StorageControllerTest {
                     OAuth2AccessToken.BEARER_TYPE + " <access token>"))
             .andExpect(status().is(201))
             .andExpect(jsonPath("$.storagePath", is("http://www.site1.com/storagepath/*")))
+            .andExpect(jsonPath("$.template", is("template1")))
             .andReturn();
 
   }
