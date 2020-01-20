@@ -185,7 +185,7 @@ public class ImServiceTest {
 
     Mockito.doReturn(ar).when(toscaService).parseAndValidateTemplate(deployment.getTemplate(),
         deployment.getParameters());
-    Mockito.doNothing().when(indigoInputsPreProcessorService).processInputAttributes(eq(ar),
+    Mockito.doNothing().when(indigoInputsPreProcessorService).processGetInputAttributes(eq(ar),
         eq(deployment.getParameters()), Mockito.any());
     Mockito.when(infrastructureManager.createInfrastructureAsync(Mockito.anyString(),
         Mockito.eq(BodyContentType.TOSCA))).thenReturn(infrastructureUri);
@@ -232,7 +232,7 @@ public class ImServiceTest {
         .thenReturn(deployment);
     Mockito.doReturn(ar).when(toscaService).parseAndValidateTemplate(deployment.getTemplate(),
         deployment.getParameters());
-    Mockito.doNothing().when(indigoInputsPreProcessorService).processInputAttributes(eq(ar),
+    Mockito.doNothing().when(indigoInputsPreProcessorService).processGetInputAttributes(eq(ar),
         eq(deployment.getParameters()), Mockito.any());
     Mockito.when(infrastructureManager.createInfrastructureAsync(Mockito.anyString(),
         Mockito.eq(BodyContentType.TOSCA))).thenReturn(infrastructureUri);
@@ -311,7 +311,7 @@ public class ImServiceTest {
         .thenReturn(deployment);
     Mockito.doReturn(ar).when(toscaService).parseAndValidateTemplate(deployment.getTemplate(),
         deployment.getParameters());
-    Mockito.doNothing().when(indigoInputsPreProcessorService).processInputAttributes(eq(ar),
+    Mockito.doNothing().when(indigoInputsPreProcessorService).processGetInputAttributes(eq(ar),
         eq(deployment.getParameters()), Mockito.any());
     Mockito.doReturn(infrastructureManager).when(imClientFactory)
         .build(Mockito.anyListOf(CloudProviderEndpoint.class), Mockito.any());
@@ -804,7 +804,7 @@ public class ImServiceTest {
         .updateTemplate(Mockito.anyString());
     Mockito.doReturn(newAr).when(toscaService).parseAndValidateTemplate(deployment.getTemplate(),
         deployment.getParameters());
-    Mockito.doNothing().when(indigoInputsPreProcessorService).processInputAttributes(eq(newAr),
+    Mockito.doNothing().when(indigoInputsPreProcessorService).processGetInputAttributes(eq(newAr),
         eq(deployment.getParameters()), Mockito.any());
 
     InfrastructureState infrastructureState = generateInfrastructureState(States.CONFIGURED, 1);
@@ -890,7 +890,7 @@ public class ImServiceTest {
         .thenReturn(infrastructureState);
     Mockito.doReturn(newAr).when(toscaService).parseAndValidateTemplate(deployment.getTemplate(),
         deployment.getParameters());
-    Mockito.doNothing().when(indigoInputsPreProcessorService).processInputAttributes(eq(newAr),
+    Mockito.doNothing().when(indigoInputsPreProcessorService).processGetInputAttributes(eq(newAr),
         eq(deployment.getParameters()), Mockito.any());
 
     assertThat(imService.doUpdate(dm, "newTemplate")).isTrue();
@@ -983,7 +983,7 @@ public class ImServiceTest {
         .updateTemplate(Mockito.anyString());
     Mockito.doReturn(newAr).when(toscaService).parseAndValidateTemplate(deployment.getTemplate(),
         deployment.getParameters());
-    Mockito.doNothing().when(indigoInputsPreProcessorService).processInputAttributes(eq(newAr),
+    Mockito.doNothing().when(indigoInputsPreProcessorService).processGetInputAttributes(eq(newAr),
         eq(deployment.getParameters()), Mockito.any());
     Mockito.when(resourceRepository.findOne(id)).thenReturn(resource);
     Mockito.doReturn(resource).when(resourceRepository).save(resource);

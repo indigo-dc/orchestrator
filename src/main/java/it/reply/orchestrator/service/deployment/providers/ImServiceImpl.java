@@ -137,7 +137,11 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         OneDataUtils.getOneDataRuntimeProperties(deploymentMessage);
     Map<String, Object> inputs = deployment.getParameters();
     ArchiveRoot ar = toscaService.parseAndValidateTemplate(deployment.getTemplate(), inputs);
-    indigoInputsPreProcessorService.processInputAttributes(ar, inputs, runtimeProperties);
+    if (runtimeProperties.getVaules().size() > 0) {
+      indigoInputsPreProcessorService.processGetInputAttributes(ar, inputs, runtimeProperties);
+    } else {
+      indigoInputsPreProcessorService.processGetInput(ar, inputs);
+    }
     return ar;
   }
 

@@ -73,22 +73,61 @@ public class IndigoInputsPreProcessorService {
    *           if the input replacement fails.
    */
   public void processGetInput(ArchiveRoot archiveRoot, Map<String, Object> inputs) {
-    Optional.ofNullable(archiveRoot).map(ArchiveRoot::getTopology).ifPresent(topology -> {
-      Map<String, PropertyDefinition> templateInputs =
-          Optional
-              .ofNullable(topology.getInputs())
-              .orElseGet(Collections::emptyMap);
+    Optional
+        .ofNullable(archiveRoot).map(ArchiveRoot::getTopology)
+        .ifPresent(topology -> {
+          Map<String, PropertyDefinition> templateInputs =
+              Optional
+                .ofNullable(topology.getInputs())
+                .orElseGet(Collections::emptyMap);
 
-      Map<String, ToscaFunction> functions = new HashMap<>();
-      Set<FunctionPropertyValue> processedFunctions = Collections
-          .newSetFromMap(new IdentityHashMap<>());
+          Map<String, ToscaFunction> functions = new HashMap<>();
+          Set<FunctionPropertyValue> processedFunctions = Collections
+              .newSetFromMap(new IdentityHashMap<>());
 
-      functions.put(ToscaFunctionConstants.GET_INPUT, (FunctionPropertyValue function,
-          String propertyName) -> processGetInputFunction(function, templateInputs, inputs,
-          propertyName));
+          functions.put(ToscaFunctionConstants.GET_INPUT, (FunctionPropertyValue function,
+              String propertyName) -> processGetInputFunction(function, templateInputs, inputs,
+                  propertyName));
 
-      processFunctions(topology, functions, processedFunctions);
-    });
+          processFunctions(topology, functions, processedFunctions);
+        });
+  }
+
+  /**
+   * Process inputs and attributes of a topology.
+   *
+   * @param archiveRoot
+   *          the in-memory TOSCA template.
+   * @param inputs
+   *          the user's inputs to the template.
+   * @param runtimeProperties
+   *          deployment runtimeProperties.
+   */
+  public void processGetInputAttributes(ArchiveRoot archiveRoot, Map<String, Object> inputs,
+      RuntimeProperties runtimeProperties) {
+    Optional
+        .ofNullable(archiveRoot)
+        .map(ArchiveRoot::getTopology)
+        .ifPresent(topology -> {
+          Map<String, PropertyDefinition> templateInputs =
+              Optional
+                .ofNullable(topology.getInputs())
+                .orElseGet(Collections::emptyMap);
+
+          Map<String, ToscaFunction> functions = new HashMap<>();
+          Set<FunctionPropertyValue> processedFunctions = Collections
+              .newSetFromMap(new IdentityHashMap<>());
+
+          functions.put(ToscaFunctionConstants.GET_ATTRIBUTE, (FunctionPropertyValue function,
+              String propertyName) -> processGetAttribute(function, runtimeProperties,
+              propertyName));
+
+          functions.put(ToscaFunctionConstants.GET_INPUT, (FunctionPropertyValue function,
+              String propertyName) -> processGetInputFunction(function, templateInputs, inputs,
+              propertyName));
+
+          processFunctions(topology, functions, processedFunctions);
+        });
   }
 
   /**
@@ -144,41 +183,6 @@ public class IndigoInputsPreProcessorService {
       });
     });
     return processedOutputs;
-  }
-
-  /**
-   * Process inputs and attributes of a topology.
-   *
-   * @param archiveRoot
-   *     the in-memory TOSCA template.
-   * @param inputs
-   *     the user's inputs to the template.
-   * @param runtimeProperties
-   *     deployment runtimeProperties.
-   */
-  public void processInputAttributes(ArchiveRoot archiveRoot, Map<String, Object> inputs,
-      RuntimeProperties runtimeProperties) {
-    Optional
-        .ofNullable(archiveRoot)
-        .map(ArchiveRoot::getTopology)
-        .ifPresent(topology -> {
-          Map<String, ToscaFunction> functions = new HashMap<>();
-          Set<FunctionPropertyValue> processedFunctions = Collections
-              .newSetFromMap(new IdentityHashMap<>());
-
-          functions.put(ToscaFunctionConstants.GET_ATTRIBUTE, (FunctionPropertyValue function,
-              String propertyName) -> processGetAttribute(function, runtimeProperties,
-              propertyName));
-
-          Map<String, PropertyDefinition> templateInputs =
-              CommonUtils.notNullOrDefaultValue(topology.getInputs(), Collections::emptyMap);
-
-          functions.put(ToscaFunctionConstants.GET_INPUT, (FunctionPropertyValue function,
-              String propertyName) -> processGetInputFunction(function, templateInputs, inputs,
-              propertyName));
-
-          processFunctions(topology, functions, processedFunctions);
-        });
   }
 
   /**
@@ -557,7 +561,6 @@ public class IndigoInputsPreProcessorService {
                           optionalReqOrCapPropertyName));
             }
           }
-          Object returnValue = null;
           if (rootProperty.isPresent()) {
             Optional<Object> propertyValue = rootProperty.map(ToscaUtils::unwrapPropertyValue);
             for (String additionalParameter : additionalParameters) {
