@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import com.google.common.collect.Multimap;
 import es.upv.i3m.grycap.im.InfrastructureManager;
 import es.upv.i3m.grycap.im.exceptions.ImClientErrorException;
 import es.upv.i3m.grycap.im.exceptions.ImClientException;
+import es.upv.i3m.grycap.im.exceptions.ImClientServerErrorException;
 import es.upv.i3m.grycap.im.pojo.InfrastructureState;
 import es.upv.i3m.grycap.im.pojo.Property;
 import es.upv.i3m.grycap.im.pojo.ResponseError;
@@ -51,10 +52,13 @@ import it.reply.orchestrator.exception.service.BusinessWorkflowException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.function.ThrowingConsumer;
 import it.reply.orchestrator.function.ThrowingFunction;
+import it.reply.orchestrator.service.IndigoInputsPreProcessorService;
+import it.reply.orchestrator.service.IndigoInputsPreProcessorService.RuntimeProperties;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.deployment.providers.factory.ImClientFactory;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
+import it.reply.orchestrator.utils.OneDataUtils;
 import it.reply.orchestrator.utils.WorkflowConstants.ErrorCode;
 
 import java.util.ArrayList;
@@ -92,6 +96,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   private ResourceRepository resourceRepository;
 
   @Autowired
+  private IndigoInputsPreProcessorService indigoInputsPreProcessorService;
+
+  @Autowired
   private OidcProperties oidcProperties;
 
   @Autowired
@@ -124,6 +131,20 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         .isPresent();
   }
 
+  protected ArchiveRoot prepareTemplate(Deployment deployment,
+      DeploymentMessage deploymentMessage) {
+    RuntimeProperties runtimeProperties =
+        OneDataUtils.getOneDataRuntimeProperties(deploymentMessage);
+    Map<String, Object> inputs = deployment.getParameters();
+    ArchiveRoot ar = toscaService.parseAndValidateTemplate(deployment.getTemplate(), inputs);
+    if (runtimeProperties.getVaules().size() > 0) {
+      indigoInputsPreProcessorService.processGetInputAttributes(ar, inputs, runtimeProperties);
+    } else {
+      indigoInputsPreProcessorService.processGetInput(ar, inputs);
+    }
+    return ar;
+  }
+
   @Override
   public boolean doDeploy(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
@@ -137,8 +158,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     // Update status of the deployment
     deployment.setTask(Task.DEPLOYER);
 
-    ArchiveRoot ar =
-        toscaService.prepareTemplate(deployment.getTemplate(), deployment.getParameters());
+    ArchiveRoot ar = prepareTemplate(deployment, deploymentMessage);
 
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
 
@@ -176,7 +196,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   }
 
   @Override
-  public boolean isDeployed(DeploymentMessage deploymentMessage) throws DeploymentException {
+  public boolean isDeployed(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
 
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
@@ -284,10 +304,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
       try {
         executeWithClient(cloudProviderEndpoints, requestedWithToken,
-            client -> client.destroyInfrastructure(deploymentEndpoint));
+            client -> client.destroyInfrastructureAsync(deploymentEndpoint));
         deployment.setEndpoint(null);
       } catch (ImClientErrorException exception) {
-        if (!getImResponseError(exception).is404Error()) {
+        if (!exception.getResponseError().is404Error()) {
           throw handleImClientException(exception);
         }
       } catch (ImClientException exception) {
@@ -305,7 +325,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     final CloudProviderEndpoint chosenCloudProviderEndpoint =
         deploymentMessage.getChosenCloudProviderEndpoint();
 
-    ArchiveRoot newAr = toscaService.prepareTemplate(template, deployment.getParameters());
+    ArchiveRoot newAr = prepareTemplate(deployment, deploymentMessage);
 
     String accessToken = null;
     if (oidcProperties.isEnabled()) {
@@ -514,10 +534,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
       try {
         executeWithClient(cloudProviderEndpoints, requestedWithToken,
-            client -> client.destroyInfrastructure(deploymentEndpoint));
+            client -> client.destroyInfrastructureAsync(deploymentEndpoint));
 
       } catch (ImClientErrorException exception) {
-        if (!getImResponseError(exception).is404Error()) {
+        if (!exception.getResponseError().is404Error()) {
           throw handleImClientException(exception);
         }
       } catch (ImClientException exception) {
@@ -547,8 +567,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
       LOG.debug(infrastructureState.getFormattedInfrastructureStateString());
     } catch (ImClientErrorException exception) {
-      ResponseError error = getImResponseError(exception);
-      if (error.is404Error()) {
+      if (exception.getResponseError().is404Error()) {
         return true;
       } else {
         throw handleImClientException(exception);
@@ -636,25 +655,18 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     }
   }
 
-  private ResponseError getImResponseError(ImClientErrorException exception) {
-    return exception.getResponseError();
-  }
-
   private RuntimeException handleImClientException(ImClientException ex) {
-    if (ex instanceof ImClientErrorException) {
-      ResponseError responseError = getImResponseError((ImClientErrorException) ex);
-      String errorMessage = responseError.getMessage();
-      if (Strings.nullToEmpty(errorMessage).startsWith("Error Creating Inf.")) {
-        return new BusinessWorkflowException(ErrorCode.CLOUD_PROVIDER_ERROR,
-            responseError.getFormattedErrorMessage(),
-            ex);
-      } else {
-        return new DeploymentException(
-            "Error executing request to IM\n" + responseError.getFormattedErrorMessage(), ex);
-      }
-    } else {
-      return new DeploymentException("Error executing request to IM", ex);
+    if (ex instanceof ImClientServerErrorException) {
+      ResponseError responseError = ((ImClientServerErrorException) ex).getResponseError();
+      return new BusinessWorkflowException(ErrorCode.CLOUD_PROVIDER_ERROR,
+          responseError.getFormattedErrorMessage(),
+          ex);
+    } else if (ex instanceof ImClientErrorException) {
+      ResponseError responseError = ((ImClientErrorException) ex).getResponseError();
+      return new DeploymentException(
+          "Error executing request to IM\n" + responseError.getFormattedErrorMessage(), ex);
     }
+    return new DeploymentException("Error executing request to IM", ex);
   }
 
   @Override
