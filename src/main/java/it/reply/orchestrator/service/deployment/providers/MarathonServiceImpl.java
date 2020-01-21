@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,6 +48,7 @@ import it.reply.orchestrator.service.VaultService;
 import it.reply.orchestrator.service.deployment.providers.factory.MarathonClientFactory;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
+import it.reply.orchestrator.utils.OneDataUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 import it.reply.orchestrator.utils.ToscaUtils;
 import it.reply.orchestrator.utils.WorkflowConstants.ErrorCode;
@@ -146,9 +147,24 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
         client -> consumer.asFunction().apply(client));
   }
 
-  protected Group createGroup(Deployment deployment, OidcTokenId requestedWithToken) {
-    ArchiveRoot ar = toscaService
-        .prepareTemplate(deployment.getTemplate(), deployment.getParameters());
+  protected ArchiveRoot prepareTemplate(Deployment deployment,
+      DeploymentMessage deploymentMessage) {
+    RuntimeProperties runtimeProperties =
+        OneDataUtils.getOneDataRuntimeProperties(deploymentMessage);
+    Map<String, Object> inputs = deployment.getParameters();
+    ArchiveRoot ar = toscaService.parseAndValidateTemplate(deployment.getTemplate(), inputs);
+    if (runtimeProperties.getVaules().size() > 0) {
+      indigoInputsPreProcessorService.processGetInputAttributes(ar, inputs, runtimeProperties);
+    } else {
+      indigoInputsPreProcessorService.processGetInput(ar, inputs);
+    }
+    return ar;
+  }
+
+  protected Group createGroup(DeploymentMessage deploymentMessage, OidcTokenId requestedWithToken) {
+
+    Deployment deployment = getDeployment(deploymentMessage);
+    ArchiveRoot ar = prepareTemplate(deployment, deploymentMessage);
 
     Map<String, NodeTemplate> nodes = Optional
         .ofNullable(ar.getTopology())
@@ -207,7 +223,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     Deployment deployment = getDeployment(deploymentMessage);
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
 
-    Group group = createGroup(deployment, requestedWithToken);
+    Group group = createGroup(deploymentMessage, requestedWithToken);
 
     String groupId = deployment.getId();
 
@@ -258,7 +274,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   }
 
   @Override
-  public boolean isDeployed(DeploymentMessage deploymentMessage) throws DeploymentException {
+  public boolean isDeployed(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
 
     Group group = getPolulatedGroup(deploymentMessage, deployment);
@@ -274,11 +290,19 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     return isDeployed;
   }
 
+  /**
+   * Retrieve Group informations.
+   *
+   * @param deploymentMessage    the deployment message.
+   * @param deployment           the deployment object.
+   * @return                     the Group object.
+   *
+   * @deprecated (remove it and use just getGroup with embed params
+   *              - requires Marathon client version > 6.0.0)
+   */
   @Deprecated
-  // TODO remove it and use just getGroup with embed params (requires marathon client version >
-  // 6.0.0)
-  private Group getPolulatedGroup(DeploymentMessage deploymentMessage, Deployment deployment)
-      throws MarathonException {
+  private Group getPolulatedGroup(DeploymentMessage deploymentMessage, Deployment deployment) {
+
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
     CloudProviderEndpoint cloudProviderEndpoint = deployment.getCloudProviderEndpoint();
     String groupId = deployment.getId();
@@ -361,7 +385,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   }
 
   @Override
-  public boolean isUndeployed(DeploymentMessage deploymentMessage) throws DeploymentException {
+  public boolean isUndeployed(DeploymentMessage deploymentMessage) {
     boolean isUndeployed = false;
     Deployment deployment = getDeployment(deploymentMessage);
     String groupId = deployment.getId();
@@ -593,9 +617,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   @Override
   public void finalizeDeploy(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
-
-    ArchiveRoot ar = toscaService
-        .prepareTemplate(deployment.getTemplate(), deployment.getParameters());
+    ArchiveRoot ar = prepareTemplate(deployment, deploymentMessage);
 
     Map<String, OutputDefinition> outputs = Optional
         .ofNullable(ar.getTopology())
@@ -674,7 +696,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   }
 
   @Override
-  public void doProviderTimeout(DeploymentMessage deploymentMessage) throws DeploymentException {
+  public void doProviderTimeout(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
     Group group = getPolulatedGroup(deploymentMessage, deployment);
     Collection<App> apps = Optional.ofNullable(group.getApps()).orElseGet(ArrayList::new);

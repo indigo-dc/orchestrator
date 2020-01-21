@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,9 +50,8 @@ public abstract class MesosFrameworkClientFactory<V extends MesosFrameworkServic
     final RequestInterceptor requestInterceptor;
     Objects.requireNonNull(accessToken, "Access Token must not be null");
     if (cloudProviderEndpoint.isIamEnabled()) {
-      requestInterceptor = requestTemplate -> {
+      requestInterceptor = requestTemplate ->
         requestTemplate.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
-      };
     } else {
       GenericServiceCredential imCred = credProvServ.credentialProvider(
           cloudProviderEndpoint.getCpComputeServiceId(),

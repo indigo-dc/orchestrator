@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,6 +54,7 @@ import java.util.stream.IntStream;
 
 import mesosphere.client.common.ModelUtils;
 import mesosphere.marathon.client.Marathon;
+import mesosphere.marathon.client.MarathonException;
 import mesosphere.marathon.client.model.v2.ExternalVolume;
 import mesosphere.marathon.client.model.v2.GetAppResponse;
 import mesosphere.marathon.client.model.v2.Group;
@@ -140,6 +141,16 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
     marathonServiceImpl.generateVolume("local/path:/var/lib/mysql:rw");
   }
 
+  @Test(expected = UnsupportedOperationException.class)
+  public void testdoUpdateFail() {
+    marathonServiceImpl.doUpdate(null, null);
+  }
+
+  @Test(expected = UnsupportedOperationException.class)
+  public void testCleanFailedUpdateFail() {
+    marathonServiceImpl.cleanFailedUpdate(null);
+  }
+
   private Deployment generateDeployment() throws IOException {
     Deployment deployment = ControllerTestUtils.createDeployment();
     deployment.setCloudProviderEndpoint(CloudProviderEndpoint.builder()
@@ -182,19 +193,18 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
   @Test
   public void testCreateGroup() throws IOException {
     Deployment deployment = generateDeployment();
-
+    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
+    Mockito
+        .when(deploymentRepository.findOne(deployment.getId()))
+        .thenReturn(deployment);
     Assertions
-        .assertThat(marathonServiceImpl.createGroup(deployment, null))
+        .assertThat(marathonServiceImpl.createGroup(dm, null))
         .isEqualToComparingFieldByFieldRecursively(
             ModelUtils.GSON.fromJson(TestUtil.getFileContentAsString(
                 ToscaServiceTest.TEMPLATES_BASE_DIR + "marathon_app.json"), Group.class));
   }
 
-  @Test
-  public void testDoDeploy() throws IOException, URISyntaxException {
-    Deployment deployment = generateDeployment();
-    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
-
+  private MarathonService buildService() {
     MarathonService cs = MarathonService
         .marathonBuilder()
         .endpoint("example.com/marathon")
@@ -208,6 +218,40 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
             .localVolumesHostBasePath("/tmp/")
             .build())
         .build();
+    return cs;
+  }
+
+  @Test
+  public void testDoUndeploy() throws IOException, URISyntaxException {
+    Deployment deployment = generateDeployment();
+    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
+
+    MarathonService cs = buildService();
+
+    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(cs));
+    csi.next();
+    dm.setCloudServicesOrderedIterator(csi);
+
+    Mockito
+        .when(deploymentRepository.findOne(deployment.getId()))
+        .thenReturn(deployment);
+    Mockito
+        .when(marathonClientFactory.build(deployment.getCloudProviderEndpoint(), "token"))
+        .thenReturn(marathonClient);
+    Mockito
+        .when(vaultService.getServiceUri())
+        .thenReturn(Optional.of(new URI(defaultVaultEndpoint)));
+    Assertions
+    .assertThat(marathonServiceImpl.doUndeploy(dm))
+    .isTrue();
+  }
+
+  @Test
+  public void testDoDeploy() throws IOException, URISyntaxException {
+    Deployment deployment = generateDeployment();
+    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
+
+    MarathonService cs = buildService();
 
     CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(cs));
     csi.next();
@@ -225,6 +269,38 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
     Assertions
         .assertThat(marathonServiceImpl.doDeploy(dm))
         .isTrue();
+  }
+
+  @Test
+  @Parameters({"true","false"})
+  public void testIsUndeployed(boolean expected) {
+    Deployment deployment = new Deployment();
+    deployment.setId(UUID.randomUUID().toString());
+    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
+    Mockito
+        .when(deploymentRepository.findOne(deployment.getId()))
+        .thenReturn(deployment);
+    Mockito
+        .when(marathonClientFactory.build(deployment.getCloudProviderEndpoint(), "token"))
+        .thenReturn(marathonClient);
+    VersionedApp app = new VersionedApp();
+    app.setId("appId");
+    Group group = new Group();
+    group.setId(deployment.getId());
+    group.setApps(Lists.newArrayList(app));
+
+    if (!expected) {
+      Mockito
+          .when(marathonClient.getGroup(deployment.getId()))
+          .thenReturn(group);
+    } else {
+      Mockito
+          .when(marathonClient.getGroup(deployment.getId()))
+          .thenThrow(new MarathonException(404, "Deployment not found"));
+    }
+    Assertions
+        .assertThat(marathonServiceImpl.isUndeployed(dm))
+        .isEqualTo(expected);
   }
 
   @Test

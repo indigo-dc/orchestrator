@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,6 +54,7 @@ import it.reply.orchestrator.exception.service.BusinessWorkflowException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.function.ThrowingFunction;
+import it.reply.orchestrator.service.IndigoInputsPreProcessorService;
 import it.reply.orchestrator.service.ToscaServiceImpl;
 import it.reply.orchestrator.service.deployment.providers.factory.ImClientFactory;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
@@ -102,6 +103,9 @@ public class ImServiceTest {
   @Spy
   private ToscaServiceImpl toscaService;
 
+  @Spy
+  private IndigoInputsPreProcessorService indigoInputsPreProcessorService;
+
   @Mock
   private DeploymentRepository deploymentRepository;
 
@@ -129,18 +133,6 @@ public class ImServiceTest {
         .when(oauth2TokenService.executeWithClientForResult(
             Mockito.any(), Mockito.any(), Mockito.any()))
         .thenAnswer(y -> ((ThrowingFunction) y.getArguments()[1]).apply("token"));
-  }
-
-  private DeploymentMessage generateIsDeployedDm() {
-    Deployment deployment = ControllerTestUtils.createDeployment(2);
-    deployment.setDeploymentProvider(DeploymentProvider.IM);
-    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
-
-    String infrastructureId = UUID.randomUUID().toString();
-    deployment.setEndpoint(infrastructureId);
-    deployment.setTask(Task.DEPLOYER);
-    deployment.setDeploymentProvider(DeploymentProvider.IM);
-    return dm;
   }
 
   private InfrastructureState generateInfrastructureState(States state, int vmNum) {
@@ -191,8 +183,10 @@ public class ImServiceTest {
     Mockito.when(deploymentRepository.findOne(deployment.getId()))
         .thenReturn(deployment);
 
-    Mockito.doReturn(ar).when(toscaService).prepareTemplate(deployment.getTemplate(),
+    Mockito.doReturn(ar).when(toscaService).parseAndValidateTemplate(deployment.getTemplate(),
         deployment.getParameters());
+    Mockito.doNothing().when(indigoInputsPreProcessorService).processGetInputAttributes(eq(ar),
+        eq(deployment.getParameters()), Mockito.any());
     Mockito.when(infrastructureManager.createInfrastructureAsync(Mockito.anyString(),
         Mockito.eq(BodyContentType.TOSCA))).thenReturn(infrastructureUri);
     Mockito.doReturn(infrastructureManager).when(imClientFactory)
@@ -236,8 +230,10 @@ public class ImServiceTest {
     Mockito.when(deploymentRepository.save(deployment)).thenReturn(deployment);
     Mockito.when(deploymentRepository.findOne(deployment.getId()))
         .thenReturn(deployment);
-    Mockito.doReturn(ar).when(toscaService).prepareTemplate(deployment.getTemplate(),
+    Mockito.doReturn(ar).when(toscaService).parseAndValidateTemplate(deployment.getTemplate(),
         deployment.getParameters());
+    Mockito.doNothing().when(indigoInputsPreProcessorService).processGetInputAttributes(eq(ar),
+        eq(deployment.getParameters()), Mockito.any());
     Mockito.when(infrastructureManager.createInfrastructureAsync(Mockito.anyString(),
         Mockito.eq(BodyContentType.TOSCA))).thenReturn(infrastructureUri);
     Mockito.doReturn(infrastructureManager).when(imClientFactory)
@@ -283,7 +279,7 @@ public class ImServiceTest {
 
     imService.cleanFailedDeploy(dm);
     Mockito.verify(infrastructureManager, Mockito.times(deleteExpectedToBeCalled ? 1 : 0))
-        .destroyInfrastructure("endpoint");
+        .destroyInfrastructureAsync("endpoint");
   }
 
   @Test
@@ -313,9 +309,10 @@ public class ImServiceTest {
 
     Mockito.when(deploymentRepository.findOne(deployment.getId()))
         .thenReturn(deployment);
-
-    Mockito.doReturn(ar).when(toscaService).prepareTemplate(deployment.getTemplate(),
+    Mockito.doReturn(ar).when(toscaService).parseAndValidateTemplate(deployment.getTemplate(),
         deployment.getParameters());
+    Mockito.doNothing().when(indigoInputsPreProcessorService).processGetInputAttributes(eq(ar),
+        eq(deployment.getParameters()), Mockito.any());
     Mockito.doReturn(infrastructureManager).when(imClientFactory)
         .build(Mockito.anyListOf(CloudProviderEndpoint.class), Mockito.any());
     Mockito.when(infrastructureManager.createInfrastructureAsync(Mockito.anyString(),
@@ -591,7 +588,7 @@ public class ImServiceTest {
         .build(Mockito.anyListOf(CloudProviderEndpoint.class), Mockito.any());
     ResponseError responseError = new ResponseError(null, 405);
     Mockito.doThrow(new ImClientErrorException(responseError)).when(infrastructureManager)
-        .destroyInfrastructure(Mockito.any(String.class));
+        .destroyInfrastructureAsync(Mockito.any(String.class));
     Mockito.doNothing().when(deploymentStatusHelper).updateOnError(Mockito.anyString(), Mockito.anyString());
 
     assertThatThrownBy(() -> imService.doUndeploy(dm)).isInstanceOf(DeploymentException.class);
@@ -615,7 +612,7 @@ public class ImServiceTest {
     Mockito.doNothing().when(deploymentStatusHelper).updateOnError(Mockito.anyString(), Mockito.anyString());
 
     Mockito.doThrow(new NullPointerException()).when(infrastructureManager)
-        .destroyInfrastructure(Mockito.any(String.class));
+        .destroyInfrastructureAsync(Mockito.any(String.class));
 
     assertThatThrownBy(() -> imService.doUndeploy(dm)).isInstanceOf(NullPointerException.class);
   }
@@ -805,6 +802,10 @@ public class ImServiceTest {
         .getCount(Mockito.any(NodeTemplate.class));
     Mockito.doReturn(deployment.getTemplate()).when(toscaService)
         .updateTemplate(Mockito.anyString());
+    Mockito.doReturn(newAr).when(toscaService).parseAndValidateTemplate(deployment.getTemplate(),
+        deployment.getParameters());
+    Mockito.doNothing().when(indigoInputsPreProcessorService).processGetInputAttributes(eq(newAr),
+        eq(deployment.getParameters()), Mockito.any());
 
     InfrastructureState infrastructureState = generateInfrastructureState(States.CONFIGURED, 1);
     Mockito.when(infrastructureManager.getInfrastructureState(deployment.getEndpoint()))
@@ -887,6 +888,10 @@ public class ImServiceTest {
     InfrastructureState infrastructureState = generateInfrastructureState(States.CONFIGURED, 2);
     Mockito.when(infrastructureManager.getInfrastructureState(deployment.getEndpoint()))
         .thenReturn(infrastructureState);
+    Mockito.doReturn(newAr).when(toscaService).parseAndValidateTemplate(deployment.getTemplate(),
+        deployment.getParameters());
+    Mockito.doNothing().when(indigoInputsPreProcessorService).processGetInputAttributes(eq(newAr),
+        eq(deployment.getParameters()), Mockito.any());
 
     assertThat(imService.doUpdate(dm, "newTemplate")).isTrue();
   }
@@ -914,7 +919,7 @@ public class ImServiceTest {
     mockMethodForDoUpdate(dm, deployment, infrastructureUri, oldAr, newAr);
 
     Mockito.doThrow(new ToscaException("string")).when(toscaService)
-        .prepareTemplate(Mockito.anyString(), Mockito.anyObject());
+        .parseAndValidateTemplate(Mockito.anyString(), Mockito.anyObject());
 
     assertThatThrownBy(() -> imService.doUpdate(dm, "newTemplate"))
         .isInstanceOf(OrchestratorException.class);
@@ -976,8 +981,10 @@ public class ImServiceTest {
         .getCount(Mockito.any(NodeTemplate.class));
     Mockito.doReturn(deployment.getTemplate()).when(toscaService)
         .updateTemplate(Mockito.anyString());
-    Mockito.doReturn(deployment.getTemplate()).when(toscaService)
-        .updateTemplate(Mockito.anyString());
+    Mockito.doReturn(newAr).when(toscaService).parseAndValidateTemplate(deployment.getTemplate(),
+        deployment.getParameters());
+    Mockito.doNothing().when(indigoInputsPreProcessorService).processGetInputAttributes(eq(newAr),
+        eq(deployment.getParameters()), Mockito.any());
     Mockito.when(resourceRepository.findOne(id)).thenReturn(resource);
     Mockito.doReturn(resource).when(resourceRepository).save(resource);
     InfrastructureManager im = mock(InfrastructureManager.class);
