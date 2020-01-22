@@ -245,6 +245,10 @@ public interface ToscaService {
 
   public boolean isHybridDeployment(ArchiveRoot archiveRoot);
 
+  public boolean isElasticClusterDeployment(ArchiveRoot archiveRoot);
+
+  public boolean isWithPrivateNetworkDeployment(ArchiveRoot archiveRoot);
+
   public boolean isMesosGpuRequired(ArchiveRoot archiveRoot);
 
   public Collection<NodeTemplate> getNodesOfType(ArchiveRoot archiveRoot, String type);

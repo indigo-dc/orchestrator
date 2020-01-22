@@ -35,6 +35,7 @@ import it.reply.orchestrator.dto.policies.ToscaPolicy;
 import it.reply.orchestrator.dto.slam.Service;
 import it.reply.orchestrator.dto.slam.Sla;
 import it.reply.orchestrator.enums.DeploymentType;
+import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.ToscaService;
@@ -117,7 +118,13 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
                 DeploymentType type = rankCloudProvidersMessage.getDeploymentType();
                 switch (type) {
                   case TOSCA:
-                    if (!(cloudProviderService instanceof ComputeService)) {
+                    if (cloudProviderService instanceof ComputeService) {
+                      ComputeService computeService = (ComputeService) cloudProviderService;
+                      if (deployment.getStatus() == Status.CREATE_IN_PROGRESS) {
+                        discardOnElasticClusterRequirement(ar, computeService, servicesToDiscard);
+                      }
+                      discardOnPrivateNetworkRequirement(ar, computeService, servicesToDiscard);
+                    } else {
                       addServiceToDiscard(servicesToDiscard, cloudProviderService);
                     }
                     break;
@@ -252,6 +259,28 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
                 }
               });
         });
+  }
+
+  protected void discardOnElasticClusterRequirement(ArchiveRoot archiveRoot,
+      ComputeService computeService, Set<CloudService> servicesToDiscard) {
+    boolean isElastic = toscaService.isElasticClusterDeployment(archiveRoot);
+    if (isElastic && !computeService.isPublicIpAssignable()) {
+      LOG.debug(
+          "Discarded Compute service {} of provider {} because it doesn't support public IPs",
+          computeService.getId(), computeService.getProviderId());
+      addServiceToDiscard(servicesToDiscard, computeService);
+    }
+  }
+
+  protected void discardOnPrivateNetworkRequirement(ArchiveRoot archiveRoot,
+      ComputeService computeService, Set<CloudService> servicesToDiscard) {
+    boolean wantPrivateNetwork = toscaService.isWithPrivateNetworkDeployment(archiveRoot);
+    if (wantPrivateNetwork && !computeService.isNetworkEnabled()) {
+      LOG.debug(
+          "Discarded Compute service {} of provider {} because it doesn't support private networks",
+          computeService.getId(), computeService.getProviderId());
+      addServiceToDiscard(servicesToDiscard, computeService);
+    }
   }
 
   protected void discardOnMesosGpuRequirement(ArchiveRoot archiveRoot,

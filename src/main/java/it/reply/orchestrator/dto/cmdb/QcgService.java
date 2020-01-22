@@ -41,8 +41,10 @@ public class QcgService extends  CloudService {
       @Nullable String region,
       @NonNull String hostname,
       @Nullable String parentServiceId,
-      boolean iamEnabled) {
+      boolean iamEnabled,
+      @Nullable boolean networkEnabled,
+      @Nullable boolean publicIpAssignable) {
     super(id, serviceType, endpoint, providerId, type, publicService, region, hostname,
-            parentServiceId, iamEnabled);
+            parentServiceId, iamEnabled, networkEnabled, publicIpAssignable);
   }
 }

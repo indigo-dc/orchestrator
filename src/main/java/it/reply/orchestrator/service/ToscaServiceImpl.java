@@ -916,6 +916,19 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
+  public boolean isElasticClusterDeployment(ArchiveRoot archiveRoot) {
+    return getNodesOfType(archiveRoot, ToscaConstants.Nodes.Types.ELASTIC_CLUSTER).size() > 0;
+  }
+
+  @Override
+  public boolean isWithPrivateNetworkDeployment(ArchiveRoot archiveRoot) {
+    return getNodesOfType(archiveRoot, ToscaConstants.Nodes.Types.NETWORK)
+        .stream()
+        .anyMatch(node -> (ToscaUtils
+            .extractScalar(node.getProperties(), "network_type") == Optional.of("private")));
+  }
+
+  @Override
   public boolean isMesosGpuRequired(ArchiveRoot archiveRoot) {
     return this.getNodesOfType(archiveRoot, Nodes.Types.DOCKER_RUNTIME)
         .stream()
@@ -1297,46 +1310,52 @@ public class ToscaServiceImpl implements ToscaService {
 
   @Override
   public ArchiveRoot setHybridUpdateDeployment(ArchiveRoot ar) {
+    boolean usePrivateNetwork = isWithPrivateNetworkDeployment(ar);
     // check if exist aToscaConstants.Nodes.Types.CENTRAL_POINT, if not create it
     if (getNodesOfType(ar, ToscaConstants.Nodes.Types.CENTRAL_POINT).isEmpty()) {
       setHybridDeployment(ar);
     }
-    // check if exist a tosca.nodes.indigo.VR.Client node, if not create it
-    if (getNodesOfType(ar, "tosca.nodes.indigo.VR.Client").isEmpty()) {
-      NodeTemplate vrC = new NodeTemplate();
-      vrC.setType("tosca.nodes.indigo.VR.Client");
-      vrC.setName("indigovr_client");
-      this.setNodeCapability(vrC, REQUIREMENT_DEPENDENCY_CAPABILITY, "dependency");
-      ar.getTopology().getNodeTemplates().put("indigovr_client", vrC);
-    }
-    getNodesOfType(ar, ToscaConstants.Nodes.Types.CENTRAL_POINT).stream()
-        .forEach(centralPointNode -> {
-          getNodesOfType(ar, "tosca.nodes.indigo.VR.Client").stream().forEach(node -> {
-            getNodesOfType(ar, ToscaConstants.Nodes.Types.ELASTIC_CLUSTER).stream()
-                .forEach(elasticClusterNode -> {
-                  elasticClusterNode.getRelationships().forEach((s, r) -> {
-                    if (r.getRequirementName().contains("wn")) {
-                      NodeTemplate wnNode = ar.getTopology().getNodeTemplates().get(r.getTarget());
-                      // add requirement : dependency: nameVrClient
-                      this.setNodeRequirement(wnNode, "dependency", node.getName(),
-                          REQUIREMENT_DEPENDENCY_RELATIONSHIP);
-                      wnNode.getRelationships().forEach((s1, r1) -> {
-                        if (r1.getRequirementName().contains("host")) {
-                          // add at vrC : requirement : host : (lrms_wn)
-                          // : central_point : (indigovr_cp)
-                          this.setNodeRequirement(node, "host", r1.getTarget(),
-                              REQUIREMENT_HOST_RELATIONSHIP);
-                          this.setNodeCapability(centralPointNode, "tosca.capabilities.Endpoint",
-                              "central_point");
-                          this.setNodeRequirement(node, "central_point", centralPointNode.getName(),
-                              REQUIREMENT_DEPENDENCY_RELATIONSHIP);
-                        }
-                      });
-                    }
+    if (!usePrivateNetwork) {
+      // check if exist a tosca.nodes.indigo.VR.Client node, if not create it
+      if (getNodesOfType(ar, ToscaConstants.Nodes.Types.CLIENT).isEmpty()) {
+        NodeTemplate vrC = new NodeTemplate();
+        vrC.setType(ToscaConstants.Nodes.Types.CLIENT);
+        vrC.setName("indigovr_client");
+        this.setNodeCapability(vrC, REQUIREMENT_DEPENDENCY_CAPABILITY, "dependency");
+        ar.getTopology().getNodeTemplates().put("indigovr_client", vrC);
+      }
+      getNodesOfType(ar, ToscaConstants.Nodes.Types.CENTRAL_POINT).stream()
+          .forEach(centralPointNode -> {
+            getNodesOfType(ar, ToscaConstants.Nodes.Types.CLIENT).stream().forEach(node -> {
+              getNodesOfType(ar, ToscaConstants.Nodes.Types.ELASTIC_CLUSTER).stream()
+                  .forEach(elasticClusterNode -> {
+                    elasticClusterNode.getRelationships().forEach((s, r) -> {
+                      if (r.getRequirementName().contains("wn")) {
+                        NodeTemplate wnNode = ar.getTopology().getNodeTemplates()
+                            .get(r.getTarget());
+                        // add requirement : dependency: nameVrClient
+                        this.setNodeRequirement(wnNode, "dependency", node.getName(),
+                            REQUIREMENT_DEPENDENCY_RELATIONSHIP);
+                        wnNode.getRelationships().forEach((s1, r1) -> {
+                          if (r1.getRequirementName().contains("host")) {
+                            // add at vrC : requirement : host : (lrms_wn)
+                            // : central_point : (indigovr_cp)
+                            this.setNodeRequirement(node, "host", r1.getTarget(),
+                                REQUIREMENT_HOST_RELATIONSHIP);
+                            this.setNodeCapability(centralPointNode, "tosca.capabilities.Endpoint",
+                                "central_point");
+                            this.setNodeRequirement(node, "central_point",
+                                centralPointNode.getName(), REQUIREMENT_DEPENDENCY_RELATIONSHIP);
+                          }
+                        });
+                      }
+                    });
                   });
-                });
+            });
           });
-        });
+    } else {
+      //create VRouter here
+    }
     LOG.debug(this.getTemplateFromTopology(ar));
     return ar;
   }

@@ -71,6 +71,12 @@ public class ComputeService extends CloudService {
    *     the images
    * @param flavors
    *     the flavors
+   * @param iamEnabled
+   *     the iamEnabled flag
+   * @param networkEnabled
+   *     the networkEnabled flag
+   * @param publicIpAssignable
+   *     the publicIpAssignable flag            
    */
   @Builder(builderMethodName = "computeBuilder")
   public ComputeService(
@@ -85,9 +91,11 @@ public class ComputeService extends CloudService {
       @Nullable String parentServiceId,
       @NonNull List<Image> images,
       @NonNull List<Flavor> flavors,
-      boolean iamEnabled) {
+      boolean iamEnabled,
+      @Nullable boolean networkEnabled,
+      @Nullable boolean publicIpAssignable) {
     super(id, serviceType, endpoint, providerId, type, publicService, region, hostname,
-            parentServiceId, iamEnabled);
+            parentServiceId, iamEnabled, networkEnabled, publicIpAssignable);
     this.images = CommonUtils.notNullOrDefaultValue(images, ArrayList::new);
     this.flavors = CommonUtils.notNullOrDefaultValue(flavors, ArrayList::new);
   }
