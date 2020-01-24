@@ -36,64 +36,166 @@ databaseChangeLog:
         - column:
             constraints:
               nullable: false
-            name: storage_path
+            name: user_storage_path
             type: VARCHAR(255)
         - column:
             name: callback
             type: VARCHAR(255)
         - column:
             constraints:
+              nullable: false
+            name: template
+            type: CLOB
+        - column:
+            name: owner_id
+            type: VARCHAR(36)
+        - column:
+            name: requested_with_token_id
+            type: VARCHAR(36)
+        tableName: deployment_scheduler
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: deployment_scheduler_id
+            type: VARCHAR(36)
+        - column:
+            constraints:
+              nullable: false
+            name: value
+            type: ${TEXT.type}
+        - column:
+            constraints:
+              nullable: false
+            name: name
+            type: VARCHAR(255)
+        tableName: deployment_scheduler_parameters
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: id
+            type: VARCHAR(36)
+        - column:
+            constraints:
+              nullable: false
+            name: created_at
+            type: TIMESTAMP(6)
+        - column:
+            name: updated_at
+            type: TIMESTAMP(6)
+        - column:
+            constraints:
+              nullable: false
+            name: version
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: storage_path
+            type: VARCHAR(255)
+        - column:
+            constraints:
               nullable: true
             name: deployment_id
             type: VARCHAR(36)
         - column:
             constraints:
-              nullable: false
-            name: template
-            type: CLOB
-        tableName: storage_path_entity
+              nullable: true
+            name: scheduler_id
+            type: VARCHAR(36)
+        tableName: deployment_requester
     - addPrimaryKey:
         columnNames: id
-        constraintName: pk__storage_path_entity
-        tableName: storage_path_entity
-    - addColumn:
-      catalogName: cat
-      columns:
-      - column:
-            constraints:
-              nullable: true
-            name: trigger_id
-            type: VARCHAR(36)
-        tableName: deployment
+        constraintName: pk__deployment_scheduler
+        tableName: deployment_scheduler
+    - addPrimaryKey:
+        columnNames: deployment_scheduler_id, name
+        constraintName: pk__deployment_scheduler_parameters
+        tableName: deployment_scheduler_parameters
+    - addPrimaryKey:
+        columnNames: id
+        constraintName: pk__deployment_requester
+        tableName: deployment_requester
     - createIndex:
-      columns:
-      - column:
+        columns:
+        - column:
+            name: owner_id
+        indexName: IDowner_id
+        tableName: deployment_scheduler
+    - createIndex:
+        columns:
+        - column:
+            name: requested_with_token_id
+        indexName: IDrequested_with_token_id
+        tableName: deployment_scheduler
+    - createIndex:
+        columns:
+        - column:
+            name: created_at
+        indexName: IDcreated_at
+        tableName: deployment_requester
+    - createIndex:
+        columns:
+        - column:
             name: deployment_id
-        indexName: FKdb70f14942f55de7587ac375f
-        tableName: workflow_reference
+        indexName: FKdeployment_id
+        tableName: deployment_requester
     - createIndex:
-      columns:
-      - column:
-            name: trigger_id
-        indexName: FKa00b27913548e4c0608a40ebb
-        tableName: deployment
+        columns:
+        - column:
+            name: scheduler_id
+        indexName: FKscheduler_id
+        tableName: deployment_requester
+    - addForeignKeyConstraint:
+        baseColumnNames: scheduler_id
+        baseTableName: deployment_requester
+        constraintName: FKscheduler_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: deployment_scheduler
+    - addForeignKeyConstraint:
+        baseColumnNames: deployment_scheduler_id
+        baseTableName: deployment_scheduler_parameters
+        constraintName: FKdeployment_scheduler_parameters
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: deployment_scheduler
+    - addForeignKeyConstraint:
+        baseColumnNames: owner_id
+        baseTableName: deployment_scheduler
+        constraintName: FKowner_id_deployment_scheduler
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: oidc_entity
+    - addForeignKeyConstraint:
+        baseColumnNames: requested_with_token_id
+        baseTableName: deployment_scheduler
+        constraintName: FKrequested_with_token_id
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: oidc_refresh_token
     - addForeignKeyConstraint:
         baseColumnNames: deployment_id
-        baseTableName: storage_path_entity
-        constraintName: deployment_id
+        baseTableName: deployment_requester
+        constraintName: FKdeployment_id
         deferrable: false
         initiallyDeferred: false
         onDelete: NO ACTION
         onUpdate: NO ACTION
         referencedColumnNames: id
         referencedTableName: deployment
-    - addForeignKeyConstraint:
-        baseColumnNames: trigger_id
-        baseTableName: deployment
-        constraintName: trigger_id
-        deferrable: false
-        initiallyDeferred: false
-        onDelete: NO ACTION
-        onUpdate: NO ACTION
-        referencedColumnNames: id
-        referencedTableName: storage_path_entity

@@ -17,6 +17,8 @@
 package it.reply.orchestrator.service;
 
 import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.entity.OidcEntity;
+import it.reply.orchestrator.dal.entity.OidcRefreshToken;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -34,4 +36,6 @@ public interface DeploymentService {
   public void updateDeployment(String id, DeploymentRequest request);
 
   public void deleteDeployment(String id);
+
+  public Deployment createDeployment(DeploymentRequest request, OidcEntity oidcEntity, OidcRefreshToken oidcRefreshToken);
 }

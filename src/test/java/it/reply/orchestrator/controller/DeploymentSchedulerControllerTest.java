@@ -21,13 +21,15 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import it.reply.orchestrator.dal.entity.StoragePathEntity;
-import it.reply.orchestrator.dto.request.PathRequest;
-import it.reply.orchestrator.service.StorageService;
+import it.reply.orchestrator.dal.entity.DeploymentScheduler;
+import it.reply.orchestrator.dto.request.SchedulerRequest;
+import it.reply.orchestrator.service.DeploymentSchedulerService;
 import it.reply.orchestrator.utils.JsonUtils;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -45,9 +47,9 @@ import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-@WebMvcTest(controllers = StorageController.class, secure = false)
+@WebMvcTest(controllers = DeploymentSchedulerController.class, secure = false)
 @AutoConfigureRestDocs("target/generated-snippets")
-public class StorageControllerTest {
+public class DeploymentSchedulerControllerTest {
 
   @ClassRule
   public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
@@ -59,26 +61,31 @@ public class StorageControllerTest {
   private MockMvc mockMvc;
 
   @MockBean
-  private StorageService storageService;
+  private DeploymentSchedulerService deploymentSchedulerService;
+
+  private String storagePath = "http://www.site1.com/storagepath/*";
 
   @Test
   public void addStoragePathExisting() throws Exception {
 
-    PathRequest pathRequest = new PathRequest();
-    pathRequest.setStoragePath("http://www.site1.com/storagepath/*");
-    pathRequest.setTemplate("template1");
+    Map<String, Object> parameters = new HashMap<>();
+    parameters.put("cpus", 1);
 
-    StoragePathEntity storagePathEntity = new StoragePathEntity();
-    storagePathEntity.setStoragePath("http://www.site1.com/storagepath/*");
-    storagePathEntity.setTemplate("template1");
+    SchedulerRequest schedulerRequest = SchedulerRequest
+        .builder()
+        .parameters(parameters)
+        .userStoragePath(storagePath)
+        .template("template")
+        .callback("http://localhost:8080/callback")
+        .build();
 
-    Mockito.when(storageService.addStoragePath(storagePathEntity))
+    Mockito.when(deploymentSchedulerService.addDeploymentScheduler(schedulerRequest))
     .thenReturn(null);
 
     MvcResult result =
-        mockMvc.perform(post("/storage")
+        mockMvc.perform(post("/scheduler")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(JsonUtils.serialize(pathRequest))
+                .content(JsonUtils.serialize(schedulerRequest))
                 .header(HttpHeaders.AUTHORIZATION,
                     OAuth2AccessToken.BEARER_TYPE + " <access token>"))
             .andExpect(status().is(500))
@@ -90,28 +97,44 @@ public class StorageControllerTest {
   @Test
   public void addStoragePathNew() throws Exception {
 
-    PathRequest pathRequest = new PathRequest();
-    pathRequest.setStoragePath("http://www.site1.com/storagepath/*");
-    pathRequest.setTemplate("template1");
+    Map<String, Object> parameters = new HashMap<>();
+    parameters.put("cpus", 1);
 
-    StoragePathEntity storagePathEntity = new StoragePathEntity();
-    storagePathEntity.setStoragePath("http://www.site1.com/storagepath/*");
-    storagePathEntity.setTemplate("template1");
+    SchedulerRequest schedulerRequest = SchedulerRequest
+        .builder()
+        .parameters(parameters)
+        .userStoragePath(storagePath)
+        .template("template")
+        .callback("http://localhost:8080/callback")
+        .build();
 
-    Mockito.when(storageService.addStoragePath(storagePathEntity))
-    .thenReturn(new StoragePathEntity("http://www.site1.com/storagepath/*", "template1", null, null, new HashMap()));
+    Mockito.when(deploymentSchedulerService.addDeploymentScheduler(schedulerRequest))
+    .thenReturn(createDeploymentScheduler(UUID.randomUUID().toString()));
 
     MvcResult result =
-        mockMvc.perform(post("/storage")
+        mockMvc.perform(post("/scheduler")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(JsonUtils.serialize(pathRequest))
+                .content(JsonUtils.serialize(schedulerRequest))
                 .header(HttpHeaders.AUTHORIZATION,
                     OAuth2AccessToken.BEARER_TYPE + " <access token>"))
             .andExpect(status().is(201))
-            .andExpect(jsonPath("$.storagePath", is("http://www.site1.com/storagepath/*")))
-            .andExpect(jsonPath("$.template", is("template1")))
+            .andExpect(jsonPath("$.userStoragePath", is(storagePath)))
+            .andExpect(jsonPath("$.template", is("tosca_definitions_version: tosca_simple_yaml_1_0\ntopology_template:")))
             .andReturn();
 
+  }
+
+  private DeploymentScheduler createDeploymentScheduler(String id) {
+    DeploymentScheduler deploymentScheduler = new DeploymentScheduler();
+    deploymentScheduler.setId(id);
+    deploymentScheduler.setCreatedAt(new Date());
+    deploymentScheduler.setUpdatedAt(new Date());
+    deploymentScheduler.setVersion(0L);
+    deploymentScheduler.setUserStoragePath(storagePath);
+    deploymentScheduler.setCallback("http://localhost");
+    deploymentScheduler.setTemplate("tosca_definitions_version: tosca_simple_yaml_1_0\ntopology_template:");
+
+    return deploymentScheduler;
   }
 
 }

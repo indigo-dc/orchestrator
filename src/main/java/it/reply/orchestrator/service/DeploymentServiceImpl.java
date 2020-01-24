@@ -24,6 +24,7 @@ import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.OidcEntity;
 import it.reply.orchestrator.dal.entity.OidcEntityId;
+import it.reply.orchestrator.dal.entity.OidcRefreshToken;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.entity.WorkflowReference;
 import it.reply.orchestrator.dal.entity.WorkflowReference.Action;
@@ -208,6 +209,12 @@ public class DeploymentServiceImpl implements DeploymentService {
   @Override
   @Transactional
   public Deployment createDeployment(DeploymentRequest request) {
+    return createDeployment(request, null, null);
+  }
+  
+  @Override
+  @Transactional
+  public Deployment createDeployment(DeploymentRequest request, OidcEntity oidcEntity, OidcRefreshToken oidcRefreshToken) {
     Deployment deployment = new Deployment();
     deployment.setStatus(Status.CREATE_IN_PROGRESS);
     deployment.setTask(Task.NONE);
@@ -225,14 +232,24 @@ public class DeploymentServiceImpl implements DeploymentService {
     // Create internal resources representation (to store in DB)
     createResources(deployment, nodes);
 
-    if (oidcProperties.isEnabled()) {
-      deployment.setOwner(oauth2TokenService.getOrGenerateOidcEntityFromCurrentAuth());
+    if (oidcEntity!=null) {
+      deployment.setOwner(oidcEntity);
+    } else {
+      if (oidcProperties.isEnabled()) {
+        deployment.setOwner(oauth2TokenService.getOrGenerateOidcEntityFromCurrentAuth());
+      }
     }
 
     DeploymentType deploymentType = inferDeploymentType(nodes);
 
+    DeploymentMessage deploymentMessage;
+    
     // Build deployment message
-    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType);
+    if (oidcRefreshToken!=null) {
+      deploymentMessage = buildDeploymentMessage(deployment, deploymentType, oidcRefreshToken);
+    } else {
+      deploymentMessage = buildDeploymentMessage(deployment, deploymentType);
+    }
 
     populateFromRequestData(request, parsingResult,  deploymentMessage);
 
@@ -266,6 +283,17 @@ public class DeploymentServiceImpl implements DeploymentService {
     DeploymentMessage deploymentMessage = new DeploymentMessage();
     if (oidcProperties.isEnabled()) {
       deploymentMessage.setRequestedWithToken(oauth2TokenService.exchangeCurrentAccessToken());
+    }
+    deploymentMessage.setDeploymentId(deployment.getId());
+    deploymentMessage.setDeploymentType(deploymentType);
+    return deploymentMessage;
+  }
+
+  protected DeploymentMessage buildDeploymentMessage(Deployment deployment,
+      DeploymentType deploymentType,  OidcRefreshToken oidcRefreshToken) {
+    DeploymentMessage deploymentMessage = new DeploymentMessage();
+    if (oidcProperties.isEnabled()) {
+      deploymentMessage.setRequestedWithToken(oidcRefreshToken.getOidcTokenId());
     }
     deploymentMessage.setDeploymentId(deployment.getId());
     deploymentMessage.setDeploymentType(deploymentType);

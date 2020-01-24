@@ -16,21 +16,20 @@
 
 package it.reply.orchestrator.config.amqp;
 
+import it.reply.orchestrator.controller.AmqpListener;
+import it.reply.orchestrator.service.DeploymentSchedulerService;
+import it.reply.orchestrator.service.DeploymentService;
+
 import lombok.Getter;
 import lombok.Setter;
 
-import org.springframework.amqp.core.AmqpTemplate;
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
 import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.rabbit.listener.MessageListenerContainer;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
-import org.springframework.amqp.support.converter.MessageConverter;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,6 +38,15 @@ import org.springframework.context.annotation.Configuration;
 @Getter
 @Setter
 public class AmqpConfig {
+
+  @Autowired
+  private DeploymentSchedulerService deploymentSchedulerService;
+
+  @Autowired
+  private DeploymentService deploymentService;
+
+  @Autowired
+  private AmqpListener amqpListener;
 
   @Value("${orchestrator.rabbitmq.exchange}")
   private String exchange;
@@ -70,21 +78,23 @@ public class AmqpConfig {
   MessageListenerContainer messageListenerContainer(ConnectionFactory connectionFactory) {
     SimpleMessageListenerContainer simpleMessageListenerContainer =
         new SimpleMessageListenerContainer();
-    simpleMessageListenerContainer.setConnectionFactory(connectionFactory);
+    // use of custom connection factory
+    simpleMessageListenerContainer.setConnectionFactory(connectionFactory());
     simpleMessageListenerContainer.setQueues(queue());
-    simpleMessageListenerContainer.setMessageListener(new AmqpListener());
+    simpleMessageListenerContainer.setMessageListener(amqpListener);
     return simpleMessageListenerContainer;
 
   }
 
   // create custom connection factory
-//  @Bean
-//  ConnectionFactory connectionFactory() {
-//    CachingConnectionFactory cachingConnectionFactory = new CachingConnectionFactory("localhost");
-//    cachingConnectionFactory.setUsername(username);
-//    cachingConnectionFactory.setUsername(password);
-//    cachingConnectionFactory.setPort(8080);
-//    return cachingConnectionFactory;
-//  }
+
+  @Bean
+  ConnectionFactory connectionFactory() {
+    CachingConnectionFactory cachingConnectionFactory = new CachingConnectionFactory("localhost");
+    cachingConnectionFactory.setUsername(username);
+    cachingConnectionFactory.setUsername(password);
+    cachingConnectionFactory.setPort(8008);
+    return cachingConnectionFactory;
+  }
 
 }

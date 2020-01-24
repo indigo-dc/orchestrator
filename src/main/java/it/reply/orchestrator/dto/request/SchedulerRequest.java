@@ -18,13 +18,15 @@ package it.reply.orchestrator.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.validation.constraints.NotNull;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -33,21 +35,31 @@ import org.hibernate.validator.constraints.URL;
 @Data
 @Builder
 @AllArgsConstructor(access = AccessLevel.PUBLIC)
-@NoArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class PathRequest {
+public class SchedulerRequest {
 
   @NotNull(message = "A Storage Path must be provided")
   @NonNull
-  private String storagePath;
+  private String userStoragePath;
 
   @NotNull(message = "A TOSCA template must be provided")
   @NonNull
   private String template;
 
+  @NotNull
+  @NonNull
+  @Builder.Default
+  private Map<String, Object> parameters = new HashMap<>();
+
   @Nullable
   @URL(message = "Callback value, if provided, must be a valid HTTP or HTTPS URL",
       regexp = "^https?\\:.*")
   private String callback;
+
+  @SuppressWarnings("null")
+  @Deprecated
+  protected SchedulerRequest() {
+    parameters = new HashMap<>();
+  }
 
 }

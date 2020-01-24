@@ -18,21 +18,22 @@ package it.reply.orchestrator.service;
 
 import groovy.util.ResourceException;
 
-import it.reply.orchestrator.dal.entity.StoragePathEntity;
+import it.reply.orchestrator.dal.entity.DeploymentScheduler;
+import it.reply.orchestrator.dto.request.SchedulerRequest;
 
 import java.util.List;
 
-public interface StorageService {
+public interface DeploymentSchedulerService {
 
-  public StoragePathEntity addStoragePath(StoragePathEntity storagePathEntity)
+  public DeploymentScheduler addDeploymentScheduler(SchedulerRequest schedulerRequest)
       throws ResourceException;
 
-  public StoragePathEntity removeStoragePath(String storagePath);
+  public void deleteDeploymentScheduler(String schedulerId);
 
-  public boolean exists(String storagePath);
-  
-  public StoragePathEntity getEntityByPath(String storagePath);
+  public boolean existsByStoragePath(String storagePath);
 
-  public List<StoragePathEntity> getStoragePathList();
+  public DeploymentScheduler getEntityByPath(String storagePath);
+
+  public List<DeploymentScheduler> getDeploymentSchedulerList();
 
 }
