@@ -16,15 +16,17 @@
 
 package it.reply.orchestrator.controller;
 
+import groovy.util.ResourceException;
+
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.DeploymentRequester;
 import it.reply.orchestrator.dal.entity.DeploymentScheduler;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
+import it.reply.orchestrator.service.DeploymentRequesterService;
 import it.reply.orchestrator.service.DeploymentSchedulerService;
 import it.reply.orchestrator.service.DeploymentService;
 
-import java.util.HashMap;
-import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.core.MessageListener;
@@ -32,10 +34,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 public class AmqpListener implements MessageListener {
 
   @Autowired
   private DeploymentSchedulerService deploymentSchedulerService;
+
+  @Autowired
+  private DeploymentRequesterService deploymentRequesterServcie;
 
   @Autowired
   private DeploymentService deploymentService;
@@ -57,26 +63,33 @@ public class AmqpListener implements MessageListener {
     try {
       entity = deploymentSchedulerService.getEntityByPath(superPath);
     } catch (Exception e) {
-      // TODO Auto-generated catch block
-      System.out.println("Exception from DeploymentSchedulerService.getEntityByPath :" + e);
+      LOG.error("Get Entity by path: {} Is Exited with error : {}",
+          path, e);
     }
 
     if (entity != null) {
-      Map<String, Object> parameters = new HashMap<>();
       DeploymentRequest request = DeploymentRequest
           .builder()
           .parameters(entity.getParameters())
           .template(entity.getTemplate())
           .callback(entity.getCallback())
           .build();
-      Deployment deployment = deploymentService.createDeployment(request, entity.getOwner(), entity.getRequestedWithToken());
+
+      Deployment deployment = deploymentService.createDeploymentWithOidc(
+          request,
+          entity.getOwner(),
+          entity.getRequestedWithToken());
       DeploymentRequester requester = new DeploymentRequester();
       requester.setStoragePath(path);
       requester.setDeployment(deployment);
       requester.setDeploymentScheduler(entity);
 
-      //TODO save DeploymentRequester
-      String temporary = "";
+      try {
+        deploymentRequesterServcie.addDeploymentRequester(requester);
+      } catch (ResourceException e) {
+        LOG.error("Adding deployment requester with storage path: {} Exited with error : {}",
+            requester.getStoragePath(), e);
+      }
     }
 
   }

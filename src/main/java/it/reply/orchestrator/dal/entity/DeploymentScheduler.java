@@ -76,20 +76,19 @@ public class DeploymentScheduler extends AbstractResourceEntity {
   @ManyToOne(cascade = {
       CascadeType.DETACH,
       CascadeType.MERGE,
-      //CascadeType.PERSIST,
+      CascadeType.PERSIST,
       CascadeType.REFRESH
   })
   @JoinColumn(name = "owner_id")
   @Nullable
   private OidcEntity owner;
-  
+
+  //TODO check needed cascadeType and verify if updatable and insertable fields are needed
   @ManyToOne(cascade = {
       CascadeType.DETACH,
-      CascadeType.MERGE,
-      //CascadeType.PERSIST,
       CascadeType.REFRESH
   })
-  @JoinColumn(name = "requested_with_token_id")
+  @JoinColumn(name = "requested_with_token_id", updatable = false, insertable = false)
   @Nullable
   private OidcRefreshToken requestedWithToken;
 

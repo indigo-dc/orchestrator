@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,5 +37,6 @@ public interface DeploymentService {
 
   public void deleteDeployment(String id);
 
-  public Deployment createDeployment(DeploymentRequest request, OidcEntity oidcEntity, OidcRefreshToken oidcRefreshToken);
+  public Deployment createDeploymentWithOidc(DeploymentRequest request,
+      OidcEntity oidcEntity, OidcRefreshToken oidcRefreshToken);
 }

@@ -59,7 +59,7 @@ public class DeploymentSchedulerServiceTest {
   DeploymentSchedulerService deploymentSchedulerService = new DeploymentSchedulerServiceImpl();
 
   @Test
-  public void addStoragePathNew() throws Exception {
+  public void addDeploymentSchedulerNew() throws Exception {
 
     Map<String, Object> parameters = new HashMap<>();
 
@@ -86,7 +86,7 @@ public class DeploymentSchedulerServiceTest {
   }
 
   @Test
-  public void addStoragePathExisting() throws Exception {
+  public void addDeploymentSchedulerExisting() throws Exception {
 
     Map<String, Object> parameters = new HashMap<>();
 

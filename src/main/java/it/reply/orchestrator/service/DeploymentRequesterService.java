@@ -14,21 +14,25 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.dal.repository;
+package it.reply.orchestrator.service;
+
+import groovy.util.ResourceException;
 
 import it.reply.orchestrator.dal.entity.DeploymentRequester;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
+import java.util.List;
 
-@Repository
-public interface DeploymentRequesterRepository extends JpaRepository<DeploymentRequester, String> {
+public interface DeploymentRequesterService {
 
-  @Query("select s "
-      + "from #{#entityName} s "
-      + "where s.storagePath = ?#{#storagePath}")
-  public DeploymentRequester findByStoragePath(@Param("storagePath") String storagePath);
+  public DeploymentRequester addDeploymentRequester(DeploymentRequester deploymentRequester)
+      throws ResourceException;
+
+  public void deleteDeploymentRequester(String requesterId);
+
+  public boolean existsByStoragePath(String storagePath);
+
+  public DeploymentRequester getEntityByPath(String storagePath);
+
+  public List<DeploymentRequester> getDeploymentRequesterList();
 
 }

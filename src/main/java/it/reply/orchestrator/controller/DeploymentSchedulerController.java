@@ -20,9 +20,20 @@ import groovy.util.ResourceException;
 
 import it.reply.orchestrator.dal.entity.DeploymentScheduler;
 import it.reply.orchestrator.dto.request.SchedulerRequest;
+import it.reply.orchestrator.resource.SchedulerResource;
+import it.reply.orchestrator.resource.SchedulerResourceAssembler;
 import it.reply.orchestrator.service.DeploymentSchedulerService;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.web.PageableDefault;
+import org.springframework.data.web.PagedResourcesAssembler;
+import org.springframework.hateoas.PagedResources;
+import org.springframework.hateoas.core.DummyInvocationUtils;
+import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,6 +41,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -42,6 +54,9 @@ public class DeploymentSchedulerController {
   @Autowired
   private DeploymentSchedulerService deploymentSchedulerService;
 
+  @Autowired
+  private SchedulerResourceAssembler schedulerResourceAssembler;
+
   /**
    * Create and save Deployment scheduler.
    * Add a user storage path and template
@@ -52,16 +67,65 @@ public class DeploymentSchedulerController {
   @ResponseStatus(HttpStatus.CREATED)
   @RequestMapping(value = "/scheduler", method = RequestMethod.POST,
       produces = MediaType.APPLICATION_JSON_VALUE)
-  public DeploymentScheduler addStoragePath(@RequestBody SchedulerRequest schedulerRequest)
+  public SchedulerResource addDeploymentScheduler(@RequestBody SchedulerRequest schedulerRequest)
       throws ResourceException {
 
     DeploymentScheduler deploymentScheduler = deploymentSchedulerService
         .addDeploymentScheduler(schedulerRequest);
     if (deploymentScheduler != null) {
-      return deploymentScheduler;
+      return schedulerResourceAssembler.toResource(deploymentScheduler);
     } else {
       throw new ResourceException("already exists");
     }
+  }
+
+  /**
+   * Get the deployment scheduler.
+   *
+   * @param id
+   *          the deployment scheduler id
+   * @return {@link SchedulerResource}
+   */
+  @ResponseStatus(HttpStatus.OK)
+  @RequestMapping(value = "/scheduler/{schedulerId}", method = RequestMethod.GET,
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  public SchedulerResource getDeploymentScheduler(@PathVariable("schedulerId") String id) {
+
+    DeploymentScheduler deploymentScheduler = deploymentSchedulerService.getDeploymentScheduler(id);
+    //TODO if needed
+    //MdcUtils.setDeploymentSchedulerId(deploymentScheduler.getId());
+    return schedulerResourceAssembler.toResource(deploymentScheduler);
+  }
+
+  /**
+   * Get all schedulers.
+   *
+   * @param pageable
+   *          {@Link Pageable}
+   * @param pagedAssembler
+   *          {@link PagedResourcesAssembler}
+   * @return {@link SchedulerResource}
+   */
+  @ResponseStatus(HttpStatus.OK)
+  @RequestMapping(value = "/scheduler", method = RequestMethod.GET,
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  public PagedResources<SchedulerResource> getSchedulers(
+      @RequestParam(name = "createdBy", required = false) @Nullable String createdBy,
+      @PageableDefault(sort = "createdAt",
+          direction = Direction.DESC) Pageable pageable,
+      PagedResourcesAssembler<DeploymentScheduler> pagedAssembler) {
+
+    Page<DeploymentScheduler> schedulers = deploymentSchedulerService
+        .getDeploymentSchedulers(pageable, createdBy);
+
+    return pagedAssembler.toResource(schedulers, schedulerResourceAssembler,
+        ControllerLinkBuilder
+            .linkTo(
+                DummyInvocationUtils
+                    .methodOn(DeploymentSchedulerController.class)
+                    .getSchedulers(createdBy, pageable, pagedAssembler))
+            .withSelfRel());
+
   }
 
   /**
@@ -74,7 +138,7 @@ public class DeploymentSchedulerController {
   @RequestMapping(value = "/scheduler/{schedulerId}", method = RequestMethod.DELETE,
       produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize(OFFLINE_ACCESS_REQUIRED_CONDITION)
-  public void deleteDeployment(@PathVariable("schedulerId") String id) {
+  public void deleteDeploymentScheduler(@PathVariable("schedulerId") String id) {
     deploymentSchedulerService.deleteDeploymentScheduler(id);
   }
 

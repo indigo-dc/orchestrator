@@ -17,7 +17,11 @@
 package it.reply.orchestrator.dal.repository;
 
 import it.reply.orchestrator.dal.entity.DeploymentScheduler;
+import it.reply.orchestrator.dal.entity.OidcEntity;
+import it.reply.orchestrator.dal.entity.OidcEntityId;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -26,9 +30,36 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface DeploymentSchedulerRepository extends JpaRepository<DeploymentScheduler, String> {
 
+  public static final String IN_SAME_ORGANIZATION =
+      "(d.owner is null "
+          + "or (d.owner.organization = ?#{#requester.organization} "
+          + "and d.owner.oidcEntityId.issuer = ?#{#requester.oidcEntityId.issuer}))";
+
   @Query("select s "
       + "from #{#entityName} s "
       + "where s.userStoragePath = ?#{#userStoragePath}")
   public DeploymentScheduler findByUserStoragePath(@Param("userStoragePath") String storagePath);
+
+  @Query("select d "
+      + "from #{#entityName} d "
+      + "where d.owner.oidcEntityId = ?#{#ownerId} "
+      + "and " + IN_SAME_ORGANIZATION)
+  public Page<DeploymentScheduler> findAllByOwner(@Param("requester") OidcEntity requester,
+      @Param("ownerId") OidcEntityId ownerId,
+      Pageable pageable);
+
+  @Query("select d "
+        + "from #{#entityName} d "
+        + "where d.owner.oidcEntityId = ?#{#ownerId}")
+  public Page<DeploymentScheduler> findAllByOwner(
+      @Param("ownerId") OidcEntityId ownerId,
+      Pageable pageable);
+
+  @Query("select d "
+        + "from #{#entityName} d "
+        + "where " + IN_SAME_ORGANIZATION)
+  public Page<DeploymentScheduler> findAll(
+      @Param("requester") OidcEntity requester,
+      Pageable pageable);
 
 }

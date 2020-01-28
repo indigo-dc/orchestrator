@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -209,12 +209,13 @@ public class DeploymentServiceImpl implements DeploymentService {
   @Override
   @Transactional
   public Deployment createDeployment(DeploymentRequest request) {
-    return createDeployment(request, null, null);
+    return createDeploymentWithOidc(request, null, null);
   }
-  
+
   @Override
   @Transactional
-  public Deployment createDeployment(DeploymentRequest request, OidcEntity oidcEntity, OidcRefreshToken oidcRefreshToken) {
+  public Deployment createDeploymentWithOidc(DeploymentRequest request,
+      OidcEntity oidcEntity, OidcRefreshToken oidcRefreshToken) {
     Deployment deployment = new Deployment();
     deployment.setStatus(Status.CREATE_IN_PROGRESS);
     deployment.setTask(Task.NONE);
@@ -232,7 +233,7 @@ public class DeploymentServiceImpl implements DeploymentService {
     // Create internal resources representation (to store in DB)
     createResources(deployment, nodes);
 
-    if (oidcEntity!=null) {
+    if (oidcEntity != null) {
       deployment.setOwner(oidcEntity);
     } else {
       if (oidcProperties.isEnabled()) {
@@ -243,9 +244,9 @@ public class DeploymentServiceImpl implements DeploymentService {
     DeploymentType deploymentType = inferDeploymentType(nodes);
 
     DeploymentMessage deploymentMessage;
-    
+
     // Build deployment message
-    if (oidcRefreshToken!=null) {
+    if (oidcRefreshToken != null) {
       deploymentMessage = buildDeploymentMessage(deployment, deploymentType, oidcRefreshToken);
     } else {
       deploymentMessage = buildDeploymentMessage(deployment, deploymentType);

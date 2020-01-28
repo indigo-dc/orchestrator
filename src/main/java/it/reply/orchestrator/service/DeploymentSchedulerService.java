@@ -21,12 +21,16 @@ import groovy.util.ResourceException;
 import it.reply.orchestrator.dal.entity.DeploymentScheduler;
 import it.reply.orchestrator.dto.request.SchedulerRequest;
 
-import java.util.List;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 public interface DeploymentSchedulerService {
 
   public DeploymentScheduler addDeploymentScheduler(SchedulerRequest schedulerRequest)
       throws ResourceException;
+
+  public DeploymentScheduler getDeploymentScheduler(String schedulerId);
 
   public void deleteDeploymentScheduler(String schedulerId);
 
@@ -34,6 +38,9 @@ public interface DeploymentSchedulerService {
 
   public DeploymentScheduler getEntityByPath(String storagePath);
 
-  public List<DeploymentScheduler> getDeploymentSchedulerList();
+  public Page<DeploymentScheduler> getDeploymentSchedulers(
+      Pageable pageable,
+      @Nullable String owner
+      );
 
 }

@@ -20,25 +20,40 @@ import groovy.util.ResourceException;
 
 import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.dal.entity.DeploymentScheduler;
+import it.reply.orchestrator.dal.entity.OidcEntity;
+import it.reply.orchestrator.dal.entity.OidcEntityId;
 import it.reply.orchestrator.dal.entity.OidcRefreshToken;
+import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.repository.DeploymentSchedulerRepository;
+import it.reply.orchestrator.dal.repository.OidcTokenRepository;
 import it.reply.orchestrator.dto.request.SchedulerRequest;
+import it.reply.orchestrator.dto.security.IndigoOAuth2Authentication;
+import it.reply.orchestrator.dto.security.IndigoUserInfo;
+import it.reply.orchestrator.exception.http.BadRequestException;
 import it.reply.orchestrator.exception.http.NotFoundException;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 
-import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
 public class DeploymentSchedulerServiceImpl implements DeploymentSchedulerService {
 
+  private static final Pattern OWNER_PATTERN = Pattern.compile("([^@]+)@([^@]+)");
+
   @Autowired
   DeploymentSchedulerRepository deploymentSchedulerRepository;
+
+  @Autowired
+  OidcTokenRepository oidcTokenRepository;
 
   @Autowired
   private OAuth2TokenService oauth2TokenService;
@@ -57,10 +72,13 @@ public class DeploymentSchedulerServiceImpl implements DeploymentSchedulerServic
     deploymentScheduler.setParameters(schedulerRequest.getParameters());
     if (oidcProperties.isEnabled()) {
       deploymentScheduler.setOwner(oauth2TokenService.getOrGenerateOidcEntityFromCurrentAuth());
-      //TODO ?
-      OidcRefreshToken newRft = new OidcRefreshToken();
-      newRft.setOidcTokenId(oauth2TokenService.generateTokenIdFromCurrentAuth());
-      deploymentScheduler.setRequestedWithToken(newRft);
+
+      //TODO replace temporary with static token
+      // OidcTokenId token = oauth2TokenService.exchangeCurrentAccessToken();
+      String id = "11ea4129-fa93-dc7b-a227-d0577b460825";
+      OidcRefreshToken refreshToken =  oidcTokenRepository.findAll().get(0);
+
+      deploymentScheduler.setRequestedWithToken(refreshToken);
     }
 
     LOG.debug("Creating deployment scheduler with user storage path:\n{}",
@@ -83,7 +101,8 @@ public class DeploymentSchedulerServiceImpl implements DeploymentSchedulerServic
     deploymentSchedulerRepository.delete(entity);
   }
 
-  private DeploymentScheduler getDeploymentScheduler(String schedulerId) {
+  @Override
+  public DeploymentScheduler getDeploymentScheduler(String schedulerId) {
     DeploymentScheduler entity = deploymentSchedulerRepository.findOne(schedulerId);
     if (entity != null) {
       return entity;
@@ -98,15 +117,54 @@ public class DeploymentSchedulerServiceImpl implements DeploymentSchedulerServic
   }
 
   @Override
-  public List<DeploymentScheduler> getDeploymentSchedulerList() {
-    return deploymentSchedulerRepository.findAll();
+  public Page<DeploymentScheduler> getDeploymentSchedulers(Pageable pageable, String owner) {
+    if (owner == null) {
+      if (oidcProperties.isEnabled() && isAdmin()) {
+        OidcEntity requester = oauth2TokenService.generateOidcEntityFromCurrentAuth();
+        return deploymentSchedulerRepository.findAll(requester, pageable);
+      }
+      owner = "me";
+    }
+    OidcEntityId ownerId;
+    if ("me".equals(owner)) {
+      ownerId = oauth2TokenService.generateOidcEntityIdFromCurrentAuth();
+    } else {
+      Matcher matcher = OWNER_PATTERN.matcher(owner);
+      if (isAdmin() && matcher.matches()) {
+        ownerId = new OidcEntityId();
+        ownerId.setSubject(matcher.group(1));
+        ownerId.setIssuer(matcher.group(2));
+      } else {
+        throw new BadRequestException("Value " + owner + " for param createdBy is illegal");
+      }
+    }
+    if (oidcProperties.isEnabled()) {
+      OidcEntity requester = oauth2TokenService.generateOidcEntityFromCurrentAuth();
+      return deploymentSchedulerRepository.findAllByOwner(requester, ownerId, pageable);
+    } else {
+      return deploymentSchedulerRepository.findAllByOwner(ownerId, pageable);
+    }
   }
 
   @Override
   public DeploymentScheduler getEntityByPath(String storagePath) {
-    //TODO
-    String temmpDebug = "";
+    //TODO must be unique
     return deploymentSchedulerRepository.findByUserStoragePath(storagePath);
+  }
+
+  private boolean isAdmin() {
+    boolean isAdmin = false;
+    if (oidcProperties.isEnabled()) {
+      OidcEntity requester = oauth2TokenService.generateOidcEntityFromCurrentAuth();
+      String issuer = requester.getOidcEntityId().getIssuer();
+      String group = oidcProperties.getIamProperties().get(issuer).getAdmingroup();
+      IndigoOAuth2Authentication authentication = oauth2TokenService.getCurrentAuthentication();
+      IndigoUserInfo userInfo = (IndigoUserInfo) authentication.getUserInfo();
+      if (userInfo != null) {
+        isAdmin = userInfo.getGroups().contains(group);
+      }
+    }
+    return isAdmin;
   }
 
 }
