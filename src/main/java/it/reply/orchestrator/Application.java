@@ -26,7 +26,7 @@ import org.springframework.boot.autoconfigure.web.ErrorMvcAutoConfiguration;
 @SpringBootApplication(exclude = ErrorMvcAutoConfiguration.class)
 @EnableRabbit
 public class Application {
-  
+
   public static void main(String[] args) {
     TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
     SpringApplication.run(Application.class, args);
