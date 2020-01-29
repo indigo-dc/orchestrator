@@ -25,6 +25,9 @@ import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.service.DeploymentRequesterService;
 import it.reply.orchestrator.service.DeploymentSchedulerService;
 import it.reply.orchestrator.service.DeploymentService;
+import it.reply.orchestrator.utils.MdcUtils;
+
+import java.util.UUID;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -74,7 +77,7 @@ public class AmqpListener implements MessageListener {
           .template(entity.getTemplate())
           .callback(entity.getCallback())
           .build();
-
+      MdcUtils.setRequestId(UUID.randomUUID().toString());
       Deployment deployment = deploymentService.createDeploymentWithOidc(
           request,
           entity.getOwner(),

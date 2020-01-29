@@ -42,6 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
@@ -62,6 +63,7 @@ public class DeploymentSchedulerServiceImpl implements DeploymentSchedulerServic
   private OidcProperties oidcProperties;
 
   @Override
+  @Transactional
   public DeploymentScheduler addDeploymentScheduler(SchedulerRequest schedulerRequest)
       throws ResourceException {
 
@@ -96,12 +98,14 @@ public class DeploymentSchedulerServiceImpl implements DeploymentSchedulerServic
   }
 
   @Override
+  @Transactional
   public void deleteDeploymentScheduler(String schedulerId) {
     DeploymentScheduler entity = getDeploymentScheduler(schedulerId);
     deploymentSchedulerRepository.delete(entity);
   }
 
   @Override
+  @Transactional(readOnly = true)
   public DeploymentScheduler getDeploymentScheduler(String schedulerId) {
     DeploymentScheduler entity = deploymentSchedulerRepository.findOne(schedulerId);
     if (entity != null) {
@@ -112,11 +116,13 @@ public class DeploymentSchedulerServiceImpl implements DeploymentSchedulerServic
   }
 
   @Override
+  @Transactional
   public boolean existsByStoragePath(String storagePath) {
     return deploymentSchedulerRepository.findByUserStoragePath(storagePath) == null ? false : true;
   }
 
   @Override
+  @Transactional(readOnly = true)
   public Page<DeploymentScheduler> getDeploymentSchedulers(Pageable pageable, String owner) {
     if (owner == null) {
       if (oidcProperties.isEnabled() && isAdmin()) {
@@ -147,6 +153,7 @@ public class DeploymentSchedulerServiceImpl implements DeploymentSchedulerServic
   }
 
   @Override
+  @Transactional(readOnly = true)
   public DeploymentScheduler getEntityByPath(String storagePath) {
     //TODO must be unique
     return deploymentSchedulerRepository.findByUserStoragePath(storagePath);

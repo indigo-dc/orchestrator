@@ -35,7 +35,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.Table;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -50,7 +49,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 })
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
 public class DeploymentScheduler extends AbstractResourceEntity {
 
@@ -86,39 +84,40 @@ public class DeploymentScheduler extends AbstractResourceEntity {
   //TODO check needed cascadeType and verify if updatable and insertable fields are needed
   @ManyToOne(cascade = {
       CascadeType.DETACH,
+      CascadeType.MERGE,
       CascadeType.REFRESH
   })
-  @JoinColumn(name = "requested_with_token_id", updatable = false, insertable = false)
+  @JoinColumn(name = "requested_with_token_id", updatable = false)
   @Nullable
   private OidcRefreshToken requestedWithToken;
 
-  @Override
-  public boolean equals(Object obj) {
-    if (this == obj) {
-      return true;
-    }
-    if (obj == null) {
-      return false;
-    }
-    if (getClass() != obj.getClass()) {
-      return false;
-    }
-    DeploymentScheduler other = (DeploymentScheduler) obj;
-    if (template == null) {
-      if (other.template != null) {
-        return false;
-      }
-    } else if (!template.equals(other.template)) {
-      return false;
-    }
-    if (userStoragePath == null) {
-      if (other.userStoragePath != null) {
-        return false;
-      }
-    } else if (!userStoragePath.equals(other.userStoragePath)) {
-      return false;
-    }
-    return true;
-  }
+//  @Override
+//  public boolean equals(Object obj) {
+//    if (this == obj) {
+//      return true;
+//    }
+//    if (obj == null) {
+//      return false;
+//    }
+//    if (getClass() != obj.getClass()) {
+//      return false;
+//    }
+//    DeploymentScheduler other = (DeploymentScheduler) obj;
+//    if (template == null) {
+//      if (other.template != null) {
+//        return false;
+//      }
+//    } else if (!template.equals(other.template)) {
+//      return false;
+//    }
+//    if (userStoragePath == null) {
+//      if (other.userStoragePath != null) {
+//        return false;
+//      }
+//    } else if (!userStoragePath.equals(other.userStoragePath)) {
+//      return false;
+//    }
+//    return true;
+//  }
 
 }
