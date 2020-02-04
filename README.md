@@ -39,7 +39,7 @@ The PaaS Orchestrator needs the presence of the following INDIGO services:
 ### Acknowledgments:
 
 This work has been co-funded by:
-* [EOSC-hub project](http://eosc-hub.eu/) (Horizon 2020) under Grant number 777536.
-* [DEEP-HybridDataCloud project]() (Horizon 2020) under Grant number 777435.
-* [eXtreme-DataCloud project]() (Horizon 2020) under Grant number 777367.
-* [INDIGO-DataCloud project]() (Horizon 2020) under Grant number 653549.
+* [EOSC-hub project](http://eosc-hub.eu/) (Horizon 2020) under Grant number 777536. <img src="https://wiki.eosc-hub.eu/download/attachments/1867786/eu%20logo.jpeg?version=1&modificationDate=1459256840098&api=v2" height="24"> <img src="https://wiki.eosc-hub.eu/download/attachments/18973612/eosc-hub-web.png?version=1&modificationDate=1516099993132&api=v2" height="24">
+* [DEEP-HybridDataCloud project](https://deep-hybrid-datacloud.eu/) (Horizon 2020) under Grant number 777435.
+* [eXtreme-DataCloud project](http://www.extreme-datacloud.eu/) (Horizon 2020) under Grant number 777367.
+* [INDIGO-DataCloud project](https://www.indigo-datacloud.eu/) (Horizon 2020) under Grant number 653549.
