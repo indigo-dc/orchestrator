@@ -79,7 +79,7 @@
     <im-java-api.version>0.4.14</im-java-api.version>
     <monitoring-pillar-domain.version>1.8.1-FINAL</monitoring-pillar-domain.version>
     <flowable.version>6.3.0</flowable.version>
-    <alien4cloud.version>2.1.0-DEEP-1.0.0</alien4cloud.version>
+    <alien4cloud.version>2.1.0-DEEP-1.2.1</alien4cloud.version>
     <chronos-client.version>0.0.1</chronos-client.version>
     <marathon-client.version>0.6.2</marathon-client.version>
     <deep-qcg-client.version>1.0.1</deep-qcg-client.version>
