@@ -506,7 +506,8 @@ public class DeploymentServiceTest {
   @Parameters({
       "CHRONOS",
       "MARATHON",
-      "QCG"})
+      "QCG",
+      "KUBERNETES"})
   public void updateDeploymentBadRequest(DeploymentProvider provider) throws Exception {
 
     String id = UUID.randomUUID().toString();

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -280,6 +280,8 @@ public class DeploymentServiceImpl implements DeploymentService {
         return DeploymentType.MARATHON;
       } else if (toscaService.isOfToscaType(node, ToscaConstants.Nodes.Types.QCG)) {
         return DeploymentType.QCG;
+      } else if (toscaService.isOfToscaType(node, ToscaConstants.Nodes.Types.KUBERNETES)) {
+        return DeploymentType.KUBERNETES;
       }
     }
     return DeploymentType.TOSCA;
@@ -293,6 +295,8 @@ public class DeploymentServiceImpl implements DeploymentService {
         return DeploymentType.MARATHON;
       case QCG:
         return DeploymentType.QCG;
+      case KUBERNETES:
+        return DeploymentType.KUBERNETES;
       case HEAT:
       case IM:
       default:
@@ -361,7 +365,8 @@ public class DeploymentServiceImpl implements DeploymentService {
 
     if (deployment.getDeploymentProvider() == DeploymentProvider.CHRONOS
         || deployment.getDeploymentProvider() == DeploymentProvider.MARATHON
-        || deployment.getDeploymentProvider() == DeploymentProvider.QCG) {
+        || deployment.getDeploymentProvider() == DeploymentProvider.QCG
+        || deployment.getDeploymentProvider() == DeploymentProvider.KUBERNETES) {
       throw new BadRequestException(String.format("%s deployments cannot be updated.",
           deployment.getDeploymentProvider().toString()));
     }
