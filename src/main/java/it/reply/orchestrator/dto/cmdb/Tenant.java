@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 I.N.F.N.
+ * Copyright © 2019-2020 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,4 +52,15 @@ public class Tenant implements CmdbIdentifiable {
   @Nullable
   private String iamOrganisation;
 
+  @JsonProperty("public_network_name")
+  @Nullable
+  private String publicNetworkName;
+
+  @JsonProperty("private_network_cidr")
+  @Nullable
+  private String privateNetworkCidr;  
+
+  @JsonProperty("private_network_name")
+  @Nullable
+  private String privateNetworkName;    
 }

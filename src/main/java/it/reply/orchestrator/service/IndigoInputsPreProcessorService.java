@@ -313,6 +313,7 @@ public class IndigoInputsPreProcessorService {
     });
   }
 
+  @SuppressWarnings("unchecked")
   protected Optional<Object> processFunctions(
       Map<String, ToscaFunction> functions,
       Set<FunctionPropertyValue> processedFunctions,
@@ -402,6 +403,7 @@ public class IndigoInputsPreProcessorService {
     return Optional.of(optionalProperties);
   }
 
+  @SuppressWarnings("unchecked")
   private <V extends IValue> Optional<Object> processProperties(
       Map<String, ToscaFunction> functions,
       Set<FunctionPropertyValue> processedFunctions,
@@ -527,6 +529,7 @@ public class IndigoInputsPreProcessorService {
     );
   }
 
+  @SuppressWarnings("rawtypes")
   protected Optional<Object> processGetProperty(
       Map<String, ToscaFunction> functions,
       Set<FunctionPropertyValue> processedFunctions,

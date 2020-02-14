@@ -48,11 +48,11 @@ public class CredentialProviderServiceImpl implements CredentialProviderService 
       String accessToken, Class<T> clazz) {
 
     if (serviceId == null || serviceId.isEmpty()) {
-      LOG.error("SeriviceId is empty");
+      LOG.error("ServiceId is empty.");
     }
     Optional<URI> vaultServiceUri = vaultService.getServiceUri();
     if (!vaultServiceUri.isPresent()) {
-      throw new DeploymentException("Vault service is not configured. Service uri is not present");
+      throw new DeploymentException("Vault service is not configured. Service uri is not present.");
     }
     TokenAuthenticationExtended vaultToken =
         vaultService.retrieveToken(

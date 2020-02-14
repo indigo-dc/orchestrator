@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,6 @@ import it.reply.orchestrator.util.TestUtil;
 import it.reply.orchestrator.utils.ToscaUtils;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -64,7 +63,13 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
   public static final String TEMPLATES_INPUT_BASE_DIR = TEMPLATES_BASE_DIR + "inputs/";
   public static final String TEMPLATES_ONEDATA_BASE_DIR =
       TEMPLATES_BASE_DIR + "onedata_requirements/";
-
+  public static final String PUBLIC_NETWORK_NAME1 = "publicNetwork1";
+  public static final String PRIVATE_NETWORK_NAME1 = "privateNetwork1";
+  public static final String PRIVATE_NETWORK_CIDR1 = "192.168.1.0/24";
+  public static final String PUBLIC_NETWORK_NAME2 = "publicNetwork2";
+  public static final String PRIVATE_NETWORK_NAME2 = "privateNetwork2";
+  public static final String PRIVATE_NETWORK_CIDR2 = "192.168.2.0/24";
+  
   // @Test(expected = ToscaException.class)
   // public void customizeTemplateWithInvalidTemplate() throws Exception {
   //
@@ -318,7 +323,8 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
 	public void checkHybridDeploymentSetting() throws Exception {
 		String template = TestUtil.getFileContentAsString(TEMPLATES_BASE_DIR + "tosca_hybrid_before_create.yaml");
 		ArchiveRoot ar = toscaService.getArchiveRootFromTemplate(template).getResult();
-		ArchiveRoot arNew = toscaService.setHybridDeployment(ar);
+		ArchiveRoot arNew = toscaService.setHybridDeployment(ar, PUBLIC_NETWORK_NAME1, PRIVATE_NETWORK_NAME1,
+		    PRIVATE_NETWORK_CIDR1);
 
 		Assertions.assertThat(toscaService.getNodesOfType(arNew, "tosca.nodes.indigo.VR.CentralPoint")).size().isOne();
 		NodeTemplate centralPointNode = arNew.getTopology().getNodeTemplates().get("indigovr_cp");
@@ -326,7 +332,8 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
 
 		template = TestUtil.getFileContentAsString(TEMPLATES_BASE_DIR + "tosca_hybrid_before_create2.yaml");
 		ar = toscaService.getArchiveRootFromTemplate(template).getResult();
-		arNew = toscaService.setHybridDeployment(ar);
+		arNew = toscaService.setHybridDeployment(ar, PUBLIC_NETWORK_NAME1, PRIVATE_NETWORK_NAME1,
+		    PRIVATE_NETWORK_CIDR1);
 
 		Assertions.assertThat(toscaService.getNodesOfType(arNew, "tosca.nodes.indigo.VR.CentralPoint")).size().isOne();
 		centralPointNode = arNew.getTopology().getNodeTemplates().get("indigovr_cp");
@@ -338,7 +345,8 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
 	public void checkHybridUpdateDeploymentSetting() throws Exception {
 		String template = TestUtil.getFileContentAsString(TEMPLATES_BASE_DIR + "tosca_hybrid_before_update.yaml");
 		ArchiveRoot ar = toscaService.getArchiveRootFromTemplate(template).getResult();
-		ArchiveRoot arNew = toscaService.setHybridUpdateDeployment(ar);
+		ArchiveRoot arNew = toscaService.setHybridUpdateDeployment(ar, PUBLIC_NETWORK_NAME1, PRIVATE_NETWORK_NAME1,
+		    PRIVATE_NETWORK_CIDR1, PUBLIC_NETWORK_NAME2, PRIVATE_NETWORK_NAME2, PRIVATE_NETWORK_CIDR2);
 
 		Assertions.assertThat(toscaService.getNodesOfType(arNew, "tosca.nodes.indigo.VR.CentralPoint")).size().isOne();
 		Assertions.assertThat(toscaService.getNodesOfType(arNew, "tosca.nodes.indigo.VR.Client")).size().isOne();

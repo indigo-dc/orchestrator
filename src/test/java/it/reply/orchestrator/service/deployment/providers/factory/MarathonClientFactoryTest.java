@@ -19,7 +19,6 @@ package it.reply.orchestrator.service.deployment.providers.factory;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.dto.security.GenericServiceCredential;
-import it.reply.orchestrator.dto.security.GenericServiceCredentialWithTenant;
 import it.reply.orchestrator.service.deployment.providers.CredentialProviderService;
 
 import java.net.URISyntaxException;

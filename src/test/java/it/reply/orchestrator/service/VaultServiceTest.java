@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 I.N.F.N.
+ * Copyright © 2019 - 2020 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,6 +48,7 @@ import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.test.web.client.MockRestServiceServer;
 import org.springframework.vault.client.VaultEndpoint;
+import org.springframework.vault.support.VaultToken;
 import org.springframework.vault.support.VaultTokenResponse;
 import org.springframework.web.client.HttpClientErrorException;
 
@@ -57,7 +58,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import it.reply.orchestrator.config.properties.VaultProperties;
 import it.reply.orchestrator.dal.entity.OidcEntityId;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
+import it.reply.orchestrator.dto.vault.TokenAuthenticationExtended;
 import it.reply.orchestrator.exception.VaultJwtTokenExpiredException;
+import it.reply.orchestrator.exception.VaultServiceNotAvailableException;
 import it.reply.orchestrator.function.ThrowingFunction;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.JsonUtils;
@@ -319,6 +322,19 @@ public class VaultServiceTest {
     assertThatThrownBy(
         () -> vaultService.retrieveToken(customVaultUri, expiredOidcTokenId))
         .isInstanceOf(VaultJwtTokenExpiredException.class);
+
+    mockServer.verify();
+  }
+
+  @Test
+  public void testServiceNotAvailableException() throws IOException, URISyntaxException {
+    vaultProperties.setUrl(null);
+    TokenAuthenticationExtended tokenExt = new TokenAuthenticationExtended(
+        VaultToken.of(validAccessToken.toCharArray()), "entityId");
+    //do test
+    assertThatThrownBy(
+      () -> vaultService.readSecret(tokenExt, "/", String.class))
+      .isInstanceOf(VaultServiceNotAvailableException.class);
 
     mockServer.verify();
   }

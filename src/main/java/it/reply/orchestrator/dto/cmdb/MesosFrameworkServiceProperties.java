@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,6 @@ import javax.validation.constraints.NotNull;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 
 import org.apache.commons.lang3.StringUtils;
@@ -47,7 +46,7 @@ public class MesosFrameworkServiceProperties {
 
   @NonNull
   @NotNull
-  @Builder.Default
+  //@Builder.Default
   @JsonProperty("persistent_storage_drivers")
   private List<String> persistentStorageDrivers = new ArrayList<>();
 

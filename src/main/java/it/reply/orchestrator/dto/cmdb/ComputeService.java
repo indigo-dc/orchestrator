@@ -39,15 +39,27 @@ public class ComputeService extends CloudService {
   @JsonProperty("images")
   @NonNull
   @NotNull
-  @Builder.Default
+  //@Builder.Default
   List<Image> images = new ArrayList<>();
 
   @JsonProperty("flavors")
   @NonNull
   @NotNull
-  @Builder.Default
+  //@Builder.Default
   List<Flavor> flavors = new ArrayList<>();
 
+  @JsonProperty("public_network_name")
+  @Nullable
+  private String publicNetworkName;
+
+  @JsonProperty("private_network_cidr")
+  @Nullable
+  private String privateNetworkCidr;  
+
+  @JsonProperty("private_network_name")
+  @Nullable
+  private String privateNetworkName;  
+  
   /**
    * Generate a new ComputeService.
    *
@@ -73,10 +85,14 @@ public class ComputeService extends CloudService {
    *     the flavors
    * @param iamEnabled
    *     the iamEnabled flag
-   * @param networkEnabled
-   *     the networkEnabled flag
    * @param publicIpAssignable
-   *     the publicIpAssignable flag            
+   *     the publicIpAssignable flag
+   * @param publicNetworkName
+   *     the public network name
+   * @param privateNetworkCidr
+   *     the private network CIDR
+   * @param privateNetworkName
+   *     the private network name
    */
   @Builder(builderMethodName = "computeBuilder")
   public ComputeService(
@@ -92,12 +108,17 @@ public class ComputeService extends CloudService {
       @NonNull List<Image> images,
       @NonNull List<Flavor> flavors,
       boolean iamEnabled,
-      @Nullable boolean networkEnabled,
-      @Nullable boolean publicIpAssignable) {
+      @Nullable boolean publicIpAssignable,
+      @Nullable String publicNetworkName,
+      @Nullable String privateNetworkCidr,
+      @Nullable String privateNetworkName) {
     super(id, serviceType, endpoint, providerId, type, publicService, region, hostname,
-            parentServiceId, iamEnabled, networkEnabled, publicIpAssignable);
+            parentServiceId, iamEnabled, publicIpAssignable);
     this.images = CommonUtils.notNullOrDefaultValue(images, ArrayList::new);
     this.flavors = CommonUtils.notNullOrDefaultValue(flavors, ArrayList::new);
+    this.publicNetworkName = publicNetworkName;
+    this.privateNetworkName = privateNetworkName;
+    this.privateNetworkCidr = privateNetworkCidr;
   }
 
   @Deprecated

@@ -45,7 +45,8 @@ public class ToscaConstants {
       public static final String CLIENT = BASE_INDIGO_NAME + "VR.Client";
       public static final String BASE_NETWORK_NAME = "tosca.nodes.network.";
       public static final String NETWORK = BASE_NETWORK_NAME + "Network";
-      public static final String PORT = BASE_NETWORK_NAME + "Port";    }
+      public static final String PORT = BASE_NETWORK_NAME + "Port";
+    }
   }
 
   @UtilityClass

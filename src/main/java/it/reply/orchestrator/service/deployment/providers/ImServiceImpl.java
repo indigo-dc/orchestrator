@@ -52,6 +52,7 @@ import it.reply.orchestrator.exception.service.BusinessWorkflowException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.function.ThrowingConsumer;
 import it.reply.orchestrator.function.ThrowingFunction;
+import it.reply.orchestrator.service.CmdbService;
 import it.reply.orchestrator.service.IndigoInputsPreProcessorService;
 import it.reply.orchestrator.service.IndigoInputsPreProcessorService.RuntimeProperties;
 import it.reply.orchestrator.service.ToscaService;
@@ -106,6 +107,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   @Autowired
   private ImClientFactory imClientFactory;
+  
+  @Autowired
+  private CmdbService cmdbService;
 
   protected <R> R executeWithClientForResult(List<CloudProviderEndpoint> cloudProviderEndpoints,
       @Nullable OidcTokenId requestedWithToken,
@@ -177,7 +181,11 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
 
     if (toscaService.isHybridDeployment(ar)) {
-      toscaService.setHybridDeployment(ar);
+      toscaService.setHybridDeployment(ar, 
+          computeService.getPublicNetworkName(),
+          computeService.getPrivateNetworkName(),
+          computeService.getPrivateNetworkCidr()
+          );
     }
     String imCustomizedTemplate = toscaService.getTemplateFromTopology(ar);
     // Deploy on IM
@@ -373,8 +381,21 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
             .getCpComputeServiceId()
             .equals(deployment.getCloudProviderEndpoint().getCpComputeServiceId());
 
+    ComputeService computeService = deploymentMessage
+        .getCloudServicesOrderedIterator()
+        .currentService(ComputeService.class);
+    
     if (newResourcesOnDifferentService) {
-      toscaService.setHybridUpdateDeployment(newAr);
+      ComputeService firstService = (ComputeService)cmdbService.getServiceById(
+          deployment.getCloudProviderEndpoint().getCpComputeServiceId());
+      
+      toscaService.setHybridUpdateDeployment(newAr, 
+          firstService.getPublicNetworkName(),
+          firstService.getPrivateNetworkName(), 
+          firstService.getPrivateNetworkCidr(),
+          computeService.getPublicNetworkName(),
+          computeService.getPrivateNetworkName(), 
+          computeService.getPrivateNetworkCidr());
     }
 
     Map<String, NodeTemplate> newNodes =
@@ -469,9 +490,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       }
     });
 
-    ComputeService computeService = deploymentMessage
-        .getCloudServicesOrderedIterator()
-        .currentService(ComputeService.class);
+//    ComputeService computeService = deploymentMessage
+//        .getCloudServicesOrderedIterator()
+//        .currentService(ComputeService.class);
 
     toscaService.contextualizeAndReplaceImages(newAr, computeService, DeploymentProvider.IM);
     toscaService.contextualizeAndReplaceFlavors(newAr, computeService, DeploymentProvider.IM);

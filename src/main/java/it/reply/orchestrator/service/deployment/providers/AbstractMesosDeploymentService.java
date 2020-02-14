@@ -68,6 +68,7 @@ public abstract class AbstractMesosDeploymentService<T extends MesosTask<T>, S>
    *          the id of the task
    * @return the Mesos task
    */
+  @SuppressWarnings("unchecked")
   public T buildTask(DirectedMultigraph<NodeTemplate, RelationshipTemplate> graph,
       NodeTemplate taskNode, String taskId) {
 

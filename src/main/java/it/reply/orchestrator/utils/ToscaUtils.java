@@ -49,6 +49,7 @@ public class ToscaUtils {
    *     the wrapped object
    * @return the unwrapped object
    */
+  @SuppressWarnings("rawtypes")
   public Object unwrapPropertyValue(Object wrappedObject) {
     if (wrappedObject instanceof PropertyValue) {
       return ((PropertyValue) wrappedObject).getValue();
@@ -64,6 +65,7 @@ public class ToscaUtils {
    *     the original object
    * @return the wrapped object
    */
+  @SuppressWarnings("unchecked")
   public AbstractPropertyValue wrapToPropertyValue(Object v) {
     if (v == null || v instanceof AbstractPropertyValue) {
       return (AbstractPropertyValue) v;

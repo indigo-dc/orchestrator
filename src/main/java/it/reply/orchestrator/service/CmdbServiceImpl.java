@@ -275,6 +275,11 @@ public class CmdbServiceImpl implements CmdbService {
             for (Tenant tenant : tenantList) {
               imageList.addAll(getImagesByTenant(tenant.getId()));
               flavorList.addAll(getFlavorsByTenant(tenant.getId()));
+              computeService.setPublicNetworkName(tenant.getPublicNetworkName());
+              computeService.setPrivateNetworkName(tenant.getPrivateNetworkName());
+              computeService.setPrivateNetworkCidr(tenant.getPrivateNetworkCidr());
+              //only one element must be here
+              break;
             }
             LOG.debug("Image list for service <{}> of provider <{}>: <{}>",
                 Arrays.toString(imageList.toArray()), serviceId, prId);

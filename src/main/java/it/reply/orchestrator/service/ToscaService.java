@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,7 @@ import it.reply.orchestrator.dto.dynafed.Dynafed;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.policies.ToscaPolicy;
 import it.reply.orchestrator.enums.DeploymentProvider;
+import it.reply.orchestrator.enums.PrivateNetworkType;
 import it.reply.orchestrator.exception.service.ToscaException;
 
 import java.io.IOException;
@@ -36,6 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.alien4cloud.tosca.model.definitions.AbstractPropertyValue;
 import org.alien4cloud.tosca.model.definitions.DeploymentArtifact;
 import org.alien4cloud.tosca.model.definitions.PropertyDefinition;
 import org.alien4cloud.tosca.model.templates.Capability;
@@ -174,6 +176,9 @@ public interface ToscaService {
    */
   public ArchiveRoot prepareTemplate(String toscaTemplate, Map<String, Object> inputs);
 
+  public Optional<AbstractPropertyValue> getNodePropertyByName(NodeTemplate node,
+      String propertyName);
+
   public Optional<Capability> getNodeCapabilityByName(NodeTemplate node, String propertyName);
 
   public Optional<DeploymentArtifact> getNodeArtifactByName(NodeTemplate node, String artifactName);
@@ -243,11 +248,11 @@ public interface ToscaService {
   public DirectedMultigraph<NodeTemplate, RelationshipTemplate> buildNodeGraph(
       Map<String, NodeTemplate> nodes, boolean checkForCycles);
 
+  public PrivateNetworkType getPrivateNetworkType(ArchiveRoot archiveRoot);
+
   public boolean isHybridDeployment(ArchiveRoot archiveRoot);
 
   public boolean isElasticClusterDeployment(ArchiveRoot archiveRoot);
-
-  public boolean isWithPrivateNetworkDeployment(ArchiveRoot archiveRoot);
 
   public boolean isMesosGpuRequired(ArchiveRoot archiveRoot);
 
@@ -263,9 +268,12 @@ public interface ToscaService {
 
   boolean isScalable(NodeTemplate nodeTemplate);
 
-  public ArchiveRoot setHybridDeployment(ArchiveRoot ar);
+  public ArchiveRoot setHybridDeployment(ArchiveRoot ar, String publicNetworkName,
+      String privateNetworkName, String privateNetworkCidr);
 
-  public ArchiveRoot setHybridUpdateDeployment(ArchiveRoot ar);
+  public ArchiveRoot setHybridUpdateDeployment(ArchiveRoot ar, 
+      String firstPublicNetworkName, String firstPrivateNetworkName, String firstPrivateNetworkCidr,
+      String publicNetworkName, String privateNetworkName, String privateNetworkCidr);
 
   public Map<NodeTemplate, Flavor> extractFlavorRequirements(ArchiveRoot parsingResult);
 

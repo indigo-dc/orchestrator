@@ -54,6 +54,7 @@ import it.reply.orchestrator.dto.policies.SlaPlacementPolicy;
 import it.reply.orchestrator.dto.policies.ToscaPolicy;
 import it.reply.orchestrator.dto.policies.ToscaPolicyFactory;
 import it.reply.orchestrator.enums.DeploymentProvider;
+import it.reply.orchestrator.enums.PrivateNetworkType;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.exception.service.ToscaException;
@@ -805,7 +806,7 @@ public class ToscaServiceImpl implements ToscaService {
       }
     }
 
-    boolean imageNameIsPresent = requiredImageMetadata.getImageName() != null;
+    boolean imageNameIsPresent = StringUtils.isNotBlank(requiredImageMetadata.getImageName());
     if (!filteredOnSomeField && imageNameIsPresent) {
       return Optional.empty();
     } else {
@@ -903,7 +904,30 @@ public class ToscaServiceImpl implements ToscaService {
             .equals(Preconditions.checkNotNull(superNodeType)))
         .isPresent();
   }
-
+  
+  @Override
+  public PrivateNetworkType getPrivateNetworkType(ArchiveRoot archiveRoot) {
+    // set private network name / cidr
+    Optional<NodeTemplate> pn = getNodesOfType(archiveRoot, ToscaConstants.Nodes.Types.NETWORK)
+        .stream()
+        .filter(node -> {
+          Optional<String> nt = ToscaUtils.extractScalar(node.getProperties(), "network_type");
+          return nt.isPresent() && (nt.get().equals("private") || nt.get().equals("isolated"));
+        }).findFirst();
+    if (pn.isPresent()) {
+      Optional<String> nt = ToscaUtils.extractScalar(pn.get().getProperties(), "network_type");
+      if (nt.isPresent()) {
+        if (nt.get().equals("private")) {
+          return PrivateNetworkType.PRIVATE;
+        }
+        if (nt.get().equals("isolated")) {
+          return PrivateNetworkType.ISOLATED;
+        }
+      }
+    }
+    return PrivateNetworkType.NONE;
+  }
+  
   @Override
   public boolean isHybridDeployment(ArchiveRoot archiveRoot) {
     // check if there is a "hybrid" ScalarPropertyValue with "true" as value
@@ -918,14 +942,6 @@ public class ToscaServiceImpl implements ToscaService {
   @Override
   public boolean isElasticClusterDeployment(ArchiveRoot archiveRoot) {
     return getNodesOfType(archiveRoot, ToscaConstants.Nodes.Types.ELASTIC_CLUSTER).size() > 0;
-  }
-
-  @Override
-  public boolean isWithPrivateNetworkDeployment(ArchiveRoot archiveRoot) {
-    return getNodesOfType(archiveRoot, ToscaConstants.Nodes.Types.NETWORK)
-        .stream()
-        .anyMatch(node -> (ToscaUtils
-            .extractScalar(node.getProperties(), "network_type") == Optional.of("private")));
   }
 
   @Override
@@ -998,6 +1014,12 @@ public class ToscaServiceImpl implements ToscaService {
     return Optional.ofNullable(oldAuth);
   }
 
+  @Override
+  public Optional<AbstractPropertyValue> getNodePropertyByName(NodeTemplate node,
+      String propertyName) {
+    return CommonUtils.getFromOptionalMap(node.getProperties(), propertyName);
+  }
+  
   @Override
   public Optional<Capability> getNodeCapabilityByName(NodeTemplate node, String capabilityName) {
     return CommonUtils.getFromOptionalMap(node.getCapabilities(), capabilityName);
@@ -1239,7 +1261,11 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
-  public ArchiveRoot setHybridDeployment(ArchiveRoot ar) {
+  public ArchiveRoot setHybridDeployment(ArchiveRoot ar,
+      String publicNetworkName,
+      String privateNetworkName,
+      String privateNetworkCidr) {
+
     // check if exist a centralpoint node, if not create it
     if (getNodesOfType(ar, ToscaConstants.Nodes.Types.CENTRAL_POINT).isEmpty()) {
       NodeTemplate cp = new NodeTemplate();
@@ -1249,27 +1275,45 @@ public class ToscaServiceImpl implements ToscaService {
       ar.getTopology().getNodeTemplates().put("indigovr_cp", cp);
     }
 
+    // set public network name
+    if (StringUtils.isNotEmpty(publicNetworkName)) {
+      Optional<NodeTemplate> pn = getNodesOfType(ar, ToscaConstants.Nodes.Types.NETWORK)
+          .stream()
+          .filter(node -> {
+            Optional<String> nt = ToscaUtils.extractScalar(node.getProperties(), "network_type");
+            return nt.isPresent() && nt.get().equals("public");
+          }).findFirst();
+      if (pn.isPresent()) {
+        pn.get().getProperties().put("network_name", new ScalarPropertyValue(publicNetworkName));
+      }    
+    }
+    
     getNodesOfType(ar, ToscaConstants.Nodes.Types.CENTRAL_POINT).stream()
         .forEach(centralPointNode -> {
           getNodesOfType(ar, ToscaConstants.Nodes.Types.ELASTIC_CLUSTER).stream()
               .forEach(elasticClusterNode -> {
                 elasticClusterNode.getRelationships().forEach((s, r) -> {
+                  // get dependency of name "lrms" -> "lmrs_front_end"
                   if (r.getRequirementName().contains("lrms")) {
                     NodeTemplate lrmsNode = ar.getTopology().getNodeTemplates().get(r.getTarget());
+                    //add requirement dependency to "indigovr_cp"
                     this.setNodeRequirement(lrmsNode, "dependency", centralPointNode.getName(),
                         REQUIREMENT_DEPENDENCY_RELATIONSHIP);
-
+                    
+                    //find "host" node in "lmrs_front_end" -> "lrms_server"
                     lrmsNode.getRelationships().forEach((s1, r1) -> {
                       if (r1.getRequirementName().contains("host")) {
                         NodeTemplate hostNode =
                             ar.getTopology().getNodeTemplates().get(r1.getTarget());
 
+                        //get lrms_server properties
                         Map<String, Capability> capabilities =
                             Optional.ofNullable(hostNode.getCapabilities())
                                 .orElseGet(() -> {
                                   hostNode.setCapabilities(new HashMap<>());
                                   return hostNode.getCapabilities();
                                 });
+                        //create "endpoint" if absent in "lrms_server"
                         Capability endpointCapability =
                             capabilities.computeIfAbsent("endpoint", key -> {
                               Capability capability = new Capability();
@@ -1281,9 +1325,11 @@ public class ToscaServiceImpl implements ToscaService {
                               endpointCapability.setProperties(new HashMap<>());
                               return endpointCapability.getProperties();
                             });
-                        endpointCapabilityProperties.put("network_name",
-                            new ScalarPropertyValue("PUBLIC"));
+                        
+                        //endpointCapabilityProperties.put("network_name",
+                        //    new ScalarPropertyValue("PUBLIC"));
 
+                        //create VPN ports on "lrms_server"
                         Map<String, Object> portProp = new HashMap<>();
                         ComplexPropertyValue portPropProperty = new ComplexPropertyValue(portProp);
                         endpointCapabilityProperties.put("ports", portPropProperty);
@@ -1293,11 +1339,40 @@ public class ToscaServiceImpl implements ToscaService {
                             new ComplexPropertyValue(openvpnProp);
                         openvpnProp.put("protocol", "udp");
                         openvpnProp.put("source", "1194");
-
                         portProp.put("openvpn", openvpnPropProperty);
+
+                        // set requirement hostName = "lrms_server" in "indigovr_cp"
                         String hostName = hostNode.getName();
                         this.setNodeRequirement(centralPointNode, "host", hostName,
                             REQUIREMENT_HOST_RELATIONSHIP);
+                        
+                        //retrieve private network node if present
+                        Optional<NodeTemplate> pn = getNodesOfType(ar, ToscaConstants.Nodes.Types.NETWORK)
+                            .stream()
+                            .filter(node -> {
+                              Optional<String> nt = ToscaUtils.extractScalar(node.getProperties(), "network_type");
+                              return nt.isPresent() && (nt.get().equals("private") || nt.get().equals("isolated"));
+                            }).findFirst();
+                        if (pn.isPresent()) {
+                          Optional<String> nt = ToscaUtils.extractScalar(pn.get().getProperties(), "network_type");
+                          if (nt.isPresent()) {
+                            if (nt.get().equals("private")) {
+                              // set private network name 
+                              pn.get().getProperties().put("network_name", new ScalarPropertyValue(privateNetworkName));
+                              // create vr_clients
+                              setHybridClients(ar);
+                            }
+                            if (nt.get().equals("isolated")) {
+                              // set private network cidr and gateway
+                              pn.get().getProperties().put("cidr", new ScalarPropertyValue(privateNetworkCidr));
+                              String gw = extractGatewayFromCidr(privateNetworkCidr);
+                              if (StringUtils.isNotEmpty(gw)) {
+                                pn.get().getProperties().put("gateway_ip", new ScalarPropertyValue(gw + "," + hostName));
+                              }
+                            }
+                          }
+                        }
+
                       }
                     });
                   }
@@ -1308,55 +1383,186 @@ public class ToscaServiceImpl implements ToscaService {
     return ar;
   }
 
+  private String extractGatewayFromCidr(String cidr) {
+    String[] parts = cidr.split("\\.");
+    if (parts.length == 4) {
+      return parts[0] + "." + parts[1] + ".0.0/16";
+    }
+    return null;
+  }
+
   @Override
-  public ArchiveRoot setHybridUpdateDeployment(ArchiveRoot ar) {
-    boolean usePrivateNetwork = isWithPrivateNetworkDeployment(ar);
+  public ArchiveRoot setHybridUpdateDeployment(
+      ArchiveRoot ar,
+      String firstPublicNetworkName,
+      String firstPrivateNetworkName,
+      String firstPrivateNetworkCidr,
+      String publicNetworkName,
+      String privateNetworkName,
+      String privateNetworkCidr) {
+
     // check if exist aToscaConstants.Nodes.Types.CENTRAL_POINT, if not create it
     if (getNodesOfType(ar, ToscaConstants.Nodes.Types.CENTRAL_POINT).isEmpty()) {
-      setHybridDeployment(ar);
+      setHybridDeployment(ar ,firstPublicNetworkName, firstPrivateNetworkName, firstPrivateNetworkCidr);
     }
-    if (!usePrivateNetwork) {
-      // check if exist a tosca.nodes.indigo.VR.Client node, if not create it
-      if (getNodesOfType(ar, ToscaConstants.Nodes.Types.CLIENT).isEmpty()) {
-        NodeTemplate vrC = new NodeTemplate();
-        vrC.setType(ToscaConstants.Nodes.Types.CLIENT);
-        vrC.setName("indigovr_client");
-        this.setNodeCapability(vrC, REQUIREMENT_DEPENDENCY_CAPABILITY, "dependency");
-        ar.getTopology().getNodeTemplates().put("indigovr_client", vrC);
-      }
-      getNodesOfType(ar, ToscaConstants.Nodes.Types.CENTRAL_POINT).stream()
-          .forEach(centralPointNode -> {
-            getNodesOfType(ar, ToscaConstants.Nodes.Types.CLIENT).stream().forEach(node -> {
-              getNodesOfType(ar, ToscaConstants.Nodes.Types.ELASTIC_CLUSTER).stream()
-                  .forEach(elasticClusterNode -> {
-                    elasticClusterNode.getRelationships().forEach((s, r) -> {
-                      if (r.getRequirementName().contains("wn")) {
-                        NodeTemplate wnNode = ar.getTopology().getNodeTemplates()
-                            .get(r.getTarget());
-                        // add requirement : dependency: nameVrClient
-                        this.setNodeRequirement(wnNode, "dependency", node.getName(),
-                            REQUIREMENT_DEPENDENCY_RELATIONSHIP);
-                        wnNode.getRelationships().forEach((s1, r1) -> {
-                          if (r1.getRequirementName().contains("host")) {
-                            // add at vrC : requirement : host : (lrms_wn)
-                            // : central_point : (indigovr_cp)
-                            this.setNodeRequirement(node, "host", r1.getTarget(),
-                                REQUIREMENT_HOST_RELATIONSHIP);
-                            this.setNodeCapability(centralPointNode, "tosca.capabilities.Endpoint",
-                                "central_point");
-                            this.setNodeRequirement(node, "central_point",
-                                centralPointNode.getName(), REQUIREMENT_DEPENDENCY_RELATIONSHIP);
-                          }
-                        });
-                      }
-                    });
-                  });
+    
+    PrivateNetworkType nt = getPrivateNetworkType(ar);
+    
+    if (nt.equals(PrivateNetworkType.PRIVATE)) {
+      setHybridClients(ar);
+    }
+
+    if (nt.equals(PrivateNetworkType.ISOLATED)) {
+      // check if exist a tosca.nodes.indigo.VR.VRouter node, if not create it
+      if (getNodesOfType(ar, ToscaConstants.Nodes.Types.VROUTER).isEmpty()) {
+        
+        Optional<NodeTemplate> centralPointNode = getNodesOfType(ar, ToscaConstants.Nodes.Types.CENTRAL_POINT)
+            .stream().findFirst();
+        if (centralPointNode.isPresent()) {
+          
+          //create compute node
+          NodeTemplate vrC = new NodeTemplate();
+          vrC.setType(ToscaConstants.Nodes.Types.COMPUTE);
+          vrC.setName("indigovr2_compute");        
+          vrC.setCapabilities(new HashMap<>());        
+          Map<String, Capability> capabilities = vrC.getCapabilities();
+          //add "endpoint"           
+          Capability endpointCapability = new Capability();
+          endpointCapability.setType("tosca.capabilities.indigo.Endpoint");
+          endpointCapability.setProperties(new HashMap<>());
+          endpointCapability.getProperties().put("dns_name", new ScalarPropertyValue(vrC.getName()));
+          capabilities.put("endpoint", endpointCapability);
+          //add host
+          Capability hostCapability = new Capability();
+          hostCapability.setType("tosca.capabilities.indigo.Container");
+          hostCapability.setProperties(new HashMap<>());
+          hostCapability.getProperties().put("num_cpus", new ScalarPropertyValue("1"));
+          hostCapability.getProperties().put("mem_size", new ScalarPropertyValue("1 GB"));
+          capabilities.put("host", hostCapability);          
+          Capability imageCapability = new Capability();
+          imageCapability.setType("tosca.capabilities.indigo.OperatingSystem");
+          imageCapability.setProperties(new HashMap<>());
+          imageCapability.getProperties().put("distribution", new ScalarPropertyValue("ubuntu"));
+          imageCapability.getProperties().put("version", new ScalarPropertyValue("16.04"));
+          imageCapability.getProperties().put("type", new ScalarPropertyValue("linux"));
+          capabilities.put("os", imageCapability);          
+          ar.getTopology().getNodeTemplates().put(vrC.getName(), vrC);
+
+          //create vrouter node
+          NodeTemplate vrR = new NodeTemplate();
+          vrR.setType(ToscaConstants.Nodes.Types.VROUTER);
+          vrR.setName("indigovr2_router");
+          this.setNodeCapability(vrR, REQUIREMENT_DEPENDENCY_CAPABILITY, "dependency");
+          ar.getTopology().getNodeTemplates().put(vrR.getName(), vrR);
+          this.setNodeRequirement(vrR, "central_point", centralPointNode.get().getName(),
+              REQUIREMENT_DEPENDENCY_RELATIONSHIP);
+          this.setNodeRequirement(vrR, "host", vrC.getName(),
+              REQUIREMENT_HOST_RELATIONSHIP);  
+          
+          //create private network
+          NodeTemplate vrN = new NodeTemplate();
+          vrN.setType(ToscaConstants.Nodes.Types.NETWORK);
+          vrN.setName("priv2_network");
+          vrN.setProperties(new HashMap<>());
+          vrN.getProperties().put("network_name", new ScalarPropertyValue("isolated"));
+          vrN.getProperties().put("cidr", new ScalarPropertyValue(privateNetworkCidr));
+          String gw = extractGatewayFromCidr(privateNetworkCidr);
+          if (StringUtils.isNotEmpty(gw)) {
+            vrN.getProperties().put("gateway_ip", new ScalarPropertyValue(gw + "," + vrC.getName()));
+          }          
+          ar.getTopology().getNodeTemplates().put(vrN.getName(), vrN);
+          
+          //create port for computenode
+          NodeTemplate vrCP = new NodeTemplate();
+          vrCP.setType(ToscaConstants.Nodes.Types.PORT);
+          vrCP.setName("indigovr2_compute_port");
+          vrCP.setProperties(new HashMap<>());
+          vrCP.getProperties().put("order", new ScalarPropertyValue("0"));
+          this.setNodeCapability(vrCP, REQUIREMENT_DEPENDENCY_CAPABILITY, "dependency");
+          ar.getTopology().getNodeTemplates().put(vrCP.getName(), vrCP);
+          this.setNodeRequirement(vrCP, "binding", vrC.getName(),
+              REQUIREMENT_DEPENDENCY_RELATIONSHIP);
+          this.setNodeRequirement(vrCP, "link", vrN.getName(),
+              REQUIREMENT_DEPENDENCY_RELATIONSHIP);  
+          
+          //create port for wnodes
+          NodeTemplate vrNP = new NodeTemplate();
+          vrNP.setType(ToscaConstants.Nodes.Types.PORT);
+          vrNP.setName("wn_priv2_port");
+          vrNP.setProperties(new HashMap<>());
+          vrNP.getProperties().put("order", new ScalarPropertyValue("0"));
+          this.setNodeCapability(vrNP, REQUIREMENT_DEPENDENCY_CAPABILITY, "dependency");
+          ar.getTopology().getNodeTemplates().put(vrNP.getName(), vrCP);
+          this.setNodeRequirement(vrNP, "binding", "lrms_wn",
+              REQUIREMENT_DEPENDENCY_RELATIONSHIP);
+          this.setNodeRequirement(vrNP, "link", vrN.getName(),
+              REQUIREMENT_DEPENDENCY_RELATIONSHIP);    
+          
+          //add  vrouter dependency to wnodes
+          
+          getNodesOfType(ar, ToscaConstants.Nodes.Types.ELASTIC_CLUSTER).stream()
+          .forEach(elasticClusterNode -> {
+            elasticClusterNode.getRelationships().forEach((s, r) -> {
+              if (r.getRequirementName().contains("wn")) {
+                NodeTemplate wnNode = ar.getTopology().getNodeTemplates()
+                    .get(r.getTarget());
+                // add requirement : dependency: crouter2
+                this.setNodeRequirement(wnNode, "dependency", vrR.getName(),
+                    REQUIREMENT_DEPENDENCY_RELATIONSHIP);
+              }
             });
-          });
-    } else {
-      //create VRouter here
+          });          
+          
+          
+          
+          
+          
+          
+        }
+      }
     }
-    LOG.debug(this.getTemplateFromTopology(ar));
+    LOG.debug(this.getTemplateFromTopology(ar));    
+    return ar;
+  }
+    
+  private ArchiveRoot setHybridClients(ArchiveRoot ar) {
+    // check if exist a tosca.nodes.indigo.VR.Client node, if not create it
+    if (getNodesOfType(ar, ToscaConstants.Nodes.Types.CLIENT).isEmpty()) {
+      NodeTemplate vrC = new NodeTemplate();
+      vrC.setType(ToscaConstants.Nodes.Types.CLIENT);
+      vrC.setName("indigovr_client");
+      this.setNodeCapability(vrC, REQUIREMENT_DEPENDENCY_CAPABILITY, "dependency");
+      ar.getTopology().getNodeTemplates().put(vrC.getName(), vrC);
+    }
+    getNodesOfType(ar, ToscaConstants.Nodes.Types.CENTRAL_POINT).stream()
+        .forEach(centralPointNode -> {
+          getNodesOfType(ar, ToscaConstants.Nodes.Types.CLIENT).stream().forEach(node -> {
+            getNodesOfType(ar, ToscaConstants.Nodes.Types.ELASTIC_CLUSTER).stream()
+                .forEach(elasticClusterNode -> {
+                  elasticClusterNode.getRelationships().forEach((s, r) -> {
+                    if (r.getRequirementName().contains("wn")) {
+                      NodeTemplate wnNode = ar.getTopology().getNodeTemplates()
+                          .get(r.getTarget());
+                      // add requirement : dependency: nameVrClient
+                      this.setNodeRequirement(wnNode, "dependency", node.getName(),
+                          REQUIREMENT_DEPENDENCY_RELATIONSHIP);
+                      wnNode.getRelationships().forEach((s1, r1) -> {
+                        if (r1.getRequirementName().contains("host")) {
+                          // add at vrC : requirement : host : (lrms_wn)
+                          // : central_point : (indigovr_cp)
+                          this.setNodeRequirement(node, "host", r1.getTarget(),
+                              REQUIREMENT_HOST_RELATIONSHIP);
+                          this.setNodeCapability(centralPointNode, "tosca.capabilities.Endpoint",
+                              "central_point");
+                          this.setNodeRequirement(node, "central_point",
+                              centralPointNode.getName(), REQUIREMENT_DEPENDENCY_RELATIONSHIP);
+                        }
+                      });
+                    }
+                  });
+                });
+          });
+        });
     return ar;
   }
 
