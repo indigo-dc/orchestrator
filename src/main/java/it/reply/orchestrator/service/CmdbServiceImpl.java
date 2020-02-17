@@ -287,16 +287,16 @@ public class CmdbServiceImpl implements CmdbService {
           return cloudService;
         })
         .collect(Collectors.toMap(CloudService::getId, Function.identity()));
-    
-//        services.put(providerId+"_kuberServiceId123", KubernetesService.kubernetesBuilder()
-//        .id(providerId+"kuberServiceId123")
-//        .providerId(providerId)
-//        .serviceType(CloudService.KUBERNETES_COMPUTE_SERVICE)
-//        .type(CloudServiceType.COMPUTE)
-//        .hostname("localhost:8001")
-//        .endpoint("localhost:8001")
-//        .build());
-        
+
+    //services.put(providerId+"_kuberServiceId123", KubernetesService.kubernetesBuilder()
+    //.id(providerId+"kuberServiceId123")
+    //.providerId(providerId)
+    //.serviceType(CloudService.KUBERNETES_COMPUTE_SERVICE)
+    //.type(CloudServiceType.COMPUTE)
+    //.hostname("localhost:8001")
+    //.endpoint("localhost:8001")
+    //.build());
+
     provider.setServices(services);
     return provider;
   }

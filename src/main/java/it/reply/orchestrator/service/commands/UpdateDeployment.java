@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,9 @@ import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.cmdb.CloudService;
-import it.reply.orchestrator.dto.cmdb.CloudServiceType;
-import it.reply.orchestrator.dto.cmdb.KubernetesService;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
-import it.reply.orchestrator.dto.workflow.CloudServiceWf;
 import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.Status;
@@ -36,7 +33,6 @@ import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.WorkflowConstants;
 import it.reply.orchestrator.utils.WorkflowConstants.ErrorCode;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -49,8 +45,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-
-import antlr.collections.List;
 
 /**
  * Choose Cloud Provider and update Deployment/Message with the selected one data.
@@ -72,20 +66,7 @@ public class UpdateDeployment extends BaseDeployCommand {
             RankCloudProvidersMessage.class);
 
     CloudServicesOrderedIterator servicesIt = deploymentMessage.getCloudServicesOrderedIterator();
-    
-//    ArrayList<CloudService> k = new ArrayList<CloudService>();
-//    
-//    k.add(KubernetesService.kubernetesBuilder()
-//          .id("localhost_kuberServiceId123")
-//          .providerId("localhost")
-//          .serviceType(CloudService.KUBERNETES_COMPUTE_SERVICE)
-//          .type(CloudServiceType.COMPUTE)
-//          .hostname("localhost:8001")
-//          .endpoint("localhost:8001")
-//          .build());
-//    
-//    servicesIt = new CloudServicesOrderedIterator(k);
-    
+
     if (servicesIt == null) {
       servicesIt = cloudProviderEndpointService
           .generateCloudProvidersOrderedIterator(rankCloudProvidersMessage,

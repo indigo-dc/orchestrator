@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ package it.reply.orchestrator.dto.cmdb;
 import static it.reply.orchestrator.dto.cmdb.CloudService.AWS_COMPUTE_SERVICE;
 import static it.reply.orchestrator.dto.cmdb.CloudService.AZURE_COMPUTE_SERVICE;
 import static it.reply.orchestrator.dto.cmdb.CloudService.CHRONOS_COMPUTE_SERVICE;
+import static it.reply.orchestrator.dto.cmdb.CloudService.KUBERNETES_COMPUTE_SERVICE;
 import static it.reply.orchestrator.dto.cmdb.CloudService.MARATHON_COMPUTE_SERVICE;
 import static it.reply.orchestrator.dto.cmdb.CloudService.OCCI_COMPUTE_SERVICE;
 import static it.reply.orchestrator.dto.cmdb.CloudService.OPENNEBULA_COMPUTE_SERVICE;
@@ -26,7 +27,6 @@ import static it.reply.orchestrator.dto.cmdb.CloudService.OPENNEBULA_TOSCA_SERVI
 import static it.reply.orchestrator.dto.cmdb.CloudService.OPENSTACK_COMPUTE_SERVICE;
 import static it.reply.orchestrator.dto.cmdb.CloudService.OTC_COMPUTE_SERVICE;
 import static it.reply.orchestrator.dto.cmdb.CloudService.QCG_COMPUTE_SERVICE;
-import static it.reply.orchestrator.dto.cmdb.CloudService.KUBERNETES_COMPUTE_SERVICE;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.fasterxml.jackson.databind.DatabindContext;
