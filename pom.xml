@@ -66,7 +66,7 @@
     <license-maven-plugin.version>3.0</license-maven-plugin.version>
     <jacoco-maven-plugin.version>0.8.2</jacoco-maven-plugin.version>
     <checkstyle-plugin.version>3.1.0</checkstyle-plugin.version>
-    <puppycrawl-tools-checkstyle.version>8.24</puppycrawl-tools-checkstyle.version>
+    <puppycrawl-tools-checkstyle.version>8.29</puppycrawl-tools-checkstyle.version>
     <editorconfig-maven-plugin.version>0.0.10</editorconfig-maven-plugin.version>
 
     <!-- Dependencies -->
