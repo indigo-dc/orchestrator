@@ -174,6 +174,10 @@ The Orchestrator allows, during the deployment of a Marathon service, to use a V
     * **Format**: http://{host}:{port}
     * **Default value**: none
     * **Example value**: https://vault.cloud.ba.infn.it:8200
+    
+  * `VAULT_ROLE`
+    * **Description**: The jwt role (defined by the Vault admin) that the orchestrator will use to authenticate in Vault 
+    * **Default value**: none
 
 The Vault server has to provide the following configurations:
 - Key/Value Secrets Engine Version 1 enabled on path `secret/`;
