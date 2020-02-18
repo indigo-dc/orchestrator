@@ -39,6 +39,7 @@ import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.ToscaServiceTest;
 import it.reply.orchestrator.service.VaultService;
 import it.reply.orchestrator.util.TestUtil;
+import it.reply.orchestrator.utils.CommonUtils;
 
 import java.io.IOException;
 import java.net.URI;
@@ -91,6 +92,10 @@ public class KubernetesServiceTest extends ToscaParserAwareTest {
         .when(oauth2tokenService.executeWithClientForResult(
             Mockito.any(), Mockito.any(), Mockito.any()))
         .thenAnswer(y -> ((ThrowingFunction) y.getArguments()[1]).apply("token"));
+    
+    Mockito
+        .when(oauth2tokenService.getAccessToken(Mockito.any()))
+        .thenAnswer(y -> ((ThrowingFunction) y.getArguments()[1]).apply("token"));
   }
 
   @Test
@@ -110,6 +115,9 @@ public class KubernetesServiceTest extends ToscaParserAwareTest {
     Mockito
         .when(vaultService.getServiceUri())
         .thenReturn(Optional.of(new URI(defaultVaultEndpoint)));
+//    Mockito
+//        .when(marathonClientFactory.build(deployment.getCloudProviderEndpoint(), "token"))
+//        .thenReturn(marathonClient);
     Assertions
         .assertThat(kubernetesServiceImpl.doDeploy(dm))
         .isTrue();

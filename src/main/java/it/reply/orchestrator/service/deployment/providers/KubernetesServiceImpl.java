@@ -16,6 +16,8 @@
 
 package it.reply.orchestrator.service.deployment.providers;
 
+import alien4cloud.tosca.model.ArchiveRoot;
+
 import io.kubernetes.client.custom.Quantity;
 import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
@@ -24,8 +26,11 @@ import io.kubernetes.client.openapi.Configuration;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.kubernetes.client.openapi.models.V1Container;
+import io.kubernetes.client.openapi.models.V1ContainerBuilder;
 import io.kubernetes.client.openapi.models.V1Deployment;
 import io.kubernetes.client.openapi.models.V1DeploymentBuilder;
+import io.kubernetes.client.openapi.models.V1DeploymentSpec;
+import io.kubernetes.client.openapi.models.V1DeploymentSpecBuilder;
 import io.kubernetes.client.openapi.models.V1Namespace;
 import io.kubernetes.client.openapi.models.V1Pod;
 import io.kubernetes.client.openapi.models.V1PodList;
@@ -33,8 +38,6 @@ import io.kubernetes.client.openapi.models.V1ResourceRequirements;
 import io.kubernetes.client.openapi.models.V1ResourceRequirementsBuilder;
 import io.kubernetes.client.openapi.models.V1Status;
 import io.kubernetes.client.util.Config;
-
-import alien4cloud.tosca.model.ArchiveRoot;
 
 import it.reply.orchestrator.annotation.DeploymentProviderQualifier;
 import it.reply.orchestrator.dal.entity.Deployment;
@@ -48,9 +51,9 @@ import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.function.ThrowingConsumer;
 import it.reply.orchestrator.function.ThrowingFunction;
 import it.reply.orchestrator.service.IndigoInputsPreProcessorService;
+import it.reply.orchestrator.service.IndigoInputsPreProcessorService.RuntimeProperties;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.VaultService;
-import it.reply.orchestrator.service.IndigoInputsPreProcessorService.RuntimeProperties;
 import it.reply.orchestrator.service.deployment.providers.factory.KubernetesClientFactory;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
@@ -67,18 +70,11 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import javax.ws.rs.client.ClientBuilder;
-
 import lombok.extern.slf4j.Slf4j;
-
-import mesosphere.marathon.client.Marathon;
-import mesosphere.marathon.client.MarathonException;
-import mesosphere.marathon.client.model.v2.App;
 
 import org.alien4cloud.tosca.model.templates.NodeTemplate;
 import org.alien4cloud.tosca.model.templates.RelationshipTemplate;
 import org.alien4cloud.tosca.model.templates.Topology;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jgrapht.graph.DirectedMultigraph;
 import org.jgrapht.traverse.TopologicalOrderIterator;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -91,7 +87,7 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
 
   //  @Autowired
   //  private KubernetesClientFactory kubernetesClientFactory;
-  
+
   @Autowired
   private IndigoInputsPreProcessorService indigoInputsPreProcessorService;
 
@@ -101,22 +97,22 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
   @Autowired
   private OAuth2TokenService oauth2TokenService;
 
-//  protected <R> R executeWithClientForResult(CloudProviderEndpoint cloudProviderEndpoint,
-//      @Nullable OidcTokenId requestedWithToken,
-//      ThrowingFunction<ApiClient, R, ApiException> function) throws ApiException {
-//    return oauth2TokenService.executeWithClientForResult(requestedWithToken,
-//        token -> function.apply(kubernetesClientFactory.build(cloudProviderEndpoint, token)),
-//        ex -> ex instanceof ApiException && ((ApiException) ex).getCode() == 401);
-//  }
-//
-//  protected void executeWithClient(CloudProviderEndpoint cloudProviderEndpoint,
-//      @Nullable OidcTokenId requestedWithToken,
-//      ThrowingConsumer<ApiClient, ApiException> consumer) throws ApiException {
-//    executeWithClientForResult(cloudProviderEndpoint, requestedWithToken,
-//        client -> consumer.asFunction().apply(client));
-//  }
-  
-  //TODO if needed 
+  //  protected <R> R executeWithClientForResult(CloudProviderEndpoint cloudProviderEndpoint,
+  //      @Nullable OidcTokenId requestedWithToken,
+  //      ThrowingFunction<ApiClient, R, ApiException> function) throws ApiException {
+  //    return oauth2TokenService.executeWithClientForResult(requestedWithToken,
+  //        token -> function.apply(kubernetesClientFactory.build(cloudProviderEndpoint, token)),
+  //        ex -> ex instanceof ApiException && ((ApiException) ex).getCode() == 401);
+  //  }
+  //
+  //  protected void executeWithClient(CloudProviderEndpoint cloudProviderEndpoint,
+  //      @Nullable OidcTokenId requestedWithToken,
+  //      ThrowingConsumer<ApiClient, ApiException> consumer) throws ApiException {
+  //    executeWithClientForResult(cloudProviderEndpoint, requestedWithToken,
+  //        client -> consumer.asFunction().apply(client));
+  //  }
+
+  //TODO if needed
   protected ArchiveRoot prepareTemplate(Deployment deployment,
       DeploymentMessage deploymentMessage) {
     RuntimeProperties runtimeProperties =
@@ -130,7 +126,7 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     }
     return ar;
   }
-  
+
   protected void createX(DeploymentMessage deploymentMessage, OidcTokenId requestedWithToken) {
     Deployment deployment = getDeployment(deploymentMessage);
     ArchiveRoot ar = prepareTemplate(deployment, deploymentMessage);
@@ -150,8 +146,26 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
         .iteratorToStream(orderIterator)
         .filter(node -> toscaService.isOfToscaType(node, ToscaConstants.Nodes.Types.KUBERNETES))
         .collect(Collectors.toList());
-    
+
     List<V1Container> containers = new ArrayList<>();
+    
+    Map<String, Quantity> requestsRes = new HashMap<String, Quantity>();
+    /*The expression 0.1 is equivalent to the expression 100m,
+     *which can be read as “one hundred millicpu”.*/
+    requestsRes.put("cpu", new Quantity("32Mi"));
+    requestsRes.put("memory", new Quantity("100m"));
+    
+    Map<String, Quantity> limitRes = new HashMap<String, Quantity>();
+    limitRes.put("cpu", new Quantity("64Mi"));
+    limitRes.put("memory", new Quantity("200m"));
+    
+    V1ResourceRequirements resources = new V1ResourceRequirementsBuilder()
+        .withRequests(requestsRes)
+        .withLimits(limitRes)
+        .build();
+    
+    V1DeploymentSpec spec = new V1DeploymentSpec();
+    V1ContainerBuilder cont = new V1ContainerBuilder().withResources(resources);
   }
 
   @Override
@@ -160,7 +174,7 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     V1Deployment outDepl = new V1Deployment();
 
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
-    String accessToken = 
+    String accessToken =
         oauth2TokenService.getAccessToken(CommonUtils.checkNotNull(requestedWithToken));
 
     try {
@@ -171,16 +185,12 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
           deploymentMessage.getChosenCloudProviderEndpoint().getCpEndpoint(), accessToken);
 
       AppsV1Api app = new AppsV1Api(client);
-
       String name = deployment.getId();
-      Map res = new HashMap<String, Quantity> ();
-      V1ResourceRequirements resources = new V1ResourceRequirementsBuilder()
-          .withRequests(res)
-          .build();
+ 
 
-      /* note , cpu and ram are shared between all containers in the pod 
+      /* note , cpu and ram are shared between all containers in the pod
        * so it is enought difine it once*/
-          
+
       //TODO manage needed field for deployment and get them from DeploymentMessage
       V1Deployment v1Deployment = new V1DeploymentBuilder()
           .withApiVersion("apps/v1")
@@ -201,7 +211,6 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
                       .addNewContainer()
                           .withImage("nginx:1.7.9")
                           .withName("nginx")
-                          .withResources(resources)
                           .addNewPort()
                               .withContainerPort(80)
                           .endPort()
@@ -222,14 +231,14 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
 
     } catch (ApiException e) {
       LOG.error("Error in doUndeploy:" + e.getCode() + " - " + e.getMessage());
-    } 
-//    catch (IOException e) {
-//      LOG.error("Error in doUndeploy:" + e.getCause() + " - " + e.getMessage());
-//    }
+    }
+    //    catch (IOException e) {
+    //      LOG.error("Error in doUndeploy:" + e.getCause() + " - " + e.getMessage());
+    //    }
 
     LOG.info("Creating Kubernetes App Group for deployment {} with definition:\n{}",
         deployment.getId(), outDepl.getMetadata().getName());
-   
+
     return true;
   }
 
@@ -312,15 +321,15 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     try {
       app = new AppsV1Api(Config.defaultClient());
 
-//      ApiResponse<V1Status> response = app.deleteNamespacedDeploymentWithHttpInfo(
-//          deployment.getId(),
-//          "default",
-//          "true",
-//          null,
-//          null,
-//          null,
-//          null,
-//          null);
+      //      ApiResponse<V1Status> response = app.deleteNamespacedDeploymentWithHttpInfo(
+      //          deployment.getId(),
+      //          "default",
+      //          "true",
+      //          null,
+      //          null,
+      //          null,
+      //          null,
+      //          null);
       V1Status status = app.deleteNamespacedDeployment(
           deployment.getId(),
           "default",
