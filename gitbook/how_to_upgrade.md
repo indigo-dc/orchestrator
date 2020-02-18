@@ -104,4 +104,4 @@ The following steps are necessary for the upgrade:
 
 - add the 'admingroup' property (mandatory) to iam-properties in `application.yml` (see [Configure IAM integration](how_to_deploy.md#configure-iam-integration-optional)).
 
-Please note that, starting from this release, the Orchestrator can interact with providers not integrated with IAM getting the user's credentials from Vault. In order to exploit this new functionality you need to configure the integration with Vault as explained in the section [Configure Vault (optional)](how_to_deploy.md#configure-vault-optional) 
+Please note that, starting from this release, the Orchestrator can interact with providers not integrated with IAM getting the user's credentials from Vault. In order to exploit this new functionality you need to configure the integration with Vault as explained in the section [Configure Vault (optional)](how_to_deploy.md#configure-vault-optional)
