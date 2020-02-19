@@ -38,6 +38,7 @@ import it.reply.orchestrator.function.ThrowingFunction;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.ToscaServiceTest;
 import it.reply.orchestrator.service.VaultService;
+import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.util.TestUtil;
 import it.reply.orchestrator.utils.CommonUtils;
 
@@ -62,6 +63,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 
+import io.kubernetes.client.util.Config;
 import junitparams.JUnitParamsRunner;
 
 @RunWith(JUnitParamsRunner.class)
@@ -83,6 +85,9 @@ public class KubernetesServiceTest extends ToscaParserAwareTest {
   @MockBean
   private VaultService vaultService;
 
+  @SpyBean
+  private Config config;
+
   private static final String defaultVaultEndpoint = "https://default.vault.com:8200";
 
   @Before
@@ -91,10 +96,6 @@ public class KubernetesServiceTest extends ToscaParserAwareTest {
     Mockito
         .when(oauth2tokenService.executeWithClientForResult(
             Mockito.any(), Mockito.any(), Mockito.any()))
-        .thenAnswer(y -> ((ThrowingFunction) y.getArguments()[1]).apply("token"));
-    
-    Mockito
-        .when(oauth2tokenService.getAccessToken(Mockito.any()))
         .thenAnswer(y -> ((ThrowingFunction) y.getArguments()[1]).apply("token"));
   }
 
@@ -109,15 +110,11 @@ public class KubernetesServiceTest extends ToscaParserAwareTest {
     csi.next();
     dm.setCloudServicesOrderedIterator(csi);
 
+
     Mockito
         .when(deploymentRepository.findOne(deployment.getId()))
         .thenReturn(deployment);
-    Mockito
-        .when(vaultService.getServiceUri())
-        .thenReturn(Optional.of(new URI(defaultVaultEndpoint)));
-//    Mockito
-//        .when(marathonClientFactory.build(deployment.getCloudProviderEndpoint(), "token"))
-//        .thenReturn(marathonClient);
+
     Assertions
         .assertThat(kubernetesServiceImpl.doDeploy(dm))
         .isTrue();
