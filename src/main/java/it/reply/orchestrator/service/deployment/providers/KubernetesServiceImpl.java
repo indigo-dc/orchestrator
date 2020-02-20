@@ -37,12 +37,6 @@ import io.kubernetes.client.openapi.models.V1ResourceRequirementsBuilder;
 import io.kubernetes.client.openapi.models.V1Status;
 import io.kubernetes.client.util.Config;
 
-import it.infn.ba.deep.qcg.client.model.Job;
-import it.infn.ba.deep.qcg.client.model.JobDescription;
-import it.infn.ba.deep.qcg.client.model.JobDescriptionExecution;
-import it.infn.ba.deep.qcg.client.model.JobWorkingDirectoryPolicy;
-import it.infn.ba.deep.qcg.client.model.RemoveConditionCreateMode;
-import it.infn.ba.deep.qcg.client.model.RemoveConditionWhen;
 import it.reply.orchestrator.annotation.DeploymentProviderQualifier;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
@@ -52,16 +46,16 @@ import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.kubernetes.KubernetesContainer;
 import it.reply.orchestrator.dto.kubernetes.KubernetesTask;
+import it.reply.orchestrator.dto.mesos.MesosContainer;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.exception.service.BusinessWorkflowException;
 import it.reply.orchestrator.exception.service.DeploymentException;
-import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.service.IndigoInputsPreProcessorService;
 import it.reply.orchestrator.service.IndigoInputsPreProcessorService.RuntimeProperties;
-import it.reply.orchestrator.service.deployment.providers.QcgServiceImpl.DeepJob;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
+import it.reply.orchestrator.utils.EnumUtils;
 import it.reply.orchestrator.utils.OneDataUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 import it.reply.orchestrator.utils.ToscaUtils;
@@ -84,12 +78,13 @@ import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.alien4cloud.tosca.model.definitions.DeploymentArtifact;
 import org.alien4cloud.tosca.model.templates.Capability;
 import org.alien4cloud.tosca.model.templates.NodeTemplate;
 import org.alien4cloud.tosca.model.templates.RelationshipTemplate;
 import org.alien4cloud.tosca.model.templates.Topology;
-import org.alien4cloud.tosca.normative.types.BooleanType;
 import org.alien4cloud.tosca.normative.types.FloatType;
+import org.alien4cloud.tosca.normative.types.StringType;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jgrapht.graph.DirectedMultigraph;
 import org.jgrapht.traverse.TopologicalOrderIterator;
@@ -117,25 +112,9 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
   private ResourceRepository resourceRepository;
 
   private static CoreV1Api COREV1_API;
-  
+
   private static final String HOST_CAPABILITY_NAME = "host";
 
-  //  protected <R> R executeWithClientForResult(CloudProviderEndpoint cloudProviderEndpoint,
-  //      @Nullable OidcTokenId requestedWithToken,
-  //      ThrowingFunction<ApiClient, R, ApiException> function) throws ApiException {
-  //    return oauth2TokenService.executeWithClientForResult(requestedWithToken,
-  //        token -> function.apply(kubernetesClientFactory.build(cloudProviderEndpoint, token)),
-  //        ex -> ex instanceof ApiException && ((ApiException) ex).getCode() == 401);
-  //  }
-  //
-  //  protected void executeWithClient(CloudProviderEndpoint cloudProviderEndpoint,
-  //      @Nullable OidcTokenId requestedWithToken,
-  //      ThrowingConsumer<ApiClient, ApiException> consumer) throws ApiException {
-  //    executeWithClientForResult(cloudProviderEndpoint, requestedWithToken,
-  //        client -> consumer.asFunction().apply(client));
-  //  }
-
-  //TODO if needed
   protected ArchiveRoot prepareTemplate(Deployment deployment,
       DeploymentMessage deploymentMessage) {
     RuntimeProperties runtimeProperties =
@@ -150,8 +129,7 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     return ar;
   }
 
-  protected List<DeepKubernetesContainer> getContanersList(DeploymentMessage deploymentMessage,
-      OidcTokenId requestedWithToken) {
+  protected V1Deployment createV1Deployment(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
     ArchiveRoot ar = prepareTemplate(deployment, deploymentMessage);
 
@@ -176,10 +154,13 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
             ToscaConstants.Nodes.Types.KUBERNETES))
         .collect(Collectors.toMap(Resource::getToscaNodeName, res -> res));
 
-    LinkedHashMap<String, KubernetesTask> containersByKuberNode = new LinkedHashMap<String, KubernetesTask>();
+    LinkedHashMap<String, KubernetesTask> containersByKuberNode =
+        new LinkedHashMap<String, KubernetesTask>();
 
-    List<DeepKubernetesContainer> containersList = new ArrayList<>();
-    
+    List<DeepKubernetesDeployment> deploymentList = new ArrayList<>();
+
+    V1Deployment kubernetesDeployment = new V1Deployment();
+
     for (NodeTemplate kuberNode : orderedKubernetesApps) {
 
       Resource kuberResource = resources.get(kuberNode.getName());
@@ -187,23 +168,21 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
         kuberResource.setIaasId(kuberResource.getId());
         return kuberResource.getIaasId();
       });
-      
-      
+
       KubernetesTask kuberTask = buildTask(graph, kuberNode, id);
       containersByKuberNode.put(kuberNode.getName(), kuberTask);
 
-      V1Deployment kubernetesContainer = generateExternalTaskRepresentation(kuberTask);
-      DeepKubernetesContainer deepV1Container = new DeepKubernetesContainer(kubernetesContainer, kuberNode.getName());
-      containersList.add(deepV1Container);
-      
-      List<Resource> requestsRes = resourceRepository
-          .findByToscaNodeNameAndDeployment_id(kuberNode.getName(), deployment.getId());
+      kubernetesDeployment = generateExternalTaskRepresentation(kuberTask, deployment.getId());
+
+      DeepKubernetesDeployment deepV1Deployment =
+          new DeepKubernetesDeployment(kubernetesDeployment, kuberNode.getName());
+      deploymentList.add(deepV1Deployment);
 
     }
 
-    return containersList;
+    return kubernetesDeployment;
   }
-  
+
   /**
    * Build a Kubernetes task object.
    * @param graph the input nodegraph.
@@ -222,29 +201,124 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     // TODO MAP ALL PROPETIES FROM TOSCA
 
     Capability containerCapability = getHostCapability(graph, taskNode);
-    
-    ToscaUtils
-      .extractScalar(containerCapability.getProperties(), "num_cpus", FloatType.class)
-      .ifPresent(kubernetesTask::setCpus);
 
+    ToscaUtils
+      .extractList(containerCapability.getProperties(),
+          "container",
+          KubernetesContainer.class::cast)
+      .ifPresent(kubernetesTask::setContainers);
+
+    DeploymentArtifact image = toscaService
+        .getNodeArtifactByName(taskNode, "image")
+        .orElseThrow(() -> new IllegalArgumentException(
+            String.format("<image> artifact not found in node <%s> of type <%s>",
+                taskNode.getName(), taskNode.getType())));
+    // <image> artifact type check
+    List<String> supportedTypes = EnumUtils
+        .toList(MesosContainer.Type.class, MesosContainer.Type::getToscaName);
+
+    KubernetesContainer.Type containerType = EnumUtils
+        .fromPredicate(KubernetesContainer.Type.class,
+            enumItem -> enumItem.getToscaName().equals(image.getArtifactType()))
+        .orElseThrow(() -> new IllegalArgumentException(String.format(
+            "Unsupported artifact type for <image> artifact in node <%s> of type <%s>."
+                + " Given <%s>, supported <%s>",
+            taskNode, taskNode.getType(), image.getArtifactType(), supportedTypes)));
+
+    KubernetesContainer container = new KubernetesContainer(containerType);
+
+    String imageName = Optional
+        .ofNullable(image.getArtifactRef())
+        .orElseThrow(() ->
+            new IllegalArgumentException(
+                "<file> field for <image> artifact in node <" + taskNode.getName()
+                    + "> must be provided")
+        );
+
+    container.setImage(imageName);
+
+    kubernetesTask.setContainer(container);
+
+    /* TODO
+     * cpu and memory in Kubernetes Container are rappresented as Quantity.class,
+     *
+     * The expression 0.1 is equivalent to the expression 100m,
+     * which can be read as “one hundred millicpu”. */
+
+    ToscaUtils
+       .extractScalar(containerCapability.getProperties(), "num_cpus", StringType.class)
+       .ifPresent(kubernetesTask::setCpu);
+
+    /* Limits and requests for memory are measured in bytes.
+     * You can express memory as a plain integer or as a fixed-point integer
+     * using one of these suffixes: E, P, T, G, M, K.
+     * You can also use the power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki.*/
+
+    ToscaUtils
+      .extractScalar(containerCapability.getProperties(), "mem_size", StringType.class)
+      .ifPresent(kubernetesTask::setMemory);
+
+    ToscaUtils
+      .extractScalar(containerCapability.getProperties(), "replicas", FloatType.class)
+      .ifPresent(kubernetesTask::setReplicas);
 
     return kubernetesTask;
   }
-  
-  protected V1Deployment generateExternalTaskRepresentation(KubernetesTask kubernetesTask) {
+
+  protected V1Deployment generateExternalTaskRepresentation(KubernetesTask kubernetesTask,
+      String deploymentId) {
 
     V1Deployment v1Deployment = new V1Deployment();
 
     v1Deployment.setApiVersion("apps/v1");
-    //(kubernetesTask.getId());
-//    if (qcgjob.getAttributes() != null) {
-//      job.setAttributes((HashMap<String, String>) ((HashMap<String, String>)
-//          qcgjob.getAttributes()).clone());
-//    }
-//    job.setUser(qcgjob.getUser());
-//    job.setState(qcgjob.getState());
-//    job.setOperation(qcgjob.getOperation());
-//    job.setNote(qcgjob.getNote());
+    v1Deployment.setKind("Deployment");
+
+    Map<String, Quantity> requestsRes = new HashMap<String, Quantity>();
+
+    //TODO cpu and ram to string and not quantity maybe
+    requestsRes.put("cpu", new Quantity(kubernetesTask.getCpu()));
+    requestsRes.put("memory", new Quantity(kubernetesTask.getMemory()));
+
+    Map<String, Quantity> limitRes = new HashMap<String, Quantity>();
+    limitRes.put("cpu", new Quantity(kubernetesTask.getCpu()));
+    limitRes.put("memory", new Quantity(kubernetesTask.getMemory()));
+
+    List<V1Container> v1Containers = new ArrayList<V1Container>();
+    for (KubernetesContainer cont : kubernetesTask.getContainers()) {
+      V1Container contV1 = new V1ContainerBuilder()
+          .withName(cont.getType().getName())
+          .withImage(cont.getImage())
+          .withNewResources()
+            .withRequests(requestsRes)
+          .endResources()
+          .addNewPort()
+            .withContainerPort(cont.getPort())
+          .endPort()
+          .build();
+      v1Containers.add(contV1);
+    }
+
+    V1Deployment v1Deployment2 = new V1DeploymentBuilder()
+        .withApiVersion("apps/v1")
+        .withKind("Deployment")
+        .withNewMetadata()
+            .withName(kubernetesTask.getId())
+        .endMetadata()
+        .withNewSpec()
+            .withReplicas(kubernetesTask.getReplicas().intValue()) /*TODO check if good value*/
+            .withNewSelector()
+                .addToMatchLabels("app", kubernetesTask.getToscaNodeName())
+            .endSelector()
+            .withNewTemplate()
+                .withNewMetadata()
+                    .addToLabels("app", kubernetesTask.getToscaNodeName())
+                .endMetadata()
+                .withNewSpec()
+                  .addAllToContainers(v1Containers)
+                .endSpec()
+            .endTemplate()
+        .endSpec()
+        .build();
 
     return v1Deployment;
   }
@@ -261,72 +335,6 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     }
     return new AppsV1Api(client);
     //TODO manage ApiException or throw some exception
-  }
-
-  private V1Deployment createV1Deployment(DeploymentMessage deploymentMessage) {
-    /* note , cpu and ram are shared between all containers in the pod
-     * so it is enought difine it once*/
-
-    //TODO manage needed field for deployment and get them from DeploymentMessage
-    List<V1Container> containers = new ArrayList<>();
-
-    Map<String, Quantity> requestsRes = new HashMap<String, Quantity>();
-    /*The expression 0.1 is equivalent to the expression 100m,
-     *which can be read as “one hundred millicpu”.*/
-    requestsRes.put("cpu", new Quantity("32Mi"));
-    requestsRes.put("memory", new Quantity("100m"));
-
-    Map<String, Quantity> limitRes = new HashMap<String, Quantity>();
-    limitRes.put("cpu", new Quantity("64Mi"));
-    limitRes.put("memory", new Quantity("200m"));
-
-    V1ResourceRequirements resources = new V1ResourceRequirementsBuilder()
-        .withRequests(requestsRes)
-        .withLimits(limitRes)
-        .build();
-
-    V1DeploymentSpec spec = new V1DeploymentSpec();
-    V1Container cont = new V1ContainerBuilder()
-        .withName("nginx")
-        .withImage("nginx:1.7.9")
-        .withResources(resources)
-        .addNewPort()
-        .withContainerPort(80)
-        .endPort()
-        .build();
-
-    Deployment deployment = getDeployment(deploymentMessage);
-
-    V1Deployment v1Deployment = new V1DeploymentBuilder()
-        .withApiVersion("apps/v1")
-        .withKind("Deployment")
-        .withNewMetadata()
-            .withName(deployment.getId())
-        .endMetadata()
-        .withNewSpec()
-            .withReplicas((Integer) deployment.getParameters().get("replicas"))
-            .withNewSelector()
-                .addToMatchLabels("app", "nginx")
-            .endSelector()
-            .withNewTemplate()
-                .withNewMetadata()
-                    .addToLabels("app", "nginx")
-                .endMetadata()
-                .withNewSpec()
-                    .addNewContainer()
-                        .withImage("nginx:1.7.9")
-                        .withName("nginx")
-                        .addNewPort()
-                            .withContainerPort(80)
-                        .endPort()
-                    .endContainer()
-                    .withContainers(cont)
-                .endSpec()
-            .endTemplate()
-        .endSpec()
-        .build();
-
-    return v1Deployment;
   }
 
   @Override
@@ -512,11 +520,11 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
       System.out.println(item.getMetadata().getName());
     }
   }
-  
+
   @Data
   @NoArgsConstructor(access = AccessLevel.PROTECTED)
   @RequiredArgsConstructor
-  public static class DeepKubernetesContainer {
+  public static class DeepKubernetesDeployment {
 
     @NonNull
     @NotNull
@@ -527,7 +535,7 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     private String toscaNodeName;
 
   }
-  
+
   protected Capability getHostCapability(
       DirectedMultigraph<NodeTemplate, RelationshipTemplate> graph, NodeTemplate taskNode) {
 
@@ -536,7 +544,7 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     // at this point we're sure that it exists
     return hostNode.getCapabilities().get(HOST_CAPABILITY_NAME);
   }
-  
+
   protected NodeTemplate getHostNode(DirectedMultigraph<NodeTemplate, RelationshipTemplate> graph,
       NodeTemplate taskNode) {
     return graph
@@ -549,6 +557,73 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
         .collect(MoreCollectors.toOptional())
         .orElseThrow(() -> new IllegalArgumentException(
             String.format("No hosting node provided for node <%s>", taskNode.getName())));
+  }
+
+  private V1Deployment createV1DeploymentNotToUse(DeploymentMessage deploymentMessage) {
+    /* note , cpu and ram are shared between all containers in the pod
+     * so it is enought difine it once*/
+
+    //TODO manage needed field for deployment and get them from DeploymentMessage
+    List<V1Container> containers = new ArrayList<>();
+
+    Map<String, Quantity> requestsRes = new HashMap<String, Quantity>();
+    /*The expression 0.1 is equivalent to the expression 100m,
+     *which can be read as “one hundred millicpu”.*/
+    requestsRes.put("cpu", new Quantity("32Mi"));
+    requestsRes.put("memory", new Quantity("100m"));
+
+    Map<String, Quantity> limitRes = new HashMap<String, Quantity>();
+    limitRes.put("cpu", new Quantity("64Mi"));
+    limitRes.put("memory", new Quantity("200m"));
+
+    V1ResourceRequirements resources = new V1ResourceRequirementsBuilder()
+        .withRequests(requestsRes)
+        .withLimits(limitRes)
+        .build();
+
+    V1DeploymentSpec spec = new V1DeploymentSpec();
+    V1Container cont = new V1ContainerBuilder()
+        .withName("nginx")
+        .withImage("nginx:1.7.9")
+        .withResources(resources)
+        .addNewPort()
+        .withContainerPort(80)
+        .endPort()
+        .build();
+
+    Deployment deployment = getDeployment(deploymentMessage);
+
+    V1Deployment v1Deployment = new V1DeploymentBuilder()
+        .withApiVersion("apps/v1")
+        .withKind("Deployment")
+        .withNewMetadata()
+            .withName(deployment.getId())
+        .endMetadata()
+        .withNewSpec()
+            .withReplicas((Integer) deployment.getParameters().get("replicas"))
+            .withNewSelector()
+                .addToMatchLabels("app", "nginx")
+            .endSelector()
+            .withNewTemplate()
+                .withNewMetadata()
+                    .addToLabels("app", "nginx")
+                .endMetadata()
+                .withNewSpec()
+                    .addNewContainer()
+                        .withImage("nginx:1.7.9")
+                        .withName("nginx")
+                        .addNewPort()
+                            .withContainerPort(80)
+                        .endPort()
+                    .endContainer()
+                    .withContainers(cont)
+
+                .endSpec()
+            .endTemplate()
+        .endSpec()
+        .build();
+
+    return v1Deployment;
   }
 
 }

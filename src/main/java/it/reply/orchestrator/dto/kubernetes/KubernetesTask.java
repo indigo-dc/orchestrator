@@ -16,19 +16,31 @@
 
 package it.reply.orchestrator.dto.kubernetes;
 
+import io.kubernetes.client.custom.Quantity;
+
+import it.reply.orchestrator.utils.ToscaConstants;
+
+import java.util.List;
+
 import lombok.Data;
 
 @Data
 public class KubernetesTask {
-  
+
+  public final String getToscaNodeName() {
+    return ToscaConstants.Nodes.Types.KUBERNETES;
+  }
+
   private String id;
 
-  private String cmd;
+  private List<KubernetesContainer> containers;
 
   private KubernetesContainer container;
 
-  private Double cpus;
+  private String cpu;
 
-  private Double memSize;
+  private String memory;
+
+  private Double replicas;
 
 }

@@ -16,21 +16,34 @@
 
 package it.reply.orchestrator.dto.kubernetes;
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.Multimap;
-
 import lombok.Data;
+import lombok.Getter;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Data
 public class KubernetesContainer {
-  
-  private String id;
-  
-  private final String name;
 
-  private final String toscaName;
-
+  @Nullable
   private String image;
-  
-  private Multimap<String, String> parameters = ArrayListMultimap.create();
+
+  private Integer port;
+
+  @NonNull
+  private Type type;
+
+  @Getter
+  public enum Type {
+    DOCKER("DOCKER", "tosca.artifacts.Deployment.Image.Container.Docker");
+
+    Type(String name, String toscaName) {
+      this.name = name;
+      this.toscaName = toscaName;
+    }
+
+    private final String name;
+
+    private final String toscaName;
+  }
 }
