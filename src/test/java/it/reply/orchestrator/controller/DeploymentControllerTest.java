@@ -57,10 +57,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import javax.validation.constraints.Min;
+
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
 import org.apache.ibatis.exceptions.PersistenceException;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.flowable.engine.common.api.FlowableOptimisticLockingException;
 import org.hamcrest.Matchers;
 import org.junit.ClassRule;
@@ -370,9 +373,13 @@ public class DeploymentControllerTest {
                 fieldWithPath("callback").description("The deployment callback URL (optional)"),
                 fieldWithPath("maxProvidersRetry").description(
                     "The maximum number Cloud providers on which attempt to create the deployment (Optional, default unbounded)"),
+                fieldWithPath("timeoutMins").description(
+                    "Overall timeout value, if provided, must be at least of 1 minute (Optional, default infinite)"),
+                fieldWithPath("providerTimeoutMins").description(
+                    "Provider timeout value, if provided, must be at least of 1 minute and equal or less than timeoutMins (Optional, default 14400 mins"),
                 fieldWithPath("keepLastAttempt").description(
                     "Whether the Orchestrator, in case of failure, will keep the resources of the last deploy attempt or not (Optional, default false)")),
-            responseFields(fieldWithPath("links[]").ignored(),
+                responseFields(fieldWithPath("links[]").ignored(),
                 fieldWithPath("uuid").description("The unique identifier of a resource"),
                 fieldWithPath("creationTime").description(
                     "Creation date-time (http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14)"),
