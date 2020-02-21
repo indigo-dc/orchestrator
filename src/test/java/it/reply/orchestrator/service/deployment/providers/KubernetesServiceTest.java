@@ -97,6 +97,7 @@ public class KubernetesServiceTest extends ToscaParserAwareTest {
         .when(oauth2tokenService.executeWithClientForResult(
             Mockito.any(), Mockito.any(), Mockito.any()))
         .thenAnswer(y -> ((ThrowingFunction) y.getArguments()[1]).apply("token"));
+    
   }
 
   @Test
@@ -218,12 +219,14 @@ public class KubernetesServiceTest extends ToscaParserAwareTest {
   private KubernetesService buildService() {
     KubernetesService cs = KubernetesService
         .kubernetesBuilder()
-        .endpoint("example.com/kubernetes")
+        .endpoint("http://localhost:8080")
         .serviceType(CloudService.KUBERNETES_COMPUTE_SERVICE)
-        .hostname("example.com")
-        .providerId("provider-1")
-        .id("provider-1-service-1")
+        .hostname("localhost")
+        .providerId("RECAS-BARI")
+        .id("http://localhost:8080")
         .type(CloudServiceType.COMPUTE)
+        .iamEnabled(false)
+        .publicService(true)
         .build();
     return cs;
   }

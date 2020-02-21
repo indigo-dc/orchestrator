@@ -114,7 +114,7 @@ public class CloudService implements CmdbIdentifiable {
   public static final String MARATHON_COMPUTE_SERVICE = INDIGO_SERVICE_PREFIX + ".marathon";
   public static final String CHRONOS_COMPUTE_SERVICE = INDIGO_SERVICE_PREFIX + ".chronos";
   public static final String QCG_COMPUTE_SERVICE = DEEP_SERVICE_PREFIX + ".qcg";
-  public static final String KUBERNETES_COMPUTE_SERVICE = DEEP_SERVICE_PREFIX + ".kubernetes";
+  public static final String KUBERNETES_COMPUTE_SERVICE = INDIGO_SERVICE_PREFIX + ".kubernetes";
 
   /**
    * Get if the the service is a OpenStack compute service.

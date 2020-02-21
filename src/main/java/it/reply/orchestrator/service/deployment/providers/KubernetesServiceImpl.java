@@ -89,6 +89,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jgrapht.graph.DirectedMultigraph;
 import org.jgrapht.traverse.TopologicalOrderIterator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -164,6 +165,7 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     for (NodeTemplate kuberNode : orderedKubernetesApps) {
 
       Resource kuberResource = resources.get(kuberNode.getName());
+      //TODO Check what id it is
       String id = Optional.ofNullable(kuberResource.getIaasId()).orElseGet(() -> {
         kuberResource.setIaasId(kuberResource.getId());
         return kuberResource.getIaasId();
@@ -268,10 +270,10 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
   protected V1Deployment generateExternalTaskRepresentation(KubernetesTask kubernetesTask,
       String deploymentId) {
 
-    V1Deployment v1Deployment = new V1Deployment();
+    // V1Deployment v1Deployment = new V1Deployment();
 
-    v1Deployment.setApiVersion("apps/v1");
-    v1Deployment.setKind("Deployment");
+    //    v1Deployment.setApiVersion("apps/v1");
+    //    v1Deployment.setKind("Deployment");
 
     Map<String, Quantity> requestsRes = new HashMap<String, Quantity>();
 
@@ -298,7 +300,7 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
       v1Containers.add(contV1);
     }
 
-    V1Deployment v1Deployment2 = new V1DeploymentBuilder()
+    V1Deployment v1Deployment = new V1DeploymentBuilder()
         .withApiVersion("apps/v1")
         .withKind("Deployment")
         .withNewMetadata()
@@ -332,6 +334,7 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
         deploymentMessage.getChosenCloudProviderEndpoint().getCpEndpoint(), accessToken);
     if (client == null) {
       client = Config.defaultClient();
+      //client.setBasePath("https://kubernetes.docker.internal:6443");
     }
     return new AppsV1Api(client);
     //TODO manage ApiException or throw some exception
@@ -341,6 +344,7 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
   public boolean doDeploy(DeploymentMessage deploymentMessage) {
 
     V1Deployment v1Deployment = createV1Deployment(deploymentMessage);
+    //V1Deployment v1Deployment = createV1DeploymentForTest(deploymentMessage);
 
     try {
       AppsV1Api app = connectApi(deploymentMessage);
@@ -368,7 +372,7 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     AppsV1Api app;
     V1Deployment v1Deployment = new V1Deployment();
     try {
-      app = new AppsV1Api(Config.defaultClient());
+      app = connectApi(deploymentMessage);
 
       v1Deployment = app.readNamespacedDeploymentStatus(deployment.getId(), "default", "true");
 
@@ -438,17 +442,8 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     Deployment deployment = getDeployment(deploymentMessage);
     AppsV1Api app;
     try {
-      app = new AppsV1Api(Config.defaultClient());
+      app = connectApi(deploymentMessage);
 
-      //      ApiResponse<V1Status> response = app.deleteNamespacedDeploymentWithHttpInfo(
-      //          deployment.getId(),
-      //          "default",
-      //          "true",
-      //          null,
-      //          null,
-      //          null,
-      //          null,
-      //          null);
       V1Status status = app.deleteNamespacedDeployment(
           deployment.getId(),
           "default",
@@ -459,7 +454,6 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
           null,
           null);
 
-      //response.getStatusCode();
       LOG.debug("Deleting deployment exited with :"
           + status.getCode()
           + " - "
@@ -481,8 +475,40 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
 
   @Override
   public boolean isUndeployed(DeploymentMessage deploymentMessage) {
-    // TODO Auto-generated method stub
-    return false;
+    boolean isUndeployed = false;
+    Deployment deployment = getDeployment(deploymentMessage);
+    
+    AppsV1Api app;
+    try {
+      app = connectApi(deploymentMessage);
+
+      V1Deployment deplSimleToCheck = app.readNamespacedDeploymentStatus(
+          deployment.getId(),
+          "default",
+          "true");
+      
+      V1Deployment depl = app.readNamespacedDeployment(
+          deployment.getId(),
+          "default",
+          "true",
+          null,
+          null);
+
+     if (depl==null) {
+       isUndeployed = true;
+     }
+
+    } catch (ApiException e) {
+      LOG.error("Error in doUndeploy:" + e.getCode() + " - " + e.getMessage());
+      if (e.getCode() == 404) {
+        isUndeployed = true;
+      }
+    } catch (IOException e) {
+      LOG.error("Error in doUndeploy:" + e.getCause() + " - " + e.getMessage());
+    }
+    
+    
+    return isUndeployed;
   }
 
   @Override
@@ -559,12 +585,11 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
             String.format("No hosting node provided for node <%s>", taskNode.getName())));
   }
 
-  private V1Deployment createV1DeploymentNotToUse(DeploymentMessage deploymentMessage) {
+  private V1Deployment createV1DeploymentForTest(DeploymentMessage deploymentMessage) {
     /* note , cpu and ram are shared between all containers in the pod
      * so it is enought difine it once*/
 
     //TODO manage needed field for deployment and get them from DeploymentMessage
-    List<V1Container> containers = new ArrayList<>();
 
     Map<String, Quantity> requestsRes = new HashMap<String, Quantity>();
     /*The expression 0.1 is equivalent to the expression 100m,
