@@ -107,9 +107,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   @Autowired
   private ImClientFactory imClientFactory;
-  
-  @Autowired
-  private CmdbService cmdbService;
 
   protected <R> R executeWithClientForResult(List<CloudProviderEndpoint> cloudProviderEndpoints,
       @Nullable OidcTokenId requestedWithToken,
@@ -135,12 +132,12 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         .isPresent();
   }
 
-  protected ArchiveRoot prepareTemplate(Deployment deployment,
+  protected ArchiveRoot prepareTemplate(String template, Deployment deployment,
       DeploymentMessage deploymentMessage) {
     RuntimeProperties runtimeProperties =
         OneDataUtils.getOneDataRuntimeProperties(deploymentMessage);
     Map<String, Object> inputs = deployment.getParameters();
-    ArchiveRoot ar = toscaService.parseAndValidateTemplate(deployment.getTemplate(), inputs);
+    ArchiveRoot ar = toscaService.parseAndValidateTemplate(template, inputs);
     if (runtimeProperties.getVaules().size() > 0) {
       indigoInputsPreProcessorService.processGetInputAttributes(ar, inputs, runtimeProperties);
     } else {
@@ -162,7 +159,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     // Update status of the deployment
     deployment.setTask(Task.DEPLOYER);
 
-    ArchiveRoot ar = prepareTemplate(deployment, deploymentMessage);
+    ArchiveRoot ar = prepareTemplate(deployment.getTemplate(), deployment, deploymentMessage);
 
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
 
@@ -333,7 +330,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     final CloudProviderEndpoint chosenCloudProviderEndpoint =
         deploymentMessage.getChosenCloudProviderEndpoint();
 
-    ArchiveRoot newAr = prepareTemplate(deployment, deploymentMessage);
+    ArchiveRoot newAr = prepareTemplate(template, deployment, deploymentMessage);
 
     String accessToken = null;
     if (oidcProperties.isEnabled()) {
@@ -385,18 +382,13 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         .getCloudServicesOrderedIterator()
         .currentService(ComputeService.class);
     
-    if (newResourcesOnDifferentService) {
-      ComputeService firstService = (ComputeService)cmdbService.getServiceById(
-          deployment.getCloudProviderEndpoint().getCpComputeServiceId());
+    //if (newResourcesOnDifferentService) {
       
-      toscaService.setHybridUpdateDeployment(newAr, 
-          firstService.getPublicNetworkName(),
-          firstService.getPrivateNetworkName(), 
-          firstService.getPrivateNetworkCidr(),
+      toscaService.setHybridUpdateDeployment(newAr,
           computeService.getPublicNetworkName(),
           computeService.getPrivateNetworkName(), 
           computeService.getPrivateNetworkCidr());
-    }
+    //}
 
     Map<String, NodeTemplate> newNodes =
         Optional

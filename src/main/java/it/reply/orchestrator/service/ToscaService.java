@@ -272,7 +272,6 @@ public interface ToscaService {
       String privateNetworkName, String privateNetworkCidr);
 
   public ArchiveRoot setHybridUpdateDeployment(ArchiveRoot ar, 
-      String firstPublicNetworkName, String firstPrivateNetworkName, String firstPrivateNetworkCidr,
       String publicNetworkName, String privateNetworkName, String privateNetworkCidr);
 
   public Map<NodeTemplate, Flavor> extractFlavorRequirements(ArchiveRoot parsingResult);

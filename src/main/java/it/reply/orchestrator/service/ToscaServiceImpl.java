@@ -1394,16 +1394,13 @@ public class ToscaServiceImpl implements ToscaService {
   @Override
   public ArchiveRoot setHybridUpdateDeployment(
       ArchiveRoot ar,
-      String firstPublicNetworkName,
-      String firstPrivateNetworkName,
-      String firstPrivateNetworkCidr,
       String publicNetworkName,
       String privateNetworkName,
       String privateNetworkCidr) {
 
     // check if exist aToscaConstants.Nodes.Types.CENTRAL_POINT, if not create it
     if (getNodesOfType(ar, ToscaConstants.Nodes.Types.CENTRAL_POINT).isEmpty()) {
-      setHybridDeployment(ar ,firstPublicNetworkName, firstPrivateNetworkName, firstPrivateNetworkCidr);
+      setHybridDeployment(ar ,publicNetworkName, privateNetworkName, privateNetworkCidr);
     }
     
     PrivateNetworkType nt = getPrivateNetworkType(ar);

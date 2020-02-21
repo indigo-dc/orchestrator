@@ -345,8 +345,8 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
 	public void checkHybridUpdateDeploymentSetting() throws Exception {
 		String template = TestUtil.getFileContentAsString(TEMPLATES_BASE_DIR + "tosca_hybrid_before_update.yaml");
 		ArchiveRoot ar = toscaService.getArchiveRootFromTemplate(template).getResult();
-		ArchiveRoot arNew = toscaService.setHybridUpdateDeployment(ar, PUBLIC_NETWORK_NAME1, PRIVATE_NETWORK_NAME1,
-		    PRIVATE_NETWORK_CIDR1, PUBLIC_NETWORK_NAME2, PRIVATE_NETWORK_NAME2, PRIVATE_NETWORK_CIDR2);
+		ArchiveRoot arNew = toscaService.setHybridUpdateDeployment(ar, PUBLIC_NETWORK_NAME2,
+		    PRIVATE_NETWORK_NAME2, PRIVATE_NETWORK_CIDR2);
 
 		Assertions.assertThat(toscaService.getNodesOfType(arNew, "tosca.nodes.indigo.VR.CentralPoint")).size().isOne();
 		Assertions.assertThat(toscaService.getNodesOfType(arNew, "tosca.nodes.indigo.VR.Client")).size().isOne();
