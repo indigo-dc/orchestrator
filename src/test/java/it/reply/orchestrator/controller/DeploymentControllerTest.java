@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -370,6 +370,10 @@ public class DeploymentControllerTest {
                 fieldWithPath("callback").description("The deployment callback URL (optional)"),
                 fieldWithPath("maxProvidersRetry").description(
                     "The maximum number Cloud providers on which attempt to create the deployment (Optional, default unbounded)"),
+                fieldWithPath("timeoutMins").description(
+                        "Overall timeout value, if provided, must be at least of 1 minute (Optional, default infinite)"),
+                fieldWithPath("providerTimeoutMins").description(
+                        "Provider timeout value, if provided, must be at least of 1 minute and equal or less than timeoutMins (Optional, default 14400 mins"),
                 fieldWithPath("keepLastAttempt").description(
                     "Whether the Orchestrator, in case of failure, will keep the resources of the last deploy attempt or not (Optional, default false)")),
             responseFields(fieldWithPath("links[]").ignored(),
@@ -518,6 +522,10 @@ public class DeploymentControllerTest {
                 fieldWithPath("callback").description("The deployment callback URL (optional)"),
                 fieldWithPath("maxProvidersRetry").description(
                     "The maximum number Cloud providers on which attempt to update the hybrid deployment update (Optional, default unbounded)"),
+                fieldWithPath("timeoutMins").description(
+                        "Overall timeout value, if provided, must be at least of 1 minute (Optional, default infinite)"),
+                fieldWithPath("providerTimeoutMins").description(
+                        "Provider timeout value, if provided, must be at least of 1 minute and equal or less than timeoutMins (Optional, default 14400 mins"),
                 fieldWithPath("keepLastAttempt").description(
                     "Whether the Orchestrator, in case of failure, will keep the resources of the last update attempt or not (Optional, default false)"))));
 
