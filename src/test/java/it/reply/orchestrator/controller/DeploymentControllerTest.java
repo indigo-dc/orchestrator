@@ -349,6 +349,8 @@ public class DeploymentControllerTest {
         .callback("http://localhost:8080/callback")
         .keepLastAttempt(false)
         .maxProvidersRetry(1)
+        .timeoutMins(5)
+        .providerTimeoutMins(10)
         .build();
 
     Deployment deployment = ControllerTestUtils.createDeployment();
@@ -503,6 +505,8 @@ public class DeploymentControllerTest {
         .callback("http://localhost:8080/callback")
         .keepLastAttempt(false)
         .maxProvidersRetry(1)
+        .timeoutMins(5)
+        .providerTimeoutMins(10)
         .build();
 
     String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
