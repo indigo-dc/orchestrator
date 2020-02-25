@@ -9,9 +9,6 @@ topology_template:
 
     kubernetes:
       type: tosca.nodes.indigo.Container.Application.Docker.Kubernetes
-      properties:
-        uris: []
-        enable_https: true
       artifacts:
         image:
           file: hello-world

@@ -85,6 +85,8 @@ import org.alien4cloud.tosca.model.templates.RelationshipTemplate;
 import org.alien4cloud.tosca.model.templates.Topology;
 import org.alien4cloud.tosca.normative.types.FloatType;
 import org.alien4cloud.tosca.normative.types.StringType;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
+import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jgrapht.graph.DirectedMultigraph;
 import org.jgrapht.traverse.TopologicalOrderIterator;
@@ -150,10 +152,10 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
         .filter(node -> toscaService.isOfToscaType(node, ToscaConstants.Nodes.Types.KUBERNETES))
         .collect(Collectors.toList());
 
-    Map<String, Resource> resources = deployment.getResources().stream()
-        .filter(resource -> toscaService.isOfToscaType(resource,
-            ToscaConstants.Nodes.Types.KUBERNETES))
-        .collect(Collectors.toMap(Resource::getToscaNodeName, res -> res));
+    //    Map<String, Resource> resources = deployment.getResources().stream()
+    //        .filter(resource -> toscaService.isOfToscaType(resource,
+    //            ToscaConstants.Nodes.Types.KUBERNETES))
+    //        .collect(Collectors.toMap(Resource::getToscaNodeName, res -> res));
 
     LinkedHashMap<String, KubernetesTask> containersByKuberNode =
         new LinkedHashMap<String, KubernetesTask>();
@@ -164,14 +166,26 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
 
     for (NodeTemplate kuberNode : orderedKubernetesApps) {
 
-      Resource kuberResource = resources.get(kuberNode.getName());
-      //TODO Check what id it is
+      KubernetesTask kuberTask = buildTask(graph, kuberNode, kuberNode.getName());
+
+      List<Resource> resources =  resourceRepository
+              .findByToscaNodeNameAndDeployment_id(kuberNode.getName(), deployment.getId());
+
+      resources.forEach(resource -> resource.setIaasId(kuberTask.getId()));
+      kuberTask.setInstances(resources.size());
+
+      // Resource kuberResource = resources.get(resources.indexOf(kuberNode.getName()));
+      Resource kuberResource = resources.stream()
+          .filter(resource -> kuberNode.getName().equals(resource.getToscaNodeName()))
+          .findAny()
+          .orElse(null);
+
       String id = Optional.ofNullable(kuberResource.getIaasId()).orElseGet(() -> {
         kuberResource.setIaasId(kuberResource.getId());
         return kuberResource.getIaasId();
       });
 
-      KubernetesTask kuberTask = buildTask(graph, kuberNode, id);
+      //TODO Check what id it is
       containersByKuberNode.put(kuberNode.getName(), kuberTask);
 
       kubernetesDeployment = generateExternalTaskRepresentation(kuberTask, deployment.getId());
@@ -257,12 +271,13 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
      * You can also use the power-of-two equivalents: Ei, Pi, Ti, Gi, Mi, Ki.*/
 
     ToscaUtils
-      .extractScalar(containerCapability.getProperties(), "mem_size", StringType.class)
-      .ifPresent(kubernetesTask::setMemory);
+       .extractScalar(containerCapability.getProperties(), "mem_size", StringType.class)
+       .ifPresent(kubernetesTask::setMemory);
 
-    ToscaUtils
-      .extractScalar(containerCapability.getProperties(), "replicas", FloatType.class)
-      .ifPresent(kubernetesTask::setReplicas);
+    kubernetesTask.setReplicas(
+        ToscaUtils
+          .extractScalar(containerCapability.getProperties(), "replicas", FloatType.class)
+          .orElse(1.0));//ifPresent(kubernetesTask::setReplicas);
 
     return kubernetesTask;
   }
@@ -277,27 +292,43 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
 
     Map<String, Quantity> requestsRes = new HashMap<String, Quantity>();
 
+    String mem = kubernetesTask.getMemory().replace("Mb", "M").replaceAll(" ", "");
+
     //TODO cpu and ram to string and not quantity maybe
     requestsRes.put("cpu", new Quantity(kubernetesTask.getCpu()));
-    requestsRes.put("memory", new Quantity(kubernetesTask.getMemory()));
+    requestsRes.put("memory", new Quantity(mem));
 
     Map<String, Quantity> limitRes = new HashMap<String, Quantity>();
     limitRes.put("cpu", new Quantity(kubernetesTask.getCpu()));
-    limitRes.put("memory", new Quantity(kubernetesTask.getMemory()));
+    limitRes.put("memory", new Quantity(mem));
 
     List<V1Container> v1Containers = new ArrayList<V1Container>();
-    for (KubernetesContainer cont : kubernetesTask.getContainers()) {
+    if (kubernetesTask.getContainers() == null || kubernetesTask.getContainers().isEmpty()) {
       V1Container contV1 = new V1ContainerBuilder()
-          .withName(cont.getType().getName())
-          .withImage(cont.getImage())
+          .withName(kubernetesTask.getContainer().getType().getName())
+          .withImage(kubernetesTask.getContainer().getImage())
           .withNewResources()
             .withRequests(requestsRes)
           .endResources()
           .addNewPort()
-            .withContainerPort(cont.getPort())
+            .withContainerPort(kubernetesTask.getContainer().getPort())
           .endPort()
           .build();
       v1Containers.add(contV1);
+    } else {
+      for (KubernetesContainer cont : kubernetesTask.getContainers()) {
+        V1Container contV1 = new V1ContainerBuilder()
+            .withName(cont.getType().getName())
+            .withImage(cont.getImage())
+            .withNewResources()
+              .withRequests(requestsRes)
+            .endResources()
+            .addNewPort()
+              .withContainerPort(cont.getPort())
+            .endPort()
+            .build();
+        v1Containers.add(contV1);
+      }
     }
 
     V1Deployment v1Deployment = new V1DeploymentBuilder()
@@ -325,10 +356,21 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     return v1Deployment;
   }
 
-  private AppsV1Api connectApi(DeploymentMessage deploymentMessage) throws IOException {
+  /**
+   * Connecting Kubernetes Api config.
+   * @param deploymentMessage DeploymentMessage as parameter
+   * @return
+   */
+  public AppsV1Api connectApi(DeploymentMessage deploymentMessage) throws IOException {
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
     String accessToken = oauth2TokenService
         .getAccessToken(CommonUtils.checkNotNull(requestedWithToken));
+
+    ApiClient x = new ApiClient();
+    x.setAccessToken(accessToken);
+    x.setReadTimeout(Integer.parseInt(deploymentMessage.getTimeout()));
+    x.setConnectTimeout(Integer.parseInt(deploymentMessage.getTimeout()));
+    x.setBasePath(deploymentMessage.getChosenCloudProviderEndpoint().getCpEndpoint());
 
     ApiClient client = Config.fromToken(
         deploymentMessage.getChosenCloudProviderEndpoint().getCpEndpoint(), accessToken);
@@ -355,6 +397,7 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
           null,
           null);
 
+      //TODO handle exception in out
     } catch (ApiException e) {
       LOG.error("Error in doDeploy:" + e.getCode() + " - " + e.getMessage());
     } catch (IOException e) {
@@ -378,9 +421,9 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
 
       printPodList();
     } catch (ApiException e) {
-      LOG.error("Error in doUndeploy:" + e.getCode() + " - " + e.getMessage());
+      LOG.error("Error in isDeployed:" + e.getCode() + " - " + e.getMessage());
     } catch (IOException e) {
-      LOG.error("Error in doUndeploy:" + e.getCause() + " - " + e.getMessage());
+      LOG.error("Error in isDeployed:" + e.getCause() + " - " + e.getMessage());
     }
 
     boolean isDeployed =
@@ -424,9 +467,9 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
       // app.replaceNamespacedDeployment(name, namespace, body, pretty, dryRun, fieldManager);
 
     } catch (ApiException e) {
-      LOG.error("Error in doUndeploy:" + e.getCode() + " - " + e.getMessage());
+      LOG.error("Error in doUpdate:" + e.getCode() + " - " + e.getMessage());
     } catch (IOException e) {
-      LOG.error("Error in doUndeploy:" + e.getCause() + " - " + e.getMessage());
+      LOG.error("Error in doUpdate:" + e.getCause() + " - " + e.getMessage());
     }
     throw new UnsupportedOperationException("Marathon app deployments do not support update.");
   }
@@ -440,35 +483,38 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
   public boolean doUndeploy(DeploymentMessage deploymentMessage) {
 
     Deployment deployment = getDeployment(deploymentMessage);
-    AppsV1Api app;
-    try {
-      app = connectApi(deploymentMessage);
+    CloudProviderEndpoint cloudProviderEndpoint = deployment.getCloudProviderEndpoint();
+    if (cloudProviderEndpoint != null) {
+      AppsV1Api app;
+      try {
+        app = connectApi(deploymentMessage);
 
-      V1Status status = app.deleteNamespacedDeployment(
-          deployment.getId(),
-          "default",
-          "true",
-          null,
-          null,
-          null,
-          null,
-          null);
+        V1Status status = app.deleteNamespacedDeployment(
+            deployment.getId(),
+            "default",
+            "true",
+            null,
+            null,
+            null,
+            null,
+            null);
 
-      LOG.debug("Deleting deployment exited with :"
-          + status.getCode()
-          + " - "
-          + status.getMessage()
-          + " - "
-          + status.getStatus());
+        LOG.debug("Deleting deployment exited with :"
+            + status.getCode()
+            + " - "
+            + status.getMessage()
+            + " - "
+            + status.getStatus());
 
-    } catch (ApiException e) {
-      LOG.error("Error in doUndeploy:" + e.getCode() + " - " + e.getMessage());
-      // TODO manage throwing errorCode exception
-      //      if(e.getCode()!=404) {
-      //        throw new HttpResponseException(e.getCode(), "KubernetesApiException");
-      //      }
-    } catch (IOException e) {
-      LOG.error("Error in doUndeploy:" + e.getCause() + " - " + e.getMessage());
+      } catch (ApiException e) {
+        LOG.error("Error in doUndeploy:" + e.getCode() + " - " + e.getMessage());
+        // TODO manage throwing errorCode exception
+        //      if(e.getCode()!=404) {
+        //        throw new HttpResponseException(e.getCode(), "KubernetesApiException");
+        //      }
+      } catch (IOException e) {
+        LOG.error("Error in doUndeploy:" + e.getCause() + " - " + e.getMessage());
+      }
     }
     return true;
   }
@@ -477,7 +523,7 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
   public boolean isUndeployed(DeploymentMessage deploymentMessage) {
     boolean isUndeployed = false;
     Deployment deployment = getDeployment(deploymentMessage);
-    
+
     AppsV1Api app;
     try {
       app = connectApi(deploymentMessage);
@@ -486,7 +532,7 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
           deployment.getId(),
           "default",
           "true");
-      
+
       V1Deployment depl = app.readNamespacedDeployment(
           deployment.getId(),
           "default",
@@ -494,9 +540,9 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
           null,
           null);
 
-     if (depl==null) {
-       isUndeployed = true;
-     }
+      if (depl == null) {
+        isUndeployed = true;
+      }
 
     } catch (ApiException e) {
       LOG.error("Error in doUndeploy:" + e.getCode() + " - " + e.getMessage());
@@ -506,8 +552,7 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     } catch (IOException e) {
       LOG.error("Error in doUndeploy:" + e.getCause() + " - " + e.getMessage());
     }
-    
-    
+
     return isUndeployed;
   }
 

@@ -43,4 +43,6 @@ public class KubernetesTask {
 
   private Double replicas;
 
+  private Integer instances;
+
 }

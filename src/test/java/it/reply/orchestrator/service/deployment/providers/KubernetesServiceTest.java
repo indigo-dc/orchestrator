@@ -16,8 +16,37 @@
 
 package it.reply.orchestrator.service.deployment.providers;
 
+import static org.mockito.Mockito.doReturn;
+
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import org.assertj.core.api.Assertions;
+import org.junit.Before;
+import org.junit.ClassRule;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.junit4.rules.SpringClassRule;
+import org.springframework.test.context.junit4.rules.SpringMethodRule;
+
 import com.google.common.collect.Lists;
 
+import io.kubernetes.client.openapi.apis.AppsV1Api;
+import io.kubernetes.client.util.Config;
 import it.reply.orchestrator.config.specific.ToscaParserAwareTest;
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
@@ -38,37 +67,19 @@ import it.reply.orchestrator.function.ThrowingFunction;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.ToscaServiceTest;
 import it.reply.orchestrator.service.VaultService;
-import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.util.TestUtil;
-import it.reply.orchestrator.utils.CommonUtils;
-
-import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-
-import org.assertj.core.api.Assertions;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
-
-import io.kubernetes.client.util.Config;
 import junitparams.JUnitParamsRunner;
 
 @RunWith(JUnitParamsRunner.class)
 public class KubernetesServiceTest extends ToscaParserAwareTest {
 
+  @ClassRule
+  public static final SpringClassRule SPRING_CLASS_RULE = new SpringClassRule();
+
+  @Rule
+  public final SpringMethodRule springMethodRule = new SpringMethodRule();
+
+  @Spy
   @InjectMocks
   private KubernetesServiceImpl kubernetesServiceImpl;
 
@@ -97,7 +108,7 @@ public class KubernetesServiceTest extends ToscaParserAwareTest {
         .when(oauth2tokenService.executeWithClientForResult(
             Mockito.any(), Mockito.any(), Mockito.any()))
         .thenAnswer(y -> ((ThrowingFunction) y.getArguments()[1]).apply("token"));
-    
+
   }
 
   @Test
@@ -115,7 +126,13 @@ public class KubernetesServiceTest extends ToscaParserAwareTest {
     Mockito
         .when(deploymentRepository.findOne(deployment.getId()))
         .thenReturn(deployment);
+    ;
 
+    doReturn(new AppsV1Api(Config.defaultClient())).when(kubernetesServiceImpl).connectApi(dm);
+
+//    Mockito
+//        .when(toscaService.parseAndValidateTemplate(deployment.getTemplate(), inputs))
+//        .thenReturn(deployment);
     Assertions
         .assertThat(kubernetesServiceImpl.doDeploy(dm))
         .isTrue();
