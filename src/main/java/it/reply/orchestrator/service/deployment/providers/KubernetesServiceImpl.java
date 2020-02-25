@@ -85,13 +85,10 @@ import org.alien4cloud.tosca.model.templates.RelationshipTemplate;
 import org.alien4cloud.tosca.model.templates.Topology;
 import org.alien4cloud.tosca.normative.types.FloatType;
 import org.alien4cloud.tosca.normative.types.StringType;
-import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
-import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jgrapht.graph.DirectedMultigraph;
 import org.jgrapht.traverse.TopologicalOrderIterator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -400,8 +397,10 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
       //TODO handle exception in out
     } catch (ApiException e) {
       LOG.error("Error in doDeploy:" + e.getCode() + " - " + e.getMessage());
+      throw new DeploymentException("Error in doDeploy:" + e.getCode() + " - " + e.getMessage(), e);
     } catch (IOException e) {
       LOG.error("Error in doDeploy:" + e.getCause() + " - " + e.getMessage());
+      throw new DeploymentException("Error in doDeploy:" + e.getCause() + " - " + e.getMessage(), e);
     }
     LOG.info("Creating Kubernetes V1Deployment for deployment {} with definition:\n{}",
         deploymentMessage.getDeploymentId(), v1Deployment.getMetadata().getName());
@@ -422,8 +421,10 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
       printPodList();
     } catch (ApiException e) {
       LOG.error("Error in isDeployed:" + e.getCode() + " - " + e.getMessage());
+      throw new DeploymentException(e.getMessage(), e);
     } catch (IOException e) {
       LOG.error("Error in isDeployed:" + e.getCause() + " - " + e.getMessage());
+      throw new DeploymentException(e.getMessage(), e);
     }
 
     boolean isDeployed =
@@ -468,8 +469,10 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
 
     } catch (ApiException e) {
       LOG.error("Error in doUpdate:" + e.getCode() + " - " + e.getMessage());
+      throw new DeploymentException(e.getMessage(), e);
     } catch (IOException e) {
       LOG.error("Error in doUpdate:" + e.getCause() + " - " + e.getMessage());
+      throw new DeploymentException(e.getMessage(), e);
     }
     throw new UnsupportedOperationException("Marathon app deployments do not support update.");
   }
@@ -512,8 +515,10 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
         //      if(e.getCode()!=404) {
         //        throw new HttpResponseException(e.getCode(), "KubernetesApiException");
         //      }
+        throw new DeploymentException("Error in doUndeploy:" + e.getCode() + " - " + e.getMessage(), e);
       } catch (IOException e) {
         LOG.error("Error in doUndeploy:" + e.getCause() + " - " + e.getMessage());
+        throw new DeploymentException("Error in doUndeploy:" + e.getCause() + " - " + e.getMessage(), e);
       }
     }
     return true;
@@ -549,8 +554,10 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
       if (e.getCode() == 404) {
         isUndeployed = true;
       }
+      throw new DeploymentException(e.getMessage(), e);
     } catch (IOException e) {
       LOG.error("Error in doUndeploy:" + e.getCause() + " - " + e.getMessage());
+      throw new DeploymentException(e.getMessage(), e);
     }
 
     return isUndeployed;
