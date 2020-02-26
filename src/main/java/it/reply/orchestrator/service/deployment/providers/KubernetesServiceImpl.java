@@ -25,6 +25,7 @@ import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.openapi.apis.CoreV1Api;
+import io.kubernetes.client.openapi.auth.ApiKeyAuth;
 import io.kubernetes.client.openapi.models.V1Container;
 import io.kubernetes.client.openapi.models.V1ContainerBuilder;
 import io.kubernetes.client.openapi.models.V1Deployment;
@@ -73,6 +74,7 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
@@ -358,19 +360,23 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
    * @param deploymentMessage DeploymentMessage as parameter
    * @return
    */
-  public AppsV1Api connectApi(DeploymentMessage deploymentMessage) throws IOException {
+  public AppsV1Api connectApi(DeploymentMessage deploymentMessage,
+      String cpEndpoint) throws IOException {
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
     String accessToken = oauth2TokenService
         .getAccessToken(CommonUtils.checkNotNull(requestedWithToken));
 
     ApiClient x = new ApiClient();
-    x.setAccessToken(accessToken);
-    x.setReadTimeout(Integer.parseInt(deploymentMessage.getTimeout()));
-    x.setConnectTimeout(Integer.parseInt(deploymentMessage.getTimeout()));
-    x.setBasePath(deploymentMessage.getChosenCloudProviderEndpoint().getCpEndpoint());
 
-    ApiClient client = Config.fromToken(
-        deploymentMessage.getChosenCloudProviderEndpoint().getCpEndpoint(), accessToken);
+    ApiKeyAuth bearerToken = (ApiKeyAuth) x.getAuthentication("BearerToken");
+    bearerToken.setApiKey(accessToken);
+
+    //x.setAccessToken(accessToken);
+    if (cpEndpoint != null && !cpEndpoint.isEmpty()) {
+      x.setBasePath(cpEndpoint);
+    }
+
+    ApiClient client = Config.fromToken(cpEndpoint, accessToken);
     if (client == null) {
       client = Config.defaultClient();
       //client.setBasePath("https://kubernetes.docker.internal:6443");
@@ -381,12 +387,13 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
 
   @Override
   public boolean doDeploy(DeploymentMessage deploymentMessage) {
-
+    Deployment deployment = getDeployment(deploymentMessage);
     V1Deployment v1Deployment = createV1Deployment(deploymentMessage);
     //V1Deployment v1Deployment = createV1DeploymentForTest(deploymentMessage);
 
     try {
-      AppsV1Api app = connectApi(deploymentMessage);
+      AppsV1Api app = connectApi(deploymentMessage,
+          deployment.getCloudProviderEndpoint().getCpEndpoint());
       app.createNamespacedDeployment(
           "default",
           v1Deployment,
@@ -397,10 +404,12 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
       //TODO handle exception in out
     } catch (ApiException e) {
       LOG.error("Error in doDeploy:" + e.getCode() + " - " + e.getMessage());
-      throw new DeploymentException("Error in doDeploy:" + e.getCode() + " - " + e.getMessage(), e);
+      throw new DeploymentException("Error in doDeploy:"
+          + e.getCode() + " - " + e.getMessage(), e);
     } catch (IOException e) {
       LOG.error("Error in doDeploy:" + e.getCause() + " - " + e.getMessage());
-      throw new DeploymentException("Error in doDeploy:" + e.getCause() + " - " + e.getMessage(), e);
+      throw new DeploymentException("Error in doDeploy:"
+          + e.getCause() + " - " + e.getMessage(), e);
     }
     LOG.info("Creating Kubernetes V1Deployment for deployment {} with definition:\n{}",
         deploymentMessage.getDeploymentId(), v1Deployment.getMetadata().getName());
@@ -414,7 +423,7 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     AppsV1Api app;
     V1Deployment v1Deployment = new V1Deployment();
     try {
-      app = connectApi(deploymentMessage);
+      app = connectApi(deploymentMessage, deployment.getCloudProviderEndpoint().getCpEndpoint());
 
       v1Deployment = app.readNamespacedDeploymentStatus(deployment.getId(), "default", "true");
 
@@ -490,7 +499,7 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     if (cloudProviderEndpoint != null) {
       AppsV1Api app;
       try {
-        app = connectApi(deploymentMessage);
+        app = connectApi(deploymentMessage, deployment.getCloudProviderEndpoint().getCpEndpoint());
 
         V1Status status = app.deleteNamespacedDeployment(
             deployment.getId(),
@@ -515,10 +524,13 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
         //      if(e.getCode()!=404) {
         //        throw new HttpResponseException(e.getCode(), "KubernetesApiException");
         //      }
-        throw new DeploymentException("Error in doUndeploy:" + e.getCode() + " - " + e.getMessage(), e);
+        throw new DeploymentException("Error in doUndeploy:"
+            + e.getCode() + " - " + e.getMessage(), e);
       } catch (IOException e) {
-        LOG.error("Error in doUndeploy:" + e.getCause() + " - " + e.getMessage());
-        throw new DeploymentException("Error in doUndeploy:" + e.getCause() + " - " + e.getMessage(), e);
+        LOG.error("Error in doUndeploy:"
+            + e.getCause() + " - " + e.getMessage());
+        throw new DeploymentException("Error in doUndeploy:"
+            + e.getCause() + " - " + e.getMessage(), e);
       }
     }
     return true;
@@ -531,7 +543,7 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
 
     AppsV1Api app;
     try {
-      app = connectApi(deploymentMessage);
+      app = connectApi(deploymentMessage, deployment.getCloudProviderEndpoint().getCpEndpoint());
 
       V1Deployment deplSimleToCheck = app.readNamespacedDeploymentStatus(
           deployment.getId(),
@@ -704,3 +716,6 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
   }
 
 }
+
+
+

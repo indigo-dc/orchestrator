@@ -31,6 +31,7 @@ import java.util.UUID;
 
 import org.assertj.core.api.AbstractThrowableAssert;
 import org.assertj.core.api.Assertions;
+import org.hamcrest.core.IsEqual;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -48,6 +49,7 @@ import org.springframework.test.context.junit4.rules.SpringMethodRule;
 
 import com.google.common.collect.Lists;
 
+import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.util.Config;
@@ -74,6 +76,7 @@ import it.reply.orchestrator.function.ThrowingFunction;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.ToscaServiceTest;
 import it.reply.orchestrator.service.VaultService;
+import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.util.TestUtil;
 import junitparams.JUnitParamsRunner;
 
@@ -102,6 +105,9 @@ public class KubernetesServiceTest extends ToscaParserAwareTest {
 
   @MockBean
   private VaultService vaultService;
+
+  @SpyBean
+  private OAuth2TokenService oauth2TokenService;
 
   @SpyBean
   private Config config;
@@ -134,24 +140,25 @@ public class KubernetesServiceTest extends ToscaParserAwareTest {
         .thenReturn(deployment);
     ;
 
-    doReturn(new AppsV1Api(Config.defaultClient())).when(kubernetesServiceImpl).connectApi(dm);
+    doReturn(new AppsV1Api(Config.defaultClient())).when(kubernetesServiceImpl)
+    .connectApi(dm, deployment.getCloudProviderEndpoint().getCpEndpoint());
 
     Assertions
         .assertThatExceptionOfType(DeploymentException.class);
-    
+
     AbstractThrowableAssert<?, ? extends Throwable> assertion = assertThatCode(
         () -> kubernetesServiceImpl.doDeploy(dm));
-    
+
     assertion.isInstanceOf(DeploymentException.class)
     .hasCauseExactlyInstanceOf(ApiException.class);
   }
-  
+
   @Test
   public void testDoUndeploy() throws IOException {
     Deployment deployment = generateDeployment();
     DeploymentMessage dm = generateDeployDm(deployment);
 
-    KubernetesService cs = buildService();
+    KubernetesService cs = buildServiceLocal();
 
     CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(cs));
     csi.next();
@@ -162,14 +169,31 @@ public class KubernetesServiceTest extends ToscaParserAwareTest {
         .thenReturn(deployment);
     ;
 
-    doReturn(new AppsV1Api(Config.defaultClient())).when(kubernetesServiceImpl).connectApi(dm);
+    doReturn(new AppsV1Api(Config.defaultClient())).when(kubernetesServiceImpl)
+    .connectApi(dm, deployment.getCloudProviderEndpoint().getCpEndpoint());
 
     AbstractThrowableAssert<?, ? extends Throwable> assertion = assertThatCode(
         () -> kubernetesServiceImpl.doUndeploy(dm));
-    
+
     assertion.isInstanceOf(DeploymentException.class)
     .hasCauseExactlyInstanceOf(ApiException.class);
   }
+
+  //  @Test
+  //  public void testConnectApi() throws IOException {
+  //    Deployment deployment = generateDeployment();
+  //    DeploymentMessage dm = generateDeployDm(deployment);
+  //
+  //    AppsV1Api expected = new  AppsV1Api(new ApiClient());
+  //
+  //    Mockito
+  //      .when(oauth2TokenService.getAccessToken(Mockito.any()))
+  //      .thenReturn("token");
+  //
+  //    Assertions
+  //    .assertThat(kubernetesServiceImpl.connectApi(dm))
+  //    .isEqualTo(expected);
+  //  }
 
   private DeploymentMessage generateDeployDmKuber(Deployment deployment) {
     DeploymentMessage dm = new DeploymentMessage();
@@ -274,6 +298,20 @@ public class KubernetesServiceTest extends ToscaParserAwareTest {
         .hostname("localhost")
         .providerId("RECAS-BARI")
         .id("http://localhost:8080")
+        .type(CloudServiceType.COMPUTE)
+        .iamEnabled(false)
+        .publicService(true)
+        .build();
+    return cs;
+  }
+  private KubernetesService buildServiceLocal() {
+    KubernetesService cs = KubernetesService
+        .kubernetesBuilder()
+        .endpoint("https://kubernetes.docker.internal:6443/")
+        .serviceType(CloudService.KUBERNETES_COMPUTE_SERVICE)
+        .hostname("localhost")
+        .providerId("RECAS-BARI")
+        .id("https://kubernetes.docker.internal:6443/")
         .type(CloudServiceType.COMPUTE)
         .iamEnabled(false)
         .publicService(true)
