@@ -97,3 +97,11 @@ mysql>delete from oidc_entity;
 mysql>delete from oidc_refresh_token;
 ```
 - add the 'audience' property (mandatory) to iam-properties in `application.yml` (see [Configure IAM integration](how_to_deploy.md#configure-iam-integration-optional)); this can be a user-defined string. We recommend to generate a uuid.
+
+### UPGRADING TO v2.3.x
+#### Upgrading to v2.3.0-FINAL
+The following steps are necessary for the upgrade:
+
+- add the 'admingroup' property (mandatory) to iam-properties in `application.yml` (see [Configure IAM integration](how_to_deploy.md#configure-iam-integration-optional)).
+
+Please note that, starting from this release, the Orchestrator can interact with providers not integrated with IAM getting the user's credentials from Vault. In order to exploit this new functionality you need to configure the integration with Vault as explained in the section [Configure Vault (optional)](how_to_deploy.md#configure-vault-optional)
