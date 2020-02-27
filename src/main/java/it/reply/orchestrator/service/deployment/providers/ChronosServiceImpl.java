@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -342,7 +342,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
 
 
   /**
-   * Deletes all the deployment jobs from Chronos. <br/>
+   * Deletes all the deployment jobs from Chronos. <br>
    * Also logs possible errors and updates the deployment status.
    *
    * @param deploymentMessage
@@ -423,6 +423,8 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
    * Creates the {@link IndigoJob} graph based on the given {@link Deployment} (the TOSCA template
    * is parsed).
    *
+   * @param deploymentMessage
+   *          the deployment message
    * @param deployment
    *          the input deployment.
    * @return the job graph.

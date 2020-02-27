@@ -64,8 +64,6 @@ import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-
-
 @Component(WorkflowConstants.Delegate.PREFILTER_CLOUD_PROVIDERS)
 @Slf4j
 public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
@@ -280,11 +278,11 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
   protected void discardOnPrivateNetworkRequirement(ArchiveRoot archiveRoot,
       ComputeService computeService, Set<CloudService> servicesToDiscard) {
     PrivateNetworkType networkType = toscaService.getPrivateNetworkType(archiveRoot);
-    if ((StringUtils.isAllEmpty(computeService.getPrivateNetworkCidr()) &&
-        networkType.equals(PrivateNetworkType.ISOLATED)) ||       
-        (StringUtils.isAllEmpty(computeService.getPrivateNetworkName()) &&
-        networkType.equals(PrivateNetworkType.PRIVATE)) ||
-        networkType.equals(PrivateNetworkType.NONE)) {
+    if ((StringUtils.isAllEmpty(computeService.getPrivateNetworkCidr())
+        && networkType.equals(PrivateNetworkType.ISOLATED))
+        || (StringUtils.isAllEmpty(computeService.getPrivateNetworkName())
+        && networkType.equals(PrivateNetworkType.PRIVATE))
+        || networkType.equals(PrivateNetworkType.NONE)) {
       LOG.debug(
           "Discarded Compute service {} of provider {} because it doesn't support private newtork",
           computeService.getId(), computeService.getProviderId());

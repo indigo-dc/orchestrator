@@ -54,12 +54,12 @@ public class ComputeService extends CloudService {
 
   @JsonProperty("private_network_cidr")
   @Nullable
-  private String privateNetworkCidr;  
+  private String privateNetworkCidr;
 
   @JsonProperty("private_network_name")
   @Nullable
-  private String privateNetworkName;  
-  
+  private String privateNetworkName;
+
   /**
    * Generate a new ComputeService.
    *
@@ -79,6 +79,8 @@ public class ComputeService extends CloudService {
    *     the region
    * @param hostname
    *     the hostname
+   * @param parentServiceId
+   *     the parent service Id
    * @param images
    *     the images
    * @param flavors

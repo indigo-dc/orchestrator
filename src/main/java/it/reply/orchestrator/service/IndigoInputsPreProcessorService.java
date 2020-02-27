@@ -139,6 +139,8 @@ public class IndigoInputsPreProcessorService {
    *          the user's inputs to the template.
    * @param runtimeProperties
    *          deployment runtimeProperties.
+   *
+   * @return the processed outputs
    */
   public Map<String, Object> processOutputs(ArchiveRoot archiveRoot, Map<String, Object> inputs,
       RuntimeProperties runtimeProperties) {

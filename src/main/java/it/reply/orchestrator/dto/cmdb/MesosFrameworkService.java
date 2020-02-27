@@ -62,6 +62,8 @@ public class MesosFrameworkService<T extends MesosFrameworkServiceProperties> ex
    *     the iamEnabled flag
    * @param publicIpAssignable
    *     the publicIpAssignable flag
+   * @param properties
+   *     the properties
    */
   public MesosFrameworkService(
       @NonNull String id,

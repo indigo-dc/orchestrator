@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,13 +57,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import javax.validation.constraints.Min;
-
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
 import org.apache.ibatis.exceptions.PersistenceException;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.flowable.engine.common.api.FlowableOptimisticLockingException;
 import org.hamcrest.Matchers;
 import org.junit.ClassRule;
@@ -352,6 +349,8 @@ public class DeploymentControllerTest {
         .callback("http://localhost:8080/callback")
         .keepLastAttempt(false)
         .maxProvidersRetry(1)
+        .timeoutMins(5)
+        .providerTimeoutMins(10)
         .build();
 
     Deployment deployment = ControllerTestUtils.createDeployment();

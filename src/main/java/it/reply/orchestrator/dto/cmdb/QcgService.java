@@ -54,13 +54,8 @@ public class QcgService extends  CloudService {
    *     the iamEnabled flag
    * @param publicIpAssignable
    *     the publicIpAssignable flag
-   * @param publicNetworkName
-   *     the public network name
-   * @param privateNetworkCidr
-   *     the private network CIDR
-   * @param privateNetworkName
-   *     the private network name
-   */  @Builder(builderMethodName = "qcgBuilder")
+   */
+  @Builder(builderMethodName = "qcgBuilder")
   public QcgService(
       @NonNull String id,
       @NonNull String serviceType,

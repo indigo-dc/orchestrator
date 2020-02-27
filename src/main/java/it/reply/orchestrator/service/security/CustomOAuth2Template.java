@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,6 +59,8 @@ public class CustomOAuth2Template {
    *          the client configuration
    * @param builder
    *          the RestTemplate builder
+   * @param audience
+   *          the audience
    */
   public CustomOAuth2Template(@NonNull ServerConfiguration serverConfiguration,
       @NonNull RegisteredClient clientConfiguration, @NonNull RestTemplateBuilder builder,

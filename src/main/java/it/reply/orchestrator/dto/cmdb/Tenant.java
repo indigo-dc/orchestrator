@@ -58,9 +58,9 @@ public class Tenant implements CmdbIdentifiable {
 
   @JsonProperty("private_network_cidr")
   @Nullable
-  private String privateNetworkCidr;  
+  private String privateNetworkCidr;
 
   @JsonProperty("private_network_name")
   @Nullable
-  private String privateNetworkName;    
+  private String privateNetworkName;
 }

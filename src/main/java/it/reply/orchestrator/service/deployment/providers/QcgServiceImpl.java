@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 I.N.F.N.
+ * Copyright © 2019-2020 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -179,7 +179,9 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
    * @param cloudProviderEndpoint the {@link CloudProviderEndpoint} of the Qcg
    *                              instance
    * @param requestedWithToken    the token ID of the request
-   * @param job                   the IndigoJob to be created
+   * @param job                   the DeepJob to be created
+   *
+   * @return The Job object
    */
   protected Job createJobOnQcg(CloudProviderEndpoint cloudProviderEndpoint,
       OidcTokenId requestedWithToken, DeepJob job) {
@@ -248,7 +250,8 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
    * @param cloudProviderEndpoint the {@link CloudProviderEndpoint} of the Qcg
    *                              instance
    * @param requestedWithToken    the token ID of the request
-   * @param jobName               the name of the Qcg job
+   * @param jobId                 the ID of the Qcg job
+   *
    * @return the optional {@link Job}.
    */
   protected boolean checkJobsOnQcg(CloudProviderEndpoint cloudProviderEndpoint,
@@ -288,7 +291,8 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
    * @param cloudProviderEndpoint the {@link CloudProviderEndpoint} of the Qcg
    *                              instance
    * @param requestedWithToken    the token ID of the request
-   * @param jobName               the name of the Qcg job
+   * @param jobId                 the ID of the Qcg job
+   *
    * @return the optional {@link Job}.
    */
   protected Optional<Job> findJobOnQcg(CloudProviderEndpoint cloudProviderEndpoint,
@@ -344,7 +348,9 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
    * Creates the {@link QcgJob} graph based on the given {@link Deployment} (the
    * TOSCA template is parsed).
    *
+   * @param deploymentMessage the deployment message.
    * @param deployment the input deployment.
+   *
    * @return the job graph.
    */
   protected QcgJobsOrderedIterator getJobsTopologicalOrder(DeploymentMessage deploymentMessage,
@@ -397,9 +403,11 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
 
   /**
    * Build a QcgJob task object.
+   *
    * @param graph the input nodegraph.
    * @param taskNode the input tasknode.
    * @param taskId the input taskid.
+   *
    * @return the QcgJob.
    */
   public QcgJob buildTask(DirectedMultigraph<NodeTemplate, RelationshipTemplate> graph,
@@ -506,7 +514,7 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
   }
 
   /**
-   * Deletes all the deployment jobs from Qcg. <br/>
+   * Deletes all the deployment jobs from Qcg. <br>
    * Also logs possible errors and updates the deployment status.
    *
    * @param deploymentMessage the deployment message.
@@ -549,7 +557,7 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
    * @param cloudProviderEndpoint the {@link CloudProviderEndpoint} of the Qcg
    *                              instance
    * @param requestedWithToken    the token ID of the request
-   * @param jobIf                 the Id of the Qcg job
+   * @param jobId                 the Id of the Qcg job
    */
 
   protected void deleteJobsOnQcg(CloudProviderEndpoint cloudProviderEndpoint,
@@ -574,6 +582,7 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
    *
    * @param deployment   the deployment
    * @param odParameters the OneData settings
+   *
    * @return the populated {@link ArchiveRoot}
    */
   public ArchiveRoot prepareTemplate(Deployment deployment, Map<String, OneData> odParameters) {
@@ -605,6 +614,7 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
    * Computes the Qcg job's state based on current success and error count.
    *
    * @param job the {@link Job}.
+   *
    * @return the {@link JobState}.
    */
   @VisibleForTesting

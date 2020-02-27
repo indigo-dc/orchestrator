@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -109,6 +109,8 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
      *          the response
      * @param maxPayloadLength
      *          the max payload request to parse
+     * @param headersToOmit
+     *          the set of headers to omit
      * @param responseTime
      *          the response time
      */
@@ -199,6 +201,8 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
      *
      * @param request
      *          the request
+     * @param headersToOmit
+     *          the set of headers to omit
      */
     public void setHeadersFromRequest(HttpServletRequest request,
         @NonNull Set<String> headersToOmit) {
@@ -248,6 +252,8 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
      *          the request
      * @param maxPayloadLength
      *          the max payload request to parse
+     * @param headersToOmit
+     *          the Set of headers to omit
      */
     public AbstractWrapper(HttpServletRequest request, int maxPayloadLength,
         Set<String> headersToOmit) {
@@ -368,6 +374,9 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
 
   /**
    * Writes a log message before the request is processed.
+   *
+   * @param request The HttpServletRequest object
+   *
    */
   protected void beforeRequest(HttpServletRequest request) {
     try {
@@ -380,6 +389,10 @@ public class CustomRequestLoggingFilter extends OncePerRequestFilter {
 
   /**
    * Writes a log message after the request is processed.
+   *
+   * @param request The HttpServletRequest object
+   * @param response The HttpServletResponse object
+   * @param responseTime The response time
    */
   protected void afterRequest(HttpServletRequest request, HttpServletResponse response,
       double responseTime) {

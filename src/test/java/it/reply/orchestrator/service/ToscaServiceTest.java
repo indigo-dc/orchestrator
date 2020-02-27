@@ -69,7 +69,7 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
   public static final String PUBLIC_NETWORK_NAME2 = "publicNetwork2";
   public static final String PRIVATE_NETWORK_NAME2 = "privateNetwork2";
   public static final String PRIVATE_NETWORK_CIDR2 = "192.168.2.0/24";
-  
+
   // @Test(expected = ToscaException.class)
   // public void customizeTemplateWithInvalidTemplate() throws Exception {
   //

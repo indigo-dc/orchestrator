@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2018 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,6 +48,13 @@ public class ResourceController {
 
   /**
    * Get all resources associated to a deployment.
+   *
+   *
+   * @param deploymentId The deployment Id
+   * @param pageable The pageable object
+   * @param pagedAssembler The PagedResourceAssembler object
+   *
+   * @return the paged resources
    */
   @ResponseStatus(HttpStatus.OK)
   @RequestMapping(value = "/resources", method = RequestMethod.GET,
@@ -68,6 +75,11 @@ public class ResourceController {
 
   /**
    * Get resource by id.
+   *
+   * @param deploymentId The deployment Id
+   * @param resourceId The resource Id
+   *
+   * @return the BaseResource object
    */
   @ResponseStatus(HttpStatus.OK)
   @RequestMapping(value = "/resources/{resourceId}", method = RequestMethod.GET,

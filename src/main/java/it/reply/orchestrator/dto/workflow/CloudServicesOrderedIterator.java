@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2019 Santer Reply S.p.A.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +41,8 @@ public class CloudServicesOrderedIterator extends WorkflowListIterator<CloudServ
   /**
    * Get the current service if present and cast it to the specified class.
    *
+   * @param <T>
+   *     the object type
    * @param clazz
    *     the required class
    * @return the casted current service
