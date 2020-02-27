@@ -202,6 +202,9 @@ include::{snippets}/deployment/http-response.adoc[]
 
 A `PUT` request is used to update the deployment from the id.
 
+==== Request Fields
+include::{snippets}/update-deployment/request-fields.adoc[]
+
 ==== Example request
 
 include::{snippets}/update-deployment/curl-request.adoc[]
