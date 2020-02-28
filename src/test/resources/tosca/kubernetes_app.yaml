@@ -13,10 +13,12 @@ topology_template:
         image:
           file: hello-world
           type: tosca.artifacts.Deployment.Image.Container.Docker
+      properties:
+        replicas: 2
       requirements:
-        - host: Docker
+        - host: docker
 
-    Docker:
+    docker:
       type: tosca.nodes.indigo.Container.Runtime.Docker
       capabilities:
         host:
@@ -30,4 +32,4 @@ topology_template:
 
   outputs:
     endpoint:
-      value:  { concat: [ { get_attribute : [ kubernetes, attr, 0 ] }, ':', { get_attribute : [ Docker, host, publish_ports, 0, target ] } ] }
+      value:  { concat: [ { get_attribute : [ kubernetes, attr, 0 ] }, ':', { get_attribute : [ docker, host, publish_ports, 0, target ] } ] }

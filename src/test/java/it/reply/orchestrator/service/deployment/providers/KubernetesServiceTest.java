@@ -17,21 +17,17 @@
 package it.reply.orchestrator.service.deployment.providers;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
-import static org.mockito.Mockito.doReturn;
 
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 import org.assertj.core.api.AbstractThrowableAssert;
 import org.assertj.core.api.Assertions;
-import org.hamcrest.core.IsEqual;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
@@ -49,7 +45,6 @@ import org.springframework.test.context.junit4.rules.SpringMethodRule;
 
 import com.google.common.collect.Lists;
 
-import io.kubernetes.client.openapi.ApiClient;
 import io.kubernetes.client.openapi.ApiException;
 import io.kubernetes.client.openapi.apis.AppsV1Api;
 import io.kubernetes.client.util.Config;
@@ -64,18 +59,17 @@ import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.CloudServiceType;
 import it.reply.orchestrator.dto.cmdb.KubernetesService;
-import it.reply.orchestrator.dto.cmdb.MarathonService;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
 import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.enums.NodeStates;
-import it.reply.orchestrator.exception.service.BusinessWorkflowException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.function.ThrowingFunction;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.ToscaServiceTest;
 import it.reply.orchestrator.service.VaultService;
+import it.reply.orchestrator.service.deployment.providers.factory.KubernetesClientFactory;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.util.TestUtil;
 import junitparams.JUnitParamsRunner;
@@ -105,6 +99,9 @@ public class KubernetesServiceTest extends ToscaParserAwareTest {
 
   @MockBean
   private VaultService vaultService;
+  
+  @MockBean
+  private KubernetesClientFactory kubernetesClientFactory;
 
   @SpyBean
   private OAuth2TokenService oauth2TokenService;
@@ -136,12 +133,17 @@ public class KubernetesServiceTest extends ToscaParserAwareTest {
     dm.setCloudServicesOrderedIterator(csi);
 
     Mockito
-        .when(deploymentRepository.findOne(deployment.getId()))
-        .thenReturn(deployment);
+      .when(deploymentRepository.findOne(deployment.getId()))
+      .thenReturn(deployment);
     ;
 
-    doReturn(new AppsV1Api(Config.defaultClient())).when(kubernetesServiceImpl)
-    .connectApi(dm, deployment.getCloudProviderEndpoint().getCpEndpoint());
+    Mockito
+      .when(oauth2TokenService.getAccessToken(dm.getRequestedWithToken()))
+      .thenReturn("token");
+
+    Mockito
+        .when(kubernetesClientFactory.build(deployment.getCloudProviderEndpoint(), "token"))
+        .thenReturn(new AppsV1Api(Config.defaultClient()));
 
     Assertions
         .assertThatExceptionOfType(DeploymentException.class);
@@ -165,12 +167,17 @@ public class KubernetesServiceTest extends ToscaParserAwareTest {
     dm.setCloudServicesOrderedIterator(csi);
 
     Mockito
-        .when(deploymentRepository.findOne(deployment.getId()))
-        .thenReturn(deployment);
+      .when(deploymentRepository.findOne(deployment.getId()))
+      .thenReturn(deployment);
     ;
 
-    doReturn(new AppsV1Api(Config.defaultClient())).when(kubernetesServiceImpl)
-    .connectApi(dm, deployment.getCloudProviderEndpoint().getCpEndpoint());
+    Mockito
+      .when(oauth2TokenService.getAccessToken(dm.getRequestedWithToken()))
+      .thenReturn("token");
+
+    Mockito
+      .when(kubernetesClientFactory.build(deployment.getCloudProviderEndpoint(), Mockito.anyString()))
+      .thenReturn(new AppsV1Api(Config.defaultClient()));
 
     AbstractThrowableAssert<?, ? extends Throwable> assertion = assertThatCode(
         () -> kubernetesServiceImpl.doUndeploy(dm));

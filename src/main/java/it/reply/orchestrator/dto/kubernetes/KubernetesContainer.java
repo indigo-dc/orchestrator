@@ -19,6 +19,9 @@ package it.reply.orchestrator.dto.kubernetes;
 import lombok.Data;
 import lombok.Getter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
@@ -28,14 +31,15 @@ public class KubernetesContainer {
   @Nullable
   private String image;
 
-  private Integer port;
+  @NonNull
+  private List<KubernetesPortMapping> portMappings = new ArrayList<>();
 
   @NonNull
   private Type type;
 
   @Getter
   public enum Type {
-    DOCKER("DOCKER", "tosca.artifacts.Deployment.Image.Container.Docker");
+    DOCKER("docker", "tosca.artifacts.Deployment.Image.Container.Docker");
 
     Type(String name, String toscaName) {
       this.name = name;

@@ -16,12 +16,11 @@
 
 package it.reply.orchestrator.dto.kubernetes;
 
-import io.kubernetes.client.custom.Quantity;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
 
 import it.reply.orchestrator.utils.ToscaConstants;
-
-import java.util.List;
-
 import lombok.Data;
 
 @Data
@@ -37,12 +36,18 @@ public class KubernetesTask {
 
   private KubernetesContainer container;
 
-  private String cpu;
+  private Double cpu;
 
-  private String memory;
+  private Double memory;
 
   private Double replicas;
 
   private Integer instances;
+  
+  private List<String> volumes = new ArrayList<>();
+  
+  public Optional<KubernetesContainer> getContainer() {
+    return Optional.ofNullable(this.container);
+  }
 
 }

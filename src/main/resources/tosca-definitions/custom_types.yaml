@@ -2367,10 +2367,6 @@ node_types:
         type: integer
         default: 1
         required: no
-      container_port:
-        type: integer
-        description: container port
-        default: 80
 
   tosca.nodes.indigo.JupyterHub:
     derived_from: tosca.nodes.SoftwareComponent

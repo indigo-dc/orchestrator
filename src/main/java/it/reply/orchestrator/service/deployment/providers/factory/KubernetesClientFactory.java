@@ -18,14 +18,23 @@ package it.reply.orchestrator.service.deployment.providers.factory;
 
 import feign.Feign;
 import feign.Logger.Level;
+import feign.auth.BasicAuthRequestInterceptor;
 import feign.RequestInterceptor;
 import feign.slf4j.Slf4jLogger;
 
 import io.kubernetes.client.openapi.ApiClient;
-
+import io.kubernetes.client.openapi.apis.AppsV1Api;
+import io.kubernetes.client.openapi.auth.ApiKeyAuth;
+import io.kubernetes.client.util.Config;
 import it.infn.ba.deep.qcg.client.utils.QcgException;
+import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
+import it.reply.orchestrator.dto.cmdb.CloudService;
+import it.reply.orchestrator.dto.deployment.DeploymentMessage;
+import it.reply.orchestrator.dto.security.GenericServiceCredential;
+import it.reply.orchestrator.utils.CommonUtils;
 
+import java.io.IOException;
 import java.util.Objects;
 
 import lombok.extern.slf4j.Slf4j;
@@ -35,42 +44,50 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Slf4j
-public class KubernetesClientFactory {
+public class KubernetesClientFactory extends CloudService{
 
-  /**
-   * Build a Kubernetes Api client object.
-   * @param cloudProviderEndpoint the service endpoint.
-   * @param accessToken the input accesstoken.
-   * @return the Kubernetes Api client object.
-   */
-  public ApiClient build(CloudProviderEndpoint cloudProviderEndpoint, String accessToken) {
-    final RequestInterceptor requestInterceptor;
-    Objects.requireNonNull(accessToken, "Access Token must not be null");
-    requestInterceptor = requestTemplate ->
-        requestTemplate.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
-
-    return build(cloudProviderEndpoint.getCpEndpoint(), requestInterceptor);
-  }
+//  /**
+//   * Build a Kubernetes Api client object.
+//   * @param cloudProviderEndpoint the service endpoint.
+//   * @param accessToken the input accesstoken.
+//   * @return the Kubernetes Api client object.
+//   */
+//  public void build(CloudProviderEndpoint cloudProviderEndpoint, OidcTokenId accessToken) {
+//    final RequestInterceptor requestInterceptor;
+//    Objects.requireNonNull(accessToken, "Access Token must not be null");
+//    requestInterceptor = requestTemplate ->
+//        requestTemplate.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
+//        
+//    //TODO if needed
+//  }
 
   /**
    * Build a Kubernetes client object.
-   * @param apiClientEndpoint the input Kubernetes service endpoint.
-   * @param authInterceptor the input request interceptor.
-   * @return the Kubernetes client object.
+   * @param cloudProviderEndpoint the input Kubernetes service endpoint.
+   * @param accessToken.
+   * @return AppsV1Api the Kubernetes client object.
+   * @throws IOException 
    */
-  public ApiClient build(String apiClientEndpoint, RequestInterceptor authInterceptor) {
-    LOG.info("Generating Qcg client with endpoint {}", apiClientEndpoint);
+  public AppsV1Api build(CloudProviderEndpoint cloudProviderEndpoint, String accessToken) throws IOException {
+    LOG.info("Generating Kubernetes client with endpoint {}", cloudProviderEndpoint.getCpEndpoint());
 
-    //TODO * new ApiEncoder()).decoder(new QcgDecoder()
-    return Feign.builder().encoder(null/* * */)
-        .logger(new Slf4jLogger(ApiClient.class))
-        .logLevel(Level.FULL)
-        .errorDecoder((methodKey, response) -> new QcgException(response.status(),
-            response.reason()))
-        .requestInterceptor(authInterceptor).requestInterceptor(template -> {
-          template.header(HttpHeaders.ACCEPT, "application/json");
-          template.header(HttpHeaders.CONTENT_TYPE, "application/json");
-        }).target(ApiClient.class, apiClientEndpoint);
+    ApiClient x = new ApiClient();
+
+    ApiKeyAuth bearerToken = (ApiKeyAuth) x.getAuthentication("BearerToken");
+    bearerToken.setApiKey(accessToken);
+    
+    String cpEndpoint = cloudProviderEndpoint.getCpEndpoint();
+
+    //x.setAccessToken(accessToken);
+    if (cpEndpoint != null && !cpEndpoint.isEmpty()) {
+      x.setBasePath(cpEndpoint);
+    }
+
+    ApiClient client = Config.fromToken(cpEndpoint, accessToken);
+    if (client == null) {
+      client = Config.defaultClient();
+    }
+    return new AppsV1Api(client);
   }
 
 }
