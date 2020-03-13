@@ -56,6 +56,7 @@ import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.deployment.providers.factory.ChronosClientFactory;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
+import it.reply.orchestrator.utils.OneDataUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 import it.reply.orchestrator.utils.ToscaConstants.Nodes;
 import it.reply.orchestrator.utils.ToscaUtils;
@@ -81,6 +82,7 @@ import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.alien4cloud.tosca.model.definitions.OutputDefinition;
 import org.alien4cloud.tosca.model.templates.NodeTemplate;
 import org.alien4cloud.tosca.model.templates.RelationshipTemplate;
 import org.alien4cloud.tosca.model.templates.Topology;
@@ -339,8 +341,23 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     // Nothing to wait here... All the jobs are delete immediately.
     return true;
   }
-
-
+  
+  @Override
+  public void finalizeDeploy(DeploymentMessage deploymentMessage) {
+    Deployment deployment = getDeployment(deploymentMessage);
+    ArchiveRoot ar = prepareTemplate(deployment, deploymentMessage.getOneDataParameters());
+    Map<String, OutputDefinition> outputs = Optional
+        .ofNullable(ar.getTopology())
+        .map(Topology::getOutputs)
+        .orElseGet(HashMap::new);
+    if (!outputs.isEmpty()) {
+      RuntimeProperties runtimeProperties = new RuntimeProperties();
+      deployment.setOutputs(indigoInputsPreProcessorService.processOutputs(ar,
+          deployment.getParameters(), runtimeProperties));
+    }
+    super.finalizeDeploy(deploymentMessage);
+  }
+  
   /**
    * Deletes all the deployment jobs from Chronos. <br>
    * Also logs possible errors and updates the deployment status.
