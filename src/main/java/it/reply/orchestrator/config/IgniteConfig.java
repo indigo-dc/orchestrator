@@ -76,7 +76,8 @@ public class IgniteConfig {
         .setClientMode(false)
         .setActiveOnStart(true)
         .setTransactionConfiguration(txCfg)
-        .setMetricsLogFrequency(0);
+        .setMetricsLogFrequency(0)
+        .setLocalHost("127.0.0.1");
 
     if (!orchestratorProperties.isClustered()) {
       TcpDiscoverySpi discoverySpi = new TcpDiscoverySpi()

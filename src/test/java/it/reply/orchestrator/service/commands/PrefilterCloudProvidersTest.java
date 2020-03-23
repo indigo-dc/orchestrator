@@ -132,7 +132,7 @@ public class PrefilterCloudProvidersTest extends
     ArchiveRoot ar = new ArchiveRoot();
     when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
         .thenReturn(deployment);
-    when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
+    when(toscaService.parse(Mockito.anyString())).thenReturn(ar);
     when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject()))
         .thenReturn(Maps.newHashMap(Boolean.FALSE, new HashMap<>()));
 
@@ -167,7 +167,7 @@ public class PrefilterCloudProvidersTest extends
     ArchiveRoot ar = new ArchiveRoot();
     when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
         .thenReturn(deployment);
-    when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
+    when(toscaService.parse(Mockito.anyString())).thenReturn(ar);
     when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject()))
         .thenReturn(new HashMap<>());
 
@@ -203,7 +203,7 @@ public class PrefilterCloudProvidersTest extends
     ArchiveRoot ar = new ArchiveRoot();
     when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
         .thenReturn(deployment);
-    when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
+    when(toscaService.parse(Mockito.anyString())).thenReturn(ar);
     when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject()))
         .thenReturn(new HashMap<>());
 
@@ -237,7 +237,7 @@ public class PrefilterCloudProvidersTest extends
     ArchiveRoot ar = new ArchiveRoot();
     when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
         .thenReturn(deployment);
-    when(toscaService.parseTemplate(Mockito.anyString())).thenReturn(ar);
+    when(toscaService.parse(Mockito.anyString())).thenReturn(ar);
     when(toscaService.contextualizeImages(Mockito.anyObject(), Mockito.anyObject()))
         .thenReturn(new HashMap<>());
 

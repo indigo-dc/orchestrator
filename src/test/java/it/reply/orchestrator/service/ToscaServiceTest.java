@@ -72,44 +72,12 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
   public static final String PRIVATE_NETWORK_NAME2 = "privateNetwork2";
   public static final String PRIVATE_NETWORK_CIDR2 = "192.168.2.0/24";
 
-  // @Test(expected = ToscaException.class)
-  // public void customizeTemplateWithInvalidTemplate() throws Exception {
-  //
-  // String template = getFileContentAsString(TEMPLATES_BASE_DIR + "galaxy_tosca_clues_error.yaml");
-  // toscaService.customizeTemplate(template, deploymentId);
-  // }
-  //
-  // @SuppressWarnings("unchecked")
-  // @Test
-  // public void customizeTemplate() throws Exception {
-  //
-  // String template = getFileContentAsString(TEMPLATES_BASE_DIR + "galaxy_tosca_clues.yaml");
-  // String customizedTemplate = toscaService.customizeTemplate(template, deploymentId);
-  // Map<String, NodeTemplate> nodes = toscaService.getArchiveRootFromTemplate(customizedTemplate)
-  // .getResult().getTopology().getNodeTemplates();
-  // for (Map.Entry<String, NodeTemplate> entry : nodes.entrySet()) {
-  // if (entry.getValue().getType().equals("tosca.nodes.indigo.ElasticCluster")) {
-  // String templateDeploymentId =
-  // ((PropertyValue<String>) entry.getValue().getProperties().get("deployment_id"))
-  // .getValue();
-  //
-  // String templateOrchestratorUrl =
-  // ((PropertyValue<String>) entry.getValue().getProperties().get("orchestrator_url"))
-  // .getValue();
-  //
-  // assertEquals(deploymentId, templateDeploymentId);
-  // assertNotNull(new URL(templateOrchestratorUrl));
-  // }
-  // }
-  //
-  // }
-
   @Test
   public void getRemovalList() throws IOException, ParsingException {
     List<String> expectedRemovalList = Arrays.asList("to-be-deleted-1", "to-be-deleted-2");
     String template =
         TestUtil.getFileContentAsString(TEMPLATES_BASE_DIR + "galaxy_tosca_clues_removal_list.yaml");
-    NodeTemplate node = toscaService.getArchiveRootFromTemplate(template).getResult().getTopology()
+    NodeTemplate node = toscaService.parse(template).getTopology()
         .getNodeTemplates().get("torque_wn");
     List<String> removalList = toscaService.getRemovalList(node);
     assertEquals(expectedRemovalList, removalList);
@@ -324,7 +292,7 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
 	@Test
 	public void checkHybridDeploymentSetting() throws Exception {
 		String template = TestUtil.getFileContentAsString(TEMPLATES_BASE_DIR + "tosca_hybrid_before_create.yaml");
-		ArchiveRoot ar = toscaService.getArchiveRootFromTemplate(template).getResult();
+		ArchiveRoot ar = toscaService.parse(template);
 		ArchiveRoot arNew = toscaService.setHybridDeployment(ar, PUBLIC_NETWORK_NAME1, PRIVATE_NETWORK_NAME1,
 		    PRIVATE_NETWORK_CIDR1);
 
@@ -342,7 +310,7 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
 
 
     template = TestUtil.getFileContentAsString(TEMPLATES_BASE_DIR + "tosca_hybrid_before_create1.yaml");
-    ar = toscaService.getArchiveRootFromTemplate(template).getResult();
+    ar = toscaService.parse(template);
     arNew = toscaService.setHybridDeployment(ar, PUBLIC_NETWORK_NAME1, PRIVATE_NETWORK_NAME1,
         PRIVATE_NETWORK_CIDR1);
 
@@ -354,7 +322,7 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
 
 
 		template = TestUtil.getFileContentAsString(TEMPLATES_BASE_DIR + "tosca_hybrid_before_create2.yaml");
-		ar = toscaService.getArchiveRootFromTemplate(template).getResult();
+		ar = toscaService.parse(template);
 		arNew = toscaService.setHybridDeployment(ar, PUBLIC_NETWORK_NAME1, PRIVATE_NETWORK_NAME1,
 		    PRIVATE_NETWORK_CIDR1);
 
@@ -368,7 +336,7 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
 	@Test
 	public void checkHybridUpdateDeploymentSetting() throws Exception {
 		String template = TestUtil.getFileContentAsString(TEMPLATES_BASE_DIR + "tosca_hybrid_before_update.yaml");
-		ArchiveRoot ar = toscaService.getArchiveRootFromTemplate(template).getResult();
+		ArchiveRoot ar = toscaService.parse(template);
 		ArchiveRoot arNew = toscaService.setHybridUpdateDeployment(ar, PUBLIC_NETWORK_NAME2,
 		    PRIVATE_NETWORK_NAME2, PRIVATE_NETWORK_CIDR2);
 

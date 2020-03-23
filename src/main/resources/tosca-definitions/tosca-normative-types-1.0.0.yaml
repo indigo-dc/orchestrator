@@ -765,13 +765,14 @@ interface_types:
       description: Operation to add a target node.
     remove_target:
       description: Operation to remove a target node.
-    add_source: >
-      description: Operation to notify the target node of a source node which
-      is now available via a relationship.
-      description:
-    target_changed: >
-      description: Operation to notify source some property or attribute of the
-      target changed
+    add_source:
+      description: >
+        Operation to notify the target node of a source node which
+        is now available via a relationship.
+    target_changed:
+      description: >
+        Operation to notify source some property or attribute of the
+        target changed
 
 ##########################################################################
  # Data Type.

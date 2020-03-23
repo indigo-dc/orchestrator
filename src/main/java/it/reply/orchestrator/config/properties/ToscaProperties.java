@@ -16,8 +16,6 @@
 
 package it.reply.orchestrator.config.properties;
 
-import java.net.URI;
-
 import javax.validation.constraints.NotNull;
 
 import lombok.Data;
@@ -25,18 +23,16 @@ import lombok.NoArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.core.io.Resource;
 import org.springframework.validation.annotation.Validated;
 
 @Validated
 @Data
-@ConfigurationProperties(prefix = "orchestrator")
+@ConfigurationProperties(prefix = "tosca")
 @NoArgsConstructor
-public class OrchestratorProperties {
+public class ToscaProperties {
 
   @NotNull
   @NonNull
-  private URI url;
-
-  private boolean clustered;
-
+  private Resource definitionsFolder;
 }

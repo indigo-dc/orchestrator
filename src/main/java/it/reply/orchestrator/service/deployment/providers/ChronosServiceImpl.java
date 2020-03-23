@@ -539,7 +539,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
       }
     });
 
-    ArchiveRoot ar = toscaService.parseTemplate(deployment.getTemplate());
+    ArchiveRoot ar = toscaService.parse(deployment.getTemplate());
 
     indigoInputsPreProcessorService
       .processFunctions(ar, deployment.getParameters(), runtimeProperties);

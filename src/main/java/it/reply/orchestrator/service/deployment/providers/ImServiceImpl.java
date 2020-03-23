@@ -183,7 +183,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           computeService.getPrivateNetworkCidr()
       );
     }
-    String imCustomizedTemplate = toscaService.getTemplateFromTopology(ar);
+    String imCustomizedTemplate = toscaService.serialize(ar);
     // Deploy on IM
     try {
       String infrastructureId =
@@ -502,7 +502,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         LOG.debug("No VMs to delete");
       }
 
-      String templateToDeploy = toscaService.getTemplateFromTopology(newAr);
+      String templateToDeploy = toscaService.serialize(newAr);
       LOG.debug("Template sent: \n{}", templateToDeploy);
 
       List<CloudProviderEndpoint> cloudProviderEndpoints =
