@@ -17,15 +17,18 @@
 package it.reply.orchestrator.config.specific;
 
 import it.reply.orchestrator.annotation.SpringTestProfile;
-import it.reply.orchestrator.config.Alien4CloudConfig;
 import it.reply.orchestrator.config.properties.OrchestratorProperties;
 import it.reply.orchestrator.service.IndigoInputsPreProcessorService;
 import it.reply.orchestrator.service.ToscaServiceImpl;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
+import it.reply.orchestrator.tosca.NormativeLaxImportParser;
+import it.reply.orchestrator.tosca.RemoteRepositoryServiceImpl;
+import it.reply.orchestrator.tosca.TemplateParser;
 
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.springframework.boot.autoconfigure.aop.AopAutoConfiguration;
+import org.springframework.boot.test.autoconfigure.web.client.AutoConfigureWebClient;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -37,11 +40,13 @@ import org.springframework.test.context.junit4.rules.SpringMethodRule;
 @SpringBootTest(
     classes = {
         AopAutoConfiguration.class,
-        Alien4CloudConfig.class,
         ToscaServiceImpl.class,
-    },
-    properties = "alien4cloud.elasticSearch.clusterName=es-cluster-test"
+        NormativeLaxImportParser.class,
+        RemoteRepositoryServiceImpl.class,
+        TemplateParser.class
+    }
 )
+@AutoConfigureWebClient
 public abstract class ToscaParserAwareTest {
 
   @ClassRule
@@ -54,9 +59,9 @@ public abstract class ToscaParserAwareTest {
   protected OAuth2TokenService oauth2tokenService;
 
   @SpyBean
-  private IndigoInputsPreProcessorService indigoInputsPreProcessorService;
+  protected IndigoInputsPreProcessorService indigoInputsPreProcessorService;
 
   @SpyBean
-  private OrchestratorProperties orchestratorProperties;
+  protected OrchestratorProperties orchestratorProperties;
 
 }

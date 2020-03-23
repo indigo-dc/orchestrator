@@ -35,6 +35,7 @@ import es.upv.i3m.grycap.im.pojo.ResponseError;
 import es.upv.i3m.grycap.im.pojo.VirtualMachineInfo;
 import es.upv.i3m.grycap.im.rest.client.BodyContentType;
 import it.reply.orchestrator.config.properties.OidcProperties;
+import it.reply.orchestrator.config.specific.ToscaParserAwareTest;
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
@@ -80,6 +81,9 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.mockito.Spy;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 
 import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
@@ -91,45 +95,38 @@ import static it.reply.orchestrator.dto.cmdb.CloudService.OPENSTACK_COMPUTE_SERV
 import static org.mockito.Mockito.*;
 
 @RunWith(JUnitParamsRunner.class)
-public class ImServiceTest {
+public class ImServiceTest extends ToscaParserAwareTest {
 
   @InjectMocks
   private ImServiceImpl imService;
 
-  @Mock
+  @MockBean
   private ImClientFactory imClientFactory;
 
-  @Spy
-  private ToscaServiceImpl toscaService;
-
-  @Spy
-  private IndigoInputsPreProcessorService indigoInputsPreProcessorService;
-
-  @Mock
+  @MockBean
   private DeploymentRepository deploymentRepository;
 
-  @Spy
-  @InjectMocks
-  private DeploymentStatusHelperImpl deploymentStatusHelper =
-      new DeploymentStatusHelperImpl(deploymentRepository);
+  @SpyBean
+  private DeploymentStatusHelperImpl deploymentStatusHelper;
 
-  @Mock
+  @MockBean
   private ResourceRepository resourceRepository;
 
-  @Mock
+  @MockBean
   private InfrastructureManager infrastructureManager;
 
-  @Mock
+  @MockBean
   private OidcProperties oidcProperties;
 
-  @Mock
-  private OAuth2TokenService oauth2TokenService;
+  @SpyBean
+  @Autowired
+  private ToscaServiceImpl toscaService;
 
   @Before
   public void setup() throws Exception {
     MockitoAnnotations.initMocks(this);
     Mockito
-        .when(oauth2TokenService.executeWithClientForResult(
+        .when(oauth2tokenService.executeWithClientForResult(
             Mockito.any(), Mockito.any(), Mockito.any()))
         .thenAnswer(y -> ((ThrowingFunction) y.getArguments()[1]).apply("token"));
   }

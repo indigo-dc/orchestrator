@@ -17,8 +17,6 @@
 package it.reply.orchestrator.service;
 
 import alien4cloud.tosca.model.ArchiveRoot;
-import alien4cloud.tosca.parser.ParsingException;
-import alien4cloud.tosca.parser.ParsingResult;
 
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dto.cmdb.ComputeService;
@@ -47,18 +45,14 @@ import org.jgrapht.graph.DirectedMultigraph;
 
 public interface ToscaService {
 
-  public ParsingResult<ArchiveRoot> getArchiveRootFromTemplate(String toscaTemplate)
-      throws ParsingException;
-
   /**
-   * Obtain the string TOSCA template representation from the in-memory representation. <br>
-   * <b>WARNING: Some nodes or properties might be missing!! Use at your own risk!</b>
+   * Obtain the string TOSCA template representation from the in-memory representation.
    *
    * @param archiveRoot
    *          the {@link ArchiveRoot} from which serialize the TOSCA template
    * @return the serialized TOSCA template
    */
-  public String getTemplateFromTopology(ArchiveRoot archiveRoot);
+  public String serialize(ArchiveRoot archiveRoot);
 
   /**
    * Adds the parameters needed for 'tosca.nodes.indigo.ElasticCluster' nodes (deployment_id,
@@ -139,10 +133,10 @@ public interface ToscaService {
    * @throws ToscaException
    *           if validation errors occur.
    */
-  public ArchiveRoot parseTemplate(String toscaTemplate);
+  public ArchiveRoot parse(String toscaTemplate);
 
   /**
-   * As for {@link #parseTemplate(String)} but also validates user's inputs.
+   * As for {@link #parse(String)} but also validates user's inputs.
    *
    * @param toscaTemplate
    *          the TOSCA template as string.
