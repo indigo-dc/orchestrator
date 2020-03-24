@@ -18,6 +18,7 @@ package it.reply.orchestrator.dto.cmdb;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import it.reply.orchestrator.dto.cmdb.CloudService.CloudServiceBuilder;
 import it.reply.orchestrator.utils.CommonUtils;
 
 import java.util.ArrayList;

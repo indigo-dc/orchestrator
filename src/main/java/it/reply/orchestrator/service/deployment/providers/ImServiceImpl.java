@@ -381,13 +381,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         .getCloudServicesOrderedIterator()
         .currentService(ComputeService.class);
 
-    //if (newResourcesOnDifferentService) {
-
     toscaService.setHybridUpdateDeployment(newAr,
         computeService.getPublicNetworkName(),
         computeService.getPrivateNetworkName(),
         computeService.getPrivateNetworkCidr());
-    //}
 
     Map<String, NodeTemplate> newNodes =
         Optional
@@ -479,10 +476,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         resourceRepository.save(resource);
       }
     });
-
-    //    ComputeService computeService = deploymentMessage
-    //        .getCloudServicesOrderedIterator()
-    //        .currentService(ComputeService.class);
 
     toscaService.contextualizeAndReplaceImages(newAr, computeService, DeploymentProvider.IM);
     toscaService.contextualizeAndReplaceFlavors(newAr, computeService, DeploymentProvider.IM);

@@ -1368,30 +1368,7 @@ public class ToscaServiceImpl implements ToscaService {
                                   .equals(ToscaConstants.Nodes.Attributes.PRIVATE)
                                   || nt.get().equals(ToscaConstants.Nodes.Attributes.ISOLATED));
                             }).findFirst();
-                        if (pn.isPresent()) {
-                          Optional<String> nt = ToscaUtils.extractScalar(pn.get().getProperties(),
-                              ToscaConstants.Nodes.Properties.NETWORKTYPE);
-                          if (nt.isPresent()) {
-                            if (nt.get().equals(ToscaConstants.Nodes.Attributes.PRIVATE)) {
-                              // set private network name
-                              pn.get().getProperties().put(
-                                  ToscaConstants.Nodes.Properties.NETWORKNAME,
-                                  new ScalarPropertyValue(privateNetworkName));
-                              // create vr_clients
-                              setHybridClients(ar);
-                            }
-                            if (nt.get().equals(ToscaConstants.Nodes.Attributes.ISOLATED)) {
-                              // set private network cidr and gateway
-                              pn.get().getProperties().put("cidr",
-                                  new ScalarPropertyValue(privateNetworkCidr));
-                              String gw = extractGatewayFromCidr(privateNetworkCidr);
-                              if (StringUtils.isNotEmpty(gw)) {
-                                pn.get().getProperties().put("gateway_ip",
-                                    new ScalarPropertyValue(gw + "," + hostName));
-                              }
-                            }
-                          }
-                        }
+                        setNetworkProperties(ar, privateNetworkName, privateNetworkCidr, hostName, pn);
 
                       }
                     });
@@ -1401,6 +1378,34 @@ public class ToscaServiceImpl implements ToscaService {
               });
         });
     return ar;
+  }
+
+  private void setNetworkProperties(ArchiveRoot ar, String privateNetworkName, String privateNetworkCidr,
+      String hostName, Optional<NodeTemplate> pn) {
+    if (pn.isPresent()) {
+      Optional<String> nt = ToscaUtils.extractScalar(pn.get().getProperties(),
+          ToscaConstants.Nodes.Properties.NETWORKTYPE);
+      if (nt.isPresent()) {
+        if (nt.get().equals(ToscaConstants.Nodes.Attributes.PRIVATE)) {
+          // set private network name
+          pn.get().getProperties().put(
+              ToscaConstants.Nodes.Properties.NETWORKNAME,
+              new ScalarPropertyValue(privateNetworkName));
+          // create vr_clients
+          setHybridClients(ar);
+        }
+        if (nt.get().equals(ToscaConstants.Nodes.Attributes.ISOLATED)) {
+          // set private network cidr and gateway
+          pn.get().getProperties().put("cidr",
+              new ScalarPropertyValue(privateNetworkCidr));
+          String gw = extractGatewayFromCidr(privateNetworkCidr);
+          if (StringUtils.isNotEmpty(gw)) {
+            pn.get().getProperties().put("gateway_ip",
+                new ScalarPropertyValue(gw + "," + hostName));
+          }
+        }
+      }
+    }
   }
 
   private String extractGatewayFromCidr(String cidr) {
