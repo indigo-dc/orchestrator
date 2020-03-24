@@ -112,7 +112,13 @@
   </distributionManagement>
 
   <repositories>
-
+  <!--
+    <repository>
+      <id>central</id>
+      <name>recas-cloud-artifactory-releases</name>
+      <url>http://artifactory.cloud.ba.infn.it:8081/artifactory/libs-release</url>
+    </repository>
+   -->
     <repository>
       <id>indigo-dc-nexus-repository</id>
       <name>INDIGO-DC repository</name>

@@ -47,6 +47,23 @@ public class ToscaConstants {
       public static final String NETWORK = BASE_NETWORK_NAME + "Network";
       public static final String PORT = BASE_NETWORK_NAME + "Port";
     }
+    
+    @UtilityClass
+    public static class Attributes {
+      public static final String PRIVATE = "private";
+      public static final String ISOLATED = "isolated";
+    }
+    
+    @UtilityClass
+    public static class Properties {
+      public static final String NETWORKTYPE = "network_type";
+      public static final String NETWORKNAME = "network_name";
+    }
+    
+    @UtilityClass
+    public static class Capabilities {
+      public static final String CENTRALPOINT = "central_point";
+    }
   }
 
   @UtilityClass

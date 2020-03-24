@@ -56,7 +56,6 @@ import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.deployment.providers.factory.ChronosClientFactory;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
-import it.reply.orchestrator.utils.OneDataUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 import it.reply.orchestrator.utils.ToscaConstants.Nodes;
 import it.reply.orchestrator.utils.ToscaUtils;

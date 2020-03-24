@@ -124,7 +124,7 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
                       ComputeService computeService = (ComputeService) cloudProviderService;
                       if (toscaService.isElasticClusterDeployment(ar)) {
                         if (deployment.getStatus() == Status.CREATE_IN_PROGRESS) {
-                          discardOnPublicNetworkRequirement(ar, computeService, servicesToDiscard);
+                          discardOnPublicNetworkRequirement(computeService, servicesToDiscard);
                         }
                         discardOnPrivateNetworkRequirement(ar, computeService, servicesToDiscard);
                       }
@@ -265,8 +265,8 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
         });
   }
 
-  protected void discardOnPublicNetworkRequirement(ArchiveRoot archiveRoot,
-      ComputeService computeService, Set<CloudService> servicesToDiscard) {
+  protected void discardOnPublicNetworkRequirement(ComputeService computeService, 
+      Set<CloudService> servicesToDiscard) {
     if (!computeService.isPublicIpAssignable()) {
       LOG.debug(
           "Discarded Compute service {} of provider {} because it doesn't support public IPs",
