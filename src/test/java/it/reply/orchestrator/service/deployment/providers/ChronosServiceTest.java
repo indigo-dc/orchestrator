@@ -402,7 +402,7 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
     deployment.setTemplate(
         TestUtil
             .getFileContentAsString(ToscaServiceTest.TEMPLATES_BASE_DIR + "chronos_2_jobs.yaml"));
-    
+
     when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
 
     chronosService.finalizeDeploy(dm);
