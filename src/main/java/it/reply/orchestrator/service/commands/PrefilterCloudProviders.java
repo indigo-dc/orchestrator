@@ -278,9 +278,9 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
   protected void discardOnPrivateNetworkRequirement(ArchiveRoot archiveRoot,
       ComputeService computeService, Set<CloudService> servicesToDiscard) {
     PrivateNetworkType networkType = toscaService.getPrivateNetworkType(archiveRoot);
-    if ((StringUtils.isAllEmpty(computeService.getPrivateNetworkCidr())
+    if ((StringUtils.isEmpty(computeService.getPrivateNetworkCidr())
         && networkType.equals(PrivateNetworkType.ISOLATED))
-        || (StringUtils.isAllEmpty(computeService.getPrivateNetworkName())
+        || (StringUtils.isEmpty(computeService.getPrivateNetworkName())
         && networkType.equals(PrivateNetworkType.PRIVATE))
         || networkType.equals(PrivateNetworkType.NONE)) {
       LOG.debug(
