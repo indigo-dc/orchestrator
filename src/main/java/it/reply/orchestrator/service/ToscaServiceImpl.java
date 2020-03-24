@@ -1368,7 +1368,7 @@ public class ToscaServiceImpl implements ToscaService {
                                   .equals(ToscaConstants.Nodes.Attributes.PRIVATE)
                                   || nt.get().equals(ToscaConstants.Nodes.Attributes.ISOLATED));
                             }).findFirst();
-                        setNetworkProperties(ar, privateNetworkName, privateNetworkCidr, 
+                        setNetworkProperties(ar, privateNetworkName, privateNetworkCidr,
                             hostName, pn);
 
                       }
