@@ -1287,19 +1287,7 @@ public class ToscaServiceImpl implements ToscaService {
     }
 
     // set public network name
-    if (StringUtils.isNotEmpty(publicNetworkName)) {
-      Optional<NodeTemplate> pn = getNodesOfType(ar, ToscaConstants.Nodes.Types.NETWORK)
-          .stream()
-          .filter(node -> {
-            Optional<String> nt = ToscaUtils.extractScalar(node.getProperties(),
-                ToscaConstants.Nodes.Properties.NETWORKTYPE);
-            return nt.isPresent() && nt.get().equals("public");
-          }).findFirst();
-      if (pn.isPresent()) {
-        pn.get().getProperties().put(ToscaConstants.Nodes.Properties.NETWORKNAME,
-            new ScalarPropertyValue(publicNetworkName));
-      }
-    }
+    setPublicNetworkName(ar, publicNetworkName);
 
     getNodesOfType(ar, ToscaConstants.Nodes.Types.CENTRAL_POINT).stream()
         .forEach(centralPointNode -> {
@@ -1379,6 +1367,22 @@ public class ToscaServiceImpl implements ToscaService {
               });
         });
     return ar;
+  }
+
+  private void setPublicNetworkName(ArchiveRoot ar, String publicNetworkName) {
+    if (StringUtils.isNotEmpty(publicNetworkName)) {
+      Optional<NodeTemplate> pn = getNodesOfType(ar, ToscaConstants.Nodes.Types.NETWORK)
+          .stream()
+          .filter(node -> {
+            Optional<String> nt = ToscaUtils.extractScalar(node.getProperties(),
+                ToscaConstants.Nodes.Properties.NETWORKTYPE);
+            return nt.isPresent() && nt.get().equals("public");
+          }).findFirst();
+      if (pn.isPresent()) {
+        pn.get().getProperties().put(ToscaConstants.Nodes.Properties.NETWORKNAME,
+            new ScalarPropertyValue(publicNetworkName));
+      }
+    }
   }
 
   private void setNetworkProperties(ArchiveRoot ar, String privateNetworkName,

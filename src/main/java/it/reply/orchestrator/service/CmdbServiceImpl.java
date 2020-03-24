@@ -272,7 +272,7 @@ public class CmdbServiceImpl implements CmdbService {
                 .collect(Collectors.toList());
             List<Image> imageList = new ArrayList<>();
             List<Flavor> flavorList = new ArrayList<>();
-            if (tenantList.size() > 0) {
+            if (!tenantList.isEmpty()) {
               //only one element must be here
               Tenant tenant = tenantList.get(0);
               imageList.addAll(getImagesByTenant(tenant.getId()));
