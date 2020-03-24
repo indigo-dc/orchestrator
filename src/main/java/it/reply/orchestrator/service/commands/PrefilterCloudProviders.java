@@ -265,7 +265,7 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
         });
   }
 
-  protected void discardOnPublicNetworkRequirement(ComputeService computeService, 
+  protected void discardOnPublicNetworkRequirement(ComputeService computeService,
       Set<CloudService> servicesToDiscard) {
     if (!computeService.isPublicIpAssignable()) {
       LOG.debug(
