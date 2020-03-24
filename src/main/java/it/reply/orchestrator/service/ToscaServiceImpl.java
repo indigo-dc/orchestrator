@@ -1527,7 +1527,7 @@ public class ToscaServiceImpl implements ToscaService {
                 if (r.getRequirementName().contains("wn")) {
                   NodeTemplate wnNode = ar.getTopology().getNodeTemplates()
                       .get(r.getTarget());
-                  // add requirement : dependency: crouter2
+                  // add requirement : dependency: vrouter2
                   this.setNodeRequirement(wnNode, "dependency", vrR.getName(),
                       REQUIREMENT_DEPENDENCY_RELATIONSHIP);
                 }
