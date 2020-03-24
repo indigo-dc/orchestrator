@@ -341,7 +341,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     // Nothing to wait here... All the jobs are delete immediately.
     return true;
   }
-  
+
   @Override
   public void finalizeDeploy(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
@@ -357,7 +357,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     }
     super.finalizeDeploy(deploymentMessage);
   }
-  
+
   /**
    * Deletes all the deployment jobs from Chronos. <br>
    * Also logs possible errors and updates the deployment status.
