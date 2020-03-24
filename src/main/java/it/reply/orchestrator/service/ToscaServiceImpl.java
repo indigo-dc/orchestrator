@@ -1368,7 +1368,8 @@ public class ToscaServiceImpl implements ToscaService {
                                   .equals(ToscaConstants.Nodes.Attributes.PRIVATE)
                                   || nt.get().equals(ToscaConstants.Nodes.Attributes.ISOLATED));
                             }).findFirst();
-                        setNetworkProperties(ar, privateNetworkName, privateNetworkCidr, hostName, pn);
+                        setNetworkProperties(ar, privateNetworkName, privateNetworkCidr, 
+                            hostName, pn);
 
                       }
                     });
@@ -1380,8 +1381,8 @@ public class ToscaServiceImpl implements ToscaService {
     return ar;
   }
 
-  private void setNetworkProperties(ArchiveRoot ar, String privateNetworkName, String privateNetworkCidr,
-      String hostName, Optional<NodeTemplate> pn) {
+  private void setNetworkProperties(ArchiveRoot ar, String privateNetworkName,
+      String privateNetworkCidr, String hostName, Optional<NodeTemplate> pn) {
     if (pn.isPresent()) {
       Optional<String> nt = ToscaUtils.extractScalar(pn.get().getProperties(),
           ToscaConstants.Nodes.Properties.NETWORKTYPE);
