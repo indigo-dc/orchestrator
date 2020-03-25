@@ -57,7 +57,7 @@ topology_template:
       type: tosca.nodes.network.Network
       properties:
         network_type: private
-        
+
     elastic_cluster_front_end:
       type: tosca.nodes.indigo.ElasticCluster
       properties:

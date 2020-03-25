@@ -220,7 +220,7 @@ public class ToscaServiceImpl implements ToscaService {
         LOG.warn("Error parsing definition {}:\n{}", resourceName,
             Arrays.toString(result.getContext().getParsingErrors().toArray()));
       }
-    }    
+    }
   }
 
   /**

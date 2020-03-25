@@ -352,7 +352,7 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
     privNetworkNode = arNew.getTopology().getNodeTemplates().get("priv_network");
     Assertions.assertThat(((ScalarPropertyValue)privNetworkNode.getProperties().get("network_type")).getValue().equals("isolated"));
 
-    
+
 		template = TestUtil.getFileContentAsString(TEMPLATES_BASE_DIR + "tosca_hybrid_before_create2.yaml");
 		ar = toscaService.getArchiveRootFromTemplate(template).getResult();
 		arNew = toscaService.setHybridDeployment(ar, PUBLIC_NETWORK_NAME1, PRIVATE_NETWORK_NAME1,
@@ -361,7 +361,7 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
 		Assertions.assertThat(toscaService.getNodesOfType(arNew, ToscaConstants.Nodes.Types.CENTRAL_POINT)).size().isOne();
 		centralPointNode = arNew.getTopology().getNodeTemplates().get("indigovr_cp");
 		Assertions.assertThat(centralPointNode.getRelationships().get("host").getTarget()).isEqualTo("lrms_server");
-	
+
 	}
 
 
