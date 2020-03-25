@@ -335,10 +335,10 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
     Assertions.assertThat(lmrsServerNode.getCapabilities().containsKey("endpoint")).isTrue();
     Assertions.assertThat(toscaService.getNodesOfType(arNew, ToscaConstants.Nodes.Types.NETWORK)).size().isEqualTo(2);
     NodeTemplate pubNetworkNode = arNew.getTopology().getNodeTemplates().get("pub_network");
-    Assertions.assertThat(((ScalarPropertyValue)pubNetworkNode.getProperties().get("network_name")).getValue().equals("publicNetwork1"));
+    Assertions.assertThat(((ScalarPropertyValue)pubNetworkNode.getProperties().get("network_name")).getValue()).isEqualTo("publicNetwork1");
     NodeTemplate privNetworkNode = arNew.getTopology().getNodeTemplates().get("priv_network");
-    Assertions.assertThat(((ScalarPropertyValue)privNetworkNode.getProperties().get("network_name")).getValue().equals("privateNetwork1"));
-    Assertions.assertThat(((ScalarPropertyValue)privNetworkNode.getProperties().get("network_type")).getValue().equals("private"));
+    Assertions.assertThat(((ScalarPropertyValue)privNetworkNode.getProperties().get("network_name")).getValue()).isEqualTo("privateNetwork1");
+    Assertions.assertThat(((ScalarPropertyValue)privNetworkNode.getProperties().get("network_type")).getValue()).isEqualTo("private");
 
 
     template = TestUtil.getFileContentAsString(TEMPLATES_BASE_DIR + "tosca_hybrid_before_create1.yaml");
@@ -348,9 +348,9 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
 
     Assertions.assertThat(toscaService.getNodesOfType(arNew, ToscaConstants.Nodes.Types.NETWORK)).size().isEqualTo(2);
     pubNetworkNode = arNew.getTopology().getNodeTemplates().get("pub_network");
-    Assertions.assertThat(((ScalarPropertyValue)pubNetworkNode.getProperties().get("network_name")).getValue().equals("publicNetwork1"));
+    Assertions.assertThat(((ScalarPropertyValue)pubNetworkNode.getProperties().get("network_name")).getValue()).isEqualTo("publicNetwork1");
     privNetworkNode = arNew.getTopology().getNodeTemplates().get("priv_network");
-    Assertions.assertThat(((ScalarPropertyValue)privNetworkNode.getProperties().get("network_type")).getValue().equals("isolated"));
+    Assertions.assertThat(((ScalarPropertyValue)privNetworkNode.getProperties().get("network_type")).getValue()).isEqualTo("isolated");
 
 
 		template = TestUtil.getFileContentAsString(TEMPLATES_BASE_DIR + "tosca_hybrid_before_create2.yaml");
