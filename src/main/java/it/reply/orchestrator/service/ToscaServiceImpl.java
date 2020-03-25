@@ -202,31 +202,25 @@ public class ToscaServiceImpl implements ToscaService {
     // set requiredAuth to upload TOSCA types
     Optional<Authentication> oldAuth = setAutenticationForToscaImport();
 
-    try (InputStream is = ctx.getResource(normativeLocalName).getInputStream()) {
-      Path zipFile = File.createTempFile(normativeLocalName, ".zip").toPath();
-      zip(is, zipFile);
-      ParsingResult<Csar> result = archiveUploadService
-          .upload(zipFile, CSARSource.ORCHESTRATOR, "default");
-      if (!result.getContext().getParsingErrors().isEmpty()) {
-        LOG.warn("Error parsing definition {}:\n{}", normativeLocalName,
-            Arrays.toString(result.getContext().getParsingErrors().toArray()));
-      }
-    }
-
-    try (InputStream is = ctx.getResource(indigoLocalName).getInputStream()) {
-      Path zipFile = File.createTempFile(indigoLocalName, ".zip").toPath();
-      zip(is, zipFile);
-      ParsingResult<Csar> result = archiveUploadService
-          .upload(zipFile, CSARSource.ORCHESTRATOR, "default");
-      if (!result.getContext().getParsingErrors().isEmpty()) {
-        LOG.warn("Error parsing definition {}:\n{}", indigoLocalName,
-            Arrays.toString(result.getContext().getParsingErrors().toArray()));
-      }
-    }
+    loadToscaTypes(normativeLocalName);
+    loadToscaTypes(indigoLocalName);
 
     // restore old auth if present
     oldAuth.ifPresent(SecurityContextHolder.getContext()::setAuthentication);
+  }
 
+  private void loadToscaTypes(String resourceName)
+      throws IOException, FunctionalException {
+    try (InputStream is = ctx.getResource(resourceName).getInputStream()) {
+      Path zipFile = File.createTempFile(resourceName, ".zip").toPath();
+      zip(is, zipFile);
+      ParsingResult<Csar> result = archiveUploadService
+          .upload(zipFile, CSARSource.ORCHESTRATOR, "default");
+      if (!result.getContext().getParsingErrors().isEmpty()) {
+        LOG.warn("Error parsing definition {}:\n{}", resourceName,
+            Arrays.toString(result.getContext().getParsingErrors().toArray()));
+      }
+    }    
   }
 
   /**
