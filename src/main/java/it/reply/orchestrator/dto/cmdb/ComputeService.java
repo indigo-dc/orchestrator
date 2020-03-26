@@ -110,7 +110,7 @@ public class ComputeService extends CloudService {
       @NonNull List<Image> images,
       @NonNull List<Flavor> flavors,
       boolean iamEnabled,
-      @Nullable boolean publicIpAssignable,
+      boolean publicIpAssignable,
       @Nullable String publicNetworkName,
       @Nullable String privateNetworkCidr,
       @Nullable String privateNetworkName) {
