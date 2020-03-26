@@ -23,10 +23,10 @@ import it.reply.orchestrator.config.specific.ToscaParserAwareTest;
 import it.reply.orchestrator.dto.cmdb.Image;
 import it.reply.orchestrator.exception.service.ToscaException;
 import it.reply.orchestrator.util.TestUtil;
+import it.reply.orchestrator.utils.ToscaConstants;
 import it.reply.orchestrator.utils.ToscaUtils;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,6 +36,7 @@ import java.util.Map;
 
 import org.alien4cloud.tosca.model.definitions.AbstractPropertyValue;
 import org.alien4cloud.tosca.model.definitions.PropertyValue;
+import org.alien4cloud.tosca.model.definitions.ScalarPropertyValue;
 import org.alien4cloud.tosca.model.templates.Capability;
 import org.alien4cloud.tosca.model.templates.NodeTemplate;
 import org.alien4cloud.tosca.normative.types.FloatType;
@@ -64,6 +65,12 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
   public static final String TEMPLATES_INPUT_BASE_DIR = TEMPLATES_BASE_DIR + "inputs/";
   public static final String TEMPLATES_ONEDATA_BASE_DIR =
       TEMPLATES_BASE_DIR + "onedata_requirements/";
+  public static final String PUBLIC_NETWORK_NAME1 = "publicNetwork1";
+  public static final String PRIVATE_NETWORK_NAME1 = "privateNetwork1";
+  public static final String PRIVATE_NETWORK_CIDR1 = "192.168.1.0/24";
+  public static final String PUBLIC_NETWORK_NAME2 = "publicNetwork2";
+  public static final String PRIVATE_NETWORK_NAME2 = "privateNetwork2";
+  public static final String PRIVATE_NETWORK_CIDR2 = "192.168.2.0/24";
 
   // @Test(expected = ToscaException.class)
   // public void customizeTemplateWithInvalidTemplate() throws Exception {
@@ -318,19 +325,43 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
 	public void checkHybridDeploymentSetting() throws Exception {
 		String template = TestUtil.getFileContentAsString(TEMPLATES_BASE_DIR + "tosca_hybrid_before_create.yaml");
 		ArchiveRoot ar = toscaService.getArchiveRootFromTemplate(template).getResult();
-		ArchiveRoot arNew = toscaService.setHybridDeployment(ar);
+		ArchiveRoot arNew = toscaService.setHybridDeployment(ar, PUBLIC_NETWORK_NAME1, PRIVATE_NETWORK_NAME1,
+		    PRIVATE_NETWORK_CIDR1);
 
-		Assertions.assertThat(toscaService.getNodesOfType(arNew, "tosca.nodes.indigo.VR.CentralPoint")).size().isOne();
+		Assertions.assertThat(toscaService.getNodesOfType(arNew, ToscaConstants.Nodes.Types.CENTRAL_POINT)).size().isOne();
 		NodeTemplate centralPointNode = arNew.getTopology().getNodeTemplates().get("indigovr_cp");
 		Assertions.assertThat(centralPointNode.getRelationships().get("host").getTarget()).isEqualTo("lrms_server");
+    NodeTemplate lmrsServerNode = arNew.getTopology().getNodeTemplates().get("lrms_server");
+    Assertions.assertThat(lmrsServerNode.getCapabilities().containsKey("endpoint")).isTrue();
+    Assertions.assertThat(toscaService.getNodesOfType(arNew, ToscaConstants.Nodes.Types.NETWORK)).size().isEqualTo(2);
+    NodeTemplate pubNetworkNode = arNew.getTopology().getNodeTemplates().get("pub_network");
+    Assertions.assertThat(((ScalarPropertyValue)pubNetworkNode.getProperties().get("network_name")).getValue()).isEqualTo("publicNetwork1");
+    NodeTemplate privNetworkNode = arNew.getTopology().getNodeTemplates().get("priv_network");
+    Assertions.assertThat(((ScalarPropertyValue)privNetworkNode.getProperties().get("network_name")).getValue()).isEqualTo("privateNetwork1");
+    Assertions.assertThat(((ScalarPropertyValue)privNetworkNode.getProperties().get("network_type")).getValue()).isEqualTo("private");
+
+
+    template = TestUtil.getFileContentAsString(TEMPLATES_BASE_DIR + "tosca_hybrid_before_create1.yaml");
+    ar = toscaService.getArchiveRootFromTemplate(template).getResult();
+    arNew = toscaService.setHybridDeployment(ar, PUBLIC_NETWORK_NAME1, PRIVATE_NETWORK_NAME1,
+        PRIVATE_NETWORK_CIDR1);
+
+    Assertions.assertThat(toscaService.getNodesOfType(arNew, ToscaConstants.Nodes.Types.NETWORK)).size().isEqualTo(2);
+    pubNetworkNode = arNew.getTopology().getNodeTemplates().get("pub_network");
+    Assertions.assertThat(((ScalarPropertyValue)pubNetworkNode.getProperties().get("network_name")).getValue()).isEqualTo("publicNetwork1");
+    privNetworkNode = arNew.getTopology().getNodeTemplates().get("priv_network");
+    Assertions.assertThat(((ScalarPropertyValue)privNetworkNode.getProperties().get("network_type")).getValue()).isEqualTo("isolated");
+
 
 		template = TestUtil.getFileContentAsString(TEMPLATES_BASE_DIR + "tosca_hybrid_before_create2.yaml");
 		ar = toscaService.getArchiveRootFromTemplate(template).getResult();
-		arNew = toscaService.setHybridDeployment(ar);
+		arNew = toscaService.setHybridDeployment(ar, PUBLIC_NETWORK_NAME1, PRIVATE_NETWORK_NAME1,
+		    PRIVATE_NETWORK_CIDR1);
 
-		Assertions.assertThat(toscaService.getNodesOfType(arNew, "tosca.nodes.indigo.VR.CentralPoint")).size().isOne();
+		Assertions.assertThat(toscaService.getNodesOfType(arNew, ToscaConstants.Nodes.Types.CENTRAL_POINT)).size().isOne();
 		centralPointNode = arNew.getTopology().getNodeTemplates().get("indigovr_cp");
 		Assertions.assertThat(centralPointNode.getRelationships().get("host").getTarget()).isEqualTo("lrms_server");
+
 	}
 
 
@@ -338,13 +369,13 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
 	public void checkHybridUpdateDeploymentSetting() throws Exception {
 		String template = TestUtil.getFileContentAsString(TEMPLATES_BASE_DIR + "tosca_hybrid_before_update.yaml");
 		ArchiveRoot ar = toscaService.getArchiveRootFromTemplate(template).getResult();
-		ArchiveRoot arNew = toscaService.setHybridUpdateDeployment(ar);
+		ArchiveRoot arNew = toscaService.setHybridUpdateDeployment(ar, PUBLIC_NETWORK_NAME2,
+		    PRIVATE_NETWORK_NAME2, PRIVATE_NETWORK_CIDR2);
 
-		Assertions.assertThat(toscaService.getNodesOfType(arNew, "tosca.nodes.indigo.VR.CentralPoint")).size().isOne();
-		Assertions.assertThat(toscaService.getNodesOfType(arNew, "tosca.nodes.indigo.VR.Client")).size().isOne();
+		Assertions.assertThat(toscaService.getNodesOfType(arNew, ToscaConstants.Nodes.Types.CENTRAL_POINT)).size().isOne();
+		Assertions.assertThat(toscaService.getNodesOfType(arNew, ToscaConstants.Nodes.Types.CLIENT)).size().isOne();
 
 		NodeTemplate indigoVRNode = arNew.getTopology().getNodeTemplates().get("indigovr_client");
 		Assertions.assertThat(indigoVRNode.getRelationships().get("central_point").getTarget()).isEqualTo("indigovr_cp");
 	}
-
 }

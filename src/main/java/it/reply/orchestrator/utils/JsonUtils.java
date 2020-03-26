@@ -55,6 +55,7 @@ public class JsonUtils {
   /**
    * Deserialize an object from a String.
    *
+   * @param <T> The type of object
    * @param serializedObject
    *          the object serialized as String.
    * @param typeReference
@@ -76,6 +77,7 @@ public class JsonUtils {
   /**
    * Deserialize an object from a String.
    *
+   * @param <T> The type of object
    * @param serializedObject
    *          the object serialized as String.
    * @param typeReference

@@ -131,12 +131,12 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         .isPresent();
   }
 
-  protected ArchiveRoot prepareTemplate(Deployment deployment,
+  protected ArchiveRoot prepareTemplate(String template, Deployment deployment,
       DeploymentMessage deploymentMessage) {
     RuntimeProperties runtimeProperties =
         OneDataUtils.getOneDataRuntimeProperties(deploymentMessage);
     Map<String, Object> inputs = deployment.getParameters();
-    ArchiveRoot ar = toscaService.parseAndValidateTemplate(deployment.getTemplate(), inputs);
+    ArchiveRoot ar = toscaService.parseAndValidateTemplate(template, inputs);
     if (runtimeProperties.getVaules().size() > 0) {
       indigoInputsPreProcessorService.processGetInputAttributes(ar, inputs, runtimeProperties);
     } else {
@@ -158,7 +158,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     // Update status of the deployment
     deployment.setTask(Task.DEPLOYER);
 
-    ArchiveRoot ar = prepareTemplate(deployment, deploymentMessage);
+    ArchiveRoot ar = prepareTemplate(deployment.getTemplate(), deployment, deploymentMessage);
 
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
 
@@ -177,7 +177,11 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
 
     if (toscaService.isHybridDeployment(ar)) {
-      toscaService.setHybridDeployment(ar);
+      toscaService.setHybridDeployment(ar,
+          computeService.getPublicNetworkName(),
+          computeService.getPrivateNetworkName(),
+          computeService.getPrivateNetworkCidr()
+      );
     }
     String imCustomizedTemplate = toscaService.getTemplateFromTopology(ar);
     // Deploy on IM
@@ -325,7 +329,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     final CloudProviderEndpoint chosenCloudProviderEndpoint =
         deploymentMessage.getChosenCloudProviderEndpoint();
 
-    ArchiveRoot newAr = prepareTemplate(deployment, deploymentMessage);
+    ArchiveRoot newAr = prepareTemplate(template, deployment, deploymentMessage);
 
     String accessToken = null;
     if (oidcProperties.isEnabled()) {
@@ -373,9 +377,14 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
             .getCpComputeServiceId()
             .equals(deployment.getCloudProviderEndpoint().getCpComputeServiceId());
 
-    if (newResourcesOnDifferentService) {
-      toscaService.setHybridUpdateDeployment(newAr);
-    }
+    ComputeService computeService = deploymentMessage
+        .getCloudServicesOrderedIterator()
+        .currentService(ComputeService.class);
+
+    toscaService.setHybridUpdateDeployment(newAr,
+        computeService.getPublicNetworkName(),
+        computeService.getPrivateNetworkName(),
+        computeService.getPrivateNetworkCidr());
 
     Map<String, NodeTemplate> newNodes =
         Optional
@@ -452,7 +461,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
               && newNode.getType().equals(resource.getToscaNodeType())
               && resource.getState() != NodeStates.DELETING)
           .collect(Collectors.toList());
-
       long newCount = toscaService.getCount(newNode).orElse(1L);
       int oldCount = resources.size();
       long diff = newCount - oldCount;
@@ -468,10 +476,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         resourceRepository.save(resource);
       }
     });
-
-    ComputeService computeService = deploymentMessage
-        .getCloudServicesOrderedIterator()
-        .currentService(ComputeService.class);
 
     toscaService.contextualizeAndReplaceImages(newAr, computeService, DeploymentProvider.IM);
     toscaService.contextualizeAndReplaceFlavors(newAr, computeService, DeploymentProvider.IM);

@@ -27,7 +27,6 @@ import javax.validation.constraints.NotNull;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
 
 import org.apache.commons.lang3.StringUtils;
@@ -47,7 +46,6 @@ public class MesosFrameworkServiceProperties {
 
   @NonNull
   @NotNull
-  @Builder.Default
   @JsonProperty("persistent_storage_drivers")
   private List<String> persistentStorageDrivers = new ArrayList<>();
 

@@ -41,6 +41,8 @@ public class CloudServicesOrderedIterator extends WorkflowListIterator<CloudServ
   /**
    * Get the current service if present and cast it to the specified class.
    *
+   * @param <T>
+   *     the object type
    * @param clazz
    *     the required class
    * @return the casted current service

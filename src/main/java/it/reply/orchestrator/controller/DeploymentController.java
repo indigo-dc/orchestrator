@@ -61,8 +61,10 @@ public class DeploymentController {
   /**
    * Get all deployments.
    *
+   * @param createdBy
+   *          created by name
    * @param pageable
-   *          {@Link Pageable}
+   *          {@link Pageable}
    * @param pagedAssembler
    *          {@link PagedResourcesAssembler}
    * @return {@link DeploymentResource}

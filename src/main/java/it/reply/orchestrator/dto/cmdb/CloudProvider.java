@@ -62,6 +62,8 @@ public class CloudProvider implements CmdbIdentifiable {
   /**
    * Get all services instance of a specified class.
    *
+   * @param <T>
+   *     the object type
    * @param clazz
    *     the base class required
    * @return the list of services

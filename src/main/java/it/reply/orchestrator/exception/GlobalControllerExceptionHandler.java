@@ -46,6 +46,8 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
    *
    * @param ex
    *          the exception
+   * @param request
+   *          the Web request object
    * @return a {@code ResponseEntity} instance
    */
   @ExceptionHandler
@@ -59,6 +61,8 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
    *
    * @param ex
    *          the exception
+   * @param request
+   *          the Web request object
    * @return a {@code ResponseEntity} instance
    */
   @ExceptionHandler
@@ -73,6 +77,8 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
    *
    * @param ex
    *     the exception
+   * @param request
+   *     the Web request object
    * @return a {@code ResponseEntity} instance
    */
   @ExceptionHandler({TransientDataAccessException.class, FlowableOptimisticLockingException.class})
@@ -94,6 +100,8 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
    *
    * @param ex
    *     the exception
+   * @param request
+   *     the web request object
    * @return a {@code ResponseEntity} instance
    */
   @ExceptionHandler
@@ -111,6 +119,8 @@ public class GlobalControllerExceptionHandler extends ResponseEntityExceptionHan
    *
    * @param ex
    *          the exception
+   * @param request
+   *          the web request object
    * @return a {@code ResponseEntity} instance
    */
   @ExceptionHandler

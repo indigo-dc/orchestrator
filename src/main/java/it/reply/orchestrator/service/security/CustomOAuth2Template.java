@@ -59,6 +59,8 @@ public class CustomOAuth2Template {
    *          the client configuration
    * @param builder
    *          the RestTemplate builder
+   * @param audience
+   *          the audience
    */
   public CustomOAuth2Template(@NonNull ServerConfiguration serverConfiguration,
       @NonNull RegisteredClient clientConfiguration, @NonNull RestTemplateBuilder builder,

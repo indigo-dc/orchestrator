@@ -45,6 +45,8 @@ public class IgniteConfig {
   @AllArgsConstructor
   public static class TransactionManagerFactory implements Factory<TransactionManager> {
 
+    private static final long serialVersionUID = 1L;
+
     @NonNull
     private transient TransactionManager transactionManager;
 
@@ -56,6 +58,9 @@ public class IgniteConfig {
 
   /**
    * Generates a new IgniteConfiguration.
+   *
+   * @param transactionManager The transaction manager object
+   * @param orchestratorProperties The Orchestrator properties object
    *
    * @return the generated IgniteConfiguration
    */
@@ -83,6 +88,11 @@ public class IgniteConfig {
 
   /**
    * Generates a new Ignite instance.
+   *
+   * @param applicationContext The Application context
+   * @param igniteConfiguration The Ignite configuration object
+   *
+   * @throws IgniteCheckedException the exception
    *
    * @return the generated Ignite instance
    */

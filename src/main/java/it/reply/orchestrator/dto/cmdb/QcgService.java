@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 I.N.F.N.
+ * Copyright © 2019-2020 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,31 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class QcgService extends  CloudService {
 
+  /**
+   * Create a new QcgService.
+   * @param id
+   *     the id of the service
+   * @param serviceType
+   *     the serviceType of the service
+   * @param endpoint
+   *     the endpoint of the service
+   * @param providerId
+   *     the providerId of the service
+   * @param type
+   *     the type of the service
+   * @param publicService
+   *     the publicService of the service
+   * @param region
+   *     the region of the service
+   * @param hostname
+   *     the hostname of the service
+   * @param parentServiceId
+   *     the parentServiceId of the service
+   * @param iamEnabled
+   *     the iamEnabled flag
+   * @param publicIpAssignable
+   *     the publicIpAssignable flag
+   */
   @Builder(builderMethodName = "qcgBuilder")
   public QcgService(
       @NonNull String id,
@@ -41,8 +66,9 @@ public class QcgService extends  CloudService {
       @Nullable String region,
       @NonNull String hostname,
       @Nullable String parentServiceId,
-      boolean iamEnabled) {
+      boolean iamEnabled,
+      boolean publicIpAssignable) {
     super(id, serviceType, endpoint, providerId, type, publicService, region, hostname,
-            parentServiceId, iamEnabled);
+            parentServiceId, iamEnabled, publicIpAssignable);
   }
 }

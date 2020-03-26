@@ -47,10 +47,11 @@ public class ChronosService extends MesosFrameworkService<ChronosServiceProperti
       @Nullable String region,
       @NonNull String hostname,
       @Nullable String parentServiceId,
-      @NonNull ChronosServiceProperties properties,
-      boolean iamEnabled) {
+      boolean iamEnabled,
+      boolean publicIpAssignable,
+      @NonNull ChronosServiceProperties properties) {
     super(id, serviceType, endpoint, providerId, type, publicService, region, hostname,
-            parentServiceId, properties, iamEnabled);
+            parentServiceId, iamEnabled, publicIpAssignable, properties);
   }
 
   @Data

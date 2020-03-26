@@ -6,12 +6,7 @@ imports:
 description: >
   TOSCA test for launching a Virtual Elastic Cluster. It will launch
   a single front-end that will be in change of managing the elasticity
-  using the LRMS workload.
-
-metadata:
-  display_name: SLURM Elastic cluster (H1 IFCA)
-  icon: https://github.com/indigo-dc/tosca-types/raw/master/images/slurm.png
-  tag: elastic
+  using the specified LRMS (torque, sge, slurm and condor) workload.
 
 topology_template:
   inputs:
@@ -30,19 +25,19 @@ topology_template:
     fe_mem:
       type: scalar-unit.size
       description: Amount of Memory for the front-end node
-      default: 1 GB
+      default: 2 GB
       required: yes
 
     wn_cpus:
       type: integer
       description: Numer of CPUs for the WNs
-      default: 1
+      default: 2
       required: yes
 
     wn_mem:
       type: scalar-unit.size
       description: Amount of Memory for the WNs
-      default: 1 GB
+      default: 3 GB
       required: yes
 
     hybrid:
@@ -61,104 +56,72 @@ topology_template:
     priv_network:
       type: tosca.nodes.network.Network
       properties:
-        network_type: private
-
-    fe_pub_port:
-      type: tosca.nodes.network.Port
-      properties:
-        order: 1
-      requirements:
-        - binding: fe_server
-        - link: pub_network
-
-    fe_priv_port:
-      type: tosca.nodes.network.Port
-      properties:
-        order: 0
-      requirements:
-        - binding: fe_server
-        - link: priv_network
-
-    wn_priv_port:
-      type: tosca.nodes.network.Port
-      properties:
-        order: 0
-      requirements:
-        - binding: wn_server
-        - link: priv_network
+        network_type: isolated
 
     elastic_cluster_front_end:
       type: tosca.nodes.indigo.ElasticCluster
       properties:
+        deployment_id: orchestrator_deployment_id
+        iam_access_token: iam_access_token
+        iam_clues_client_id: iam_clues_client_id
+        iam_clues_client_secret: iam_clues_client_secret
         hybrid: { get_input: hybrid }
       requirements:
-        - lrms: front_end
+        - lrms: lrms_front_end
         - wn: wn_node
-        - host: fe_server
 
-    front_end:
+    lrms_front_end:
       type: tosca.nodes.indigo.LRMS.FrontEnd.Slurm
       properties:
-        wn_ips: { get_attribute: [ wn_server, private_address ] }
+        wn_ips: { get_attribute: [ lrms_wn, private_address ] }
         hybrid: { get_input: hybrid }
       requirements:
-        - host: fe_server
+        - host: lrms_server
 
-    fe_server:
+
+    lrms_server:
       type: tosca.nodes.indigo.Compute
       capabilities:
-        endpoint:
-          properties:
-            dns_name: slurmserver
         host:
           properties:
             num_cpus: { get_input: fe_cpus }
             mem_size: { get_input: fe_mem }
         os:
           properties:
-              distribution: ubuntu
               type: linux
-              version: 16.04
+              distribution: ubuntu
 
     wn_node:
       type: tosca.nodes.indigo.LRMS.WorkerNode.Slurm
       properties:
-        front_end_ip: { get_attribute: [ fe_server, private_address, 0 ] }
-        public_front_end_ip: { get_attribute: [ fe_server, public_address, 0 ] }
+        front_end_ip: { get_attribute: [ lrms_server, private_address, 0 ] }
+        public_front_end_ip: { get_attribute: [ lrms_server, public_address, 0 ] }
         hybrid: { get_input: hybrid }
       capabilities:
         wn:
           properties:
-            min_instances: 0
             max_instances: { get_input: wn_num }
+            min_instances: 0
       requirements:
-        - host: wn_server
+        - host: lrms_wn
 
-    wn_server:
+    lrms_wn:
       type: tosca.nodes.indigo.Compute
       capabilities:
         scalable:
           properties:
-            count: 1
+            count: 0
         host:
           properties:
             num_cpus: { get_input: wn_cpus }
             mem_size: { get_input: wn_mem }
         os:
           properties:
-              distribution: ubuntu
               type: linux
-              version: 16.04
+              distribution: ubuntu
 
   outputs:
     cluster_ip:
-      value: { get_attribute: [ fe_server, public_address, 0 ] }
+      value: { get_attribute: [ lrms_server, public_address, 0 ] }
     cluster_creds:
-      value: { get_attribute: [ fe_server, endpoint, credential, 0 ] }
-    wn_ips:
-      value: { get_attribute: [ wn_server, private_address ] }
-
-  policies:
-    - deploy_on_ifca:
-        type: tosca.policies.indigo.SlaPlacement
-        properties: { sla_id: 5dc42be3e1ac200a237b0aa4 }
+      value: { get_attribute: [ lrms_server, endpoint, credential, 0 ] }

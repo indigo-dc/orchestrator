@@ -80,7 +80,7 @@
     <alien4cloud.version>2.1.0-DEEP-1.2.1</alien4cloud.version>
     <chronos-client.version>0.0.1</chronos-client.version>
     <marathon-client.version>0.6.2</marathon-client.version>
-    <deep-qcg-client.version>1.0.1</deep-qcg-client.version>
+    <deep-qcg-client.version>1.0.3</deep-qcg-client.version>
     <org.springframework.vault.version>1.1.3.RELEASE</org.springframework.vault.version>
     <ignite.version>2.3.0</ignite.version>
     <java-uuid-generator.version>3.1.3</java-uuid-generator.version>
@@ -112,6 +112,7 @@
   </distributionManagement>
 
   <repositories>
+
     <repository>
       <id>indigo-dc-nexus-repository</id>
       <name>INDIGO-DC repository</name>
@@ -487,6 +488,32 @@
               </execution>
             </executions>
           </plugin>
+          <plugin>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok-maven-plugin</artifactId>
+            <version>1.18.10.0</version>
+            <configuration>
+              <sourceDirectory>${project.basedir}/src/main/java</sourceDirectory>
+              <outputDirectory>${project.build.directory}/generated-sources/delombok</outputDirectory>
+              <addOutputDirectory>false</addOutputDirectory>
+            </configuration>
+            <executions>
+              <execution>
+                <phase>generate-sources</phase>
+                <goals>
+                  <goal>delombok</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <configuration>
+              <sourcepath>${project.build.directory}/generated-sources/delombok</sourcepath>
+              <reportOutputDirectory>apidocs</reportOutputDirectory>
+            </configuration>
+          </plugin>
         </plugins>
       </build>
     </profile>
@@ -523,6 +550,15 @@
           </plugin>
         </plugins>
       </build>
+    </profile>
+    <profile>
+      <id>doclint-java8-disable</id>
+      <activation>
+        <jdk>[1.8,)</jdk>
+      </activation>
+      <properties>
+        <javadoc.opts>-Xdoclint:none</javadoc.opts>
+      </properties>
     </profile>
   </profiles>
 
@@ -612,7 +648,7 @@
                   <pluginExecutionFilter>
                     <groupId>org.ec4j.maven</groupId>
                     <artifactId>
-        							editorconfig-maven-plugin
+        				editorconfig-maven-plugin
                     </artifactId>
                     <versionRange>[0.0.10,)</versionRange>
                     <goals>
@@ -730,7 +766,9 @@
             <exclude>src/main/java/it/reply/orchestrator/dto/deployment/QcgJobsOrderedIterator.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/dto/qcg/QcgJob.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/dto/vault/VaultSecret.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/enums/PrivateNetworkType.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/exception/VaultJwtTokenExpiredException.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/exception/VaultSecretNotFoundException.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/exception/VaultServiceNotAvailableException.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/resource/CloudProviderEndpointResource.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/service/ConfigurationService.java</exclude>
@@ -775,9 +813,12 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-javadoc-plugin</artifactId>
         <configuration>
+          <sourcepath>${project.build.directory}/generated-sources/delombok</sourcepath>
           <reportOutputDirectory>apidocs</reportOutputDirectory>
         </configuration>
       </plugin>
     </plugins>
   </reporting>
 </project>
+
+

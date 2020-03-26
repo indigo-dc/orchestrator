@@ -99,9 +99,6 @@ public class DeploymentMessage extends BaseWorkflowMessage {
   @Nullable
   private CloudProviderEndpoint chosenCloudProviderEndpoint;
 
-  /**
-   * The OneData information generated after the best provider choice.
-   */
   @NonNull
   private Map<String, OneData> oneDataParameters = new HashMap<>();
 

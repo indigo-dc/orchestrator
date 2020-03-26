@@ -81,6 +81,7 @@ import lombok.NoArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import org.alien4cloud.tosca.model.definitions.OutputDefinition;
 import org.alien4cloud.tosca.model.templates.NodeTemplate;
 import org.alien4cloud.tosca.model.templates.RelationshipTemplate;
 import org.alien4cloud.tosca.model.templates.Topology;
@@ -340,9 +341,24 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     return true;
   }
 
+  @Override
+  public void finalizeDeploy(DeploymentMessage deploymentMessage) {
+    Deployment deployment = getDeployment(deploymentMessage);
+    ArchiveRoot ar = prepareTemplate(deployment, deploymentMessage.getOneDataParameters());
+    Map<String, OutputDefinition> outputs = Optional
+        .ofNullable(ar.getTopology())
+        .map(Topology::getOutputs)
+        .orElseGet(HashMap::new);
+    if (!outputs.isEmpty()) {
+      RuntimeProperties runtimeProperties = new RuntimeProperties();
+      deployment.setOutputs(indigoInputsPreProcessorService.processOutputs(ar,
+          deployment.getParameters(), runtimeProperties));
+    }
+    super.finalizeDeploy(deploymentMessage);
+  }
 
   /**
-   * Deletes all the deployment jobs from Chronos. <br/>
+   * Deletes all the deployment jobs from Chronos. <br>
    * Also logs possible errors and updates the deployment status.
    *
    * @param deploymentMessage
@@ -423,6 +439,8 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
    * Creates the {@link IndigoJob} graph based on the given {@link Deployment} (the TOSCA template
    * is parsed).
    *
+   * @param deploymentMessage
+   *          the deployment message
    * @param deployment
    *          the input deployment.
    * @return the job graph.

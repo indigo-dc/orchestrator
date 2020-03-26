@@ -37,6 +37,9 @@ public interface DeploymentStatusHelper {
 
   /**
    * Update the status of a deployment successfully.
+   *
+   * @param deploymentUuid
+   *           the deployment UUID
    */
   public void updateOnSuccess(String deploymentUuid);
 

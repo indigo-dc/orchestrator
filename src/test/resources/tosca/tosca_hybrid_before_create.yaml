@@ -48,6 +48,16 @@ topology_template:
 
   node_templates:
 
+    pub_network:
+      type: tosca.nodes.network.Network
+      properties:
+        network_type: public
+
+    priv_network:
+      type: tosca.nodes.network.Network
+      properties:
+        network_type: private
+
     elastic_cluster_front_end:
       type: tosca.nodes.indigo.ElasticCluster
       properties:
@@ -72,9 +82,6 @@ topology_template:
     lrms_server:
       type: tosca.nodes.indigo.Compute
       capabilities:
-        endpoint:
-          properties:
-            dns_name: slurmserver
         host:
           properties:
             num_cpus: { get_input: fe_cpus }

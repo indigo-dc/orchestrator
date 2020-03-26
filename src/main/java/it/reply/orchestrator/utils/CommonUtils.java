@@ -63,6 +63,7 @@ public class CommonUtils {
    * Verify that a <code>@Nullable</code> reference is effectively non null and cast it to a
    * <code>@NonNull</code> reference. If the reference is instead null, a NPE is thrown
    *
+   * @param <T> The type of object
    * @param reference
    *          the nullable reference
    * @return the non null reference
@@ -80,6 +81,7 @@ public class CommonUtils {
    * <code>@NonNull</code> reference. If the reference is instead null, the <code>@NonNull</code>
    * default value is returned
    *
+   * @param <T> The type of object
    * @param reference
    *          the <code>@Nullable</code> reference
    * @param defaultValue
@@ -100,6 +102,7 @@ public class CommonUtils {
    * <code>@NonNull</code> reference. If the reference is instead null, the <code>@NonNull</code> a
    * default value will be generated through the provided supplier and returned.
    *
+   * @param <T> The type of object
    * @param reference
    *          the <code>@Nullable</code> reference
    * @param defaultValueSupplier
@@ -127,6 +130,7 @@ public class CommonUtils {
   /**
    * Cast, if present, the object wrapped inside an {@link Optional}.
    *
+   * @param <S> The type of object
    * @param optionalObject
    *          the wrapped object
    * @return the casted object wrapped in a Optional
@@ -146,6 +150,7 @@ public class CommonUtils {
    * Generate a <b>sequential</b> and <b>ordered</b> {@link Stream} from the remaining element of a
    * {@link Iterator}.
    *
+   * @param <E> the thrown exception type
    * @param iterator
    *          the iterator from which generate the stream
    * @return the stream
@@ -178,6 +183,8 @@ public class CommonUtils {
    * <tt>(e==null&nbsp;?&nbsp;e2==null&nbsp;:&nbsp;e.equals(e2))</tt> on the result of the provided
    * mapping function.
    *
+   * @param <T> The type of return object stream
+   * @param <V> The type of the object to evaluate
    * @param stream
    *          the stream to filter
    * @param mapper
@@ -201,6 +208,9 @@ public class CommonUtils {
    * {@code IllegalStateException} is thrown when the collection operation is performed.
    * </p>
    *
+   * @param <T> the type of object
+   * @param <K> the type of object
+   * @param <U> the type of object
    * @param keyMapper
    *          a mapping function to produce keys
    * @param valueMapper

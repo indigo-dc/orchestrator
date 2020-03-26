@@ -65,7 +65,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -769,17 +768,20 @@ public class ImServiceTest {
         new InfrastructureUri("http://localhost:8080/infrastructures/" + infrastructureId);
 
     ArchiveRoot oldAr = new ArchiveRoot();
-    Topology topology = new Topology();
-    oldAr.setTopology(topology);
-
-    ArchiveRoot newAr = new ArchiveRoot();
-    newAr.setTopology(topology);
+    Topology t1 = new Topology();
+    oldAr.setTopology(t1);
 
     // old node
     NodeTemplate ntOld = new NodeTemplate();
     ntOld.setName("oldNode");
     Map<String, NodeTemplate> oldNodes = new HashMap<>();
-    oldNodes.put("oldNode", ntOld);
+    oldNodes.put(ntOld.getName(), ntOld);
+
+    oldAr.getTopology().setNodeTemplates(oldNodes);
+
+    ArchiveRoot newAr = new ArchiveRoot();
+    Topology t2 = new Topology();
+    newAr.setTopology(t2);
 
     // new node
     NodeTemplate ntNew = new NodeTemplate();
@@ -789,20 +791,21 @@ public class ImServiceTest {
     NodeTemplate ntNew3 = new NodeTemplate();
     ntNew3.setName("newNode3");
     Map<String, NodeTemplate> newNodes = new HashMap<>();
-    newNodes.put("oldNode", ntOld);
-    newNodes.put("newNode", ntNew);
-    newNodes.put("newNode2", ntNew2);
-    newNodes.put("newNode3", ntNew3);
+    newNodes.put(ntOld.getName(), ntOld);
+    newNodes.put(ntNew.getName(), ntNew);
+    newNodes.put(ntNew2.getName(), ntNew2);
+    newNodes.put(ntNew3.getName(), ntNew3);
+
+    newAr.getTopology().setNodeTemplates(newNodes);
 
     mockMethodForDoUpdate(dm, deployment, infrastructureUri, oldAr, newAr);
 
     Mockito.doReturn(oldNodes.values()).when(toscaService).getScalableNodes(oldAr);
     Mockito.doReturn(newNodes.values()).when(toscaService).getScalableNodes(newAr);
-    Mockito.doReturn(Optional.of(1)).doReturn(Optional.of(4)).when(toscaService)
-        .getCount(Mockito.any(NodeTemplate.class));
+
     Mockito.doReturn(deployment.getTemplate()).when(toscaService)
         .updateTemplate(Mockito.anyString());
-    Mockito.doReturn(newAr).when(toscaService).parseAndValidateTemplate(deployment.getTemplate(),
+    Mockito.doReturn(newAr).when(toscaService).parseAndValidateTemplate("newTemplate",
         deployment.getParameters());
     Mockito.doNothing().when(indigoInputsPreProcessorService).processGetInputAttributes(eq(newAr),
         eq(deployment.getParameters()), Mockito.any());
@@ -812,7 +815,6 @@ public class ImServiceTest {
         .thenReturn(infrastructureState);
 
     assertThat(imService.doUpdate(dm, "newTemplate")).isTrue();
-
   }
 
   @Test
@@ -840,31 +842,28 @@ public class ImServiceTest {
         new InfrastructureUri("http://localhost:8080/infrastructures/" + infrastructureId);
 
     ArchiveRoot oldAr = new ArchiveRoot();
-    Topology topology = new Topology();
-    oldAr.setTopology(topology);
-
-    ArchiveRoot newAr = new ArchiveRoot();
-    newAr.setTopology(topology);
-
-    oldAr = new ArchiveRoot();
-    topology = new Topology();
-    oldAr.setTopology(topology);
-
-    newAr = new ArchiveRoot();
-    newAr.setTopology(topology);
+    Topology t1 = new Topology();
+    oldAr.setTopology(t1);
 
     // old node
     NodeTemplate ntOld = new NodeTemplate();
     ntOld.setName("oldNode");
     Map<String, NodeTemplate> oldNodes = new HashMap<>();
-    oldNodes = new HashMap<>();
-    oldNodes.put("oldNode", ntOld);
+    oldNodes.put(ntOld.getName(), ntOld);
+
+    oldAr.getTopology().setNodeTemplates(oldNodes);
+
+    ArchiveRoot newAr = new ArchiveRoot();
+    Topology t2 = new Topology();
+    newAr.setTopology(t2);
 
     // new node
     NodeTemplate ntNew = new NodeTemplate();
     ntNew.setName("newNode");
     Map<String, NodeTemplate> newNodes = new HashMap<>();
-    newNodes.put("oldNode", ntOld);
+    newNodes.put(ntNew.getName(), ntNew);
+
+    newAr.getTopology().setNodeTemplates(newNodes);
 
     Mockito.doReturn(oldNodes.values()).when(toscaService).getScalableNodes(oldAr);
     Mockito.doReturn(newNodes.values()).when(toscaService).getScalableNodes(newAr);
@@ -877,8 +876,6 @@ public class ImServiceTest {
     resource2.setIaasId(UUID.randomUUID().toString());
     Mockito.when(resourceRepository.findOne(id)).thenReturn(resource2);
 
-    Mockito.doReturn(Optional.of(1)).doReturn(Optional.of(0)).when(toscaService)
-        .getCount(Mockito.any(NodeTemplate.class));
     Mockito.doReturn(deployment.getTemplate()).when(toscaService)
         .updateTemplate(Mockito.anyString());
     Mockito.doReturn(resource2).when(resourceRepository).save(resource2);
@@ -893,7 +890,7 @@ public class ImServiceTest {
     Mockito.doNothing().when(indigoInputsPreProcessorService).processGetInputAttributes(eq(newAr),
         eq(deployment.getParameters()), Mockito.any());
 
-    assertThat(imService.doUpdate(dm, "newTemplate")).isTrue();
+    assertThat(imService.doUpdate(dm, deployment.getTemplate())).isTrue();
   }
 
 
@@ -939,17 +936,20 @@ public class ImServiceTest {
         new InfrastructureUri("http://localhost:8080/infrastructures/" + infrastructureId);
 
     ArchiveRoot oldAr = new ArchiveRoot();
-    Topology topology = new Topology();
-    oldAr.setTopology(topology);
-
-    ArchiveRoot newAr = new ArchiveRoot();
-    newAr.setTopology(topology);
+    Topology t1 = new Topology();
+    oldAr.setTopology(t1);
 
     // old node
     NodeTemplate ntOld = new NodeTemplate();
     ntOld.setName("oldNode");
     Map<String, NodeTemplate> oldNodes = new HashMap<>();
-    oldNodes.put("oldNode", ntOld);
+    oldNodes.put(ntOld.getName(), ntOld);
+
+    oldAr.getTopology().setNodeTemplates(oldNodes);
+
+    ArchiveRoot newAr = new ArchiveRoot();
+    Topology t2 = new Topology();
+    newAr.setTopology(t2);
 
     // new node
     NodeTemplate ntNew = new NodeTemplate();
@@ -959,10 +959,12 @@ public class ImServiceTest {
     NodeTemplate ntNew3 = new NodeTemplate();
     ntNew3.setName("newNode3");
     Map<String, NodeTemplate> newNodes = new HashMap<>();
-    newNodes.put("oldNode", ntOld);
-    newNodes.put("newNode", ntNew);
-    newNodes.put("newNode2", ntNew2);
-    newNodes.put("newNode3", ntNew3);
+    newNodes.put(ntOld.getName(), ntOld);
+    newNodes.put(ntNew.getName(), ntNew);
+    newNodes.put(ntNew2.getName(), ntNew2);
+    newNodes.put(ntNew3.getName(), ntNew3);
+
+    newAr.getTopology().setNodeTemplates(newNodes);
 
     List<String> removalList = new ArrayList<>();
     String id = UUID.randomUUID().toString();
@@ -977,11 +979,9 @@ public class ImServiceTest {
 
     Mockito.doReturn(removalList).when(toscaService).getRemovalList(Mockito.anyObject());
 
-    Mockito.doReturn(Optional.of(1)).doReturn(Optional.of(0)).when(toscaService)
-        .getCount(Mockito.any(NodeTemplate.class));
     Mockito.doReturn(deployment.getTemplate()).when(toscaService)
         .updateTemplate(Mockito.anyString());
-    Mockito.doReturn(newAr).when(toscaService).parseAndValidateTemplate(deployment.getTemplate(),
+    Mockito.doReturn(newAr).when(toscaService).parseAndValidateTemplate("newTemplate",
         deployment.getParameters());
     Mockito.doNothing().when(indigoInputsPreProcessorService).processGetInputAttributes(eq(newAr),
         eq(deployment.getParameters()), Mockito.any());
@@ -994,7 +994,6 @@ public class ImServiceTest {
 
     assertThatThrownBy(() -> imService.doUpdate(dm, "newTemplate"))
         .isInstanceOf(DeploymentException.class);
-
   }
 
 }

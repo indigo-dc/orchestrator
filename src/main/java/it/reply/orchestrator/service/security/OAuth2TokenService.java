@@ -225,6 +225,8 @@ public class OAuth2TokenService {
   /**
    * Execute a {@link ThrowingFunction}, handling the OAuth2 token.
    *
+   * @param <R> the result object type
+   * @param <E> the thrown exception type
    * @param oidcTokenId
    *     the token ID
    * @param function
@@ -259,6 +261,7 @@ public class OAuth2TokenService {
   /**
    * Execute a {@link ThrowingConsumer}, handling the OAuth2 token.
    *
+   * @param <E> the thrown exception type
    * @param oidcTokenId
    *     the token ID
    * @param consumer

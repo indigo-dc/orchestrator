@@ -35,6 +35,7 @@ public class EnumUtils {
   /**
    * Retrieve a enum value from its class and a user defined predicate.
    *
+   * @param <T> The type of object
    * @param enumClass
    *          the class of the enum
    * @param predicate
@@ -52,6 +53,8 @@ public class EnumUtils {
    * Collect all the enums represented by a class in a List of objects returned by a mapper
    * function.
    *
+   * @param <T> The type of object
+   * @param <R> The type of object
    * @param enumClass
    *          enums the class
    * @param mapper
@@ -75,6 +78,7 @@ public class EnumUtils {
    * returned from {@link Named#getName()}.
    * </p>
    *
+   * @param <T> The type of object
    * @param enumClass
    *          the class of the enum
    * @param name
@@ -101,6 +105,7 @@ public class EnumUtils {
    * If no enum is found a {@link NoSuchElementException} will be thrown.
    * </p>
    *
+   * @param <T> The type of object
    * @param enumClass
    *          the class of the enum
    * @param name
@@ -126,6 +131,7 @@ public class EnumUtils {
    * If no enum is found the default value will be returned.
    * </p>
    *
+   * @param <T> The type of object
    * @param enumClass
    *          the class of the enum
    * @param name

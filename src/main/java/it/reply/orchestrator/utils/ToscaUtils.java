@@ -49,6 +49,7 @@ public class ToscaUtils {
    *     the wrapped object
    * @return the unwrapped object
    */
+  @SuppressWarnings("rawtypes")
   public Object unwrapPropertyValue(Object wrappedObject) {
     if (wrappedObject instanceof PropertyValue) {
       return ((PropertyValue) wrappedObject).getValue();
@@ -64,6 +65,7 @@ public class ToscaUtils {
    *     the original object
    * @return the wrapped object
    */
+  @SuppressWarnings("unchecked")
   public AbstractPropertyValue wrapToPropertyValue(Object v) {
     if (v == null || v instanceof AbstractPropertyValue) {
       return (AbstractPropertyValue) v;
@@ -86,6 +88,8 @@ public class ToscaUtils {
   /**
    * It extracts a scalar value from a properties map and parses it.
    *
+   * @param <T> The type of object
+   * @param <V> The type of object
    * @param properties
    *     the properties map
    * @param key
@@ -105,6 +109,8 @@ public class ToscaUtils {
   /**
    * It parses a {@link String} into a scalar value.
    *
+   * @param <T> The type of object
+   * @param <V> The type of object
    * @param value
    *     the String to parse
    * @param clazz
@@ -130,6 +136,7 @@ public class ToscaUtils {
    * It extracts an optional {@link List} from a properties map and applies a mapping function on
    * every value before returning.
    *
+   * @param <V> The type of object
    * @param properties
    *     the properties map
    * @param key
@@ -151,6 +158,7 @@ public class ToscaUtils {
    * It extracts an optional {@link Map} from a properties map and applies a mapping function on
    * every value before returning.
    *
+   * @param <V> The type of object
    * @param properties
    *     the properties map
    * @param key

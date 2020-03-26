@@ -35,6 +35,8 @@ import it.reply.orchestrator.dto.policies.ToscaPolicy;
 import it.reply.orchestrator.dto.slam.Service;
 import it.reply.orchestrator.dto.slam.Sla;
 import it.reply.orchestrator.enums.DeploymentType;
+import it.reply.orchestrator.enums.PrivateNetworkType;
+import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.ToscaService;
@@ -56,6 +58,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.alien4cloud.tosca.model.templates.NodeTemplate;
 import org.alien4cloud.tosca.model.templates.Topology;
+import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -117,7 +120,15 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
                 DeploymentType type = rankCloudProvidersMessage.getDeploymentType();
                 switch (type) {
                   case TOSCA:
-                    if (!(cloudProviderService instanceof ComputeService)) {
+                    if (cloudProviderService instanceof ComputeService) {
+                      ComputeService computeService = (ComputeService) cloudProviderService;
+                      if (toscaService.isElasticClusterDeployment(ar)) {
+                        if (deployment.getStatus() == Status.CREATE_IN_PROGRESS) {
+                          discardOnPublicNetworkRequirement(computeService, servicesToDiscard);
+                        }
+                        discardOnPrivateNetworkRequirement(ar, computeService, servicesToDiscard);
+                      }
+                    } else {
                       addServiceToDiscard(servicesToDiscard, cloudProviderService);
                     }
                     break;
@@ -254,8 +265,33 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
         });
   }
 
+  protected void discardOnPublicNetworkRequirement(ComputeService computeService,
+      Set<CloudService> servicesToDiscard) {
+    if (!computeService.isPublicIpAssignable()) {
+      LOG.debug(
+          "Discarded Compute service {} of provider {} because it doesn't support public IPs",
+          computeService.getId(), computeService.getProviderId());
+      addServiceToDiscard(servicesToDiscard, computeService);
+    }
+  }
+
+  protected void discardOnPrivateNetworkRequirement(ArchiveRoot archiveRoot,
+      ComputeService computeService, Set<CloudService> servicesToDiscard) {
+    PrivateNetworkType networkType = toscaService.getPrivateNetworkType(archiveRoot);
+    if ((StringUtils.isEmpty(computeService.getPrivateNetworkCidr())
+        && networkType.equals(PrivateNetworkType.ISOLATED))
+        || (StringUtils.isEmpty(computeService.getPrivateNetworkName())
+        && networkType.equals(PrivateNetworkType.PRIVATE))
+        || networkType.equals(PrivateNetworkType.NONE)) {
+      LOG.debug(
+          "Discarded Compute service {} of provider {} because it doesn't support private newtork",
+          computeService.getId(), computeService.getProviderId());
+      addServiceToDiscard(servicesToDiscard, computeService);
+    }
+  }
+
   protected void discardOnMesosGpuRequirement(ArchiveRoot archiveRoot,
-      MesosFrameworkService mesosFrameworkService,
+      @SuppressWarnings("rawtypes") MesosFrameworkService mesosFrameworkService,
       Set<CloudService> servicesToDiscard) {
     boolean requiresGpu = toscaService.isMesosGpuRequired(archiveRoot);
     if (requiresGpu && !mesosFrameworkService.getProperties().isGpuSupport()) {

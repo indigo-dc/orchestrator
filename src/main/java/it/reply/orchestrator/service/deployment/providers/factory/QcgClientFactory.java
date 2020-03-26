@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 I.N.F.N.
+ * Copyright © 2019-2020 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -68,20 +68,7 @@ public class QcgClientFactory {
   public Qcg build(CloudProviderEndpoint cloudProviderEndpoint, String accessToken) {
     Objects.requireNonNull(accessToken, "Access Token must not be null");
     RequestInterceptor requestInterceptor = requestTemplate -> {
-      // TODO remove test token ad resume standard implementation
-      requestTemplate.header(HttpHeaders.AUTHORIZATION,
-          "Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImtpZCI6ImRlZmF1bHQta2lkIn0.e"
-              + "yJzdWIiOiJkZWZhdWx0LXVzZSIsImlzcyI6ImRlZmF1bHQtaXNzdWVyIiwiaWF0Ij"
-              + "oxNTcwNTIzMTIzLCJleHAiOjE1NzkxNjMxMjMsImF0dHJzIjp7ImxvY2FsX3VzZXI"
-              + "iOiJ1bmtub3duIn0sInBlcm1zIjp7Im93bmVyIjpbInN0YXR1cyIsImNhbmNlbCJd"
-              + "LCJzeXN0ZW0iOlsic3VibWl0IiwicmVzb3VyY2VzIiwiYWRtaW4iLCJzY2hlbWEiX"
-              + "SwiYWRtaW4iOlsidXBkYXRlIiwic3RhdHVzIiwiY2FuY2VsIl19fQ.e1zvno3Z99S"
-              + "9TCESOq40V3BG5bhgpuntQS5S2dIRFFpMnMfJlvGXaNe60JbmrH3Ps7muzAIYQ2Cr"
-              + "hjurblklFBfKIYqO5fT3nWrbHCqwwm8ArHxcUbZAzWSoDIFmPdIpJRG69oE0B6KcS"
-              + "Vs9I96tD9gl6H605NLyR8LC8UgkhVceVEKQbufj5A6QcR2XiQx3oHGEDLk2KlV4XN"
-              + "Jlt28-SJcd71FObtnXGwcCKBVblCZ75AUYLZeDU0gObRT0objw2y7kxpu2YSF9wVi"
-              + "Q2AzAIkfFCJP5HEqRjTVq5SsxNyK0sqEmXcjgbwoMFrfpr8WBj3ynO_f18gEBnwSO3H8vYQ");
-      // .header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
+      requestTemplate.header(HttpHeaders.AUTHORIZATION, "Bearer " + accessToken);
     };
     return build(cloudProviderEndpoint.getCpEndpoint(), requestInterceptor);
   }

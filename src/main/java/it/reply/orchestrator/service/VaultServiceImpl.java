@@ -21,6 +21,7 @@ import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dto.vault.TokenAuthenticationExtended;
 import it.reply.orchestrator.dto.vault.VaultTokenResponseExtended;
 import it.reply.orchestrator.exception.VaultJwtTokenExpiredException;
+import it.reply.orchestrator.exception.VaultSecretNotFoundException;
 import it.reply.orchestrator.exception.VaultServiceNotAvailableException;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 
@@ -40,6 +41,7 @@ import org.springframework.vault.client.VaultEndpoint;
 import org.springframework.vault.client.VaultResponses;
 import org.springframework.vault.core.VaultTemplate;
 import org.springframework.vault.support.VaultResponse;
+import org.springframework.vault.support.VaultResponseSupport;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
@@ -97,7 +99,11 @@ public class VaultServiceImpl implements VaultService {
 
   @Override
   public <T> T readSecret(URI uri, ClientAuthentication token, String path, Class<T> type) {
-    return getTemplate(uri, token).read(path, type).getData();
+    VaultResponseSupport<T> response = getTemplate(uri, token).read(path, type);
+    if (response == null) {
+      throw new VaultSecretNotFoundException();
+    }
+    return response.getData();
   }
 
   @Override
@@ -107,7 +113,11 @@ public class VaultServiceImpl implements VaultService {
 
   @Override
   public Map<String, Object> readSecret(URI uri, ClientAuthentication token, String path) {
-    return getTemplate(uri, token).read(path).getData();
+    VaultResponse response = getTemplate(uri, token).read(path);
+    if (response == null) {
+      throw new VaultSecretNotFoundException();
+    }
+    return response.getData();
   }
 
   @Override

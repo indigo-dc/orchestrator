@@ -396,9 +396,14 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
   }
 
   @Test
-  public void finalizeDeployTestUpdateOnSuccess() {
+  public void finalizeDeployTestUpdateOnSuccess() throws IOException {
     Deployment deployment = ControllerTestUtils.createDeployment();
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
+    deployment.setTemplate(
+        TestUtil
+            .getFileContentAsString(ToscaServiceTest.TEMPLATES_BASE_DIR + "chronos_2_jobs.yaml"));
+
+    when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
 
     chronosService.finalizeDeploy(dm);
 

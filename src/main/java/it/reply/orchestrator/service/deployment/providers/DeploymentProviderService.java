@@ -26,14 +26,14 @@ public interface DeploymentProviderService {
   /**
    * Executes the deployment of the given <code>deployment</code>, which typically means
    * instantiating the required resources on the underlying system (i.e. IaaS, other service
-   * clusters, etc). <br/>
-   * <br/>
+   * clusters, etc). <br>
+   * <br>
    * The nodes can be created iteratively (i.e. a given subset for each invocation); the deployment
    * is considered completed when the {@link DeploymentMessage#isCreateComplete()} flag is set to
-   * <tt>true</tt>. <br/>
-   * <br/>
+   * <tt>true</tt>. <br>
+   * <br>
    * It should handle every error internally (i.e. not throwing exceptions) and just return a
-   * boolean indicating the result or the failure. <br/>
+   * boolean indicating the result or the failure. <br>
    * It should also handle the deployment status update internally.
    *
    * @param deploymentMessage
@@ -44,13 +44,13 @@ public interface DeploymentProviderService {
   public boolean doDeploy(DeploymentMessage deploymentMessage);
 
   /**
-   * Checks whether the given <tt>deployment</tt> is ready. <br/>
-   * <br/>
+   * Checks whether the given <tt>deployment</tt> is ready. <br>
+   * <br>
    * The nodes can be checked iteratively (i.e. a given subset for each invocation); the deployment
-   * is considered ready when the result of the invocation is <tt>true</tt>. <br/>
-   * <br/>
+   * is considered ready when the result of the invocation is <tt>true</tt>. <br>
+   * <br>
    * The method should handle node status update internally, but can throw a DeploymentException to
-   * notify an unexpected error during the status check. <br/>
+   * notify an unexpected error during the status check. <br>
    *
    * @param deploymentMessage
    *          the deployment message.
@@ -71,14 +71,14 @@ public interface DeploymentProviderService {
   /**
    * Executes the undeployment of the given <code>deployment</code>, which typically means deleting
    * the required resources from the underlying system (i.e. IaaS, other service clusters, etc).
-   * <br/>
-   * <br/>
+   * <br>
+   * <br>
    * The nodes can be deleted iteratively (i.e. a given subset for each invocation); the
    * undeployment is considered completed when the {@link DeploymentMessage#isDeleteComplete()} flag
-   * is set to <tt>true</tt>. <br/>
-   * <br/>
+   * is set to <tt>true</tt>. <br>
+   * <br>
    * It should handle every error internally (i.e. not throwing exceptions) and just return a
-   * boolean indicating the result or the failure. <br/>
+   * boolean indicating the result or the failure. <br>
    * It should also handle the deployment status update internally.
    *
    * @param deploymentMessage
@@ -89,13 +89,13 @@ public interface DeploymentProviderService {
   public boolean doUndeploy(DeploymentMessage deploymentMessage);
 
   /**
-   * Checks whether the given <tt>deployment</tt> is deleted. <br/>
-   * <br/>
+   * Checks whether the given <tt>deployment</tt> is deleted. <br>
+   * <br>
    * The nodes can be checked iteratively (i.e. a given subset for each invocation); the deployment
-   * is considered deleted when the result of the invocation is <tt>true</tt>. <br/>
-   * <br/>
+   * is considered deleted when the result of the invocation is <tt>true</tt>. <br>
+   * <br>
    * The method should handle node status update internally, but can throw a DeploymentException to
-   * notify an unexpected error during the status check. <br/>
+   * notify an unexpected error during the status check. <br>
    *
    * @param deploymentMessage
    *          the deployment message.

@@ -48,6 +48,11 @@ topology_template:
 
   node_templates:
 
+    priv_network:
+      type: tosca.nodes.network.Network
+      properties:
+        network_type: isolated
+
     elastic_cluster_front_end:
       type: tosca.nodes.indigo.ElasticCluster
       properties:

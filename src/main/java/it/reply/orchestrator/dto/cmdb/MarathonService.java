@@ -51,10 +51,11 @@ public class MarathonService extends MesosFrameworkService<MarathonServiceProper
       @Nullable String region,
       @NonNull String hostname,
       @Nullable String parentServiceId,
-      @NonNull MarathonServiceProperties properties,
-      boolean iamEnabled) {
+      boolean iamEnabled,
+      boolean publicIpAssignable,
+      @NonNull MarathonServiceProperties properties) {
     super(id, serviceType, endpoint, providerId, type, publicService, region, hostname,
-            parentServiceId, properties, iamEnabled);
+            parentServiceId, iamEnabled, publicIpAssignable, properties);
   }
 
   @Data
@@ -63,7 +64,6 @@ public class MarathonService extends MesosFrameworkService<MarathonServiceProper
 
     @NonNull
     @NotNull
-    @Builder.Default
     @JsonProperty("load_balancer_ips")
     private List<String> loadBalancerIps = new ArrayList<>();
 

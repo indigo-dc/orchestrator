@@ -39,14 +39,24 @@ public class ComputeService extends CloudService {
   @JsonProperty("images")
   @NonNull
   @NotNull
-  @Builder.Default
   List<Image> images = new ArrayList<>();
 
   @JsonProperty("flavors")
   @NonNull
   @NotNull
-  @Builder.Default
   List<Flavor> flavors = new ArrayList<>();
+
+  @JsonProperty("public_network_name")
+  @Nullable
+  private String publicNetworkName;
+
+  @JsonProperty("private_network_cidr")
+  @Nullable
+  private String privateNetworkCidr;
+
+  @JsonProperty("private_network_name")
+  @Nullable
+  private String privateNetworkName;
 
   /**
    * Generate a new ComputeService.
@@ -67,10 +77,22 @@ public class ComputeService extends CloudService {
    *     the region
    * @param hostname
    *     the hostname
+   * @param parentServiceId
+   *     the parent service Id
    * @param images
    *     the images
    * @param flavors
    *     the flavors
+   * @param iamEnabled
+   *     the iamEnabled flag
+   * @param publicIpAssignable
+   *     the publicIpAssignable flag
+   * @param publicNetworkName
+   *     the public network name
+   * @param privateNetworkCidr
+   *     the private network CIDR
+   * @param privateNetworkName
+   *     the private network name
    */
   @Builder(builderMethodName = "computeBuilder")
   public ComputeService(
@@ -85,11 +107,18 @@ public class ComputeService extends CloudService {
       @Nullable String parentServiceId,
       @NonNull List<Image> images,
       @NonNull List<Flavor> flavors,
-      boolean iamEnabled) {
+      boolean iamEnabled,
+      boolean publicIpAssignable,
+      @Nullable String publicNetworkName,
+      @Nullable String privateNetworkCidr,
+      @Nullable String privateNetworkName) {
     super(id, serviceType, endpoint, providerId, type, publicService, region, hostname,
-            parentServiceId, iamEnabled);
+            parentServiceId, iamEnabled, publicIpAssignable);
     this.images = CommonUtils.notNullOrDefaultValue(images, ArrayList::new);
     this.flavors = CommonUtils.notNullOrDefaultValue(flavors, ArrayList::new);
+    this.publicNetworkName = publicNetworkName;
+    this.privateNetworkName = privateNetworkName;
+    this.privateNetworkCidr = privateNetworkCidr;
   }
 
   @Deprecated

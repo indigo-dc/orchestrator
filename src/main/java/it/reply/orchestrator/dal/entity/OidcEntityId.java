@@ -50,6 +50,8 @@ public class OidcEntityId extends OidcIssuerAwareId implements Serializable {
   /**
    * Generate a OidcEntityId from an access token.
    *
+   * @param accessToken The access token
+   *
    * @return the OidcEntityId
    */
   public static OidcEntityId fromAccesToken(String accessToken) {

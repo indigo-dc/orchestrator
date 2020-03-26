@@ -41,6 +41,8 @@ public class DeploymentProviderServiceRegistry {
    * Creates the DeploymentProviderServiceRegistry from all the DeploymentProviderServices
    * registered in the Spring {@link ApplicationContext}.
    *
+   * @param deploymentRepository
+   *          the deployment repository
    * @param services
    *          the registered DeploymentProviderServices
    */
