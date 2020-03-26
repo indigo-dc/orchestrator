@@ -92,7 +92,6 @@ public class CloudService implements CmdbIdentifiable {
   private boolean iamEnabled = true;
 
   @JsonProperty("public_ip_assignable")
-  @Nullable
   private boolean publicIpAssignable;
 
   private static final String INDIGO_SERVICE_PREFIX = "eu.indigo-datacloud";
