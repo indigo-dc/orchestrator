@@ -39,13 +39,11 @@ public class ComputeService extends CloudService {
   @JsonProperty("images")
   @NonNull
   @NotNull
-  //@Builder.Default
   List<Image> images = new ArrayList<>();
 
   @JsonProperty("flavors")
   @NonNull
   @NotNull
-  //@Builder.Default
   List<Flavor> flavors = new ArrayList<>();
 
   @JsonProperty("public_network_name")

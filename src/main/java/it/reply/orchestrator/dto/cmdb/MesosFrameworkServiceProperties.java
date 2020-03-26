@@ -46,7 +46,6 @@ public class MesosFrameworkServiceProperties {
 
   @NonNull
   @NotNull
-  //@Builder.Default
   @JsonProperty("persistent_storage_drivers")
   private List<String> persistentStorageDrivers = new ArrayList<>();
 
