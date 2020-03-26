@@ -24,8 +24,6 @@ import it.reply.orchestrator.service.security.OAuth2TokenService;
 
 import java.net.URI;
 
-import javax.ws.rs.core.UriBuilder;
-
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpHeaders;
@@ -34,6 +32,7 @@ import org.springframework.http.RequestEntity.HeadersBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 @EnableConfigurationProperties(SlamProperties.class)
@@ -68,10 +67,11 @@ public class SlamServiceImpl implements SlamService {
 
     String slamCustomer = oauth2TokenService.getOrganization(tokenId);
 
-    URI requestUri = UriBuilder
-        .fromUri(slamProperties.getUrl() + slamProperties.getCustomerPreferencesPath())
-        .build(slamCustomer)
-        .normalize();
+    URI requestUri = UriComponentsBuilder
+        .fromHttpUrl(slamProperties.getUrl() + slamProperties.getCustomerPreferencesPath())
+        .buildAndExpand(slamCustomer)
+        .normalize()
+        .toUri();
 
     try {
       return oauth2TokenService.executeWithClientForResult(tokenId,

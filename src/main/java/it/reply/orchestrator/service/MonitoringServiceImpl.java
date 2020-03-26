@@ -25,14 +25,13 @@ import it.reply.orchestrator.exception.service.DeploymentException;
 import java.net.URI;
 import java.util.Optional;
 
-import javax.ws.rs.core.UriBuilder;
-
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 @EnableConfigurationProperties(MonitoringProperties.class)
@@ -51,10 +50,11 @@ public class MonitoringServiceImpl implements MonitoringService {
   @Override
   public Group getProviderData(String providerId) {
 
-    URI requestUri = UriBuilder
-        .fromUri(monitoringProperties.getUrl() + monitoringProperties.getProviderMetricsPath())
-        .build(providerId)
-        .normalize();
+    URI requestUri = UriComponentsBuilder
+        .fromHttpUrl(monitoringProperties.getUrl() + monitoringProperties.getProviderMetricsPath())
+        .buildAndExpand(providerId)
+        .normalize()
+        .toUri();
 
     try {
       ResponseEntity<MonitoringResponse> response =
