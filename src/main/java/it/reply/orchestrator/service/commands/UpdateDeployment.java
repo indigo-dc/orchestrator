@@ -66,6 +66,7 @@ public class UpdateDeployment extends BaseDeployCommand {
             RankCloudProvidersMessage.class);
 
     CloudServicesOrderedIterator servicesIt = deploymentMessage.getCloudServicesOrderedIterator();
+
     if (servicesIt == null) {
       servicesIt = cloudProviderEndpointService
           .generateCloudProvidersOrderedIterator(rankCloudProvidersMessage,

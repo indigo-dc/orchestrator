@@ -25,6 +25,7 @@ import it.reply.orchestrator.dto.cmdb.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.CloudServiceType;
 import it.reply.orchestrator.dto.cmdb.ComputeService;
+import it.reply.orchestrator.dto.cmdb.KubernetesService;
 import it.reply.orchestrator.dto.cmdb.MarathonService;
 import it.reply.orchestrator.dto.cmdb.MesosFrameworkService;
 import it.reply.orchestrator.dto.cmdb.QcgService;
@@ -154,6 +155,14 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
                       addServiceToDiscard(servicesToDiscard, cloudProviderService);
                     }
                     break;
+                  case KUBERNETES:
+                    if ((cloudProviderService instanceof KubernetesService)) {
+                      KubernetesService kubernetesService =
+                          (KubernetesService) cloudProviderService;
+                    } else {
+                      addServiceToDiscard(servicesToDiscard, cloudProviderService);
+                    }
+                    break;
                   default:
                     throw new DeploymentException("Unknown Deployment Type: " + type);
                 }
@@ -254,8 +263,7 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
                     .stream()
                     .flatMap(policy -> policy.getServicesId().stream())
                     .anyMatch(serviceId -> serviceId.equals(cloudService.getId()));
-                boolean credentialsRequired = cloudService.isCredentialsRequired();
-                if (!serviceIsInSlaPolicy && (slaPlacementRequired || credentialsRequired)) {
+                if (!serviceIsInSlaPolicy && slaPlacementRequired) {
                   LOG.debug(
                       "Discarded service {} of provider {} because it doesn't match SLA policies",
                       cloudService.getId(), cloudProvider.getId());

@@ -19,6 +19,7 @@ package it.reply.orchestrator.dto.cmdb;
 import static it.reply.orchestrator.dto.cmdb.CloudService.AWS_COMPUTE_SERVICE;
 import static it.reply.orchestrator.dto.cmdb.CloudService.AZURE_COMPUTE_SERVICE;
 import static it.reply.orchestrator.dto.cmdb.CloudService.CHRONOS_COMPUTE_SERVICE;
+import static it.reply.orchestrator.dto.cmdb.CloudService.KUBERNETES_COMPUTE_SERVICE;
 import static it.reply.orchestrator.dto.cmdb.CloudService.MARATHON_COMPUTE_SERVICE;
 import static it.reply.orchestrator.dto.cmdb.CloudService.OCCI_COMPUTE_SERVICE;
 import static it.reply.orchestrator.dto.cmdb.CloudService.OPENNEBULA_COMPUTE_SERVICE;
@@ -63,6 +64,9 @@ public class CloudServiceResolver extends TypeIdResolverBase {
         break;
       case QCG_COMPUTE_SERVICE:
         subType = QcgService.class;
+        break;
+      case KUBERNETES_COMPUTE_SERVICE:
+        subType = KubernetesService.class;
         break;
       case OCCI_COMPUTE_SERVICE:
       case OPENNEBULA_COMPUTE_SERVICE:

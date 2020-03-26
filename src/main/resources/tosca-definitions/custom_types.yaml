@@ -2349,6 +2349,25 @@ node_types:
             kube_admin_username:  { get_property: [ SELF, admin_username] }
             kube_admin_token:  { get_property: [ SELF, admin_token] }
 
+  tosca.nodes.indigo.Container.Application.Docker.Kubernetes:
+    derived_from: tosca.nodes.indigo.Container.Application.Docker
+    metadata:
+      icon: /images/kubernetesWN.png
+    attributes:
+      some_attrib:
+        type: list
+        entry_schema: string
+    properties:
+      secrets:
+        entry_schema:
+          type: string
+        required: no
+        type: map
+      replicas:
+        type: integer
+        default: 1
+        required: no
+
   tosca.nodes.indigo.JupyterHub:
     derived_from: tosca.nodes.SoftwareComponent
     metadata:
