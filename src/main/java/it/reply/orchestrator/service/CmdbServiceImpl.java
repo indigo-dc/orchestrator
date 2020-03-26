@@ -39,8 +39,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import javax.ws.rs.core.UriBuilder;
-
 import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -50,6 +48,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 @Slf4j
@@ -139,10 +138,11 @@ public class CmdbServiceImpl implements CmdbService {
   @Override
   public CloudProvider getProviderById(String providerId) {
 
-    URI requestUri = UriBuilder
-        .fromUri(cmdbProperties.getUrl() + cmdbProperties.getProviderByIdPath())
-        .build(providerId)
-        .normalize();
+    URI requestUri = UriComponentsBuilder
+        .fromHttpUrl(cmdbProperties.getUrl() + cmdbProperties.getProviderByIdPath())
+        .buildAndExpand(providerId)
+        .normalize()
+        .toUri();
 
     try {
       return get(requestUri, PROVIDER_RESPONSE_TYPE);
@@ -155,10 +155,11 @@ public class CmdbServiceImpl implements CmdbService {
   @Override
   public CloudService getServiceById(String serviceId) {
 
-    URI requestUri = UriBuilder
-        .fromUri(cmdbProperties.getUrl() + cmdbProperties.getServiceByIdPath())
-        .build(serviceId)
-        .normalize();
+    URI requestUri = UriComponentsBuilder
+        .fromHttpUrl(cmdbProperties.getUrl() + cmdbProperties.getServiceByIdPath())
+        .buildAndExpand(serviceId)
+        .normalize()
+        .toUri();
 
     try {
       return get(requestUri, CLOUD_SERVICE_RESPONSE_TYPE);
@@ -172,10 +173,11 @@ public class CmdbServiceImpl implements CmdbService {
   @Override
   public List<CloudService> getServicesByProvider(String providerId) {
 
-    URI requestUri = UriBuilder
-        .fromUri(cmdbProperties.getUrl() + cmdbProperties.getServicesByProviderIdPath())
-        .build(providerId)
-        .normalize();
+    URI requestUri = UriComponentsBuilder
+        .fromHttpUrl(cmdbProperties.getUrl() + cmdbProperties.getServicesByProviderIdPath())
+        .buildAndExpand(providerId)
+        .normalize()
+        .toUri();
 
     try {
       return getAll(requestUri, CLOUD_SERVICES_LIST_RESPONSE_TYPE);
@@ -188,10 +190,11 @@ public class CmdbServiceImpl implements CmdbService {
   @Override
   public Image getImageById(String imageId) {
 
-    URI requestUri = UriBuilder
-        .fromUri(cmdbProperties.getUrl() + cmdbProperties.getImageByIdPath())
-        .build(imageId)
-        .normalize();
+    URI requestUri = UriComponentsBuilder
+        .fromHttpUrl(cmdbProperties.getUrl() + cmdbProperties.getImageByIdPath())
+        .buildAndExpand(imageId)
+        .normalize()
+        .toUri();
 
     try {
       return get(requestUri, IMAGE_RESPONSE_TYPE);
@@ -204,10 +207,11 @@ public class CmdbServiceImpl implements CmdbService {
   @Override
   public List<Image> getImagesByTenant(String tenantId) {
 
-    URI requestUri = UriBuilder
-        .fromUri(cmdbProperties.getUrl() + cmdbProperties.getImagesByTenantIdPath())
-        .build(tenantId)
-        .normalize();
+    URI requestUri = UriComponentsBuilder
+        .fromHttpUrl(cmdbProperties.getUrl() + cmdbProperties.getImagesByTenantIdPath())
+        .buildAndExpand(tenantId)
+        .normalize()
+        .toUri();
 
     try {
       return getAll(requestUri, IMAGES_LIST_RESPONSE_TYPE);
@@ -220,10 +224,11 @@ public class CmdbServiceImpl implements CmdbService {
   @Override
   public Flavor getFlavorById(String flavorId) {
 
-    URI requestUri = UriBuilder
-        .fromUri(cmdbProperties.getUrl() + cmdbProperties.getFlavorByIdPath())
-        .build(flavorId)
-        .normalize();
+    URI requestUri = UriComponentsBuilder
+        .fromHttpUrl(cmdbProperties.getUrl() + cmdbProperties.getFlavorByIdPath())
+        .buildAndExpand(flavorId)
+        .normalize()
+        .toUri();
 
     try {
       return get(requestUri, FLAVOR_RESPONSE_TYPE);
@@ -237,10 +242,11 @@ public class CmdbServiceImpl implements CmdbService {
   @Override
   public List<Flavor> getFlavorsByTenant(String tenantId) {
 
-    URI requestUri = UriBuilder
-        .fromUri(cmdbProperties.getUrl() + cmdbProperties.getFlavorsByTenantIdPath())
-        .build(tenantId)
-        .normalize();
+    URI requestUri = UriComponentsBuilder
+        .fromHttpUrl(cmdbProperties.getUrl() + cmdbProperties.getFlavorsByTenantIdPath())
+        .buildAndExpand(tenantId)
+        .normalize()
+        .toUri();
 
     try {
       return getAll(requestUri, FLAVORS_LIST_RESPONSE_TYPE);
@@ -299,10 +305,11 @@ public class CmdbServiceImpl implements CmdbService {
   @Override
   public List<Tenant> getTenantsByService(String serviceId) {
 
-    URI requestUri = UriBuilder
-        .fromUri(cmdbProperties.getUrl() + cmdbProperties.getTenantsByServiceIdPath())
-        .build(serviceId)
-        .normalize();
+    URI requestUri = UriComponentsBuilder
+        .fromHttpUrl(cmdbProperties.getUrl() + cmdbProperties.getTenantsByServiceIdPath())
+        .buildAndExpand(serviceId)
+        .normalize()
+        .toUri();
 
     try {
       return getAll(requestUri, TENANTS_LIST_RESPONSE_TYPE);
@@ -315,10 +322,11 @@ public class CmdbServiceImpl implements CmdbService {
   @Override
   public List<Tenant> getTenantsByOrganisation(String organisationId) {
 
-    URI requestUri = UriBuilder
-        .fromUri(cmdbProperties.getUrl() + cmdbProperties.getTenantsByOrganizationIdPath())
-        .build(organisationId)
-        .normalize();
+    URI requestUri = UriComponentsBuilder
+        .fromHttpUrl(cmdbProperties.getUrl() + cmdbProperties.getTenantsByOrganizationIdPath())
+        .buildAndExpand(organisationId)
+        .normalize()
+        .toUri();
 
     try {
       return getAll(requestUri, TENANTS_LIST_RESPONSE_TYPE);
@@ -331,10 +339,11 @@ public class CmdbServiceImpl implements CmdbService {
   @Override
   public Tenant getTenantById(String tenantId) {
 
-    URI requestUri = UriBuilder
-        .fromUri(cmdbProperties.getUrl() + cmdbProperties.getTenantByIdPath())
-        .build(tenantId)
-        .normalize();
+    URI requestUri = UriComponentsBuilder
+        .fromHttpUrl(cmdbProperties.getUrl() + cmdbProperties.getTenantByIdPath())
+        .buildAndExpand(tenantId)
+        .normalize()
+        .toUri();
 
     try {
       return get(requestUri, TENANT_RESPONSE_TYPE);

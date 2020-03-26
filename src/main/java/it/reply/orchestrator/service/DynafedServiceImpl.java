@@ -34,8 +34,6 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import javax.ws.rs.core.UriBuilder;
-
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.RequestEntity;
@@ -43,6 +41,7 @@ import org.springframework.http.RequestEntity.HeadersBuilder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 public class DynafedServiceImpl {
@@ -96,10 +95,11 @@ public class DynafedServiceImpl {
     dynafed
         .getFiles()
         .forEach(file -> {
-          URI requestUri = UriBuilder
-              .fromUri(file.getEndpoint() + "?metalink")
+          URI requestUri = UriComponentsBuilder
+              .fromHttpUrl(file.getEndpoint() + "?metalink")
               .build()
-              .normalize();
+              .normalize()
+              .toUri();
 
           Metalink metalink;
           try {

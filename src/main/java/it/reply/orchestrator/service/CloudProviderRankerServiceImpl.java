@@ -24,8 +24,6 @@ import it.reply.orchestrator.exception.service.DeploymentException;
 import java.net.URI;
 import java.util.List;
 
-import javax.ws.rs.core.UriBuilder;
-
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.ParameterizedTypeReference;
@@ -34,6 +32,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 @EnableConfigurationProperties(CprProperties.class)
@@ -57,10 +56,11 @@ public class CloudProviderRankerServiceImpl implements CloudProviderRankerServic
   public List<RankedCloudService> getProviderServicesRanking(
       CloudProviderRankerRequest cloudProviderRankerRequest) {
 
-    URI requestUri = UriBuilder
-        .fromUri(cprProperties.getUrl() + cprProperties.getRankPath())
+    URI requestUri = UriComponentsBuilder
+        .fromHttpUrl(cprProperties.getUrl() + cprProperties.getRankPath())
         .build()
-        .normalize();
+        .normalize()
+        .toUri();
 
     HttpEntity<CloudProviderRankerRequest> entity = new HttpEntity<>(cloudProviderRankerRequest);
 

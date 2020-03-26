@@ -44,8 +44,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import javax.ws.rs.core.UriBuilder;
-
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
@@ -54,6 +52,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 @EnableConfigurationProperties(OneDataProperties.class)
@@ -86,10 +85,11 @@ public class OneDataServiceImpl implements OneDataService {
   @Override
   public UserSpaces getUserSpacesId(String oneZoneEndpoint, String oneDataToken) {
 
-    URI requestUri = UriBuilder
-        .fromUri(oneZoneEndpoint + oneDataProperties.getOnezoneBasePath() + "/user/spaces")
+    URI requestUri = UriComponentsBuilder
+        .fromHttpUrl(oneZoneEndpoint + oneDataProperties.getOnezoneBasePath() + "/user/spaces")
         .build()
-        .normalize();
+        .normalize()
+        .toUri();
 
     try {
       return restTemplate
@@ -104,11 +104,12 @@ public class OneDataServiceImpl implements OneDataService {
   public SpaceDetails getSpaceDetailsFromId(String oneZoneEndpoint, String oneDataToken,
       String oneSpaceId) {
 
-    URI requestUri = UriBuilder
-        .fromUri(
+    URI requestUri = UriComponentsBuilder
+        .fromHttpUrl(
             oneZoneEndpoint + oneDataProperties.getOnezoneBasePath() + "/user/spaces/{oneSpaceId}")
-        .build(oneSpaceId)
-        .normalize();
+        .buildAndExpand(oneSpaceId)
+        .normalize()
+        .toUri();
 
     try {
       return restTemplate
@@ -123,11 +124,12 @@ public class OneDataServiceImpl implements OneDataService {
   public ProviderDetails getProviderDetailsFromId(String oneZoneEndpoint, String oneDataToken,
       String oneProviderId) {
 
-    URI requestUri = UriBuilder
-        .fromUri(
+    URI requestUri = UriComponentsBuilder
+        .fromHttpUrl(
             oneZoneEndpoint + oneDataProperties.getOnezoneBasePath() + "/providers/{oneProviderId}")
-        .build(oneProviderId)
-        .normalize();
+        .buildAndExpand(oneProviderId)
+        .normalize()
+        .toUri();
 
     try {
       return restTemplate
@@ -144,10 +146,12 @@ public class OneDataServiceImpl implements OneDataService {
 
     String organization = oauth2TokenService.getOrganization(oidcTokenId);
 
-    URI requestUri = UriBuilder
-        .fromUri(oneZoneEndpoint + oneDataProperties.getOnezoneBasePath() + "/user/client_tokens")
+    URI requestUri = UriComponentsBuilder
+        .fromHttpUrl(
+            oneZoneEndpoint + oneDataProperties.getOnezoneBasePath() + "/user/client_tokens")
         .build()
-        .normalize();
+        .normalize()
+        .toUri();
 
     try {
       return oauth2TokenService.executeWithClientForResult(oidcTokenId,
@@ -165,10 +169,12 @@ public class OneDataServiceImpl implements OneDataService {
 
     String organization = oauth2TokenService.getOrganization(oidcTokenId);
 
-    URI requestUri = UriBuilder
-        .fromUri(oneZoneEndpoint + oneDataProperties.getOnezoneBasePath() + "/user/client_tokens")
+    URI requestUri = UriComponentsBuilder
+        .fromHttpUrl(
+            oneZoneEndpoint + oneDataProperties.getOnezoneBasePath() + "/user/client_tokens")
         .build()
-        .normalize();
+        .normalize()
+        .toUri();
 
     try {
       return oauth2TokenService.executeWithClientForResult(oidcTokenId,
