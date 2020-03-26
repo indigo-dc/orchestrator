@@ -63,7 +63,7 @@ import junitparams.JUnitParamsRunner;
 import junitparams.Parameters;
 
 import org.apache.ibatis.exceptions.PersistenceException;
-import org.flowable.engine.common.api.FlowableOptimisticLockingException;
+import org.flowable.common.engine.api.FlowableOptimisticLockingException;
 import org.hamcrest.Matchers;
 import org.junit.ClassRule;
 import org.junit.Rule;

@@ -23,7 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.ignite.Ignite;
 import org.apache.ignite.lang.IgniteBiPredicate;
 import org.flowable.engine.ProcessEngineConfiguration;
-import org.flowable.engine.common.impl.interceptor.EngineConfigurationConstants;
+import org.flowable.common.engine.impl.interceptor.EngineConfigurationConstants;
 import org.flowable.job.service.JobServiceConfiguration;
 import org.flowable.job.service.impl.asyncexecutor.AsyncRunnableExecutionExceptionHandler;
 import org.flowable.job.service.impl.asyncexecutor.ExecuteAsyncRunnable;
