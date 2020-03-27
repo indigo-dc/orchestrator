@@ -133,6 +133,35 @@ pipeline {
             }
         }
 
+        stage('DockerHub delivery (for pull requests)') {
+            when {
+                changeRequest()
+            }
+            agent {
+                label 'docker-build'
+            }
+            steps {
+                checkout scm
+                script {
+                    MavenRun('-DskipTests=true package')
+                    dockerhub_image_id = DockerBuild(dockerhub_repo,
+                                                     tag: env.CHANGE_ID,
+                                                     build_dir: 'docker')
+                }
+            }
+            post {
+                success {
+                    DockerPush(dockerhub_image_id)
+                }
+                failure {
+                    DockerClean()
+                }
+                always {
+                    cleanWs()
+                }
+            }
+        }
+
         stage('Notifications') {
             when {
                 tag 'v*'
