@@ -1136,9 +1136,29 @@ public class ToscaServiceImpl implements ToscaService {
                             }).findFirst();
                         setNetworkProperties(ar, privateNetworkName, privateNetworkCidr,
                             hostName, pn);
-
                       }
                     });
+                  }
+                  //handle hybrid flag for ISOLATED network environment
+                  Optional<NodeTemplate> pn = getNodesOfType(ar,
+                      ToscaConstants.Nodes.Types.NETWORK)
+                      .stream()
+                      .filter(node -> {
+                        Optional<String> nt = ToscaUtils.extractScalar(node.getProperties(),
+                            ToscaConstants.Nodes.Properties.NETWORKTYPE);
+                        return nt.isPresent() && (nt.get()
+                            .equals(ToscaConstants.Nodes.Attributes.ISOLATED));
+                      }).findFirst();
+                  if (pn.isPresent()) {
+                    if (r.getRequirementName().contains("wn")) {
+                      NodeTemplate wnNode = ar.getTopology().getNodeTemplates().get(r.getTarget());
+                      if (wnNode.getProperties()
+                          .containsKey(ToscaConstants.Nodes.Properties.HYBRID)) {
+                        //force to false
+                        wnNode.getProperties().put(ToscaConstants.Nodes.Properties.HYBRID,
+                            new ScalarPropertyValue("false"));
+                      }
+                    }
                   }
                 });
               });
@@ -1307,8 +1327,7 @@ public class ToscaServiceImpl implements ToscaService {
         this.setNodeRequirement(vrNP, "link", vrN.getName(),
             REQUIREMENT_DEPENDENCY_RELATIONSHIP);
 
-        //add  vrouter dependency to wnodes
-
+        //add  vrouter dependency to wnodes and clear hybrid flag if present
         getNodesOfType(ar, ToscaConstants.Nodes.Types.ELASTIC_CLUSTER).stream()
             .forEach(elasticClusterNode -> {
               elasticClusterNode.getRelationships().forEach((s, r) -> {
@@ -1318,6 +1337,10 @@ public class ToscaServiceImpl implements ToscaService {
                   // add requirement : dependency: vrouter2
                   this.setNodeRequirement(wnNode, "dependency", vrR.getName(),
                       REQUIREMENT_DEPENDENCY_RELATIONSHIP);
+                  if (wnNode.getProperties().containsKey(ToscaConstants.Nodes.Properties.HYBRID)) {
+                    //force to false
+                    wnNode.getProperties().put("hybrid", new ScalarPropertyValue("false"));
+                  }
                 }
               });
             });

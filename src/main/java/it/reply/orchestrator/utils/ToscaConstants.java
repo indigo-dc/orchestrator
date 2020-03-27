@@ -58,6 +58,7 @@ public class ToscaConstants {
     public static class Properties {
       public static final String NETWORKTYPE = "network_type";
       public static final String NETWORKNAME = "network_name";
+      public static final String HYBRID = "hybrid";
     }
 
     @UtilityClass
