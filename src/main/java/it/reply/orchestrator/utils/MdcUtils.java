@@ -45,24 +45,16 @@ public class MdcUtils {
     MDC_KEYS.forEach(MDC::remove);
   }
 
-  public static void setDeploymentId(@Nullable String deploymentId) {
-    MDC.put(DEPLOYMENT_ID, deploymentId);
-  }
-
-  public static MdcCloseable setDeploymentIdCloseable(@Nullable String deploymentId) {
-    return new MdcCloseable(DEPLOYMENT_ID, deploymentId);
+  public static CloseableMdcEntry setDeploymentId(@Nullable String deploymentId) {
+    return new CloseableMdcEntry(DEPLOYMENT_ID, deploymentId);
   }
 
   public static @Nullable String getDeploymentId() {
     return MDC.get(DEPLOYMENT_ID);
   }
 
-  public static void setRequestId(@Nullable String requestId) {
-    MDC.put(REQUEST_ID, requestId);
-  }
-
-  public static MdcCloseable setRequestIdCloseable(@Nullable String requestId) {
-    return new MdcCloseable(REQUEST_ID, requestId);
+  public static CloseableMdcEntry setRequestId(@Nullable String requestId) {
+    return new CloseableMdcEntry(REQUEST_ID, requestId);
   }
 
   public static @Nullable String getRequestId() {
@@ -93,7 +85,7 @@ public class MdcUtils {
     return getDeploymentId() + ":" + getRequestId();
   }
 
-  public static class MdcCloseable implements AutoCloseable {
+  public static class CloseableMdcEntry implements AutoCloseable {
 
     @NonNull
     private final String keyName;
@@ -104,7 +96,7 @@ public class MdcUtils {
     @Nullable
     private final String newValue;
 
-    private MdcCloseable(String keyName, String newValue) {
+    private CloseableMdcEntry(String keyName, String newValue) {
       this.keyName = Objects.requireNonNull(keyName);
       this.newValue = newValue;
       this.oldValue = MDC.get(keyName);

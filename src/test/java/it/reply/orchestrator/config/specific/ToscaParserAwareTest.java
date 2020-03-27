@@ -16,6 +16,7 @@
 
 package it.reply.orchestrator.config.specific;
 
+import alien4cloud.tosca.model.ArchiveRoot;
 import it.reply.orchestrator.annotation.SpringTestProfile;
 import it.reply.orchestrator.config.properties.OrchestratorProperties;
 import it.reply.orchestrator.service.IndigoInputsPreProcessorService;
@@ -25,13 +26,19 @@ import it.reply.orchestrator.tosca.NormativeLaxImportParser;
 import it.reply.orchestrator.tosca.RemoteRepositoryServiceImpl;
 import it.reply.orchestrator.tosca.TemplateParser;
 
+import it.reply.orchestrator.tosca.cache.DependencyLoader;
+import it.reply.orchestrator.tosca.cache.TemplateCacheService;
+import org.alien4cloud.tosca.model.CSARDependency;
 import org.junit.ClassRule;
 import org.junit.Rule;
+import org.mockito.Spy;
 import org.springframework.boot.autoconfigure.aop.AopAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.client.AutoConfigureWebClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.context.annotation.Bean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
@@ -43,7 +50,8 @@ import org.springframework.test.context.junit4.rules.SpringMethodRule;
         ToscaServiceImpl.class,
         NormativeLaxImportParser.class,
         RemoteRepositoryServiceImpl.class,
-        TemplateParser.class
+        TemplateParser.class,
+        DependencyLoader.class
     }
 )
 @AutoConfigureWebClient
@@ -63,5 +71,16 @@ public abstract class ToscaParserAwareTest {
 
   @SpyBean
   protected OrchestratorProperties orchestratorProperties;
+
+  @TestConfiguration
+  static class TestConfig {
+
+    @Bean
+    public TemplateCacheService templateCacheService(DependencyLoader dependencyLoader) {
+      return id -> dependencyLoader.load(id);
+    }
+
+  }
+
 
 }

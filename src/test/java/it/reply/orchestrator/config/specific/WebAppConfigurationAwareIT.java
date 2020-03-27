@@ -32,7 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @RunWith(SpringRunner.class)
 @ActiveProfiles(SpringTestProfile.PROFILE_QUALIFIER)
-@SpringBootTest(properties = "alien4cloud.elasticSearch.clusterName=es-cluster-it-test")
+@SpringBootTest
 @Category(IntegrationTest.class)
 @Transactional
 @TestExecutionListeners(listeners = { DbUnitTestExecutionListener.class },

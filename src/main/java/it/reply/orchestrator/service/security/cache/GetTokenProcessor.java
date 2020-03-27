@@ -14,28 +14,20 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.config.properties;
+package it.reply.orchestrator.service.security.cache;
 
-import java.time.Duration;
-import javax.validation.constraints.NotNull;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import it.reply.orchestrator.dal.entity.OidcTokenId;
+import it.reply.orchestrator.dto.security.AccessGrant;
+import javax.cache.processor.MutableEntry;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.core.io.Resource;
-import org.springframework.validation.annotation.Validated;
+import org.springframework.stereotype.Component;
 
-@Validated
-@Data
-@ConfigurationProperties(prefix = "tosca")
-@NoArgsConstructor
-public class ToscaProperties {
+@Component
+public class GetTokenProcessor extends AbstractTokenEntryProcessor {
 
-  @NotNull
-  @NonNull
-  private Resource definitionsFolder;
-
-  @NotNull
-  @NonNull
-  private long cacheDuration = 300;
+  @Override
+  public AccessGrant process(@NonNull MutableEntry<OidcTokenId, AccessGrant> entry,
+                             Object... arguments) {
+    return refreshIfExpired(entry);
+  }
 }

@@ -21,7 +21,6 @@ import alien4cloud.tosca.parser.impl.advanced.LaxImportParser;
 import alien4cloud.tosca.parser.impl.base.BaseParserFactory;
 import alien4cloud.tosca.parser.impl.base.MapParser;
 import alien4cloud.tosca.parser.impl.base.ScalarParser;
-
 import org.alien4cloud.tosca.model.CSARDependency;
 import org.alien4cloud.tosca.model.CSARDependencyWithUrl;
 import org.springframework.beans.factory.annotation.Autowired;

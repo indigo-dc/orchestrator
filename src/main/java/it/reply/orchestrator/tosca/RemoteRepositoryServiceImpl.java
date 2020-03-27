@@ -21,35 +21,19 @@ import alien4cloud.exception.NotFoundException;
 import alien4cloud.tosca.context.ToscaContext;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingContextExecution;
-
-import it.reply.orchestrator.config.properties.ToscaProperties;
-import it.reply.orchestrator.exception.service.ToscaException;
-
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.MalformedURLException;
-import java.net.URL;
+import it.reply.orchestrator.tosca.cache.TemplateCacheService;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Supplier;
-
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.alien4cloud.tosca.model.CSARDependency;
-import org.alien4cloud.tosca.model.CSARDependencyWithUrl;
 import org.alien4cloud.tosca.model.Csar;
 import org.alien4cloud.tosca.model.types.AbstractToscaType;
-import org.apache.commons.io.Charsets;
-import org.apache.commons.io.IOUtils;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.alien4cloud.tosca.normative.ToscaNormativeImports;
 import org.springframework.context.annotation.Primary;
-import org.springframework.core.io.Resource;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
 
 @Service
 @Primary
@@ -59,14 +43,14 @@ public class RemoteRepositoryServiceImpl implements ICSARRepositorySearchService
 
   private static ThreadLocal<Boolean> recursiveCall = new ThreadLocal<>();
 
-  private TemplateParser templateParser;
-
-  private ToscaProperties toscaProperties;
-
-  private RestTemplateBuilder restTemplateBuilder;
+  private TemplateCacheService templateCacheService;
 
   @Override
   public Csar getArchive(CSARDependency dependency) {
+    ParsingContextExecution.Context context = ParsingContextExecution.get();
+    if (context.getFileName().contains(ToscaNormativeImports.TOSCA_NORMATIVE_TYPES)) {
+      return null;
+    }
     ArchiveRoot root = parseAndRegister(dependency);
     return root == null ? null : root.getArchive();
   }
@@ -147,74 +131,7 @@ public class RemoteRepositoryServiceImpl implements ICSARRepositorySearchService
   }
 
   private ArchiveRoot parse(CSARDependency dependency) {
-    if (dependency instanceof CSARDependencyWithUrl) {
-      return withNewParsingContext(() -> parseRemoteTemplate((CSARDependencyWithUrl) dependency));
-    } else {
-      return withNewParsingContext(() -> parseLocalTemplate(dependency));
-    }
-
-  }
-
-  private ArchiveRoot parseLocalTemplate(CSARDependency dependency) {
-    String templateFileName =
-        String.format("%s-%s.yaml", dependency.getName(), dependency.getVersion());
-    try {
-      Resource templateFile = toscaProperties
-          .getDefinitionsFolder()
-          .createRelative(templateFileName);
-      String templatePath = templateFile.getURI().toString();
-      LOG.info("Fetching local TOSCA dependency {}", templatePath);
-      String template;
-      try (InputStream in = templateFile.getInputStream()) {
-        template = IOUtils.toString(in, Charsets.UTF_8);
-      }
-      LOG.info("Fetched local TOSCA dependency {}", templatePath);
-      ArchiveRoot result = templateParser.parse(templatePath, templateFileName, template);
-      LOG.info("Parsed local TOSCA dependency {}", templatePath);
-      return result;
-    } catch (ToscaException e) {
-      throw new ToscaException(
-          "Failed to parse local TOSCA dependency " + templateFileName, e);
-    } catch (IOException e) {
-      throw new ToscaException(
-          "Failed to fetch local TOSCA dependency " + templateFileName, e);
-    }
-  }
-
-  private ArchiveRoot parseRemoteTemplate(CSARDependencyWithUrl dependency) {
-    try {
-      URL templateUrl = new URL(dependency.getUrl());
-      RestTemplate restTemplate = restTemplateBuilder.build();
-      LOG.info("Fetching remote TOSCA dependency {}", templateUrl);
-      String template = restTemplate.getForObject(templateUrl.toString(), String.class);
-      LOG.info("Fetched remote TOSCA dependency {}", templateUrl);
-      ArchiveRoot result = templateParser
-          .parse(templateUrl.toString(), templateUrl.getFile(), template);
-      LOG.info("Parsed remote TOSCA dependency {}", templateUrl);
-      return result;
-    } catch (RestClientException e) {
-      throw new ToscaException(
-          "Failed to fetch remote TOSCA dependency " + dependency.getUrl(), e);
-    } catch (ToscaException e) {
-      throw new ToscaException(
-          "Failed to parse remote TOSCA dependency " + dependency.getUrl(), e);
-    } catch (MalformedURLException e) {
-      throw new ToscaException(
-          "Invalid import url for remote TOSCA dependency " + dependency, e);
-    }
-  }
-
-  private <T> T withNewParsingContext(Supplier<T> function) {
-    ParsingContextExecution.Context previousContext = ParsingContextExecution.get();
-    try {
-      ParsingContextExecution.init();
-      return function.get();
-    } finally {
-      ParsingContextExecution.destroy();
-      if (previousContext != null) {
-        ParsingContextExecution.set(previousContext);
-      }
-    }
+    return templateCacheService.get(dependency);
   }
 
 }

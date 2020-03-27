@@ -24,11 +24,9 @@ import alien4cloud.tosca.parser.ParsingException;
 import alien4cloud.tosca.parser.ParsingResult;
 import alien4cloud.tosca.parser.ToscaParser;
 import alien4cloud.tosca.serializer.VelocityUtil;
-
 import it.reply.orchestrator.config.properties.ToscaProperties;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.ToscaException;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -37,9 +35,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 import lombok.extern.slf4j.Slf4j;
-
 import org.alien4cloud.tosca.model.templates.Topology;
 import org.apache.commons.io.Charsets;
 import org.apache.commons.io.IOUtils;
@@ -86,7 +82,7 @@ public class TemplateParser {
    * @throws ToscaException
    *           if validation errors occur.
    */
-  @ToscaContextual
+  @ToscaContextual(requiresNew = true)
   public ArchiveRoot parse(String filePath, String fileName, String template) {
     try (InputStream in = IOUtils.toInputStream(template, Charsets.UTF_8)) {
       ParsingResult<ArchiveRoot> result = toscaParser.parseFile(fileName, filePath, in, null);
