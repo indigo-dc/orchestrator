@@ -1221,6 +1221,7 @@ public class ToscaServiceImpl implements ToscaService {
   @Override
   public ArchiveRoot setHybridUpdateDeployment(
       ArchiveRoot ar,
+      boolean newResourcesOnDifferentService,
       String publicNetworkName,
       String privateNetworkName,
       String privateNetworkCidr) {
@@ -1237,6 +1238,7 @@ public class ToscaServiceImpl implements ToscaService {
     }
 
     if (nt.equals(PrivateNetworkType.ISOLATED)
+        && newResourcesOnDifferentService
         && getNodesOfType(ar, ToscaConstants.Nodes.Types.VROUTER).isEmpty()) {
 
       Optional<NodeTemplate> centralPointNode = getNodesOfType(ar,

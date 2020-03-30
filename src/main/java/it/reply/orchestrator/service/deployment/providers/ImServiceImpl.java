@@ -382,6 +382,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         .currentService(ComputeService.class);
 
     toscaService.setHybridUpdateDeployment(newAr,
+        newResourcesOnDifferentService,
         computeService.getPublicNetworkName(),
         computeService.getPrivateNetworkName(),
         computeService.getPrivateNetworkCidr());
