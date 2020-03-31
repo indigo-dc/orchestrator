@@ -18,6 +18,8 @@ package it.reply.orchestrator.service.security;
 
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 
+import it.reply.orchestrator.utils.CommonUtils;
+import java.util.concurrent.ConcurrentHashMap;
 import org.mitre.oauth2.model.RegisteredClient;
 import org.mitre.openid.connect.config.ServerConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,6 +36,8 @@ public class CustomOAuth2TemplateFactory {
   @Autowired
   private RestTemplateBuilder restTemplateBuilder;
 
+  private ConcurrentHashMap<String, CustomOAuth2Template> customOAuth2Templates = new ConcurrentHashMap<>();
+
   public CustomOAuth2Template generateOAuth2Template(OidcTokenId tokenId) {
     return generateOAuth2Template(tokenId.getOidcEntityId().getIssuer());
   }
@@ -46,12 +50,13 @@ public class CustomOAuth2TemplateFactory {
    * @return the OAuth2Template
    */
   public CustomOAuth2Template generateOAuth2Template(String issuer) {
-    ServerConfiguration serverConfiguration =
-        oauth2ConfigurationsService.getServerConfiguration(issuer);
-    RegisteredClient clientConfiguration =
+    return customOAuth2Templates.computeIfAbsent(issuer, (missingIssuer) -> {
+      ServerConfiguration serverConfiguration =
+        oauth2ConfigurationsService.getServerConfiguration(missingIssuer);
+      RegisteredClient clientConfiguration =
         oauth2ConfigurationsService.getClientConfiguration(serverConfiguration);
-    return new CustomOAuth2Template(serverConfiguration, clientConfiguration,
-        restTemplateBuilder, oauth2ConfigurationsService.getAudience(issuer));
-
+      return new CustomOAuth2Template(serverConfiguration, clientConfiguration,
+        restTemplateBuilder, oauth2ConfigurationsService.getAudience(missingIssuer));
+    });
   }
 }

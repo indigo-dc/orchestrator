@@ -35,8 +35,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.util.StopWatch;
 
 @Slf4j
@@ -50,7 +48,7 @@ public abstract class AbstractTokenEntryProcessor
   private CustomOAuth2TemplateFactory customOAuth2TemplateFactory;
 
   @Autowired
-  private PlatformTransactionManager transactionManager;
+  private OidcProperties oidcProperties;
 
   protected AccessGrant refreshIfExpired(@NonNull MutableEntry<OidcTokenId, AccessGrant> entry) {
     OidcTokenId id = entry.getKey();
@@ -74,36 +72,32 @@ public abstract class AbstractTokenEntryProcessor
   protected AccessGrant refresh(@NonNull MutableEntry<OidcTokenId, AccessGrant> entry) {
     OidcTokenId id = entry.getKey();
     CustomOAuth2Template template = customOAuth2TemplateFactory.generateOAuth2Template(id);
-    AccessGrant newGrant = generateTransactionTemplate().execute(transactionStatus -> {
-      OidcRefreshToken refreshToken =
-          oidcTokenRepository
-              .findByOidcTokenId(id)
-              .orElseThrow(
-                  () -> new OrchestratorException("No refresh token found for " + id));
-      StopWatch stopWatch = new StopWatch();
-      stopWatch.start();
-      AccessGrant grant =
-          template.refreshToken(refreshToken.getValue(), OidcProperties.REQUIRED_SCOPES);
-      stopWatch.stop();
-      LOG.info("Access token for {} refreshed in {}ms", id, stopWatch.getTotalTimeMillis());
-      String newRefreshToken = grant.getRefreshToken();
-      if (newRefreshToken != null && !newRefreshToken.equals(refreshToken.getValue())) {
-        LOG.info("New refresh token received for {}", id);
-        refreshToken.updateFromAccessGrant(grant);
-      }
-      return grant;
-    });
-    entry.setValue(newGrant);
-    return newGrant;
+    OidcRefreshToken refreshToken =
+        oidcTokenRepository
+            .findByOidcTokenId(id)
+            .orElseThrow(() -> new OrchestratorException("No refresh token found for " + id));
+    StopWatch stopWatch = new StopWatch();
+    stopWatch.start();
+    AccessGrant grant =
+        template.refreshToken(refreshToken.getValue(), OidcProperties.REQUIRED_SCOPES);
+    stopWatch.stop();
+    LOG.info("Access token for {} refreshed in {}ms", id, stopWatch.getTotalTimeMillis());
+    String newRefreshToken = grant.getRefreshToken();
+    if (newRefreshToken != null && !newRefreshToken.equals(refreshToken.getValue())) {
+      LOG.info("New refresh token received for {}", id);
+      refreshToken.updateFromAccessGrant(grant);
+    }
+    entry.setValue(grant);
+    return grant;
   }
 
   protected AccessGrant exchange(@NonNull MutableEntry<OidcTokenId, AccessGrant> entry,
       String accessToken) {
     OidcTokenId id = entry.getKey();
     CustomOAuth2Template template = customOAuth2TemplateFactory.generateOAuth2Template(id);
-    generateTransactionTemplate().execute(transactionStatus -> {
-      Optional<OidcRefreshToken> refreshToken = oidcTokenRepository.findByOidcTokenId(id);
-      if (refreshToken.isPresent()) {
+    Optional<OidcRefreshToken> refreshToken = oidcTokenRepository.findByOidcTokenId(id);
+    if (refreshToken.isPresent()) {
+      if (oidcProperties.isForceRefreshTokensValidation()) {
         StopWatch stopWatch = new StopWatch();
         stopWatch.start();
         boolean isActive = refreshToken
@@ -126,23 +120,17 @@ public abstract class AbstractTokenEntryProcessor
               id);
         }
       } else {
-        LOG.info("No refresh token found for {}. Exchanging access token with jti={}",
-            id, JwtUtils.getJti(JwtUtils.parseJwt(accessToken)));
-        AccessGrant grant = template.exchangeToken(accessToken, OidcProperties.REQUIRED_SCOPES);
-        OidcRefreshToken token = OidcRefreshToken.createFromAccessGrant(grant, entry.getKey());
-        oidcTokenRepository.save(token);
-        entry.setValue(grant);
+        LOG.info("Skipping validation of refresh token for {}", id);
       }
-      return null;
-    });
+    } else {
+      LOG.info("No refresh token found for {}. Exchanging access token with jti={}",
+          id, JwtUtils.getJti(JwtUtils.parseJwt(accessToken)));
+      AccessGrant grant = template.exchangeToken(accessToken, OidcProperties.REQUIRED_SCOPES);
+      OidcRefreshToken token = OidcRefreshToken.createFromAccessGrant(grant, entry.getKey());
+      oidcTokenRepository.save(token);
+      entry.setValue(grant);
+    }
     return refreshIfExpired(entry);
-  }
-
-  private TransactionTemplate generateTransactionTemplate() {
-    TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
-    transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-    transactionTemplate.setIsolationLevel(TransactionDefinition.ISOLATION_READ_COMMITTED);
-    return transactionTemplate;
   }
 
   @Override

@@ -64,6 +64,8 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
 
   private boolean cacheTokens = true;
 
+  private boolean forceRefreshTokensValidation = true;
+
   @NotNull
   @NonNull
   @Valid
