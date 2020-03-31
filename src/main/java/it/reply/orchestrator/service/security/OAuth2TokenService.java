@@ -139,9 +139,12 @@ public class OAuth2TokenService {
    * @return the OidcEntityId
    */
   public OidcEntityId generateOidcEntityIdFromCurrentAuth() {
-    OidcEntityId tmp = OidcEntityId.fromAccesToken(getOAuth2TokenFromCurrentAuth());
-    tmp.setSubject(request.getHeader("User"));
-    return tmp;
+    OidcEntityId entityId = OidcEntityId.fromAccesToken(getOAuth2TokenFromCurrentAuth());
+    String tmpUserOverride = request.getHeader("User");
+    if (tmpUserOverride != null) {
+      entityId.setSubject(tmpUserOverride);
+    }
+    return entityId;
   }
 
   /**
