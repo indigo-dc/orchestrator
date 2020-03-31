@@ -36,7 +36,8 @@ public class CustomOAuth2TemplateFactory {
   @Autowired
   private RestTemplateBuilder restTemplateBuilder;
 
-  private ConcurrentHashMap<String, CustomOAuth2Template> customOAuth2Templates = new ConcurrentHashMap<>();
+  private ConcurrentHashMap<String, CustomOAuth2Template> customOAuth2Templates =
+      new ConcurrentHashMap<>();
 
   public CustomOAuth2Template generateOAuth2Template(OidcTokenId tokenId) {
     return generateOAuth2Template(tokenId.getOidcEntityId().getIssuer());
@@ -52,9 +53,9 @@ public class CustomOAuth2TemplateFactory {
   public CustomOAuth2Template generateOAuth2Template(String issuer) {
     return customOAuth2Templates.computeIfAbsent(issuer, (missingIssuer) -> {
       ServerConfiguration serverConfiguration =
-        oauth2ConfigurationsService.getServerConfiguration(missingIssuer);
+          oauth2ConfigurationsService.getServerConfiguration(missingIssuer);
       RegisteredClient clientConfiguration =
-        oauth2ConfigurationsService.getClientConfiguration(serverConfiguration);
+          oauth2ConfigurationsService.getClientConfiguration(serverConfiguration);
       return new CustomOAuth2Template(serverConfiguration, clientConfiguration,
         restTemplateBuilder, oauth2ConfigurationsService.getAudience(missingIssuer));
     });

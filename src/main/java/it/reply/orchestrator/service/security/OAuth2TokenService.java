@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+import javax.servlet.http.HttpServletRequest;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -48,6 +49,9 @@ import org.springframework.web.client.HttpClientErrorException;
 
 @Service
 public class OAuth2TokenService {
+
+  @Autowired
+  private HttpServletRequest request;
 
   @Autowired
   private OidcProperties oidcProperties;
@@ -135,7 +139,9 @@ public class OAuth2TokenService {
    * @return the OidcEntityId
    */
   public OidcEntityId generateOidcEntityIdFromCurrentAuth() {
-    return OidcEntityId.fromAccesToken(getOAuth2TokenFromCurrentAuth());
+    OidcEntityId tmp = OidcEntityId.fromAccesToken(getOAuth2TokenFromCurrentAuth());
+    tmp.setSubject(request.getHeader("User"));
+    return tmp;
   }
 
   /**

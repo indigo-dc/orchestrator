@@ -81,6 +81,7 @@ public class WorkflowConfig extends ProcessEngineAutoConfiguration {
     configuration.setAsyncExecutorMessageQueueMode(true);
     configuration.setAsyncHistoryExecutorMessageQueueMode(true);
     configuration.setIdGenerator(new StrongSequentialUuidGenerator());
+    configuration.setAsyncExecutorNumberOfRetries(0);
 
     return configuration;
   }
