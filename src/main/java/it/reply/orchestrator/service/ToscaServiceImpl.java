@@ -1293,7 +1293,7 @@ public class ToscaServiceImpl implements ToscaService {
         vrN.setType(ToscaConstants.Nodes.Types.NETWORK);
         vrN.setName("priv2_network");
         vrN.setProperties(new HashMap<>());
-        vrN.getProperties().put(ToscaConstants.Nodes.Properties.NETWORKNAME,
+        vrN.getProperties().put(ToscaConstants.Nodes.Properties.NETWORKTYPE,
             new ScalarPropertyValue(ToscaConstants.Nodes.Attributes.ISOLATED));
         vrN.getProperties().put("cidr", new ScalarPropertyValue(privateNetworkCidr));
         String gw = extractGatewayFromCidr(privateNetworkCidr);
