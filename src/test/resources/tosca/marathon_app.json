@@ -42,7 +42,9 @@
       },
       "env": {},
       "labels": {
+        "origin": "http://localhost:8080",
         "HAPROXY_GROUP": "external",
+        "created_by": "0123456789-subject@https://iam-test.com",
         "HAPROXY_0_BACKEND_HEAD": "\nbackend {backend}\n  balance {balance}\n  mode http\n  http-request add-header X-Forwarded-Proto https\n",
         "HAPROXY_0_SSL_CERT": "/etc/ssl/cert.pem"
       }

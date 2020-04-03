@@ -22,7 +22,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.MoreCollectors;
 
 import it.reply.orchestrator.annotation.DeploymentProviderQualifier;
+import it.reply.orchestrator.config.properties.OrchestratorProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.entity.OidcEntityId;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
@@ -132,6 +134,9 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   @Autowired
   private VaultService vaultService;
 
+  @Autowired
+  private OrchestratorProperties orchestratorProperties;
+
   protected <R> R executeWithClientForResult(CloudProviderEndpoint cloudProviderEndpoint,
       @Nullable OidcTokenId requestedWithToken,
       ThrowingFunction<Marathon, R, MarathonException> function) {
@@ -187,7 +192,20 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     List<App> apps = new ArrayList<>();
     for (NodeTemplate marathonNode : orderedMarathonApps) {
 
-      MarathonApp marathonTask = buildTask(graph, marathonNode, marathonNode.getName());
+      MarathonApp marathonTask = super.buildTask(graph, marathonNode, marathonNode.getName());
+
+      ToscaUtils
+          .extractScalar(marathonNode.getProperties(), "enable_https", BooleanType.class)
+          .ifPresent(marathonTask::setEnableHttps);
+
+      ToscaUtils
+          .extractMap(marathonNode.getProperties(), "secrets", String.class::cast)
+          .ifPresent(marathonTask::setSecrets);
+
+      OidcEntityId ownerId = deployment.getOwner().getOidcEntityId();
+      marathonTask.getLabels().put("created_by", ownerId.getSubject() + "@" + ownerId.getIssuer());
+      marathonTask.getLabels().put("origin", orchestratorProperties.getUrl().toString());
+
       List<Resource> resources = resourceRepository
           .findByToscaNodeNameAndDeployment_id(marathonNode.getName(), deployment.getId());
 
@@ -200,22 +218,6 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     }
     group.setApps(apps);
     return group;
-  }
-
-  @Override
-  public MarathonApp buildTask(DirectedMultigraph<NodeTemplate, RelationshipTemplate> graph,
-      NodeTemplate taskNode, String taskId) {
-    MarathonApp task = super.buildTask(graph, taskNode, taskId);
-
-    ToscaUtils
-        .extractScalar(taskNode.getProperties(), "enable_https", BooleanType.class)
-        .ifPresent(task::setEnableHttps);
-
-    ToscaUtils
-        .extractMap(taskNode.getProperties(), "secrets", String.class::cast)
-        .ifPresent(task::setSecrets);
-
-    return task;
   }
 
   @Override

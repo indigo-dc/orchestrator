@@ -18,6 +18,7 @@ package it.reply.orchestrator.service.deployment.providers;
 
 import com.google.common.collect.Lists;
 
+import it.reply.orchestrator.config.properties.OrchestratorProperties;
 import it.reply.orchestrator.config.specific.ToscaParserAwareTest;
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
@@ -43,6 +44,7 @@ import it.reply.orchestrator.service.deployment.providers.factory.MarathonClient
 import it.reply.orchestrator.util.TestUtil;
 
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.net.URI;
@@ -70,6 +72,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,6 +107,9 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
   @MockBean
   private Marathon marathonClient;
 
+  @Mock
+  private OrchestratorProperties orchestratorProperties;
+
   private static final String defaultVaultEndpoint = "https://default.vault.com:8200";
 
   @Before
@@ -113,6 +119,7 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
         .when(oauth2tokenService.executeWithClientForResult(
             Mockito.any(), Mockito.any(), Mockito.any()))
         .thenAnswer(y -> ((ThrowingFunction) y.getArguments()[1]).apply("token"));
+    when(orchestratorProperties.getUrl()).thenReturn(new URI("http://localhost:8080"));
   }
 
   @Test
