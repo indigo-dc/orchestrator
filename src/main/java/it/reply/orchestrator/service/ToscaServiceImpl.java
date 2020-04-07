@@ -1316,7 +1316,28 @@ public class ToscaServiceImpl implements ToscaService {
         this.setNodeRequirement(vrCP, "link", vrN.getName(),
             REQUIREMENT_DEPENDENCY_RELATIONSHIP);
 
-        //create port for wnodes
+        //create port for wn_server
+        getNodesOfType(ar, ToscaConstants.Nodes.Types.SLURM_WN).stream()
+        .forEach(slurmWorkerNode -> {
+          slurmWorkerNode.getRelationships().forEach((s, r) -> {
+            if (r.getRequirementName().contains("host")) {
+              NodeTemplate workerNode = ar.getTopology().getNodeTemplates()
+                  .get(r.getTarget());
+              NodeTemplate vrNP = new NodeTemplate();
+              vrNP.setType(ToscaConstants.Nodes.Types.PORT);
+              vrNP.setName("wn_priv2_port");
+              vrNP.setProperties(new HashMap<>());
+              vrNP.getProperties().put("order", new ScalarPropertyValue("0"));
+              this.setNodeCapability(vrNP, REQUIREMENT_DEPENDENCY_CAPABILITY, "dependency");
+              ar.getTopology().getNodeTemplates().put(vrNP.getName(), vrNP);
+              this.setNodeRequirement(vrNP, "binding", workerNode.getName(),
+                  REQUIREMENT_DEPENDENCY_RELATIONSHIP);
+              this.setNodeRequirement(vrNP, "link", vrN.getName(),
+                  REQUIREMENT_DEPENDENCY_RELATIONSHIP);      
+            }
+          });
+        });
+        /*
         NodeTemplate vrNP = new NodeTemplate();
         vrNP.setType(ToscaConstants.Nodes.Types.PORT);
         vrNP.setName("wn_priv2_port");
@@ -1328,7 +1349,7 @@ public class ToscaServiceImpl implements ToscaService {
             REQUIREMENT_DEPENDENCY_RELATIONSHIP);
         this.setNodeRequirement(vrNP, "link", vrN.getName(),
             REQUIREMENT_DEPENDENCY_RELATIONSHIP);
-
+        */
         //add  vrouter dependency to wnodes and clear hybrid flag if present
         getNodesOfType(ar, ToscaConstants.Nodes.Types.ELASTIC_CLUSTER).stream()
             .forEach(elasticClusterNode -> {
