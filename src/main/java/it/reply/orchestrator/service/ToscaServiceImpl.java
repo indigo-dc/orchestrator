@@ -1323,7 +1323,7 @@ public class ToscaServiceImpl implements ToscaService {
         vrNP.setProperties(new HashMap<>());
         vrNP.getProperties().put("order", new ScalarPropertyValue("0"));
         this.setNodeCapability(vrNP, REQUIREMENT_DEPENDENCY_CAPABILITY, "dependency");
-        ar.getTopology().getNodeTemplates().put(vrNP.getName(), vrCP);
+        ar.getTopology().getNodeTemplates().put(vrNP.getName(), vrNP);
         this.setNodeRequirement(vrNP, "binding", "lrms_wn",
             REQUIREMENT_DEPENDENCY_RELATIONSHIP);
         this.setNodeRequirement(vrNP, "link", vrN.getName(),
