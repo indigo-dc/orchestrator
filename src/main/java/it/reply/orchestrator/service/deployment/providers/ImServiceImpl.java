@@ -18,6 +18,9 @@ package it.reply.orchestrator.service.deployment.providers;
 
 import alien4cloud.tosca.model.ArchiveRoot;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.MoreCollectors;
@@ -28,6 +31,8 @@ import es.upv.i3m.grycap.im.exceptions.ImClientErrorException;
 import es.upv.i3m.grycap.im.exceptions.ImClientException;
 import es.upv.i3m.grycap.im.exceptions.ImClientServerErrorException;
 import es.upv.i3m.grycap.im.pojo.InfrastructureState;
+import es.upv.i3m.grycap.im.pojo.InfrastructureUri;
+import es.upv.i3m.grycap.im.pojo.InfrastructureUris;
 import es.upv.i3m.grycap.im.pojo.Property;
 import es.upv.i3m.grycap.im.pojo.ResponseError;
 import es.upv.i3m.grycap.im.pojo.VirtualMachineInfo;
@@ -61,6 +66,7 @@ import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.OneDataUtils;
 import it.reply.orchestrator.utils.WorkflowConstants.ErrorCode;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -71,6 +77,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -261,6 +268,69 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       throw handleImClientException(exception);
     }
     return Optional.empty();
+  }
+
+  @Override
+  public Optional<String> getDeploymentLogInternal(DeploymentMessage deploymentMessage) {
+    Deployment deployment = getDeployment(deploymentMessage);
+
+    final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
+
+    List<CloudProviderEndpoint> cloudProviderEndpoints =
+        deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
+
+    // Try to get the logs of the virtual infrastructure.
+    try {
+      Property contMsg = executeWithClientForResult(cloudProviderEndpoints, requestedWithToken,
+          client -> client.getInfrastructureContMsg(deployment.getEndpoint()));
+      if (!Strings.isNullOrEmpty(contMsg.getValue())) {
+        return Optional.of(contMsg.getValue());
+      }
+    } catch (ImClientException exception) {
+      throw handleImClientException(exception);
+    }
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<String> getDeploymentExtendedInfoInternal(DeploymentMessage deploymentMessage) {
+    Deployment deployment = getDeployment(deploymentMessage);
+
+    final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
+
+    List<CloudProviderEndpoint> cloudProviderEndpoints =
+        deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
+
+    // Try to get the infrastructure info for VMs.
+    try {
+      InfrastructureUris uris = executeWithClientForResult(cloudProviderEndpoints, requestedWithToken,
+          client -> client.getInfrastructureInfo(deployment.getEndpoint()));
+      ObjectMapper mapper = new ObjectMapper();
+      //mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+      List<VirtualMachineInfo> VMInfos = new ArrayList<>();
+      for (InfrastructureUri vmUri : uris.getUris()) {
+        String[] subDirs = vmUri.getUri().split(Pattern.quote(File.separator));
+        String vmId = subDirs[subDirs.length - 1];
+        // Try to get the VM info.
+        
+        try {
+          VirtualMachineInfo machineInfo = executeWithClientForResult(cloudProviderEndpoints, 
+              requestedWithToken, client -> client.getVmInfo(deployment.getEndpoint(), vmId));
+          VMInfos.add(machineInfo);                 
+        } catch (ImClientException exception) {
+          throw handleImClientException(exception);
+        }       
+      }
+      try {
+        String info = mapper.writeValueAsString(VMInfos);
+        return Optional.of(info);
+      }
+      catch (JsonProcessingException e) {
+        throw new DeploymentException("Error deserializing VM Info", e);
+      }  
+    } catch (ImClientException exception) {
+      throw handleImClientException(exception);
+    }
   }
 
   @Override

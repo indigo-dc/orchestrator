@@ -142,6 +142,34 @@ public class DeploymentController {
   }
 
   /**
+   * Get the infrastructure log by deploymentId.
+   *
+   * @param uuid
+   *          the uuid of the deployment
+   * @return the log
+   */
+  @RequestMapping(value = "/deployments/{deploymentId}/log", method = RequestMethod.GET)
+  @ResponseStatus(HttpStatus.OK)
+  public CharSequence getDeploymentLog(@PathVariable("deploymentId") String id) {
+    MdcUtils.setDeploymentId(id);
+    return deploymentService.getDeploymentLog(id);
+  }
+
+  /**
+   * Get the infrastructure info for deploymentId.
+   *
+   * @param uuid
+   *          the uuid of the deployment
+   * @return the extra info
+   */
+  @RequestMapping(value = "/deployments/{deploymentId}/extrainfo", method = RequestMethod.GET)
+  @ResponseStatus(HttpStatus.OK)
+  public CharSequence getDeploymentExtraInfo(@PathVariable("deploymentId") String id) {
+    MdcUtils.setDeploymentId(id);
+    return deploymentService.getDeploymentExtendedInfo(id);
+  }
+
+  /**
    * Delete the deployment.
    *
    * @param id

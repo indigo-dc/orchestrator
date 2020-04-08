@@ -97,4 +97,34 @@ public abstract class AbstractDeploymentProviderService implements DeploymentPro
 
   protected abstract Optional<String>
       getAdditionalErrorInfoInternal(DeploymentMessage deploymentMessage);
+
+  @Override
+  public Optional<String> getDeploymentLog(DeploymentMessage deploymentMessage) {
+    
+    try {
+      return getDeploymentLogInternal(deploymentMessage);
+    } catch (RuntimeException ex) {
+      LOG.error("Error while retrieving infrastructure log for deployment {}",
+          deploymentMessage.getDeploymentId(), ex);
+      return Optional.empty();
+    }
+  }
+  
+  protected abstract Optional<String>
+      getDeploymentLogInternal(DeploymentMessage deploymentMessage);
+  
+  @Override
+  public Optional<String> getDeploymentExtendedInfo(DeploymentMessage deploymentMessage) {
+    
+    try {
+      return getDeploymentExtendedInfoInternal(deploymentMessage);
+    } catch (RuntimeException ex) {
+      LOG.error("Error while retrieving additional info for deployment {}",
+          deploymentMessage.getDeploymentId(), ex);
+      return Optional.empty();
+    }
+  }
+  
+  protected abstract Optional<String>
+      getDeploymentExtendedInfoInternal(DeploymentMessage deploymentMessage);  
 }

@@ -632,8 +632,18 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
     }
   }
 
+  @Override
   public Optional<String> getAdditionalErrorInfoInternal(DeploymentMessage deploymentMessage) {
     return Optional.empty();
   }
 
+  @Override
+  public Optional<String> getDeploymentLogInternal(DeploymentMessage deploymentMessage) {
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<String> getDeploymentExtendedInfoInternal(DeploymentMessage deploymentMessage) {
+    return Optional.empty();
+  }
 }

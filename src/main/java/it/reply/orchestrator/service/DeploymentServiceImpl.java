@@ -45,6 +45,8 @@ import it.reply.orchestrator.exception.http.BadRequestException;
 import it.reply.orchestrator.exception.http.ConflictException;
 import it.reply.orchestrator.exception.http.ForbiddenException;
 import it.reply.orchestrator.exception.http.NotFoundException;
+import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
+import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.MdcUtils;
@@ -54,6 +56,7 @@ import it.reply.orchestrator.utils.WorkflowConstants;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -84,6 +87,9 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   @Autowired
   private DeploymentRepository deploymentRepository;
+
+  @Autowired
+  private DeploymentProviderServiceRegistry deploymentProviderServiceRegistry;
 
   @Autowired
   private ResourceRepository resourceRepository;
@@ -460,4 +466,53 @@ public class DeploymentServiceImpl implements DeploymentService {
       resourcesMap.put(node, resources);
     });
   }
+
+  @Override
+  @Transactional(readOnly = true)
+  public String getDeploymentLog(String id) {
+    Deployment deployment = getDeployment(id);
+    LOG.debug("Retrieving infrastructure log for deployment {}", id);
+    throwIfNotOwned(deployment);
+
+    DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
+
+    // Build deployment message
+    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType);
+
+    DeploymentProviderService ds = deploymentProviderServiceRegistry
+        .getDeploymentProviderService(id);
+
+    Optional<String> log = ds.getDeploymentLog(deploymentMessage);
+
+    if (log.isPresent()) {
+      return log.get();
+    } else {
+      return "";
+    }
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public String getDeploymentExtendedInfo(String id) {
+    Deployment deployment = getDeployment(id);
+    LOG.debug("Retrieving infrastructure extra info for deployment {}", id);
+    throwIfNotOwned(deployment);   
+
+    DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
+
+    // Build deployment message
+    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType);
+
+    DeploymentProviderService ds = deploymentProviderServiceRegistry
+        .getDeploymentProviderService(id);
+
+    Optional<String> info = ds.getDeploymentExtendedInfo(deploymentMessage);
+
+    if (info.isPresent()) {
+      return info.get();
+    } else {
+      return "{[]}";
+    }
+  }
+
 }

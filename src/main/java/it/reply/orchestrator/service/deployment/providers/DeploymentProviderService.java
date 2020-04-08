@@ -110,5 +110,9 @@ public interface DeploymentProviderService {
   public void doProviderTimeout(DeploymentMessage deploymentMessage);
 
   public Optional<String> getAdditionalErrorInfo(DeploymentMessage deploymentMessage);
+  
+  public Optional<String> getDeploymentLog(DeploymentMessage deploymentMessage);
+  
+  public Optional<String> getDeploymentExtendedInfo(DeploymentMessage deploymentMessage);
 
 }
