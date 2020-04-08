@@ -1149,15 +1149,14 @@ public class ToscaServiceImpl implements ToscaService {
                         return nt.isPresent() && (nt.get()
                             .equals(ToscaConstants.Nodes.Attributes.ISOLATED));
                       }).findFirst();
-                  if (pn.isPresent()) {
-                    if (r.getRequirementName().contains("wn")) {
-                      NodeTemplate wnNode = ar.getTopology().getNodeTemplates().get(r.getTarget());
-                      if (wnNode.getProperties()
-                          .containsKey(ToscaConstants.Nodes.Properties.HYBRID)) {
-                        //force to false
-                        wnNode.getProperties().put(ToscaConstants.Nodes.Properties.HYBRID,
-                            new ScalarPropertyValue("false"));
-                      }
+                  if (pn.isPresent() && r.getRequirementName().contains("wn")) {
+                    NodeTemplate wnNode = ar.getTopology().getNodeTemplates()
+                        .get(r.getTarget());
+                    if (wnNode.getProperties()
+                        .containsKey(ToscaConstants.Nodes.Properties.HYBRID)) {
+                      //force to false
+                      wnNode.getProperties().put(ToscaConstants.Nodes.Properties.HYBRID,
+                          new ScalarPropertyValue("false"));
                     }
                   }
                 });
@@ -1318,7 +1317,7 @@ public class ToscaServiceImpl implements ToscaService {
 
         //create port for wn_server
         getNodesOfType(ar, ToscaConstants.Nodes.Types.SLURM_WN).stream()
-            .forEach(slurmWorkerNode -> {
+            .forEach(slurmWorkerNode ->
               slurmWorkerNode.getRelationships().forEach((s, r) -> {
                 if (r.getRequirementName().contains("host")) {
                   NodeTemplate vrNP = new NodeTemplate();
@@ -1335,8 +1334,8 @@ public class ToscaServiceImpl implements ToscaService {
                   this.setNodeRequirement(vrNP, "link", vrN.getName(),
                       REQUIREMENT_DEPENDENCY_RELATIONSHIP);
                 }
-              });
-            });
+              })
+            );
 
         //add  vrouter dependency to wnodes and clear hybrid flag if present
         getNodesOfType(ar, ToscaConstants.Nodes.Types.ELASTIC_CLUSTER).stream()
