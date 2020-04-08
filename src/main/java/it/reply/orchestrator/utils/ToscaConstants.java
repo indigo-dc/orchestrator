@@ -43,6 +43,7 @@ public class ToscaConstants {
       public static final String CENTRAL_POINT = BASE_INDIGO_NAME + "VR.CentralPoint";
       public static final String VROUTER = BASE_INDIGO_NAME + "VR.VRouter";
       public static final String CLIENT = BASE_INDIGO_NAME + "VR.Client";
+      public static final String SLURM_WN = BASE_INDIGO_NAME + "LRMS.WorkerNode.Slurm";
       public static final String BASE_NETWORK_NAME = "tosca.nodes.network.";
       public static final String NETWORK = BASE_NETWORK_NAME + "Network";
       public static final String PORT = BASE_NETWORK_NAME + "Port";
@@ -58,6 +59,7 @@ public class ToscaConstants {
     public static class Properties {
       public static final String NETWORKTYPE = "network_type";
       public static final String NETWORKNAME = "network_name";
+      public static final String HYBRID = "hybrid";
     }
 
     @UtilityClass

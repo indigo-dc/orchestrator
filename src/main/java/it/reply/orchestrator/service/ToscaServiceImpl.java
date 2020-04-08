@@ -1136,9 +1136,29 @@ public class ToscaServiceImpl implements ToscaService {
                             }).findFirst();
                         setNetworkProperties(ar, privateNetworkName, privateNetworkCidr,
                             hostName, pn);
-
                       }
                     });
+                  }
+                  //handle hybrid flag for ISOLATED network environment
+                  Optional<NodeTemplate> pn = getNodesOfType(ar,
+                      ToscaConstants.Nodes.Types.NETWORK)
+                      .stream()
+                      .filter(node -> {
+                        Optional<String> nt = ToscaUtils.extractScalar(node.getProperties(),
+                            ToscaConstants.Nodes.Properties.NETWORKTYPE);
+                        return nt.isPresent() && (nt.get()
+                            .equals(ToscaConstants.Nodes.Attributes.ISOLATED));
+                      }).findFirst();
+                  if (pn.isPresent()) {
+                    if (r.getRequirementName().contains("wn")) {
+                      NodeTemplate wnNode = ar.getTopology().getNodeTemplates().get(r.getTarget());
+                      if (wnNode.getProperties()
+                          .containsKey(ToscaConstants.Nodes.Properties.HYBRID)) {
+                        //force to false
+                        wnNode.getProperties().put(ToscaConstants.Nodes.Properties.HYBRID,
+                            new ScalarPropertyValue("false"));
+                      }
+                    }
                   }
                 });
               });
@@ -1201,6 +1221,7 @@ public class ToscaServiceImpl implements ToscaService {
   @Override
   public ArchiveRoot setHybridUpdateDeployment(
       ArchiveRoot ar,
+      boolean newResourcesOnDifferentService,
       String publicNetworkName,
       String privateNetworkName,
       String privateNetworkCidr) {
@@ -1217,6 +1238,7 @@ public class ToscaServiceImpl implements ToscaService {
     }
 
     if (nt.equals(PrivateNetworkType.ISOLATED)
+        && newResourcesOnDifferentService
         && getNodesOfType(ar, ToscaConstants.Nodes.Types.VROUTER).isEmpty()) {
 
       Optional<NodeTemplate> centralPointNode = getNodesOfType(ar,
@@ -1271,7 +1293,7 @@ public class ToscaServiceImpl implements ToscaService {
         vrN.setType(ToscaConstants.Nodes.Types.NETWORK);
         vrN.setName("priv2_network");
         vrN.setProperties(new HashMap<>());
-        vrN.getProperties().put(ToscaConstants.Nodes.Properties.NETWORKNAME,
+        vrN.getProperties().put(ToscaConstants.Nodes.Properties.NETWORKTYPE,
             new ScalarPropertyValue(ToscaConstants.Nodes.Attributes.ISOLATED));
         vrN.getProperties().put("cidr", new ScalarPropertyValue(privateNetworkCidr));
         String gw = extractGatewayFromCidr(privateNetworkCidr);
@@ -1294,21 +1316,29 @@ public class ToscaServiceImpl implements ToscaService {
         this.setNodeRequirement(vrCP, "link", vrN.getName(),
             REQUIREMENT_DEPENDENCY_RELATIONSHIP);
 
-        //create port for wnodes
-        NodeTemplate vrNP = new NodeTemplate();
-        vrNP.setType(ToscaConstants.Nodes.Types.PORT);
-        vrNP.setName("wn_priv2_port");
-        vrNP.setProperties(new HashMap<>());
-        vrNP.getProperties().put("order", new ScalarPropertyValue("0"));
-        this.setNodeCapability(vrNP, REQUIREMENT_DEPENDENCY_CAPABILITY, "dependency");
-        ar.getTopology().getNodeTemplates().put(vrNP.getName(), vrCP);
-        this.setNodeRequirement(vrNP, "binding", "lrms_wn",
-            REQUIREMENT_DEPENDENCY_RELATIONSHIP);
-        this.setNodeRequirement(vrNP, "link", vrN.getName(),
-            REQUIREMENT_DEPENDENCY_RELATIONSHIP);
+        //create port for wn_server
+        getNodesOfType(ar, ToscaConstants.Nodes.Types.SLURM_WN).stream()
+            .forEach(slurmWorkerNode -> {
+              slurmWorkerNode.getRelationships().forEach((s, r) -> {
+                if (r.getRequirementName().contains("host")) {
+                  NodeTemplate vrNP = new NodeTemplate();
+                  vrNP.setType(ToscaConstants.Nodes.Types.PORT);
+                  vrNP.setName("wn_priv2_port");
+                  vrNP.setProperties(new HashMap<>());
+                  vrNP.getProperties().put("order", new ScalarPropertyValue("0"));
+                  this.setNodeCapability(vrNP, REQUIREMENT_DEPENDENCY_CAPABILITY, "dependency");
+                  ar.getTopology().getNodeTemplates().put(vrNP.getName(), vrNP);
+                  NodeTemplate serverNode = ar.getTopology().getNodeTemplates()
+                      .get(r.getTarget());
+                  this.setNodeRequirement(vrNP, "binding", serverNode.getName(),
+                      REQUIREMENT_DEPENDENCY_RELATIONSHIP);
+                  this.setNodeRequirement(vrNP, "link", vrN.getName(),
+                      REQUIREMENT_DEPENDENCY_RELATIONSHIP);
+                }
+              });
+            });
 
-        //add  vrouter dependency to wnodes
-
+        //add  vrouter dependency to wnodes and clear hybrid flag if present
         getNodesOfType(ar, ToscaConstants.Nodes.Types.ELASTIC_CLUSTER).stream()
             .forEach(elasticClusterNode -> {
               elasticClusterNode.getRelationships().forEach((s, r) -> {
@@ -1318,6 +1348,10 @@ public class ToscaServiceImpl implements ToscaService {
                   // add requirement : dependency: vrouter2
                   this.setNodeRequirement(wnNode, "dependency", vrR.getName(),
                       REQUIREMENT_DEPENDENCY_RELATIONSHIP);
+                  if (wnNode.getProperties().containsKey(ToscaConstants.Nodes.Properties.HYBRID)) {
+                    //force to false
+                    wnNode.getProperties().put("hybrid", new ScalarPropertyValue("false"));
+                  }
                 }
               });
             });
