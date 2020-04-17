@@ -496,7 +496,7 @@ public class DeploymentServiceImpl implements DeploymentService {
   public String getDeploymentExtendedInfo(String id) {
     Deployment deployment = getDeployment(id);
     LOG.debug("Retrieving infrastructure extra info for deployment {}", id);
-    throwIfNotOwned(deployment);   
+    throwIfNotOwned(deployment);
 
     DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
 

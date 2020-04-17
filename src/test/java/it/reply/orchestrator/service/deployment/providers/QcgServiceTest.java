@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 I.N.F.N.
+ * Copyright © 2019-2020 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -167,10 +167,10 @@ public class QcgServiceTest extends ToscaParserAwareTest {
 
     when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
     when(topologyIterator.hasNext()).thenReturn(true, !isLast);
-    when(topologyIterator.next()).thenReturn(new DeepJob(job,"toscaName"));
+    when(topologyIterator.next()).thenReturn(new DeepJob(job, "toscaName"));
 
     assertThat(qcgService.doDeploy(dm)).isEqualTo(isLast);
-    verify(qcg, times(1)).createJob(job.getDescription());
+    verify(qcg, times(1)).createJob(description);
     if (isLast) {
       verify(topologyIterator, times(1)).reset();
     }
@@ -185,13 +185,15 @@ public class QcgServiceTest extends ToscaParserAwareTest {
     Job job = new Job();
     job.setId("999");
 
+    JobDescription description = new JobDescription();
+    job.setDescription(description);
     QcgJobsOrderedIterator iterator = mock(QcgJobsOrderedIterator.class);
     dm.setQcgJobsIterator(iterator);
 
     when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
     when(iterator.hasCurrent()).thenReturn(true, true);
     when(iterator.hasNext()).thenReturn(!isLast);
-    when(iterator.current()).thenReturn(new DeepJob(job,"toscaName"));
+    when(iterator.current()).thenReturn(new DeepJob(job, "toscaName"));
 
     Job returnedJob = new Job();
     if (isCompleted) {
@@ -240,8 +242,8 @@ public class QcgServiceTest extends ToscaParserAwareTest {
     job.setDescription(description);
 
     /*Job updated =*/ qcgService
-    	.createJobOnQcg(generateCloudProviderEndpoint(), null, new DeepJob(job,"toscaName"));
-    verify(qcg, times(1)).createJob(job.getDescription());
+    	.createJobOnQcg(generateCloudProviderEndpoint(), null, new DeepJob(job, "toscaName"));
+    verify(qcg, times(1)).createJob(description);
   }
 
   @Test
@@ -254,11 +256,11 @@ public class QcgServiceTest extends ToscaParserAwareTest {
     description.setExecution(execution);
     job.setDescription(description);
 
-    doThrow(new QcgException(500, "some message")).when(qcg).createJob(job.getDescription());
+    doThrow(new QcgException(500, "some message")).when(qcg).createJob(description);
 
     assertThatCode(
         () -> qcgService
-        .createJobOnQcg(generateCloudProviderEndpoint(), null, new DeepJob(job,"toscaName")))
+        .createJobOnQcg(generateCloudProviderEndpoint(), null, new DeepJob(job, "toscaName")))
         .isInstanceOf(DeploymentException.class)
         .hasCauseExactlyInstanceOf(QcgException.class)
         .hasMessage(

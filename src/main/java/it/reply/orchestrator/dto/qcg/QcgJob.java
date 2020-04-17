@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 I.N.F.N.
+ * Copyright © 2019-2020 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,9 +35,9 @@ public class QcgJob {
    */
   public QcgJob() {
     attributes = null;
-    args = null;
+    arguments = null;
     environment = null;
-    cpus = null;
+    nativee = null;
     exitcode = null;
     resubmit = null;
     createdworkdir = null;
@@ -48,13 +48,18 @@ public class QcgJob {
   private String user;
   private String state;
   private String operation;
+  private String description;
   private String note;
 
   private String directory;
   private String executable;
-  private List<String> args;
+  private List<String> arguments;
   private Map<String, String> environment;
   private String schema;
+  private String stdin;
+  private String stdout;
+  private String stdouterr;
+  private String stderr;
 
   private String operationstart;
   private String resource;
@@ -67,8 +72,16 @@ public class QcgJob {
   private String finishtime;
   private String updatedtime;
   private String eta;
-  private String nodes;
   private Integer cpus;
+  private String nodes;
+  private Integer totalnodes;
+  private Integer totalcores;
+  private Integer corespernode;
+  private Integer memorypernode;
+  private Integer memorypercore;
+  private Integer gpus;
+  private Double wallclock;
+  private List<String> nativee;
   private Integer exitcode;
   private String errors;
   private Integer resubmit;

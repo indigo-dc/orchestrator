@@ -117,6 +117,7 @@
       <name>INDIGO-DC repository</name>
       <url>https://repository.indigo-datacloud.eu/repository/maven-public</url>
     </repository>
+
   </repositories>
 
 
@@ -708,6 +709,7 @@
             <!-- excluded because I.N.F.N. Copyright -->
             <exclude>src/main/java/it/reply/orchestrator/config/properties/VaultProperties.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/controller/ConfigurationController.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/dal/util/VirtualMachineInfoToJsonConverter.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/dto/SystemEndpoints.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/dto/cmdb/QcgService.java</exclude>
             <exclude>src/main/java/it/reply/orchestrator/dto/cmdb/Tenant.java</exclude>

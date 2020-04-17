@@ -100,7 +100,7 @@ public abstract class AbstractDeploymentProviderService implements DeploymentPro
 
   @Override
   public Optional<String> getDeploymentLog(DeploymentMessage deploymentMessage) {
-    
+
     try {
       return getDeploymentLogInternal(deploymentMessage);
     } catch (RuntimeException ex) {
@@ -109,13 +109,13 @@ public abstract class AbstractDeploymentProviderService implements DeploymentPro
       return Optional.empty();
     }
   }
-  
+
   protected abstract Optional<String>
       getDeploymentLogInternal(DeploymentMessage deploymentMessage);
-  
+
   @Override
   public Optional<String> getDeploymentExtendedInfo(DeploymentMessage deploymentMessage) {
-    
+
     try {
       return getDeploymentExtendedInfoInternal(deploymentMessage);
     } catch (RuntimeException ex) {
@@ -124,7 +124,7 @@ public abstract class AbstractDeploymentProviderService implements DeploymentPro
       return Optional.empty();
     }
   }
-  
+
   protected abstract Optional<String>
-      getDeploymentExtendedInfoInternal(DeploymentMessage deploymentMessage);  
+      getDeploymentExtendedInfoInternal(DeploymentMessage deploymentMessage);
 }

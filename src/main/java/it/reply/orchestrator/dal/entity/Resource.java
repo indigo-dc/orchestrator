@@ -17,6 +17,7 @@
 package it.reply.orchestrator.dal.entity;
 
 import it.reply.orchestrator.dal.util.CloudProviderEndpointToJsonConverter;
+import it.reply.orchestrator.dal.util.VirtualMachineInfoToJsonConverter;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.enums.NodeStates;
 
@@ -41,6 +42,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+
+import es.upv.i3m.grycap.im.pojo.VirtualMachineInfo;
 
 @Entity
 @Table(indexes = {
@@ -82,6 +85,11 @@ public class Resource extends AbstractResourceEntity {
   @Nullable
   @Column(columnDefinition = "TEXT")
   private CloudProviderEndpoint cloudProviderEndpoint;
+
+  @Convert(converter = VirtualMachineInfoToJsonConverter.class)
+  @Nullable
+  @Column(columnDefinition = "TEXT")
+  private VirtualMachineInfo vmInfo;
 
   public void addRequiredResource(Resource resource) {
     requires.add(resource);

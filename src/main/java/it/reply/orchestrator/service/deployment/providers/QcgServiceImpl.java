@@ -19,11 +19,15 @@ package it.reply.orchestrator.service.deployment.providers;
 import alien4cloud.tosca.model.ArchiveRoot;
 
 import com.google.common.annotations.VisibleForTesting;
+import com.google.common.primitives.Ints;
+import com.mysql.jdbc.StringUtils;
 
 import it.infn.ba.deep.qcg.client.Qcg;
 import it.infn.ba.deep.qcg.client.model.Job;
 import it.infn.ba.deep.qcg.client.model.JobDescription;
 import it.infn.ba.deep.qcg.client.model.JobDescriptionExecution;
+import it.infn.ba.deep.qcg.client.model.JobDescriptionResources;
+import it.infn.ba.deep.qcg.client.model.JobDescriptionResourcesComponent;
 import it.infn.ba.deep.qcg.client.model.JobWorkingDirectoryPolicy;
 import it.infn.ba.deep.qcg.client.model.RemoveConditionCreateMode;
 import it.infn.ba.deep.qcg.client.model.RemoveConditionWhen;
@@ -78,7 +82,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.alien4cloud.tosca.model.templates.NodeTemplate;
 import org.alien4cloud.tosca.model.templates.RelationshipTemplate;
 import org.alien4cloud.tosca.model.templates.Topology;
-
+import org.alien4cloud.tosca.normative.types.FloatType;
+import org.alien4cloud.tosca.normative.types.IntegerType;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jgrapht.graph.DirectedMultigraph;
 import org.jgrapht.traverse.TopologicalOrderIterator;
@@ -187,7 +192,8 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
       OidcTokenId requestedWithToken, DeepJob job) {
     // Create jobs based on the topological order
     try {
-      LOG.debug("Creating scheduled Qcg job\n{}", job);
+      LOG.debug("Creating scheduled Qcg job\n{}",
+          ModelUtils.toString(job.getQcgJob().getDescription()));
 
       Job created = executeWithClientForResult(cloudProviderEndpoint, requestedWithToken,
           client -> client.createJob(job.getQcgJob().getDescription()));
@@ -258,7 +264,8 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
       OidcTokenId requestedWithToken, String jobId) {
 
     Job updatedJob = findJobOnQcg(cloudProviderEndpoint, requestedWithToken, jobId)
-        .orElseThrow(() -> new DeploymentException("Job " + jobId + " doesn't exist on Qcg"));
+        .orElseThrow(() -> new DeploymentException("Job " + jobId + " not found on " +
+            cloudProviderEndpoint.getCpComputeServiceId()));
 
     LOG.debug("Qcg job {} current status:\n{}", jobId, updatedJob);
     JobState jobState = getLastState(updatedJob);
@@ -272,7 +279,11 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
         LOG.debug("Qcg job {} is ready", jobId);
         return true;
       case FAILURE:
-        throw new DeploymentException("Qcg job " + jobId + " failed to execute");
+        String ermsg = "Qcg job " + jobId + " failed to execute";
+        if (!StringUtils.isNullOrEmpty(updatedJob.getErrors())) {
+          ermsg += " with message: " + updatedJob.getErrors();
+        }
+        throw new DeploymentException(ermsg);
       default:
         throw new DeploymentException("Unknown Qcg job status: " + jobState);
     }
@@ -282,7 +293,10 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
 
     resourceRepository.findByToscaNodeNameAndDeployment_id(job.getToscaNodeName(),
         deployment.getId())
-        .forEach(resource -> resource.setState(state));
+        .forEach(resource -> {
+          resource.setState(state);
+          resource.setIaasId(job.getQcgJob().getId());
+        });
   }
 
   /**
@@ -385,12 +399,7 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
 
     for (NodeTemplate qcgNode : orderedQcgJobs) {
       Resource jobResource = resources.get(qcgNode.getName());
-      String id = Optional.ofNullable(jobResource.getIaasId()).orElseGet(() -> {
-        jobResource.setIaasId(jobResource.getId());
-        return jobResource.getIaasId();
-      });
-
-      QcgJob qcgJob = buildTask(graph, qcgNode, id);
+      QcgJob qcgJob = buildTask(graph, qcgNode, jobResource.getId());
       jobs.put(qcgNode.getName(), qcgJob);
 
       Job job = generateExternalTaskRepresentation(qcgJob);
@@ -418,8 +427,9 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
     // orchestrator internal
     qcgjob.setTaskId(taskId);
 
-    // TODO MAP ALL PROPETIES FROM TOSCA
+    // TODO FINISH MAP PROPETIES FROM TOSCA
 
+    // from tosca.nodes.indigo.Batch.Job
     // property: environment
     ToscaUtils.extractMap(taskNode.getProperties(), "environment", String.class::cast)
         .ifPresent(qcgjob::setEnvironment);
@@ -434,19 +444,64 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
               taskNode.getName()));
     }
 
+    // property: arguments
+    ToscaUtils.extractList(taskNode.getProperties(), "arguments", String.class::cast)
+        .ifPresent(qcgjob::setArguments);
+
+    // from tosca.nodes.indigo.Qcg.Job
     // property: directory
     ToscaUtils.extractScalar(taskNode.getProperties(), "directory")
         .ifPresent(qcgjob::setDirectory);
-
-    // property: arguments
-    ToscaUtils.extractList(taskNode.getProperties(), "arguments", String.class::cast)
-        .ifPresent(qcgjob::setArgs);
 
     // property: schema
     ToscaUtils.extractScalar(taskNode.getProperties(), "schema").ifPresent(qcgjob::setSchema);
 
     // property: note
     ToscaUtils.extractScalar(taskNode.getProperties(), "note").ifPresent(qcgjob::setNote);
+
+    // property: stdin
+    ToscaUtils.extractScalar(taskNode.getProperties(), "stdin").ifPresent(qcgjob::setStdin);
+
+    // property: stdout
+    ToscaUtils.extractScalar(taskNode.getProperties(), "stdout").ifPresent(qcgjob::setStdout);
+
+    // property: std_outerr
+    ToscaUtils.extractScalar(taskNode.getProperties(), "std_outerr")
+        .ifPresent(qcgjob::setStdouterr);
+
+    // property: stderr
+    ToscaUtils.extractScalar(taskNode.getProperties(), "stderr").ifPresent(qcgjob::setStderr);
+
+    // property: total_cores
+    ToscaUtils.extractScalar(taskNode.getProperties(), "total_cores",
+        IntegerType.class).map(Ints::saturatedCast).ifPresent(qcgjob::setTotalcores);
+
+    // property: total_nodes
+    ToscaUtils.extractScalar(taskNode.getProperties(), "total_nodes",
+        IntegerType.class).map(Ints::saturatedCast).ifPresent(qcgjob::setTotalnodes);
+
+    // property: cores_per_node
+    ToscaUtils.extractScalar(taskNode.getProperties(), "cores_per_node",
+        IntegerType.class).map(Ints::saturatedCast).ifPresent(qcgjob::setCorespernode);
+
+    // property: memory_per_node
+    ToscaUtils.extractScalar(taskNode.getProperties(), "memory_per_node",
+        IntegerType.class).map(Ints::saturatedCast).ifPresent(qcgjob::setMemorypernode);
+
+    // property: memory_per_core
+    ToscaUtils.extractScalar(taskNode.getProperties(), "memory_per_core",
+        IntegerType.class).map(Ints::saturatedCast).ifPresent(qcgjob::setMemorypercore);
+
+    // property: gpus
+    ToscaUtils.extractScalar(taskNode.getProperties(), "gpus",
+        IntegerType.class).map(Ints::saturatedCast).ifPresent(qcgjob::setGpus);
+
+    // property: queue
+    ToscaUtils.extractScalar(taskNode.getProperties(), "queue").ifPresent(qcgjob::setQueue);
+
+    // property: wall_clock
+    ToscaUtils.extractScalar(taskNode.getProperties(), "wall_clock",
+        FloatType.class).map(Double.class::cast).ifPresent(qcgjob::setWallclock);
 
     return qcgjob;
   }
@@ -469,8 +524,8 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
     JobDescriptionExecution execution = new JobDescriptionExecution();
     execution.setExecutable(qcgjob.getExecutable());
     execution.setDirectory(qcgjob.getDirectory());
-    if (qcgjob.getArgs() != null) {
-      execution.setArgs((ArrayList<String>) ((ArrayList<String>) qcgjob.getArgs()).clone());
+    if (qcgjob.getArguments() != null) {
+      execution.setArgs((ArrayList<String>) ((ArrayList<String>) qcgjob.getArguments()).clone());
     }
     if (qcgjob.getEnvironment() != null) {
       execution.setEnvironment((HashMap<String, String>) ((HashMap<String, String>)
@@ -480,14 +535,43 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
     JobWorkingDirectoryPolicy directorypolicy = new JobWorkingDirectoryPolicy();
     directorypolicy.setCreate(RemoveConditionCreateMode.OVERWRITE);
     directorypolicy.setRemove(RemoveConditionWhen.NEVER);
-
     execution.setDirectory_policy(directorypolicy);
+
+    execution.setStdin(qcgjob.getStdin());
+    execution.setStdout(qcgjob.getStdout());
+    execution.setStd_outerr(qcgjob.getStdouterr());
+    execution.setStderr(qcgjob.getStderr());
 
     JobDescription description = new JobDescription();
 
+    if (qcgjob.getAttributes() != null) {
+      description.setAttributes((HashMap<String, String>) ((HashMap<String, String>)
+          qcgjob.getAttributes()).clone());
+    }
     description.setSchema(qcgjob.getSchema());
     description.setExecution(execution);
     description.setNote(qcgjob.getNote());
+
+    JobDescriptionResources resources = new JobDescriptionResources();
+    resources.setQueue(qcgjob.getQueue());
+    resources.setWall_clock(qcgjob.getWallclock());
+
+    JobDescriptionResourcesComponent component = new JobDescriptionResourcesComponent();
+    component.setTotal_nodes(qcgjob.getTotalnodes());
+    component.setTotal_cores(qcgjob.getTotalcores());
+    component.setCores_per_node(qcgjob.getCorespernode());
+    component.setMemory_per_node(qcgjob.getMemorypernode());
+    component.setMemory_per_core(qcgjob.getMemorypercore());
+    if(qcgjob.getGpus() != null) {
+      List<String> nativee = new ArrayList<String>();
+      nativee.add("--gres=gpu:"+qcgjob.getGpus().toString());
+    }
+    List<JobDescriptionResourcesComponent> components =
+        new ArrayList<JobDescriptionResourcesComponent>();
+    components.add(component);
+    resources.setComponents(components);
+    description.setResources(resources);
+
     job.setDescription(description);
 
     job.setOperation_start(qcgjob.getOperationstart());

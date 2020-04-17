@@ -5,3 +5,6 @@ databaseChangeLog:
   - include:
     - file: 0003_orchestrator-mysql-timestamp-default-value-2101.yaml
       relativeToChangelogFile: true
+  - include:
+    - file: 0004_orchestrator-resource-vminfo-2201.yaml
+      relativeToChangelogFile: true

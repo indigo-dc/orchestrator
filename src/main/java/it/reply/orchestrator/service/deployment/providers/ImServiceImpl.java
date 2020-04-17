@@ -20,7 +20,6 @@ import alien4cloud.tosca.model.ArchiveRoot;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
 import com.google.common.collect.MoreCollectors;
@@ -31,8 +30,6 @@ import es.upv.i3m.grycap.im.exceptions.ImClientErrorException;
 import es.upv.i3m.grycap.im.exceptions.ImClientException;
 import es.upv.i3m.grycap.im.exceptions.ImClientServerErrorException;
 import es.upv.i3m.grycap.im.pojo.InfrastructureState;
-import es.upv.i3m.grycap.im.pojo.InfrastructureUri;
-import es.upv.i3m.grycap.im.pojo.InfrastructureUris;
 import es.upv.i3m.grycap.im.pojo.Property;
 import es.upv.i3m.grycap.im.pojo.ResponseError;
 import es.upv.i3m.grycap.im.pojo.VirtualMachineInfo;
@@ -66,18 +63,17 @@ import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.OneDataUtils;
 import it.reply.orchestrator.utils.WorkflowConstants.ErrorCode;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
@@ -296,40 +292,26 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   public Optional<String> getDeploymentExtendedInfoInternal(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
 
-    final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
+    Map<Boolean, Set<Resource>> resources =
+        resourceRepository
+            .findByDeployment_id(deployment.getId())
+            .stream()
+            .collect(Collectors.partitioningBy(resource ->
+              (resource.getIaasId() != null && resource.getVmInfo() != null),
+                Collectors.toSet()));
+    List<VirtualMachineInfo> VMInfos = new ArrayList<>();
+    for (Resource resource : resources.get(true)) {
+      VMInfos.add(resource.getVmInfo());
+    }
 
-    List<CloudProviderEndpoint> cloudProviderEndpoints =
-        deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
-
-    // Try to get the infrastructure info for VMs.
+    ObjectMapper mapper = new ObjectMapper();
     try {
-      InfrastructureUris uris = executeWithClientForResult(cloudProviderEndpoints, requestedWithToken,
-          client -> client.getInfrastructureInfo(deployment.getEndpoint()));
-      ObjectMapper mapper = new ObjectMapper();
-      //mapper.configure(SerializationFeature.INDENT_OUTPUT, true);
-      List<VirtualMachineInfo> VMInfos = new ArrayList<>();
-      for (InfrastructureUri vmUri : uris.getUris()) {
-        String[] subDirs = vmUri.getUri().split(Pattern.quote(File.separator));
-        String vmId = subDirs[subDirs.length - 1];
-        // Try to get the VM info.
-        
-        try {
-          VirtualMachineInfo machineInfo = executeWithClientForResult(cloudProviderEndpoints, 
-              requestedWithToken, client -> client.getVmInfo(deployment.getEndpoint(), vmId));
-          VMInfos.add(machineInfo);                 
-        } catch (ImClientException exception) {
-          throw handleImClientException(exception);
-        }       
-      }
-      try {
-        String info = mapper.writeValueAsString(VMInfos);
-        return Optional.of(info);
-      }
-      catch (JsonProcessingException e) {
-        throw new DeploymentException("Error deserializing VM Info", e);
-      }  
-    } catch (ImClientException exception) {
-      throw handleImClientException(exception);
+      String info = mapper.writeValueAsString(VMInfos);
+      //String info = mapper.writeValueAsString(uris.getUris());
+      return Optional.of(info);
+    }
+    catch (JsonProcessingException e) {
+      throw new DeploymentException("Error deserializing VM Info", e);
     }
   }
 
@@ -679,6 +661,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
     // for each URL get the tosca Node Name about the VM
     Multimap<String, String> vmMap = HashMultimap.create();
+    Map<String, VirtualMachineInfo> vmMapInfo = new HashMap<String, VirtualMachineInfo>();
     for (String vmId : infrastructureState.getVmStates().keySet()) {
       VirtualMachineInfo vmInfo =
           executeWithClientForResult(cloudProviderEndpoints, requestedWithToken,
@@ -692,7 +675,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           .filter(Objects::nonNull)
           .map(Object::toString)
           .findAny()
-          .ifPresent(toscaNodeName -> vmMap.put(toscaNodeName, vmId));
+          .ifPresent(toscaNodeName -> {
+            vmMap.put(toscaNodeName, vmId);
+            vmMapInfo.put(vmId, vmInfo);
+          });
     }
 
     Map<Boolean, Set<Resource>> resources =
@@ -705,15 +691,25 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     for (Resource bindedResource : resources.get(true)) {
       boolean vmIsPresent =
           vmMap.get(bindedResource.getToscaNodeName()).remove(bindedResource.getIaasId());
-      if (!vmIsPresent && bindedResource.getState() != NodeStates.DELETING) {
-        // the node isn't supposed to be deleted -> put it again in the pool of bindable resources
-        // TODO maybe throw an error? Eventual consistency (for update) should already have been
-        // handled
-        LOG.warn("Resource <{}> in status {} was binded to the VM <{}> which doesn't exist anymore",
-            bindedResource.getId(), bindedResource.getState(), bindedResource.getIaasId());
-        bindedResource.setIaasId(null);
-        bindedResource.setCloudProviderEndpoint(null);
-        resources.get(false).add(bindedResource);
+      if (!vmIsPresent) {
+        if (bindedResource.getState() != NodeStates.DELETING) {
+          // the node isn't supposed to be deleted -> put it again in the pool of bindable resources
+          // TODO maybe throw an error? Eventual consistency (for update) should already have been
+          // handled
+          LOG.warn("Resource <{}> in status {} unbinded from VM <{}> which doesn't exist anymore.",
+              bindedResource.getId(), bindedResource.getState(), bindedResource.getIaasId());
+          bindedResource.setIaasId(null);
+          bindedResource.setCloudProviderEndpoint(null);
+          resources.get(false).add(bindedResource);
+        }
+      } else {
+        if (vmMapInfo.containsKey(bindedResource.getIaasId())) {
+          VirtualMachineInfo vmInfo = vmMapInfo.get(bindedResource.getIaasId());
+          if (bindedResource.getVmInfo() == null || 
+              !vmInfo.equals(bindedResource.getVmInfo())) {
+            bindedResource.setVmInfo(vmInfo);
+          }
+        }
       }
     }
 
@@ -721,6 +717,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       Collection<String> vmIds = vmMap.get(resource.getToscaNodeName());
       vmIds.stream().findAny().ifPresent(vmId -> {
         resource.setIaasId(vmId);
+        resource.setVmInfo(vmMapInfo.get(vmId));
         vmIds.remove(vmId);
       });
     }
