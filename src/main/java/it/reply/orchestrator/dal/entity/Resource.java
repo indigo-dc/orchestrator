@@ -17,11 +17,12 @@
 package it.reply.orchestrator.dal.entity;
 
 import it.reply.orchestrator.dal.util.CloudProviderEndpointToJsonConverter;
-import it.reply.orchestrator.dal.util.VirtualMachineInfoToJsonConverter;
+import it.reply.orchestrator.dal.util.ResourceMetadataToJsonConverter;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.enums.NodeStates;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -42,8 +43,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-
-import es.upv.i3m.grycap.im.pojo.VirtualMachineInfo;
 
 @Entity
 @Table(indexes = {
@@ -86,10 +85,10 @@ public class Resource extends AbstractResourceEntity {
   @Column(columnDefinition = "TEXT")
   private CloudProviderEndpoint cloudProviderEndpoint;
 
-  @Convert(converter = VirtualMachineInfoToJsonConverter.class)
+  @Convert(converter = ResourceMetadataToJsonConverter.class)
   @Nullable
   @Column(columnDefinition = "TEXT")
-  private VirtualMachineInfo vmInfo;
+  private Map<String,String> metadata;
 
   public void addRequiredResource(Resource resource) {
     requires.add(resource);

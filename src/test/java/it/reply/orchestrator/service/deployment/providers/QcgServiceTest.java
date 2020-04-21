@@ -228,7 +228,7 @@ public class QcgServiceTest extends ToscaParserAwareTest {
     assertThatCode(
         () -> qcgService.checkJobsOnQcg(generateCloudProviderEndpoint(), null, "999"))
         .isInstanceOf(DeploymentException.class)
-        .hasMessage("Qcg job 999 failed to execute");
+        .hasMessage("Qcg job 999 failed to execute with message: fail");
   }
 
   @Test

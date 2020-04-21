@@ -150,9 +150,9 @@ public class DeploymentController {
    */
   @RequestMapping(value = "/deployments/{deploymentId}/log", method = RequestMethod.GET)
   @ResponseStatus(HttpStatus.OK)
-  public CharSequence getDeploymentLog(@PathVariable("deploymentId") String id) {
-    MdcUtils.setDeploymentId(id);
-    return deploymentService.getDeploymentLog(id);
+  public CharSequence getDeploymentLog(@PathVariable("deploymentId") String uuid) {
+    MdcUtils.setDeploymentId(uuid);
+    return deploymentService.getDeploymentLog(uuid);
   }
 
   /**
@@ -164,9 +164,9 @@ public class DeploymentController {
    */
   @RequestMapping(value = "/deployments/{deploymentId}/extrainfo", method = RequestMethod.GET)
   @ResponseStatus(HttpStatus.OK)
-  public CharSequence getDeploymentExtraInfo(@PathVariable("deploymentId") String id) {
-    MdcUtils.setDeploymentId(id);
-    return deploymentService.getDeploymentExtendedInfo(id);
+  public CharSequence getDeploymentExtraInfo(@PathVariable("deploymentId") String uuid) {
+    MdcUtils.setDeploymentId(uuid);
+    return deploymentService.getDeploymentExtendedInfo(uuid);
   }
 
   /**

@@ -63,6 +63,7 @@ import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.OneDataUtils;
 import it.reply.orchestrator.utils.WorkflowConstants.ErrorCode;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -297,21 +298,28 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
             .findByDeployment_id(deployment.getId())
             .stream()
             .collect(Collectors.partitioningBy(resource ->
-              (resource.getIaasId() != null && resource.getVmInfo() != null),
+              (resource.getIaasId() != null && resource.getMetadata() != null),
                 Collectors.toSet()));
-    List<VirtualMachineInfo> VMInfos = new ArrayList<>();
+    List<VirtualMachineInfo> vmInfos = new ArrayList<>();
     for (Resource resource : resources.get(true)) {
-      VMInfos.add(resource.getVmInfo());
+      Map<String,String> resourceMetadata = resource.getMetadata();
+      if (resourceMetadata != null && resourceMetadata.containsKey("vminfo")) {
+        try {
+          VirtualMachineInfo vmInfo =
+              new ObjectMapper().readValue(resourceMetadata.get("vminfo"),
+                  VirtualMachineInfo.class);
+          vmInfos.add(vmInfo);
+        } catch (IOException e) {
+          throw new DeploymentException("Error serializing VM Info", e);
+        }
+      }
     }
 
-    ObjectMapper mapper = new ObjectMapper();
     try {
-      String info = mapper.writeValueAsString(VMInfos);
-      //String info = mapper.writeValueAsString(uris.getUris());
+      String info = new ObjectMapper().writeValueAsString(vmInfos);
       return Optional.of(info);
-    }
-    catch (JsonProcessingException e) {
-      throw new DeploymentException("Error deserializing VM Info", e);
+    } catch (JsonProcessingException e) {
+      throw new DeploymentException("Error serializing VM Info", e);
     }
   }
 
@@ -705,10 +713,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       } else {
         if (vmMapInfo.containsKey(bindedResource.getIaasId())) {
           VirtualMachineInfo vmInfo = vmMapInfo.get(bindedResource.getIaasId());
-          if (bindedResource.getVmInfo() == null || 
-              !vmInfo.equals(bindedResource.getVmInfo())) {
-            bindedResource.setVmInfo(vmInfo);
-          }
+          writeVmInfoToResource(bindedResource, vmInfo);
         }
       }
     }
@@ -717,13 +722,39 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       Collection<String> vmIds = vmMap.get(resource.getToscaNodeName());
       vmIds.stream().findAny().ifPresent(vmId -> {
         resource.setIaasId(vmId);
-        resource.setVmInfo(vmMapInfo.get(vmId));
+        writeVmInfoToResource(resource, vmMapInfo.get(vmId));
         vmIds.remove(vmId);
       });
     }
     if (!vmMap.isEmpty()) {
       LOG.warn("Some VMs of infrastructure <{}> couldn't be binded to a resource: {}",
           infrastructureId, vmMap.entries());
+    }
+  }
+
+  private void writeVmInfoToResource(Resource bindedResource,
+      VirtualMachineInfo vmInfo) {
+    Map<String,String> resourceMetadata = bindedResource.getMetadata();
+    if (resourceMetadata == null) {
+      resourceMetadata = new HashMap<String,String>();
+      bindedResource.setMetadata(resourceMetadata);
+    }
+    VirtualMachineInfo vmOldInfo = null;
+    if (resourceMetadata.containsKey("vminfo")) {
+      try {
+        vmOldInfo = new ObjectMapper().readValue(resourceMetadata.get("vminfo"),
+            VirtualMachineInfo.class);
+      } catch (IOException e) {
+        throw new DeploymentException("Error deserializing VM Info", e);
+      }
+    }
+    if (vmOldInfo == null || !vmInfo.equals(vmOldInfo)) {
+      try {
+        resourceMetadata.put("vminfo",
+            new ObjectMapper().writeValueAsString(vmInfo));
+      } catch (IOException e) {
+        throw new DeploymentException("Error serializing VM Info", e);
+      }
     }
   }
 

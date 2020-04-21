@@ -264,8 +264,8 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
       OidcTokenId requestedWithToken, String jobId) {
 
     Job updatedJob = findJobOnQcg(cloudProviderEndpoint, requestedWithToken, jobId)
-        .orElseThrow(() -> new DeploymentException("Job " + jobId + " not found on " +
-            cloudProviderEndpoint.getCpComputeServiceId()));
+        .orElseThrow(() -> new DeploymentException("Job " + jobId + " not found on "
+            + cloudProviderEndpoint.getCpComputeServiceId()));
 
     LOG.debug("Qcg job {} current status:\n{}", jobId, updatedJob);
     JobState jobState = getLastState(updatedJob);
@@ -562,9 +562,9 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
     component.setCores_per_node(qcgjob.getCorespernode());
     component.setMemory_per_node(qcgjob.getMemorypernode());
     component.setMemory_per_core(qcgjob.getMemorypercore());
-    if(qcgjob.getGpus() != null) {
+    if (qcgjob.getGpus() != null) {
       List<String> nativee = new ArrayList<String>();
-      nativee.add("--gres=gpu:"+qcgjob.getGpus().toString());
+      nativee.add("--gres=gpu:" + qcgjob.getGpus().toString());
     }
     List<JobDescriptionResourcesComponent> components =
         new ArrayList<JobDescriptionResourcesComponent>();

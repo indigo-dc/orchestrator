@@ -1335,7 +1335,7 @@ public class ToscaServiceImpl implements ToscaService {
                       REQUIREMENT_DEPENDENCY_RELATIONSHIP);
                 }
               })
-            );
+        );
 
         //add  vrouter dependency to wnodes and clear hybrid flag if present
         getNodesOfType(ar, ToscaConstants.Nodes.Types.ELASTIC_CLUSTER).stream()

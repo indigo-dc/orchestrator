@@ -18,21 +18,21 @@ package it.reply.orchestrator.dal.util;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 
-import es.upv.i3m.grycap.im.pojo.VirtualMachineInfo;
+import java.util.Map;
 
 import javax.persistence.Converter;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Converter
-public class VirtualMachineInfoToJsonConverter
-    extends AbstractToJsonConverter<@Nullable VirtualMachineInfo> {
+public class ResourceMetadataToJsonConverter
+    extends AbstractToJsonConverter<@Nullable Map<String,String>> {
 
-  private static final TypeReference<@Nullable VirtualMachineInfo> REFERENCE =
-      new TypeReference<@Nullable VirtualMachineInfo>() {
+  private static final TypeReference<@Nullable Map<String,String>> REFERENCE =
+      new TypeReference<@Nullable Map<String,String>>() {
       };
 
-  public VirtualMachineInfoToJsonConverter() {
+  public ResourceMetadataToJsonConverter() {
     super(REFERENCE);
   }
 

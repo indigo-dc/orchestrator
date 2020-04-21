@@ -1,0 +1,21 @@
+databaseChangeLog:
+- property:
+    name: TEXT.type
+    value: TEXT
+    dbms: mysql,postgresql
+- property:
+    name: TEXT.type
+    value: VARCHAR(65535)
+    dbms: h2
+- changeSet:
+    id: 0004_orchestrator-resource-metadata-2201
+    author: m.perniola
+    comment: >
+      Add field metadata to table resource to store additional info
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            name: metadata
+            type: ${TEXT.type}
+        tableName: resource
