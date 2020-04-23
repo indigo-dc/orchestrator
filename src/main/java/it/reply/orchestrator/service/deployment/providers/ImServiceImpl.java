@@ -18,7 +18,6 @@ package it.reply.orchestrator.service.deployment.providers;
 
 import alien4cloud.tosca.model.ArchiveRoot;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
@@ -300,27 +299,21 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
             .collect(Collectors.partitioningBy(resource ->
               (resource.getIaasId() != null && resource.getMetadata() != null),
                 Collectors.toSet()));
-    List<VirtualMachineInfo> vmInfos = new ArrayList<>();
+    StringBuilder sb = new StringBuilder();
+    sb.append("[");
+    boolean first = true;
     for (Resource resource : resources.get(true)) {
       Map<String,String> resourceMetadata = resource.getMetadata();
-      if (resourceMetadata != null && resourceMetadata.containsKey("vminfo")) {
-        try {
-          VirtualMachineInfo vmInfo =
-              new ObjectMapper().readValue(resourceMetadata.get("vminfo"),
-                  VirtualMachineInfo.class);
-          vmInfos.add(vmInfo);
-        } catch (IOException e) {
-          throw new DeploymentException("Error serializing VM Info", e);
+      if (resourceMetadata != null && resourceMetadata.containsKey("VirtualMachineInfo")) {
+        if (!first) {
+          sb.append(",");
         }
+        first = false;
+        sb.append(resourceMetadata.get("VirtualMachineInfo"));
       }
     }
-
-    try {
-      String info = new ObjectMapper().writeValueAsString(vmInfos);
-      return Optional.of(info);
-    } catch (JsonProcessingException e) {
-      throw new DeploymentException("Error serializing VM Info", e);
-    }
+    sb.append("]");
+    return Optional.of(sb.toString());
   }
 
   @Override
@@ -439,13 +432,15 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
     ComputeService computeService = deploymentMessage
         .getCloudServicesOrderedIterator()
-        .currentService(ComputeService.class);
+        .firstService(ComputeService.class);
 
-    toscaService.setHybridUpdateDeployment(newAr,
-        newResourcesOnDifferentService,
-        computeService.getPublicNetworkName(),
-        computeService.getPrivateNetworkName(),
-        computeService.getPrivateNetworkCidr());
+    if (deploymentMessage.isHybrid()) {
+      toscaService.setHybridUpdateDeployment(newAr,
+          newResourcesOnDifferentService,
+          computeService.getPublicNetworkName(),
+          computeService.getPrivateNetworkName(),
+          computeService.getPrivateNetworkCidr());
+    }
 
     Map<String, NodeTemplate> newNodes =
         Optional
@@ -740,9 +735,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       bindedResource.setMetadata(resourceMetadata);
     }
     VirtualMachineInfo vmOldInfo = null;
-    if (resourceMetadata.containsKey("vminfo")) {
+    if (resourceMetadata.containsKey("VirtualMachineInfo")) {
       try {
-        vmOldInfo = new ObjectMapper().readValue(resourceMetadata.get("vminfo"),
+        vmOldInfo = new ObjectMapper().readValue(resourceMetadata.get("VirtualMachineInfo"),
             VirtualMachineInfo.class);
       } catch (IOException e) {
         throw new DeploymentException("Error deserializing VM Info", e);
@@ -750,7 +745,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     }
     if (vmOldInfo == null || !vmInfo.equals(vmOldInfo)) {
       try {
-        resourceMetadata.put("vminfo",
+        resourceMetadata.put("VirtualMachineInfo",
             new ObjectMapper().writeValueAsString(vmInfo));
       } catch (IOException e) {
         throw new DeploymentException("Error serializing VM Info", e);

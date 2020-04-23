@@ -137,14 +137,27 @@ public class QcgServiceTest extends ToscaParserAwareTest {
   }
 
   @Test
-  @Parameters({"0,,FRESH", "1,,SUCCESS", "1,fail,FAILURE", "0,fail,FAILURE"})
-  public void getLastState(int successCount, String error, JobState expectedState) {
+  @Parameters({"SUBMITTED", "PENDING", "EXECUTING", "FAILED", "FINISHED", "?", ""})
+  public void getLastState(String jobState) {
     Job job = new Job();
-    job.setResubmit(successCount);
-    job.setErrors(error);
-    JobState lastState = QcgServiceImpl.getLastState(job);
+    job.setState(jobState);
+    if (jobState.equals("")) {
+      assertThatCode(
+          () -> QcgServiceImpl.getLastState(job))
+          .isInstanceOf(DeploymentException.class)
+          .hasMessage("Empty Qcg job status");
 
-    assertThat(lastState).isEqualTo(expectedState);
+    } else {
+      if (jobState.equals("?")) {
+        assertThatCode(
+            () -> QcgServiceImpl.getLastState(job))
+            .isInstanceOf(DeploymentException.class)
+            .hasMessage("Unknown Qcg job status: ?");
+      } else {
+        JobState lastState = QcgServiceImpl.getLastState(job);
+        assertThat(lastState.toString()).isEqualTo(jobState);
+      }
+    }
   }
 
   @Test
@@ -197,10 +210,9 @@ public class QcgServiceTest extends ToscaParserAwareTest {
 
     Job returnedJob = new Job();
     if (isCompleted) {
-      returnedJob.setResubmit(1);
+      returnedJob.setState("FINISHED");
     } else {
-      returnedJob.setResubmit(0);
-      returnedJob.setErrors(null);
+      returnedJob.setState("EXECUTING");
     }
 
     when(qcg.getJob("999")).thenReturn(returnedJob);
@@ -221,14 +233,15 @@ public class QcgServiceTest extends ToscaParserAwareTest {
   public void testCheckJobsOnQcgFail() {
     Job job = new Job();
     job.setId("999");
-    job.setResubmit(0);
     job.setErrors("fail");
+    job.setExit_code(2);
+    job.setState("FAILED");
     when(qcg.getJob("999")).thenReturn(job);
 
     assertThatCode(
-        () -> qcgService.checkJobsOnQcg(generateCloudProviderEndpoint(), null, "999"))
+        () -> qcgService.checkJobState(job))
         .isInstanceOf(DeploymentException.class)
-        .hasMessage("Qcg job 999 failed to execute with message: fail");
+        .hasMessage("Qcg job 999 failed to execute with exit code:2 - message: fail");
   }
 
   @Test
@@ -249,7 +262,6 @@ public class QcgServiceTest extends ToscaParserAwareTest {
   @Test
   public void createJobOnQcgFail() throws QcgException {
     Job job = new Job();
-    job.setId("999");
     JobDescription description = new JobDescription();
     JobDescriptionExecution execution = new JobDescriptionExecution();
     execution.setExecutable("/usr/bin/printf");
@@ -264,8 +276,8 @@ public class QcgServiceTest extends ToscaParserAwareTest {
         .isInstanceOf(DeploymentException.class)
         .hasCauseExactlyInstanceOf(QcgException.class)
         .hasMessage(
-            "Failed to launch job <%s> on Qcg; nested exception is %s (http status: %s)",
-            "999", "some message", 500);
+            "Failed to launch job on Qcg; nested exception is %s (http status: %s)",
+            "some message", 500);
   }
 
   @Test

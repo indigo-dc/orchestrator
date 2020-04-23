@@ -77,6 +77,10 @@ public class Flavor implements CmdbIdentifiable, Comparable<Flavor> {
   @Nullable
   private String gpuModel;
 
+  @JsonProperty("infiniband_support")
+  @Nullable
+  private Boolean infinibandSupport;
+  
   @Override
   public int compareTo(@NotNull Flavor other) {
     return COMPARATOR.compare(this, other);

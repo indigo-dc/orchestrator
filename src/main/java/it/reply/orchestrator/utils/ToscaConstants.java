@@ -44,6 +44,7 @@ public class ToscaConstants {
       public static final String VROUTER = BASE_INDIGO_NAME + "VR.VRouter";
       public static final String CLIENT = BASE_INDIGO_NAME + "VR.Client";
       public static final String SLURM_WN = BASE_INDIGO_NAME + "LRMS.WorkerNode.Slurm";
+      public static final String SLURM_FE = BASE_INDIGO_NAME  + "LRMS.FrontEnd.Slurm";
       public static final String BASE_NETWORK_NAME = "tosca.nodes.network.";
       public static final String NETWORK = BASE_NETWORK_NAME + "Network";
       public static final String PORT = BASE_NETWORK_NAME + "Port";

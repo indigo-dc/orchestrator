@@ -300,6 +300,10 @@ public class ToscaServiceImpl implements ToscaService {
     capabilityPropertiesMapping.put("gpu_model",
         flavorMetadataBuilder -> flavorMetadataBuilder::gpuModel);
 
+    capabilityPropertiesMapping.put("infiniband_support",
+        flavorMetadataBuilder -> (String infinibandSupport) -> flavorMetadataBuilder
+            .infinibandSupport(Boolean.parseBoolean(infinibandSupport)));
+
     // Only indigo.Compute nodes are relevant
     return getNodesOfType(parsingResult, ToscaConstants.Nodes.Types.COMPUTE)
         .stream()
@@ -639,7 +643,8 @@ public class ToscaServiceImpl implements ToscaService {
         new Filter<>(Flavor::getDiskSize, (a, b) -> b >= a),
         new Filter<>(Flavor::getNumGpus, (a, b) -> b >= a),
         new Filter<>(Flavor::getGpuVendor, String::equalsIgnoreCase),
-        new Filter<>(Flavor::getGpuModel, String::equalsIgnoreCase)
+        new Filter<>(Flavor::getGpuModel, String::equalsIgnoreCase),
+        new Filter<>(Flavor::getInfinibandSupport, (a, b) -> !a || (b != null ? b : false))
     );
     Stream<Flavor> flavorStream = cloudProviderServiceFlavors.stream();
 
@@ -730,12 +735,21 @@ public class ToscaServiceImpl implements ToscaService {
   @Override
   public boolean isHybridDeployment(ArchiveRoot archiveRoot) {
     // check if there is a "hybrid" ScalarPropertyValue with "true" as value
-    return getNodesOfType(archiveRoot, ToscaConstants.Nodes.Types.ELASTIC_CLUSTER)
-        .stream()
-        .anyMatch(node -> ToscaUtils
-            .extractScalar(node.getProperties(), "hybrid", BooleanType.class)
-            .orElse(false)
+    boolean hybridecluster = getNodesOfType(archiveRoot, 
+        ToscaConstants.Nodes.Types.ELASTIC_CLUSTER)
+          .stream()
+          .anyMatch(node -> ToscaUtils
+              .extractScalar(node.getProperties(), "hybrid", BooleanType.class)
+              .orElse(false)
         );
+    boolean hybridefrontend = getNodesOfType(archiveRoot, 
+        ToscaConstants.Nodes.Types.SLURM_FE)
+          .stream()
+          .anyMatch(node -> ToscaUtils
+              .extractScalar(node.getProperties(), "hybrid", BooleanType.class)
+              .orElse(false)
+        ); 
+    return hybridecluster | hybridefrontend;
   }
 
   @Override
