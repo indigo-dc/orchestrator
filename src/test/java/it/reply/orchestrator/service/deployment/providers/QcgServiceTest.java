@@ -125,6 +125,7 @@ public class QcgServiceTest extends ToscaParserAwareTest {
         .when(oauth2tokenService.executeWithClientForResult(
             Mockito.any(), Mockito.any(), Mockito.any()))
     	        .thenAnswer(y -> ((ThrowingFunction) y.getArguments()[1]).apply("token"));
+
   }
 
   private CloudProviderEndpoint generateCloudProviderEndpoint() {
@@ -177,10 +178,13 @@ public class QcgServiceTest extends ToscaParserAwareTest {
 
     QcgJobsOrderedIterator topologyIterator = mock(QcgJobsOrderedIterator.class);
     dm.setQcgJobsIterator(topologyIterator);
+    DeepJob deepJob = new DeepJob(job, "toscaName");
 
     when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
     when(topologyIterator.hasNext()).thenReturn(true, !isLast);
-    when(topologyIterator.next()).thenReturn(new DeepJob(job, "toscaName"));
+    when(topologyIterator.next()).thenReturn(deepJob);
+
+    when(qcg.createJob(job.getDescription())).thenReturn(job);
 
     assertThat(qcgService.doDeploy(dm)).isEqualTo(isLast);
     verify(qcg, times(1)).createJob(description);
@@ -254,7 +258,7 @@ public class QcgServiceTest extends ToscaParserAwareTest {
     description.setExecution(execution);
     job.setDescription(description);
 
-    /*Job updated =*/ qcgService
+    qcgService
     	.createJobOnQcg(generateCloudProviderEndpoint(), null, new DeepJob(job, "toscaName"));
     verify(qcg, times(1)).createJob(description);
   }
@@ -327,7 +331,7 @@ public class QcgServiceTest extends ToscaParserAwareTest {
 
   @Test
   @Parameters({"true", "false"})
-  public void doUndeploySuccessful(boolean isLast) throws QcgException {
+  public void doUndeploySuccessful(boolean isLast) {
     Deployment deployment = ControllerTestUtils.createDeployment(isLast ? 1 : 2);
     deployment.setEndpoint(isLast ? "999" : "1000");
     DeploymentMessage dm = generateDeployDmQcg(deployment);

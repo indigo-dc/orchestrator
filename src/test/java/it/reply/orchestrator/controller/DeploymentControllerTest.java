@@ -16,6 +16,7 @@
 
 package it.reply.orchestrator.controller;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.Matchers.is;
 import static org.springframework.restdocs.headers.HeaderDocumentation.headerWithName;
 import static org.springframework.restdocs.headers.HeaderDocumentation.requestHeaders;
@@ -43,6 +44,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.OidcEntity;
 import it.reply.orchestrator.dal.entity.OidcEntityId;
+import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.exception.http.ConflictException;
@@ -105,6 +107,9 @@ public class DeploymentControllerTest {
 
   @MockBean
   private DeploymentService deploymentService;
+
+  @MockBean
+  private ResourceRepository resourceRepository;
 
   @SpyBean
   private DeploymentResourceAssembler deploymentResourceAssembler;
@@ -229,6 +234,32 @@ public class DeploymentControllerTest {
         .andExpect(status().isOk())
         .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
         .andExpect(jsonPath("$.uuid", is(deploymentId)));
+  }
+
+  @Test
+  public void getDeploymentExtendedInfo() throws Exception {
+    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    String result = "{\"vmProperties\":[{\"class\":\"network\",\"id\":\"pub_network\",\"outbound\":\"yes\",\"provider_id\":\"external\"},{\"class\":\"network\",\"id\":\"priv_network\",\"provider_id\":\"provider-2099\"},{\"class\":\"system\",\"id\":\"simple_node1\",\"instance_name\":\"simple_node1-158799480931\",\"disk.0.os.flavour\":\"ubuntu\",\"disk.0.image.url\":\"ost://api.cloud.test.com/f46f7387-a371-44ec-9a2d-16a8f2a85786\",\"cpu.count\":1,\"memory.size\":2097152000,\"instance_type\":\"m1.small\",\"net_interface.1.connection\":\"pub_network\",\"net_interface.0.connection\":\"priv_network\",\"cpu.arch\":\"x86_64\",\"disk.0.free_size\":10737418240,\"disk.0.os.credentials.username\":\"cloudadm\",\"provider.type\":\"OpenStack\",\"provider.host\":\"api.cloud.test.com\",\"provider.port\":5000,\"disk.0.os.credentials.private_key\":\"\",\"state\":\"configured\",\"instance_id\":\"11d647dc-97f1-4347-8ede-ec83e2b64976\",\"net_interface.0.ip\":\"192.168.1.1\",\"net_interface.1.ip\":\"1.2.3.4\"}]}";
+    Mockito.when(deploymentService.getDeploymentExtendedInfo(deploymentId)).thenReturn(result);
+
+    mockMvc.perform(get("/deployments/" + deploymentId + "/extrainfo").header(HttpHeaders.AUTHORIZATION, OAuth2AccessToken.BEARER_TYPE + " <access token>"))
+    .andExpect(status().isOk())
+    .andExpect(content().string(containsString(result)))
+    .andDo(document("get-deployment-extended-info",
+        preprocessResponse(prettyPrint())));
+  }
+
+  @Test
+  public void getDeploymentLog() throws Exception {
+    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    String result = "deployment log";
+    Mockito.when(deploymentService.getDeploymentLog(deploymentId)).thenReturn(result);
+
+    mockMvc.perform(get("/deployments/" + deploymentId + "/log").header(HttpHeaders.AUTHORIZATION, OAuth2AccessToken.BEARER_TYPE + " <access token>"))
+    .andExpect(status().isOk())
+    .andExpect(content().string(containsString(result)))
+    .andDo(document("get-deployment-log",
+        preprocessResponse(prettyPrint())));
   }
 
   @Test

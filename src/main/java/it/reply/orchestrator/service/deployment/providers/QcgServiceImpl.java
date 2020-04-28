@@ -129,17 +129,14 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
   public boolean doDeploy(DeploymentMessage deploymentMessage) {
 
     Deployment deployment = getDeployment(deploymentMessage);
-    // Update status of the deployment - if not already done (remember the Iterative
-    // mode)
+    // Update status of the deployment - if not already done
+    // (remember the Iterative mode)
     if (deployment.getTask() != Task.DEPLOYER) {
       deployment.setTask(Task.DEPLOYER);
     }
     if (deployment.getEndpoint() == null) {
       deployment.setEndpoint("<NO_ENDPOINT>");
     }
-
-    // TODO Replace attribute, inputs, temporary-hard-coded properties in the TOSCA
-    // template
 
     QcgJobsOrderedIterator topologyIterator = deploymentMessage.getQcgJobsIterator();
     // Create nodes iterator if not done yet
@@ -156,12 +153,12 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
           topologyIterator.getSize());
       final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
       CloudProviderEndpoint cloudProviderEndpoint = deployment.getCloudProviderEndpoint();
-      Job updated = createJobOnQcg(cloudProviderEndpoint, requestedWithToken, currentJob);
+      Job created = createJobOnQcg(cloudProviderEndpoint, requestedWithToken, currentJob);
       // update object with deployment data
       try {
-        ModelUtils.updateJob(updated, currentJob.getQcgJob());
-      } catch (QcgException ex) {
-        // TODO cannot update job, do something?
+        ModelUtils.updateJob(created, currentJob.getQcgJob());
+      } catch (QcgException exception) { // Qcg job update error
+        throw new DeploymentException("Failed to create Qcg job", exception);
       }
       deployment.setEndpoint(currentJob.getQcgJob().getId());
       updateResource(deployment, currentJob.getToscaNodeName(),
@@ -274,6 +271,7 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
       }
     }
   }
+
   @Override
   public void cleanFailedDeploy(DeploymentMessage deploymentMessage) {
     doUndeploy(deploymentMessage);
@@ -434,16 +432,13 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
    *
    * @param graph the input nodegraph.
    * @param taskNode the input tasknode.
-   * @param taskId the input taskid.
    *
    * @return the Job.
    */
   protected Job buildJob(DirectedMultigraph<NodeTemplate, RelationshipTemplate> graph,
       NodeTemplate taskNode) {
-    
+
     // TODO FINISH MAP PROPETIES FROM TOSCA
-    
-    Job job = new Job();
 
     JobDescriptionExecution execution = new JobDescriptionExecution();
 
@@ -455,14 +450,14 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
       throw new ToscaException(
           String.format("<executable> property of node <%s> must not be an empty string",
               taskNode.getName()));
-    }    
+    }
 
     // property: directory
     ToscaUtils.extractScalar(taskNode.getProperties(), "directory")
-        .ifPresent(execution::setDirectory); 
+        .ifPresent(execution::setDirectory);
     // property: arguments
     ToscaUtils.extractList(taskNode.getProperties(), "arguments", String.class::cast)
-        .ifPresent(execution::setArgs);    
+        .ifPresent(execution::setArgs);
     // property: environment
     ToscaUtils.extractMap(taskNode.getProperties(), "environment", String.class::cast)
         .ifPresent(execution::setEnvironment);
@@ -492,12 +487,12 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
     // property: schema
     ToscaUtils.extractScalar(taskNode.getProperties(), "schema").ifPresent(description::setSchema);
     // property: note
-    ToscaUtils.extractScalar(taskNode.getProperties(), "note").ifPresent(description::setNote);  
+    ToscaUtils.extractScalar(taskNode.getProperties(), "note").ifPresent(description::setNote);
 
     JobDescriptionResources resources = new JobDescriptionResources();
 
     // property: queue
-    ToscaUtils.extractScalar(taskNode.getProperties(), "queue").ifPresent(resources::setQueue);  
+    ToscaUtils.extractScalar(taskNode.getProperties(), "queue").ifPresent(resources::setQueue);
     // property: wall_clock
     ToscaUtils.extractScalar(taskNode.getProperties(), "wall_clock")
         .ifPresent(resources::setWall_clock);
@@ -520,12 +515,12 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
     ToscaUtils.extractScalar(taskNode.getProperties(), "memory_per_core",
         IntegerType.class).map(Ints::saturatedCast).ifPresent(component::setMemory_per_core);
     // property: gpus
-    Optional <Integer> gpus = ToscaUtils.extractScalar(taskNode.getProperties(), "gpus",
+    Optional<Integer> gpus = ToscaUtils.extractScalar(taskNode.getProperties(), "gpus",
         IntegerType.class).map(Ints::saturatedCast);
     if (gpus.isPresent()) {
-      List<String> _native = new ArrayList<String>();
-      _native.add("--gres=gpu:" + gpus.toString());
-      component.set_native(_native);
+      List<String> nativee = new ArrayList<String>();
+      nativee.add("--gres=gpu:" + gpus.toString());
+      component.set_native(nativee);
     }
 
     List<JobDescriptionResourcesComponent> components =
@@ -534,6 +529,7 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
     resources.setComponents(components);
     description.setResources(resources);
 
+    Job job = new Job();
     job.setDescription(description);
 
     return job;
@@ -585,7 +581,6 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
    * @param requestedWithToken    the token ID of the request
    * @param jobId                 the Id of the Qcg job
    */
-
   protected void deleteJobsOnQcg(CloudProviderEndpoint cloudProviderEndpoint,
       OidcTokenId requestedWithToken, String jobId) {
 
@@ -600,7 +595,6 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
         throw new DeploymentException("Failed to delete job " + jobId + " on Qcg", ex);
       }
     }
-
   }
 
   /**
@@ -653,7 +647,7 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
       }
     } else {
       throw new DeploymentException("Empty Qcg job status");
-    } 
+    }
   }
 
   @Override

@@ -735,20 +735,20 @@ public class ToscaServiceImpl implements ToscaService {
   @Override
   public boolean isHybridDeployment(ArchiveRoot archiveRoot) {
     // check if there is a "hybrid" ScalarPropertyValue with "true" as value
-    boolean hybridecluster = getNodesOfType(archiveRoot, 
+    boolean hybridecluster = getNodesOfType(archiveRoot,
         ToscaConstants.Nodes.Types.ELASTIC_CLUSTER)
           .stream()
           .anyMatch(node -> ToscaUtils
               .extractScalar(node.getProperties(), "hybrid", BooleanType.class)
               .orElse(false)
         );
-    boolean hybridefrontend = getNodesOfType(archiveRoot, 
+    boolean hybridefrontend = getNodesOfType(archiveRoot,
         ToscaConstants.Nodes.Types.SLURM_FE)
           .stream()
           .anyMatch(node -> ToscaUtils
               .extractScalar(node.getProperties(), "hybrid", BooleanType.class)
               .orElse(false)
-        ); 
+        );
     return hybridecluster | hybridefrontend;
   }
 
