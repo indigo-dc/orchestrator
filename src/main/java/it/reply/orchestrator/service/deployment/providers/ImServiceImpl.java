@@ -109,7 +109,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   @Autowired
   private ImClientFactory imClientFactory;
-  
+
   private String VMINFO = "VirtualMachineInfo";
 
   protected <R> R executeWithClientForResult(List<CloudProviderEndpoint> cloudProviderEndpoints,
