@@ -118,12 +118,6 @@
       <url>https://repository.indigo-datacloud.eu/repository/maven-public</url>
     </repository>
 
-    <repository>
-      <id>infn-bari-repository</id>
-      <name>RECAS repository</name>
-      <url>http://artifactory.cloud.ba.infn.it:8081/artifactory/libs-release</url>
-    </repository>
-
   </repositories>
 
 
