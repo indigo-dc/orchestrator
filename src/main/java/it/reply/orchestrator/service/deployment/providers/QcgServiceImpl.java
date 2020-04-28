@@ -250,7 +250,7 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
   private void writeJobToResource(Resource resource, Job job) {
     Map<String,String> resourceMetadata = resource.getMetadata();
     if (resourceMetadata == null) {
-      resourceMetadata = new HashMap<String,String>();
+      resourceMetadata = new HashMap<>();
       resource.setMetadata(resourceMetadata);
     }
     Job oldJob = null;
@@ -438,8 +438,6 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
   protected Job buildJob(DirectedMultigraph<NodeTemplate, RelationshipTemplate> graph,
       NodeTemplate taskNode) {
 
-    // TODO FINISH MAP PROPETIES FROM TOSCA
-
     JobDescriptionExecution execution = new JobDescriptionExecution();
 
     // property: executable
@@ -518,13 +516,12 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
     Optional<Integer> gpus = ToscaUtils.extractScalar(taskNode.getProperties(), "gpus",
         IntegerType.class).map(Ints::saturatedCast);
     if (gpus.isPresent()) {
-      List<String> nativee = new ArrayList<String>();
+      List<String> nativee = new ArrayList<>();
       nativee.add("--gres=gpu:" + gpus.toString());
       component.set_native(nativee);
     }
 
-    List<JobDescriptionResourcesComponent> components =
-        new ArrayList<JobDescriptionResourcesComponent>();
+    List<JobDescriptionResourcesComponent> components = new ArrayList<>();
     components.add(component);
     resources.setComponents(components);
     description.setResources(resources);

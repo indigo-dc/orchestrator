@@ -739,17 +739,19 @@ public class ToscaServiceImpl implements ToscaService {
         ToscaConstants.Nodes.Types.ELASTIC_CLUSTER)
           .stream()
           .anyMatch(node -> ToscaUtils
-              .extractScalar(node.getProperties(), "hybrid", BooleanType.class)
+              .extractScalar(node.getProperties(), ToscaConstants.Nodes.Properties.HYBRID,
+                  BooleanType.class)
               .orElse(false)
         );
     boolean hybridefrontend = getNodesOfType(archiveRoot,
         ToscaConstants.Nodes.Types.SLURM_FE)
           .stream()
           .anyMatch(node -> ToscaUtils
-              .extractScalar(node.getProperties(), "hybrid", BooleanType.class)
+              .extractScalar(node.getProperties(), ToscaConstants.Nodes.Properties.HYBRID,
+                  BooleanType.class)
               .orElse(false)
         );
-    return hybridecluster | hybridefrontend;
+    return hybridecluster || hybridefrontend;
   }
 
   @Override
@@ -1363,7 +1365,8 @@ public class ToscaServiceImpl implements ToscaService {
                       REQUIREMENT_DEPENDENCY_RELATIONSHIP);
                   if (wnNode.getProperties().containsKey(ToscaConstants.Nodes.Properties.HYBRID)) {
                     //force to false
-                    wnNode.getProperties().put("hybrid", new ScalarPropertyValue("false"));
+                    wnNode.getProperties().put(ToscaConstants.Nodes.Properties.HYBRID,
+                        new ScalarPropertyValue("false"));
                   }
                 }
               });

@@ -38,6 +38,7 @@ import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -148,7 +149,7 @@ public class DeploymentController {
    *          the uuid of the deployment
    * @return the log
    */
-  @RequestMapping(value = "/deployments/{deploymentId}/log", method = RequestMethod.GET)
+  @GetMapping(path = "/deployments/{deploymentId}/log")
   @ResponseStatus(HttpStatus.OK)
   public CharSequence getDeploymentLog(@PathVariable("deploymentId") String uuid) {
     MdcUtils.setDeploymentId(uuid);
@@ -162,7 +163,7 @@ public class DeploymentController {
    *          the uuid of the deployment
    * @return the extra info
    */
-  @RequestMapping(value = "/deployments/{deploymentId}/extrainfo", method = RequestMethod.GET)
+  @GetMapping(path = "/deployments/{deploymentId}/extrainfo")
   @ResponseStatus(HttpStatus.OK)
   public CharSequence getDeploymentExtraInfo(@PathVariable("deploymentId") String uuid) {
     MdcUtils.setDeploymentId(uuid);

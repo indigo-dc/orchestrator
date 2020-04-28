@@ -109,6 +109,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   @Autowired
   private ImClientFactory imClientFactory;
+  
+  private String VMINFO = "VirtualMachineInfo";
 
   protected <R> R executeWithClientForResult(List<CloudProviderEndpoint> cloudProviderEndpoints,
       @Nullable OidcTokenId requestedWithToken,
@@ -304,12 +306,12 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     boolean first = true;
     for (Resource resource : resources.get(true)) {
       Map<String,String> resourceMetadata = resource.getMetadata();
-      if (resourceMetadata != null && resourceMetadata.containsKey("VirtualMachineInfo")) {
+      if (resourceMetadata != null && resourceMetadata.containsKey(VMINFO)) {
         if (!first) {
           sb.append(",");
         }
         first = false;
-        sb.append(resourceMetadata.get("VirtualMachineInfo"));
+        sb.append(resourceMetadata.get(VMINFO));
       }
     }
     sb.append("]");
@@ -664,7 +666,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
     // for each URL get the tosca Node Name about the VM
     Multimap<String, String> vmMap = HashMultimap.create();
-    Map<String, VirtualMachineInfo> vmMapInfo = new HashMap<String, VirtualMachineInfo>();
+    Map<String, VirtualMachineInfo> vmMapInfo = new HashMap<>();
     for (String vmId : infrastructureState.getVmStates().keySet()) {
       VirtualMachineInfo vmInfo =
           executeWithClientForResult(cloudProviderEndpoints, requestedWithToken,
@@ -731,13 +733,13 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       VirtualMachineInfo vmInfo) {
     Map<String,String> resourceMetadata = bindedResource.getMetadata();
     if (resourceMetadata == null) {
-      resourceMetadata = new HashMap<String,String>();
+      resourceMetadata = new HashMap<>();
       bindedResource.setMetadata(resourceMetadata);
     }
     VirtualMachineInfo vmOldInfo = null;
-    if (resourceMetadata.containsKey("VirtualMachineInfo")) {
+    if (resourceMetadata.containsKey(VMINFO)) {
       try {
-        vmOldInfo = new ObjectMapper().readValue(resourceMetadata.get("VirtualMachineInfo"),
+        vmOldInfo = new ObjectMapper().readValue(resourceMetadata.get(VMINFO),
             VirtualMachineInfo.class);
       } catch (IOException e) {
         throw new DeploymentException("Error deserializing VM Info", e);
@@ -745,7 +747,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     }
     if (vmOldInfo == null || !vmInfo.equals(vmOldInfo)) {
       try {
-        resourceMetadata.put("VirtualMachineInfo",
+        resourceMetadata.put(VMINFO,
             new ObjectMapper().writeValueAsString(vmInfo));
       } catch (IOException e) {
         throw new DeploymentException("Error serializing VM Info", e);
