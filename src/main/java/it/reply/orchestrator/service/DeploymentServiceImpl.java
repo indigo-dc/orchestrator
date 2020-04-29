@@ -511,7 +511,7 @@ public class DeploymentServiceImpl implements DeploymentService {
     if (info.isPresent()) {
       return info.get();
     } else {
-      return "{[]}";
+      return "[]";
     }
   }
 

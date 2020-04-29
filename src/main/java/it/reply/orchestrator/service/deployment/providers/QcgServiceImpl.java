@@ -303,8 +303,10 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
         LOG.debug("Qcg job {} is ready", job.getId());
         return true;
       case FAILED:
-        String ermsg = "Qcg job " + job.getId() + " failed to execute with exit code:";
-        ermsg += job.getExit_code().toString();
+        String ermsg = "Qcg job " + job.getId() + " failed to execute";
+        if (job.getExit_code() != null) {
+          ermsg += " with exit code:" + job.getExit_code().toString();
+        }
         if (!StringUtils.isNullOrEmpty(job.getErrors())) {
           ermsg += " - message: " + job.getErrors();
         }
@@ -516,9 +518,12 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
     Optional<Integer> gpus = ToscaUtils.extractScalar(taskNode.getProperties(), "gpus",
         IntegerType.class).map(Ints::saturatedCast);
     if (gpus.isPresent()) {
-      List<String> nativee = new ArrayList<>();
-      nativee.add("--gres=gpu:" + gpus.toString());
-      component.set_native(nativee);
+      Integer ng = gpus.get();
+      if (ng > 0) {
+        List<String> nativee = new ArrayList<>();
+        nativee.add("--gres=gpu:" + ng.toString());
+        component.set_native(nativee);
+      }
     }
 
     List<JobDescriptionResourcesComponent> components = new ArrayList<>();

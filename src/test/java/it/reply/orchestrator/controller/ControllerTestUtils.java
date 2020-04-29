@@ -74,7 +74,7 @@ public class ControllerTestUtils {
   }
 
   public static Resource createResource(Deployment deployment,
-      String toscaNodeType, String toscaNodeName) {
+      String toscaNodeType, String toscaNodeName, String iaasId) {
     Resource resource = new Resource();
     resource.setId(UUID.randomUUID().toString());
     resource.setCreatedAt(new Date());
@@ -82,7 +82,7 @@ public class ControllerTestUtils {
     resource.setState(NodeStates.CREATING);
     resource.setToscaNodeType(toscaNodeType);
     resource.setToscaNodeName(toscaNodeName);
-    resource.setIaasId(UUID.randomUUID().toString());
+    resource.setIaasId(iaasId);
     resource.setDeployment(deployment);
     deployment.getResources().add(resource);
     return resource;
