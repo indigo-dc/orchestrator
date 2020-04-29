@@ -19,7 +19,6 @@ package it.reply.orchestrator.service.deployment.providers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-
 import com.google.common.collect.Lists;
 
 import it.infn.ba.deep.qcg.client.Qcg;
@@ -54,6 +53,11 @@ import it.reply.orchestrator.util.TestUtil;
 import it.reply.orchestrator.utils.ToscaConstants.Nodes;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import junitparams.JUnitParamsRunner;
@@ -162,6 +166,36 @@ public class QcgServiceTest extends ToscaParserAwareTest {
   }
 
   @Test
+  public void getDeploymentExtendedInfoInternal() {
+    Deployment deployment = ControllerTestUtils.createDeployment();
+    DeploymentMessage dm = generateDeployDmQcg(deployment);
+
+    Resource resource1 = ControllerTestUtils.createResource(deployment,
+        "tosca.nodes.indigo.Qcg.Job", "qcg_job");
+    Map<String,String> metadata1 = new HashMap<>();
+    metadata1.put("Job", "{\"Id\": \"1\"}");
+    resource1.setMetadata(metadata1);
+    Resource resource2 = ControllerTestUtils.createResource(deployment,
+        "tosca.nodes.indigo.Qcg.Job", "qcg_job");
+    Map<String,String> metadata2 = new HashMap<>();
+    metadata2.put("Job", "{\"Id\": \"2\"}");
+    resource2.setMetadata(metadata2);
+    List<Resource> resources = new ArrayList<>();
+    resources.add(resource1);
+    resources.add(resource2);
+    when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
+    when(resourceRepository.findByDeployment_id(deployment.getId())).thenReturn(resources);
+    assertThat(qcgService.getDeploymentExtendedInfo(dm).get())
+        .isEqualTo("[{\"Id\": \"1\"},{\"Id\": \"2\"}]");
+  }
+
+  @Test
+  public void getDeploymentLogInternal() {
+    DeploymentMessage dm = new DeploymentMessage();
+    assertThat(qcgService.getDeploymentLog(dm)).isEqualTo(Optional.empty());
+  }
+
+  @Test
   @Parameters({"true", "false"})
   public void doDeploy(boolean isLast) throws QcgException {
     Deployment deployment = ControllerTestUtils.createDeployment();
@@ -178,12 +212,22 @@ public class QcgServiceTest extends ToscaParserAwareTest {
 
     QcgJobsOrderedIterator topologyIterator = mock(QcgJobsOrderedIterator.class);
     dm.setQcgJobsIterator(topologyIterator);
-    DeepJob deepJob = new DeepJob(job, "toscaName");
-
+    DeepJob deepJob = new DeepJob(job, "qcg_job");
+    Resource resource1 = ControllerTestUtils.createResource(deployment,
+        "tosca.nodes.indigo.Qcg.Job", "qcg_job");
+    Resource resource2 = ControllerTestUtils.createResource(deployment,
+        "tosca.nodes.indigo.Qcg.Job", "qcg_job");
+    Map<String,String> metadata = new HashMap<>();
+    metadata.put("Job", "{}");
+    resource2.setMetadata(metadata);
+    List<Resource> resources = new ArrayList<>();
+    resources.add(resource1);
+    resources.add(resource2);
     when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
     when(topologyIterator.hasNext()).thenReturn(true, !isLast);
     when(topologyIterator.next()).thenReturn(deepJob);
-
+    when(resourceRepository.findByToscaNodeNameAndDeployment_id(
+        "qcg_job", deployment.getId())).thenReturn(resources);
     when(qcg.createJob(job.getDescription())).thenReturn(job);
 
     assertThat(qcgService.doDeploy(dm)).isEqualTo(isLast);

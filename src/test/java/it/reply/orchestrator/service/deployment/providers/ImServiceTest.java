@@ -19,6 +19,8 @@ package it.reply.orchestrator.service.deployment.providers;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingException;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 
@@ -315,7 +317,7 @@ public class ImServiceTest extends ToscaParserAwareTest {
   }
 
   @Test
-  public void testIsDeployedSuccesful() throws ImClientException {
+  public void testIsDeployedSuccesful() throws ImClientException, JsonProcessingException {
     Deployment deployment = ControllerTestUtils.createDeployment(2);
     deployment.setDeploymentProvider(DeploymentProvider.IM);
     deployment.setTask(Task.DEPLOYER);
@@ -324,7 +326,14 @@ public class ImServiceTest extends ToscaParserAwareTest {
     InfrastructureState infrastructureState = generateInfrastructureState(States.CONFIGURED, 2);
 
     List<VirtualMachineInfo> info= generateVirtualMachineInfo(2);
-
+    List<Resource> resources = new ArrayList<>(deployment.getResources());
+    ObjectMapper mapper = new ObjectMapper();
+    Map<String,String> metadata1 = new HashMap<>();
+    metadata1.put("VirtualMachineInfo",  mapper.writeValueAsString(info.get(0)));
+    resources.get(0).setMetadata(metadata1);
+    Map<String,String> metadata2 = new HashMap<>();
+    metadata2.put("VirtualMachineInfo",  mapper.writeValueAsString(info.get(1)));
+    resources.get(1).setMetadata(metadata2);
     Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
     Mockito.doReturn(infrastructureManager).when(imClientFactory)
         .build(Mockito.anyListOf(CloudProviderEndpoint.class), Mockito.any());
@@ -334,7 +343,7 @@ public class ImServiceTest extends ToscaParserAwareTest {
         .when(infrastructureManager.getVmInfo(Mockito.eq(deployment.getEndpoint()), Mockito.anyString()))
         .thenReturn(info.get(0), info.get(1));
     Mockito.when(resourceRepository
-            .findByDeployment_id(deployment.getId())).thenReturn(new ArrayList<>(deployment.getResources()));
+            .findByDeployment_id(deployment.getId())).thenReturn(resources);
 
     boolean returnValue = imService.isDeployed(dm);
 

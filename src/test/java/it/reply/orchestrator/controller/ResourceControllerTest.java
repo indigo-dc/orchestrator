@@ -102,6 +102,8 @@ public class ResourceControllerTest {
                     .description("The type of the represented TOSCA node"),
                 fieldWithPath("content[].toscaNodeName").optional()
                     .description("The name of the represented TOSCA node"),
+                fieldWithPath("content[].physicalId").optional()
+                    .description("The Infrastructure ID of the object"),
                 fieldWithPath("content[].requiredBy")
                     .description("A list of nodes that require this resource"),
                 fieldWithPath("content[].links[]").ignored(), fieldWithPath("page").ignored())));
@@ -150,6 +152,8 @@ public class ResourceControllerTest {
                 .description("The type of the represented TOSCA node"),
             fieldWithPath("toscaNodeName").optional()
                 .description("The name of the represented TOSCA node"),
+            fieldWithPath("physicalId").optional()
+                .description("The Infrastructure ID of the object"),
             fieldWithPath("requiredBy").description("A list of nodes that require this resource"),
             fieldWithPath("links[]").ignored())));
   }

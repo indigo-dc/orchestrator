@@ -58,6 +58,7 @@ import it.reply.orchestrator.utils.ToscaUtils;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 
 import org.alien4cloud.tosca.model.templates.NodeTemplate;
 import org.assertj.core.api.AbstractThrowableAssert;
@@ -409,6 +410,19 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
 
     verify(deploymentStatusHelper, times(1))
         .updateOnSuccess(deployment.getId());
+  }
+
+  @Test
+  public void getDeploymentExtendedInfoInternal() {
+    DeploymentMessage dm = new DeploymentMessage();
+    assertThat(chronosService.getDeploymentExtendedInfoInternal(dm))
+      .isEqualTo(Optional.empty());
+  }
+
+  @Test
+  public void getDeploymentLogInternal() {
+    DeploymentMessage dm = new DeploymentMessage();
+    assertThat(chronosService.getDeploymentLog(dm)).isEqualTo(Optional.empty());
   }
 
   @Test
