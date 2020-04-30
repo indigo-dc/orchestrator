@@ -297,6 +297,7 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
       case SUBMITTED:
       case EXECUTING:
       case PENDING:
+      case COMPLETING:
         LOG.debug("Qcg job {} not ready yet", job.getId());
         return false;
       case FINISHED:
@@ -592,7 +593,6 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
     } catch (QcgException ex) {
       // Qcg API hack to avoid error 400 if the job to delete does not exist or cannot
       // be deleted
-      // if in state FINISHED, FAILED
       if (ex.getStatus() != 400 && ex.getStatus() != 404) {
         throw new DeploymentException("Failed to delete job " + jobId + " on Qcg", ex);
       }
@@ -629,7 +629,7 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
   }
 
   public enum JobState {
-    SUBMITTED, PENDING, EXECUTING, FAILED, FINISHED;
+    SUBMITTED, PENDING, EXECUTING, FAILED, COMPLETING, FINISHED;
   }
 
   /**

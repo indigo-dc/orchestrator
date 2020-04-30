@@ -142,7 +142,7 @@ public class QcgServiceTest extends ToscaParserAwareTest {
   }
 
   @Test
-  @Parameters({"SUBMITTED", "PENDING", "EXECUTING", "FAILED", "FINISHED", "?", ""})
+  @Parameters({"SUBMITTED", "PENDING", "EXECUTING", "FAILED", "COMPLETING", "FINISHED", "?", ""})
   public void getLastState(String jobState) {
     Job job = new Job();
     job.setState(jobState);
