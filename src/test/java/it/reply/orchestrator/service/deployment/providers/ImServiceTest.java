@@ -33,6 +33,7 @@ import es.upv.i3m.grycap.im.pojo.InfOutputValues;
 import es.upv.i3m.grycap.im.pojo.InfrastructureState;
 import es.upv.i3m.grycap.im.pojo.InfrastructureUri;
 import es.upv.i3m.grycap.im.pojo.InfrastructureUris;
+import es.upv.i3m.grycap.im.pojo.Property;
 import es.upv.i3m.grycap.im.pojo.ResponseError;
 import es.upv.i3m.grycap.im.pojo.VirtualMachineInfo;
 import es.upv.i3m.grycap.im.rest.client.BodyContentType;
@@ -66,6 +67,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -478,6 +480,68 @@ public class ImServiceTest extends ToscaParserAwareTest {
   }
 
   @Test
+  @Parameters({"true", "false"})
+  public void testGetDeploymentExtendedInfo(boolean fail) throws ImClientException, JsonProcessingException {
+    Deployment deployment = ControllerTestUtils.createDeployment(2);
+    deployment.setDeploymentProvider(DeploymentProvider.IM);
+    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
+
+    List<Resource> resources = new ArrayList<>(deployment.getResources());
+
+    ObjectMapper mapper = new ObjectMapper();
+
+    VirtualMachineInfo vmInfo0 = new VirtualMachineInfo(Lists.newArrayList());
+    vmInfo0.getVmProperties().add(Maps.newHashMap());
+    vmInfo0.getVmProperties().get(0).put("id",
+        resources.get(0).getToscaNodeName());
+    String vmInfo0s = mapper.writeValueAsString(vmInfo0);
+    Map<String,String> metadata1 = new HashMap<>();
+    metadata1.put("VirtualMachineInfo", vmInfo0s);
+    resources.get(0).setMetadata(metadata1);       
+
+    VirtualMachineInfo vmInfo1 = new VirtualMachineInfo(Lists.newArrayList());
+    vmInfo1.getVmProperties().add(Maps.newHashMap());    
+    vmInfo1.getVmProperties().get(0).put("id",
+        resources.get(1).getToscaNodeName());
+    String vmInfo1s = mapper.writeValueAsString(vmInfo1);
+    Map<String,String> metadata2 = new HashMap<>();
+    metadata2.put("VirtualMachineInfo", vmInfo1s);
+    resources.get(1).setMetadata(metadata2);   
+
+    when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
+    when(resourceRepository.findByDeployment_id(deployment.getId())).thenReturn(resources);
+    if (!fail) {
+      assertThat(imService.getDeploymentExtendedInfo(dm).get())
+          .isEqualTo("[" + vmInfo0s + "," + vmInfo1s + "]");
+    } else {
+      when(imService.getDeploymentExtendedInfoInternal(dm)).thenThrow(new RuntimeException("test failed"));
+      assertThat(imService.getDeploymentExtendedInfo(dm))
+          .isEqualTo(Optional.empty());
+    }
+  }
+
+  @Test
+  @Parameters({"true", "false"})
+  public void testGetDeploymentLog(boolean empty) throws ImClientException {
+    Deployment deployment = ControllerTestUtils.createDeployment(0);
+    deployment.setDeploymentProvider(DeploymentProvider.IM);
+    DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
+    String logMessage = empty ? "" : "Deployment log message";
+    Property logMessageProperty = new Property("ContMsg",logMessage);
+    Mockito.doReturn(infrastructureManager).when(imClientFactory)
+        .build(Mockito.anyListOf(CloudProviderEndpoint.class), Mockito.any()); 
+    Mockito.when(deploymentRepository.findOne(deployment.getId()))
+        .thenReturn(deployment);    
+    Mockito.when(infrastructureManager.getInfrastructureContMsg(Mockito.anyString()))
+        .thenReturn(logMessageProperty);  
+    if (empty) {
+      assertThat(imService.getDeploymentLog(dm)).isEqualTo(Optional.empty());
+    } else {
+      assertThat(imService.getDeploymentLog(dm)).isEqualTo(Optional.of(logMessage));
+    }
+  }
+
+  @Test
   public void testFinalizeDeploy() throws ImClientException {
     Deployment deployment = ControllerTestUtils.createDeployment(2);
     deployment.setDeploymentProvider(DeploymentProvider.IM);
@@ -501,7 +565,8 @@ public class ImServiceTest extends ToscaParserAwareTest {
     vmInfo0.getVmProperties().get(0).put("id",
         resources.get(0).getToscaNodeName());
     VirtualMachineInfo vmInfo1 = new VirtualMachineInfo(Lists.newArrayList());
-    vmInfo0.getVmProperties().get(0).put("id",
+    vmInfo1.getVmProperties().add(Maps.newHashMap());  
+    vmInfo1.getVmProperties().get(0).put("id",
         resources.get(1).getToscaNodeName());
 
     Mockito.when(deploymentRepository.findOne(deployment.getId()))
