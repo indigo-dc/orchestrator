@@ -46,6 +46,7 @@ import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.cmdb.ComputeService;
+import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.CloudServiceType;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
@@ -92,6 +93,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static it.reply.orchestrator.dto.cmdb.CloudService.OPENSTACK_COMPUTE_SERVICE;
+import static it.reply.orchestrator.dto.cmdb.CloudService.ONEPROVIDER_STORAGE_SERVICE;
 import static org.mockito.Mockito.*;
 
 @RunWith(JUnitParamsRunner.class)
@@ -521,8 +523,8 @@ public class ImServiceTest extends ToscaParserAwareTest {
   }
 
   @Test
-  @Parameters({"true", "false"})
-  public void testGetDeploymentLog(boolean empty) throws ImClientException {
+  @Parameters({"true|false", "false|false", "true|true"})
+  public void testGetDeploymentLog(boolean empty, boolean fail) throws ImClientException {
     Deployment deployment = ControllerTestUtils.createDeployment(0);
     deployment.setDeploymentProvider(DeploymentProvider.IM);
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
@@ -535,6 +537,9 @@ public class ImServiceTest extends ToscaParserAwareTest {
     Mockito.when(infrastructureManager.getInfrastructureContMsg(Mockito.anyString()))
         .thenReturn(logMessageProperty);
     if (empty) {
+      if (fail) {
+        when(imService.getDeploymentLogInternal(dm)).thenThrow(new RuntimeException("test failed"));
+      }
       assertThat(imService.getDeploymentLog(dm)).isEqualTo(Optional.empty());
     } else {
       assertThat(imService.getDeploymentLog(dm)).isEqualTo(Optional.of(logMessage));
@@ -885,22 +890,38 @@ public class ImServiceTest extends ToscaParserAwareTest {
   }
 
   @Test
-  public void testDoUpdateNoNewNodeSuccesful() throws Exception {
+  @Parameters({"false", "true"})
+  public void testDoUpdateNoNewNodeSuccesful(boolean failservice) throws Exception {
     Deployment deployment = ControllerTestUtils.createDeployment(2);
     deployment.setDeploymentProvider(DeploymentProvider.IM);
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
 
-    ComputeService cs = ComputeService
-        .computeBuilder()
+    CloudService cs = CloudService
+        .builder()
         .endpoint("http://example.com")
         .providerId("cloud-provider-id-1")
         .id("cloud-service-id-1")
+        .type(CloudServiceType.STORAGE)
+        .endpoint("http://example.com")
+        .serviceType(ONEPROVIDER_STORAGE_SERVICE)
+        .hostname("example.com")
+        .build();
+    ComputeService cs2 = ComputeService
+        .computeBuilder()
+        .endpoint("http://example.com")
+        .providerId("cloud-provider-id-2")
+        .id("cloud-service-id-2")
         .type(CloudServiceType.COMPUTE)
         .endpoint("http://example.com")
         .serviceType(OPENSTACK_COMPUTE_SERVICE)
         .hostname("example.com")
         .build();
-    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(cs));
+    List<CloudService> services = new ArrayList<>();
+    services.add(cs);
+    if (!failservice) {
+      services.add(cs2);
+    }
+    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(services);
     csi.next();
     dm.setCloudServicesOrderedIterator(csi);
 
@@ -956,10 +977,13 @@ public class ImServiceTest extends ToscaParserAwareTest {
         deployment.getParameters());
     Mockito.doNothing().when(indigoInputsPreProcessorService).processGetInputAttributes(eq(newAr),
         eq(deployment.getParameters()), Mockito.any());
-
-    assertThat(imService.doUpdate(dm, deployment.getTemplate())).isTrue();
+    if (!failservice) {
+      assertThat(imService.doUpdate(dm, deployment.getTemplate())).isTrue();
+    } else {
+      assertThatThrownBy(() -> imService.doUpdate(dm, deployment.getTemplate()))
+          .isInstanceOf(DeploymentException.class);
+    }
   }
-
 
 
   @Test
