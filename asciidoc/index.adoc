@@ -116,6 +116,7 @@ include::{snippets}/deployments/curl-request.adoc[]
 === Authentication header
 include::{snippets}/authentication/request-headers.adoc[]
 
+
 [[resources-deployment]]
 == Deployment
 
@@ -153,7 +154,6 @@ include::{snippets}/deployments/http-response.adoc[]
 === Create deployment
 
 A `POST` request is used to create a deployment.
-
 
 ==== Request Fields
 include::{snippets}/create-deployment/request-fields.adoc[]
@@ -196,7 +196,6 @@ include::{snippets}/deployment/http-response.adoc[]
 
 
 
-
 [[resources-update-deployment]]
 === Update deployment
 
@@ -212,8 +211,6 @@ include::{snippets}/update-deployment/http-request.adoc[]
 ==== Example response
 
 include::{snippets}/update-deployment/http-response.adoc[]
-
-
 
 
 
@@ -237,6 +234,44 @@ include::{snippets}/delete-deployment/http-response.adoc[]
 
 
 
+[[resources-get-deployment-extended-info]]
+=== Get deployment extended info
+
+A `GET` request is used to retrieve the extended informations associated to a deployment.
+This may be VM information for cloud deployments or JOB information for QCG
+
+==== Example request
+
+include::{snippets}/get-deployment-extended-info/curl-request.adoc[]
+
+include::{snippets}/get-deployment-extended-info/http-request.adoc[]
+
+
+==== Example response
+
+include::{snippets}/get-deployment-extended-info/http-response.adoc[]
+
+
+
+
+[[resources-get-deployment-log]]
+=== Get deployment log
+
+A `GET` request is used to retrieve the infrastructure log associated to a deployment.
+
+==== Example request
+
+include::{snippets}/get-deployment-log/curl-request.adoc[]
+
+include::{snippets}/get-deployment-log/http-request.adoc[]
+
+
+==== Example response
+
+include::{snippets}/get-deployment-log/http-response.adoc[]
+
+
+
 
 [[resources-get-template]]
 === Get template
@@ -253,11 +288,6 @@ include::{snippets}/get-template/http-request.adoc[]
 ==== Example response
 
 include::{snippets}/get-template/http-response.adoc[]
-
-
-
-
-
 [[resources-resource]]
 == Resource
 
@@ -285,6 +315,7 @@ include::{snippets}/resources/http-response.adoc[]
 
 
 
+
 [[resources-get-resource]]
 === Get resource
 
@@ -303,8 +334,6 @@ include::{snippets}/get-resource/response-fields.adoc[]
 ==== Example response
 
 include::{snippets}/get-resource/http-response.adoc[]
-
-
 
 
 

@@ -581,6 +581,16 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
   }
 
   @Override
+  public Optional<String> getDeploymentLogInternal(DeploymentMessage deploymentMessage) {
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<String> getDeploymentExtendedInfoInternal(DeploymentMessage deploymentMessage) {
+    return Optional.empty();
+  }
+
+  @Override
   protected ChronosJob createInternalTaskRepresentation() {
     return new ChronosJob();
   }

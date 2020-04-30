@@ -17,10 +17,12 @@
 package it.reply.orchestrator.dal.entity;
 
 import it.reply.orchestrator.dal.util.CloudProviderEndpointToJsonConverter;
+import it.reply.orchestrator.dal.util.ResourceMetadataToJsonConverter;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.enums.NodeStates;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -82,6 +84,11 @@ public class Resource extends AbstractResourceEntity {
   @Nullable
   @Column(columnDefinition = "TEXT")
   private CloudProviderEndpoint cloudProviderEndpoint;
+
+  @Convert(converter = ResourceMetadataToJsonConverter.class)
+  @Nullable
+  @Column(columnDefinition = "TEXT")
+  private Map<String,String> metadata;
 
   public void addRequiredResource(Resource resource) {
     requires.add(resource);

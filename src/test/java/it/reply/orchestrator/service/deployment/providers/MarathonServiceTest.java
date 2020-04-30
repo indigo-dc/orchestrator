@@ -43,6 +43,7 @@ import it.reply.orchestrator.service.VaultService;
 import it.reply.orchestrator.service.deployment.providers.factory.MarathonClientFactory;
 import it.reply.orchestrator.util.TestUtil;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.when;
 
@@ -417,6 +418,19 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
           + " nested exception is it.reply.orchestrator.exception.service."
           + "DeploymentException: Deployment timeout: Task Failure Message\n");
     }
+  }
+
+  @Test
+  public void getDeploymentExtendedInfoInternal() {
+    DeploymentMessage dm = new DeploymentMessage();
+    assertThat(marathonServiceImpl.getDeploymentExtendedInfoInternal(dm))
+      .isEqualTo(Optional.empty());
+  }
+
+  @Test
+  public void getDeploymentLogInternal() {
+    DeploymentMessage dm = new DeploymentMessage();
+    assertThat(marathonServiceImpl.getDeploymentLog(dm)).isEqualTo(Optional.empty());
   }
 
 }

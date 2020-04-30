@@ -300,6 +300,10 @@ public class ToscaServiceImpl implements ToscaService {
     capabilityPropertiesMapping.put("gpu_model",
         flavorMetadataBuilder -> flavorMetadataBuilder::gpuModel);
 
+    capabilityPropertiesMapping.put("infiniband_support",
+        flavorMetadataBuilder -> (String infinibandSupport) -> flavorMetadataBuilder
+            .infinibandSupport(Boolean.parseBoolean(infinibandSupport)));
+
     // Only indigo.Compute nodes are relevant
     return getNodesOfType(parsingResult, ToscaConstants.Nodes.Types.COMPUTE)
         .stream()
@@ -639,7 +643,8 @@ public class ToscaServiceImpl implements ToscaService {
         new Filter<>(Flavor::getDiskSize, (a, b) -> b >= a),
         new Filter<>(Flavor::getNumGpus, (a, b) -> b >= a),
         new Filter<>(Flavor::getGpuVendor, String::equalsIgnoreCase),
-        new Filter<>(Flavor::getGpuModel, String::equalsIgnoreCase)
+        new Filter<>(Flavor::getGpuModel, String::equalsIgnoreCase),
+        new Filter<>(Flavor::getInfinibandSupport, (a, b) -> !a || (b != null ? b : false))
     );
     Stream<Flavor> flavorStream = cloudProviderServiceFlavors.stream();
 
@@ -730,12 +735,23 @@ public class ToscaServiceImpl implements ToscaService {
   @Override
   public boolean isHybridDeployment(ArchiveRoot archiveRoot) {
     // check if there is a "hybrid" ScalarPropertyValue with "true" as value
-    return getNodesOfType(archiveRoot, ToscaConstants.Nodes.Types.ELASTIC_CLUSTER)
-        .stream()
-        .anyMatch(node -> ToscaUtils
-            .extractScalar(node.getProperties(), "hybrid", BooleanType.class)
-            .orElse(false)
+    boolean hybridecluster = getNodesOfType(archiveRoot,
+        ToscaConstants.Nodes.Types.ELASTIC_CLUSTER)
+          .stream()
+          .anyMatch(node -> ToscaUtils
+              .extractScalar(node.getProperties(), ToscaConstants.Nodes.Properties.HYBRID,
+                  BooleanType.class)
+              .orElse(false)
         );
+    boolean hybridefrontend = getNodesOfType(archiveRoot,
+        ToscaConstants.Nodes.Types.SLURM_FE)
+          .stream()
+          .anyMatch(node -> ToscaUtils
+              .extractScalar(node.getProperties(), ToscaConstants.Nodes.Properties.HYBRID,
+                  BooleanType.class)
+              .orElse(false)
+        );
+    return hybridecluster || hybridefrontend;
   }
 
   @Override
@@ -1149,15 +1165,14 @@ public class ToscaServiceImpl implements ToscaService {
                         return nt.isPresent() && (nt.get()
                             .equals(ToscaConstants.Nodes.Attributes.ISOLATED));
                       }).findFirst();
-                  if (pn.isPresent()) {
-                    if (r.getRequirementName().contains("wn")) {
-                      NodeTemplate wnNode = ar.getTopology().getNodeTemplates().get(r.getTarget());
-                      if (wnNode.getProperties()
-                          .containsKey(ToscaConstants.Nodes.Properties.HYBRID)) {
-                        //force to false
-                        wnNode.getProperties().put(ToscaConstants.Nodes.Properties.HYBRID,
-                            new ScalarPropertyValue("false"));
-                      }
+                  if (pn.isPresent() && r.getRequirementName().contains("wn")) {
+                    NodeTemplate wnNode = ar.getTopology().getNodeTemplates()
+                        .get(r.getTarget());
+                    if (wnNode.getProperties()
+                        .containsKey(ToscaConstants.Nodes.Properties.HYBRID)) {
+                      //force to false
+                      wnNode.getProperties().put(ToscaConstants.Nodes.Properties.HYBRID,
+                          new ScalarPropertyValue("false"));
                     }
                   }
                 });
@@ -1318,7 +1333,7 @@ public class ToscaServiceImpl implements ToscaService {
 
         //create port for wn_server
         getNodesOfType(ar, ToscaConstants.Nodes.Types.SLURM_WN).stream()
-            .forEach(slurmWorkerNode -> {
+            .forEach(slurmWorkerNode ->
               slurmWorkerNode.getRelationships().forEach((s, r) -> {
                 if (r.getRequirementName().contains("host")) {
                   NodeTemplate vrNP = new NodeTemplate();
@@ -1335,8 +1350,8 @@ public class ToscaServiceImpl implements ToscaService {
                   this.setNodeRequirement(vrNP, "link", vrN.getName(),
                       REQUIREMENT_DEPENDENCY_RELATIONSHIP);
                 }
-              });
-            });
+              })
+        );
 
         //add  vrouter dependency to wnodes and clear hybrid flag if present
         getNodesOfType(ar, ToscaConstants.Nodes.Types.ELASTIC_CLUSTER).stream()
@@ -1350,7 +1365,8 @@ public class ToscaServiceImpl implements ToscaService {
                       REQUIREMENT_DEPENDENCY_RELATIONSHIP);
                   if (wnNode.getProperties().containsKey(ToscaConstants.Nodes.Properties.HYBRID)) {
                     //force to false
-                    wnNode.getProperties().put("hybrid", new ScalarPropertyValue("false"));
+                    wnNode.getProperties().put(ToscaConstants.Nodes.Properties.HYBRID,
+                        new ScalarPropertyValue("false"));
                   }
                 }
               });

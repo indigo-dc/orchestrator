@@ -35,10 +35,13 @@ import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.exception.http.BadRequestException;
 import it.reply.orchestrator.exception.http.ConflictException;
 import it.reply.orchestrator.exception.http.NotFoundException;
+import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;
+import it.reply.orchestrator.service.deployment.providers.ImServiceImpl;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -90,6 +93,12 @@ public class DeploymentServiceTest {
 
   @InjectMocks
   private DeploymentService deploymentService = new DeploymentServiceImpl();
+
+  @Mock
+  private DeploymentProviderServiceRegistry deploymentProviderServiceRegistry;
+
+  @Mock
+  private ImServiceImpl imService;
 
   @Mock
   private DeploymentRepository deploymentRepository;
@@ -163,7 +172,45 @@ public class DeploymentServiceTest {
         .isInstanceOf(NotFoundException.class);
   }
 
-  private Deployment basecreateDeploymentSuccessful(DeploymentRequest deploymentRequest,
+  @Test
+  @Parameters({"true", "false"})
+  public void getDeploymentExtendedInfo(boolean ispresent) {
+    Deployment deployment = ControllerTestUtils.createDeployment();
+    deployment.setDeploymentProvider(DeploymentProvider.IM);
+    Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
+    Mockito.when(deploymentProviderServiceRegistry.getDeploymentProviderService(deployment.getId()))
+        .thenReturn(imService);
+    if (ispresent) {
+      Mockito.when(imService.getDeploymentExtendedInfo(Mockito.any()))
+          .thenReturn(Optional.of("extendedinfo"));
+      assertThat(deploymentService.getDeploymentExtendedInfo(deployment.getId())).isEqualTo("extendedinfo");
+    } else {
+      Mockito.when(imService.getDeploymentExtendedInfo(Mockito.any()))
+          .thenReturn(Optional.empty());
+      assertThat(deploymentService.getDeploymentExtendedInfo(deployment.getId())).isEqualTo("[]");
+    }
+  }
+
+  @Test
+  @Parameters({"true", "false"})
+  public void getDeploymentLog(boolean ispresent) {
+    Deployment deployment = ControllerTestUtils.createDeployment();
+    deployment.setDeploymentProvider(DeploymentProvider.IM);
+    Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
+    Mockito.when(deploymentProviderServiceRegistry.getDeploymentProviderService(deployment.getId()))
+        .thenReturn(imService);
+    if (ispresent) {
+      Mockito.when(imService.getDeploymentLog(Mockito.any()))
+          .thenReturn(Optional.of("deploymentlog"));
+      assertThat(deploymentService.getDeploymentLog(deployment.getId())).isEqualTo("deploymentlog");
+    } else {
+      Mockito.when(imService.getDeploymentLog(Mockito.any()))
+          .thenReturn(Optional.empty());
+      assertThat(deploymentService.getDeploymentLog(deployment.getId())).isEqualTo("");
+    }
+  }
+
+ private Deployment basecreateDeploymentSuccessful(DeploymentRequest deploymentRequest,
       Map<String, NodeTemplate> nodeTemplates) throws Exception {
 
     if (nodeTemplates == null) {

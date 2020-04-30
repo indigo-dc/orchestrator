@@ -617,6 +617,16 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   }
 
   @Override
+  public Optional<String> getDeploymentLogInternal(DeploymentMessage deploymentMessage) {
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<String> getDeploymentExtendedInfoInternal(DeploymentMessage deploymentMessage) {
+    return Optional.empty();
+  }
+
+  @Override
   public void finalizeDeploy(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
     ArchiveRoot ar = prepareTemplate(deployment, deploymentMessage);

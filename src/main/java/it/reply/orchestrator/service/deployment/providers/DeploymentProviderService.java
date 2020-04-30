@@ -111,4 +111,8 @@ public interface DeploymentProviderService {
 
   public Optional<String> getAdditionalErrorInfo(DeploymentMessage deploymentMessage);
 
+  public Optional<String> getDeploymentLog(DeploymentMessage deploymentMessage);
+
+  public Optional<String> getDeploymentExtendedInfo(DeploymentMessage deploymentMessage);
+
 }

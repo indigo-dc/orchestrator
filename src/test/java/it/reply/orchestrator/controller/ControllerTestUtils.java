@@ -73,6 +73,21 @@ public class ControllerTestUtils {
         .collect(Collectors.toList());
   }
 
+  public static Resource createResource(Deployment deployment,
+      String toscaNodeType, String toscaNodeName, String iaasId) {
+    Resource resource = new Resource();
+    resource.setId(UUID.randomUUID().toString());
+    resource.setCreatedAt(new Date());
+    resource.setUpdatedAt(new Date());
+    resource.setState(NodeStates.CREATING);
+    resource.setToscaNodeType(toscaNodeType);
+    resource.setToscaNodeName(toscaNodeName);
+    resource.setIaasId(iaasId);
+    resource.setDeployment(deployment);
+    deployment.getResources().add(resource);
+    return resource;
+  }
+
   public static Resource createResource(String id, Deployment deployment) {
     Resource resource = new Resource();
     resource.setId(UUID.randomUUID().toString());
@@ -81,6 +96,7 @@ public class ControllerTestUtils {
     resource.setState(NodeStates.CREATING);
     resource.setToscaNodeType("tosca.nodes.Compute");
     resource.setToscaNodeName("node_" + id);
+    resource.setIaasId(id);
     resource.setDeployment(deployment);
     deployment.getResources().add(resource);
     return resource;

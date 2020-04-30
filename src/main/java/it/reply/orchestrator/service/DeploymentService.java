@@ -34,4 +34,8 @@ public interface DeploymentService {
   public void updateDeployment(String id, DeploymentRequest request);
 
   public void deleteDeployment(String id);
+
+  public String getDeploymentLog(String id);
+
+  public String getDeploymentExtendedInfo(String id);
 }
