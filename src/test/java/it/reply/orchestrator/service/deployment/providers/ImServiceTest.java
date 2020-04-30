@@ -497,16 +497,16 @@ public class ImServiceTest extends ToscaParserAwareTest {
     String vmInfo0s = mapper.writeValueAsString(vmInfo0);
     Map<String,String> metadata1 = new HashMap<>();
     metadata1.put("VirtualMachineInfo", vmInfo0s);
-    resources.get(0).setMetadata(metadata1);       
+    resources.get(0).setMetadata(metadata1);
 
     VirtualMachineInfo vmInfo1 = new VirtualMachineInfo(Lists.newArrayList());
-    vmInfo1.getVmProperties().add(Maps.newHashMap());    
+    vmInfo1.getVmProperties().add(Maps.newHashMap());
     vmInfo1.getVmProperties().get(0).put("id",
         resources.get(1).getToscaNodeName());
     String vmInfo1s = mapper.writeValueAsString(vmInfo1);
     Map<String,String> metadata2 = new HashMap<>();
     metadata2.put("VirtualMachineInfo", vmInfo1s);
-    resources.get(1).setMetadata(metadata2);   
+    resources.get(1).setMetadata(metadata2);
 
     when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
     when(resourceRepository.findByDeployment_id(deployment.getId())).thenReturn(resources);
@@ -529,9 +529,9 @@ public class ImServiceTest extends ToscaParserAwareTest {
     String logMessage = empty ? "" : "Deployment log message";
     Property logMessageProperty = new Property("ContMsg",logMessage);
     Mockito.doReturn(infrastructureManager).when(imClientFactory)
-        .build(Mockito.anyListOf(CloudProviderEndpoint.class), Mockito.any()); 
+        .build(Mockito.anyListOf(CloudProviderEndpoint.class), Mockito.any());
     Mockito.when(deploymentRepository.findOne(deployment.getId()))
-        .thenReturn(deployment);    
+        .thenReturn(deployment);
     Mockito.when(infrastructureManager.getInfrastructureContMsg(Mockito.anyString()))
         .thenReturn(logMessageProperty);  
     if (empty) {
@@ -565,7 +565,7 @@ public class ImServiceTest extends ToscaParserAwareTest {
     vmInfo0.getVmProperties().get(0).put("id",
         resources.get(0).getToscaNodeName());
     VirtualMachineInfo vmInfo1 = new VirtualMachineInfo(Lists.newArrayList());
-    vmInfo1.getVmProperties().add(Maps.newHashMap());  
+    vmInfo1.getVmProperties().add(Maps.newHashMap());
     vmInfo1.getVmProperties().get(0).put("id",
         resources.get(1).getToscaNodeName());
 
