@@ -533,7 +533,7 @@ public class ImServiceTest extends ToscaParserAwareTest {
     Mockito.when(deploymentRepository.findOne(deployment.getId()))
         .thenReturn(deployment);
     Mockito.when(infrastructureManager.getInfrastructureContMsg(Mockito.anyString()))
-        .thenReturn(logMessageProperty);  
+        .thenReturn(logMessageProperty);
     if (empty) {
       assertThat(imService.getDeploymentLog(dm)).isEqualTo(Optional.empty());
     } else {
