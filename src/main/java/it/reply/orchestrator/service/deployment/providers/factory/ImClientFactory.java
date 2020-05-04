@@ -88,7 +88,7 @@ public class ImClientFactory {
             .getIaasHeaderId()
             .map(OpenStackCredentials::buildCredentials)
             .orElseGet(OpenStackCredentials::buildCredentials)
-            .withTenant("oidc")
+            .withTenant(cloudProviderEndpoint.getIdpProtocol())
             .withUsername(organization)
             .withPassword(accessToken)
             .withHost(endpoint);
