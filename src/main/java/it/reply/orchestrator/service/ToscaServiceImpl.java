@@ -687,8 +687,21 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
+  public Collection<NodeTemplate> getNodesLikeType(ArchiveRoot archiveRoot, String regexType) {
+    Preconditions.checkNotNull(regexType);
+    return getNodesFromArchiveRoot(archiveRoot).stream()
+        .filter(node -> isLikeToscaType(node, regexType))
+        .collect(Collectors.toList());
+  }
+
+  @Override
   public boolean isOfToscaType(NodeTemplate node, String nodeType) {
     return isSubTypeOf(Preconditions.checkNotNull(node).getType(), nodeType);
+  }
+
+  @Override
+  public boolean isLikeToscaType(NodeTemplate node, String regexNodeType) {
+    return isSubTypeLike(Preconditions.checkNotNull(node).getType(), regexNodeType);
   }
 
   @Override
@@ -703,6 +716,16 @@ public class ToscaServiceImpl implements ToscaService {
         .filter(nodeType -> CommonUtils
             .checkNotNull(nodeType)
             .equals(Preconditions.checkNotNull(superNodeType)))
+        .isPresent();
+  }
+
+  private boolean isSubTypeLike(@Nullable String optionalNodeType, String regexNodeType) {
+    return Optional
+        .ofNullable(optionalNodeType)
+        // FIXME: Check inheritance
+        .filter(nodeType -> CommonUtils
+            .checkNotNull(nodeType)
+            .matches(Preconditions.checkNotNull(regexNodeType)))
         .isPresent();
   }
 
@@ -743,8 +766,8 @@ public class ToscaServiceImpl implements ToscaService {
                   BooleanType.class)
               .orElse(false)
         );
-    boolean hybridefrontend = getNodesOfType(archiveRoot,
-        ToscaConstants.Nodes.Types.SLURM_FE)
+    boolean hybridefrontend = getNodesLikeType(archiveRoot,
+        ToscaConstants.Nodes.RE.FRONT_END_RE)
           .stream()
           .anyMatch(node -> ToscaUtils
               .extractScalar(node.getProperties(), ToscaConstants.Nodes.Properties.HYBRID,
@@ -1332,7 +1355,7 @@ public class ToscaServiceImpl implements ToscaService {
             REQUIREMENT_DEPENDENCY_RELATIONSHIP);
 
         //create port for wn_server
-        getNodesOfType(ar, ToscaConstants.Nodes.Types.SLURM_WN).stream()
+        getNodesLikeType(ar, ToscaConstants.Nodes.RE.WORKER_NODE_RE).stream()
             .forEach(slurmWorkerNode ->
               slurmWorkerNode.getRelationships().forEach((s, r) -> {
                 if (r.getRequirementName().contains("host")) {
