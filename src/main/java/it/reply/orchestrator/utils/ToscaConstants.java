@@ -46,7 +46,7 @@ public class ToscaConstants {
       public static final String ELASTIC_CLUSTER = BASE_INDIGO_NAME + "ElasticCluster";
 
       public static final String WORKER_NODE = BASE_INDIGO_NAME + "LRMS.WorkerNode";
-       public static final String SLURM_WN = WORKER_NODE + ".Slurm";
+      public static final String SLURM_WN = WORKER_NODE + ".Slurm";
       public static final String TORQUE_WN = WORKER_NODE  + ".Torque";
       public static final String GALAXY_WN = WORKER_NODE  + ".SlurmGalaxy";
       public static final String MESOS_WN = WORKER_NODE  + ".Mesos";

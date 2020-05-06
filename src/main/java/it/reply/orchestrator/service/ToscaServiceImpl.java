@@ -695,13 +695,13 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
-  public boolean isOfToscaType(NodeTemplate node, String nodeType) {
-    return isSubTypeOf(Preconditions.checkNotNull(node).getType(), nodeType);
+  public boolean isLikeToscaType(NodeTemplate node, String regexNodeType) {
+    return isSubTypeLike(Preconditions.checkNotNull(node).getType(), regexNodeType);
   }
 
   @Override
-  public boolean isLikeToscaType(NodeTemplate node, String regexNodeType) {
-    return isSubTypeLike(Preconditions.checkNotNull(node).getType(), regexNodeType);
+  public boolean isOfToscaType(NodeTemplate node, String nodeType) {
+    return isSubTypeOf(Preconditions.checkNotNull(node).getType(), nodeType);
   }
 
   @Override
