@@ -94,6 +94,7 @@ public class RemoteRepositoryServiceImpl implements ICSARRepositorySearchService
     return element;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public <T extends AbstractToscaType> T getElementInDependencies(Class<T> elementClass,
       Set<CSARDependency> dependencies, String... keyValueFilters) {
