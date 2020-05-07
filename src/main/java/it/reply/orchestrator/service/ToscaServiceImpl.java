@@ -1302,7 +1302,7 @@ public class ToscaServiceImpl implements ToscaService {
         hostCapability.setType("tosca.capabilities.indigo.Container");
         hostCapability.setProperties(new HashMap<>());
         hostCapability.getProperties().put("num_cpus", new ScalarPropertyValue("1"));
-        hostCapability.getProperties().put("mem_size", new ScalarPropertyValue("1 GB"));
+        hostCapability.getProperties().put("mem_size", new ScalarPropertyValue("2 GB"));
         capabilities.put("host", hostCapability);
         Capability imageCapability = new Capability();
         imageCapability.setType("tosca.capabilities.indigo.OperatingSystem");
