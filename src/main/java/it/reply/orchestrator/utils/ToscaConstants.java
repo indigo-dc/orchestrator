@@ -70,7 +70,6 @@ public class ToscaConstants {
           "^tosca\\.nodes\\.indigo\\.LRMS\\.FrontEnd\\.\\w+$";
       public static final String WORKER_NODE_RE =
           "^tosca\\.nodes\\.indigo\\.LRMS\\.WorkerNode\\.\\w+$";
-      public static final String ISOLATED = "isolated";
     }
 
     @UtilityClass
