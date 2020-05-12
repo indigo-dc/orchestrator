@@ -269,8 +269,14 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     vaultService.getServiceUri()
         .map(URI::toString)
         .ifPresent(cloudProviderEndpoint::setVaultEndpoint);
-    executeWithClient(cloudProviderEndpoint, requestedWithToken,
-        client -> client.createGroup(group));
+    try {
+      executeWithClient(cloudProviderEndpoint, requestedWithToken,
+          client -> client.createGroup(group));
+    } catch (MarathonException ex) {
+      throw new BusinessWorkflowException(ErrorCode.CLOUD_PROVIDER_ERROR,
+          "Error creating Marathon App Group",
+          new DeploymentException(ex.getMessage()));
+    }
     return true;
 
   }
