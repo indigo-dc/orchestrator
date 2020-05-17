@@ -331,6 +331,27 @@
       <version>${org.springframework.vault.version}</version>
     </dependency>
 
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-messaging</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.projectreactor</groupId>
+      <artifactId>reactor-net</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-all</artifactId>
+      <version>4.1.36.Final</version>
+    </dependency>
+
+    <dependency>
+      <groupId>it.infn.ba.xdc</groupId>
+      <artifactId>rucio-client-xdc</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+    </dependency>
     <!-- annotations and static code analysis -->
     <dependency>
       <groupId>org.projectlombok</groupId>
