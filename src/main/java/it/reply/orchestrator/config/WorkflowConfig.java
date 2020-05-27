@@ -22,18 +22,26 @@ import it.reply.orchestrator.workflow.CustomFailedJobCommandFactory;
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
 
+import liquibase.integration.spring.SpringLiquibase;
 import org.flowable.spring.SpringProcessEngineConfiguration;
 import org.flowable.spring.boot.EngineConfigurationConfigurer;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class WorkflowConfig {
 
+  @Autowired
+  @Qualifier("workflowDataSource")
+  DataSource dataSource;
+
   @Bean
   EngineConfigurationConfigurer<SpringProcessEngineConfiguration> workflowConfigurer(
     @Qualifier("workflowDataSource") DataSource dataSource,
+    @Qualifier("workflowLiquibase") SpringLiquibase workflowLiquibase,
     EntityManagerFactory entityManagerFactory
   ) {
     return engineConfiguration -> {

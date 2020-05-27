@@ -1,40 +1,31 @@
-package it.reply.orchestrator.dto.rucio;
+package it.reply.orchestrator.dto.messaging.rucio;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.reply.orchestrator.service.RucioMessageReceiver;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 import org.checkerframework.checker.nullness.qual.NonNull;
 
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 @Data
-@AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class RucioRuleEvent {
+public class RuleOkEvent extends Event<RuleOkEvent.RuleOkEventPayload> {
 
-  public static final String RULE_OK = "rule_ok";
+  public static final String EVENT_TYPE = "rule_ok";
 
-  @JsonProperty("event_type")
-  @NonNull
-  @NotNull
-  private String eventType;
-
-  @JsonProperty("created_at")
-  @NonNull
-  @NotNull
-  private String createdAt;
-
-  @JsonProperty("payload")
-  @NonNull
-  @NotNull
-  private Payload payload;
+  public RuleOkEvent(@NonNull String eventType, @NonNull String createdAt, @NonNull RuleOkEventPayload payload) {
+    super(eventType, createdAt, payload);
+  }
 
   @Data
   @AllArgsConstructor
   @NoArgsConstructor(access = AccessLevel.PROTECTED)
-  public static class Payload {
+  public static class RuleOkEventPayload implements EventPayload {
 
     @JsonProperty("scope")
     @NonNull

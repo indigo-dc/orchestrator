@@ -44,7 +44,7 @@ public class DeploymentResourceAssembler
 
   @Override
   public DeploymentResource toResource(Deployment entity) {
-    return getDeploymentResource(entity);
+    return getDeploymentResource(entity, false);
   }
 
   @SuppressWarnings("rawtypes")
@@ -69,7 +69,7 @@ public class DeploymentResourceAssembler
     }
   }
 
-  private DeploymentResource getDeploymentResource(Deployment entity) {
+  protected DeploymentResource getDeploymentResource(Deployment entity, boolean nested) {
 
     DeploymentResource resource = DeploymentResource.builder()
         .uuid(entity.getId())
@@ -91,7 +91,7 @@ public class DeploymentResourceAssembler
 
     // add hateoas links only if we are inside of a HTTP request otherwise, due to
     // https://github.com/spring-projects/spring-hateoas/issues/408, we'd have an error
-    if (CommonUtils.isInHttpRequest()) {
+    if (CommonUtils.isInHttpRequest() && !nested) {
       resource.add(ControllerLinkBuilder.linkTo(
           DummyInvocationUtils.methodOn(DeploymentController.class).getDeployment(entity.getId()))
           .withSelfRel());
@@ -101,7 +101,7 @@ public class DeploymentResourceAssembler
           .withRel("resources"));
       resource.add(ControllerLinkBuilder
           .linkTo(
-              DummyInvocationUtils.methodOn(TemplateController.class).getTemplate(entity.getId()))
+              DummyInvocationUtils.methodOn(TemplateController.class).getDeploymentTemplate(entity.getId()))
           .withRel("template"));
     }
 

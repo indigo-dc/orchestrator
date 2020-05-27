@@ -107,4 +107,12 @@ public class DeploymentMessage extends BaseWorkflowMessage {
 
   private boolean keepLastAttempt = false;
 
+  private String  mainReplicationRuleId;
+
+  private boolean mainReplicationRuleCompleted = false;
+
+  private String  tempReplicationRuleId;
+
+  private boolean tempReplicationRuleCompleted = false;
+
 }
