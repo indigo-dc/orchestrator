@@ -16,7 +16,7 @@ import org.springframework.validation.annotation.Validated;
 public class XdcClientProperties {
   private String host = "netmon-mb.cern.ch";
   private int port = 61613;
-  private String destination = "/queue/Consumer.xdc.doma.rucio.events";
+  private String destination = "/queue/Consumer.xdc.doma.orchestrator.events";
   private String username = "domarucioc";
   private String password = "Y2jZ9Xdih2PkNBRZ";
   private boolean enabled = true;
