@@ -528,12 +528,12 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
       }
     }
     // property: batch_system_options
-    Optional<List<String>> batch_system_options = ToscaUtils.extractList(taskNode.getProperties(),
+    Optional<List<String>> batchSystemOptions = ToscaUtils.extractList(taskNode.getProperties(),
         "batch_system_options", String.class::cast);
-    if (batch_system_options.isPresent()) {
+    if (batchSystemOptions.isPresent()) {
       List<String> nativee =
           component.get_native() == null ? new ArrayList<>() : component.get_native();
-      nativee.addAll(batch_system_options.get());
+      nativee.addAll(batchSystemOptions.get());
       component.set_native(nativee);
     }
     List<JobDescriptionResourcesComponent> components = new ArrayList<>();
