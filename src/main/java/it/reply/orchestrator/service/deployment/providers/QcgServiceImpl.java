@@ -521,12 +521,21 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
     if (gpus.isPresent()) {
       Integer ng = gpus.get();
       if (ng > 0) {
-        List<String> nativee = new ArrayList<>();
+        List<String> nativee =
+            component.get_native() == null ? new ArrayList<>() : component.get_native();
         nativee.add("--gres=gpu:" + ng.toString());
         component.set_native(nativee);
       }
     }
-
+    // property: batch_system_options
+    Optional<List<String>> batch_system_options = ToscaUtils.extractList(taskNode.getProperties(),
+        "batch_system_options", String.class::cast);
+    if (batch_system_options.isPresent()) {
+      List<String> nativee =
+          component.get_native() == null ? new ArrayList<>() : component.get_native();
+      nativee.addAll(batch_system_options.get());
+      component.set_native(nativee);
+    }
     List<JobDescriptionResourcesComponent> components = new ArrayList<>();
     components.add(component);
     resources.setComponents(components);
