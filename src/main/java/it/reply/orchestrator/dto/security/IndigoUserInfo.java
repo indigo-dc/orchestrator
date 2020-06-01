@@ -86,7 +86,7 @@ public class IndigoUserInfo extends DefaultUserInfo {
   }
 
   public String getOrganizationName() {
-    return Optional.ofNullable(organizationName).orElse("indigo-dc");
+    return Optional.ofNullable(organizationName).orElse("eXtreme-DataCloud");
   }
 
   @Override
