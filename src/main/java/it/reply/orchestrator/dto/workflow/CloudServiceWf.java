@@ -50,6 +50,6 @@ public class CloudServiceWf {
 
   @JsonProperty("rucio_rse")
   @Nullable
-  private String rucioRse = "XDCDESY_ORCHESTRATOR_2_MOCK";
+  private String rucioRse;
 
 }

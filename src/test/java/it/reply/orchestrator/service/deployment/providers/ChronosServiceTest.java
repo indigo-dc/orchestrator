@@ -42,6 +42,7 @@ import it.reply.orchestrator.dto.deployment.ChronosJobsOrderedIterator;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
+import it.reply.orchestrator.dto.workflow.CloudServiceWf;
 import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.exception.service.BusinessWorkflowException;
@@ -443,7 +444,7 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
             .build())
         .build();
 
-    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(cs));
+    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(new CloudServiceWf(cs)));
     csi.next();
     dm.setCloudServicesOrderedIterator(csi);
 

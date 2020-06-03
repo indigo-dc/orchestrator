@@ -49,6 +49,7 @@ import it.reply.orchestrator.dto.cmdb.ComputeService;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.CloudServiceType;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
+import it.reply.orchestrator.dto.workflow.CloudServiceWf;
 import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
@@ -169,7 +170,7 @@ public class ImServiceTest extends ToscaParserAwareTest {
         .serviceType(OPENSTACK_COMPUTE_SERVICE)
         .hostname("example.com")
         .build();
-    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(cs));
+    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(new CloudServiceWf(cs)));
     csi.next();
     dm.setCloudServicesOrderedIterator(csi);
 
@@ -217,7 +218,7 @@ public class ImServiceTest extends ToscaParserAwareTest {
         .serviceType(OPENSTACK_COMPUTE_SERVICE)
         .hostname("example.com")
         .build();
-    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(cs));
+    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(new CloudServiceWf(cs)));
     csi.next();
     dm.setCloudServicesOrderedIterator(csi);
 
@@ -297,7 +298,7 @@ public class ImServiceTest extends ToscaParserAwareTest {
         .serviceType(OPENSTACK_COMPUTE_SERVICE)
         .hostname("example.com")
         .build();
-    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(cs));
+    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(new CloudServiceWf(cs)));
     csi.next();
     dm.setCloudServicesOrderedIterator(csi);
 
@@ -831,7 +832,7 @@ public class ImServiceTest extends ToscaParserAwareTest {
         .serviceType(OPENSTACK_COMPUTE_SERVICE)
         .hostname("example.com")
         .build();
-    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(cs));
+    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(new CloudServiceWf(cs)));
     csi.next();
     dm.setCloudServicesOrderedIterator(csi);
 
@@ -921,7 +922,8 @@ public class ImServiceTest extends ToscaParserAwareTest {
     if (!failservice) {
       services.add(cs2);
     }
-    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(services);
+    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(services.stream().map(
+        CloudServiceWf::new).collect(Collectors.toList()));
     csi.next();
     dm.setCloudServicesOrderedIterator(csi);
 

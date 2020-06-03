@@ -36,10 +36,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Entity
 @Table(indexes = {
-    @Index(columnList = "rucioId", unique = true),
-    @Index(
-        columnList = "scope, name, replicationExpression, numberOfReplicas, rucioAccount, deleted",
-        unique = true)
+    @Index(columnList = "rucioId", unique = true)
 })
 @Getter
 @Setter
