@@ -240,7 +240,7 @@ public class DeploymentControllerTest {
   public void getDeploymentExtendedInfo() throws Exception {
     String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
     String result = "{\"vmProperties\":[{\"class\":\"network\",\"id\":\"pub_network\",\"outbound\":\"yes\",\"provider_id\":\"external\"},{\"class\":\"network\",\"id\":\"priv_network\",\"provider_id\":\"provider-2099\"},{\"class\":\"system\",\"id\":\"simple_node1\",\"instance_name\":\"simple_node1-158799480931\",\"disk.0.os.flavour\":\"ubuntu\",\"disk.0.image.url\":\"ost://api.cloud.test.com/f46f7387-a371-44ec-9a2d-16a8f2a85786\",\"cpu.count\":1,\"memory.size\":2097152000,\"instance_type\":\"m1.small\",\"net_interface.1.connection\":\"pub_network\",\"net_interface.0.connection\":\"priv_network\",\"cpu.arch\":\"x86_64\",\"disk.0.free_size\":10737418240,\"disk.0.os.credentials.username\":\"cloudadm\",\"provider.type\":\"OpenStack\",\"provider.host\":\"api.cloud.test.com\",\"provider.port\":5000,\"disk.0.os.credentials.private_key\":\"\",\"state\":\"configured\",\"instance_id\":\"11d647dc-97f1-4347-8ede-ec83e2b64976\",\"net_interface.0.ip\":\"192.168.1.1\",\"net_interface.1.ip\":\"1.2.3.4\"}]}";
-    //Mockito.when(deploymentService.getDeploymentExtendedInfo(deploymentId, requestedWithToken)).thenReturn(result);
+    Mockito.when(deploymentService.getDeploymentExtendedInfo(deploymentId)).thenReturn(result);
 
     mockMvc.perform(get("/deployments/" + deploymentId + "/extrainfo").header(HttpHeaders.AUTHORIZATION, OAuth2AccessToken.BEARER_TYPE + " <access token>"))
     .andExpect(status().isOk())
@@ -253,7 +253,7 @@ public class DeploymentControllerTest {
   public void getDeploymentLog() throws Exception {
     String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
     String result = "deployment log";
-   // Mockito.when(deploymentService.getDeploymentLog(deploymentId, requestedWithToken)).thenReturn(result);
+    Mockito.when(deploymentService.getDeploymentLog(deploymentId)).thenReturn(result);
 
     mockMvc.perform(get("/deployments/" + deploymentId + "/log").header(HttpHeaders.AUTHORIZATION, OAuth2AccessToken.BEARER_TYPE + " <access token>"))
     .andExpect(status().isOk())
@@ -440,7 +440,7 @@ public class DeploymentControllerTest {
     String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
     Mockito.doThrow(new NotFoundException("Message"))
         .when(deploymentService)
-        .updateDeployment(deploymentId, request, requestedWithToken);
+        .updateDeployment(deploymentId, request);
 
     mockMvc
         .perform(put("/deployments/" + deploymentId).contentType(MediaType.APPLICATION_JSON)
@@ -460,7 +460,7 @@ public class DeploymentControllerTest {
     String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
     Mockito.doThrow(new ConflictException("Cannot update a deployment in DELETE_IN_PROGRESS state"))
         .when(deploymentService)
-        .updateDeployment(deploymentId, request, requestedWithToken);
+        .updateDeployment(deploymentId, request);
 
     mockMvc
         .perform(put("/deployments/" + deploymentId).contentType(MediaType.APPLICATION_JSON)
@@ -491,7 +491,7 @@ public class DeploymentControllerTest {
     String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
     Mockito.doThrow(ex)
         .when(deploymentService)
-        .updateDeployment(deploymentId, request, requestedWithToken);
+        .updateDeployment(deploymentId, request);
 
     mockMvc
         .perform(put("/deployments/" + deploymentId).contentType(MediaType.APPLICATION_JSON)
@@ -512,7 +512,7 @@ public class DeploymentControllerTest {
     String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
     Mockito.doThrow(ex)
         .when(deploymentService)
-        .deleteDeployment(deploymentId, requestedWithToken);
+        .deleteDeployment(deploymentId);
 
     mockMvc
         .perform(delete("/deployments/" + deploymentId))
@@ -541,7 +541,7 @@ public class DeploymentControllerTest {
         .build();
 
     String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
-    Mockito.doNothing().when(deploymentService).updateDeployment(deploymentId, request, requestedWithToken);
+    Mockito.doNothing().when(deploymentService).updateDeployment(deploymentId, request);
 
     mockMvc.perform(put("/deployments/" + deploymentId).contentType(MediaType.APPLICATION_JSON)
         .content(JsonUtils.serialize(request))
@@ -609,7 +609,7 @@ public class DeploymentControllerTest {
   public void deleteDeployment() throws Exception {
 
     String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
-    Mockito.doNothing().when(deploymentService).deleteDeployment(deploymentId, requestedWithToken);
+    Mockito.doNothing().when(deploymentService).deleteDeployment(deploymentId);
 
     mockMvc
         .perform(delete("/deployments/" + deploymentId).header(HttpHeaders.AUTHORIZATION,
@@ -626,7 +626,7 @@ public class DeploymentControllerTest {
     String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
     Mockito.doThrow(new ConflictException("Cannot delete a deployment in DELETE_IN_PROGRESS state"))
         .when(deploymentService)
-        .deleteDeployment(deploymentId, requestedWithToken);
+        .deleteDeployment(deploymentId);
 
     mockMvc.perform(delete("/deployments/" + deploymentId)).andExpect(status().isConflict());
   }
@@ -637,7 +637,7 @@ public class DeploymentControllerTest {
     String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
     Mockito.doThrow(new NotFoundException("The deployment <not-found> doesn't exist"))
         .when(deploymentService)
-        .deleteDeployment(deploymentId, requestedWithToken);
+        .deleteDeployment(deploymentId);
 
     mockMvc.perform(delete("/deployments/" + deploymentId))
         .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))

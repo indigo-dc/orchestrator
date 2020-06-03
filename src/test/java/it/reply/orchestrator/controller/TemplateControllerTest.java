@@ -75,7 +75,7 @@ public class TemplateControllerTest {
 
     String expectedtemplate = TestUtil.getFileContentAsString(templatePath);
 
-    when(templateService.getDeploymentTemplate(deploymentUuid))
+    when(templateService.getTemplate(deploymentUuid))
         .thenReturn(expectedtemplate);
 
     MvcResult result =
@@ -101,7 +101,7 @@ public class TemplateControllerTest {
     Exception expectedException =
         new NotFoundException("The deployment <" + deploymentUuid + "> doesn't exist");
 
-    when(templateService.getDeploymentTemplate(deploymentUuid))
+    when(templateService.getTemplate(deploymentUuid))
         .thenThrow(expectedException);
 
     mockMvc
