@@ -43,7 +43,7 @@
     <url>https://github.com/indigo-dc/orchestrator</url>
     <connection>scm:git:https://github.com/indigo-dc/orchestrator.git</connection>
     <developerConnection>scm:git:https://github.com/indigo-dc/orchestrator.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>releases/2-5-stable</tag>
   </scm>
 
   <organization>
