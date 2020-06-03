@@ -24,6 +24,7 @@ import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.OidcEntity;
 import it.reply.orchestrator.dal.entity.OidcEntityId;
+import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.entity.WorkflowReference;
 import it.reply.orchestrator.dal.entity.WorkflowReference.Action;
@@ -34,6 +35,7 @@ import it.reply.orchestrator.dto.dynafed.Dynafed;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.policies.ToscaPolicy;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
+import it.reply.orchestrator.dto.request.DeploymentScheduleRequest;
 import it.reply.orchestrator.dto.security.IndigoOAuth2Authentication;
 import it.reply.orchestrator.dto.security.IndigoUserInfo;
 import it.reply.orchestrator.enums.DeploymentProvider;
@@ -209,11 +211,15 @@ public class DeploymentServiceImpl implements DeploymentService {
 
     deploymentMessage.setMaxProvidersRetry(request.getMaxProvidersRetry());
     deploymentMessage.setKeepLastAttempt(request.isKeepLastAttempt());
+    if (request instanceof DeploymentScheduleRequest) {
+      deploymentMessage.setDataMovementWorkflow(true);
+    }
   }
 
   @Override
   @Transactional
-  public Deployment createDeployment(DeploymentRequest request) {
+  public Deployment createDeployment(DeploymentRequest request, OidcEntity owner,
+      OidcTokenId requestedWithToken) {
     Deployment deployment = new Deployment();
     deployment.setStatus(Status.CREATE_IN_PROGRESS);
     deployment.setTask(Task.NONE);
@@ -231,14 +237,13 @@ public class DeploymentServiceImpl implements DeploymentService {
     // Create internal resources representation (to store in DB)
     createResources(deployment, nodes);
 
-    if (oidcProperties.isEnabled()) {
-      deployment.setOwner(oauth2TokenService.getOrGenerateOidcEntityFromCurrentAuth());
-    }
+    deployment.setOwner(owner);
 
     DeploymentType deploymentType = inferDeploymentType(nodes);
 
     // Build deployment message
-    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType);
+    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType,
+        requestedWithToken);
 
     populateFromRequestData(request, parsingResult,  deploymentMessage);
 
@@ -268,11 +273,9 @@ public class DeploymentServiceImpl implements DeploymentService {
   }
 
   protected DeploymentMessage buildDeploymentMessage(Deployment deployment,
-      DeploymentType deploymentType) {
+      DeploymentType deploymentType, OidcTokenId requestedWithToken) {
     DeploymentMessage deploymentMessage = new DeploymentMessage();
-    if (oidcProperties.isEnabled()) {
-      deploymentMessage.setRequestedWithToken(oauth2TokenService.exchangeCurrentAccessToken());
-    }
+    deploymentMessage.setRequestedWithToken(requestedWithToken);
     deploymentMessage.setDeploymentId(deployment.getId());
     deploymentMessage.setDeploymentType(deploymentType);
     return deploymentMessage;
@@ -308,7 +311,7 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   @Override
   @Transactional
-  public void deleteDeployment(String uuid) {
+  public void deleteDeployment(String uuid, OidcTokenId requestedWithToken) {
     Deployment deployment = getDeployment(uuid);
     MdcUtils.setDeploymentId(deployment.getId());
     throwIfNotOwned(deployment);
@@ -341,7 +344,8 @@ public class DeploymentServiceImpl implements DeploymentService {
     DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
 
     // Build deployment message
-    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType);
+    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType,
+        requestedWithToken);
 
     ProcessInstance pi = wfService
         .createProcessInstanceBuilder()
@@ -359,10 +363,11 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   @Override
   @Transactional
-  public void updateDeployment(String id, DeploymentRequest request) {
+  public void updateDeployment(String id, DeploymentRequest request,
+      OidcTokenId requestedWithToken) {
     Deployment deployment = getDeployment(id);
     MdcUtils.setDeploymentId(deployment.getId());
-    LOG.debug("Updating deployment with template\n{}", id, request.getTemplate());
+    LOG.debug("Updating deployment with template\n{}", request.getTemplate());
     throwIfNotOwned(deployment);
 
     if (deployment.getDeploymentProvider() == DeploymentProvider.CHRONOS
@@ -391,7 +396,8 @@ public class DeploymentServiceImpl implements DeploymentService {
     DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
 
     // Build deployment message
-    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType);
+    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType,
+        requestedWithToken);
 
     // Check if the new template is valid: parse, validate structure and user's inputs,
     // replace user's inputs
@@ -469,7 +475,7 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   @Override
   @Transactional(readOnly = true)
-  public String getDeploymentLog(String id) {
+  public String getDeploymentLog(String id, OidcTokenId requestedWithToken) {
     Deployment deployment = getDeployment(id);
     LOG.debug("Retrieving infrastructure log for deployment {}", id);
     throwIfNotOwned(deployment);
@@ -477,7 +483,8 @@ public class DeploymentServiceImpl implements DeploymentService {
     DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
 
     // Build deployment message
-    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType);
+    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType,
+        requestedWithToken);
 
     DeploymentProviderService ds = deploymentProviderServiceRegistry
         .getDeploymentProviderService(id);
@@ -493,7 +500,7 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   @Override
   @Transactional(readOnly = true)
-  public String getDeploymentExtendedInfo(String id) {
+  public String getDeploymentExtendedInfo(String id, OidcTokenId requestedWithToken) {
     Deployment deployment = getDeployment(id);
     LOG.debug("Retrieving infrastructure extra info for deployment {}", id);
     throwIfNotOwned(deployment);
@@ -501,7 +508,8 @@ public class DeploymentServiceImpl implements DeploymentService {
     DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
 
     // Build deployment message
-    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType);
+    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType,
+        requestedWithToken);
 
     DeploymentProviderService ds = deploymentProviderServiceRegistry
         .getDeploymentProviderService(id);

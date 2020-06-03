@@ -28,6 +28,7 @@ import it.reply.orchestrator.dto.cmdb.ComputeService;
 import it.reply.orchestrator.dto.cmdb.MarathonService;
 import it.reply.orchestrator.dto.cmdb.MesosFrameworkService;
 import it.reply.orchestrator.dto.cmdb.QcgService;
+import it.reply.orchestrator.dto.cmdb.StorageService;
 import it.reply.orchestrator.dto.dynafed.Dynafed;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.policies.SlaPlacementPolicy;
@@ -79,6 +80,18 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
     Set<CloudProvider> providersToDiscard = new HashSet<>();
     Set<CloudService> servicesToDiscard = new HashSet<>();
 
+    if (rankCloudProvidersMessage.isDataMovementWorkflow()) {
+      rankCloudProvidersMessage
+          .getCloudProviders()
+          .values()
+          .stream()
+          .filter(cp -> cp.getServicesOfType(StorageService.class)
+              .stream()
+              .allMatch(storageService -> storageService.getRucioRse() == null))
+          .forEach(cloudProvider -> addProviderToDiscard(providersToDiscard, servicesToDiscard,
+              cloudProvider));
+      discardProvidersAndServices(providersToDiscard, servicesToDiscard, rankCloudProvidersMessage);
+    }
     discardOnPlacementPolicies(rankCloudProvidersMessage.getPlacementPolicies(),
         rankCloudProvidersMessage.getCloudProviders().values(),
         rankCloudProvidersMessage.getSlamPreferences().getSla(), servicesToDiscard);

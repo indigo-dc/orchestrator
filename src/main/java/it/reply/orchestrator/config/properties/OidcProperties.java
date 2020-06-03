@@ -54,7 +54,7 @@ import org.springframework.validation.annotation.Validated;
 public class OidcProperties implements SecurityPrerequisite, InitializingBean {
 
   public static final Set<String> REQUIRED_SCOPES =
-      ImmutableSet.of("openid", "profile", "offline_access");
+      ImmutableSet.of("openid", "profile", "offline_access", "fts:submit-transfer");
 
   protected static final String PROPERTIES_PREFIX = "oidc";
 

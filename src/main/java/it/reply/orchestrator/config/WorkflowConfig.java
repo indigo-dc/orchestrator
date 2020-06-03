@@ -19,70 +19,30 @@ package it.reply.orchestrator.config;
 import it.reply.orchestrator.dal.util.StrongSequentialUuidGenerator;
 import it.reply.orchestrator.workflow.CustomFailedJobCommandFactory;
 
-import java.io.IOException;
-
 import javax.persistence.EntityManagerFactory;
-import javax.sql.DataSource;
 
-import org.flowable.job.service.impl.asyncexecutor.AsyncExecutor;
+import liquibase.integration.spring.SpringLiquibase;
 import org.flowable.spring.SpringProcessEngineConfiguration;
-import org.flowable.spring.boot.FlowableMailProperties;
-import org.flowable.spring.boot.FlowableProperties;
-import org.flowable.spring.boot.ProcessEngineAutoConfiguration;
-import org.flowable.spring.boot.idm.FlowableIdmProperties;
-import org.flowable.spring.boot.process.FlowableProcessProperties;
-import org.flowable.spring.boot.process.Process;
-import org.springframework.beans.factory.ObjectProvider;
+import org.flowable.spring.boot.EngineConfigurationConfigurer;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.DependsOn;
-import org.springframework.transaction.PlatformTransactionManager;
 
 @Configuration
-public class WorkflowConfig extends ProcessEngineAutoConfiguration {
+public class WorkflowConfig {
 
-  public WorkflowConfig(FlowableProperties flowableProperties,
-      FlowableProcessProperties processProperties, FlowableIdmProperties idmProperties,
-      FlowableMailProperties mailProperties) {
-    super(flowableProperties, processProperties, idmProperties, mailProperties);
-  }
-
-  /**
-   * Generates a SpringProcessEngineConfiguration.
-   *
-   * @param dataSource
-   *          the Datasource to use
-   * @param platformTransactionManager
-   *          the PlatformTransactionManager to use
-   * @param asyncExecutorProvider
-   *          the AsyncExecutor to use
-   * @param entityManagerFactory
-   *          the EntityManagerFactory to use
-   * @return the generated SpringProcessEngineConfiguration
-   * @throws IOException
-   *           when I/O exception of some sort has occurred during initialization
-   */
   @Bean
-  @DependsOn("workflowLiquibase")
-  public SpringProcessEngineConfiguration springProcessEngineConfiguration(
-      @Qualifier("workflowDataSource") DataSource dataSource,
-      PlatformTransactionManager platformTransactionManager,
-      @Process ObjectProvider<AsyncExecutor> asyncExecutorProvider,
-      EntityManagerFactory entityManagerFactory) throws IOException {
-    SpringProcessEngineConfiguration configuration =
-        super.springProcessEngineConfiguration(dataSource, platformTransactionManager,
-            asyncExecutorProvider);
-
-    configuration.setJpaEntityManagerFactory(entityManagerFactory);
-    configuration.setJpaHandleTransaction(false);
-    configuration.setJpaCloseEntityManager(false);
-    configuration.setFailedJobCommandFactory(new CustomFailedJobCommandFactory());
-    configuration.setAsyncExecutorMessageQueueMode(true);
-    configuration.setAsyncHistoryExecutorMessageQueueMode(true);
-    configuration.setIdGenerator(new StrongSequentialUuidGenerator());
-
-    return configuration;
+  EngineConfigurationConfigurer<SpringProcessEngineConfiguration> workflowConfigurer(
+      @Qualifier("workflowLiquibase") SpringLiquibase liquibase,
+      EntityManagerFactory entityManagerFactory
+  ) {
+    return engineConfiguration -> {
+      engineConfiguration.setDataSource(liquibase.getDataSource());
+      engineConfiguration.setJpaEntityManagerFactory(entityManagerFactory);
+      engineConfiguration.setJpaHandleTransaction(false);
+      engineConfiguration.setJpaCloseEntityManager(false);
+      engineConfiguration.setFailedJobCommandFactory(new CustomFailedJobCommandFactory());
+      engineConfiguration.setIdGenerator(new StrongSequentialUuidGenerator());
+    };
   }
-
 }

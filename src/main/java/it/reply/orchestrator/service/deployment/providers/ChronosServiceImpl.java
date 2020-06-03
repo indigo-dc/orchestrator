@@ -31,6 +31,7 @@ import it.infn.ba.indigo.chronos.client.model.v1.Volume;
 import it.infn.ba.indigo.chronos.client.utils.ChronosException;
 import it.reply.orchestrator.annotation.DeploymentProviderQualifier;
 import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.entity.DeploymentScheduleEvent;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
@@ -42,6 +43,8 @@ import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.mesos.MesosContainer;
 import it.reply.orchestrator.dto.mesos.chronos.ChronosJob;
 import it.reply.orchestrator.dto.onedata.OneData;
+import it.reply.orchestrator.dto.workflow.CloudServiceWf;
+import it.reply.orchestrator.dto.workflow.WorkflowListIterator;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Task;
@@ -52,6 +55,7 @@ import it.reply.orchestrator.function.ThrowingConsumer;
 import it.reply.orchestrator.function.ThrowingFunction;
 import it.reply.orchestrator.service.IndigoInputsPreProcessorService;
 import it.reply.orchestrator.service.IndigoInputsPreProcessorService.RuntimeProperties;
+import it.reply.orchestrator.service.RucioService;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.deployment.providers.factory.ChronosClientFactory;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
@@ -113,6 +117,9 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
 
   @Autowired
   private IndigoInputsPreProcessorService indigoInputsPreProcessorService;
+
+  @Autowired
+  private RucioService rucioService;
 
   protected <R> R executeWithClientForResult(CloudProviderEndpoint cloudProviderEndpoint,
       OidcTokenId requestedWithToken,
@@ -480,7 +487,21 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
         .getCloudServicesOrderedIterator()
         .currentService(ChronosService.class)
         .getProperties();
-
+    Optional<String> localReplicaPfn = Optional
+        .of(deployment)
+        .map(Deployment::getDeploymentScheduleEvent)
+        .map(DeploymentScheduleEvent::getTempReplicationRule)
+        .flatMap(replicationRule -> Optional
+            .ofNullable(deploymentMessage.getCloudServicesOrderedIterator())
+            .map(WorkflowListIterator::current)
+            .map(CloudServiceWf::getRucioRse)
+            .flatMap(selectedRse -> {
+              String scope = replicationRule.getScope();
+              String name = replicationRule.getName();
+              return rucioService
+                  .getPfnFromReplica(deploymentMessage.getRequestedWithToken(), scope, name,
+                      selectedRse);
+            }));
     LinkedHashMap<String, ChronosJob> jobs = new LinkedHashMap<>();
     List<IndigoJob> indigoJobs = new ArrayList<>();
     for (NodeTemplate chronosNode : orderedChronosJobs) {
@@ -492,6 +513,11 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
             return jobResource.getIaasId();
           });
       ChronosJob mesosTask = buildTask(graph, chronosNode, id);
+      localReplicaPfn.ifPresent(pfn -> {
+        mesosTask.getEnv().put("LOCAL_REPLICA_PFN", pfn);
+        mesosTask.getEnv().put("IAM_TOKEN",
+            oauth2TokenService.getAccessToken(deploymentMessage.getRequestedWithToken()));
+      });
       jobs.put(chronosNode.getName(), mesosTask);
       List<NodeTemplate> parentNodes = getParentNodes("parent_job", graph, chronosNode);
       mesosTask.setParents(parentNodes

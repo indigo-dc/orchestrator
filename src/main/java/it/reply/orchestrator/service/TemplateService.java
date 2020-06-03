@@ -25,6 +25,7 @@ public interface TemplateService {
    *          the uuid of the deployment
    * @return the template
    */
-  public String getTemplate(String uuid);
+  public String getDeploymentTemplate(String uuid);
 
+  public String getDeploymentScheduleTemplate(String uuid);
 }

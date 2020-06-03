@@ -36,10 +36,13 @@ public class TemplateServiceTest {
   @Mock
   private DeploymentService deploymentService;
 
+  @Mock
+  private DeploymentScheduleServiceImpl deploymentScheduleService;
+
   @Before
   public void setup() {
     MockitoAnnotations.initMocks(this);
-    templateService = new TemplateServiceImpl(deploymentService);
+    templateService = new TemplateServiceImpl(deploymentService, deploymentScheduleService);
   }
 
   @Test
@@ -49,7 +52,7 @@ public class TemplateServiceTest {
 
     Mockito.when(deploymentService.getDeployment(deploymentId)).thenReturn(deployment);
 
-    Assert.assertEquals(templateService.getTemplate(deploymentId), deployment.getTemplate());
+    Assert.assertEquals(templateService.getDeploymentTemplate(deploymentId), deployment.getTemplate());
   }
 
   @Test(expected = NotFoundException.class)
@@ -57,7 +60,7 @@ public class TemplateServiceTest {
     String deploymentId = UUID.randomUUID().toString();
     Mockito.when(deploymentService.getDeployment(deploymentId))
         .thenThrow(new NotFoundException(deploymentId));
-    templateService.getTemplate(deploymentId);
+    templateService.getDeploymentTemplate(deploymentId);
   }
 
 }
