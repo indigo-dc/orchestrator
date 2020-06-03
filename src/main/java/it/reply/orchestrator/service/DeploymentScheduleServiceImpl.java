@@ -1,7 +1,21 @@
+/*
+ * Copyright © 2015-2020 Santer Reply S.p.A.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package it.reply.orchestrator.service;
 
-import alien4cloud.tosca.model.ArchiveRoot;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.DeploymentSchedule;
@@ -10,50 +24,23 @@ import it.reply.orchestrator.dal.entity.OidcEntity;
 import it.reply.orchestrator.dal.entity.OidcEntityId;
 import it.reply.orchestrator.dal.entity.OidcRefreshToken;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
-import it.reply.orchestrator.dal.entity.Resource;
-import it.reply.orchestrator.dal.entity.WorkflowReference;
-import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.DeploymentScheduleEventRepository;
 import it.reply.orchestrator.dal.repository.DeploymentScheduleRepository;
 import it.reply.orchestrator.dal.repository.OidcTokenRepository;
-import it.reply.orchestrator.dal.repository.ResourceRepository;
-import it.reply.orchestrator.dto.deployment.DeploymentMessage;
-import it.reply.orchestrator.dto.policies.ToscaPolicy;
-import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.dto.request.DeploymentScheduleRequest;
 import it.reply.orchestrator.dto.security.IndigoOAuth2Authentication;
 import it.reply.orchestrator.dto.security.IndigoUserInfo;
 import it.reply.orchestrator.enums.DeploymentScheduleStatus;
-import it.reply.orchestrator.enums.DeploymentType;
-import it.reply.orchestrator.enums.NodeStates;
-import it.reply.orchestrator.enums.Status;
-import it.reply.orchestrator.enums.Task;
 import it.reply.orchestrator.exception.http.BadRequestException;
 import it.reply.orchestrator.exception.http.NotFoundException;
-import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
-import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.MdcUtils;
-import it.reply.orchestrator.utils.ToscaConstants;
-import it.reply.orchestrator.utils.WorkflowConstants;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.LongStream;
 import lombok.extern.slf4j.Slf4j;
-import org.alien4cloud.tosca.model.templates.NodeTemplate;
-import org.alien4cloud.tosca.model.templates.RelationshipTemplate;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.flowable.engine.RuntimeService;
-import org.flowable.engine.runtime.ProcessInstance;
-import org.jgrapht.graph.DirectedMultigraph;
-import org.jgrapht.traverse.TopologicalOrderIterator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -63,6 +50,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Slf4j
 public class DeploymentScheduleServiceImpl {
+
+  private static final Pattern OWNER_PATTERN = Pattern.compile("([^@]+)@([^@]+)");
 
   @Autowired
   private DeploymentService deploymentService;
@@ -76,16 +65,22 @@ public class DeploymentScheduleServiceImpl {
   @Autowired
   private DeploymentScheduleEventRepository deploymentScheduleEventRepository;
 
+  @Autowired
+  private DeploymentScheduleRepository deploymentScheduleRepository;
 
-  private static final Pattern OWNER_PATTERN = Pattern.compile("([^@]+)@([^@]+)");
+  @Autowired
+  private OAuth2TokenService oauth2Tokenservice;
+
+  @Autowired
+  private OidcTokenRepository oidcTokenRepository;
 
   private boolean isAdmin() {
     boolean isAdmin = false;
     if (oidcProperties.isEnabled()) {
-      OidcEntity requester = oAuth2TokenService.generateOidcEntityFromCurrentAuth();
+      OidcEntity requester = oauth2Tokenservice.generateOidcEntityFromCurrentAuth();
       String issuer = requester.getOidcEntityId().getIssuer();
       String group = oidcProperties.getIamProperties().get(issuer).getAdmingroup();
-      IndigoOAuth2Authentication authentication = oAuth2TokenService.getCurrentAuthentication();
+      IndigoOAuth2Authentication authentication = oauth2Tokenservice.getCurrentAuthentication();
       IndigoUserInfo userInfo = (IndigoUserInfo) authentication.getUserInfo();
       if (userInfo != null) {
         isAdmin = userInfo.getGroups().contains(group);
@@ -94,16 +89,11 @@ public class DeploymentScheduleServiceImpl {
     return isAdmin;
   }
 
-  @Autowired
-  private DeploymentScheduleRepository deploymentScheduleRepository;
-
-  @Autowired
-  private OAuth2TokenService oAuth2TokenService;
-
-  @Autowired
-  private OidcTokenRepository oidcTokenRepository;
-
-
+  /**
+   * Create a new Deployment schedule.
+   * @param request the request
+   * @return the deployment schedule
+   */
   @Transactional
   public DeploymentSchedule createDeploymentSchedule(DeploymentScheduleRequest request) {
     DeploymentSchedule deploymentSchedule = new DeploymentSchedule();
@@ -121,28 +111,38 @@ public class DeploymentScheduleServiceImpl {
     toscaService.prepareTemplate(request.getTemplate(), request.getParameters());
 
     if (oidcProperties.isEnabled()) {
-      deploymentSchedule.setOwner(oAuth2TokenService.getOrGenerateOidcEntityFromCurrentAuth());
-      Optional<OidcRefreshToken> oidcRefreshToken = oidcTokenRepository.findByOidcTokenId(oAuth2TokenService.exchangeCurrentAccessToken());
+      deploymentSchedule.setOwner(oauth2Tokenservice.getOrGenerateOidcEntityFromCurrentAuth());
+      Optional<OidcRefreshToken> oidcRefreshToken =
+          oidcTokenRepository.findByOidcTokenId(oauth2Tokenservice.exchangeCurrentAccessToken());
       deploymentSchedule.setRequestedWithToken(oidcRefreshToken.orElse(null));
     }
     deploymentSchedule = deploymentScheduleRepository.save(deploymentSchedule);
     return deploymentSchedule;
   }
 
-
-
+  /**
+   * Create a new Deployment schedule event.
+   * @param schedule the Deployment schedule
+   * @param fileName the name of the file that triggered the event
+   * @param fileScope the scope of the file that triggered the event
+   * @return the deployment schedule event
+   */
   @Transactional
-  public DeploymentScheduleEvent createDeploymentScheduleEvent(DeploymentSchedule schedule, String fileScope, String fileName) {
-    try(MdcUtils.MdcCloseable requestId = MdcUtils.setRequestIdCloseable(UUID.randomUUID().toString())) {
+  public DeploymentScheduleEvent createDeploymentScheduleEvent(DeploymentSchedule schedule,
+      String fileScope, String fileName) {
+    try (MdcUtils.MdcCloseable requestId = MdcUtils
+        .setRequestIdCloseable(UUID.randomUUID().toString())) {
       DeploymentScheduleRequest deploymentRequest = DeploymentScheduleRequest
-        .deploymentScheduleBuilder()
-        .callback(schedule.getCallback())
-        .parameters(new HashMap<>(schedule.getParameters()))
-        .template(schedule.getTemplate())
-        .build();
+          .deploymentScheduleBuilder()
+          .callback(schedule.getCallback())
+          .parameters(new HashMap<>(schedule.getParameters()))
+          .template(schedule.getTemplate())
+          .build();
 
-      OidcTokenId requestedWithToken = Optional.ofNullable(schedule.getRequestedWithToken()).map(OidcRefreshToken::getOidcTokenId).orElse(null);
-      Deployment deployment = deploymentService.createDeployment(deploymentRequest, schedule.getOwner(), requestedWithToken);
+      OidcTokenId requestedWithToken = Optional.ofNullable(schedule.getRequestedWithToken())
+          .map(OidcRefreshToken::getOidcTokenId).orElse(null);
+      Deployment deployment = deploymentService
+          .createDeployment(deploymentRequest, schedule.getOwner(), requestedWithToken);
 
       DeploymentScheduleEvent event = new DeploymentScheduleEvent();
       event.setScope(fileScope);
@@ -155,59 +155,79 @@ public class DeploymentScheduleServiceImpl {
     }
   }
 
+  /**
+   * Create a DeploymentScheduleEvent for each DeploymentSchedule listening for the file.
+   * @param scope the scope of the file
+   * @param name the name of the file
+   */
   @Transactional
   public void createDeploymentScheduleEvents(String scope, String name) {
     String did = String.format("%s:%s", scope, name);
     deploymentScheduleRepository
-      .findAll()
-      .stream()
-      // TODO filter with a query DB-side
-      .filter(s -> did.matches(s.getFileExpression()) && s.getStatus() == DeploymentScheduleStatus.RUNNING)
-      .filter(s -> s.getScheduleEvents().stream().noneMatch(e -> scope.equals(e.getScope()) && name.equals(e.getName())))
-      .forEach(deploymentSchedule -> this.createDeploymentScheduleEvent(deploymentSchedule, scope, name));
+        .findAll()
+        .stream()
+        // TODO filter with a query DB-side
+        .filter(s -> did.matches(s.getFileExpression())
+            && s.getStatus() == DeploymentScheduleStatus.RUNNING)
+        .filter(s -> s.getScheduleEvents().stream()
+            .noneMatch(e -> scope.equals(e.getScope()) && name.equals(e.getName())))
+        .forEach(deploymentSchedule -> this
+            .createDeploymentScheduleEvent(deploymentSchedule, scope, name));
   }
 
-    @Transactional(readOnly = true)
-    public Page<DeploymentSchedule> getDeploymentSchedules(Pageable pageable, String owner) {
-      if (owner == null) {
-        if (oidcProperties.isEnabled() && isAdmin()) {
-          OidcEntity requester = oAuth2TokenService.generateOidcEntityFromCurrentAuth();
-          return deploymentScheduleRepository.findAll(requester, pageable);
-        }
-        owner = "me";
+  /**
+   * Get all the deployment schedules of a user.
+   * @param pageable the page information
+   * @param owner the owner
+   * @return the deployment schedules
+   */
+  @Transactional(readOnly = true)
+  public Page<DeploymentSchedule> getDeploymentSchedules(Pageable pageable, String owner) {
+    if (owner == null) {
+      if (oidcProperties.isEnabled() && isAdmin()) {
+        OidcEntity requester = oauth2Tokenservice.generateOidcEntityFromCurrentAuth();
+        return deploymentScheduleRepository.findAll(requester, pageable);
       }
-      OidcEntityId ownerId;
-      if ("me".equals(owner)) {
-        ownerId = oAuth2TokenService.generateOidcEntityIdFromCurrentAuth();
+      owner = "me";
+    }
+    OidcEntityId ownerId;
+    if ("me".equals(owner)) {
+      ownerId = oauth2Tokenservice.generateOidcEntityIdFromCurrentAuth();
+    } else {
+      Matcher matcher = OWNER_PATTERN.matcher(owner);
+      if (isAdmin() && matcher.matches()) {
+        ownerId = new OidcEntityId();
+        ownerId.setSubject(matcher.group(1));
+        ownerId.setIssuer(matcher.group(2));
       } else {
-        Matcher matcher = OWNER_PATTERN.matcher(owner);
-        if (isAdmin() && matcher.matches()) {
-          ownerId = new OidcEntityId();
-          ownerId.setSubject(matcher.group(1));
-          ownerId.setIssuer(matcher.group(2));
-        } else {
-          throw new BadRequestException("Value " + owner + " for param createdBy is illegal");
-        }
-      }
-      if (oidcProperties.isEnabled()) {
-        OidcEntity requester = oAuth2TokenService.generateOidcEntityFromCurrentAuth();
-        return deploymentScheduleRepository.findAllByOwner(requester, ownerId, pageable);
-      } else {
-        return deploymentScheduleRepository.findAllByOwner(ownerId, pageable);
+        throw new BadRequestException("Value " + owner + " for param createdBy is illegal");
       }
     }
+    if (oidcProperties.isEnabled()) {
+      OidcEntity requester = oauth2Tokenservice.generateOidcEntityFromCurrentAuth();
+      return deploymentScheduleRepository.findAllByOwner(requester, ownerId, pageable);
+    } else {
+      return deploymentScheduleRepository.findAllByOwner(ownerId, pageable);
+    }
+  }
 
-    @Transactional(readOnly = true)
+  /**
+   * Returns the DeploymentSchedule with that id.
+   * @param id the id
+   * @return the
+   */
+  @Transactional(readOnly = true)
   public DeploymentSchedule getDeploymentSchedule(String id) {
-      DeploymentSchedule deploymentSchedule = null;
-      if (oidcProperties.isEnabled()) {
-        OidcEntity requester = oAuth2TokenService.generateOidcEntityFromCurrentAuth();
-        deploymentSchedule = deploymentScheduleRepository.findOne(requester, id);
-      } else {
-        deploymentSchedule = deploymentScheduleRepository.findOne(id);
-      }
-      return Optional.ofNullable(deploymentSchedule).orElseThrow(() ->new NotFoundException("The deployment <" + id + "> doesn't exist"));
-      }
+    DeploymentSchedule deploymentSchedule = null;
+    if (oidcProperties.isEnabled()) {
+      OidcEntity requester = oauth2Tokenservice.generateOidcEntityFromCurrentAuth();
+      deploymentSchedule = deploymentScheduleRepository.findOne(requester, id);
+    } else {
+      deploymentSchedule = deploymentScheduleRepository.findOne(id);
+    }
+    return Optional.ofNullable(deploymentSchedule)
+        .orElseThrow(() -> new NotFoundException("The deployment <" + id + "> doesn't exist"));
+  }
 
   public Page<DeploymentScheduleEvent> getDeploymentScheduleEvents(String id, Pageable pageable) {
     return deploymentScheduleEventRepository.findByDeploymentSchedule_Id(id, pageable);

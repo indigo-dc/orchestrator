@@ -50,9 +50,25 @@ public class DeploymentScheduleResource extends AbstractResource {
   @Nullable
   private OidcEntityId createdBy;
 
+  /**
+   * Create a new DeploymentScheduleResource.
+   * @param uuid the uuid
+   * @param creationTime the creation time
+   * @param updateTime the update time
+   * @param status the status
+   * @param replicationExpression the replication expression
+   * @param fileExpression the file espression
+   * @param numberOfReplicas the number of replicas
+   * @param callback the callback
+   * @param createdBy the {@link OidcEntityId} of the user that created the resource
+   */
   @Builder
-  public DeploymentScheduleResource(@NonNull String uuid, @Nullable Date creationTime, @Nullable Date updateTime, @Nullable String physicalId, @Nullable DeploymentScheduleStatus status, String replicationExpression, String fileExpression, Integer numberOfReplicas, @Nullable String callback, @Nullable OidcEntityId createdBy) {
-    super(uuid, creationTime, updateTime, physicalId);
+  public DeploymentScheduleResource(@NonNull String uuid, @Nullable Date creationTime,
+      @Nullable Date updateTime,
+      @Nullable DeploymentScheduleStatus status, String replicationExpression,
+      String fileExpression, Integer numberOfReplicas, @Nullable String callback,
+      @Nullable OidcEntityId createdBy) {
+    super(uuid, creationTime, updateTime, null);
     this.status = status;
     this.replicationExpression = replicationExpression;
     this.fileExpression = fileExpression;

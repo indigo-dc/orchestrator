@@ -55,7 +55,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class DeploymentController {
 
   private static final String OFFLINE_ACCESS_REQUIRED_CONDITION =
-    "#oauth2.throwOnError(#oauth2.hasAnyScope('offline_access', 'fts:submit-transfer'))";
+      "#oauth2.throwOnError(#oauth2.hasAnyScope('offline_access', 'fts:submit-transfer'))";
 
   @Autowired
   private DeploymentService deploymentService;
@@ -64,7 +64,7 @@ public class DeploymentController {
   private DeploymentResourceAssembler deploymentResourceAssembler;
 
   @Autowired
-  private OAuth2TokenService oAuth2TokenService;
+  private OAuth2TokenService oauth2Tokenservice;
 
   @Autowired
   private OidcProperties oidcProperties;
@@ -116,8 +116,8 @@ public class DeploymentController {
     OidcEntity owner = null;
     OidcTokenId requestedWithToken = null;
     if (oidcProperties.isEnabled()) {
-      owner = oAuth2TokenService.getOrGenerateOidcEntityFromCurrentAuth();
-      requestedWithToken = oAuth2TokenService.exchangeCurrentAccessToken();
+      owner = oauth2Tokenservice.getOrGenerateOidcEntityFromCurrentAuth();
+      requestedWithToken = oauth2Tokenservice.exchangeCurrentAccessToken();
     }
     Deployment deployment = deploymentService.createDeployment(request, owner, requestedWithToken);
     return deploymentResourceAssembler.toResource(deployment);
@@ -141,8 +141,8 @@ public class DeploymentController {
     OidcEntity owner = null;
     OidcTokenId requestedWithToken = null;
     if (oidcProperties.isEnabled()) {
-      owner = oAuth2TokenService.getOrGenerateOidcEntityFromCurrentAuth();
-      requestedWithToken = oAuth2TokenService.exchangeCurrentAccessToken();
+      owner = oauth2Tokenservice.getOrGenerateOidcEntityFromCurrentAuth();
+      requestedWithToken = oauth2Tokenservice.exchangeCurrentAccessToken();
     }
     deploymentService.updateDeployment(id, request, requestedWithToken);
   }
@@ -178,8 +178,8 @@ public class DeploymentController {
     OidcEntity owner = null;
     OidcTokenId requestedWithToken = null;
     if (oidcProperties.isEnabled()) {
-      owner = oAuth2TokenService.getOrGenerateOidcEntityFromCurrentAuth();
-      requestedWithToken = oAuth2TokenService.exchangeCurrentAccessToken();
+      owner = oauth2Tokenservice.getOrGenerateOidcEntityFromCurrentAuth();
+      requestedWithToken = oauth2Tokenservice.exchangeCurrentAccessToken();
     }
     return deploymentService.getDeploymentLog(uuid, requestedWithToken);
   }
@@ -198,8 +198,8 @@ public class DeploymentController {
     OidcEntity owner = null;
     OidcTokenId requestedWithToken = null;
     if (oidcProperties.isEnabled()) {
-      owner = oAuth2TokenService.getOrGenerateOidcEntityFromCurrentAuth();
-      requestedWithToken = oAuth2TokenService.exchangeCurrentAccessToken();
+      owner = oauth2Tokenservice.getOrGenerateOidcEntityFromCurrentAuth();
+      requestedWithToken = oauth2Tokenservice.exchangeCurrentAccessToken();
     }
     return deploymentService.getDeploymentExtendedInfo(uuid, requestedWithToken);
   }
@@ -218,8 +218,8 @@ public class DeploymentController {
     OidcEntity owner = null;
     OidcTokenId requestedWithToken = null;
     if (oidcProperties.isEnabled()) {
-      owner = oAuth2TokenService.getOrGenerateOidcEntityFromCurrentAuth();
-      requestedWithToken = oAuth2TokenService.exchangeCurrentAccessToken();
+      owner = oauth2Tokenservice.getOrGenerateOidcEntityFromCurrentAuth();
+      requestedWithToken = oauth2Tokenservice.exchangeCurrentAccessToken();
     }
     deploymentService.deleteDeployment(id, requestedWithToken);
   }

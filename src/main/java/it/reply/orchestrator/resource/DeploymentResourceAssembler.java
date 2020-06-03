@@ -100,8 +100,8 @@ public class DeploymentResourceAssembler
               .getResources(entity.getId(), null, null))
           .withRel("resources"));
       resource.add(ControllerLinkBuilder
-          .linkTo(
-              DummyInvocationUtils.methodOn(TemplateController.class).getDeploymentTemplate(entity.getId()))
+          .linkTo(DummyInvocationUtils.methodOn(TemplateController.class)
+              .getDeploymentTemplate(entity.getId()))
           .withRel("template"));
     }
 

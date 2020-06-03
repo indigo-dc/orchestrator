@@ -17,18 +17,14 @@
 package it.reply.orchestrator.dto.request;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import java.util.HashMap;
 import java.util.Map;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hibernate.validator.constraints.URL;
 
 @Data
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -47,9 +43,27 @@ public class DeploymentScheduleRequest extends DeploymentRequest {
   @NonNull
   private Integer numberOfReplicas;
 
+  /**
+   * Create a new DeploymentScheduleRequest.
+   * @param template the template
+   * @param parameters the parameters
+   * @param callback the callback
+   * @param timeoutMins the global timeout in mins
+   * @param providerTimeoutMins the provider timeout in mins
+   * @param maxProvidersRetry the max num of retries
+   * @param keepLastAttempt whether to keep the last attempt or not
+   * @param fileExpression the file expression
+   * @param replicationExpression the replication expression
+   * @param numberOfReplicas the number of replicas
+   */
   @Builder(builderMethodName = "deploymentScheduleBuilder")
-  public DeploymentScheduleRequest(@NonNull String template, @NonNull Map<String, Object> parameters, @Nullable String callback, @Nullable Integer timeoutMins, @Nullable Integer providerTimeoutMins, @Nullable Integer maxProvidersRetry, boolean keepLastAttempt, @NonNull String fileExpression, @NonNull String replicationExpression, @NonNull Integer numberOfReplicas) {
-    super(template, parameters, callback, timeoutMins, providerTimeoutMins, maxProvidersRetry, keepLastAttempt);
+  public DeploymentScheduleRequest(@NonNull String template,
+      @NonNull Map<String, Object> parameters, @Nullable String callback,
+      @Nullable Integer timeoutMins, @Nullable Integer providerTimeoutMins,
+      @Nullable Integer maxProvidersRetry, boolean keepLastAttempt, @NonNull String fileExpression,
+      @NonNull String replicationExpression, @NonNull Integer numberOfReplicas) {
+    super(template, parameters, callback, timeoutMins, providerTimeoutMins, maxProvidersRetry,
+        keepLastAttempt);
     this.fileExpression = fileExpression;
     this.replicationExpression = replicationExpression;
     this.numberOfReplicas = numberOfReplicas;

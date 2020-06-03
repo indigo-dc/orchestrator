@@ -218,7 +218,8 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   @Override
   @Transactional
-  public Deployment createDeployment(DeploymentRequest request, OidcEntity owner, OidcTokenId requestedWithToken) {
+  public Deployment createDeployment(DeploymentRequest request, OidcEntity owner,
+      OidcTokenId requestedWithToken) {
     Deployment deployment = new Deployment();
     deployment.setStatus(Status.CREATE_IN_PROGRESS);
     deployment.setTask(Task.NONE);
@@ -241,7 +242,8 @@ public class DeploymentServiceImpl implements DeploymentService {
     DeploymentType deploymentType = inferDeploymentType(nodes);
 
     // Build deployment message
-    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType, requestedWithToken);
+    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType,
+        requestedWithToken);
 
     populateFromRequestData(request, parsingResult,  deploymentMessage);
 
@@ -261,7 +263,7 @@ public class DeploymentServiceImpl implements DeploymentService {
             objectMapper.valueToTree(deploymentMessage))
         .processDefinitionKey(WorkflowConstants.Process.DEPLOY)
         .businessKey(MdcUtils.toBusinessKey())
-        .startAsync();
+        .start();
 
     deployment.addWorkflowReferences(
         new WorkflowReference(pi.getId(), MdcUtils.getRequestId(), Action.CREATE));
@@ -271,7 +273,7 @@ public class DeploymentServiceImpl implements DeploymentService {
   }
 
   protected DeploymentMessage buildDeploymentMessage(Deployment deployment,
-                                                     DeploymentType deploymentType, OidcTokenId requestedWithToken) {
+      DeploymentType deploymentType, OidcTokenId requestedWithToken) {
     DeploymentMessage deploymentMessage = new DeploymentMessage();
     deploymentMessage.setRequestedWithToken(requestedWithToken);
     deploymentMessage.setDeploymentId(deployment.getId());
@@ -342,7 +344,8 @@ public class DeploymentServiceImpl implements DeploymentService {
     DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
 
     // Build deployment message
-    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType, requestedWithToken);
+    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType,
+        requestedWithToken);
 
     ProcessInstance pi = wfService
         .createProcessInstanceBuilder()
@@ -352,7 +355,7 @@ public class DeploymentServiceImpl implements DeploymentService {
             objectMapper.valueToTree(deploymentMessage))
         .processDefinitionKey(WorkflowConstants.Process.UNDEPLOY)
         .businessKey(MdcUtils.toBusinessKey())
-        .startAsync();
+        .start();
 
     deployment.addWorkflowReferences(
         new WorkflowReference(pi.getId(), MdcUtils.getRequestId(), Action.DELETE));
@@ -360,7 +363,8 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   @Override
   @Transactional
-  public void updateDeployment(String id, DeploymentRequest request, OidcTokenId requestedWithToken) {
+  public void updateDeployment(String id, DeploymentRequest request,
+      OidcTokenId requestedWithToken) {
     Deployment deployment = getDeployment(id);
     MdcUtils.setDeploymentId(deployment.getId());
     LOG.debug("Updating deployment with template\n{}", request.getTemplate());
@@ -392,7 +396,8 @@ public class DeploymentServiceImpl implements DeploymentService {
     DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
 
     // Build deployment message
-    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType, requestedWithToken);
+    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType,
+        requestedWithToken);
 
     // Check if the new template is valid: parse, validate structure and user's inputs,
     // replace user's inputs
@@ -417,7 +422,7 @@ public class DeploymentServiceImpl implements DeploymentService {
             objectMapper.valueToTree(deploymentMessage))
         .processDefinitionKey(WorkflowConstants.Process.UPDATE)
         .businessKey(MdcUtils.toBusinessKey())
-        .startAsync();
+        .start();
 
     deployment.addWorkflowReferences(
         new WorkflowReference(pi.getId(), MdcUtils.getRequestId(), Action.UPDATE));
@@ -478,7 +483,8 @@ public class DeploymentServiceImpl implements DeploymentService {
     DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
 
     // Build deployment message
-    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType, requestedWithToken);
+    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType,
+        requestedWithToken);
 
     DeploymentProviderService ds = deploymentProviderServiceRegistry
         .getDeploymentProviderService(id);
@@ -502,7 +508,8 @@ public class DeploymentServiceImpl implements DeploymentService {
     DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
 
     // Build deployment message
-    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType, requestedWithToken);
+    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType,
+        requestedWithToken);
 
     DeploymentProviderService ds = deploymentProviderServiceRegistry
         .getDeploymentProviderService(id);

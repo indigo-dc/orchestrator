@@ -18,13 +18,9 @@ package it.reply.orchestrator.resource;
 
 import it.reply.orchestrator.controller.DeploymentScheduleController;
 import it.reply.orchestrator.dal.entity.DeploymentScheduleEvent;
-import it.reply.orchestrator.dal.entity.OidcEntity;
 import it.reply.orchestrator.dal.entity.ReplicationRule;
-import it.reply.orchestrator.utils.CommonUtils;
 import java.util.Objects;
 import java.util.Optional;
-import org.springframework.hateoas.core.DummyInvocationUtils;
-import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.hateoas.mvc.ResourceAssemblerSupport;
 import org.springframework.stereotype.Component;
 
@@ -33,7 +29,9 @@ public class DeploymentScheduleEventResourceAssembler
     extends ResourceAssemblerSupport<DeploymentScheduleEvent, DeploymentScheduleEventResource> {
 
   private final DeploymentResourceAssembler deploymentResourceAssembler;
-  public DeploymentScheduleEventResourceAssembler(DeploymentResourceAssembler deploymentResourceAssembler) {
+
+  public DeploymentScheduleEventResourceAssembler(
+      DeploymentResourceAssembler deploymentResourceAssembler) {
     super(DeploymentScheduleController.class, DeploymentScheduleEventResource.class);
     this.deploymentResourceAssembler = deploymentResourceAssembler;
   }
@@ -43,8 +41,11 @@ public class DeploymentScheduleEventResourceAssembler
     return getDeploymentScheduleResource(entity);
   }
 
-  private DeploymentScheduleEventResource getDeploymentScheduleResource(DeploymentScheduleEvent entity) {
-    String replicationStatus = Optional.ofNullable(entity.getMainReplicationRule()).map(ReplicationRule::getStatus).map(Objects::toString).orElse(null);
+  private DeploymentScheduleEventResource getDeploymentScheduleResource(
+      DeploymentScheduleEvent entity) {
+    String replicationStatus =
+        Optional.ofNullable(entity.getMainReplicationRule()).map(ReplicationRule::getStatus)
+            .map(Objects::toString).orElse(null);
     DeploymentScheduleEventResource resource = DeploymentScheduleEventResource.builder()
         .uuid(entity.getId())
         .creationTime(entity.getCreatedAt())

@@ -50,11 +50,4 @@ public class TemplateServiceImpl implements TemplateService {
     return deploymentSchedule.getTemplate();
   }
 
-//  @Override
-//  @Transactional(readOnly = true)
-//  public String getDeploymentScheduleEventTemplate(String deploymentScheduleId, String deploymentScheduleEventId) {
-//    DeploymentScheduleEvent deploymentSchedule = deploymentScheduleService.getDeploymentScheduleEvent(deploymentScheduleId, deploymentScheduleEventId);
-//    return deploymentSchedule.getDeployment().getTemplate();
-//  }
-
 }

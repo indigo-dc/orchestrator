@@ -1,3 +1,19 @@
+/*
+ * Copyright © 2015-2020 Santer Reply S.p.A.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package it.reply.orchestrator.service.messaging;
 
 import io.netty.channel.EventLoopGroup;
@@ -10,7 +26,8 @@ import reactor.io.net.NetStreams;
 import reactor.io.net.Spec;
 import reactor.io.net.impl.netty.NettyClientSocketOptions;
 
-class StompTcpClientSpecFactory implements NetStreams.TcpClientFactory<Message<byte[]>, Message<byte[]>> {
+class StompTcpClientSpecFactory
+    implements NetStreams.TcpClientFactory<Message<byte[]>, Message<byte[]>> {
 
   private final String host;
 
@@ -22,7 +39,6 @@ class StompTcpClientSpecFactory implements NetStreams.TcpClientFactory<Message<b
 
   private final Reactor2StompCodec codec;
 
-
   StompTcpClientSpecFactory(String host, int port, EventLoopGroup group, Environment environment) {
     this.host = host;
     this.port = port;
@@ -33,12 +49,12 @@ class StompTcpClientSpecFactory implements NetStreams.TcpClientFactory<Message<b
 
   @Override
   public Spec.TcpClientSpec<Message<byte[]>, Message<byte[]>> apply(
-    Spec.TcpClientSpec<Message<byte[]>, Message<byte[]>> clientSpec) {
+      Spec.TcpClientSpec<Message<byte[]>, Message<byte[]>> clientSpec) {
 
     return clientSpec
-      .env(this.environment)
-      .connect(this.host, this.port)
-      .codec(this.codec)
-      .options(this.socketOptions);
+        .env(this.environment)
+        .connect(this.host, this.port)
+        .codec(this.codec)
+        .options(this.socketOptions);
   }
 }

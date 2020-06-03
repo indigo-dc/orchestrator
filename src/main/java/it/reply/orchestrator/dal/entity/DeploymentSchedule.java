@@ -16,13 +16,8 @@
 
 package it.reply.orchestrator.dal.entity;
 
-import it.reply.orchestrator.dal.util.CloudProviderEndpointToJsonConverter;
 import it.reply.orchestrator.dal.util.ObjectToJsonConverter;
-import it.reply.orchestrator.dto.CloudProviderEndpoint;
-import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.DeploymentScheduleStatus;
-import it.reply.orchestrator.enums.Status;
-import it.reply.orchestrator.enums.Task;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -43,7 +38,6 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
-import javax.persistence.Transient;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -100,10 +94,10 @@ public class DeploymentSchedule extends AbstractResourceEntity {
   private OidcEntity owner;
 
   @ManyToOne(cascade = {
-    CascadeType.DETACH,
-    CascadeType.MERGE,
-    CascadeType.PERSIST,
-    CascadeType.REFRESH
+      CascadeType.DETACH,
+      CascadeType.MERGE,
+      CascadeType.PERSIST,
+      CascadeType.REFRESH
   })
   @JoinColumn(name = "requested_with_token_id")
   @Nullable

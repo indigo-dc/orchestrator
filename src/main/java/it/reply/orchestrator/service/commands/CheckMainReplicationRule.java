@@ -44,8 +44,10 @@ public class CheckMainReplicationRule extends BaseDeployCommand {
         break;
       case STUCK:
         throw new BusinessWorkflowException(WorkflowConstants.ErrorCode.RUNTIME_ERROR,
-          "Error while checking main replication rule",
-          new DeploymentException("Main Replication rule is stuck: " + rule.getStatusReason()));
+            "Error while checking main replication rule",
+            new DeploymentException("Main Replication rule is stuck: " + rule.getStatusReason()));
+      default:
+        // DO NOTHING
     }
   }
 
@@ -53,6 +55,4 @@ public class CheckMainReplicationRule extends BaseDeployCommand {
   protected String getErrorMessagePrefix() {
     return "Error while checking main replication rule";
   }
-
-
 }

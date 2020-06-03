@@ -16,7 +16,6 @@
 
 package it.reply.orchestrator.dal.repository;
 
-import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.DeploymentSchedule;
 import it.reply.orchestrator.dal.entity.OidcEntity;
 import it.reply.orchestrator.dal.entity.OidcEntityId;
@@ -32,33 +31,36 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public interface DeploymentScheduleRepository extends JpaRepository<DeploymentSchedule, String> {
 
-  public static final String IN_SAME_ORGANIZATION =
+  String IN_SAME_ORGANIZATION =
       "(d.owner is null "
           + "or (d.owner.organization = ?#{#requester.organization} "
           + "and d.owner.oidcEntityId.issuer = ?#{#requester.oidcEntityId.issuer}))";
 
   @Query("select d "
       + "from #{#entityName} d "
-      + "where d.owner.oidcEntityId = ?#{#ownerId}")
-  public Page<DeploymentSchedule> findAllByOwner(@Param("ownerId") OidcEntityId ownerId, Pageable pageable);
+      + "where d.owner.oidcEntityId = ?#{#ownerId}") Page<DeploymentSchedule> findAllByOwner(
+      @Param("ownerId") OidcEntityId ownerId,
+      Pageable pageable);
 
   @Query("select d "
       + "from #{#entityName} d "
       + "where d.owner.oidcEntityId = ?#{#ownerId} "
-      + "and " + IN_SAME_ORGANIZATION)
-  public Page<DeploymentSchedule> findAllByOwner(@Param("requester") OidcEntity requester,
+      + "and " + IN_SAME_ORGANIZATION) Page<DeploymentSchedule> findAllByOwner(
+      @Param("requester") OidcEntity requester,
       @Param("ownerId") OidcEntityId ownerId,
       Pageable pageable);
 
   @Query("select d "
       + "from #{#entityName} d "
       + "where d.id = ?#{#id} "
-      + "and " + IN_SAME_ORGANIZATION)
-  public DeploymentSchedule findOne(@Param("requester") OidcEntity requester, @Param("id") String id);
+      + "and " + IN_SAME_ORGANIZATION) DeploymentSchedule findOne(
+      @Param("requester") OidcEntity requester,
+      @Param("id") String id);
 
   @Query("select d "
       + "from #{#entityName} d "
-      + "where " + IN_SAME_ORGANIZATION)
-  public Page<DeploymentSchedule> findAll(@Param("requester") OidcEntity requester, Pageable pageable);
+      + "where " + IN_SAME_ORGANIZATION) Page<DeploymentSchedule> findAll(
+      @Param("requester") OidcEntity requester,
+      Pageable pageable);
 
 }

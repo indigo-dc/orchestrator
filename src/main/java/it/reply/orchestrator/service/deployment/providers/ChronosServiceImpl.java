@@ -488,17 +488,20 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
         .currentService(ChronosService.class)
         .getProperties();
     Optional<String> localReplicaPfn = Optional
-      .of(deployment)
-      .map(Deployment::getDeploymentScheduleEvent)
-      .map(DeploymentScheduleEvent::getTempReplicationRule)
-      .flatMap(replicationRule -> Optional.ofNullable(deploymentMessage.getCloudServicesOrderedIterator())
-        .map(WorkflowListIterator::current)
-        .map(CloudServiceWf::getRucioRse)
-        .flatMap(selectedRse -> {
-          String scope = replicationRule.getScope();
-          String name = replicationRule.getName();
-          return rucioService.getPfnFromReplica(deploymentMessage.getRequestedWithToken(), scope, name, selectedRse);
-        }));
+        .of(deployment)
+        .map(Deployment::getDeploymentScheduleEvent)
+        .map(DeploymentScheduleEvent::getTempReplicationRule)
+        .flatMap(replicationRule -> Optional
+            .ofNullable(deploymentMessage.getCloudServicesOrderedIterator())
+            .map(WorkflowListIterator::current)
+            .map(CloudServiceWf::getRucioRse)
+            .flatMap(selectedRse -> {
+              String scope = replicationRule.getScope();
+              String name = replicationRule.getName();
+              return rucioService
+                  .getPfnFromReplica(deploymentMessage.getRequestedWithToken(), scope, name,
+                      selectedRse);
+            }));
     LinkedHashMap<String, ChronosJob> jobs = new LinkedHashMap<>();
     List<IndigoJob> indigoJobs = new ArrayList<>();
     for (NodeTemplate chronosNode : orderedChronosJobs) {
@@ -512,7 +515,8 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
       ChronosJob mesosTask = buildTask(graph, chronosNode, id);
       localReplicaPfn.ifPresent(pfn -> {
         mesosTask.getEnv().put("LOCAL_REPLICA_PFN", pfn);
-        mesosTask.getEnv().put("IAM_TOKEN", oauth2TokenService.getAccessToken(deploymentMessage.getRequestedWithToken()));
+        mesosTask.getEnv().put("IAM_TOKEN",
+            oauth2TokenService.getAccessToken(deploymentMessage.getRequestedWithToken()));
       });
       jobs.put(chronosNode.getName(), mesosTask);
       List<NodeTemplate> parentNodes = getParentNodes("parent_job", graph, chronosNode);

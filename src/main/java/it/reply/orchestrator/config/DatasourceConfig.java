@@ -33,7 +33,6 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.BeanClassLoaderAware;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
@@ -88,7 +87,6 @@ public class DatasourceConfig implements BeanClassLoaderAware {
   }
 
   @Bean
-  @Qualifier("workflowDataSource")
   @ConfigurationProperties("datasource.workflow")
   public DataSource workflowDataSource(XADataSourceWrapper wrapper) throws Exception {
     XADataSource xaDataSource = createXaDataSource(workflowDataSourceProperties());

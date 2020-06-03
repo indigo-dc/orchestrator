@@ -38,7 +38,8 @@ public class CreateTempReplicationRule extends BaseDeployCommand {
     String rse = message.getCloudServicesOrderedIterator().current().getRucioRse();
     OidcTokenId requestedWithToken = message.getRequestedWithToken();
     String deploymentId = message.getDeploymentId();
-    ReplicationRule replicationRule = rucioService.getOrCreateTempReplicationRule(requestedWithToken, deploymentId, rse);
+    ReplicationRule replicationRule =
+        rucioService.getOrCreateTempReplicationRule(requestedWithToken, deploymentId, rse);
     message.setTempReplicationRuleId(replicationRule.getRucioId());
     switch (replicationRule.getStatus()) {
       case OK:
@@ -46,8 +47,12 @@ public class CreateTempReplicationRule extends BaseDeployCommand {
         break;
       case STUCK:
         throw new BusinessWorkflowException(WorkflowConstants.ErrorCode.CLOUD_PROVIDER_ERROR,
-          "Error creating temp replication rule",
-          new DeploymentException("Temp Replication rule in conflict with a stuck rule: " + replicationRule.getStatusReason()));
+            "Error creating temp replication rule",
+            new DeploymentException(
+                "Temp Replication rule in conflict with a stuck rule: " + replicationRule
+                    .getStatusReason()));
+      default:
+        // DO NOTHING
     }
   }
 
@@ -55,6 +60,4 @@ public class CreateTempReplicationRule extends BaseDeployCommand {
   protected String getErrorMessagePrefix() {
     return "Error creating temp replication rule";
   }
-
-
 }

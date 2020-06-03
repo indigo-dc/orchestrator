@@ -31,9 +31,11 @@ public interface DeploymentService {
 
   public Deployment getDeployment(String id);
 
-  public Deployment createDeployment(DeploymentRequest request, OidcEntity owner, OidcTokenId requestedWithToken);
+  public Deployment createDeployment(DeploymentRequest request, OidcEntity owner,
+      OidcTokenId requestedWithToken);
 
-  public void updateDeployment(String id, DeploymentRequest request, OidcTokenId requestedWithToken);
+  public void updateDeployment(String id, DeploymentRequest request,
+      OidcTokenId requestedWithToken);
 
   public void deleteDeployment(String id, OidcTokenId requestedWithToken);
 

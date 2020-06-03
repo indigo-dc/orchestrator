@@ -21,7 +21,6 @@ import it.reply.orchestrator.config.properties.OrchestratorProperties;
 import java.util.Objects;
 
 import javax.cache.configuration.Factory;
-import javax.sql.DataSource;
 import javax.transaction.TransactionManager;
 
 import lombok.AllArgsConstructor;
@@ -35,8 +34,6 @@ import org.apache.ignite.logger.slf4j.Slf4jLogger;
 import org.apache.ignite.spi.discovery.tcp.TcpDiscoverySpi;
 import org.apache.ignite.spi.discovery.tcp.ipfinder.vm.TcpDiscoveryVmIpFinder;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -44,10 +41,6 @@ import org.springframework.transaction.jta.JtaTransactionManager;
 
 @Configuration
 public class IgniteConfig {
-
-  @Autowired
-  @Qualifier("workflowDataSource")
-  DataSource dataSource;
 
   @AllArgsConstructor
   public static class TransactionManagerFactory implements Factory<TransactionManager> {

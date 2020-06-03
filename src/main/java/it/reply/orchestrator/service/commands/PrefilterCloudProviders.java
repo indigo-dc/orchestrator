@@ -80,15 +80,18 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
     Set<CloudProvider> providersToDiscard = new HashSet<>();
     Set<CloudService> servicesToDiscard = new HashSet<>();
 
-//    if(rankCloudProvidersMessage.isDataMovementWorkflow()) {
-//      rankCloudProvidersMessage
-//        .getCloudProviders()
-//        .values()
-//        .stream()
-//        .filter(cp -> cp.getServicesOfType(StorageService.class).stream().allMatch(storageService -> storageService.getRucioRse() == null))
-//        .forEach(cloudProvider -> addProviderToDiscard(providersToDiscard, servicesToDiscard, cloudProvider));
-//      discardProvidersAndServices(providersToDiscard, servicesToDiscard, rankCloudProvidersMessage);
-//    }
+    if (rankCloudProvidersMessage.isDataMovementWorkflow()) {
+      rankCloudProvidersMessage
+          .getCloudProviders()
+          .values()
+          .stream()
+          .filter(cp -> cp.getServicesOfType(StorageService.class)
+              .stream()
+              .allMatch(storageService -> storageService.getRucioRse() == null))
+          .forEach(cloudProvider -> addProviderToDiscard(providersToDiscard, servicesToDiscard,
+              cloudProvider));
+      discardProvidersAndServices(providersToDiscard, servicesToDiscard, rankCloudProvidersMessage);
+    }
     discardOnPlacementPolicies(rankCloudProvidersMessage.getPlacementPolicies(),
         rankCloudProvidersMessage.getCloudProviders().values(),
         rankCloudProvidersMessage.getSlamPreferences().getSla(), servicesToDiscard);

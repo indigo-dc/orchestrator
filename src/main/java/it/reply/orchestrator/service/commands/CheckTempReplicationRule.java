@@ -16,8 +16,6 @@
 
 package it.reply.orchestrator.service.commands;
 
-import it.infn.ba.xdc.rucio.client.model.RuleInformation;
-import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.entity.ReplicationRule;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
@@ -46,8 +44,10 @@ public class CheckTempReplicationRule extends BaseDeployCommand {
         break;
       case STUCK:
         throw new BusinessWorkflowException(WorkflowConstants.ErrorCode.CLOUD_PROVIDER_ERROR,
-          "Error while checking temp replication rule",
-          new DeploymentException("Temp Replication rule is stuck: " + rule.getStatusReason()));
+            "Error while checking temp replication rule",
+            new DeploymentException("Temp Replication rule is stuck: " + rule.getStatusReason()));
+      default:
+        // DO NOTHING
     }
   }
 
@@ -55,6 +55,4 @@ public class CheckTempReplicationRule extends BaseDeployCommand {
   protected String getErrorMessagePrefix() {
     return "Error while checking temp replication rule";
   }
-
-
 }

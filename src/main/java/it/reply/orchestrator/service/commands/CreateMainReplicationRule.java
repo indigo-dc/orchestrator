@@ -37,7 +37,8 @@ public class CreateMainReplicationRule extends BaseDeployCommand {
   protected void execute(DelegateExecution execution, DeploymentMessage message) {
     OidcTokenId requestedWithToken = message.getRequestedWithToken();
     String deploymentId = message.getDeploymentId();
-    ReplicationRule replicationRule = rucioService.getOrCreateMainReplicationRule(requestedWithToken, deploymentId);
+    ReplicationRule replicationRule =
+        rucioService.getOrCreateMainReplicationRule(requestedWithToken, deploymentId);
     message.setMainReplicationRuleId(replicationRule.getRucioId());
     switch (replicationRule.getStatus()) {
       case OK:
@@ -45,8 +46,12 @@ public class CreateMainReplicationRule extends BaseDeployCommand {
         break;
       case STUCK:
         throw new BusinessWorkflowException(WorkflowConstants.ErrorCode.RUNTIME_ERROR,
-          "Error creating main replication rule",
-          new DeploymentException("Main Replication rule in conflict with a stuck rule: " + replicationRule.getStatusReason()));
+            "Error creating main replication rule",
+            new DeploymentException(
+                "Main Replication rule in conflict with a stuck rule: " + replicationRule
+                    .getStatusReason()));
+      default:
+        // DO NOTHING
     }
   }
 
@@ -54,6 +59,4 @@ public class CreateMainReplicationRule extends BaseDeployCommand {
   protected String getErrorMessagePrefix() {
     return "Error creating main replication rule";
   }
-
-
 }

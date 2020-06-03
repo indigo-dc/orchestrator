@@ -16,18 +16,10 @@
 
 package it.reply.orchestrator.resource;
 
-import it.reply.orchestrator.controller.DeploymentController;
 import it.reply.orchestrator.controller.DeploymentScheduleController;
-import it.reply.orchestrator.controller.ResourceController;
-import it.reply.orchestrator.controller.TemplateController;
-import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.DeploymentSchedule;
 import it.reply.orchestrator.dal.entity.OidcEntity;
-import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.utils.CommonUtils;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.Optional;
 import org.springframework.hateoas.core.DummyInvocationUtils;
 import org.springframework.hateoas.mvc.ControllerLinkBuilder;
@@ -68,12 +60,9 @@ public class DeploymentScheduleResourceAssembler
     // https://github.com/spring-projects/spring-hateoas/issues/408, we'd have an error
     if (CommonUtils.isInHttpRequest()) {
       resource.add(ControllerLinkBuilder.linkTo(
-          DummyInvocationUtils.methodOn(DeploymentScheduleController.class).getDeploymentSchedule(entity.getId()))
+          DummyInvocationUtils.methodOn(DeploymentScheduleController.class)
+              .getDeploymentSchedule(entity.getId()))
           .withSelfRel());
-//      resource.add(ControllerLinkBuilder
-//          .linkTo(DummyInvocationUtils.methodOn(DeploymentScheduleController.class, entity.getId())
-//              .getDeploymentScheduleEvents(entity.getId(), null, null, null))
-//          .withRel("events"));
     }
 
     return resource;

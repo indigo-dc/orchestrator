@@ -21,14 +21,17 @@ import it.reply.orchestrator.utils.CommonUtils;
 import java.util.ArrayList;
 import java.util.List;
 import javax.validation.constraints.NotNull;
+import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class StorageService extends CloudService {
 
   @JsonProperty("rucio_rse")

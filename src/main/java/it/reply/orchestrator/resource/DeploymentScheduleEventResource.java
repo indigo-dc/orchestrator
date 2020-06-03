@@ -16,8 +16,6 @@
 
 package it.reply.orchestrator.resource;
 
-import it.reply.orchestrator.dal.entity.OidcEntityId;
-import it.reply.orchestrator.enums.DeploymentScheduleStatus;
 import it.reply.orchestrator.resource.common.AbstractResource;
 import java.util.Date;
 import lombok.AccessLevel;
@@ -44,9 +42,21 @@ public class DeploymentScheduleEventResource extends AbstractResource {
   @Nullable
   private String replicationStatus;
 
+  /**
+   *  Create a new DeploymentScheduleEventResource.
+   * @param uuid the uuid
+   * @param creationTime the creation time
+   * @param updateTime the update time
+   * @param deployment the deployment deployment
+   * @param scope the file scope
+   * @param name the file name
+   * @param replicationStatus the replication status
+   */
   @Builder
-  public DeploymentScheduleEventResource(@NonNull String uuid, @Nullable Date creationTime, @Nullable Date updateTime, @Nullable String physicalId, DeploymentResource deployment, String scope, String name, @Nullable String replicationStatus) {
-    super(uuid, creationTime, updateTime, physicalId);
+  public DeploymentScheduleEventResource(@NonNull String uuid, @Nullable Date creationTime,
+      @Nullable Date updateTime, DeploymentResource deployment,
+      String scope, String name, @Nullable String replicationStatus) {
+    super(uuid, creationTime, updateTime, null);
     this.deployment = deployment;
     this.scope = scope;
     this.name = name;

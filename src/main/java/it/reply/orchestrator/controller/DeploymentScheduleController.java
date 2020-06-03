@@ -16,22 +16,16 @@
 
 package it.reply.orchestrator.controller;
 
-import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.DeploymentSchedule;
 import it.reply.orchestrator.dal.entity.DeploymentScheduleEvent;
-import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.dto.request.DeploymentScheduleRequest;
-import it.reply.orchestrator.resource.BaseResource;
 import it.reply.orchestrator.resource.DeploymentResource;
-import it.reply.orchestrator.resource.DeploymentResourceAssembler;
 import it.reply.orchestrator.resource.DeploymentScheduleEventResource;
 import it.reply.orchestrator.resource.DeploymentScheduleEventResourceAssembler;
 import it.reply.orchestrator.resource.DeploymentScheduleResource;
 import it.reply.orchestrator.resource.DeploymentScheduleResourceAssembler;
 import it.reply.orchestrator.service.DeploymentScheduleServiceImpl;
-import it.reply.orchestrator.service.DeploymentService;
-import it.reply.orchestrator.utils.MdcUtils;
 import javax.validation.Valid;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,7 +40,6 @@ import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -69,15 +62,13 @@ public class DeploymentScheduleController {
 
   @Autowired
   private DeploymentScheduleEventResourceAssembler deploymentScheduleEventResourceAssembler;
+
   /**
    * Get all deployments.
    *
-   * @param createdBy
-   *          created by name
-   * @param pageable
-   *          {@link Pageable}
-   * @param pagedAssembler
-   *          {@link PagedResourcesAssembler}
+   * @param createdBy      created by name
+   * @param pageable       {@link Pageable}
+   * @param pagedAssembler {@link PagedResourcesAssembler}
    * @return {@link DeploymentResource}
    */
   @ResponseStatus(HttpStatus.OK)
@@ -89,7 +80,8 @@ public class DeploymentScheduleController {
           direction = Direction.DESC) Pageable pageable,
       PagedResourcesAssembler<DeploymentSchedule> pagedAssembler) {
 
-    Page<DeploymentSchedule> deploymentSchedules = deploymentScheduleService.getDeploymentSchedules(pageable, createdBy);
+    Page<DeploymentSchedule> deploymentSchedules =
+        deploymentScheduleService.getDeploymentSchedules(pageable, createdBy);
 
     return pagedAssembler.toResource(deploymentSchedules, deploymentScheduleResourceAssembler,
         ControllerLinkBuilder
@@ -104,16 +96,17 @@ public class DeploymentScheduleController {
   /**
    * Create a deployment.
    *
-   * @param request
-   *          {@link DeploymentRequest}
+   * @param request {@link DeploymentRequest}
    * @return {@link DeploymentResource}
    */
   @ResponseStatus(HttpStatus.CREATED)
   @RequestMapping(value = "/schedules", method = RequestMethod.POST,
       produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize(OFFLINE_ACCESS_REQUIRED_CONDITION)
-  public DeploymentScheduleResource createDeployment(@Valid @RequestBody DeploymentScheduleRequest request) {
-    DeploymentSchedule deploymentSchedule = deploymentScheduleService.createDeploymentSchedule(request);
+  public DeploymentScheduleResource createDeployment(
+      @Valid @RequestBody DeploymentScheduleRequest request) {
+    DeploymentSchedule deploymentSchedule =
+        deploymentScheduleService.createDeploymentSchedule(request);
     return deploymentScheduleResourceAssembler.toResource(deploymentSchedule);
 
   }
@@ -121,8 +114,7 @@ public class DeploymentScheduleController {
   /**
    * Get the deployment.
    *
-   * @param id
-   *          the deployment id
+   * @param id the deployment id
    * @return {@link DeploymentResource}
    */
   @ResponseStatus(HttpStatus.OK)
@@ -137,21 +129,23 @@ public class DeploymentScheduleController {
   /**
    * Get the deployment.
    *
-   * @param id
-   *          the deployment id
+   * @param id the deployment id
    * @return {@link DeploymentResource}
    */
   @ResponseStatus(HttpStatus.OK)
   @RequestMapping(value = "/schedules/{scheduleId}/events", method = RequestMethod.GET,
-    produces = MediaType.APPLICATION_JSON_VALUE)
-  public PagedResources<DeploymentScheduleEventResource> getDeploymentScheduleEvents(@PathVariable("scheduleId") String id,
-                                                                                     @RequestParam(name = "createdBy", required = false) @Nullable String createdBy,
-                                                                                     @PageableDefault(sort = "createdAt",
-                                                          direction = Direction.DESC) Pageable pageable,
-                                                                                     PagedResourcesAssembler<DeploymentScheduleEvent> pagedAssembler) {
-    Page<DeploymentScheduleEvent> scheduleEvents = deploymentScheduleService.getDeploymentScheduleEvents(id, pageable);
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  public PagedResources<DeploymentScheduleEventResource> getDeploymentScheduleEvents(
+      @PathVariable("scheduleId") String id,
+      @RequestParam(name = "createdBy", required = false) @Nullable String createdBy,
+      @PageableDefault(sort = "createdAt",
+          direction = Direction.DESC) Pageable pageable,
+      PagedResourcesAssembler<DeploymentScheduleEvent> pagedAssembler) {
+    Page<DeploymentScheduleEvent> scheduleEvents =
+        deploymentScheduleService.getDeploymentScheduleEvents(id, pageable);
 
-    PagedResources<DeploymentScheduleEventResource> pagedResources = pagedAssembler.toResource(scheduleEvents, deploymentScheduleEventResourceAssembler);
+    PagedResources<DeploymentScheduleEventResource> pagedResources =
+        pagedAssembler.toResource(scheduleEvents, deploymentScheduleEventResourceAssembler);
     return pagedResources;
   }
 }

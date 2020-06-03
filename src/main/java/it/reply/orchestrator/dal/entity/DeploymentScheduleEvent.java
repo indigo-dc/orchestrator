@@ -23,7 +23,6 @@ import javax.persistence.FetchType;
 import javax.persistence.Index;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import lombok.Getter;
@@ -55,30 +54,30 @@ public class DeploymentScheduleEvent extends AbstractResourceEntity {
   private Deployment deployment;
 
   @ManyToOne(cascade = {
-    CascadeType.DETACH,
-    CascadeType.MERGE,
-    CascadeType.PERSIST,
-    CascadeType.REFRESH
+      CascadeType.DETACH,
+      CascadeType.MERGE,
+      CascadeType.PERSIST,
+      CascadeType.REFRESH
   })
   @JoinColumn(name = "owner_id")
   @Nullable
   private OidcEntity owner;
 
   @ManyToOne(cascade = {
-    CascadeType.DETACH,
-    CascadeType.MERGE,
-    CascadeType.PERSIST,
-    CascadeType.REFRESH
+      CascadeType.DETACH,
+      CascadeType.MERGE,
+      CascadeType.PERSIST,
+      CascadeType.REFRESH
   })
   @JoinColumn(name = "main_replication_rule_id")
   @Nullable
   private ReplicationRule mainReplicationRule;
 
   @ManyToOne(cascade = {
-    CascadeType.DETACH,
-    CascadeType.MERGE,
-    CascadeType.PERSIST,
-    CascadeType.REFRESH
+      CascadeType.DETACH,
+      CascadeType.MERGE,
+      CascadeType.PERSIST,
+      CascadeType.REFRESH
   })
   @JoinColumn(name = "temp_replication_rule_id")
   @Nullable

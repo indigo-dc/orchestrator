@@ -1,3 +1,19 @@
+/*
+ * Copyright © 2015-2020 Santer Reply S.p.A.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package it.reply.orchestrator.service.messaging;
 
 import io.netty.channel.EventLoopGroup;
@@ -44,7 +60,17 @@ public class XdcStompClient implements SmartLifecycle {
 
   private volatile boolean isRunning = false;
 
-  public XdcStompClient(XdcClientProperties xdcClientProperties, EventLoopGroup eventLoopGroup, Environment environment, RucioMessageHandlerFactory rucioMessageHandlerFactory, XdcMessageHandlerFactory xdcMessageHandlerFactory) {
+  /**
+   * Crfeate a new XdcStompClient.
+   * @param xdcClientProperties the xdcClientProperties
+   * @param eventLoopGroup the eventLoopGroup
+   * @param environment the Reactor environment
+   * @param rucioMessageHandlerFactory the rucioMessageHandlerFactory
+   * @param xdcMessageHandlerFactory the xdcMessageHandlerFactory
+   */
+  public XdcStompClient(XdcClientProperties xdcClientProperties, EventLoopGroup eventLoopGroup,
+      Environment environment, RucioMessageHandlerFactory rucioMessageHandlerFactory,
+      XdcMessageHandlerFactory xdcMessageHandlerFactory) {
     this.xdcClientProperties = xdcClientProperties;
     this.eventLoopGroup = eventLoopGroup;
     this.environment = environment;
@@ -53,14 +79,22 @@ public class XdcStompClient implements SmartLifecycle {
     this.stompSessions = new HashMap<>();
   }
 
+  /**
+   * Create a new Stomp Session.
+   * @param host the host
+   * @param port the port
+   * @return the session
+   */
   public StompSession newStompSession(String host, int port) {
-    Reactor2TcpStompClient stompClient = new Reactor2TcpStompClient(new Reactor2TcpClient<>(new StompTcpClientSpecFactory(host, port, eventLoopGroup, environment)));
+    Reactor2TcpStompClient stompClient = new Reactor2TcpStompClient(new Reactor2TcpClient<>(
+        new StompTcpClientSpecFactory(host, port, eventLoopGroup, environment)));
 
     stompClient.setMessageConverter(new StringMessageConverter());
 
     StompSessionHandler connectionHandler = new StompSessionHandlerAdapter() {
       @Override
-      public void handleException(StompSession session, StompCommand command, StompHeaders headers, byte[] payload, Throwable exception) {
+      public void handleException(StompSession session, StompCommand command, StompHeaders headers,
+          byte[] payload, Throwable exception) {
         LOG.error("Error handling STOMP command {} with headers {}", command, headers, exception);
         if (headers.getAck() != null) {
           session.acknowledge(headers.getAck(), false);
@@ -75,17 +109,21 @@ public class XdcStompClient implements SmartLifecycle {
 
       @Override
       public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
-        subscribe(session, xdcClientProperties.getRucioDestination(), rucioMessageHandlerFactory.getObject(session));
-        subscribe(session, xdcClientProperties.getXdcDestination(), xdcMessageHandlerFactory.getObject(session));
+        subscribe(session, xdcClientProperties.getRucioDestination(),
+            rucioMessageHandlerFactory.getObject(session));
+        subscribe(session, xdcClientProperties.getXdcDestination(),
+            xdcMessageHandlerFactory.getObject(session));
       }
 
-      private void subscribe(StompSession session, String destination, StompFrameHandler messageHandler) {
+      private void subscribe(StompSession session, String destination,
+          StompFrameHandler messageHandler) {
         StompHeaders stompHeaders = new StompHeaders();
         stompHeaders.setDestination(destination);
         stompHeaders.setAck("client-individual");
         stompHeaders.set("activemq.prefetchSize", "1");
         session.subscribe(stompHeaders, messageHandler);
-        LOG.info("STOMP session with id: {} subscribed to destination: {}", session.getSessionId(), destination);
+        LOG.info("STOMP session with id: {} subscribed to destination: {}", session.getSessionId(),
+            destination);
       }
 
     };
@@ -95,31 +133,21 @@ public class XdcStompClient implements SmartLifecycle {
     auth.setPasscode(xdcClientProperties.getPassword());
     try {
       StompSession session = stompClient.connect(auth, connectionHandler).get(2, TimeUnit.SECONDS);
-      LOG.info("STOMP session with id: {} created for host: {}, port: {}, ", session.getSessionId(), host, port);
+      LOG.info("STOMP session with id: {} created for host: {}, port: {}, ", session.getSessionId(),
+          host, port);
       return session;
     } catch (InterruptedException | ExecutionException | TimeoutException ex) {
       if (ex instanceof InterruptedException) {
         Thread.currentThread().interrupt();
       }
-      throw new OrchestratorException("Error initializing Stomp session with host: " +host +", port: " + port, ex);
-    }
-  }
-
-  @Override
-  public boolean isAutoStartup() {
-    return xdcClientProperties.isEnabled();
-  }
-
-  @Override
-  public void stop(Runnable callback) {
-    synchronized (this.lifecycleMonitor) {
-      this.stop();
-      callback.run();
+      throw new OrchestratorException(
+          "Error initializing Stomp session with host: " + host + ", port: " + port, ex);
     }
   }
 
   private boolean disconnectSession(String address, StompSession session) {
-    LOG.info("Disconnecting STOMP session with id: {} from broker address: {}", session.getSessionId(), address);
+    LOG.info("Disconnecting STOMP session with id: {} from broker address: {}",
+        session.getSessionId(), address);
     if (session.isConnected()) {
       try {
         session.disconnect();
@@ -141,74 +169,92 @@ public class XdcStompClient implements SmartLifecycle {
       resetSessions(true);
     }
   }
-  private void resetSessions(boolean retry) {
-    synchronized (lifecycleMonitor){
-    if (isRunning) {
-      if (retry) {
-        LOG.info("Retrying connection to STOMP broker {}:{}", xdcClientProperties.getHost(), xdcClientProperties.getPort());
-      } else {
-        LOG.info("Connecting to STOMP broker {}:{}", xdcClientProperties.getHost(), xdcClientProperties.getPort());
-      }
-      final Set<String> addresses;
-      try {
-        addresses = Arrays
-          .stream(InetAddress.getAllByName(xdcClientProperties.getHost()))
-          .filter(Inet4Address.class::isInstance)
-          .map(InetAddress::getHostAddress)
-          .collect(Collectors.toSet());
-      } catch (UnknownHostException ex) {
-        if (retry) {
-          LOG.info("Error connecting to STOMP broker {}:{}, retrying in 10 seconds", xdcClientProperties.getHost(), xdcClientProperties.getPort(), ex);
-          this.eventLoopGroup.schedule(() -> resetSessions(true), 10, TimeUnit.SECONDS);
-        }
-        throw new OrchestratorException("Error resolving broker domain name", ex);
-      }
-      Map<String, StompSession> newSessions = new HashMap<>();
-      this.stompSessions.forEach((address, session) -> {
-        if (addresses.contains(address)) {
-          if (session.isConnected()) {
-            newSessions.put(address, session);
-          } else {
-            try {
-              newSessions.put(address, newStompSession(address, xdcClientProperties.getPort()));
-            } catch (RuntimeException ex) {
-              if (retry) {
-                LOG.info("Error connecting to STOMP broker {}:{}, retrying in 10 seconds", xdcClientProperties.getHost(), xdcClientProperties.getPort(), ex);
-                this.eventLoopGroup.schedule(() -> resetSessions(true), 10, TimeUnit.SECONDS);
-              }
-              throw ex;
-            }
-          }
-        } else {
-          disconnectSession(address, session);
-        }
-      });
 
-      addresses.forEach(address -> {
-        if (!newSessions.containsKey(address)) {
-          newSessions.put(address, newStompSession(address, xdcClientProperties.getPort()));
+  private void resetSessions(boolean retry) {
+    synchronized (lifecycleMonitor) {
+      if (isRunning) {
+        if (retry) {
+          LOG.info("Retrying connection to STOMP broker {}:{}", xdcClientProperties.getHost(),
+              xdcClientProperties.getPort());
+        } else {
+          LOG.info("Connecting to STOMP broker {}:{}", xdcClientProperties.getHost(),
+              xdcClientProperties.getPort());
         }
-      });
-      this.stompSessions.clear();
-      this.stompSessions.putAll(newSessions);
+        final Set<String> addresses;
+        try {
+          addresses = Arrays
+              .stream(InetAddress.getAllByName(xdcClientProperties.getHost()))
+              .filter(Inet4Address.class::isInstance)
+              .map(InetAddress::getHostAddress)
+              .collect(Collectors.toSet());
+        } catch (UnknownHostException ex) {
+          if (retry) {
+            LOG.info("Error connecting to STOMP broker {}:{}, retrying in 10 seconds",
+                xdcClientProperties.getHost(), xdcClientProperties.getPort(), ex);
+            this.eventLoopGroup.schedule(() -> resetSessions(true), 10, TimeUnit.SECONDS);
+          }
+          throw new OrchestratorException("Error resolving broker domain name", ex);
+        }
+        Map<String, StompSession> newSessions = new HashMap<>();
+        this.stompSessions.forEach((address, session) -> {
+          if (addresses.contains(address)) {
+            if (session.isConnected()) {
+              newSessions.put(address, session);
+            } else {
+              try {
+                newSessions.put(address, newStompSession(address, xdcClientProperties.getPort()));
+              } catch (RuntimeException ex) {
+                if (retry) {
+                  LOG.info("Error connecting to STOMP broker {}:{}, retrying in 10 seconds",
+                      xdcClientProperties.getHost(), xdcClientProperties.getPort(), ex);
+                  this.eventLoopGroup.schedule(() -> resetSessions(true), 10, TimeUnit.SECONDS);
+                }
+                throw ex;
+              }
+            }
+          } else {
+            disconnectSession(address, session);
+          }
+        });
+
+        addresses.forEach(address -> {
+          if (!newSessions.containsKey(address)) {
+            newSessions.put(address, newStompSession(address, xdcClientProperties.getPort()));
+          }
+        });
+        this.stompSessions.clear();
+        this.stompSessions.putAll(newSessions);
+      }
     }
-  }
   }
 
   @Override
-  public void start() {
-    synchronized (lifecycleMonitor){
-      this.isRunning = true;
-      resetSessions(false);
+  public boolean isAutoStartup() {
+    return xdcClientProperties.isEnabled();
+  }
+
+  @Override
+  public void stop(Runnable callback) {
+    synchronized (this.lifecycleMonitor) {
+      this.stop();
+      callback.run();
     }
   }
 
   @Override
   public void stop() {
-    synchronized (lifecycleMonitor){
+    synchronized (lifecycleMonitor) {
       isRunning = false;
       stompSessions.forEach(this::disconnectSession);
       stompSessions.clear();
+    }
+  }
+
+  @Override
+  public void start() {
+    synchronized (lifecycleMonitor) {
+      this.isRunning = true;
+      resetSessions(false);
     }
   }
 
@@ -221,5 +267,4 @@ public class XdcStompClient implements SmartLifecycle {
   public int getPhase() {
     return Integer.MAX_VALUE;
   }
-
 }

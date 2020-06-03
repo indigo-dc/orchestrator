@@ -134,7 +134,8 @@ public class Deployment extends AbstractResourceEntity {
     this.workflowReferences.add(workflowReference);
   }
 
-  @OneToOne(mappedBy = "deployment", cascade = CascadeType.ALL, fetch = FetchType.LAZY, optional = true)
+  @OneToOne(mappedBy = "deployment", cascade = CascadeType.ALL, fetch = FetchType.LAZY,
+      optional = true)
   @Nullable
   private DeploymentScheduleEvent deploymentScheduleEvent;
 }
