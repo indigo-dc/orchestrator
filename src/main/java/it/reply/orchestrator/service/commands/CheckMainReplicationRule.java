@@ -43,7 +43,7 @@ public class CheckMainReplicationRule extends BaseDeployCommand {
         message.setMainReplicationRuleCompleted(true);
         break;
       case STUCK:
-        throw new BusinessWorkflowException(WorkflowConstants.ErrorCode.CLOUD_PROVIDER_ERROR,
+        throw new BusinessWorkflowException(WorkflowConstants.ErrorCode.RUNTIME_ERROR,
           "Error while checking main replication rule",
           new DeploymentException("Main Replication rule is stuck: " + rule.getStatusReason()));
     }

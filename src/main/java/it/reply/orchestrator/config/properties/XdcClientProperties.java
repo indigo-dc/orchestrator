@@ -14,10 +14,11 @@ import org.springframework.validation.annotation.Validated;
 @NoArgsConstructor
 @ConfigurationProperties(prefix = "broker.xdc")
 public class XdcClientProperties {
-  private String host = "netmon-mb.cern.ch";
-  private int port = 61513;
-  private String destination = "/queue/Consumer.xdc.doma.orchestrator.events";
-  private String username = "domarucioc";
-  private String password = "Y2jZ9Xdih2PkNBRZ";
-  private boolean enabled = true;
+  private String host;
+  private int port;
+  private String rucioDestination = "/queue/Consumer.xdc.doma.rucio.events";
+  private String xdcDestination = "/queue/doma.orchestrator.events";
+  private String username;
+  private String password;
+  private boolean enabled = false;
 }
