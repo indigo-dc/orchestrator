@@ -16,10 +16,10 @@
 
 package it.reply.orchestrator.workflow;
 
-import org.flowable.engine.common.impl.interceptor.Command;
-import org.flowable.engine.impl.jobexecutor.DefaultFailedJobCommandFactory;
+import org.flowable.common.engine.impl.interceptor.Command;
+import org.flowable.job.service.impl.asyncexecutor.FailedJobCommandFactory;
 
-public class CustomFailedJobCommandFactory extends DefaultFailedJobCommandFactory {
+public class CustomFailedJobCommandFactory implements FailedJobCommandFactory {
 
   @Override
   public Command<Object> getCommand(String jobId, Throwable exception) {

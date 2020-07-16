@@ -39,6 +39,7 @@ import it.reply.orchestrator.dto.cmdb.CloudServiceType;
 import it.reply.orchestrator.dto.cmdb.QcgService;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.deployment.QcgJobsOrderedIterator;
+import it.reply.orchestrator.dto.workflow.CloudServiceWf;
 import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.exception.service.BusinessWorkflowException;
@@ -453,7 +454,7 @@ public class QcgServiceTest extends ToscaParserAwareTest {
         .type(CloudServiceType.COMPUTE)
         .build();
 
-    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(qs));
+    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(new CloudServiceWf(qs)));
     csi.next();
     dm.setCloudServicesOrderedIterator(csi);
 

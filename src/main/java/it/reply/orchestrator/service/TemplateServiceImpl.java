@@ -17,6 +17,8 @@
 package it.reply.orchestrator.service;
 
 import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.entity.DeploymentSchedule;
+import it.reply.orchestrator.dal.entity.DeploymentScheduleEvent;
 import it.reply.orchestrator.utils.MdcUtils;
 
 import lombok.AllArgsConstructor;
@@ -30,13 +32,22 @@ public class TemplateServiceImpl implements TemplateService {
 
   private DeploymentService deploymentservice;
 
+  private DeploymentScheduleServiceImpl deploymentScheduleService;
+
   @Override
   @Transactional(readOnly = true)
-  public String getTemplate(String uuid) {
+  public String getDeploymentTemplate(String uuid) {
     // check if deploymentExists
     Deployment deployment = deploymentservice.getDeployment(uuid);
     MdcUtils.setDeploymentId(deployment.getId());
     return deployment.getTemplate();
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public String getDeploymentScheduleTemplate(String uuid) {
+    DeploymentSchedule deploymentSchedule = deploymentScheduleService.getDeploymentSchedule(uuid);
+    return deploymentSchedule.getTemplate();
   }
 
 }

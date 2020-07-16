@@ -17,9 +17,9 @@
 package it.reply.orchestrator.workflow;
 
 import org.apache.ignite.Ignite;
-import org.flowable.engine.impl.asyncexecutor.message.AbstractMessageBasedJobManager;
 import org.flowable.job.api.HistoryJob;
 import org.flowable.job.api.JobInfo;
+import org.flowable.job.service.impl.asyncexecutor.message.AbstractMessageBasedJobManager;
 import org.springframework.stereotype.Component;
 
 @Component

@@ -23,7 +23,7 @@ import com.google.common.annotations.VisibleForTesting;
 
 import java.io.Serializable;
 
-import org.flowable.engine.common.impl.cfg.IdGenerator;
+import org.flowable.common.engine.impl.cfg.IdGenerator;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.IdentifierGenerator;
 

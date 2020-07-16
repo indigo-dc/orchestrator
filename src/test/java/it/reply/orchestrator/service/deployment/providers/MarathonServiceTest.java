@@ -32,6 +32,7 @@ import it.reply.orchestrator.dto.cmdb.MarathonService;
 import it.reply.orchestrator.dto.cmdb.MarathonService.MarathonServiceProperties;
 import it.reply.orchestrator.dto.cmdb.CloudServiceType;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
+import it.reply.orchestrator.dto.workflow.CloudServiceWf;
 import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.exception.service.BusinessWorkflowException;
@@ -236,7 +237,7 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
 
     MarathonService cs = buildService();
 
-    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(cs));
+    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(new CloudServiceWf(cs)));
     csi.next();
     dm.setCloudServicesOrderedIterator(csi);
 
@@ -261,7 +262,7 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
 
     MarathonService cs = buildService();
 
-    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(cs));
+    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(new CloudServiceWf(cs)));
     csi.next();
     dm.setCloudServicesOrderedIterator(csi);
 

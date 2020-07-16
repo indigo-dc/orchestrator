@@ -1,0 +1,21 @@
+databaseChangeLog:
+  - changeSet:
+      id: 0004_workflow-upgrade-all-6301-to-6310
+      author: a.brigandi
+      comment: Update Flowable DB to version 6.3.1.0
+      changes:
+      - sqlFile:
+          dbms: h2
+          encoding: utf8
+          path: sql/h2/0002_workflow-upgrade-all-6301-to-6310.sql
+          relativeToChangelogFile: true
+      - sqlFile:
+          dbms: mysql
+          encoding: utf8
+          path: sql/mysql/0002_workflow-upgrade-all-6301-to-6310.sql
+          relativeToChangelogFile: true
+      - sqlFile:
+          dbms: postgresql
+          encoding: utf8
+          path: sql/postgresql/0002_workflow-upgrade-all-6301-to-6310.sql
+          relativeToChangelogFile: true

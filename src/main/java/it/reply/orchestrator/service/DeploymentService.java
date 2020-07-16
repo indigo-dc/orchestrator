@@ -17,6 +17,8 @@
 package it.reply.orchestrator.service;
 
 import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.entity.OidcEntity;
+import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -29,13 +31,15 @@ public interface DeploymentService {
 
   public Deployment getDeployment(String id);
 
-  public Deployment createDeployment(DeploymentRequest request);
+  public Deployment createDeployment(DeploymentRequest request, OidcEntity owner,
+      OidcTokenId requestedWithToken);
 
-  public void updateDeployment(String id, DeploymentRequest request);
+  public void updateDeployment(String id, DeploymentRequest request,
+      OidcTokenId requestedWithToken);
 
-  public void deleteDeployment(String id);
+  public void deleteDeployment(String id, OidcTokenId requestedWithToken);
 
-  public String getDeploymentLog(String id);
+  public String getDeploymentLog(String id, OidcTokenId requestedWithToken);
 
-  public String getDeploymentExtendedInfo(String id);
+  public String getDeploymentExtendedInfo(String id, OidcTokenId requestedWithToken);
 }
