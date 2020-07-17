@@ -52,6 +52,8 @@ public class QcgService extends  CloudService {
    *     the parentServiceId of the service
    * @param iamEnabled
    *     the iamEnabled flag
+   * @param idpProtocol
+   *     the IDP protocol name
    * @param publicIpAssignable
    *     the publicIpAssignable flag
    */
@@ -67,8 +69,9 @@ public class QcgService extends  CloudService {
       @NonNull String hostname,
       @Nullable String parentServiceId,
       boolean iamEnabled,
+      @NonNull String idpProtocol,
       boolean publicIpAssignable) {
     super(id, serviceType, endpoint, providerId, type, publicService, region, hostname,
-            parentServiceId, iamEnabled, publicIpAssignable);
+            parentServiceId, iamEnabled, idpProtocol, publicIpAssignable);
   }
 }

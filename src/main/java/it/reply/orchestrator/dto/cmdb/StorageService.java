@@ -75,9 +75,10 @@ public class StorageService extends CloudService {
       @Nullable String parentServiceId,
       @Nullable String rucioRse,
       boolean iamEnabled,
+      @Nullable String idpProtocol,
       boolean publicIpAssignable) {
     super(id, serviceType, endpoint, providerId, type, publicService, region, hostname,
-            parentServiceId, iamEnabled, publicIpAssignable);
+            parentServiceId, iamEnabled, idpProtocol, publicIpAssignable);
     this.rucioRse = rucioRse;
   }
 

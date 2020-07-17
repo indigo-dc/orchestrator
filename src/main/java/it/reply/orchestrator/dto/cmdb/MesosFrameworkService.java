@@ -60,6 +60,8 @@ public class MesosFrameworkService<T extends MesosFrameworkServiceProperties> ex
    *     the parentServiceId of the service
    * @param iamEnabled
    *     the iamEnabled flag
+   * @param idpProtocol
+   *     the IDP protocol name
    * @param publicIpAssignable
    *     the publicIpAssignable flag
    * @param properties
@@ -76,10 +78,11 @@ public class MesosFrameworkService<T extends MesosFrameworkServiceProperties> ex
       @NonNull String hostname,
       @Nullable String parentServiceId,
       boolean iamEnabled,
+      @NonNull String idpProtocol,
       boolean publicIpAssignable,
       @NonNull T properties) {
     super(id, serviceType, endpoint, providerId, type, publicService, region, hostname,
-            parentServiceId, iamEnabled, publicIpAssignable);
+            parentServiceId, iamEnabled, idpProtocol, publicIpAssignable);
     this.properties = properties;
   }
 }
