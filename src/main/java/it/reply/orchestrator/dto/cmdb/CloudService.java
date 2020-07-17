@@ -91,6 +91,10 @@ public class CloudService implements CmdbIdentifiable {
   @JsonProperty("iam_enabled")
   private boolean iamEnabled = true;
 
+  @Builder.Default
+  @JsonProperty("idp_protocol")
+  private String idpProtocol = "oidc";
+
   @JsonProperty("public_ip_assignable")
   private boolean publicIpAssignable;
 

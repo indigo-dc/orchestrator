@@ -111,6 +111,7 @@ public class ImClientFactoryTest {
             .cpComputeServiceId(UUID.randomUUID().toString())
             .iaasHeaderId(headerId)
             .iamEnabled(true)
+            .idpProtocol("oidc")
             .build();
 
     String iaasAuthHeader =

@@ -89,6 +89,10 @@ public class CloudProviderEndpoint {
   @JsonProperty
   private boolean iamEnabled = true;
 
+  @Builder.Default
+  @JsonProperty
+  private String idpProtocol = "oidc";
+
   @SuppressWarnings("null")
   @Deprecated
   protected CloudProviderEndpoint() {
