@@ -16,6 +16,7 @@
 
 package it.reply.orchestrator.dto.cmdb;
 
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
 import lombok.AccessLevel;
@@ -80,9 +81,10 @@ public class MesosFrameworkService<T extends MesosFrameworkServiceProperties> ex
       boolean iamEnabled,
       @NonNull String idpProtocol,
       boolean publicIpAssignable,
+      @NonNull List<String> supportedIdps,
       @NonNull T properties) {
     super(id, serviceType, endpoint, providerId, type, publicService, region, hostname,
-            parentServiceId, iamEnabled, idpProtocol, publicIpAssignable);
+            parentServiceId, iamEnabled, idpProtocol, publicIpAssignable, supportedIdps);
     this.properties = properties;
   }
 }

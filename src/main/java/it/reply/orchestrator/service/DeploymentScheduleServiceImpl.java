@@ -28,8 +28,8 @@ import it.reply.orchestrator.dal.repository.DeploymentScheduleEventRepository;
 import it.reply.orchestrator.dal.repository.DeploymentScheduleRepository;
 import it.reply.orchestrator.dal.repository.OidcTokenRepository;
 import it.reply.orchestrator.dto.request.DeploymentScheduleRequest;
+import it.reply.orchestrator.dto.security.IamUserInfo;
 import it.reply.orchestrator.dto.security.IndigoOAuth2Authentication;
-import it.reply.orchestrator.dto.security.IndigoUserInfo;
 import it.reply.orchestrator.enums.DeploymentScheduleStatus;
 import it.reply.orchestrator.exception.http.BadRequestException;
 import it.reply.orchestrator.exception.http.NotFoundException;
@@ -81,7 +81,7 @@ public class DeploymentScheduleServiceImpl {
       String issuer = requester.getOidcEntityId().getIssuer();
       String group = oidcProperties.getIamProperties().get(issuer).getAdmingroup();
       IndigoOAuth2Authentication authentication = oauth2Tokenservice.getCurrentAuthentication();
-      IndigoUserInfo userInfo = (IndigoUserInfo) authentication.getUserInfo();
+      IamUserInfo userInfo = (IamUserInfo) authentication.getUserInfo();
       if (userInfo != null) {
         isAdmin = userInfo.getGroups().contains(group);
       }

@@ -58,6 +58,7 @@ import it.reply.orchestrator.utils.ToscaConstants.Nodes;
 import it.reply.orchestrator.utils.ToscaUtils;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
 
@@ -438,6 +439,7 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
         .providerId("provider-1")
         .id("provider-1-service-1")
         .type(CloudServiceType.COMPUTE)
+        .supportedIdps(new ArrayList<>())
         .properties(ChronosServiceProperties
             .builder()
             .localVolumesHostBasePath("/tmp/")

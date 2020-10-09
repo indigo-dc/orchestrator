@@ -23,10 +23,10 @@ import org.mockito.MockitoAnnotations;
 
 import com.google.gson.JsonObject;
 
-public class IndigoUserInfoFetcherTest {
+public class IamUserInfoFetcherTest {
 
   @InjectMocks
-  IndigoUserInfoFetcher indigoUserInfoFetcher = new IndigoUserInfoFetcher();
+  CustomUserInfoFetcher customUserInfoFetcher = new CustomUserInfoFetcher();
 
   @Before
   public void setup() {
@@ -37,6 +37,6 @@ public class IndigoUserInfoFetcherTest {
   @Test
   public void fromJson() {
     JsonObject userInfoJson = new JsonObject();
-    indigoUserInfoFetcher.fromJson(userInfoJson);
+    customUserInfoFetcher.fromJson(userInfoJson);
   }
 }

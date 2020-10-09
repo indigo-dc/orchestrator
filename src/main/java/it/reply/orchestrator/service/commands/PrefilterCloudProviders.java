@@ -19,6 +19,7 @@ package it.reply.orchestrator.service.commands;
 import alien4cloud.tosca.model.ArchiveRoot;
 
 import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.cmdb.ChronosService;
 import it.reply.orchestrator.dto.cmdb.CloudProvider;
@@ -80,6 +81,20 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
     Set<CloudProvider> providersToDiscard = new HashSet<>();
     Set<CloudService> servicesToDiscard = new HashSet<>();
 
+    OidcTokenId requestedWithToken = rankCloudProvidersMessage.getRequestedWithToken();
+    if (requestedWithToken != null) {
+      String issuer = requestedWithToken.getOidcEntityId().getIssuer();
+      rankCloudProvidersMessage
+          .getCloudProviders()
+          .values()
+          .stream()
+          .flatMap(cloudProvider -> cloudProvider.getServices().values().stream())
+          .filter(cloudService -> !cloudService.isIamEnabled()
+              || cloudService.getSupportedIdps().contains(issuer))
+          .forEach(cloudService -> addServiceToDiscard(servicesToDiscard, cloudService));
+
+      discardProvidersAndServices(providersToDiscard, servicesToDiscard, rankCloudProvidersMessage);
+    }
     if (rankCloudProvidersMessage.isDataMovementWorkflow()) {
       rankCloudProvidersMessage
           .getCloudProviders()
