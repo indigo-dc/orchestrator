@@ -89,8 +89,8 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
           .values()
           .stream()
           .flatMap(cloudProvider -> cloudProvider.getServices().values().stream())
-          .filter(cloudService -> cloudService.isIamEnabled()
-              && !cloudService.getSupportedIdps().contains(issuer))
+          .filter(cloudService -> !cloudService.isIamEnabled()
+              || cloudService.getSupportedIdps().contains(issuer))
           .forEach(cloudService -> addServiceToDiscard(servicesToDiscard, cloudService));
 
       discardProvidersAndServices(providersToDiscard, servicesToDiscard, rankCloudProvidersMessage);
