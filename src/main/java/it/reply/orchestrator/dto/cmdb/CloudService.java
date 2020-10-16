@@ -126,6 +126,7 @@ public class CloudService implements CmdbIdentifiable {
   public static final String MARATHON_COMPUTE_SERVICE = INDIGO_SERVICE_PREFIX + ".marathon";
   public static final String CHRONOS_COMPUTE_SERVICE = INDIGO_SERVICE_PREFIX + ".chronos";
   public static final String QCG_COMPUTE_SERVICE = "eu.deep.qcg";
+  public static final String KUBERNETES_COMPUTE_SERVICE = "eu.deep.kubernetes";
 
   @Deprecated
   protected CloudService() {
@@ -250,6 +251,16 @@ public class CloudService implements CmdbIdentifiable {
   @JsonIgnore
   public boolean isQcgComputeProviderService() {
     return QCG_COMPUTE_SERVICE.equals(this.serviceType);
+  }
+
+  /**
+   * Get if the the service is a Kubernetes compute service.
+   *
+   * @return true if the service is a Kubernetes compute service
+   */
+  @JsonIgnore
+  public boolean isKubernetesComputeProviderService() {
+    return KUBERNETES_COMPUTE_SERVICE.equals(this.serviceType);
   }
 
   @JsonIgnore

@@ -26,6 +26,7 @@ import it.reply.orchestrator.dto.cmdb.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.CloudServiceType;
 import it.reply.orchestrator.dto.cmdb.ComputeService;
+import it.reply.orchestrator.dto.cmdb.KubernetesService;
 import it.reply.orchestrator.dto.cmdb.MarathonService;
 import it.reply.orchestrator.dto.cmdb.MesosFrameworkService;
 import it.reply.orchestrator.dto.cmdb.QcgService;
@@ -179,6 +180,11 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
                     break;
                   case QCG:
                     if (!(cloudProviderService instanceof QcgService)) {
+                      addServiceToDiscard(servicesToDiscard, cloudProviderService);
+                    }
+                    break;
+                  case KUBERNETES_HELM_CHART:
+                    if (!(cloudProviderService instanceof KubernetesService)) {
                       addServiceToDiscard(servicesToDiscard, cloudProviderService);
                     }
                     break;

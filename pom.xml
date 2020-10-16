@@ -352,6 +352,13 @@
       <artifactId>rucio-client-xdc</artifactId>
       <version>1.0.0</version>
     </dependency>
+
+    <dependency>
+      <groupId>io.kubernetes</groupId>
+      <artifactId>client-java</artifactId>
+      <version>10.0.0</version>
+    </dependency>
+
     <!-- annotations and static code analysis -->
     <dependency>
       <groupId>org.projectlombok</groupId>

@@ -20,7 +20,8 @@ public enum DeploymentType {
   CHRONOS,
   MARATHON,
   TOSCA,
-  QCG;
+  QCG,
+  KUBERNETES_HELM_CHART;
 
   public static boolean isMesosDeployment(DeploymentType deploymentType) {
     return deploymentType == CHRONOS || deploymentType == DeploymentType.MARATHON;
