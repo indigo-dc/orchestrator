@@ -289,7 +289,8 @@ public class DeploymentServiceImpl implements DeploymentService {
         return DeploymentType.MARATHON;
       } else if (toscaService.isOfToscaType(node, ToscaConstants.Nodes.Types.QCG)) {
         return DeploymentType.QCG;
-      } else if (toscaService.isOfToscaType(node, ToscaConstants.Nodes.Types.KUBERNETES_HELM_CHART)) {
+      } else if (toscaService.isOfToscaType(node,
+          ToscaConstants.Nodes.Types.KUBERNETES_HELM_CHART)) {
         return DeploymentType.KUBERNETES_HELM_CHART;
       }
     }

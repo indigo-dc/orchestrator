@@ -27,7 +27,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @AllArgsConstructor
-public abstract class KubernetesClientFactory {
+public class KubernetesClientFactory {
 
   private final CredentialProviderService credentialProvider;
 
@@ -41,7 +41,7 @@ public abstract class KubernetesClientFactory {
   public ApiClient build(CloudProviderEndpoint cloudProviderEndpoint, String accessToken) {
     Objects.requireNonNull(accessToken, "Access Token must not be null");
     if (cloudProviderEndpoint.isIamEnabled()) {
-      return Config.fromToken(cloudProviderEndpoint.getCpEndpoint(), accessToken);
+      return Config.fromToken(cloudProviderEndpoint.getCpEndpoint(), accessToken, false);
     } else {
       GenericServiceCredential credential = credentialProvider.credentialProvider(
           cloudProviderEndpoint.getCpComputeServiceId(),
@@ -50,7 +50,9 @@ public abstract class KubernetesClientFactory {
           );
       return Config.fromUserPassword(cloudProviderEndpoint.getCpEndpoint(),
               credential.getUsername(),
-              credential.getPassword());
+              credential.getPassword(),
+              false
+      );
     }
   }
 

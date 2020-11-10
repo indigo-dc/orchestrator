@@ -20,6 +20,7 @@ import static it.reply.orchestrator.dto.cmdb.CloudService.AWS_COMPUTE_SERVICE;
 import static it.reply.orchestrator.dto.cmdb.CloudService.AZURE_COMPUTE_SERVICE;
 import static it.reply.orchestrator.dto.cmdb.CloudService.CDMI_STORAGE_SERVICE;
 import static it.reply.orchestrator.dto.cmdb.CloudService.CHRONOS_COMPUTE_SERVICE;
+import static it.reply.orchestrator.dto.cmdb.CloudService.KUBERNETES_COMPUTE_SERVICE;
 import static it.reply.orchestrator.dto.cmdb.CloudService.MARATHON_COMPUTE_SERVICE;
 import static it.reply.orchestrator.dto.cmdb.CloudService.OCCI_COMPUTE_SERVICE;
 import static it.reply.orchestrator.dto.cmdb.CloudService.ONEPROVIDER_STORAGE_SERVICE;
@@ -28,7 +29,6 @@ import static it.reply.orchestrator.dto.cmdb.CloudService.OPENNEBULA_TOSCA_SERVI
 import static it.reply.orchestrator.dto.cmdb.CloudService.OPENSTACK_COMPUTE_SERVICE;
 import static it.reply.orchestrator.dto.cmdb.CloudService.OTC_COMPUTE_SERVICE;
 import static it.reply.orchestrator.dto.cmdb.CloudService.QCG_COMPUTE_SERVICE;
-import static it.reply.orchestrator.dto.cmdb.CloudService.KUBERNETES_COMPUTE_SERVICE;
 
 import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;
 import com.fasterxml.jackson.databind.DatabindContext;
