@@ -22,6 +22,8 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonTypeInfo.As;
 import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver;
 
+import java.util.ArrayList;
+import java.util.List;
 import javax.validation.constraints.NotNull;
 
 import lombok.AccessLevel;
@@ -35,7 +37,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Data
 @Builder
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
 @JsonTypeInfo(
     use = JsonTypeInfo.Id.NAME,
@@ -97,6 +98,12 @@ public class CloudService implements CmdbIdentifiable {
   @JsonProperty("public_ip_assignable")
   private boolean publicIpAssignable;
 
+  @Builder.Default
+  @JsonProperty("supported_idps")
+  @NonNull
+  @NotNull
+  private List<String> supportedIdps = new ArrayList<>();
+
   private static final String INDIGO_SERVICE_PREFIX = "eu.indigo-datacloud";
   private static final String EGI_SERVICE_PREFIX = "eu.egi.cloud";
 
@@ -119,6 +126,11 @@ public class CloudService implements CmdbIdentifiable {
   public static final String MARATHON_COMPUTE_SERVICE = INDIGO_SERVICE_PREFIX + ".marathon";
   public static final String CHRONOS_COMPUTE_SERVICE = INDIGO_SERVICE_PREFIX + ".chronos";
   public static final String QCG_COMPUTE_SERVICE = "eu.deep.qcg";
+
+  @Deprecated
+  protected CloudService() {
+    supportedIdps = new ArrayList<>();
+  }
 
   /**
    * Get if the the service is a OpenStack compute service.

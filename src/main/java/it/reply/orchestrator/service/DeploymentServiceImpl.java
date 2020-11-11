@@ -36,8 +36,8 @@ import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.policies.ToscaPolicy;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.dto.request.DeploymentScheduleRequest;
+import it.reply.orchestrator.dto.security.IamUserInfo;
 import it.reply.orchestrator.dto.security.IndigoOAuth2Authentication;
-import it.reply.orchestrator.dto.security.IndigoUserInfo;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.DeploymentType;
 import it.reply.orchestrator.enums.NodeStates;
@@ -149,7 +149,7 @@ public class DeploymentServiceImpl implements DeploymentService {
       String issuer = requester.getOidcEntityId().getIssuer();
       String group = oidcProperties.getIamProperties().get(issuer).getAdmingroup();
       IndigoOAuth2Authentication authentication = oauth2TokenService.getCurrentAuthentication();
-      IndigoUserInfo userInfo = (IndigoUserInfo) authentication.getUserInfo();
+      IamUserInfo userInfo = (IamUserInfo) authentication.getUserInfo();
       if (userInfo != null) {
         isAdmin = userInfo.getGroups().contains(group);
       }

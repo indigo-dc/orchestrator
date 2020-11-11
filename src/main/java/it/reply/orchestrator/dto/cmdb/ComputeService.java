@@ -112,11 +112,12 @@ public class ComputeService extends CloudService {
       boolean iamEnabled,
       @NonNull String idpProtocol,
       boolean publicIpAssignable,
+      @NonNull List<String> supportedIdps,
       @Nullable String publicNetworkName,
       @Nullable String privateNetworkCidr,
       @Nullable String privateNetworkName) {
     super(id, serviceType, endpoint, providerId, type, publicService, region, hostname,
-            parentServiceId, iamEnabled, idpProtocol, publicIpAssignable);
+            parentServiceId, iamEnabled, idpProtocol, publicIpAssignable, supportedIdps);
     this.images = CommonUtils.notNullOrDefaultValue(images, ArrayList::new);
     this.flavors = CommonUtils.notNullOrDefaultValue(flavors, ArrayList::new);
     this.publicNetworkName = publicNetworkName;

@@ -16,6 +16,7 @@
 
 package it.reply.orchestrator.dto.cmdb;
 
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -70,8 +71,9 @@ public class QcgService extends  CloudService {
       @Nullable String parentServiceId,
       boolean iamEnabled,
       @NonNull String idpProtocol,
-      boolean publicIpAssignable) {
+      boolean publicIpAssignable,
+      @NonNull List<String> supportedIdps) {
     super(id, serviceType, endpoint, providerId, type, publicService, region, hostname,
-            parentServiceId, iamEnabled, idpProtocol, publicIpAssignable);
+            parentServiceId, iamEnabled, idpProtocol, publicIpAssignable, supportedIdps);
   }
 }

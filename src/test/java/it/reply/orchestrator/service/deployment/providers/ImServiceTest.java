@@ -169,6 +169,7 @@ public class ImServiceTest extends ToscaParserAwareTest {
         .endpoint("http://example.com")
         .serviceType(OPENSTACK_COMPUTE_SERVICE)
         .hostname("example.com")
+        .supportedIdps(new ArrayList<>())
         .build();
     CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(new CloudServiceWf(cs)));
     csi.next();
@@ -217,6 +218,7 @@ public class ImServiceTest extends ToscaParserAwareTest {
         .endpoint("http://example.com")
         .serviceType(OPENSTACK_COMPUTE_SERVICE)
         .hostname("example.com")
+        .supportedIdps(new ArrayList<>())
         .build();
     CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(new CloudServiceWf(cs)));
     csi.next();
@@ -297,6 +299,7 @@ public class ImServiceTest extends ToscaParserAwareTest {
         .endpoint("http://example.com")
         .serviceType(OPENSTACK_COMPUTE_SERVICE)
         .hostname("example.com")
+        .supportedIdps(new ArrayList<>())
         .build();
     CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(new CloudServiceWf(cs)));
     csi.next();
@@ -831,6 +834,7 @@ public class ImServiceTest extends ToscaParserAwareTest {
         .endpoint("http://example.com")
         .serviceType(OPENSTACK_COMPUTE_SERVICE)
         .hostname("example.com")
+        .supportedIdps(new ArrayList<>())
         .build();
     CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(new CloudServiceWf(cs)));
     csi.next();
@@ -906,6 +910,7 @@ public class ImServiceTest extends ToscaParserAwareTest {
         .endpoint("http://example.com")
         .serviceType(ONEPROVIDER_STORAGE_SERVICE)
         .hostname("example.com")
+        .supportedIdps(new ArrayList<>())
         .build();
     ComputeService cs2 = ComputeService
         .computeBuilder()
@@ -916,6 +921,7 @@ public class ImServiceTest extends ToscaParserAwareTest {
         .endpoint("http://example.com")
         .serviceType(OPENSTACK_COMPUTE_SERVICE)
         .hostname("example.com")
+        .supportedIdps(new ArrayList<>())
         .build();
     List<CloudService> services = new ArrayList<>();
     services.add(cs);

@@ -452,6 +452,7 @@ public class QcgServiceTest extends ToscaParserAwareTest {
         .providerId("provider-1")
         .id("provider-1-service-1")
         .type(CloudServiceType.COMPUTE)
+        .supportedIdps(new ArrayList<>())
         .build();
 
     CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(new CloudServiceWf(qs)));

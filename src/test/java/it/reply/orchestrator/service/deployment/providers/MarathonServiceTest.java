@@ -51,6 +51,7 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -222,6 +223,7 @@ public class MarathonServiceTest extends ToscaParserAwareTest {
         .providerId("provider-1")
         .id("provider-1-service-1")
         .type(CloudServiceType.COMPUTE)
+        .supportedIdps(new ArrayList<>())
         .properties(MarathonServiceProperties
             .builder()
             .localVolumesHostBasePath("/tmp/")
