@@ -1103,8 +1103,8 @@ public class ToscaServiceImpl implements ToscaService {
       ar.getTopology().getNodeTemplates().put("indigovr_cp", cp);
     }
 
-    // set public network name
-    setPublicNetworkName(ar, publicNetworkName);
+    // set public network properties
+    setHdPublicNetworkProperties(ar, publicNetworkName);
 
     getNodesOfType(ar, ToscaConstants.Nodes.Types.CENTRAL_POINT).stream()
         .forEach(centralPointNode -> {
@@ -1162,19 +1162,11 @@ public class ToscaServiceImpl implements ToscaService {
                         this.setNodeRequirement(centralPointNode, "host", hostName,
                             REQUIREMENT_HOST_RELATIONSHIP);
 
-                        //retrieve private network node if present
-                        Optional<NodeTemplate> pn = getNodesOfType(ar,
-                            ToscaConstants.Nodes.Types.NETWORK)
-                            .stream()
-                            .filter(node -> {
-                              Optional<String> nt = ToscaUtils.extractScalar(node.getProperties(),
-                                  ToscaConstants.Nodes.Properties.NETWORKTYPE);
-                              return nt.isPresent() && (nt.get()
-                                  .equals(ToscaConstants.Nodes.Attributes.PRIVATE)
-                                  || nt.get().equals(ToscaConstants.Nodes.Attributes.ISOLATED));
-                            }).findFirst();
-                        setNetworkProperties(ar, privateNetworkName, privateNetworkCidr,
-                            hostName, pn);
+                        if (!setHdPrivateNetworkProperties(ar, privateNetworkName,
+                            privateNetworkCidr, hostName)) {
+                          setHdIsolatedNetworkProperties(ar, privateNetworkName,
+                              privateNetworkCidr, hostName);
+                        }
                       }
                     });
                   }
@@ -1204,48 +1196,76 @@ public class ToscaServiceImpl implements ToscaService {
     return ar;
   }
 
-  private void setPublicNetworkName(ArchiveRoot ar, String publicNetworkName) {
-    if (StringUtils.isNotEmpty(publicNetworkName)) {
-      Optional<NodeTemplate> pn = getNodesOfType(ar, ToscaConstants.Nodes.Types.NETWORK)
-          .stream()
-          .filter(node -> {
-            Optional<String> nt = ToscaUtils.extractScalar(node.getProperties(),
-                ToscaConstants.Nodes.Properties.NETWORKTYPE);
-            return nt.isPresent() && nt.get().equals("public");
-          }).findFirst();
-      if (pn.isPresent()) {
+  private boolean setNetworkName(Optional<NodeTemplate> pn, String networkName) {
+    if (StringUtils.isNotEmpty(networkName)) {
+      Optional<String> nn = ToscaUtils.extractScalar(pn.get().getProperties(),
+          ToscaConstants.Nodes.Properties.NETWORKNAME);
+      if (!nn.isPresent()) {
         pn.get().getProperties().put(ToscaConstants.Nodes.Properties.NETWORKNAME,
-            new ScalarPropertyValue(publicNetworkName));
+            new ScalarPropertyValue(networkName));
       }
+      return true;
     }
+    return false;
   }
 
-  private void setNetworkProperties(ArchiveRoot ar, String privateNetworkName,
-      String privateNetworkCidr, String hostName, Optional<NodeTemplate> pn) {
+  private boolean setHdPublicNetworkProperties(ArchiveRoot ar, String publicNetworkName) {
+    Optional<NodeTemplate> pn = getNodesOfType(ar, ToscaConstants.Nodes.Types.NETWORK)
+        .stream()
+        .filter(node -> {
+          Optional<String> nt = ToscaUtils.extractScalar(node.getProperties(),
+              ToscaConstants.Nodes.Properties.NETWORKTYPE);
+          return nt.isPresent() && nt.get().equals(ToscaConstants.Nodes.Attributes.PUBLIC);
+        }).findFirst();
     if (pn.isPresent()) {
-      Optional<String> nt = ToscaUtils.extractScalar(pn.get().getProperties(),
-          ToscaConstants.Nodes.Properties.NETWORKTYPE);
-      if (nt.isPresent()) {
-        if (nt.get().equals(ToscaConstants.Nodes.Attributes.PRIVATE)) {
-          // set private network name
-          pn.get().getProperties().put(
-              ToscaConstants.Nodes.Properties.NETWORKNAME,
-              new ScalarPropertyValue(privateNetworkName));
-          // create vr_clients
-          setHybridClients(ar);
-        }
-        if (nt.get().equals(ToscaConstants.Nodes.Attributes.ISOLATED)) {
-          // set private network cidr and gateway
-          pn.get().getProperties().put("cidr",
-              new ScalarPropertyValue(privateNetworkCidr));
-          String gw = extractGatewayFromCidr(privateNetworkCidr);
-          if (StringUtils.isNotEmpty(gw)) {
-            pn.get().getProperties().put("gateway_ip",
-                new ScalarPropertyValue(gw + "," + hostName));
-          }
-        }
-      }
+      return setNetworkName(pn,  publicNetworkName);
     }
+    return false;
+  }
+
+  private boolean setHdPrivateNetworkProperties(ArchiveRoot ar,
+      String privateNetworkName, String privateNetworkCidr, String hostName) {
+    //retrieve private network node if present
+    Optional<NodeTemplate> pn = getNodesOfType(ar, ToscaConstants.Nodes.Types.NETWORK)
+        .stream()
+        .filter(node -> {
+          Optional<String> nt = ToscaUtils.extractScalar(node.getProperties(),
+              ToscaConstants.Nodes.Properties.NETWORKTYPE);
+          return nt.isPresent() && nt.get().equals(ToscaConstants.Nodes.Attributes.PRIVATE);
+        }).findFirst();
+    if (pn.isPresent()) {
+      // set private network name
+      boolean result = setNetworkName(pn, privateNetworkName);
+      // create vr_clients
+      setHybridClients(ar);
+      return result;
+    }
+    return false;
+  }
+
+  private boolean setHdIsolatedNetworkProperties(ArchiveRoot ar,
+      String privateNetworkName, String privateNetworkCidr, String hostName) {
+    //retrieve isolated network node if present
+    Optional<NodeTemplate> pn = getNodesOfType(ar, ToscaConstants.Nodes.Types.NETWORK)
+        .stream()
+        .filter(node -> {
+          Optional<String> nt = ToscaUtils.extractScalar(node.getProperties(),
+              ToscaConstants.Nodes.Properties.NETWORKTYPE);
+          return nt.isPresent() && nt.get().equals(ToscaConstants.Nodes.Attributes.ISOLATED);
+        }).findFirst();
+    if (pn.isPresent()) {
+      boolean result = setNetworkName(pn, privateNetworkName);
+      // set private network cidr and gateway
+      pn.get().getProperties().put("cidr",
+          new ScalarPropertyValue(privateNetworkCidr));
+      String gw = extractGatewayFromCidr(privateNetworkCidr);
+      if (StringUtils.isNotEmpty(gw)) {
+        pn.get().getProperties().put("gateway_ip",
+            new ScalarPropertyValue(gw + "," + hostName));
+      }
+      return result;
+    }
+    return false;
   }
 
   private String extractGatewayFromCidr(String cidr) {
@@ -1254,6 +1274,38 @@ public class ToscaServiceImpl implements ToscaService {
       return parts[0] + "." + parts[1] + ".0.0/16";
     }
     return null;
+  }
+
+  @Override
+  public ArchiveRoot setNetworkNames(
+      ArchiveRoot ar,
+      String publicNetworkName,
+      String privateNetworkName) {
+
+    Optional<NodeTemplate> pn = getNodesOfType(ar, ToscaConstants.Nodes.Types.NETWORK)
+        .stream()
+        .filter(node -> {
+          Optional<String> nt = ToscaUtils.extractScalar(node.getProperties(),
+              ToscaConstants.Nodes.Properties.NETWORKTYPE);
+          return nt.isPresent() && nt.get().equals(ToscaConstants.Nodes.Attributes.PUBLIC);
+        }).findFirst();
+    if (pn.isPresent()) {
+      // set public network name
+      setNetworkName(pn,  publicNetworkName);
+    }
+
+    pn = getNodesOfType(ar, ToscaConstants.Nodes.Types.NETWORK)
+        .stream()
+        .filter(node -> {
+          Optional<String> nt = ToscaUtils.extractScalar(node.getProperties(),
+              ToscaConstants.Nodes.Properties.NETWORKTYPE);
+          return nt.isPresent() && nt.get().equals(ToscaConstants.Nodes.Attributes.PRIVATE);
+        }).findFirst();
+    if (pn.isPresent()) {
+      // set private network name
+      setNetworkName(pn, privateNetworkName);
+    }
+    return ar;
   }
 
   @Override

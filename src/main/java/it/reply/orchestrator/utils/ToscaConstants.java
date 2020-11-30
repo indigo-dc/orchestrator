@@ -76,6 +76,7 @@ public class ToscaConstants {
     public static class Attributes {
       public static final String PRIVATE = "private";
       public static final String ISOLATED = "isolated";
+      public static final String PUBLIC = "public";
     }
 
     @UtilityClass

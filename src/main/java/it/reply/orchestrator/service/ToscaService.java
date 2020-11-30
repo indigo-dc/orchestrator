@@ -264,6 +264,10 @@ public interface ToscaService {
       boolean newResourcesOnDifferentService,
       String publicNetworkName, String privateNetworkName, String privateNetworkCidr);
 
+  public ArchiveRoot setNetworkNames(ArchiveRoot ar,
+      String publicNetworkName,
+      String privateNetworkName);
+
   public Map<NodeTemplate, Flavor> extractFlavorRequirements(ArchiveRoot parsingResult);
 
   public Map<Boolean, Map<NodeTemplate, Flavor>> contextualizeFlavors(ArchiveRoot parsingResult,
