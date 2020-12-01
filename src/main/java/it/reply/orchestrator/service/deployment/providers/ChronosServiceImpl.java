@@ -647,6 +647,10 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
         .extractScalar(taskNode.getProperties(), "epsilon")
         .ifPresent(job::setEpsilon);
 
+    ToscaUtils
+        .extractScalar(taskNode.getProperties(), "user")
+        .ifPresent(job::setRunAsUser);
+
     return job;
   }
 
@@ -659,7 +663,7 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     chronosJob.setRetries(mesosTask.getRetries());
     chronosJob.setCommand(mesosTask.getCmd());
     chronosJob.setUris(mesosTask.getUris());
-
+    chronosJob.setRunAsUser(mesosTask.getRunAsUser());
     chronosJob.setEnvironmentVariables(mesosTask
         .getEnv()
         .entrySet()
