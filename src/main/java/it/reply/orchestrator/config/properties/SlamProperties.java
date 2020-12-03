@@ -41,4 +41,7 @@ public class SlamProperties {
   @NonNull
   private String customerPreferencesPath = "/preferences/{customerName}";
 
+  @NotNull
+  @NonNull
+  private String serviceVersion = "v1";
 }
