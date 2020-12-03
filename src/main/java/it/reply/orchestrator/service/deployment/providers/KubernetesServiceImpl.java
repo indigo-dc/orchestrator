@@ -419,6 +419,8 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
                 .listNamespacedService(namespace, null, null, null, null, labelSelector, null, null,
                     null, null));
         services.getItems().forEach(service -> {
+          String serviceName = service
+              .getMetadata().getName().split(namespace + "-" + name + "-")[1];
           Optional
               .ofNullable(service.getSpec())
               .map(V1ServiceSpec::getPorts)
@@ -428,16 +430,19 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
                 Optional
                     .ofNullable(portSpec.getNodePort())
                     .ifPresent(target -> runtimeProperties
-                        .put(target, chartNodeName, "service_ports", portName, "target"));
+                        .put(target, chartNodeName, "service_ports", serviceName,
+                            portName, "target"));
                 Optional
                     .ofNullable(portSpec.getPort())
                     .ifPresent(source -> runtimeProperties
-                        .put(source, chartNodeName, "service_ports", portName, "source"));
+                        .put(source, chartNodeName, "service_ports", serviceName,
+                            portName, "source"));
                 Optional
                     .ofNullable(portSpec.getProtocol())
                     .map(String::toLowerCase)
                     .ifPresent(protocol -> runtimeProperties
-                        .put(protocol, chartNodeName, "service_ports", portName, "protocol"));
+                        .put(protocol, chartNodeName, "service_ports", serviceName,
+                            portName, "protocol"));
               });
         });
 
