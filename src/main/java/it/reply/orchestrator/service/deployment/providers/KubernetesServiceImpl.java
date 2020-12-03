@@ -87,20 +87,6 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
   @Autowired
   private IndigoInputsPreProcessorService indigoInputsPreProcessorService;
 
-  protected ArchiveRoot prepareTemplate(Deployment deployment,
-      DeploymentMessage deploymentMessage) {
-    RuntimeProperties runtimeProperties =
-        OneDataUtils.getOneDataRuntimeProperties(deploymentMessage);
-    Map<String, Object> inputs = deployment.getParameters();
-    ArchiveRoot ar = toscaService.parseAndValidateTemplate(deployment.getTemplate(), inputs);
-    if (runtimeProperties.getVaules().size() > 0) {
-      indigoInputsPreProcessorService.processGetInputAttributes(ar, inputs, runtimeProperties);
-    } else {
-      indigoInputsPreProcessorService.processGetInput(ar, inputs);
-    }
-    return ar;
-  }
-
   private GenericKubernetesApi<V1HelmRelease, V1HelmReleaseList> getHelmClient(
           CloudProviderEndpoint cloudProviderEndpoint, String accessToken) {
     ApiClient apiClient = clientFactory.build(cloudProviderEndpoint, accessToken);
@@ -382,7 +368,8 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
             new DeploymentException("Provider Timeout"));
   }
 
-  @Override public void finalizeDeploy(DeploymentMessage deploymentMessage) {
+  @Override
+  public void finalizeDeploy(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
     Map<String, Object> inputs = deployment.getParameters();
     ArchiveRoot ar = toscaService.parseAndValidateTemplate(deployment.getTemplate(), inputs);
