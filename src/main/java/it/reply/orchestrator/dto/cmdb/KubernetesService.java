@@ -16,19 +16,24 @@
 
 package it.reply.orchestrator.dto.cmdb;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.ArrayList;
 import java.util.List;
-import lombok.AccessLevel;
+import javax.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class KubernetesService extends CloudService {
+
+  @NonNull
+  @NotNull
+  @JsonProperty("worker_nodes_ip")
+  private List<String> workerNodesIp = new ArrayList<>();
 
   /**
    * Create a new KubernetesService.
@@ -71,8 +76,16 @@ public class KubernetesService extends CloudService {
       boolean iamEnabled,
       @NonNull String idpProtocol,
       boolean publicIpAssignable,
-      @NonNull List<String> supportedIdps) {
+      @NonNull List<String> supportedIdps,
+      @NonNull List<String> workerNodesIp) {
     super(id, serviceType, endpoint, providerId, type, publicService, region, hostname,
             parentServiceId, iamEnabled, idpProtocol, publicIpAssignable, supportedIdps);
+    this.workerNodesIp = workerNodesIp;
+  }
+
+  @Deprecated
+  protected KubernetesService() {
+    super();
+    this.workerNodesIp = new ArrayList<>();
   }
 }
