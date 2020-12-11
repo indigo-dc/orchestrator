@@ -1,0 +1,247 @@
+{
+	"providers": [
+		{
+			"id": "RECAS-BARI",
+			"name": "RECAS-BARI",
+			"services": {
+				"RECAS-BARI_327b1deb-5b66-472f-bf42-d6832ab5b04d": {
+					"id": "RECAS-BARI_327b1deb-5b66-472f-bf42-d6832ab5b04d",
+					"provider_id": "RECAS-BARI",
+					"endpoint": "https://mesos.recas.ba.infn.it/mesos",
+					"sitename": "RECAS-BARI",
+					"hostname": "mesos.recas.ba.infn.it",
+					"iam_enabled": true,
+					"is_public_service": false,
+					"service_type": "eu.indigo-datacloud.mesos",
+					"public_ip_assignable": false,
+					"type": "compute",
+					"properties": {
+						"gpu_vendor": "nvidia",
+						"num_gpus": 3,
+						"gpu_support": true,
+						"num_cpus": 72,
+						"num_gpus_used": 3,
+						"mem_used": 134864,
+						"num_cpus_used": 15,
+						"mem_total": 320265,
+						"gpu_model": "1080TI"
+					}
+				},
+				"RECAS-BARI_33998a11-1cbd-45b6-9911-5b56fecacde6": {
+					"id": "RECAS-BARI_33998a11-1cbd-45b6-9911-5b56fecacde6",
+					"provider_id": "RECAS-BARI",
+					"endpoint": "https://mesos.recas.ba.infn.it/marathon",
+					"sitename": "RECAS-BARI",
+					"hostname": "mesos.recas.ba.infn.it",
+					"iam_enabled": true,
+					"is_public_service": false,
+					"service_type": "eu.indigo-datacloud.marathon",
+					"public_ip_assignable": false,
+					"type": "compute",
+					"properties": {
+						"gpu_vendor": "nvidia",
+						"mesos_leader_ui_url": "http://172.20.0.38:5050/",
+						"num_gpus": 0,
+						"master_zk": "zk://172.20.0.38:2181/mesos",
+						"num_cpus": 30,
+						"hostname": "172.20.0.38",
+						"gpu_support": true,
+						"mem_total": 0,
+						"secrets_support": false,
+						"gpu_model": "1080TI",
+						"persistent_storage_drivers": [],
+						"load_balancer_ips": [
+							"mesos-lb.recas.ba.infn.it"
+						],
+						"local_volumes_host_base_path": "/tmp"
+					},
+					"service_parent_id": "RECAS-BARI_327b1deb-5b66-472f-bf42-d6832ab5b04d"
+				},
+				"RECAS-BARI_6ffb1b5a-3275-4877-891a-0c2f63d99f64": {
+					"id": "RECAS-BARI_6ffb1b5a-3275-4877-891a-0c2f63d99f64",
+					"provider_id": "RECAS-BARI",
+					"endpoint": "https://212.189.205.223:6443",
+					"sitename": "RECAS-BARI",
+					"hostname": "212.189.205.223",
+					"iam_enabled": true,
+					"is_public_service": false,
+					"service_type": "eu.deep.kubernetes",
+					"supported_idps": [
+						"https://iam.deep-hybrid-datacloud.eu/"
+					],
+					"worker_nodes_ip": [
+						"127.0.0.1"
+					],
+					"type": "compute"
+				},
+				"RECAS-BARI_c8eacd25-30ea-4c42-97b7-14255eff65a9": {
+					"id": "RECAS-BARI_c8eacd25-30ea-4c42-97b7-14255eff65a9",
+					"provider_id": "RECAS-BARI",
+					"endpoint": "https://cloud.recas.ba.infn.it:5000/v3",
+					"sitename": "RECAS-BARI",
+					"hostname": "cloud.recas.ba.infn.it",
+					"iam_enabled": true,
+					"is_public_service": false,
+					"service_type": "org.openstack.nova",
+					"public_ip_assignable": false,
+					"type": "compute",
+					"supported_idps": [
+						"https://aai-dev.egi.eu/oidc/"
+					]
+				},
+				"RECAS-BARI_ff8205c5-0a73-455e-b3d0-4b3b05e64d36": {
+					"id": "RECAS-BARI_ff8205c5-0a73-455e-b3d0-4b3b05e64d36",
+					"provider_id": "RECAS-BARI",
+					"endpoint": "https://mesos.recas.ba.infn.it/chronos",
+					"sitename": "RECAS-BARI",
+					"hostname": "mesos.recas.ba.infn.it",
+					"iam_enabled": true,
+					"is_public_service": false,
+					"service_type": "eu.indigo-datacloud.chronos",
+					"public_ip_assignable": false,
+					"type": "compute",
+					"properties": {
+						"gpu_vendor": "nvidia",
+						"num_gpus": 1,
+						"num_cpus": 30,
+						"gpu_support": true,
+						"mem_total": 0,
+						"gpu_model": "1080TI",
+						"local_volumes_host_base_path": "/tmp"
+					},
+					"service_parent_id": "RECAS-BARI_327b1deb-5b66-472f-bf42-d6832ab5b04d"
+				}
+			}
+		}
+	],
+	"tenants": {
+		"2d1e5aa4-2da5-4ff6-bba9-7266f5bdab1b": {
+			"tenant": {
+				"id": "2d1e5aa4-2da5-4ff6-bba9-7266f5bdab1b",
+				"service": "INFN_DEEP_02ba6850-8364-40c8-8743-433dce5f4ee6",
+				"private_network_name": "deep-net",
+				"tenant_id": "498783f2b70848bd9b8bc1aa69700a89",
+				"public_network_name": "public",
+				"tenant_name": "DEEP",
+				"iam_organisation": "deep-hdc"
+			},
+			"images": [
+				{
+					"id": "6bb5132bf55a54631a92f04116096019",
+					"gpu_driver": false,
+					"service": "https://horizon.cloud.cnaf.infn.it:5000/v3",
+					"image_marketplace_id": "https://horizon.cloud.cnaf.infn.it:9292/v2/images/daff051c-451d-49ac-b3ce-05d73f6c0523/file",
+					"tenant_id": "2d1e5aa4-2da5-4ff6-bba9-7266f5bdab1b",
+					"image_name": "centos-6-SDDS-x86_64",
+					"image_id": "daff051c-451d-49ac-b3ce-05d73f6c0523",
+					"version": "6",
+					"architecture": "x86_64",
+					"tenant_name": "DEEP",
+					"distribution": "centos",
+					"type": "Linux",
+					"cuda_support": false
+				}
+			],
+			"flavors": [
+				{
+					"id": "6bb5132bf55a54631a92f04116099db7",
+					"service": "https://horizon.cloud.cnaf.infn.it:5000/v3",
+					"num_gpus": 0,
+					"tenant_id": "2d1e5aa4-2da5-4ff6-bba9-7266f5bdab1b",
+					"ram": 4096,
+					"infiniband_support": false,
+					"num_vcpus": 2,
+					"flavor_id": "3",
+					"tenant_name": "DEEP",
+					"disk": 40,
+					"flavor_name": "m1.medium"
+				}
+			]
+		},
+		"4d43a7c5-5088-4599-82b8-1eca5802572f": {
+			"tenant": {
+				"id": "4d43a7c5-5088-4599-82b8-1eca5802572f",
+				"service": "IFCA-LCG2_def9b4f4-2f13-494b-96a3-eaf7c85c1f1e",
+				"private_network_name": "provider-2099",
+				"tenant_id": "36fb9668c47148d9b1bedba88eb2460a",
+				"public_network_name": "external",
+				"tenant_name": "deep-hybrid-datacloud.eu",
+				"iam_organisation": "deep-hdc"
+			},
+			"images": [
+				{
+					"id": "6bb5132bf55a54631a92f041160143ff",
+					"image_marketplace_id": "https://glance.cloud.ifca.es:9292/v2/images/f581b272-8089-43bc-a6bd-63889a6d1072/file",
+					"service": "https://api.cloud.ifca.es:5000/v3",
+					"gpu_driver": false,
+					"tenant_id": "4d43a7c5-5088-4599-82b8-1eca5802572f",
+					"image_name": "IFCA Debian 9 [20190923]",
+					"image_id": "f581b272-8089-43bc-a6bd-63889a6d1072",
+					"version": "9",
+					"cuda_support": false,
+					"tenant_name": "deep-hybrid-datacloud.eu",
+					"distribution": "ubuntu",
+					"type": "Linux"
+				}
+			],
+			"flavors": [
+				{
+					"id": "6bb5132bf55a54631a92f0411608e3a4",
+					"service": "https://api.cloud.ifca.es:5000/v3",
+					"num_gpus": 10,
+					"tenant_id": "4d43a7c5-5088-4599-82b8-1eca5802572f",
+					"ram": 186000,
+					"infiniband_support": false,
+					"num_vcpus": 12,
+					"flavor_id": "b3fc7f91-a587-43ee-8721-9cc96c9f8d32",
+					"tenant_name": "deep-hybrid-datacloud.eu",
+					"disk": 60,
+					"flavor_name": "g5.6xlarge"
+				}
+			]
+		},
+		"a587c3e8-6f0f-425a-a897-be797f48d2f8": {
+			"tenant": {
+				"id": "a587c3e8-6f0f-425a-a897-be797f48d2f8",
+				"service": "RECAS-BARI_c8eacd25-30ea-4c42-97b7-14255eff65a9",
+				"private_network_name": "private_net",
+				"tenant_id": "78d9ecb64353402bb621b569891c633a",
+				"public_network_name": "public_net",
+				"tenant_name": "DEEP_DEMO",
+				"iam_organisation": "egi"
+			},
+			"images": [
+				{
+					"id": "6bb5132bf55a54631a92f041160070fd",
+					"gpu_driver": false,
+					"service": "https://cloud.recas.ba.infn.it:5000/v3",
+					"image_marketplace_id": "http://cloud.recas.ba.infn.it:9292/v2/images/8f667fbc-40bf-45b8-b22d-40f05b48d060/file",
+					"tenant_id": "a587c3e8-6f0f-425a-a897-be797f48d2f8",
+					"image_name": "RECAS Ubuntu 16.04 LTS [Daily Build 20181114]",
+					"image_id": "8f667fbc-40bf-45b8-b22d-40f05b48d060",
+					"version": "16.04",
+					"architecture": "x86_64",
+					"tenant_name": "DEEP_DEMO",
+					"distribution": "ubuntu",
+					"type": "Linux",
+					"cuda_support": false
+				}
+			],
+			"flavors": [
+				{
+					"id": "6bb5132bf55a54631a92f04116011e42",
+					"service": "https://cloud.recas.ba.infn.it:5000/v3",
+					"num_gpus": 0,
+					"tenant_id": "a587c3e8-6f0f-425a-a897-be797f48d2f8",
+					"ram": 32768,
+					"infiniband_support": false,
+					"num_vcpus": 16,
+					"flavor_id": "11",
+					"tenant_name": "DEEP_DEMO",
+					"disk": 20,
+					"flavor_name": "xxlarge"
+				}
+			]
+		}
+	}
+}

@@ -16,12 +16,11 @@
 
 package it.reply.orchestrator.service;
 
+import it.reply.orchestrator.annotation.ServiceVersion;
 import it.reply.orchestrator.config.properties.CmdbProperties;
 import it.reply.orchestrator.dto.cmdb.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudService;
-import it.reply.orchestrator.dto.cmdb.CloudServiceType;
 import it.reply.orchestrator.dto.cmdb.CmdbIdentifiable;
-import it.reply.orchestrator.dto.cmdb.ComputeService;
 import it.reply.orchestrator.dto.cmdb.Flavor;
 import it.reply.orchestrator.dto.cmdb.Image;
 import it.reply.orchestrator.dto.cmdb.Tenant;
@@ -29,19 +28,10 @@ import it.reply.orchestrator.dto.cmdb.wrappers.CmdbDataWrapper;
 import it.reply.orchestrator.dto.cmdb.wrappers.CmdbHasManyList;
 import it.reply.orchestrator.dto.cmdb.wrappers.CmdbRow;
 import it.reply.orchestrator.exception.service.DeploymentException;
-
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-
 import lombok.extern.slf4j.Slf4j;
-
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -52,8 +42,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
 @Slf4j
-@EnableConfigurationProperties(CmdbProperties.class)
-public class CmdbServiceImpl implements CmdbService {
+@ServiceVersion("v1")
+public class CmdbServiceV1Impl extends AbstractCmdbServiceImpl {
 
   private static final ParameterizedTypeReference<CmdbDataWrapper<CloudProvider>>
       PROVIDER_RESPONSE_TYPE =
@@ -104,7 +94,7 @@ public class CmdbServiceImpl implements CmdbService {
 
   private RestTemplate restTemplate;
 
-  public CmdbServiceImpl(CmdbProperties cmdbProperties, RestTemplateBuilder restTemplateBuilder) {
+  public CmdbServiceV1Impl(CmdbProperties cmdbProperties, RestTemplateBuilder restTemplateBuilder) {
     this.cmdbProperties = cmdbProperties;
     this.restTemplate = restTemplateBuilder.build();
   }
@@ -254,52 +244,6 @@ public class CmdbServiceImpl implements CmdbService {
       throw new DeploymentException(
           "Error loading flavor list for tenant <" + tenantId + "> from CMDB.", ex);
     }
-  }
-
-  @Override
-  public CloudProvider fillCloudProviderInfo(String providerId,
-      Set<String> servicesWithSla, String organisation) {
-    // Get provider's data
-    CloudProvider provider = getProviderById(providerId);
-    Map<String, CloudService> services = getServicesByProvider(providerId)
-        .stream()
-        .filter(cs -> servicesWithSla.contains(cs.getId())
-            || cs.getType().equals(CloudServiceType.STORAGE))
-        .map(cloudService -> {
-          if (cloudService instanceof ComputeService) {
-            String prId = cloudService.getProviderId();
-            String serviceId = cloudService.getId();
-            ComputeService computeService = (ComputeService) cloudService;
-            List<Tenant> serviceTenants = getTenantsByService(serviceId);
-            List<Tenant> organisationTenants = getTenantsByOrganisation(organisation);
-            List<Tenant> tenantList = serviceTenants.stream()
-                .distinct()
-                .filter(organisationTenants::contains)
-                .collect(Collectors.toList());
-            List<Image> imageList = new ArrayList<>();
-            List<Flavor> flavorList = new ArrayList<>();
-            if (!tenantList.isEmpty()) {
-              //only one element must be here
-              Tenant tenant = tenantList.get(0);
-              imageList.addAll(getImagesByTenant(tenant.getId()));
-              flavorList.addAll(getFlavorsByTenant(tenant.getId()));
-              computeService.setPublicNetworkName(tenant.getPublicNetworkName());
-              computeService.setPrivateNetworkName(tenant.getPrivateNetworkName());
-              computeService.setPrivateNetworkCidr(tenant.getPrivateNetworkCidr());
-            }
-            LOG.debug("Image list for service <{}> of provider <{}>: <{}>",
-                Arrays.toString(imageList.toArray()), serviceId, prId);
-            computeService.setImages(imageList);
-            LOG.debug("Flavor list for service <{}> of provider <{}>: <{}>",
-                Arrays.toString(flavorList.toArray()), serviceId, prId);
-            computeService.setFlavors(flavorList);
-          }
-          return cloudService;
-        })
-        .collect(Collectors.toMap(CloudService::getId, Function.identity()));
-
-    provider.setServices(services);
-    return provider;
   }
 
   @Override
