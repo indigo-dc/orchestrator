@@ -1162,8 +1162,7 @@ public class ToscaServiceImpl implements ToscaService {
                         this.setNodeRequirement(centralPointNode, "host", hostName,
                             REQUIREMENT_HOST_RELATIONSHIP);
 
-                        if (!setHdPrivateNetworkProperties(ar, privateNetworkName,
-                            hostName)) {
+                        if (!setHdPrivateNetworkProperties(ar, privateNetworkName)) {
                           setHdIsolatedNetworkProperties(ar, privateNetworkName,
                               privateNetworkCidr, hostName);
                         }
@@ -1197,7 +1196,7 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   private boolean setNetworkName(Optional<NodeTemplate> pn, String networkName) {
-    if (StringUtils.isNotEmpty(networkName) || !pn.isPresent()) {
+    if (!pn.isPresent() || StringUtils.isNotEmpty(networkName)) {
       Optional<String> nn = ToscaUtils.extractScalar(pn.get().getProperties(),
           ToscaConstants.Nodes.Properties.NETWORKNAME);
       if (!nn.isPresent()) {
@@ -1224,7 +1223,7 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   private boolean setHdPrivateNetworkProperties(ArchiveRoot ar,
-      String privateNetworkName, String hostName) {
+      String privateNetworkName) {
     //retrieve private network node if present
     Optional<NodeTemplate> pn = getNodesOfType(ar, ToscaConstants.Nodes.Types.NETWORK)
         .stream()
