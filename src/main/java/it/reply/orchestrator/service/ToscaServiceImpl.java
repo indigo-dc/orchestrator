@@ -1196,7 +1196,7 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   private boolean setNetworkName(Optional<NodeTemplate> pn, String networkName) {
-    if (!pn.isPresent() || StringUtils.isNotEmpty(networkName)) {
+    if (pn.isPresent() && StringUtils.isNotEmpty(networkName)) {
       Optional<String> nn = ToscaUtils.extractScalar(pn.get().getProperties(),
           ToscaConstants.Nodes.Properties.NETWORKNAME);
       if (!nn.isPresent()) {
