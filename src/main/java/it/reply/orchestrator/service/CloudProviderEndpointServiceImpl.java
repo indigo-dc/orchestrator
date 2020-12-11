@@ -138,6 +138,8 @@ public class CloudProviderEndpointServiceImpl {
       iaasType = IaaSType.MARATHON;
     } else if (computeService.isQcgComputeProviderService()) {
       iaasType = IaaSType.QCG;
+    } else if (computeService.isKubernetesComputeProviderService()) {
+      iaasType = IaaSType.KUBERNETES;
     } else {
       throw new IllegalArgumentException("Unknown Cloud Provider type: " + computeService);
     }
@@ -180,6 +182,8 @@ public class CloudProviderEndpointServiceImpl {
         return DeploymentProvider.QCG;
       case TOSCA:
         return DeploymentProvider.IM;
+      case KUBERNETES_HELM_CHART:
+        return DeploymentProvider.KUBERNETES;
       default:
         throw new DeploymentException("Unknown DeploymentType: " + deploymentType.toString());
     }

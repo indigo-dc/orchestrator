@@ -22,6 +22,7 @@ public enum DeploymentProvider {
   HEAT,
   CHRONOS,
   MARATHON,
-  QCG;
+  QCG,
+  KUBERNETES;
 
 }

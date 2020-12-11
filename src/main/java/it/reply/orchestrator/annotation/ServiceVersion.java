@@ -14,16 +14,24 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.enums;
+package it.reply.orchestrator.annotation;
 
-public enum DeploymentType {
-  CHRONOS,
-  MARATHON,
-  TOSCA,
-  QCG,
-  KUBERNETES_HELM_CHART;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import org.springframework.beans.factory.annotation.Qualifier;
 
-  public static boolean isMesosDeployment(DeploymentType deploymentType) {
-    return deploymentType == CHRONOS || deploymentType == DeploymentType.MARATHON;
-  }
+@Qualifier
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ ElementType.TYPE })
+public @interface ServiceVersion {
+
+  /**
+   * The qualifying version.
+   *
+   * @return the version
+   */
+  String value();
+
 }
