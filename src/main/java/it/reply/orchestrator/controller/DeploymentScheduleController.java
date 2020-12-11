@@ -103,7 +103,7 @@ public class DeploymentScheduleController {
   @RequestMapping(value = "/schedules", method = RequestMethod.POST,
       produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize(OFFLINE_ACCESS_REQUIRED_CONDITION)
-  public DeploymentScheduleResource createDeployment(
+  public DeploymentScheduleResource createDeploymentSchedule(
       @Valid @RequestBody DeploymentScheduleRequest request) {
     DeploymentSchedule deploymentSchedule =
         deploymentScheduleService.createDeploymentSchedule(request);

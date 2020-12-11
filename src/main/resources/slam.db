@@ -1,0 +1,105 @@
+{
+	"deep-hdc": {
+		"preferences": [
+			{
+				"customer": "deep-hdc",
+				"preferences": [
+					{
+						"service_type": "compute",
+						"priority": [
+							{
+								"sla_id": "5faba703e1ac3701b8c8c5b8",
+								"service_id": "RECAS-BARI_6ffb1b5a-3275-4877-891a-0c2f63d99f64",
+								"weight": 0.5
+							},
+							{
+								"sla_id": "5faba74de1ac3701b8c8c5bb",
+								"service_id": "RECAS-BARI_c8eacd25-30ea-4c42-97b7-14255eff65a9",
+								"weight": 0.5
+							}
+						]
+					},
+					{
+						"service_type": "storage",
+						"priority": []
+					}
+				],
+				"id": "5165f4cdffc0728e36c52cfc42e2b6551f19a7dd"
+			}
+		],
+		"sla": [
+			{
+				"customer": "deep-hdc",
+				"provider": "RECAS-BARI",
+				"start_date": "Tue Nov 10 23:00:00 UTC 2020",
+				"end_date": "Sun Nov 10 23:00:00 UTC 2030",
+				"services": [
+					{
+						"type": "computing",
+						"service_id": "RECAS-BARI_6ffb1b5a-3275-4877-891a-0c2f63d99f64",
+						"targets": [
+							{
+								"type": "public_ip",
+								"unit": null,
+								"restrictions": {
+									"total_guaranteed": 10,
+									"user_guaranteed": 10,
+									"user_limit": 10,
+									"total_limit": 10
+								}
+							},
+							{
+								"type": "computing_time",
+								"unit": "h",
+								"restrictions": {
+									"total_guaranteed": 10,
+									"instance_limit": 10,
+									"user_guaranteed": 10,
+									"user_limit": 10,
+									"total_limit": 10
+								}
+							}
+						]
+					}
+				],
+				"id": "5faba703e1ac3701b8c8c5b8"
+			},
+			{
+				"customer": "deep-hdc",
+				"provider": "RECAS-BARI",
+				"start_date": "Tue Nov 10 23:00:00 UTC 2020",
+				"end_date": "Sun Nov 10 23:00:00 UTC 2030",
+				"services": [
+					{
+						"type": "computing",
+						"service_id": "RECAS-BARI_c8eacd25-30ea-4c42-97b7-14255eff65a9",
+						"targets": [
+							{
+								"type": "public_ip",
+								"unit": null,
+								"restrictions": {
+									"total_guaranteed": 50,
+									"user_guaranteed": 50,
+									"user_limit": 50,
+									"total_limit": 50
+								}
+							},
+							{
+								"type": "computing_time",
+								"unit": "h",
+								"restrictions": {
+									"total_guaranteed": 50,
+									"instance_limit": 50,
+									"user_guaranteed": 50,
+									"user_limit": 50,
+									"total_limit": 50
+								}
+							}
+						]
+					}
+				],
+				"id": "5faba74de1ac3701b8c8c5bb"
+			}
+		]
+	}
+}

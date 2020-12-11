@@ -82,4 +82,8 @@ public class CmdbProperties {
   @NonNull
   private String flavorByIdPath = "/flavor/id/{flavorId}?include_docs=true";
 
+  @NotNull
+  @NonNull
+  private String serviceVersion = "v1";
+
 }
