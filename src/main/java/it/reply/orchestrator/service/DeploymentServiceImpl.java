@@ -71,6 +71,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.alien4cloud.tosca.model.templates.NodeTemplate;
 import org.alien4cloud.tosca.model.templates.RelationshipTemplate;
+import org.apache.commons.lang3.StringUtils;
 import org.flowable.engine.RuntimeService;
 import org.flowable.engine.runtime.ProcessInstance;
 import org.jgrapht.graph.DirectedMultigraph;
@@ -114,24 +115,27 @@ public class DeploymentServiceImpl implements DeploymentService {
   @Override
   @Transactional(readOnly = true)
   public Page<Deployment> getDeployments(Pageable pageable, String owner) {
-    if (owner == null) {
-      if (oidcProperties.isEnabled() && isAdmin()) {
+    if (StringUtils.isEmpty(owner)) {
+      if (isAdmin()) {
         OidcEntity requester = oauth2TokenService.generateOidcEntityFromCurrentAuth();
         return deploymentRepository.findAll(requester, pageable);
       }
       owner = "me";
     }
     OidcEntityId ownerId;
+    OidcEntityId currentId = oauth2TokenService.generateOidcEntityIdFromCurrentAuth();
     if ("me".equals(owner)) {
-      ownerId = oauth2TokenService.generateOidcEntityIdFromCurrentAuth();
+      ownerId = currentId;
     } else {
       Matcher matcher = OWNER_PATTERN.matcher(owner);
-      if (isAdmin() && matcher.matches()) {
-        ownerId = new OidcEntityId();
-        ownerId.setSubject(matcher.group(1));
-        ownerId.setIssuer(matcher.group(2));
-      } else {
+      if (!matcher.matches()) {
         throw new BadRequestException("Value " + owner + " for param createdBy is illegal");
+      }
+      ownerId = new OidcEntityId();
+      ownerId.setSubject(matcher.group(1));
+      ownerId.setIssuer(matcher.group(2));
+      if (!ownerId.getSubject().equals(currentId.getSubject()) && !isAdmin()) {
+        throw new  ForbiddenException("Only admin can retrieve deployments for " + owner);
       }
     }
     if (oidcProperties.isEnabled()) {
