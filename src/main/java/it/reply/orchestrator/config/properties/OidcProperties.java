@@ -16,8 +16,6 @@
 
 package it.reply.orchestrator.config.properties;
 
-import com.google.common.collect.ImmutableSet;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -25,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.Set;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -73,7 +70,7 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
   @Valid
   @NestedConfigurationProperty
   private List<String> scopes =
-      new ArrayList<String>(Arrays.asList("openid", "profile", "offline_access", "mail"));
+      new ArrayList<>(Arrays.asList("openid", "profile", "offline_access", "mail"));
 
   /**
    * Throw an {@link IllegalStateException} if the security is disabled.
