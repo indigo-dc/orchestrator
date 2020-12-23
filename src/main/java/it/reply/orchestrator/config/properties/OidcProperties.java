@@ -95,10 +95,9 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
   public Optional<IamProperties> getIamConfiguration(String issuer) {
     return Optional.ofNullable(iamProperties.get(issuer));
   }
-  
+
   public Set<String> getOrchestratorScopes(String issuer) {
-	    return new HashSet<>(iamProperties.get(issuer).orchestrator.scopes);
-	    
+    return new HashSet<>(iamProperties.get(issuer).orchestrator.scopes);
   }
 
   @Override
@@ -115,10 +114,11 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
         Assert.hasText(orchestratorConfiguration.getClientSecret(),
             "Orchestrator OAuth2 clientSecret for issuer " + issuer + " must be provided");
         if (orchestratorConfiguration.getScopes().isEmpty()) {
-            LOG.warn("No Orchestrator OAuth2 scopes provided for issuer {}. Using default: {}", issuer, REQUIRED_SCOPES);
-            orchestratorConfiguration.setScopes(new ArrayList<String>(REQUIRED_SCOPES));
-            iamConfiguration.setOrchestrator(orchestratorConfiguration);
-            iamConfigurationEntry.setValue(iamConfiguration);
+          LOG.warn("No Orchestrator OAuth2 scopes provided for issuer {}. Using default: {}",
+                  issuer, REQUIRED_SCOPES);
+          orchestratorConfiguration.setScopes(new ArrayList<String>(REQUIRED_SCOPES));
+          iamConfiguration.setOrchestrator(orchestratorConfiguration);
+          iamConfigurationEntry.setValue(iamConfiguration);
         }
 
         Optional<OidcClientProperties> cluesConfiguration = iamConfiguration.getClues();
@@ -201,15 +201,16 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
   @NoArgsConstructor
   public static class ScopedOidcClientProperties extends OidcClientProperties {
 
-    //@NotNull
-    //@NonNull
-    private List<String> scopes ;
-    
-    public List<String> getScopes(){
-    	if (scopes == null) {
-    		scopes = new ArrayList<String>();;
-    	}	
-    	return scopes;
+    private List<String> scopes;
+
+    /**
+     * Return the scopes.
+     */
+    public List<String> getScopes() {
+      if (scopes == null) {
+        scopes = new ArrayList<String>();
+      }
+      return scopes;
     }
   }
 }
