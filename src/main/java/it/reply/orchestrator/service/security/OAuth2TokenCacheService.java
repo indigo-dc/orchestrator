@@ -30,7 +30,6 @@ import it.reply.orchestrator.utils.MdcUtils.MdcCloseable;
 import java.io.Serializable;
 import java.time.Duration;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -188,15 +187,15 @@ public class OAuth2TokenCacheService {
 
     @Autowired
     private OidcTokenRepository oidcTokenRepository;
+    
+    @Autowired
+    private OidcProperties oidcProperties;
 
     @Autowired
     private CustomOAuth2TemplateFactory customOAuth2TemplateFactory;
 
     @Autowired
     private PlatformTransactionManager transactionManager;
-
-    @Autowired
-    private OidcProperties oidcProperties;
 
     protected AccessGrant refresh(@NonNull MutableEntry<OidcTokenId, AccessGrant> entry) {
       OidcTokenId id = entry.getKey();
@@ -208,8 +207,8 @@ public class OAuth2TokenCacheService {
                 .orElseThrow(
                     () -> new OrchestratorException("No refresh token found for " + id));
         AccessGrant grant =
-            template.refreshToken(refreshToken.getValue(),
-                new HashSet<>(oidcProperties.getScopes()));
+            //template.refreshToken(refreshToken.getValue(), OidcProperties.REQUIRED_SCOPES);
+        	template.refreshToken(refreshToken.getValue(), oidcProperties.getOrchestratorScopes(id.getOidcEntityId().getIssuer()));
         LOG.info("Access token for {} refreshed", id);
         String newRefreshToken = grant.getRefreshToken();
         if (newRefreshToken != null && !newRefreshToken.equals(refreshToken.getValue())) {
@@ -239,8 +238,9 @@ public class OAuth2TokenCacheService {
                 "Refresh token for {} isn't active anymore."
                     + " Getting a new one exchanging access token with jti={}",
                 id, JwtUtils.getJti(JwtUtils.parseJwt(accessToken)));
-            AccessGrant grant = template.exchangeToken(accessToken,
-                new HashSet<>(oidcProperties.getScopes()));
+            
+            //AccessGrant grant = template.exchangeToken(accessToken, OidcProperties.REQUIRED_SCOPES);
+            AccessGrant grant = template.exchangeToken(accessToken,  oidcProperties.getOrchestratorScopes(id.getOidcEntityId().getIssuer()));
             refreshToken.get().updateFromAccessGrant(grant);
             entry.setValue(grant);
             return grant;
@@ -253,8 +253,8 @@ public class OAuth2TokenCacheService {
         } else {
           LOG.info("No refresh token found for {}. Exchanging access token with jti={}",
               id, JwtUtils.getJti(JwtUtils.parseJwt(accessToken)));
-          AccessGrant grant = template.exchangeToken(accessToken,
-              new HashSet<>(oidcProperties.getScopes()));
+          //AccessGrant grant = template.exchangeToken(accessToken, OidcProperties.REQUIRED_SCOPES);
+          AccessGrant grant = template.exchangeToken(accessToken, oidcProperties.getOrchestratorScopes(id.getOidcEntityId().getIssuer()));
           OidcRefreshToken token = OidcRefreshToken.createFromAccessGrant(grant, entry.getKey());
           oidcTokenRepository.save(token);
           entry.setValue(grant);
