@@ -16,13 +16,16 @@
 
 package it.reply.orchestrator.config.properties;
 
+import com.google.common.collect.ImmutableSet;
+
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Set;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -51,6 +54,9 @@ import org.springframework.validation.annotation.Validated;
 @Component
 public class OidcProperties implements SecurityPrerequisite, InitializingBean {
 
+  public static final Set<String> REQUIRED_SCOPES =
+      ImmutableSet.of("openid", "profile", "offline_access", "fts:submit-transfer");
+
   protected static final String PROPERTIES_PREFIX = "oidc";
 
   public static final String SECURITY_ENABLED_PROPERTY = PROPERTIES_PREFIX + ".enabled";
@@ -64,13 +70,6 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
   @Valid
   @NestedConfigurationProperty
   private Map<String, IamProperties> iamProperties = new HashMap<>();
-
-  @NotNull
-  @NonNull
-  @Valid
-  @NestedConfigurationProperty
-  private List<String> scopes =
-      new ArrayList<>(Arrays.asList("openid", "profile", "offline_access", "mail"));
 
   /**
    * Throw an {@link IllegalStateException} if the security is disabled.
@@ -97,6 +96,10 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
     return Optional.ofNullable(iamProperties.get(issuer));
   }
 
+  public Set<String> getOrchestratorScopes(String issuer) {
+    return new HashSet<>(iamProperties.get(issuer).orchestrator.scopes);
+  }
+
   @Override
   public void afterPropertiesSet() throws Exception {
     if (enabled) {
@@ -111,7 +114,11 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
         Assert.hasText(orchestratorConfiguration.getClientSecret(),
             "Orchestrator OAuth2 clientSecret for issuer " + issuer + " must be provided");
         if (orchestratorConfiguration.getScopes().isEmpty()) {
-          orchestratorConfiguration.setScopes(new ArrayList<String>(scopes));
+          LOG.warn("No Orchestrator OAuth2 scopes provided for issuer {}. Using default: {}",
+                  issuer, REQUIRED_SCOPES);
+          orchestratorConfiguration.setScopes(new ArrayList<String>(REQUIRED_SCOPES));
+          iamConfiguration.setOrchestrator(orchestratorConfiguration);
+          iamConfigurationEntry.setValue(iamConfiguration);
         }
 
         Optional<OidcClientProperties> cluesConfiguration = iamConfiguration.getClues();
@@ -194,9 +201,16 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
   @NoArgsConstructor
   public static class ScopedOidcClientProperties extends OidcClientProperties {
 
-    @NotNull
-    @NonNull
-    private List<String> scopes = new ArrayList<>();
+    private List<String> scopes;
 
+    /**
+     * Return the scopes.
+     */
+    public List<String> getScopes() {
+      if (scopes == null) {
+        scopes = new ArrayList<String>();
+      }
+      return scopes;
+    }
   }
 }
