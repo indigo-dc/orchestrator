@@ -34,6 +34,7 @@ public class ToscaConstants {
       public static final String MARATHON = DOCKER_APPLICATION + ".Marathon";
       public static final String COMPUTE = BASE_INDIGO_NAME + "Compute";
       public static final String QCG = BASE_INDIGO_NAME + "Qcg.Job";
+      public static final String KUBERNETES_HELM_CHART = BASE_INDIGO_NAME + "Kubernetes.HelmChart";
 
       public static final String DOCKER_RUNTIME = BASE_INDIGO_NAME + "Container.Runtime.Docker";
       public static final String ONEDATA_SPACE = BASE_INDIGO_NAME + "OnedataSpace";
@@ -76,6 +77,7 @@ public class ToscaConstants {
     public static class Attributes {
       public static final String PRIVATE = "private";
       public static final String ISOLATED = "isolated";
+      public static final String PUBLIC = "public";
     }
 
     @UtilityClass

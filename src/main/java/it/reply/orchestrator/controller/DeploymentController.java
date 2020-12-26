@@ -85,8 +85,7 @@ public class DeploymentController {
       produces = MediaType.APPLICATION_JSON_VALUE)
   public PagedResources<DeploymentResource> getDeployments(
       @RequestParam(name = "createdBy", required = false) @Nullable String createdBy,
-      @PageableDefault(sort = "createdAt",
-          direction = Direction.DESC) Pageable pageable,
+      @PageableDefault(sort = "createdAt", direction = Direction.DESC) Pageable pageable,
       PagedResourcesAssembler<Deployment> pagedAssembler) {
 
     Page<Deployment> deployments = deploymentService.getDeployments(pageable, createdBy);

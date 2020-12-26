@@ -43,6 +43,8 @@ public abstract class MesosTask<T extends MesosTask<T>> {
 
   private Double memSize;
 
+  private String runAsUser;
+
   @NonNull
   private List<T> parents = new ArrayList<>();
 

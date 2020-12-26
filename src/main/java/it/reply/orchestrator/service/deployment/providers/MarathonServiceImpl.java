@@ -202,6 +202,10 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
           .extractMap(marathonNode.getProperties(), "secrets", String.class::cast)
           .ifPresent(marathonTask::setSecrets);
 
+      ToscaUtils
+          .extractScalar(marathonNode.getProperties(), "user")
+          .ifPresent(marathonTask::setRunAsUser);
+
       OidcEntityId ownerId = deployment.getOwner().getOidcEntityId();
       marathonTask.getLabels().put("created_by", ownerId.getSubject() + "@" + ownerId.getIssuer());
       marathonTask.getLabels().put("origin", orchestratorProperties.getUrl().toString());
@@ -443,7 +447,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     app.setMem(marathonTask.getMemSize());
     app.setUris(marathonTask.getUris());
     app.setLabels(marathonTask.getLabels());
-
+    app.setUser(marathonTask.getRunAsUser());
     Map<String, Object> marathonEnv = new HashMap<>(marathonTask.getEnv());
 
     // handle secrets

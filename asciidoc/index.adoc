@@ -362,3 +362,106 @@ include::{snippets}/configuration/response-fields.adoc[]
 
 include::{snippets}/configuration/http-response.adoc[]
 
+
+
+
+
+
+[[overview-deployment-schedules]]
+== Deployment Schedules
+
+This REST resource represents a deployment Schedule.
+
+[[resources-get-deployment-schedules]]
+=== Get deployment schedules
+
+A `GET` request is used to list all the deployment schedules.
+
+==== Request parameters
+
+[cols=",a"]
+include::{snippets}/get-deployment-schedules/request-parameters.adoc[]
+
+==== Example request
+
+include::{snippets}/get-deployment-schedules/curl-request.adoc[]
+
+include::{snippets}/get-deployment-schedules/http-request.adoc[]
+
+==== Response structure
+
+include::{snippets}/get-deployment-schedules/response-fields.adoc[]
+
+==== Example response
+
+include::{snippets}/get-deployment-schedules/http-response.adoc[]
+
+
+
+
+[[resources-create-deployment-schedule]]
+=== Create deployment schedule
+
+A `POST` request is used to create a deployment schedule.
+
+==== Request Fields
+include::{snippets}/create-deployment-schedule/request-fields.adoc[]
+
+==== Example request
+include::{snippets}/create-deployment-schedule/curl-request.adoc[]
+
+include::{snippets}/create-deployment-schedule/http-request.adoc[]
+
+==== Response structure
+
+include::{snippets}/create-deployment-schedule/response-fields.adoc[]
+
+==== Example response
+
+include::{snippets}/create-deployment-schedule/http-response.adoc[]
+
+
+
+
+[[resources-get-deployment-schedule]]
+=== Get deployment schedule
+
+A `GET` request is used to retrieve a deployment schedule from the id.
+
+==== Example request
+
+include::{snippets}/get-deployment-schedule/curl-request.adoc[]
+
+include::{snippets}/get-deployment-schedule/http-request.adoc[]
+
+==== Response structure
+
+include::{snippets}/get-deployment-schedule/response-fields.adoc[]
+
+==== Example response
+
+include::{snippets}/get-deployment-schedule/http-response.adoc[]
+[[resources-deployment-schedule-events]]
+== Deployment Schedule Event
+
+This REST resource represents a fired event of a deployment schedule.
+
+
+[[resources-get-deployment-schedule-events]]
+=== Get Deployment Schedule Events
+
+A `GET` request is used to list all the events of a deployment schedule.
+
+==== Example request
+
+include::{snippets}/get-deployment-schedule-events/curl-request.adoc[]
+
+include::{snippets}/get-deployment-schedule-events/http-request.adoc[]
+
+==== Response structure
+
+include::{snippets}/get-deployment-schedule-events/response-fields.adoc[]
+
+==== Example response
+
+include::{snippets}/get-deployment-schedule-events/http-response.adoc[]

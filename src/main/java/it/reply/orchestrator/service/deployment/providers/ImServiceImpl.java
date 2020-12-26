@@ -187,7 +187,12 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           computeService.getPrivateNetworkName(),
           computeService.getPrivateNetworkCidr()
       );
+    } else {
+      toscaService.setNetworkNames(ar,
+          computeService.getPublicNetworkName(),
+          computeService.getPrivateNetworkName());
     }
+
     String imCustomizedTemplate = toscaService.serialize(ar);
     // Deploy on IM
     try {
