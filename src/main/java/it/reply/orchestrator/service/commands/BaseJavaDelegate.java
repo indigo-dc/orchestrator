@@ -31,7 +31,7 @@ import java.util.Optional;
 import lombok.extern.slf4j.Slf4j;
 
 import org.flowable.bpmn.model.FlowElement;
-import org.flowable.engine.common.api.FlowableException;
+import org.flowable.common.engine.api.FlowableException;
 import org.flowable.engine.delegate.DelegateExecution;
 import org.flowable.engine.delegate.JavaDelegate;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -16,6 +16,7 @@
 
 package it.reply.orchestrator.service;
 
+import it.reply.orchestrator.annotation.ServiceVersion;
 import it.reply.orchestrator.config.properties.SlamProperties;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dto.slam.SlamPreferences;
@@ -35,8 +36,8 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 @Service
-@EnableConfigurationProperties(SlamProperties.class)
-public class SlamServiceImpl implements SlamService {
+@ServiceVersion("v1")
+public class SlamServiceV1Impl implements SlamService {
 
   private SlamProperties slamProperties;
 
@@ -54,7 +55,7 @@ public class SlamServiceImpl implements SlamService {
    * @param restTemplateBuilder
    *          the RestTemplateBuilder to use
    */
-  public SlamServiceImpl(
+  public SlamServiceV1Impl(
       SlamProperties slamProperties, OAuth2TokenService oauth2TokenService,
       RestTemplateBuilder restTemplateBuilder) {
     this.slamProperties = slamProperties;

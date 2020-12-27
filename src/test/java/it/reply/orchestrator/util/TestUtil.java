@@ -17,6 +17,8 @@
 package it.reply.orchestrator.util;
 
 import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.entity.OidcEntity;
+import it.reply.orchestrator.dal.entity.OidcEntityId;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
@@ -74,6 +76,12 @@ public class TestUtil {
         .build();
     oneDataParameters.put("provider-1", parameter);
     dm.setOneDataParameters(oneDataParameters);
+    OidcEntity oe = new OidcEntity();
+    OidcEntityId oeid = new OidcEntityId();
+    oeid.setIssuer("https://iam-test.com");
+    oeid.setSubject("0123456789-subject");
+    oe.setOidcEntityId(oeid);
+    deployment.setOwner(oe);
     return dm;
   }
 

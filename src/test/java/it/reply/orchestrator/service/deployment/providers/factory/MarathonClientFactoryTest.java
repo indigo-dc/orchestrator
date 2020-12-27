@@ -95,6 +95,7 @@ public class MarathonClientFactoryTest {
         .cpComputeServiceId(UUID.randomUUID().toString())
         .iaasType(IaaSType.MARATHON)
         .iamEnabled(true)
+        .idpProtocol("oidc")
         .build();
 
     String serviceId = cloudProviderEndpoint.getCpComputeServiceId();
@@ -128,6 +129,7 @@ public class MarathonClientFactoryTest {
         .cpComputeServiceId(UUID.randomUUID().toString())
         .iaasType(IaaSType.MARATHON)
         .iamEnabled(true)
+        .idpProtocol("oidc")
         .build();
     assertThatThrownBy(() -> clientFactory.build(cloudProviderEndpoint, null))
         .isInstanceOf(NullPointerException.class);

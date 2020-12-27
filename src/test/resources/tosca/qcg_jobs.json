@@ -8,6 +8,9 @@
             "create" : "OVERWRITE",
             "remove" : "NEVER"
           }
+        },
+        "resources" : {
+          "components" : [ { } ]
         }
       }
     },

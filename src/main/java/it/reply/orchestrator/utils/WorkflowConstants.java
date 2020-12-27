@@ -44,6 +44,7 @@ public class WorkflowConstants {
     public static final String UNDEPLOY = "Undeploy";
     public static final String UPDATE = "Update";
     public static final String RANK_CLOUD_PROVIDERS = "RankCloudProviders";
+    public static final String MOVE_DATA_AND_DEPLOY = "Move Data and Deploy";
   }
 
   @UtilityClass
@@ -70,5 +71,10 @@ public class WorkflowConstants {
     public static final String CLEAN_FAILED_DEPLOY = "cleanFailedDeploy";
     public static final String CLEAN_FAILED_UPDATE = "cleanFailedUpdate";
     public static final String PROVIDER_TIMEOUT = "providerTimeout";
+    public static final String CREATE_MAIN_REPLICATION_RULE = "createMainReplicationRule";
+    public static final String CREATE_TEMP_REPLICATION_RULE = "createTempReplicationRule";
+    public static final String CHECK_MAIN_REPLICATION_RULE = "checkMainReplicationRule";
+    public static final String CHECK_TEMP_REPLICATION_RULE = "checkTempReplicationRule";
+    public static final String DELETE_TEMP_REPLICATION_RULE = "deleteTempReplicationRule";
   }
 }

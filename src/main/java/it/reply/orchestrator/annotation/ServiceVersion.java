@@ -14,29 +14,24 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.service.security;
+package it.reply.orchestrator.annotation;
 
-import org.junit.Before;
-import org.junit.Test;
-import org.mockito.InjectMocks;
-import org.mockito.MockitoAnnotations;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import org.springframework.beans.factory.annotation.Qualifier;
 
-import com.google.gson.JsonObject;
+@Qualifier
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ ElementType.TYPE })
+public @interface ServiceVersion {
 
-public class IndigoUserInfoFetcherTest {
+  /**
+   * The qualifying version.
+   *
+   * @return the version
+   */
+  String value();
 
-  @InjectMocks
-  IndigoUserInfoFetcher indigoUserInfoFetcher = new IndigoUserInfoFetcher();
-
-  @Before
-  public void setup() {
-    MockitoAnnotations.initMocks(this);
-  }
-
-
-  @Test
-  public void fromJson() {
-    JsonObject userInfoJson = new JsonObject();
-    indigoUserInfoFetcher.fromJson(userInfoJson);
-  }
 }

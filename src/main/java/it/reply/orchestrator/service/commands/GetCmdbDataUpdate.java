@@ -23,6 +23,7 @@ import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.cmdb.CloudProvider;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
+import it.reply.orchestrator.dto.workflow.CloudServiceWf;
 import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.service.CmdbService;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
@@ -30,6 +31,7 @@ import it.reply.orchestrator.utils.WorkflowConstants;
 
 import java.util.Set;
 
+import java.util.stream.Collectors;
 import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -55,7 +57,8 @@ public class GetCmdbDataUpdate extends BaseDeployCommand {
         .fillCloudProviderInfo(cloudProviderId, serviceWithSla, organisation);
 
     CloudServicesOrderedIterator cloudServicesOrderedIterator =
-        new CloudServicesOrderedIterator(Lists.newArrayList(cloudProvider.getServices().values()));
+        new CloudServicesOrderedIterator(cloudProvider.getServices().values().stream().map(
+            CloudServiceWf::new).collect(Collectors.toList()));
     cloudServicesOrderedIterator.next();
     deploymentMessage.setCloudServicesOrderedIterator(cloudServicesOrderedIterator);
     deploymentMessage.setChosenCloudProviderEndpoint(cloudProviderEndpoint);

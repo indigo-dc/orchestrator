@@ -19,15 +19,18 @@ package it.reply.orchestrator.service.commands;
 import alien4cloud.tosca.model.ArchiveRoot;
 
 import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.cmdb.ChronosService;
 import it.reply.orchestrator.dto.cmdb.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.CloudServiceType;
 import it.reply.orchestrator.dto.cmdb.ComputeService;
+import it.reply.orchestrator.dto.cmdb.KubernetesService;
 import it.reply.orchestrator.dto.cmdb.MarathonService;
 import it.reply.orchestrator.dto.cmdb.MesosFrameworkService;
 import it.reply.orchestrator.dto.cmdb.QcgService;
+import it.reply.orchestrator.dto.cmdb.StorageService;
 import it.reply.orchestrator.dto.dynafed.Dynafed;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.policies.SlaPlacementPolicy;
@@ -79,6 +82,32 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
     Set<CloudProvider> providersToDiscard = new HashSet<>();
     Set<CloudService> servicesToDiscard = new HashSet<>();
 
+    OidcTokenId requestedWithToken = rankCloudProvidersMessage.getRequestedWithToken();
+    if (requestedWithToken != null) {
+      String issuer = requestedWithToken.getOidcEntityId().getIssuer();
+      rankCloudProvidersMessage
+          .getCloudProviders()
+          .values()
+          .stream()
+          .flatMap(cloudProvider -> cloudProvider.getServices().values().stream())
+          .filter(cloudService -> cloudService.isIamEnabled()
+              && !cloudService.getSupportedIdps().contains(issuer))
+          .forEach(cloudService -> addServiceToDiscard(servicesToDiscard, cloudService));
+
+      discardProvidersAndServices(providersToDiscard, servicesToDiscard, rankCloudProvidersMessage);
+    }
+    if (rankCloudProvidersMessage.isDataMovementWorkflow()) {
+      rankCloudProvidersMessage
+          .getCloudProviders()
+          .values()
+          .stream()
+          .filter(cp -> cp.getServicesOfType(StorageService.class)
+              .stream()
+              .allMatch(storageService -> storageService.getRucioRse() == null))
+          .forEach(cloudProvider -> addProviderToDiscard(providersToDiscard, servicesToDiscard,
+              cloudProvider));
+      discardProvidersAndServices(providersToDiscard, servicesToDiscard, rankCloudProvidersMessage);
+    }
     discardOnPlacementPolicies(rankCloudProvidersMessage.getPlacementPolicies(),
         rankCloudProvidersMessage.getCloudProviders().values(),
         rankCloudProvidersMessage.getSlamPreferences().getSla(), servicesToDiscard);
@@ -151,6 +180,11 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
                     break;
                   case QCG:
                     if (!(cloudProviderService instanceof QcgService)) {
+                      addServiceToDiscard(servicesToDiscard, cloudProviderService);
+                    }
+                    break;
+                  case KUBERNETES_HELM_CHART:
+                    if (!(cloudProviderService instanceof KubernetesService)) {
                       addServiceToDiscard(servicesToDiscard, cloudProviderService);
                     }
                     break;

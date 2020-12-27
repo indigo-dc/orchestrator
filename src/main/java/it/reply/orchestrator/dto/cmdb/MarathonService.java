@@ -52,10 +52,12 @@ public class MarathonService extends MesosFrameworkService<MarathonServiceProper
       @NonNull String hostname,
       @Nullable String parentServiceId,
       boolean iamEnabled,
+      @NonNull String idpProtocol,
       boolean publicIpAssignable,
+      @NonNull List<String> supportedIdps,
       @NonNull MarathonServiceProperties properties) {
     super(id, serviceType, endpoint, providerId, type, publicService, region, hostname,
-            parentServiceId, iamEnabled, publicIpAssignable, properties);
+          parentServiceId, iamEnabled, idpProtocol, publicIpAssignable, supportedIdps, properties);
   }
 
   @Data

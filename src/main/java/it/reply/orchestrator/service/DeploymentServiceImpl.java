@@ -24,6 +24,7 @@ import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.OidcEntity;
 import it.reply.orchestrator.dal.entity.OidcEntityId;
+import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.entity.WorkflowReference;
 import it.reply.orchestrator.dal.entity.WorkflowReference.Action;
@@ -34,8 +35,9 @@ import it.reply.orchestrator.dto.dynafed.Dynafed;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.policies.ToscaPolicy;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
+import it.reply.orchestrator.dto.request.DeploymentScheduleRequest;
+import it.reply.orchestrator.dto.security.IamUserInfo;
 import it.reply.orchestrator.dto.security.IndigoOAuth2Authentication;
-import it.reply.orchestrator.dto.security.IndigoUserInfo;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.DeploymentType;
 import it.reply.orchestrator.enums.NodeStates;
@@ -45,6 +47,8 @@ import it.reply.orchestrator.exception.http.BadRequestException;
 import it.reply.orchestrator.exception.http.ConflictException;
 import it.reply.orchestrator.exception.http.ForbiddenException;
 import it.reply.orchestrator.exception.http.NotFoundException;
+import it.reply.orchestrator.service.deployment.providers.DeploymentProviderService;
+import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.MdcUtils;
@@ -54,6 +58,7 @@ import it.reply.orchestrator.utils.WorkflowConstants;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -66,6 +71,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.alien4cloud.tosca.model.templates.NodeTemplate;
 import org.alien4cloud.tosca.model.templates.RelationshipTemplate;
+import org.apache.commons.lang3.StringUtils;
 import org.flowable.engine.RuntimeService;
 import org.flowable.engine.runtime.ProcessInstance;
 import org.jgrapht.graph.DirectedMultigraph;
@@ -84,6 +90,9 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   @Autowired
   private DeploymentRepository deploymentRepository;
+
+  @Autowired
+  private DeploymentProviderServiceRegistry deploymentProviderServiceRegistry;
 
   @Autowired
   private ResourceRepository resourceRepository;
@@ -106,24 +115,27 @@ public class DeploymentServiceImpl implements DeploymentService {
   @Override
   @Transactional(readOnly = true)
   public Page<Deployment> getDeployments(Pageable pageable, String owner) {
-    if (owner == null) {
-      if (oidcProperties.isEnabled() && isAdmin()) {
+    if (StringUtils.isEmpty(owner)) {
+      if (isAdmin()) {
         OidcEntity requester = oauth2TokenService.generateOidcEntityFromCurrentAuth();
         return deploymentRepository.findAll(requester, pageable);
       }
       owner = "me";
     }
     OidcEntityId ownerId;
+    OidcEntityId currentId = oauth2TokenService.generateOidcEntityIdFromCurrentAuth();
     if ("me".equals(owner)) {
-      ownerId = oauth2TokenService.generateOidcEntityIdFromCurrentAuth();
+      ownerId = currentId;
     } else {
       Matcher matcher = OWNER_PATTERN.matcher(owner);
-      if (isAdmin() && matcher.matches()) {
-        ownerId = new OidcEntityId();
-        ownerId.setSubject(matcher.group(1));
-        ownerId.setIssuer(matcher.group(2));
-      } else {
+      if (!matcher.matches()) {
         throw new BadRequestException("Value " + owner + " for param createdBy is illegal");
+      }
+      ownerId = new OidcEntityId();
+      ownerId.setSubject(matcher.group(1));
+      ownerId.setIssuer(matcher.group(2));
+      if (!ownerId.getSubject().equals(currentId.getSubject()) && !isAdmin()) {
+        throw new  ForbiddenException("Only admin can retrieve deployments for " + owner);
       }
     }
     if (oidcProperties.isEnabled()) {
@@ -141,7 +153,7 @@ public class DeploymentServiceImpl implements DeploymentService {
       String issuer = requester.getOidcEntityId().getIssuer();
       String group = oidcProperties.getIamProperties().get(issuer).getAdmingroup();
       IndigoOAuth2Authentication authentication = oauth2TokenService.getCurrentAuthentication();
-      IndigoUserInfo userInfo = (IndigoUserInfo) authentication.getUserInfo();
+      IamUserInfo userInfo = (IamUserInfo) authentication.getUserInfo();
       if (userInfo != null) {
         isAdmin = userInfo.getGroups().contains(group);
       }
@@ -203,11 +215,15 @@ public class DeploymentServiceImpl implements DeploymentService {
 
     deploymentMessage.setMaxProvidersRetry(request.getMaxProvidersRetry());
     deploymentMessage.setKeepLastAttempt(request.isKeepLastAttempt());
+    if (request instanceof DeploymentScheduleRequest) {
+      deploymentMessage.setDataMovementWorkflow(true);
+    }
   }
 
   @Override
   @Transactional
-  public Deployment createDeployment(DeploymentRequest request) {
+  public Deployment createDeployment(DeploymentRequest request, OidcEntity owner,
+      OidcTokenId requestedWithToken) {
     Deployment deployment = new Deployment();
     deployment.setStatus(Status.CREATE_IN_PROGRESS);
     deployment.setTask(Task.NONE);
@@ -225,14 +241,13 @@ public class DeploymentServiceImpl implements DeploymentService {
     // Create internal resources representation (to store in DB)
     createResources(deployment, nodes);
 
-    if (oidcProperties.isEnabled()) {
-      deployment.setOwner(oauth2TokenService.getOrGenerateOidcEntityFromCurrentAuth());
-    }
+    deployment.setOwner(owner);
 
     DeploymentType deploymentType = inferDeploymentType(nodes);
 
     // Build deployment message
-    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType);
+    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType,
+        requestedWithToken);
 
     populateFromRequestData(request, parsingResult,  deploymentMessage);
 
@@ -262,11 +277,9 @@ public class DeploymentServiceImpl implements DeploymentService {
   }
 
   protected DeploymentMessage buildDeploymentMessage(Deployment deployment,
-      DeploymentType deploymentType) {
+      DeploymentType deploymentType, OidcTokenId requestedWithToken) {
     DeploymentMessage deploymentMessage = new DeploymentMessage();
-    if (oidcProperties.isEnabled()) {
-      deploymentMessage.setRequestedWithToken(oauth2TokenService.exchangeCurrentAccessToken());
-    }
+    deploymentMessage.setRequestedWithToken(requestedWithToken);
     deploymentMessage.setDeploymentId(deployment.getId());
     deploymentMessage.setDeploymentType(deploymentType);
     return deploymentMessage;
@@ -280,6 +293,9 @@ public class DeploymentServiceImpl implements DeploymentService {
         return DeploymentType.MARATHON;
       } else if (toscaService.isOfToscaType(node, ToscaConstants.Nodes.Types.QCG)) {
         return DeploymentType.QCG;
+      } else if (toscaService.isOfToscaType(node,
+          ToscaConstants.Nodes.Types.KUBERNETES_HELM_CHART)) {
+        return DeploymentType.KUBERNETES_HELM_CHART;
       }
     }
     return DeploymentType.TOSCA;
@@ -302,7 +318,7 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   @Override
   @Transactional
-  public void deleteDeployment(String uuid) {
+  public void deleteDeployment(String uuid, OidcTokenId requestedWithToken) {
     Deployment deployment = getDeployment(uuid);
     MdcUtils.setDeploymentId(deployment.getId());
     throwIfNotOwned(deployment);
@@ -335,7 +351,8 @@ public class DeploymentServiceImpl implements DeploymentService {
     DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
 
     // Build deployment message
-    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType);
+    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType,
+        requestedWithToken);
 
     ProcessInstance pi = wfService
         .createProcessInstanceBuilder()
@@ -353,10 +370,11 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   @Override
   @Transactional
-  public void updateDeployment(String id, DeploymentRequest request) {
+  public void updateDeployment(String id, DeploymentRequest request,
+      OidcTokenId requestedWithToken) {
     Deployment deployment = getDeployment(id);
     MdcUtils.setDeploymentId(deployment.getId());
-    LOG.debug("Updating deployment with template\n{}", id, request.getTemplate());
+    LOG.debug("Updating deployment with template\n{}", request.getTemplate());
     throwIfNotOwned(deployment);
 
     if (deployment.getDeploymentProvider() == DeploymentProvider.CHRONOS
@@ -385,7 +403,8 @@ public class DeploymentServiceImpl implements DeploymentService {
     DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
 
     // Build deployment message
-    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType);
+    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType,
+        requestedWithToken);
 
     // Check if the new template is valid: parse, validate structure and user's inputs,
     // replace user's inputs
@@ -460,4 +479,55 @@ public class DeploymentServiceImpl implements DeploymentService {
       resourcesMap.put(node, resources);
     });
   }
+
+  @Override
+  @Transactional(readOnly = true)
+  public String getDeploymentLog(String id, OidcTokenId requestedWithToken) {
+    Deployment deployment = getDeployment(id);
+    LOG.debug("Retrieving infrastructure log for deployment {}", id);
+    throwIfNotOwned(deployment);
+
+    DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
+
+    // Build deployment message
+    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType,
+        requestedWithToken);
+
+    DeploymentProviderService ds = deploymentProviderServiceRegistry
+        .getDeploymentProviderService(id);
+
+    Optional<String> log = ds.getDeploymentLog(deploymentMessage);
+
+    if (log.isPresent()) {
+      return log.get();
+    } else {
+      return "";
+    }
+  }
+
+  @Override
+  @Transactional(readOnly = true)
+  public String getDeploymentExtendedInfo(String id, OidcTokenId requestedWithToken) {
+    Deployment deployment = getDeployment(id);
+    LOG.debug("Retrieving infrastructure extra info for deployment {}", id);
+    throwIfNotOwned(deployment);
+
+    DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
+
+    // Build deployment message
+    DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType,
+        requestedWithToken);
+
+    DeploymentProviderService ds = deploymentProviderServiceRegistry
+        .getDeploymentProviderService(id);
+
+    Optional<String> info = ds.getDeploymentExtendedInfo(deploymentMessage);
+
+    if (info.isPresent()) {
+      return info.get();
+    } else {
+      return "[]";
+    }
+  }
+
 }

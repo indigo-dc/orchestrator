@@ -46,9 +46,9 @@ import org.springframework.util.StopWatch;
 @AllArgsConstructor
 public class UserInfoIntrospectingTokenService extends IntrospectingTokenService {
 
-  private OAuth2ConfigurationsService oauth2ConfigurationsService;
-  private UserInfoFetcher userInfoFetcher;
-  private JWKSetCacheService validationServices;
+  private final OAuth2ConfigurationsService oauth2ConfigurationsService;
+  private final UserInfoFetcher userInfoFetcher;
+  private final JWKSetCacheService validationServices;
 
   @Override
   public OAuth2Authentication loadAuthentication(String accessToken)

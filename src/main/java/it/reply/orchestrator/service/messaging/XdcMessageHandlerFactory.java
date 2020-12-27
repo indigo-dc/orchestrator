@@ -14,19 +14,21 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.service.security;
+package it.reply.orchestrator.service.messaging;
 
-import com.google.gson.JsonObject;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.AllArgsConstructor;
+import org.springframework.messaging.simp.stomp.StompSession;
+import org.springframework.stereotype.Component;
 
-import it.reply.orchestrator.dto.security.IndigoUserInfo;
+@Component
+@AllArgsConstructor
+public class XdcMessageHandlerFactory {
 
-import org.mitre.openid.connect.client.UserInfoFetcher;
-import org.mitre.openid.connect.model.UserInfo;
+  private final ObjectMapper objectMapper;
+  private final XdcEventHandlerService xdcEventHandlerService;
 
-public class IndigoUserInfoFetcher extends UserInfoFetcher {
-
-  @Override
-  protected UserInfo fromJson(JsonObject userInfoJson) {
-    return IndigoUserInfo.fromJson(userInfoJson);
+  public XdcMessageHandler getObject(StompSession session) {
+    return new XdcMessageHandler(session, objectMapper, xdcEventHandlerService);
   }
 }

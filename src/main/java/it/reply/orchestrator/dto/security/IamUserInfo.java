@@ -16,7 +16,9 @@
 
 package it.reply.orchestrator.dto.security;
 
+import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 
@@ -25,6 +27,8 @@ import it.reply.orchestrator.utils.CommonUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.validation.constraints.NotNull;
@@ -41,12 +45,14 @@ import org.mitre.openid.connect.model.UserInfo;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
-public class IndigoUserInfo extends DefaultUserInfo {
+public class IamUserInfo extends DefaultUserInfo {
 
   private static final long serialVersionUID = 1L;
 
   private static final String GROUPS_KEY = "groups";
   private static final String ORGANIZATION_NAME_KEY = "organisation_name";
+  private static final String EDUPERSON_ENTITLEMENT = "eduperson_entitlement";
+  private static final String EDUPERSON_UNIQUE_ID = "edu_person_unique_id";
 
   @NonNull
   @NotNull
@@ -61,7 +67,7 @@ public class IndigoUserInfo extends DefaultUserInfo {
    * @param other
    *          the {@link UserInfo} to copy from.
    */
-  public IndigoUserInfo(UserInfo other) {
+  public IamUserInfo(UserInfo other) {
     this.setSub(other.getSub());
     this.setPreferredUsername(other.getPreferredUsername());
     this.setName(other.getName());
@@ -113,21 +119,31 @@ public class IndigoUserInfo extends DefaultUserInfo {
    * @return the UserInfo.
    */
   public static UserInfo fromJson(JsonObject obj) {
-    IndigoUserInfo result = new IndigoUserInfo(DefaultUserInfo.fromJson(obj));
+    IamUserInfo result = new IamUserInfo(DefaultUserInfo.fromJson(obj));
 
-    // get groups json array
-    Optional.ofNullable(obj.get(GROUPS_KEY))
-        .filter(groups -> groups.isJsonArray())
-        .map(groups -> groups.getAsJsonArray())
-        // deserialize groups json array and set it
-        .map(groupsJson -> deserializeGroups(groupsJson))
-        .ifPresent(groups -> result.setGroups(CommonUtils.checkNotNull(groups)));
+    if (obj.has(EDUPERSON_UNIQUE_ID)) {
+      result.setOrganizationName("egi");
+      if (obj.has(EDUPERSON_ENTITLEMENT)) {
+        result.setGroups(CommonUtils
+                  .iteratorToStream(obj.get(EDUPERSON_ENTITLEMENT).getAsJsonArray().iterator())
+                  .map(JsonElement::getAsString)
+                  .collect(Collectors.toList())
+        );
+      }
+    } else {
+      // get groups json array
+      Optional.ofNullable(obj.get(GROUPS_KEY))
+          .filter(groups -> groups.isJsonArray())
+          .map(groups -> groups.getAsJsonArray())
+          // deserialize groups json array and set it
+          .map(groupsJson -> deserializeGroups(groupsJson))
+          .ifPresent(groups -> result.setGroups(CommonUtils.checkNotNull(groups)));
 
-    // get organization, deserialize it and set it (if present)
-    Optional.ofNullable(obj.get(ORGANIZATION_NAME_KEY))
-        .filter(element -> element.isJsonPrimitive())
-        .ifPresent(element -> result.setOrganizationName(element.getAsString()));
-
+      // get organization, deserialize it and set it (if present)
+      Optional.ofNullable(obj.get(ORGANIZATION_NAME_KEY))
+          .filter(element -> element.isJsonPrimitive())
+          .ifPresent(element -> result.setOrganizationName(element.getAsString()));
+    }
     return result;
   }
 

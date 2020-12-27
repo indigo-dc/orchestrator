@@ -42,6 +42,7 @@ import it.reply.orchestrator.dto.deployment.ChronosJobsOrderedIterator;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
+import it.reply.orchestrator.dto.workflow.CloudServiceWf;
 import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.exception.service.BusinessWorkflowException;
@@ -57,7 +58,9 @@ import it.reply.orchestrator.utils.ToscaConstants.Nodes;
 import it.reply.orchestrator.utils.ToscaUtils;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.Optional;
 
 import org.alien4cloud.tosca.model.templates.NodeTemplate;
 import org.assertj.core.api.AbstractThrowableAssert;
@@ -412,6 +415,19 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
   }
 
   @Test
+  public void getDeploymentExtendedInfoInternal() {
+    DeploymentMessage dm = new DeploymentMessage();
+    assertThat(chronosService.getDeploymentExtendedInfoInternal(dm))
+      .isEqualTo(Optional.empty());
+  }
+
+  @Test
+  public void getDeploymentLogInternal() {
+    DeploymentMessage dm = new DeploymentMessage();
+    assertThat(chronosService.getDeploymentLog(dm)).isEqualTo(Optional.empty());
+  }
+
+  @Test
   public void generateJobGraph() throws IOException {
     Deployment deployment = generateDeployment();
     DeploymentMessage dm = TestUtil.generateDeployDm(deployment);
@@ -423,13 +439,14 @@ public class ChronosServiceTest extends ToscaParserAwareTest {
         .providerId("provider-1")
         .id("provider-1-service-1")
         .type(CloudServiceType.COMPUTE)
+        .supportedIdps(new ArrayList<>())
         .properties(ChronosServiceProperties
             .builder()
             .localVolumesHostBasePath("/tmp/")
             .build())
         .build();
 
-    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(cs));
+    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(new CloudServiceWf(cs)));
     csi.next();
     dm.setCloudServicesOrderedIterator(csi);
 

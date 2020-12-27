@@ -19,6 +19,7 @@ package it.reply.orchestrator.dto.workflow;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.exception.service.DeploymentException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -34,8 +35,8 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 @EqualsAndHashCode(callSuper = true)
 public class CloudServicesOrderedIterator extends WorkflowListIterator<CloudServiceWf> {
 
-  public CloudServicesOrderedIterator(@NonNull List<CloudService> items) {
-    super(items.stream().map(CloudServiceWf::new).collect(Collectors.toList()));
+  public CloudServicesOrderedIterator(@NonNull List<CloudServiceWf> items) {
+    super(new ArrayList<>(items));
   }
 
   /**
@@ -56,4 +57,26 @@ public class CloudServicesOrderedIterator extends WorkflowListIterator<CloudServ
     }
   }
 
+  /**
+   * Get the first service present (starting from current) of specified class.
+   *
+   * @param <T>
+   *     the object type
+   * @param clazz
+   *     the required class
+   * @return the casted service
+   */
+  public <T extends CloudService> T firstService(Class<T> clazz) {
+    CloudService currentService = current().getCloudService();
+    while (!clazz.isInstance(currentService) && hasNext()) {
+      next();
+      currentService = current().getCloudService();
+    }
+    if (clazz.isInstance(currentService)) {
+      return clazz.cast(currentService);
+    } else {
+      throw new DeploymentException("Service of type "
+          + clazz.getSimpleName() + " not present.");
+    }
+  }
 }

@@ -46,6 +46,10 @@ public class CloudServiceWf {
 
   @JsonProperty("last_error_cause")
   @Nullable
-  String lastErrorCause;
+  private String lastErrorCause;
+
+  @JsonProperty("rucio_rse")
+  @Nullable
+  private String rucioRse;
 
 }

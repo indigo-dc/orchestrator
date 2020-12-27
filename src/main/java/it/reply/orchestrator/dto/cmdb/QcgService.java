@@ -16,6 +16,7 @@
 
 package it.reply.orchestrator.dto.cmdb;
 
+import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -52,6 +53,8 @@ public class QcgService extends  CloudService {
    *     the parentServiceId of the service
    * @param iamEnabled
    *     the iamEnabled flag
+   * @param idpProtocol
+   *     the IDP protocol name
    * @param publicIpAssignable
    *     the publicIpAssignable flag
    */
@@ -67,8 +70,10 @@ public class QcgService extends  CloudService {
       @NonNull String hostname,
       @Nullable String parentServiceId,
       boolean iamEnabled,
-      boolean publicIpAssignable) {
+      @NonNull String idpProtocol,
+      boolean publicIpAssignable,
+      @NonNull List<String> supportedIdps) {
     super(id, serviceType, endpoint, providerId, type, publicService, region, hostname,
-            parentServiceId, iamEnabled, publicIpAssignable);
+            parentServiceId, iamEnabled, idpProtocol, publicIpAssignable, supportedIdps);
   }
 }

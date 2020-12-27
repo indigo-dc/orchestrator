@@ -16,11 +16,15 @@
 
 package it.reply.orchestrator.controller;
 
+import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.entity.OidcEntity;
+import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
 import it.reply.orchestrator.resource.DeploymentResource;
 import it.reply.orchestrator.resource.DeploymentResourceAssembler;
 import it.reply.orchestrator.service.DeploymentService;
+import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.MdcUtils;
 
 import javax.validation.Valid;
@@ -38,6 +42,7 @@ import org.springframework.hateoas.mvc.ControllerLinkBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -50,13 +55,19 @@ import org.springframework.web.bind.annotation.RestController;
 public class DeploymentController {
 
   private static final String OFFLINE_ACCESS_REQUIRED_CONDITION =
-      "#oauth2.throwOnError(#oauth2.hasScope('offline_access'))";
+      "#oauth2.throwOnError(#oauth2.hasAnyScope('offline_access', 'fts:submit-transfer'))";
 
   @Autowired
   private DeploymentService deploymentService;
 
   @Autowired
   private DeploymentResourceAssembler deploymentResourceAssembler;
+
+  @Autowired
+  private OAuth2TokenService oauth2Tokenservice;
+
+  @Autowired
+  private OidcProperties oidcProperties;
 
   /**
    * Get all deployments.
@@ -74,8 +85,7 @@ public class DeploymentController {
       produces = MediaType.APPLICATION_JSON_VALUE)
   public PagedResources<DeploymentResource> getDeployments(
       @RequestParam(name = "createdBy", required = false) @Nullable String createdBy,
-      @PageableDefault(sort = "createdAt",
-          direction = Direction.DESC) Pageable pageable,
+      @PageableDefault(sort = "createdAt", direction = Direction.DESC) Pageable pageable,
       PagedResourcesAssembler<Deployment> pagedAssembler) {
 
     Page<Deployment> deployments = deploymentService.getDeployments(pageable, createdBy);
@@ -102,7 +112,13 @@ public class DeploymentController {
       produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize(OFFLINE_ACCESS_REQUIRED_CONDITION)
   public DeploymentResource createDeployment(@Valid @RequestBody DeploymentRequest request) {
-    Deployment deployment = deploymentService.createDeployment(request);
+    OidcEntity owner = null;
+    OidcTokenId requestedWithToken = null;
+    if (oidcProperties.isEnabled()) {
+      owner = oauth2Tokenservice.getOrGenerateOidcEntityFromCurrentAuth();
+      requestedWithToken = oauth2Tokenservice.exchangeCurrentAccessToken();
+    }
+    Deployment deployment = deploymentService.createDeployment(request, owner, requestedWithToken);
     return deploymentResourceAssembler.toResource(deployment);
 
   }
@@ -121,7 +137,13 @@ public class DeploymentController {
   @PreAuthorize(OFFLINE_ACCESS_REQUIRED_CONDITION)
   public void updateDeployment(@PathVariable("deploymentId") String id,
       @Valid @RequestBody DeploymentRequest request) {
-    deploymentService.updateDeployment(id, request);
+    OidcEntity owner = null;
+    OidcTokenId requestedWithToken = null;
+    if (oidcProperties.isEnabled()) {
+      owner = oauth2Tokenservice.getOrGenerateOidcEntityFromCurrentAuth();
+      requestedWithToken = oauth2Tokenservice.exchangeCurrentAccessToken();
+    }
+    deploymentService.updateDeployment(id, request, requestedWithToken);
   }
 
   /**
@@ -142,6 +164,46 @@ public class DeploymentController {
   }
 
   /**
+   * Get the infrastructure log by deploymentId.
+   *
+   * @param uuid
+   *          the uuid of the deployment
+   * @return the log
+   */
+  @GetMapping(path = "/deployments/{deploymentId}/log")
+  @ResponseStatus(HttpStatus.OK)
+  public CharSequence getDeploymentLog(@PathVariable("deploymentId") String uuid) {
+    MdcUtils.setDeploymentId(uuid);
+    OidcEntity owner = null;
+    OidcTokenId requestedWithToken = null;
+    if (oidcProperties.isEnabled()) {
+      owner = oauth2Tokenservice.getOrGenerateOidcEntityFromCurrentAuth();
+      requestedWithToken = oauth2Tokenservice.exchangeCurrentAccessToken();
+    }
+    return deploymentService.getDeploymentLog(uuid, requestedWithToken);
+  }
+
+  /**
+   * Get the infrastructure info for deploymentId.
+   *
+   * @param uuid
+   *          the uuid of the deployment
+   * @return the extra info
+   */
+  @GetMapping(path = "/deployments/{deploymentId}/extrainfo")
+  @ResponseStatus(HttpStatus.OK)
+  public CharSequence getDeploymentExtraInfo(@PathVariable("deploymentId") String uuid) {
+    MdcUtils.setDeploymentId(uuid);
+    OidcEntity owner = null;
+    OidcTokenId requestedWithToken = null;
+    if (oidcProperties.isEnabled()) {
+      owner = oauth2Tokenservice.getOrGenerateOidcEntityFromCurrentAuth();
+      requestedWithToken = oauth2Tokenservice.exchangeCurrentAccessToken();
+    }
+    return deploymentService.getDeploymentExtendedInfo(uuid, requestedWithToken);
+  }
+
+  /**
    * Delete the deployment.
    *
    * @param id
@@ -152,7 +214,12 @@ public class DeploymentController {
       produces = MediaType.APPLICATION_JSON_VALUE)
   @PreAuthorize(OFFLINE_ACCESS_REQUIRED_CONDITION)
   public void deleteDeployment(@PathVariable("deploymentId") String id) {
-
-    deploymentService.deleteDeployment(id);
+    OidcEntity owner = null;
+    OidcTokenId requestedWithToken = null;
+    if (oidcProperties.isEnabled()) {
+      owner = oauth2Tokenservice.getOrGenerateOidcEntityFromCurrentAuth();
+      requestedWithToken = oauth2Tokenservice.exchangeCurrentAccessToken();
+    }
+    deploymentService.deleteDeployment(id, requestedWithToken);
   }
 }

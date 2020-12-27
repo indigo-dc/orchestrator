@@ -32,6 +32,7 @@ import it.reply.orchestrator.dto.cmdb.CloudServiceType;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.onedata.OneData;
 import it.reply.orchestrator.dto.onedata.OneData.OneDataProviderInfo;
+import it.reply.orchestrator.dto.workflow.CloudServiceWf;
 import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.exception.service.WorkflowException;
 import it.reply.orchestrator.service.CloudProviderEndpointServiceImpl;
@@ -127,7 +128,7 @@ public class UpdateDeploymentTest extends BaseDeployCommandTest<UpdateDeployment
 
     when(cloudProviderEndpointServiceImpl
         .generateCloudProvidersOrderedIterator(rankCloudProvidersMessage, null))
-        .thenReturn(new CloudServicesOrderedIterator(Lists.newArrayList(cs)));
+        .thenReturn(new CloudServicesOrderedIterator(Lists.newArrayList(new CloudServiceWf(cs))));
     when(deploymentRepository.findOne(deployment.getId()))
         .thenReturn(deployment);
     doNothing()
