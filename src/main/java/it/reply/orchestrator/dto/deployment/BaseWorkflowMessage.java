@@ -63,6 +63,8 @@ public class BaseWorkflowMessage {
   @NonNull
   private Map<String, ToscaPolicy> placementPolicies = new HashMap<>();
 
+  private boolean dataMovementWorkflow = false;
+
   /**
    * Creates a new BaseWorkflowMessage coping the fields from another one.
    *
@@ -78,5 +80,6 @@ public class BaseWorkflowMessage {
     oneDataRequirements = other.oneDataRequirements;
     dynafedRequirements = other.dynafedRequirements;
     placementPolicies = other.placementPolicies;
+    dataMovementWorkflow = other.dataMovementWorkflow;
   }
 }

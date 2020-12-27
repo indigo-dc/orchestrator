@@ -19,7 +19,7 @@ package it.reply.orchestrator.service.commands;
 import it.reply.orchestrator.config.properties.CmdbProperties;
 import it.reply.orchestrator.dal.entity.OidcEntityId;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
-import it.reply.orchestrator.service.CmdbServiceImpl;
+import it.reply.orchestrator.service.CmdbServiceV1Impl;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.util.IntegrationTestUtil;
 
@@ -44,7 +44,7 @@ public class GetCmdbDataDeployTest extends BaseRankCloudProvidersCommandTest<Get
 
   @Spy
   @InjectMocks
-  private CmdbServiceImpl cmdbService;
+  private CmdbServiceV1Impl cmdbService;
 
   @Spy
   private CmdbProperties cmdbProperties;

@@ -22,8 +22,10 @@ import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.cmdb.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudService;
+import it.reply.orchestrator.dto.cmdb.StorageService;
 import it.reply.orchestrator.dto.policies.ToscaPolicy;
 import it.reply.orchestrator.dto.ranker.RankedCloudService;
+import it.reply.orchestrator.dto.workflow.CloudServiceWf;
 import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.DeploymentType;
@@ -66,7 +68,7 @@ public class CloudProviderEndpointServiceImpl {
         .flatMap(Collection::stream)
         .collect(Collectors.toMap(CloudService::getId, Function.identity()));
 
-    Stream<CloudService> orderedCloudServices =
+    Stream<CloudServiceWf> orderedCloudServices =
         rankCloudProvidersMessage
             .getRankedCloudServices()
             .stream()
@@ -76,7 +78,20 @@ public class CloudProviderEndpointServiceImpl {
             .sorted(Comparator.comparing(RankedCloudService::getRank))
             .map(RankedCloudService::getServiceId)
             .map(cloudServices::get)
-            .filter(Objects::nonNull);
+            .filter(Objects::nonNull)
+            .map(cloudService -> {
+              CloudServiceWf serviceWf = new CloudServiceWf(cloudService);
+              rankCloudProvidersMessage
+                  .getCloudProviders()
+                  .get(cloudService.getProviderId())
+                  .getServicesOfType(StorageService.class)
+                  .stream()
+                  .map(StorageService::getRucioRse)
+                  .filter(Objects::nonNull)
+                  .findFirst()
+                  .ifPresent(serviceWf::setRucioRse);
+              return serviceWf;
+            });
     if (maxProvidersRetry != null) {
       orderedCloudServices = orderedCloudServices.limit(maxProvidersRetry);
     }
@@ -123,6 +138,8 @@ public class CloudProviderEndpointServiceImpl {
       iaasType = IaaSType.MARATHON;
     } else if (computeService.isQcgComputeProviderService()) {
       iaasType = IaaSType.QCG;
+    } else if (computeService.isKubernetesComputeProviderService()) {
+      iaasType = IaaSType.KUBERNETES;
     } else {
       throw new IllegalArgumentException("Unknown Cloud Provider type: " + computeService);
     }
@@ -133,6 +150,7 @@ public class CloudProviderEndpointServiceImpl {
     cpe.iaasType(iaasType);
     cpe.imEndpoint(imEndpoint);
     cpe.iamEnabled(computeService.isIamEnabled());
+    cpe.idpProtocol(computeService.getIdpProtocol());
 
     if (isHybrid) {
       // generate and set IM iaasHeaderId
@@ -164,6 +182,8 @@ public class CloudProviderEndpointServiceImpl {
         return DeploymentProvider.QCG;
       case TOSCA:
         return DeploymentProvider.IM;
+      case KUBERNETES_HELM_CHART:
+        return DeploymentProvider.KUBERNETES;
       default:
         throw new DeploymentException("Unknown DeploymentType: " + deploymentType.toString());
     }

@@ -22,7 +22,9 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.MoreCollectors;
 
 import it.reply.orchestrator.annotation.DeploymentProviderQualifier;
+import it.reply.orchestrator.config.properties.OrchestratorProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.entity.OidcEntityId;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
@@ -132,6 +134,9 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
   @Autowired
   private VaultService vaultService;
 
+  @Autowired
+  private OrchestratorProperties orchestratorProperties;
+
   protected <R> R executeWithClientForResult(CloudProviderEndpoint cloudProviderEndpoint,
       @Nullable OidcTokenId requestedWithToken,
       ThrowingFunction<Marathon, R, MarathonException> function) {
@@ -187,7 +192,24 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     List<App> apps = new ArrayList<>();
     for (NodeTemplate marathonNode : orderedMarathonApps) {
 
-      MarathonApp marathonTask = buildTask(graph, marathonNode, marathonNode.getName());
+      MarathonApp marathonTask = super.buildTask(graph, marathonNode, marathonNode.getName());
+
+      ToscaUtils
+          .extractScalar(marathonNode.getProperties(), "enable_https", BooleanType.class)
+          .ifPresent(marathonTask::setEnableHttps);
+
+      ToscaUtils
+          .extractMap(marathonNode.getProperties(), "secrets", String.class::cast)
+          .ifPresent(marathonTask::setSecrets);
+
+      ToscaUtils
+          .extractScalar(marathonNode.getProperties(), "user")
+          .ifPresent(marathonTask::setRunAsUser);
+
+      OidcEntityId ownerId = deployment.getOwner().getOidcEntityId();
+      marathonTask.getLabels().put("created_by", ownerId.getSubject() + "@" + ownerId.getIssuer());
+      marathonTask.getLabels().put("origin", orchestratorProperties.getUrl().toString());
+
       List<Resource> resources = resourceRepository
           .findByToscaNodeNameAndDeployment_id(marathonNode.getName(), deployment.getId());
 
@@ -200,22 +222,6 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     }
     group.setApps(apps);
     return group;
-  }
-
-  @Override
-  public MarathonApp buildTask(DirectedMultigraph<NodeTemplate, RelationshipTemplate> graph,
-      NodeTemplate taskNode, String taskId) {
-    MarathonApp task = super.buildTask(graph, taskNode, taskId);
-
-    ToscaUtils
-        .extractScalar(taskNode.getProperties(), "enable_https", BooleanType.class)
-        .ifPresent(task::setEnableHttps);
-
-    ToscaUtils
-        .extractMap(taskNode.getProperties(), "secrets", String.class::cast)
-        .ifPresent(task::setSecrets);
-
-    return task;
   }
 
   @Override
@@ -267,8 +273,14 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     vaultService.getServiceUri()
         .map(URI::toString)
         .ifPresent(cloudProviderEndpoint::setVaultEndpoint);
-    executeWithClient(cloudProviderEndpoint, requestedWithToken,
-        client -> client.createGroup(group));
+    try {
+      executeWithClient(cloudProviderEndpoint, requestedWithToken,
+          client -> client.createGroup(group));
+    } catch (MarathonException ex) {
+      throw new BusinessWorkflowException(ErrorCode.CLOUD_PROVIDER_ERROR,
+          "Error creating Marathon App Group",
+          new DeploymentException(ex.getMessage()));
+    }
     return true;
 
   }
@@ -435,7 +447,7 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     app.setMem(marathonTask.getMemSize());
     app.setUris(marathonTask.getUris());
     app.setLabels(marathonTask.getLabels());
-
+    app.setUser(marathonTask.getRunAsUser());
     Map<String, Object> marathonEnv = new HashMap<>(marathonTask.getEnv());
 
     // handle secrets
@@ -612,6 +624,16 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     } else {
       return Optional.of("Some Application failed:\n" + failedAppsMessage);
     }
+  }
+
+  @Override
+  public Optional<String> getDeploymentLogInternal(DeploymentMessage deploymentMessage) {
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<String> getDeploymentExtendedInfoInternal(DeploymentMessage deploymentMessage) {
+    return Optional.empty();
   }
 
   @Override

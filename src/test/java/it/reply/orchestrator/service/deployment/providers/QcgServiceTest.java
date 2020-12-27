@@ -1,5 +1,5 @@
 /*
- * Copyright © 2019 I.N.F.N.
+ * Copyright © 2019-2020 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@ package it.reply.orchestrator.service.deployment.providers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-
 import com.google.common.collect.Lists;
 
 import it.infn.ba.deep.qcg.client.Qcg;
@@ -40,6 +39,7 @@ import it.reply.orchestrator.dto.cmdb.CloudServiceType;
 import it.reply.orchestrator.dto.cmdb.QcgService;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.deployment.QcgJobsOrderedIterator;
+import it.reply.orchestrator.dto.workflow.CloudServiceWf;
 import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.exception.service.BusinessWorkflowException;
@@ -54,6 +54,11 @@ import it.reply.orchestrator.util.TestUtil;
 import it.reply.orchestrator.utils.ToscaConstants.Nodes;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import junitparams.JUnitParamsRunner;
@@ -125,6 +130,7 @@ public class QcgServiceTest extends ToscaParserAwareTest {
         .when(oauth2tokenService.executeWithClientForResult(
             Mockito.any(), Mockito.any(), Mockito.any()))
     	        .thenAnswer(y -> ((ThrowingFunction) y.getArguments()[1]).apply("token"));
+
   }
 
   private CloudProviderEndpoint generateCloudProviderEndpoint() {
@@ -137,14 +143,64 @@ public class QcgServiceTest extends ToscaParserAwareTest {
   }
 
   @Test
-  @Parameters({"0,,FRESH", "1,,SUCCESS", "1,fail,FAILURE", "0,fail,FAILURE"})
-  public void getLastState(int successCount, String error, JobState expectedState) {
+  @Parameters({"SUBMITTED", "PENDING", "EXECUTING", "FAILED", "COMPLETING", "FINISHED", "?", ""})
+  public void getLastState(String jobState) {
     Job job = new Job();
-    job.setResubmit(successCount);
-    job.setErrors(error);
-    JobState lastState = QcgServiceImpl.getLastState(job);
+    job.setState(jobState);
+    if (jobState.equals("")) {
+      assertThatCode(
+          () -> QcgServiceImpl.getLastState(job))
+          .isInstanceOf(DeploymentException.class)
+          .hasMessage("Empty Qcg job status");
 
-    assertThat(lastState).isEqualTo(expectedState);
+    } else {
+      if (jobState.equals("?")) {
+        assertThatCode(
+            () -> QcgServiceImpl.getLastState(job))
+            .isInstanceOf(DeploymentException.class)
+            .hasMessage("Unknown Qcg job status: ?");
+      } else {
+        JobState lastState = QcgServiceImpl.getLastState(job);
+        assertThat(lastState.toString()).isEqualTo(jobState);
+      }
+    }
+  }
+
+  @Test
+  @Parameters({"true", "false"})
+  public void getDeploymentExtendedInfo(boolean fail) {
+    Deployment deployment = ControllerTestUtils.createDeployment();
+    DeploymentMessage dm = generateDeployDmQcg(deployment);
+
+    Resource resource1 = ControllerTestUtils.createResource(deployment,
+        "tosca.nodes.indigo.Qcg.Job", "qcg_job", "1");
+    Map<String,String> metadata1 = new HashMap<>();
+    metadata1.put("Job", "{\"Id\": \"1\"}");
+    resource1.setMetadata(metadata1);
+    Resource resource2 = ControllerTestUtils.createResource(deployment,
+        "tosca.nodes.indigo.Qcg.Job", "qcg_job", "2");
+    Map<String,String> metadata2 = new HashMap<>();
+    metadata2.put("Job", "{\"Id\": \"2\"}");
+    resource2.setMetadata(metadata2);
+    List<Resource> resources = new ArrayList<>(deployment.getResources());
+    when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
+    when(resourceRepository.findByDeployment_id(deployment.getId())).thenReturn(resources);
+    if (!fail) {
+      assertThat(qcgService.getDeploymentExtendedInfo(dm).get())
+          .isEqualTo(String.format("[{\"Id\": \"%s\"},{\"Id\": \"%s\"}]",
+              resources.get(0).getIaasId(), resources.get(1).getIaasId()));
+    } else {
+      when(qcgService.getDeploymentExtendedInfoInternal(dm)).thenThrow(new RuntimeException("test failed"));
+      assertThat(qcgService.getDeploymentExtendedInfo(dm))
+          .isEqualTo(Optional.empty());
+    }
+  }
+
+  @Test
+  public void getDeploymentLog() {
+    Deployment deployment = ControllerTestUtils.createDeployment();
+    DeploymentMessage dm = generateDeployDmQcg(deployment);
+    assertThat(qcgService.getDeploymentLog(dm)).isEqualTo(Optional.empty());
   }
 
   @Test
@@ -164,13 +220,26 @@ public class QcgServiceTest extends ToscaParserAwareTest {
 
     QcgJobsOrderedIterator topologyIterator = mock(QcgJobsOrderedIterator.class);
     dm.setQcgJobsIterator(topologyIterator);
-
+    DeepJob deepJob = new DeepJob(job, "qcg_job");
+    Resource resource1 = ControllerTestUtils.createResource(deployment,
+        "tosca.nodes.indigo.Qcg.Job", "qcg_job", "1");
+    Resource resource2 = ControllerTestUtils.createResource(deployment,
+        "tosca.nodes.indigo.Qcg.Job", "qcg_job", "2");
+    Map<String,String> metadata = new HashMap<>();
+    metadata.put("Job", "{}");
+    resource2.setMetadata(metadata);
+    List<Resource> resources = new ArrayList<>();
+    resources.add(resource1);
+    resources.add(resource2);
     when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
     when(topologyIterator.hasNext()).thenReturn(true, !isLast);
-    when(topologyIterator.next()).thenReturn(new DeepJob(job,"toscaName"));
+    when(topologyIterator.next()).thenReturn(deepJob);
+    when(resourceRepository.findByToscaNodeNameAndDeployment_id(
+        "qcg_job", deployment.getId())).thenReturn(resources);
+    when(qcg.createJob(job.getDescription())).thenReturn(job);
 
     assertThat(qcgService.doDeploy(dm)).isEqualTo(isLast);
-    verify(qcg, times(1)).createJob(job.getDescription());
+    verify(qcg, times(1)).createJob(description);
     if (isLast) {
       verify(topologyIterator, times(1)).reset();
     }
@@ -185,20 +254,21 @@ public class QcgServiceTest extends ToscaParserAwareTest {
     Job job = new Job();
     job.setId("999");
 
+    JobDescription description = new JobDescription();
+    job.setDescription(description);
     QcgJobsOrderedIterator iterator = mock(QcgJobsOrderedIterator.class);
     dm.setQcgJobsIterator(iterator);
 
     when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
     when(iterator.hasCurrent()).thenReturn(true, true);
     when(iterator.hasNext()).thenReturn(!isLast);
-    when(iterator.current()).thenReturn(new DeepJob(job,"toscaName"));
+    when(iterator.current()).thenReturn(new DeepJob(job, "toscaName"));
 
     Job returnedJob = new Job();
     if (isCompleted) {
-      returnedJob.setResubmit(1);
+      returnedJob.setState("FINISHED");
     } else {
-      returnedJob.setResubmit(0);
-      returnedJob.setErrors(null);
+      returnedJob.setState("EXECUTING");
     }
 
     when(qcg.getJob("999")).thenReturn(returnedJob);
@@ -219,14 +289,15 @@ public class QcgServiceTest extends ToscaParserAwareTest {
   public void testCheckJobsOnQcgFail() {
     Job job = new Job();
     job.setId("999");
-    job.setResubmit(0);
     job.setErrors("fail");
+    job.setExit_code(2);
+    job.setState("FAILED");
     when(qcg.getJob("999")).thenReturn(job);
 
     assertThatCode(
-        () -> qcgService.checkJobsOnQcg(generateCloudProviderEndpoint(), null, "999"))
+        () -> qcgService.checkJobState(job))
         .isInstanceOf(DeploymentException.class)
-        .hasMessage("Qcg job 999 failed to execute");
+        .hasMessage("Qcg job 999 failed to execute with exit code:2 - message: fail");
   }
 
   @Test
@@ -239,31 +310,30 @@ public class QcgServiceTest extends ToscaParserAwareTest {
     description.setExecution(execution);
     job.setDescription(description);
 
-    /*Job updated =*/ qcgService
-    	.createJobOnQcg(generateCloudProviderEndpoint(), null, new DeepJob(job,"toscaName"));
-    verify(qcg, times(1)).createJob(job.getDescription());
+    qcgService
+    	.createJobOnQcg(generateCloudProviderEndpoint(), null, new DeepJob(job, "toscaName"));
+    verify(qcg, times(1)).createJob(description);
   }
 
   @Test
   public void createJobOnQcgFail() throws QcgException {
     Job job = new Job();
-    job.setId("999");
     JobDescription description = new JobDescription();
     JobDescriptionExecution execution = new JobDescriptionExecution();
     execution.setExecutable("/usr/bin/printf");
     description.setExecution(execution);
     job.setDescription(description);
 
-    doThrow(new QcgException(500, "some message")).when(qcg).createJob(job.getDescription());
+    doThrow(new QcgException(500, "some message")).when(qcg).createJob(description);
 
     assertThatCode(
         () -> qcgService
-        .createJobOnQcg(generateCloudProviderEndpoint(), null, new DeepJob(job,"toscaName")))
+        .createJobOnQcg(generateCloudProviderEndpoint(), null, new DeepJob(job, "toscaName")))
         .isInstanceOf(DeploymentException.class)
         .hasCauseExactlyInstanceOf(QcgException.class)
         .hasMessage(
-            "Failed to launch job <%s> on Qcg; nested exception is %s (http status: %s)",
-            "999", "some message", 500);
+            "Failed to launch job on Qcg; nested exception is %s (http status: %s)",
+            "some message", 500);
   }
 
   @Test
@@ -313,7 +383,7 @@ public class QcgServiceTest extends ToscaParserAwareTest {
 
   @Test
   @Parameters({"true", "false"})
-  public void doUndeploySuccessful(boolean isLast) throws QcgException {
+  public void doUndeploySuccessful(boolean isLast) {
     Deployment deployment = ControllerTestUtils.createDeployment(isLast ? 1 : 2);
     deployment.setEndpoint(isLast ? "999" : "1000");
     DeploymentMessage dm = generateDeployDmQcg(deployment);
@@ -382,9 +452,10 @@ public class QcgServiceTest extends ToscaParserAwareTest {
         .providerId("provider-1")
         .id("provider-1-service-1")
         .type(CloudServiceType.COMPUTE)
+        .supportedIdps(new ArrayList<>())
         .build();
 
-    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(qs));
+    CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(new CloudServiceWf(qs)));
     csi.next();
     dm.setCloudServicesOrderedIterator(csi);
 

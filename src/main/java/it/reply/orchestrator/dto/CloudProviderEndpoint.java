@@ -32,6 +32,7 @@ import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.Getter;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -51,7 +52,8 @@ public class CloudProviderEndpoint {
     AZURE,
     CHRONOS,
     MARATHON,
-    QCG;
+    QCG,
+    KUBERNETES;
   }
 
   @Nullable
@@ -89,6 +91,11 @@ public class CloudProviderEndpoint {
   @JsonProperty
   private boolean iamEnabled = true;
 
+  @Builder.Default
+  @JsonProperty
+  @Getter(AccessLevel.NONE)
+  private String idpProtocol = "oidc";
+
   @SuppressWarnings("null")
   @Deprecated
   protected CloudProviderEndpoint() {
@@ -98,6 +105,18 @@ public class CloudProviderEndpoint {
   @JsonIgnore
   public Optional<String> getIaasHeaderId() {
     return Optional.ofNullable(iaasHeaderId);
+  }
+
+  /**
+   * getIdpProtocol.
+   * @return the name of Idp Protocol
+   */
+  @JsonIgnore
+  public String getIdpProtocol() {
+    if (idpProtocol == null) {
+      return "oidc";
+    }
+    return idpProtocol;
   }
 
   @JsonIgnore

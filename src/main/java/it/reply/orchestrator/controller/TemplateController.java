@@ -41,8 +41,21 @@ public class TemplateController {
    */
   @RequestMapping(value = "/deployments/{deploymentId}/template", method = RequestMethod.GET)
   @ResponseStatus(HttpStatus.OK)
-  public CharSequence getTemplate(@PathVariable("deploymentId") String uuid) {
-    return templateService.getTemplate(uuid);
+  public CharSequence getDeploymentTemplate(@PathVariable("deploymentId") String uuid) {
+    return templateService.getDeploymentTemplate(uuid);
+  }
+
+  /**
+   * Get the template by deploymentId.
+   *
+   * @param uuid
+   *          the uuid of the deployment
+   * @return the template
+   */
+  @RequestMapping(value = "/schedules/{scheduleId}/template", method = RequestMethod.GET)
+  @ResponseStatus(HttpStatus.OK)
+  public CharSequence getDeploymentScheduleTemplate(@PathVariable("scheduleId") String uuid) {
+    return templateService.getDeploymentScheduleTemplate(uuid);
   }
 
 }

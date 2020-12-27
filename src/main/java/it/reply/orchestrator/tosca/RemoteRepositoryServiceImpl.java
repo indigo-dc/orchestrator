@@ -25,8 +25,8 @@ import alien4cloud.tosca.parser.ParsingContextExecution;
 import it.reply.orchestrator.config.properties.ToscaProperties;
 import it.reply.orchestrator.exception.service.ToscaException;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
@@ -41,9 +41,10 @@ import org.alien4cloud.tosca.model.CSARDependencyWithUrl;
 import org.alien4cloud.tosca.model.Csar;
 import org.alien4cloud.tosca.model.types.AbstractToscaType;
 import org.apache.commons.io.Charsets;
-import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Primary;
+import org.springframework.core.io.Resource;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Service;
@@ -93,6 +94,7 @@ public class RemoteRepositoryServiceImpl implements ICSARRepositorySearchService
     return element;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public <T extends AbstractToscaType> T getElementInDependencies(Class<T> elementClass,
       Set<CSARDependency> dependencies, String... keyValueFilters) {
@@ -158,13 +160,15 @@ public class RemoteRepositoryServiceImpl implements ICSARRepositorySearchService
     String templateFileName =
         String.format("%s-%s.yaml", dependency.getName(), dependency.getVersion());
     try {
-      File templateFile = toscaProperties
+      Resource templateFile = toscaProperties
           .getDefinitionsFolder()
-          .createRelative(templateFileName)
-          .getFile();
-      String templatePath = templateFile.getAbsolutePath();
+          .createRelative(templateFileName);
+      String templatePath = templateFile.getURI().toString();
       LOG.info("Fetching local TOSCA dependency {}", templatePath);
-      String template = FileUtils.readFileToString(templateFile, Charsets.UTF_8);
+      String template;
+      try (InputStream in = templateFile.getInputStream()) {
+        template = IOUtils.toString(in, Charsets.UTF_8);
+      }
       LOG.info("Fetched local TOSCA dependency {}", templatePath);
       ArchiveRoot result = templateParser.parse(templatePath, templateFileName, template);
       LOG.info("Parsed local TOSCA dependency {}", templatePath);

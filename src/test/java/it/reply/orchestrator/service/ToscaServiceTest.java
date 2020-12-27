@@ -337,7 +337,7 @@ public class ToscaServiceTest extends ToscaParserAwareTest {
 	public void checkHybridUpdateDeploymentSetting() throws Exception {
 		String template = TestUtil.getFileContentAsString(TEMPLATES_BASE_DIR + "tosca_hybrid_before_update.yaml");
 		ArchiveRoot ar = toscaService.parse(template);
-		ArchiveRoot arNew = toscaService.setHybridUpdateDeployment(ar, PUBLIC_NETWORK_NAME2,
+		ArchiveRoot arNew = toscaService.setHybridUpdateDeployment(ar, true, PUBLIC_NETWORK_NAME2,
 		    PRIVATE_NETWORK_NAME2, PRIVATE_NETWORK_CIDR2);
 
 		Assertions.assertThat(toscaService.getNodesOfType(arNew, ToscaConstants.Nodes.Types.CENTRAL_POINT)).size().isOne();

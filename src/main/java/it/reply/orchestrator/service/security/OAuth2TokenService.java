@@ -26,8 +26,8 @@ import it.reply.orchestrator.dal.entity.OidcEntity;
 import it.reply.orchestrator.dal.entity.OidcEntityId;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.repository.OidcEntityRepository;
+import it.reply.orchestrator.dto.security.IamUserInfo;
 import it.reply.orchestrator.dto.security.IndigoOAuth2Authentication;
-import it.reply.orchestrator.dto.security.IndigoUserInfo;
 import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.function.ThrowingConsumer;
@@ -149,7 +149,7 @@ public class OAuth2TokenService {
     newEntity.setOidcEntityId(id);
 
     IndigoOAuth2Authentication autentication = getCurrentAuthentication();
-    IndigoUserInfo userInfo = (IndigoUserInfo) autentication.getUserInfo();
+    IamUserInfo userInfo = (IamUserInfo) autentication.getUserInfo();
     if (userInfo != null) {
       String organization = Preconditions.checkNotNull(userInfo.getOrganizationName(),
           "Organization name not found between the user info claims");

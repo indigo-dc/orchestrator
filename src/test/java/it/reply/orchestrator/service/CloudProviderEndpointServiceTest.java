@@ -228,6 +228,7 @@ public class CloudProviderEndpointServiceTest {
         .endpoint("www.example.com")
         .providerId("provider-RECAS-BARI")
         .type(CloudServiceType.COMPUTE)
+        .iamEnabled(true)
         .hostname("example.com")
         .build();
 

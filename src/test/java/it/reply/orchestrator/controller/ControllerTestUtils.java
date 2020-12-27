@@ -17,8 +17,13 @@
 package it.reply.orchestrator.controller;
 
 import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.entity.DeploymentSchedule;
+import it.reply.orchestrator.dal.entity.DeploymentScheduleEvent;
+import it.reply.orchestrator.dal.entity.ReplicationRule;
 import it.reply.orchestrator.dal.entity.Resource;
+import it.reply.orchestrator.enums.DeploymentScheduleStatus;
 import it.reply.orchestrator.enums.NodeStates;
+import it.reply.orchestrator.enums.ReplicationRuleStatus;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
 
@@ -54,12 +59,31 @@ public class ControllerTestUtils {
     return deployment;
   }
 
+  public static DeploymentSchedule createDeploymentSchedule(String id) {
+    DeploymentSchedule deploymentSchedule = new DeploymentSchedule();
+    deploymentSchedule.setId(id);
+    deploymentSchedule.setCreatedAt(new Date());
+    deploymentSchedule.setUpdatedAt(new Date());
+    deploymentSchedule.setVersion(0L);
+    deploymentSchedule.setFileExpression("scope:name*");
+    deploymentSchedule.setStatus(DeploymentScheduleStatus.RUNNING);
+    deploymentSchedule.setNumberOfReplicas(1);
+    deploymentSchedule.setReplicationExpression("RSE_RECAS");
+    deploymentSchedule.setCallback("http://localhost");
+    deploymentSchedule.setTemplate("tosca_definitions_version: tosca_simple_yaml_1_0\ntopology_template:\n");
+    return deploymentSchedule;
+  }
+
   public static Deployment createDeployment(String id) {
     return createDeployment(id, 0);
   }
 
   public static Deployment createDeployment() {
     return createDeployment(UUID.randomUUID().toString());
+  }
+
+  public static DeploymentSchedule createDeploymentSchedule() {
+    return createDeploymentSchedule(UUID.randomUUID().toString());
   }
 
   public static Deployment createDeployment(int resourceNumber) {
@@ -73,6 +97,28 @@ public class ControllerTestUtils {
         .collect(Collectors.toList());
   }
 
+  public static List<DeploymentSchedule> createDeploymentSchedules(int total) {
+    return IntStream
+        .range(0, total)
+        .mapToObj((i) -> createDeploymentSchedule())
+        .collect(Collectors.toList());
+  }
+
+  public static Resource createResource(Deployment deployment,
+      String toscaNodeType, String toscaNodeName, String iaasId) {
+    Resource resource = new Resource();
+    resource.setId(UUID.randomUUID().toString());
+    resource.setCreatedAt(new Date());
+    resource.setUpdatedAt(new Date());
+    resource.setState(NodeStates.CREATING);
+    resource.setToscaNodeType(toscaNodeType);
+    resource.setToscaNodeName(toscaNodeName);
+    resource.setIaasId(iaasId);
+    resource.setDeployment(deployment);
+    deployment.getResources().add(resource);
+    return resource;
+  }
+
   public static Resource createResource(String id, Deployment deployment) {
     Resource resource = new Resource();
     resource.setId(UUID.randomUUID().toString());
@@ -81,6 +127,7 @@ public class ControllerTestUtils {
     resource.setState(NodeStates.CREATING);
     resource.setToscaNodeType("tosca.nodes.Compute");
     resource.setToscaNodeName("node_" + id);
+    resource.setIaasId(id);
     resource.setDeployment(deployment);
     deployment.getResources().add(resource);
     return resource;
@@ -97,4 +144,25 @@ public class ControllerTestUtils {
         .collect(Collectors.toList());
   }
 
+  public static DeploymentScheduleEvent createDeploymentScheduleEvent(String deploymentScheduleId, String eventId) {
+    DeploymentScheduleEvent deploymentScheduleEvent = new DeploymentScheduleEvent();
+    deploymentScheduleEvent.setDeploymentSchedule(createDeploymentSchedule(deploymentScheduleId));
+    deploymentScheduleEvent.setDeployment(createDeployment());
+    deploymentScheduleEvent.setName("file-name");
+    deploymentScheduleEvent.setScope("file-scope");
+    deploymentScheduleEvent.setCreatedAt(new Date());
+    deploymentScheduleEvent.setUpdatedAt(new Date());
+    deploymentScheduleEvent.setVersion(0L);
+    deploymentScheduleEvent.setId(eventId);
+    ReplicationRule replicationRule = new ReplicationRule();
+    replicationRule.setStatus(ReplicationRuleStatus.REPLICATING);
+    deploymentScheduleEvent.setMainReplicationRule(replicationRule);
+    return deploymentScheduleEvent;
+  }
+  public static List<DeploymentScheduleEvent> createDeploymentScheduleEvents(String deploymentScheduleId, int total) {
+    return IntStream
+        .range(0, total)
+        .mapToObj((i) -> createDeploymentScheduleEvent(deploymentScheduleId, UUID.randomUUID().toString()))
+        .collect(Collectors.toList());
+  }
 }

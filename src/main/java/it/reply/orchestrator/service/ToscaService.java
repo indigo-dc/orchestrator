@@ -243,7 +243,11 @@ public interface ToscaService {
 
   public Collection<NodeTemplate> getNodesOfType(ArchiveRoot archiveRoot, String type);
 
+  public Collection<NodeTemplate> getNodesLikeType(ArchiveRoot archiveRoot, String regexType);
+
   public Map<NodeTemplate, Image> extractImageRequirements(ArchiveRoot parsingResult);
+
+  boolean isLikeToscaType(NodeTemplate node, String regexNodeType);
 
   boolean isOfToscaType(NodeTemplate node, String nodeType);
 
@@ -257,7 +261,12 @@ public interface ToscaService {
       String privateNetworkName, String privateNetworkCidr);
 
   public ArchiveRoot setHybridUpdateDeployment(ArchiveRoot ar,
+      boolean newResourcesOnDifferentService,
       String publicNetworkName, String privateNetworkName, String privateNetworkCidr);
+
+  public ArchiveRoot setNetworkNames(ArchiveRoot ar,
+      String publicNetworkName,
+      String privateNetworkName);
 
   public Map<NodeTemplate, Flavor> extractFlavorRequirements(ArchiveRoot parsingResult);
 

@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableSet;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -54,7 +55,7 @@ import org.springframework.validation.annotation.Validated;
 public class OidcProperties implements SecurityPrerequisite, InitializingBean {
 
   public static final Set<String> REQUIRED_SCOPES =
-      ImmutableSet.of("openid", "profile", "offline_access");
+      ImmutableSet.of("openid", "profile", "offline_access", "fts:submit-transfer");
 
   protected static final String PROPERTIES_PREFIX = "oidc";
 
@@ -95,6 +96,10 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
     return Optional.ofNullable(iamProperties.get(issuer));
   }
 
+  public Set<String> getOrchestratorScopes(String issuer) {
+    return new HashSet<>(iamProperties.get(issuer).orchestrator.scopes);
+  }
+
   @Override
   public void afterPropertiesSet() throws Exception {
     if (enabled) {
@@ -109,8 +114,11 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
         Assert.hasText(orchestratorConfiguration.getClientSecret(),
             "Orchestrator OAuth2 clientSecret for issuer " + issuer + " must be provided");
         if (orchestratorConfiguration.getScopes().isEmpty()) {
-          // TODO do we need this?
-          LOG.warn("No Orchestrator OAuth2 scopes provided for issuer {}", issuer);
+          LOG.warn("No Orchestrator OAuth2 scopes provided for issuer {}. Using default: {}",
+                  issuer, REQUIRED_SCOPES);
+          orchestratorConfiguration.setScopes(new ArrayList<String>(REQUIRED_SCOPES));
+          iamConfiguration.setOrchestrator(orchestratorConfiguration);
+          iamConfigurationEntry.setValue(iamConfiguration);
         }
 
         Optional<OidcClientProperties> cluesConfiguration = iamConfiguration.getClues();
@@ -193,9 +201,16 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
   @NoArgsConstructor
   public static class ScopedOidcClientProperties extends OidcClientProperties {
 
-    @NotNull
-    @NonNull
-    private List<String> scopes = new ArrayList<>(REQUIRED_SCOPES);
+    private List<String> scopes;
 
+    /**
+     * Return the scopes.
+     */
+    public List<String> getScopes() {
+      if (scopes == null) {
+        scopes = new ArrayList<String>();
+      }
+      return scopes;
+    }
   }
 }

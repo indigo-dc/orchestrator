@@ -43,6 +43,12 @@ import org.springframework.web.client.RestTemplate;
 
 public class CustomOAuth2Template {
 
+  private static final String TOKEN_TYPE_ACCESS_TOKEN =
+      "urn:ietf:params:oauth:token-type:access_token";
+  private static final String GRANT_TYPE_TOKEN_EXCHANGE =
+      "urn:ietf:params:oauth:grant-type:token-exchange";
+  public static final String GRANT_TYPE_REFRESH_TOKEN = "refresh_token";
+
   private ServerConfiguration serverConfiguration;
   private RegisteredClient clientConfiguration;
 
@@ -87,9 +93,8 @@ public class CustomOAuth2Template {
     MultiValueMap<String, String> params =
         generateParams(clientConfiguration.getTokenEndpointAuthMethod());
     params.set("subject_token", accessToken);
-    params.set("grant_type", "urn:ietf:params:oauth:grant-type:token-exchange");
-    params.set("audience", audience);
-    return postForAccessGrant(params, scopes);
+    params.set("subject_token_type", TOKEN_TYPE_ACCESS_TOKEN);
+    return postForAccessGrant(params, scopes, GRANT_TYPE_TOKEN_EXCHANGE);
   }
 
   /**
@@ -105,9 +110,7 @@ public class CustomOAuth2Template {
     MultiValueMap<String, String> params =
         generateParams(clientConfiguration.getTokenEndpointAuthMethod());
     params.set("refresh_token", refreshToken);
-    params.set("grant_type", "refresh_token");
-    params.set("audience", audience);
-    return postForAccessGrant(params, scopes);
+    return postForAccessGrant(params, scopes, GRANT_TYPE_REFRESH_TOKEN);
   }
 
   /**
@@ -138,8 +141,10 @@ public class CustomOAuth2Template {
   }
 
   protected AccessGrant postForAccessGrant(MultiValueMap<String, String> params,
-      Set<String> scopes) {
+      Set<String> scopes, String grantType) {
+    params.set("audience", audience);
     params.set("scope", scopeFromCollection(scopes));
+    params.set("grant_type", grantType);
     return validateAccessGrantScopes(postForObject(serverConfiguration.getTokenEndpointUri(),
         clientConfiguration.getTokenEndpointAuthMethod(), params, AccessGrant.class), scopes);
   }

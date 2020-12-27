@@ -21,7 +21,7 @@ import com.google.common.collect.Lists;
 import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.config.properties.OidcProperties.ScopedOidcClientProperties;
 import it.reply.orchestrator.exception.CustomOAuth2ExceptionRenderer;
-import it.reply.orchestrator.service.security.IndigoUserInfoFetcher;
+import it.reply.orchestrator.service.security.CustomUserInfoFetcher;
 import it.reply.orchestrator.service.security.OAuth2ConfigurationsService;
 import it.reply.orchestrator.service.security.UserInfoIntrospectingTokenService;
 
@@ -103,7 +103,7 @@ public class AuthenticatedWebSecurityConfig extends BaseWebSecurityConfig {
 
   @Bean
   public UserInfoFetcher userInfoFetcher() {
-    return new IndigoUserInfoFetcher();
+    return new CustomUserInfoFetcher();
   }
 
   /**

@@ -20,7 +20,7 @@ import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.config.properties.SlamProperties;
 import it.reply.orchestrator.dal.repository.OidcEntityRepository;
 import it.reply.orchestrator.function.ThrowingFunction;
-import it.reply.orchestrator.service.SlamServiceImpl;
+import it.reply.orchestrator.service.SlamServiceV1Impl;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.util.IntegrationTestUtil;
 
@@ -39,7 +39,7 @@ public class GetSlamTest extends BaseRankCloudProvidersCommandTest<GetSlam> {
 
   @Spy
   @InjectMocks
-  private SlamServiceImpl slamService;
+  private SlamServiceV1Impl slamService;
 
   @Spy
   private SlamProperties slamProperties;

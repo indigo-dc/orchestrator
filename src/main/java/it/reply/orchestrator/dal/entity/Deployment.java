@@ -43,6 +43,7 @@ import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
 import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -133,4 +134,8 @@ public class Deployment extends AbstractResourceEntity {
     this.workflowReferences.add(workflowReference);
   }
 
+  @OneToOne(mappedBy = "deployment", cascade = CascadeType.ALL, fetch = FetchType.LAZY,
+      optional = true)
+  @Nullable
+  private DeploymentScheduleEvent deploymentScheduleEvent;
 }

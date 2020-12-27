@@ -2,3 +2,18 @@ databaseChangeLog:
   - include:
     - file: 0001_workflow-create-all-6301.yaml
       relativeToChangelogFile: true
+  - include:
+    - file: 0004_workflow-upgrade-all-6301-to-6310.yaml
+      relativeToChangelogFile: true
+  - include:
+    - file: 0005_workflow-upgrade-all-6310-to-6400.yaml
+      relativeToChangelogFile: true
+  - include:
+    - file: 0006_workflow-upgrade-all-6400-to-6413.yaml
+      relativeToChangelogFile: true
+  - include:
+    - file: 0007_workflow-upgrade-all-6413-to-6501.yaml
+      relativeToChangelogFile: true
+  - include:
+    - file: 0008_workflow-upgrade-all-6501-to-6506.yaml
+      relativeToChangelogFile: true

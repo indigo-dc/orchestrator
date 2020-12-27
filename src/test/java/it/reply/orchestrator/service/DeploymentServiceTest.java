@@ -35,10 +35,13 @@ import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.exception.http.BadRequestException;
 import it.reply.orchestrator.exception.http.ConflictException;
 import it.reply.orchestrator.exception.http.NotFoundException;
+import it.reply.orchestrator.service.deployment.providers.DeploymentProviderServiceRegistry;
+import it.reply.orchestrator.service.deployment.providers.ImServiceImpl;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.UUID;
 
 import javax.annotation.Nullable;
@@ -90,6 +93,12 @@ public class DeploymentServiceTest {
 
   @InjectMocks
   private DeploymentService deploymentService = new DeploymentServiceImpl();
+
+  @Mock
+  private DeploymentProviderServiceRegistry deploymentProviderServiceRegistry;
+
+  @Mock
+  private ImServiceImpl imService;
 
   @Mock
   private DeploymentRepository deploymentRepository;
@@ -163,7 +172,45 @@ public class DeploymentServiceTest {
         .isInstanceOf(NotFoundException.class);
   }
 
-  private Deployment basecreateDeploymentSuccessful(DeploymentRequest deploymentRequest,
+  @Test
+  @Parameters({"true", "false"})
+  public void getDeploymentExtendedInfo(boolean ispresent) {
+    Deployment deployment = ControllerTestUtils.createDeployment();
+    deployment.setDeploymentProvider(DeploymentProvider.IM);
+    Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
+    Mockito.when(deploymentProviderServiceRegistry.getDeploymentProviderService(deployment.getId()))
+        .thenReturn(imService);
+    if (ispresent) {
+      Mockito.when(imService.getDeploymentExtendedInfo(Mockito.any()))
+          .thenReturn(Optional.of("extendedinfo"));
+      assertThat(deploymentService.getDeploymentExtendedInfo(deployment.getId(), null)).isEqualTo("extendedinfo");
+    } else {
+      Mockito.when(imService.getDeploymentExtendedInfo(Mockito.any()))
+          .thenReturn(Optional.empty());
+      assertThat(deploymentService.getDeploymentExtendedInfo(deployment.getId(), null)).isEqualTo("[]");
+    }
+  }
+
+  @Test
+  @Parameters({"true", "false"})
+  public void getDeploymentLog(boolean ispresent) {
+    Deployment deployment = ControllerTestUtils.createDeployment();
+    deployment.setDeploymentProvider(DeploymentProvider.IM);
+    Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
+    Mockito.when(deploymentProviderServiceRegistry.getDeploymentProviderService(deployment.getId()))
+        .thenReturn(imService);
+    if (ispresent) {
+      Mockito.when(imService.getDeploymentLog(Mockito.any()))
+          .thenReturn(Optional.of("deploymentlog"));
+      assertThat(deploymentService.getDeploymentLog(deployment.getId(), null)).isEqualTo("deploymentlog");
+    } else {
+      Mockito.when(imService.getDeploymentLog(Mockito.any()))
+          .thenReturn(Optional.empty());
+      assertThat(deploymentService.getDeploymentLog(deployment.getId(), null)).isEqualTo("");
+    }
+  }
+
+ private Deployment basecreateDeploymentSuccessful(DeploymentRequest deploymentRequest,
       Map<String, NodeTemplate> nodeTemplates) throws Exception {
 
     if (nodeTemplates == null) {
@@ -198,7 +245,7 @@ public class DeploymentServiceTest {
         .thenReturn(builder);
     Mockito.when(builder.start()).thenReturn(Mockito.mock(ProcessInstance.class));
 
-    return deploymentService.createDeployment(deploymentRequest);
+    return deploymentService.createDeployment(deploymentRequest, null, null);
   }
 
   @Test
@@ -422,7 +469,7 @@ public class DeploymentServiceTest {
   public void deleteDeploymentNotFound() throws Exception {
     Mockito.when(deploymentRepository.findOne("id")).thenReturn(null);
 
-    assertThatThrownBy(() -> deploymentService.deleteDeployment("id"))
+    assertThatThrownBy(() -> deploymentService.deleteDeployment("id", null))
         .isInstanceOf(NotFoundException.class);
   }
 
@@ -436,7 +483,7 @@ public class DeploymentServiceTest {
 
     Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
 
-    assertThatThrownBy(() -> deploymentService.deleteDeployment(deployment.getId()))
+    assertThatThrownBy(() -> deploymentService.deleteDeployment(deployment.getId(), null))
         .isInstanceOf(ConflictException.class);
   }
 
@@ -460,7 +507,7 @@ public class DeploymentServiceTest {
     Mockito.when(wfService.createExecutionQuery()).thenReturn(executionQueryImpl);
     Mockito.doReturn(Lists.emptyList()).when(executionQueryImpl).list();
 
-    deploymentService.deleteDeployment(deployment.getId());
+    deploymentService.deleteDeployment(deployment.getId(), null);
 
     Mockito.verify(wfService, Mockito.never()).startProcessInstance(Mockito.any());
     Mockito.verify(deploymentRepository, Mockito.times(1)).delete(deployment);
@@ -493,7 +540,7 @@ public class DeploymentServiceTest {
     Mockito.when(wfService.createExecutionQuery()).thenReturn(executionQueryImpl);
     Mockito.doReturn(Lists.emptyList()).when(executionQueryImpl).list();
 
-    deploymentService.deleteDeployment(deployment.getId());
+    deploymentService.deleteDeployment(deployment.getId(), null);
 
     Mockito.verify(wfService, Mockito.times(1)).startProcessInstance(Mockito.eq(builder));
     Mockito.verify(deploymentRepository, Mockito.times(0)).delete(deployment);
@@ -517,7 +564,7 @@ public class DeploymentServiceTest {
         .builder()
         .template("template")
         .build();
-    assertThatThrownBy(() -> deploymentService.updateDeployment(id, deploymentRequest))
+    assertThatThrownBy(() -> deploymentService.updateDeployment(id, deploymentRequest, null))
         .isInstanceOf(BadRequestException.class);
 
   }
@@ -526,7 +573,7 @@ public class DeploymentServiceTest {
   public void updateDeploymentNotFound() throws Exception {
     String id = UUID.randomUUID().toString();
     Mockito.when(deploymentRepository.findOne(id)).thenReturn(null);
-    assertThatThrownBy(() -> deploymentService.updateDeployment(id, null))
+    assertThatThrownBy(() -> deploymentService.updateDeployment(id, null, null))
         .isInstanceOf(NotFoundException.class);
   }
 
@@ -550,7 +597,7 @@ public class DeploymentServiceTest {
         .template("template")
         .build();
 
-    assertThatThrownBy(() -> deploymentService.updateDeployment(id, deploymentRequest))
+    assertThatThrownBy(() -> deploymentService.updateDeployment(id, deploymentRequest, null))
         .isInstanceOf(ConflictException.class);
   }
 
@@ -572,7 +619,7 @@ public class DeploymentServiceTest {
 
     deployment.setStatus(status);
     Mockito.when(deploymentRepository.findOne(deployment.getId())).thenReturn(deployment);
-    deploymentService.updateDeployment(deployment.getId(), deploymentRequest);
+    deploymentService.updateDeployment(deployment.getId(), deploymentRequest, null);
     assertThat(deployment.getStatus()).isEqualTo(Status.UPDATE_IN_PROGRESS);
   }
 
