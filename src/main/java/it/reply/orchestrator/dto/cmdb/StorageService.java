@@ -70,6 +70,7 @@ public class StorageService extends CloudService {
       @NonNull String providerId,
       @NonNull CloudServiceType type,
       boolean publicService,
+      @Nullable String tenant,
       @Nullable String region,
       @NonNull String hostname,
       @Nullable String parentServiceId,
@@ -77,8 +78,8 @@ public class StorageService extends CloudService {
       boolean iamEnabled,
       @Nullable String idpProtocol,
       boolean publicIpAssignable,
-      @NonNull List<String> supportedIdps) {
-    super(id, serviceType, endpoint, providerId, type, publicService, region, hostname,
+      @NonNull List<SupportedIdp> supportedIdps) {
+    super(id, serviceType, endpoint, providerId, type, publicService, region, tenant, hostname,
             parentServiceId, iamEnabled, idpProtocol, publicIpAssignable, supportedIdps);
     this.rucioRse = rucioRse;
   }

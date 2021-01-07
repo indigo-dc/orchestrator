@@ -67,6 +67,7 @@ public abstract class AbstractCmdbServiceImpl implements CmdbService {
               computeService.setPublicNetworkName(tenant.getPublicNetworkName());
               computeService.setPrivateNetworkName(tenant.getPrivateNetworkName());
               computeService.setPrivateNetworkCidr(tenant.getPrivateNetworkCidr());
+              computeService.setTenant(tenant.getTenantName());
             }
             LOG.debug("Image list for service <{}> of provider <{}>: <{}>",
                 Arrays.toString(imageList.toArray()), serviceId, prId);

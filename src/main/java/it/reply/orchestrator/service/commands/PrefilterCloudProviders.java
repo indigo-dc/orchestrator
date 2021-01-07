@@ -24,6 +24,7 @@ import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.cmdb.ChronosService;
 import it.reply.orchestrator.dto.cmdb.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudService;
+import it.reply.orchestrator.dto.cmdb.CloudService.SupportedIdp;
 import it.reply.orchestrator.dto.cmdb.CloudServiceType;
 import it.reply.orchestrator.dto.cmdb.ComputeService;
 import it.reply.orchestrator.dto.cmdb.KubernetesService;
@@ -91,7 +92,8 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
           .stream()
           .flatMap(cloudProvider -> cloudProvider.getServices().values().stream())
           .filter(cloudService -> cloudService.isIamEnabled()
-              && !cloudService.getSupportedIdps().contains(issuer))
+              && !cloudService.getSupportedIdps().stream()
+                    .map(SupportedIdp::getIssuer).collect(Collectors.toList()).contains(issuer))
           .forEach(cloudService -> addServiceToDiscard(servicesToDiscard, cloudService));
 
       discardProvidersAndServices(providersToDiscard, servicesToDiscard, rankCloudProvidersMessage);

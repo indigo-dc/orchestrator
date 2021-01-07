@@ -29,10 +29,12 @@ import es.upv.i3m.grycap.im.exceptions.ImClientException;
 
 import it.reply.orchestrator.config.properties.ImProperties;
 import it.reply.orchestrator.config.properties.OidcProperties;
+import it.reply.orchestrator.dal.entity.OidcEntity;
 import it.reply.orchestrator.dal.entity.OidcEntityId;
 import it.reply.orchestrator.dal.repository.OidcEntityRepository;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.CloudProviderEndpoint.IaaSType;
+import it.reply.orchestrator.dto.cmdb.CloudService.SupportedIdp;
 import it.reply.orchestrator.dto.security.GenericServiceCredential;
 import it.reply.orchestrator.dto.security.GenericServiceCredentialWithTenant;
 import it.reply.orchestrator.exception.OrchestratorException;
@@ -78,23 +80,36 @@ public class ImClientFactory {
       throw new DeploymentException("Wrong OS endpoint format: " + endpoint);
     } else {
       if (cloudProviderEndpoint.isIamEnabled()) {
-        String organization = oidcEntityRepository
-            .findByOidcEntityId(OidcEntityId.fromAccesToken(accessToken))
-            .orElseThrow(
-                () -> new DeploymentException("No user associated to deployment token found"))
-            .getOrganization();
+        OidcEntityId oidcEntityId =  OidcEntityId.fromAccesToken(accessToken);
+        OidcEntity oidcEntity = oidcEntityRepository
+                .findByOidcEntityId(oidcEntityId)
+                .orElseThrow(
+                    () -> new DeploymentException("No user associated to deployment token found"));
+        // Compute the Username field of the IM Authorization Header for Openstack as follows:
+        // Use the name of the IDP (that matches the token issuer) as configured in CMDB, if present
+        // otherwise use the organization name retrieved from the token.
+        String organization = oidcEntity.getOrganization();
+        String issuer = oidcEntityId.getIssuer();
+        SupportedIdp supportedidp = cloudProviderEndpoint
+                       .getSupportedIdps().stream()
+                       .filter(idp -> issuer.equals(idp.getIssuer())).findAny()
+                       .orElse(new SupportedIdp(organization, issuer));
+
         endpoint = matcher.group(1);
         OpenStackCredentials cred = cloudProviderEndpoint
             .getIaasHeaderId()
             .map(OpenStackCredentials::buildCredentials)
             .orElseGet(OpenStackCredentials::buildCredentials)
             .withTenant(cloudProviderEndpoint.getIdpProtocol())
-            .withUsername(organization)
+            .withUsername(supportedidp.getName())
             .withPassword(accessToken)
             .withHost(endpoint);
         cloudProviderEndpoint
             .getRegion()
             .ifPresent(cred::withServiceRegion);
+        cloudProviderEndpoint
+            .getTenant()
+            .ifPresent(cred::withDomain); // use domain to avoid mapping ambiguity at IaaS level
         if ("v2".equals(matcher.group(2))) {
           throw new DeploymentException("Openstack keystone v2 not supported");
         } else {

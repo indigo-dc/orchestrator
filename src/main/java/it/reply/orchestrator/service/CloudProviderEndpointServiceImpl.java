@@ -146,11 +146,13 @@ public class CloudProviderEndpointServiceImpl {
 
     cpe.cpEndpoint(computeService.getEndpoint());
     cpe.cpComputeServiceId(computeService.getId());
+    cpe.tenant(computeService.getTenant());
     cpe.region(computeService.getRegion());
     cpe.iaasType(iaasType);
     cpe.imEndpoint(imEndpoint);
     cpe.iamEnabled(computeService.isIamEnabled());
     cpe.idpProtocol(computeService.getIdpProtocol());
+    cpe.supportedIdps(computeService.getSupportedIdps());
 
     if (isHybrid) {
       // generate and set IM iaasHeaderId

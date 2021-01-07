@@ -24,13 +24,13 @@ import com.fasterxml.jackson.databind.annotation.JsonTypeIdResolver;
 
 import java.util.ArrayList;
 import java.util.List;
+
 import javax.validation.constraints.NotNull;
 
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -75,6 +75,10 @@ public class CloudService implements CmdbIdentifiable {
   @JsonProperty("is_public_service")
   private boolean publicService;
 
+  @JsonProperty("tenant")
+  @Nullable
+  String tenant;
+
   @JsonProperty("region")
   @Nullable
   private String region;
@@ -98,11 +102,33 @@ public class CloudService implements CmdbIdentifiable {
   @JsonProperty("public_ip_assignable")
   private boolean publicIpAssignable;
 
+  @Data
+  @AllArgsConstructor
+  public static class SupportedIdp {
+
+    @Nullable
+    @JsonProperty("name")
+    private String name;
+
+    @JsonProperty("issuer")
+    private String issuer;
+
+    /**
+     * Default constructor.
+     */
+    public SupportedIdp() {
+      this.name = null;
+      this.issuer = null;
+
+    }
+
+  }
+
   @Builder.Default
   @JsonProperty("supported_idps")
   @NonNull
   @NotNull
-  private List<String> supportedIdps = new ArrayList<>();
+  private List<SupportedIdp> supportedIdps = new ArrayList<>();
 
   private static final String INDIGO_SERVICE_PREFIX = "eu.indigo-datacloud";
   private static final String EGI_SERVICE_PREFIX = "eu.egi.cloud";

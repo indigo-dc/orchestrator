@@ -104,6 +104,7 @@ public class ComputeService extends CloudService {
       @NonNull String providerId,
       @NonNull CloudServiceType type,
       boolean publicService,
+      @Nullable String tenant,
       @Nullable String region,
       @NonNull String hostname,
       @Nullable String parentServiceId,
@@ -112,11 +113,11 @@ public class ComputeService extends CloudService {
       boolean iamEnabled,
       @NonNull String idpProtocol,
       boolean publicIpAssignable,
-      @NonNull List<String> supportedIdps,
+      @NonNull List<SupportedIdp> supportedIdps,
       @Nullable String publicNetworkName,
       @Nullable String privateNetworkCidr,
       @Nullable String privateNetworkName) {
-    super(id, serviceType, endpoint, providerId, type, publicService, region, hostname,
+    super(id, serviceType, endpoint, providerId, type, publicService, tenant, region, hostname,
             parentServiceId, iamEnabled, idpProtocol, publicIpAssignable, supportedIdps);
     this.images = CommonUtils.notNullOrDefaultValue(images, ArrayList::new);
     this.flavors = CommonUtils.notNullOrDefaultValue(flavors, ArrayList::new);

@@ -20,6 +20,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import it.reply.orchestrator.dto.cmdb.CloudService.SupportedIdp;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -73,6 +75,10 @@ public class CloudProviderEndpoint {
 
   @Nullable
   @JsonProperty
+  private String tenant;
+
+  @Nullable
+  @JsonProperty
   private String region;
 
   @Nullable
@@ -91,6 +97,10 @@ public class CloudProviderEndpoint {
   @JsonProperty
   private boolean iamEnabled = true;
 
+  @Nullable
+  @JsonProperty
+  private List<SupportedIdp> supportedIdps;
+
   @Builder.Default
   @JsonProperty
   @Getter(AccessLevel.NONE)
@@ -107,6 +117,12 @@ public class CloudProviderEndpoint {
     return Optional.ofNullable(iaasHeaderId);
   }
 
+  @JsonIgnore
+  public Optional<List<SupportedIdp>> getIdpName() {
+    return Optional.ofNullable(supportedIdps);
+  }
+
+
   /**
    * getIdpProtocol.
    * @return the name of Idp Protocol
@@ -117,6 +133,11 @@ public class CloudProviderEndpoint {
       return "oidc";
     }
     return idpProtocol;
+  }
+
+  @JsonIgnore
+  public Optional<String> getTenant() {
+    return Optional.ofNullable(tenant);
   }
 
   @JsonIgnore
