@@ -41,19 +41,7 @@ public class GetSlam extends BaseRankCloudProvidersCommand {
   public void execute(DelegateExecution execution,
       RankCloudProvidersMessage rankCloudProvidersMessage) {
     OidcTokenId requestedWithToken = rankCloudProvidersMessage.getRequestedWithToken();
-    // TODO: REMOVE IT!!!! ////////////////////////////////////////
-    // TEMPORARY HACK ONLY BECAUSE SLAM DOES NOT SUPPORT EGI YET //
-    if (requestedWithToken != null && requestedWithToken
-        .getOidcEntityId().getIssuer().contains("egi.eu")) {
-      requestedWithToken = tokenRepository
-          .findAll()
-          .stream()
-          .map(OidcRefreshToken::getOidcTokenId)
-          .filter(oidcTokenId -> !oidcTokenId.getOidcEntityId().getIssuer().contains("egi.eu"))
-          .findAny()
-          .orElseThrow(() -> new OrchestratorException("No token available to hack SLAM"));
-    }
-    ///////////////////////////////////////////////////////
+
     rankCloudProvidersMessage.setSlamPreferences(slamService
         .getCustomerPreferences(requestedWithToken));
 
