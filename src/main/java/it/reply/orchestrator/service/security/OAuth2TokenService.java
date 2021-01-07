@@ -189,7 +189,7 @@ public class OAuth2TokenService {
           if (oidcProperties.isEnabled()) {
             throw new DeploymentException("No user associated to deployment token found");
           } else {
-            return "indigo-dc";
+            return "egi.eu";
           }
         });
   }
