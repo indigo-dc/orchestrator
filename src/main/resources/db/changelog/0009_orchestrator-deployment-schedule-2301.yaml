@@ -154,7 +154,7 @@ databaseChangeLog:
         - column:
             name: file_expression
         - column:
-            name: status    
+            name: status
         indexName: IDXq00jckgonlrl43pihn6hbhy9r
         tableName: deployment_schedule
     - createIndex:
