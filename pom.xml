@@ -1,6 +1,6 @@
 <!--
 
-    Copyright © 2015-2020 Santer Reply S.p.A.
+    Copyright © 2015-2021 Santer Reply S.p.A.
 
     Licensed under the Apache License, Version 2.0 (the "License");
     you may not use this file except in compliance with the License.
@@ -777,6 +777,30 @@
             <exclude>src/test/java/it/reply/orchestrator/service/deployment/providers/QcgServiceTest.java</exclude>
             <exclude>src/test/java/it/reply/orchestrator/service/ConfigurationServiceTest.java</exclude>
             <exclude>src/test/java/it/reply/orchestrator/service/VaultServiceTest.java</exclude>
+            <exclude>src/test/java/it/reply/orchestrator/controller/DeploymentScheduleControllerTest.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/dto/security/IamUserInfo.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/dto/CloudProviderEndpoint.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/dto/workflow/CloudServicesOrderedIterator.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/dto/cmdb/KubernetesService.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/dto/cmdb/ChronosService.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/dto/cmdb/ComputeService.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/dto/cmdb/MesosFrameworkService.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/dto/cmdb/MarathonService.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/dto/cmdb/CloudService.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/dto/cmdb/StorageService.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/config/properties/XdcClientProperties.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/service/TemplateServiceImpl.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/service/SlamServiceV1Impl.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/service/security/OAuth2TokenService.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/service/CloudProviderEndpointServiceImpl.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/service/AbstractCmdbServiceImpl.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/service/deployment/providers/KubernetesServiceImpl.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/service/deployment/providers/factory/ImClientFactory.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/service/commands/DeleteTempReplicationRule.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/service/commands/GetSlam.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/service/commands/GetCmdbDataUpdate.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/service/commands/PrefilterCloudProviders.java</exclude>
+            <exclude>src/main/java/it/reply/orchestrator/dal/repository/ReplicationRuleRepository.java</exclude>
           </excludes>
         </configuration>
       </plugin>

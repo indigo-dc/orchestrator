@@ -1,5 +1,6 @@
 /*
  * Copyright © 2015-2020 Santer Reply S.p.A.
+ * Copyright © 2020-2021 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +22,6 @@ import it.reply.orchestrator.exception.service.DeploymentException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;

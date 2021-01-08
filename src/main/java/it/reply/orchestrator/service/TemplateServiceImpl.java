@@ -1,5 +1,6 @@
 /*
  * Copyright © 2015-2020 Santer Reply S.p.A.
+ * Copyright © 2020-2021 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +19,6 @@ package it.reply.orchestrator.service;
 
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.DeploymentSchedule;
-import it.reply.orchestrator.dal.entity.DeploymentScheduleEvent;
 import it.reply.orchestrator.utils.MdcUtils;
 
 import lombok.AllArgsConstructor;
