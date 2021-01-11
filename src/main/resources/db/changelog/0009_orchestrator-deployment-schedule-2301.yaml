@@ -173,7 +173,7 @@ databaseChangeLog:
             name: number_of_replicas
             constraints:
               nullable: false
-            type: BIGINT
+            type: INTEGER
         - column:
             constraints:
               nullable: false
@@ -208,7 +208,7 @@ databaseChangeLog:
             name: usage_count
             constraints:
               nullable: false
-            type: BIGINT
+            type: INTEGER
         - column:
             name: owner_id
             type: VARCHAR(36)
