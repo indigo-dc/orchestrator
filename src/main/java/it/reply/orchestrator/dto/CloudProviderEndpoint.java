@@ -98,9 +98,11 @@ public class CloudProviderEndpoint {
   @JsonProperty
   private boolean iamEnabled = true;
 
-  @Nullable
+  @NonNull
+  @NotNull
+  @Builder.Default
   @JsonProperty
-  private List<SupportedIdp> supportedIdps;
+  private List<SupportedIdp> supportedIdps = new ArrayList<>();
 
   @Builder.Default
   @JsonProperty
