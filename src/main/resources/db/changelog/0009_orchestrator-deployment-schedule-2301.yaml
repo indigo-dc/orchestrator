@@ -52,7 +52,7 @@ databaseChangeLog:
             name: number_of_replicas
             constraints:
               nullable: false
-            type: BIGINT
+            type: INTEGER
         - column:
             constraints:
               nullable: false
