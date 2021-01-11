@@ -80,6 +80,33 @@ pipeline {
         }
         */
 
+        stage('Build Javadoc and REST documentation') {
+            when {
+                branch 'master'
+            }
+            steps {
+                withCredentials([string(
+                    credentialsId: "indigo-github-token",
+                    variable: "GITHUB_TOKEN")]) {
+                    // git defaults
+                    sh 'git remote set-url origin "https://indigobot:${GITHUB_TOKEN}@github.com/indigo-dc/orchestrator"'
+                    sh 'git config user.name "indigobot"'
+                    sh 'git config user.email "<>"'
+                    // build docs
+                    sh 'git checkout gh-pages'
+                    sh 'git merge --ff -s recursive -X theirs --commit -m "Merge remote-tracking branch <origin/master>"'
+                    sh 'rm -rf "${WORKSPACE}/apidocs"'
+                    sh 'rm -rf "${WORKSPACE}/restdocs"'
+                    MavenRun('clean javadoc:javadoc package -P restdocs -Deditorconfig.skip=true')
+                    sh "mv ${WORKSPACE}/target/site/apidocs ${WORKSPACE}/apidocs"
+                    sh 'git add -A'
+                    sh 'git commit -am "Update documentation"'
+                    // push to gh-pages
+                    sh 'git push origin HEAD:gh-pages'
+                }
+            }
+        }
+
         stage('Metrics') {
             agent {
                 label 'sloc'
@@ -118,6 +145,35 @@ pipeline {
                         dockerhub_repo,
                         tag: PROJECT_VERSION,
                         build_dir: 'docker')
+                }
+            }
+            post {
+                success {
+                    DockerPush(dockerhub_image_id)
+                }
+                failure {
+                    DockerClean()
+                }
+                always {
+                    cleanWs()
+                }
+            }
+        }
+
+        stage('DockerHub delivery (for pull requests)') {
+            when {
+                changeRequest()
+            }
+            agent {
+                label 'docker-build'
+            }
+            steps {
+                checkout scm
+                script {
+                    MavenRun('-DskipTests=true package')
+                    dockerhub_image_id = DockerBuild(dockerhub_repo,
+                                                     tag: env.CHANGE_ID,
+                                                     build_dir: 'docker')
                 }
             }
             post {
