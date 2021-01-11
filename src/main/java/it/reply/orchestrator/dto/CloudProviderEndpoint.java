@@ -121,8 +121,8 @@ public class CloudProviderEndpoint {
   }
 
   @JsonIgnore
-  public Optional<List<SupportedIdp>> getIdpName() {
-    return Optional.ofNullable(supportedIdps);
+  public List<SupportedIdp> getSupportedIdps() {
+    return (supportedIdps == null) ? new ArrayList<>() : supportedIdps;
   }
 
 
