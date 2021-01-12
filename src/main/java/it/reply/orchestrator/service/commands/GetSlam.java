@@ -1,5 +1,6 @@
 /*
  * Copyright © 2015-2020 Santer Reply S.p.A.
+ * Copyright © 2020-2021 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,11 +17,9 @@
 
 package it.reply.orchestrator.service.commands;
 
-import it.reply.orchestrator.dal.entity.OidcRefreshToken;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.repository.OidcTokenRepository;
 import it.reply.orchestrator.dto.RankCloudProvidersMessage;
-import it.reply.orchestrator.exception.OrchestratorException;
 import it.reply.orchestrator.service.SlamService;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
@@ -41,19 +40,7 @@ public class GetSlam extends BaseRankCloudProvidersCommand {
   public void execute(DelegateExecution execution,
       RankCloudProvidersMessage rankCloudProvidersMessage) {
     OidcTokenId requestedWithToken = rankCloudProvidersMessage.getRequestedWithToken();
-    // TODO: REMOVE IT!!!! ////////////////////////////////////////
-    // TEMPORARY HACK ONLY BECAUSE SLAM DOES NOT SUPPORT EGI YET //
-    if (requestedWithToken != null && requestedWithToken
-        .getOidcEntityId().getIssuer().contains("egi.eu")) {
-      requestedWithToken = tokenRepository
-          .findAll()
-          .stream()
-          .map(OidcRefreshToken::getOidcTokenId)
-          .filter(oidcTokenId -> !oidcTokenId.getOidcEntityId().getIssuer().contains("egi.eu"))
-          .findAny()
-          .orElseThrow(() -> new OrchestratorException("No token available to hack SLAM"));
-    }
-    ///////////////////////////////////////////////////////
+
     rankCloudProvidersMessage.setSlamPreferences(slamService
         .getCustomerPreferences(requestedWithToken));
 

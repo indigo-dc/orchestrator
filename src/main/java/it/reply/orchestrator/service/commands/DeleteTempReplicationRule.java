@@ -1,5 +1,6 @@
 /*
  * Copyright © 2015-2020 Santer Reply S.p.A.
+ * Copyright © 2020-2021 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,14 +17,10 @@
 
 package it.reply.orchestrator.service.commands;
 
-import it.infn.ba.xdc.rucio.client.exceptions.DuplicateRuleException;
-import it.infn.ba.xdc.rucio.client.model.RuleInformation;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.DeploymentScheduleEvent;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
-import it.reply.orchestrator.exception.service.BusinessWorkflowException;
-import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.RucioService;
 import it.reply.orchestrator.utils.WorkflowConstants;
 import java.util.Optional;

@@ -66,14 +66,15 @@ public class QcgService extends  CloudService {
       @NonNull String providerId,
       @NonNull CloudServiceType type,
       boolean publicService,
+      @Nullable String tenant,
       @Nullable String region,
       @NonNull String hostname,
       @Nullable String parentServiceId,
       boolean iamEnabled,
       @NonNull String idpProtocol,
       boolean publicIpAssignable,
-      @NonNull List<String> supportedIdps) {
-    super(id, serviceType, endpoint, providerId, type, publicService, region, hostname,
+      @NonNull List<SupportedIdp> supportedIdps) {
+    super(id, serviceType, endpoint, providerId, type, publicService, tenant, region, hostname,
             parentServiceId, iamEnabled, idpProtocol, publicIpAssignable, supportedIdps);
   }
 }

@@ -1,5 +1,6 @@
 /*
  * Copyright © 2015-2020 Santer Reply S.p.A.
+ * Copyright © 2020-2021 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,10 +18,7 @@
 package it.reply.orchestrator.dto.cmdb;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import it.reply.orchestrator.utils.CommonUtils;
-import java.util.ArrayList;
 import java.util.List;
-import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Data;
@@ -70,6 +68,7 @@ public class StorageService extends CloudService {
       @NonNull String providerId,
       @NonNull CloudServiceType type,
       boolean publicService,
+      @Nullable String tenant,
       @Nullable String region,
       @NonNull String hostname,
       @Nullable String parentServiceId,
@@ -77,8 +76,8 @@ public class StorageService extends CloudService {
       boolean iamEnabled,
       @Nullable String idpProtocol,
       boolean publicIpAssignable,
-      @NonNull List<String> supportedIdps) {
-    super(id, serviceType, endpoint, providerId, type, publicService, region, hostname,
+      @NonNull List<SupportedIdp> supportedIdps) {
+    super(id, serviceType, endpoint, providerId, type, publicService, region, tenant, hostname,
             parentServiceId, iamEnabled, idpProtocol, publicIpAssignable, supportedIdps);
     this.rucioRse = rucioRse;
   }

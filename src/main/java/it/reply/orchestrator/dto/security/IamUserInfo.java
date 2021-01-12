@@ -1,5 +1,6 @@
 /*
  * Copyright © 2015-2020 Santer Reply S.p.A.
+ * Copyright © 2020-2021 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +17,6 @@
 
 package it.reply.orchestrator.dto.security;
 
-import com.google.common.collect.Lists;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -27,8 +27,6 @@ import it.reply.orchestrator.utils.CommonUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.validation.constraints.NotNull;
@@ -92,7 +90,7 @@ public class IamUserInfo extends DefaultUserInfo {
   }
 
   public String getOrganizationName() {
-    return Optional.ofNullable(organizationName).orElse("indigo-dc");
+    return Optional.ofNullable(organizationName).orElse("egi.eu");
   }
 
   @Override

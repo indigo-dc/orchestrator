@@ -1,5 +1,6 @@
 /*
  * Copyright © 2015-2020 Santer Reply S.p.A.
+ * Copyright © 2020-2021 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -146,11 +147,13 @@ public class CloudProviderEndpointServiceImpl {
 
     cpe.cpEndpoint(computeService.getEndpoint());
     cpe.cpComputeServiceId(computeService.getId());
+    cpe.tenant(computeService.getTenant());
     cpe.region(computeService.getRegion());
     cpe.iaasType(iaasType);
     cpe.imEndpoint(imEndpoint);
     cpe.iamEnabled(computeService.isIamEnabled());
     cpe.idpProtocol(computeService.getIdpProtocol());
+    cpe.supportedIdps(computeService.getSupportedIdps());
 
     if (isHybrid) {
       // generate and set IM iaasHeaderId

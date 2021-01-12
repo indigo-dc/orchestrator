@@ -1,5 +1,6 @@
 /*
  * Copyright © 2015-2020 Santer Reply S.p.A.
+ * Copyright © 2020-2021 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -189,7 +190,7 @@ public class OAuth2TokenService {
           if (oidcProperties.isEnabled()) {
             throw new DeploymentException("No user associated to deployment token found");
           } else {
-            return "indigo-dc";
+            return "egi.eu";
           }
         });
   }

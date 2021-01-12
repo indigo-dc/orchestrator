@@ -1,5 +1,6 @@
 /*
  * Copyright © 2015-2020 Santer Reply S.p.A.
+ * Copyright © 2020-2021 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +53,6 @@ import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.deployment.providers.factory.KubernetesClientFactory;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
-import it.reply.orchestrator.utils.OneDataUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 import it.reply.orchestrator.utils.ToscaUtils;
 import it.reply.orchestrator.utils.WorkflowConstants;
@@ -69,6 +69,7 @@ import org.jgrapht.graph.DirectedMultigraph;
 import org.jgrapht.traverse.TopologicalOrderIterator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.yaml.snakeyaml.Yaml;
 
 @Service
 @DeploymentProviderQualifier(DeploymentProvider.KUBERNETES)
@@ -177,8 +178,8 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
         .orElseThrow(() -> new OrchestratorException("Chart Name not specified"));
     String version = ToscaUtils.extractScalar(chartNode.getProperties(), "version")
         .orElseThrow(() -> new OrchestratorException("Chart Version not specified"));
-    Map<String, Object> values = ToscaUtils.extractMap(chartNode.getProperties(), "values")
-        .orElseGet(HashMap::new);
+    String values = ToscaUtils.extractScalar(chartNode.getProperties(), "values")
+        .orElseGet(String::new);
 
     return helmRelease
         .spec(new V1HelmReleaseSpec()
@@ -187,7 +188,7 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
                         .name(chartName)
                         .version(version)
                 ).wait(true)
-                .values(values)
+                .values(new Yaml().load(values))
         );
   }
 
@@ -386,7 +387,7 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
 
       String name = deployment.getEndpoint();
       String namespace = oauth2TokenService.getOrganization(requestedWithToken);
-      String labelSelector = String.format("release=%s-%s", namespace, name);
+      String labelSelector = String.format("app.kubernetes.io/instance=%s-%s", namespace, name);
       Map<String, NodeTemplate> nodes = Optional
           .ofNullable(ar.getTopology())
           .map(Topology::getNodeTemplates)

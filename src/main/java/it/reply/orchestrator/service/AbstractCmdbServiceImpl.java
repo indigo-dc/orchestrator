@@ -1,5 +1,6 @@
 /*
  * Copyright © 2015-2020 Santer Reply S.p.A.
+ * Copyright © 2020-2021 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +17,6 @@
 
 package it.reply.orchestrator.service;
 
-import it.reply.orchestrator.annotation.ServiceVersion;
 import it.reply.orchestrator.dto.cmdb.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudService;
 import it.reply.orchestrator.dto.cmdb.CloudServiceType;
@@ -32,7 +32,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
 
 @Slf4j
 public abstract class AbstractCmdbServiceImpl implements CmdbService {
@@ -67,6 +66,7 @@ public abstract class AbstractCmdbServiceImpl implements CmdbService {
               computeService.setPublicNetworkName(tenant.getPublicNetworkName());
               computeService.setPrivateNetworkName(tenant.getPrivateNetworkName());
               computeService.setPrivateNetworkCidr(tenant.getPrivateNetworkCidr());
+              computeService.setTenant(tenant.getTenantName());
             }
             LOG.debug("Image list for service <{}> of provider <{}>: <{}>",
                 Arrays.toString(imageList.toArray()), serviceId, prId);

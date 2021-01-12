@@ -1,5 +1,6 @@
 /*
  * Copyright © 2015-2020 Santer Reply S.p.A.
+ * Copyright © 2020-2021 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +25,7 @@ import it.reply.orchestrator.dto.RankCloudProvidersMessage;
 import it.reply.orchestrator.dto.cmdb.ChronosService;
 import it.reply.orchestrator.dto.cmdb.CloudProvider;
 import it.reply.orchestrator.dto.cmdb.CloudService;
+import it.reply.orchestrator.dto.cmdb.CloudService.SupportedIdp;
 import it.reply.orchestrator.dto.cmdb.CloudServiceType;
 import it.reply.orchestrator.dto.cmdb.ComputeService;
 import it.reply.orchestrator.dto.cmdb.KubernetesService;
@@ -91,7 +93,8 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
           .stream()
           .flatMap(cloudProvider -> cloudProvider.getServices().values().stream())
           .filter(cloudService -> cloudService.isIamEnabled()
-              && !cloudService.getSupportedIdps().contains(issuer))
+              && !cloudService.getSupportedIdps().stream()
+                    .map(SupportedIdp::getIssuer).collect(Collectors.toList()).contains(issuer))
           .forEach(cloudService -> addServiceToDiscard(servicesToDiscard, cloudService));
 
       discardProvidersAndServices(providersToDiscard, servicesToDiscard, rankCloudProvidersMessage);
