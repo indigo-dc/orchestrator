@@ -1,5 +1,6 @@
 /*
  * Copyright © 2015-2020 Santer Reply S.p.A.
+ * Copyright © 2020-2021 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +20,8 @@ package it.reply.orchestrator.dto;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import it.reply.orchestrator.dto.cmdb.CloudService.SupportedIdp;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -73,6 +76,10 @@ public class CloudProviderEndpoint {
 
   @Nullable
   @JsonProperty
+  private String tenant;
+
+  @Nullable
+  @JsonProperty
   private String region;
 
   @Nullable
@@ -91,6 +98,12 @@ public class CloudProviderEndpoint {
   @JsonProperty
   private boolean iamEnabled = true;
 
+  @NonNull
+  @NotNull
+  @Builder.Default
+  @JsonProperty
+  private List<SupportedIdp> supportedIdps = new ArrayList<>();
+
   @Builder.Default
   @JsonProperty
   @Getter(AccessLevel.NONE)
@@ -107,6 +120,12 @@ public class CloudProviderEndpoint {
     return Optional.ofNullable(iaasHeaderId);
   }
 
+  @JsonIgnore
+  public List<SupportedIdp> getSupportedIdps() {
+    return (supportedIdps == null) ? new ArrayList<>() : supportedIdps;
+  }
+
+
   /**
    * getIdpProtocol.
    * @return the name of Idp Protocol
@@ -117,6 +136,11 @@ public class CloudProviderEndpoint {
       return "oidc";
     }
     return idpProtocol;
+  }
+
+  @JsonIgnore
+  public Optional<String> getTenant() {
+    return Optional.ofNullable(tenant);
   }
 
   @JsonIgnore

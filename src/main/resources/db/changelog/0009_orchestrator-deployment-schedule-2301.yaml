@@ -1,0 +1,379 @@
+databaseChangeLog:
+- property:
+    name: TEXT.type
+    value: TEXT
+    dbms: mysql,postgresql
+- property:
+    name: TEXT.type
+    value: VARCHAR(65535)
+    dbms: h2
+- property:
+    name: BOOL.type
+    value: BIT(1)
+    dbms: mysql
+- property:
+    name: BOOL.type
+    value: BOOLEAN
+    dbms: postgresql,h2
+- changeSet:
+    id: 0009_orchestrator-deployment-schedule-2301
+    author: m.perniola
+    comment: Added deployment schedule tables in Orchestrator DB
+    changes:
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: id
+            type: VARCHAR(36)
+        - column:
+            constraints:
+              nullable: false
+            name: created_at
+            type: TIMESTAMP(6)
+        - column:
+            name: updated_at
+            type: TIMESTAMP(6)
+        - column:
+            constraints:
+              nullable: false
+            name: version
+            type: BIGINT
+        - column:
+            name: callback
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: file_expression
+            type: VARCHAR(255)
+        - column:
+            name: number_of_replicas
+            constraints:
+              nullable: false
+            type: INTEGER
+        - column:
+            constraints:
+              nullable: false
+            name: replication_expression
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: status
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: template
+            type: CLOB
+        - column:
+            name: owner_id
+            type: VARCHAR(36)
+        - column:
+            name: requested_with_token_id
+            type: VARCHAR(36)
+        tableName: deployment_schedule
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: id
+            type: VARCHAR(36)
+        - column:
+            constraints:
+              nullable: false
+            name: created_at
+            type: TIMESTAMP(6)
+        - column:
+            name: updated_at
+            type: TIMESTAMP(6)
+        - column:
+            constraints:
+              nullable: false
+            name: version
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: name
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: scope
+            type: VARCHAR(255)
+        - column:
+            name: deployment_id
+            type: VARCHAR(36)
+        - column:
+            constraints:
+              nullable: false
+            name: deployment_schedule_id
+            type: VARCHAR(36)
+        - column:
+            name: main_replication_rule_id
+            type: VARCHAR(36)
+        - column:
+            name: owner_id
+            type: VARCHAR(36)
+        - column:
+            name: temp_replication_rule_id
+            type: VARCHAR(36)
+        tableName: deployment_schedule_event
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: deployment_schedule_id
+            type: VARCHAR(36)
+        - column:
+            constraints:
+              nullable: false
+            name: value
+            type: ${TEXT.type}
+        - column:
+            constraints:
+              nullable: false
+            name: name
+            type: VARCHAR(255)
+        tableName: deployment_schedule_parameters
+    - createTable:
+        columns:
+        - column:
+            constraints:
+              nullable: false
+            name: id
+            type: VARCHAR(36)
+        - column:
+            constraints:
+              nullable: false
+            name: created_at
+            type: TIMESTAMP(6)
+        - column:
+            name: updated_at
+            type: TIMESTAMP(6)
+        - column:
+            constraints:
+              nullable: false
+            name: version
+            type: BIGINT
+        - column:
+            name: deleted
+            type: ${BOOL.type}
+        - column:
+            constraints:
+              nullable: false
+            name: name
+            type: VARCHAR(255)
+        - column:
+            name: number_of_replicas
+            constraints:
+              nullable: false
+            type: INTEGER
+        - column:
+            constraints:
+              nullable: false
+            name: replication_expression
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: rucio_account
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: rucio_id
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: scope
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: status
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: status_reason
+            type: CLOB
+        - column:
+            name: usage_count
+            constraints:
+              nullable: false
+            type: INTEGER
+        - column:
+            name: owner_id
+            type: VARCHAR(36)
+        tableName: replication_rule
+    - addPrimaryKey:
+        columnNames: id
+        constraintName: pk__deployment_schedule
+        tableName: deployment_schedule
+    - addPrimaryKey:
+        columnNames: id
+        constraintName: pk__deployment_schedule_event
+        tableName: deployment_schedule_event
+    - addPrimaryKey:
+        columnNames: deployment_schedule_id, name
+        constraintName: pk__deployment_schedule_parameters
+        tableName: deployment_schedule_parameters
+    - addPrimaryKey:
+        columnNames: id
+        constraintName: pk__replication_rule
+        tableName: replication_rule
+    - addUniqueConstraint:
+        columnNames: deployment_schedule_id, scope, name
+        constraintName: UK_dryqm3o3vleabnsh62me5pnmd
+        tableName: deployment_schedule_event
+    - addUniqueConstraint:
+        columnNames: rucio_id
+        constraintName: UK_UK5s76lhn25pvptx0itnxq47r32
+        tableName: replication_rule
+    - createIndex:
+        columns:
+        - column:
+            name: file_expression
+        - column:
+            name: status
+        indexName: IDXq00jckgonlrl43pihn6hbhy9r
+        tableName: deployment_schedule
+    - createIndex:
+        columns:
+        - column:
+            name: owner_id
+        indexName: FKm97ggan416el96921mw9o4yvx
+        tableName: deployment_schedule
+    - createIndex:
+        columns:
+        - column:
+            name: requested_with_token_id
+        indexName: FKba1amvscj5po5c5hqsl86ex7g
+        tableName: deployment_schedule
+    - createIndex:
+        columns:
+        - column:
+            name: deployment_id
+        indexName: FKi2brayjb2lpfvkinrnba5f3xv
+        tableName: deployment_schedule_event
+    - createIndex:
+        columns:
+        - column:
+            name: main_replication_rule_id
+        indexName: FK25355oqs5jgr9vh9cwlash2xk
+        tableName: deployment_schedule_event
+    - createIndex:
+        columns:
+        - column:
+            name: owner_id
+        indexName: FKbq7xfxw4efrq9gs7fy9jhla4d
+        tableName: deployment_schedule_event
+    - createIndex:
+        columns:
+        - column:
+            name: temp_replication_rule_id
+        indexName: FKbul65j58fu9bcy6tamtl2qthr
+        tableName: deployment_schedule_event
+    - createIndex:
+        columns:
+        - column:
+            name: owner_id
+        indexName: FKrenj6wu79masp19ye8bodydep
+        tableName: replication_rule
+    - addForeignKeyConstraint:
+        baseColumnNames: requested_with_token_id
+        baseTableName: deployment_schedule
+        constraintName: FKba1amvscj5po5c5hqsl86ex7g
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: oidc_refresh_token
+    - addForeignKeyConstraint:
+        baseColumnNames: owner_id
+        baseTableName: deployment_schedule
+        constraintName: FKm97ggan416el96921mw9o4yvx
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: oidc_entity
+    - addForeignKeyConstraint:
+        baseColumnNames: main_replication_rule_id
+        baseTableName: deployment_schedule_event
+        constraintName: FK25355oqs5jgr9vh9cwlash2xk
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: replication_rule
+    - addForeignKeyConstraint:
+        baseColumnNames: deployment_schedule_id
+        baseTableName: deployment_schedule_event
+        constraintName: FKbefefas9ln6lr8q1v3u4ngt8x
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: deployment_schedule
+    - addForeignKeyConstraint:
+        baseColumnNames: owner_id
+        baseTableName: deployment_schedule_event
+        constraintName: FKbq7xfxw4efrq9gs7fy9jhla4d
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: oidc_entity
+    - addForeignKeyConstraint:
+        baseColumnNames: temp_replication_rule_id
+        baseTableName: deployment_schedule_event
+        constraintName: FKbul65j58fu9bcy6tamtl2qthr
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: replication_rule
+    - addForeignKeyConstraint:
+        baseColumnNames: deployment_id
+        baseTableName: deployment_schedule_event
+        constraintName: FKi2brayjb2lpfvkinrnba5f3xv
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: deployment
+    - addForeignKeyConstraint:
+        baseColumnNames: deployment_schedule_id
+        baseTableName: deployment_schedule_parameters
+        constraintName: FKqd99fi6kj82una213mkslr8ga
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: deployment_schedule
+    - addForeignKeyConstraint:
+        baseColumnNames: owner_id
+        baseTableName: replication_rule
+        constraintName: FKrenj6wu79masp19ye8bodydep
+        deferrable: false
+        initiallyDeferred: false
+        onDelete: NO ACTION
+        onUpdate: NO ACTION
+        referencedColumnNames: id
+        referencedTableName: oidc_entity

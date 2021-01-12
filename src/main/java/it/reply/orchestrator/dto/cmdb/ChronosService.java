@@ -1,5 +1,6 @@
 /*
  * Copyright © 2015-2020 Santer Reply S.p.A.
+ * Copyright © 2020-2021 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,15 +45,16 @@ public class ChronosService extends MesosFrameworkService<ChronosServiceProperti
       @NonNull String providerId,
       @NonNull CloudServiceType type,
       boolean publicService,
+      @Nullable String tenant,
       @Nullable String region,
       @NonNull String hostname,
       @Nullable String parentServiceId,
       boolean iamEnabled,
       @NonNull String idpProtocol,
       boolean publicIpAssignable,
-      @NonNull List<String> supportedIdps,
+      @NonNull List<SupportedIdp> supportedIdps,
       @NonNull ChronosServiceProperties properties) {
-    super(id, serviceType, endpoint, providerId, type, publicService, region, hostname,
+    super(id, serviceType, endpoint, providerId, type, publicService, tenant, region, hostname,
           parentServiceId, iamEnabled, idpProtocol, publicIpAssignable, supportedIdps, properties);
   }
 
