@@ -75,7 +75,7 @@ public class UpdateDeployment extends BaseDeployCommand {
     if (!servicesIt.hasNext()) {
       if (servicesIt.getSize() == 0) {
         throw new BusinessWorkflowException(ErrorCode.RUNTIME_ERROR,
-            "No cloud providers available to deploy");
+            "No cloud provider meets the deployment requirements");
       } else {
         servicesIt.reset();
         String causes = CommonUtils
