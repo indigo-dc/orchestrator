@@ -25,6 +25,9 @@ import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 
 import java.net.URI;
+import java.util.Optional;
+
+import javax.annotation.Nullable;
 
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpHeaders;
@@ -64,9 +67,9 @@ public class SlamServiceV1Impl implements SlamService {
   }
 
   @Override
-  public SlamPreferences getCustomerPreferences(OidcTokenId tokenId) {
+  public SlamPreferences getCustomerPreferences(OidcTokenId tokenId, @Nullable String userGroup) {
 
-    String slamCustomer = oauth2TokenService.getOrganization(tokenId);
+    String slamCustomer = Optional.ofNullable(userGroup).orElse(oauth2TokenService.getOrganization(tokenId));
 
     URI requestUri = UriComponentsBuilder
         .fromHttpUrl(slamProperties.getUrl() + slamProperties.getCustomerPreferencesPath())

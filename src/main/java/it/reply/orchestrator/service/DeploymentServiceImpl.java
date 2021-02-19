@@ -114,7 +114,7 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   @Override
   @Transactional(readOnly = true)
-  public Page<Deployment> getDeployments(Pageable pageable, String owner) {
+  public Page<Deployment> getDeployments(Pageable pageable, String owner, String userGroup) {
     if (StringUtils.isEmpty(owner)) {
       if (isAdmin()) {
         OidcEntity requester = oauth2TokenService.generateOidcEntityFromCurrentAuth();
@@ -140,7 +140,12 @@ public class DeploymentServiceImpl implements DeploymentService {
     }
     if (oidcProperties.isEnabled()) {
       OidcEntity requester = oauth2TokenService.generateOidcEntityFromCurrentAuth();
-      return deploymentRepository.findAllByOwner(requester, ownerId, pageable);
+      if (StringUtils.isEmpty(userGroup)) { 
+    	  return deploymentRepository.findAllByOwner(requester, ownerId, pageable);
+      } else {
+    	  return deploymentRepository.findAllByOwner(requester, ownerId, userGroup, pageable);
+      }
+    	  
     } else {
       return deploymentRepository.findAllByOwner(ownerId, pageable);
     }
@@ -230,6 +235,7 @@ public class DeploymentServiceImpl implements DeploymentService {
     deployment.setTemplate(request.getTemplate());
     deployment.setParameters(request.getParameters());
     deployment.setCallback(request.getCallback());
+    deployment.setUserGroup(request.getUserGroup());
     deployment = deploymentRepository.save(deployment);
     MdcUtils.setDeploymentId(deployment.getId());
     LOG.debug("Creating deployment with template\n{}", request.getTemplate());

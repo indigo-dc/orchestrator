@@ -68,6 +68,9 @@ public class DeploymentRequest {
 
   @Builder.Default
   private boolean keepLastAttempt = false;
+  
+  @Nullable
+  private String userGroup;
 
   @SuppressWarnings("null")
   @Deprecated

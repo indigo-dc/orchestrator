@@ -29,6 +29,7 @@ import it.reply.orchestrator.service.CmdbService;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
+import java.util.Optional;
 import java.util.Set;
 
 import java.util.stream.Collectors;
@@ -51,8 +52,10 @@ public class GetCmdbDataUpdate extends BaseDeployCommand {
     CloudProviderEndpoint cloudProviderEndpoint = deployment.getCloudProviderEndpoint();
     String cloudProviderId = deployment.getCloudProviderName();
     Set<String> serviceWithSla = Sets.newHashSet(cloudProviderEndpoint.getCpComputeServiceId());
-    String organisation = oauth2TokenService.getOrganization(
-        deploymentMessage.getRequestedWithToken());
+    //String organisation = oauth2TokenService.getOrganization(
+    //    deploymentMessage.getRequestedWithToken());
+    String organisation = Optional.ofNullable(deployment.getUserGroup())
+           .orElse(oauth2TokenService.getOrganization(deploymentMessage.getRequestedWithToken()));
     CloudProvider cloudProvider = cmdbService
         .fillCloudProviderInfo(cloudProviderId, serviceWithSla, organisation);
 

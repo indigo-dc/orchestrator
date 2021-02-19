@@ -43,6 +43,12 @@ public interface DeploymentRepository extends JpaRepository<Deployment, String> 
   public Page<Deployment> findAllByOwner(@Param("ownerId") OidcEntityId ownerId, Pageable pageable);
 
   @Query("select d "
+	      + "from #{#entityName} d "
+	      + "where d.owner.oidcEntityId = ?#{#ownerId} "
+	      + "and d.userGroup = ?#{#userGroup}")
+	  public Page<Deployment> findAllByOwner(@Param("ownerId") OidcEntityId ownerId, @Param("userGroup") String userGroup, Pageable pageable);
+  
+  @Query("select d "
       + "from #{#entityName} d "
       + "where d.owner.oidcEntityId = ?#{#ownerId} "
       + "and " + IN_SAME_ORGANIZATION)
@@ -50,6 +56,16 @@ public interface DeploymentRepository extends JpaRepository<Deployment, String> 
       @Param("ownerId") OidcEntityId ownerId,
       Pageable pageable);
 
+  @Query("select d "
+	      + "from #{#entityName} d "
+	      + "where d.owner.oidcEntityId = ?#{#ownerId} "
+	      + "and " + IN_SAME_ORGANIZATION
+	      + "and d.userGroup = ?#{#userGroup}")
+	  public Page<Deployment> findAllByOwner(@Param("requester") OidcEntity requester,
+	      @Param("ownerId") OidcEntityId ownerId, @Param("userGroup") String userGroup, 
+	      Pageable pageable);
+
+  
   @Query("select d "
       + "from #{#entityName} d "
       + "where d.id = ?#{#id} "

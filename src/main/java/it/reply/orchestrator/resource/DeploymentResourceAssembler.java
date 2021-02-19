@@ -83,6 +83,7 @@ public class DeploymentResourceAssembler
         .task(entity.getTask())
         .outputs(entity.getOutputs())
         .callback(entity.getCallback())
+        .userGroup(entity.getUserGroup())
         .build();
 
     Optional.ofNullable(entity.getOwner())

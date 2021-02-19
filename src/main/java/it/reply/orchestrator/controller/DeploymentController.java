@@ -74,6 +74,8 @@ public class DeploymentController {
    *
    * @param createdBy
    *          created by name
+   * @param userGroup
+   *          user group
    * @param pageable
    *          {@link Pageable}
    * @param pagedAssembler
@@ -85,17 +87,18 @@ public class DeploymentController {
       produces = MediaType.APPLICATION_JSON_VALUE)
   public PagedResources<DeploymentResource> getDeployments(
       @RequestParam(name = "createdBy", required = false) @Nullable String createdBy,
+      @RequestParam(name = "userGroup", required = false) @Nullable String userGroup,
       @PageableDefault(sort = "createdAt", direction = Direction.DESC) Pageable pageable,
       PagedResourcesAssembler<Deployment> pagedAssembler) {
 
-    Page<Deployment> deployments = deploymentService.getDeployments(pageable, createdBy);
+    Page<Deployment> deployments = deploymentService.getDeployments(pageable, createdBy, userGroup);
 
     return pagedAssembler.toResource(deployments, deploymentResourceAssembler,
         ControllerLinkBuilder
             .linkTo(
                 DummyInvocationUtils
                     .methodOn(DeploymentController.class)
-                    .getDeployments(createdBy, pageable, pagedAssembler))
+                    .getDeployments(createdBy, userGroup, pageable, pagedAssembler))
             .withSelfRel());
 
   }

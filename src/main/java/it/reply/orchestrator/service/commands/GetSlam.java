@@ -40,9 +40,9 @@ public class GetSlam extends BaseRankCloudProvidersCommand {
   public void execute(DelegateExecution execution,
       RankCloudProvidersMessage rankCloudProvidersMessage) {
     OidcTokenId requestedWithToken = rankCloudProvidersMessage.getRequestedWithToken();
-
+    
     rankCloudProvidersMessage.setSlamPreferences(slamService
-        .getCustomerPreferences(requestedWithToken));
+        .getCustomerPreferences(requestedWithToken, getDeployment(rankCloudProvidersMessage).getUserGroup()));
 
   }
 

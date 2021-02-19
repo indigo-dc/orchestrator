@@ -28,6 +28,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+
+import javax.annotation.Nullable;
+
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
@@ -72,8 +76,8 @@ public class SlamServiceLocalImpl implements SlamService {
   }
 
   @Override
-  public SlamPreferences getCustomerPreferences(OidcTokenId tokenId) {
-    String slamCustomer = oauth2TokenService.getOrganization(tokenId);
+  public SlamPreferences getCustomerPreferences(OidcTokenId tokenId, @Nullable String userGroup) {
+    String slamCustomer = Optional.ofNullable(userGroup).orElse(oauth2TokenService.getOrganization(tokenId));
 
     return loadData().get(slamCustomer);
   }

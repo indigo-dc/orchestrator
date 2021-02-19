@@ -27,7 +27,7 @@ import org.springframework.data.domain.Pageable;
 
 public interface DeploymentService {
 
-  public Page<Deployment> getDeployments(Pageable pageable, @Nullable String owner);
+  public Page<Deployment> getDeployments(Pageable pageable, @Nullable String owner, @Nullable String userGroup);
 
   public Deployment getDeployment(String id);
 

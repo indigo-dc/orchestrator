@@ -16,11 +16,14 @@
 
 package it.reply.orchestrator.service;
 
+
+import javax.annotation.Nullable;
+
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dto.slam.SlamPreferences;
 
 public interface SlamService {
 
-  public SlamPreferences getCustomerPreferences(OidcTokenId tokenId);
+  public SlamPreferences getCustomerPreferences(OidcTokenId tokenId, @Nullable String userGroup);
 
 }
