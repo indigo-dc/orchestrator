@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2020 Santer Reply S.p.A.
+ * Copyright © 2015-2021 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,17 @@ package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.config.properties.OidcProperties;
 import it.reply.orchestrator.config.properties.SlamProperties;
+import it.reply.orchestrator.controller.ControllerTestUtils;
+import it.reply.orchestrator.dal.entity.Deployment;
+import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.OidcEntityRepository;
+import it.reply.orchestrator.dto.deployment.DeploymentMessage;
+import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.function.ThrowingFunction;
 import it.reply.orchestrator.service.SlamServiceV1Impl;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.util.IntegrationTestUtil;
+import it.reply.orchestrator.util.TestUtil;
 
 import java.net.URI;
 
@@ -50,6 +56,9 @@ public class GetSlamTest extends BaseRankCloudProvidersCommandTest<GetSlam> {
   @Mock
   private OidcEntityRepository entityRepository;
 
+  @Mock
+  private DeploymentRepository deploymentRepository;
+
   public GetSlamTest() {
     super(new GetSlam());
   }
@@ -60,9 +69,18 @@ public class GetSlamTest extends BaseRankCloudProvidersCommandTest<GetSlam> {
   @Before
   public void setup() throws Exception {
     slamProperties.setUrl(URI.create("https://www.example.com"));
+
     when(oauth2TokenService.executeWithClientForResult(any(), any(), any()))
         .thenAnswer(y -> ((ThrowingFunction) y.getArguments()[1]).apply("token"));
+
     when(oauth2TokenService.getOrganization(any())).thenReturn("indigo-dc");
+
+    Deployment deployment = ControllerTestUtils.createDeployment("mmd34483-d937-4578-bfdb-ebe196bf82dd");
+    DeploymentMessage generateDeployDm = TestUtil.generateDeployDm(deployment);
+    deployment.setDeploymentProvider(DeploymentProvider.IM);
+
+    when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
+        .thenReturn(deployment);
   }
 
   @Test
