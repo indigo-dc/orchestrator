@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2020 Santer Reply S.p.A.
+ * Copyright © 2015-2021 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,7 +65,8 @@ public class DeploymentScheduleRequest extends DeploymentRequest {
       @NonNull Map<String, Object> parameters, @Nullable String callback,
       @Nullable Integer timeoutMins, @Nullable Integer providerTimeoutMins,
       @Nullable Integer maxProvidersRetry, boolean keepLastAttempt, @NonNull String fileExpression,
-      @NonNull String replicationExpression, @NonNull Integer numberOfReplicas, @Nullable String group) {
+      @NonNull String replicationExpression, @NonNull Integer numberOfReplicas,
+      @Nullable String group) {
     super(template, parameters, callback, timeoutMins, providerTimeoutMins, maxProvidersRetry,
         keepLastAttempt, group);
     this.fileExpression = fileExpression;

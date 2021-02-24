@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2020 Santer Reply S.p.A.
+ * Copyright © 2015-2021 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -140,12 +140,11 @@ public class DeploymentServiceImpl implements DeploymentService {
     }
     if (oidcProperties.isEnabled()) {
       OidcEntity requester = oauth2TokenService.generateOidcEntityFromCurrentAuth();
-      if (StringUtils.isEmpty(userGroup)) { 
-    	  return deploymentRepository.findAllByOwner(requester, ownerId, pageable);
+      if (StringUtils.isEmpty(userGroup)) {
+        return deploymentRepository.findAllByOwner(requester, ownerId, pageable);
       } else {
-    	  return deploymentRepository.findAllByOwner(requester, ownerId, userGroup, pageable);
+        return deploymentRepository.findAllByOwner(requester, ownerId, userGroup, pageable);
       }
-    	  
     } else {
       return deploymentRepository.findAllByOwner(ownerId, pageable);
     }

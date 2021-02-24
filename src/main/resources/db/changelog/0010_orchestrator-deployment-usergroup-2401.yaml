@@ -1,0 +1,13 @@
+databaseChangeLog:
+- changeSet:
+    id: 0010_orchestrator-deployment-usergroup-2401
+    author: m.perniola
+    comment: >
+      Add field user_group to table deployment to store user group info
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            name: user_group
+            type: VARCHAR(255)
+        tableName: deployment

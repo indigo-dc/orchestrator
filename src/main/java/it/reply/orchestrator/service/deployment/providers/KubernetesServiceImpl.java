@@ -202,9 +202,9 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     CloudProviderEndpoint chosenCloudProviderEndpoint = deploymentMessage
             .getChosenCloudProviderEndpoint();
     //String namespace = oauth2TokenService.getOrganization(requestedWithToken);
-    
+
     String namespace = Optional.ofNullable(deployment.getUserGroup())
-                       .orElse(oauth2TokenService.getOrganization(requestedWithToken)); 	    
+                       .orElse(oauth2TokenService.getOrganization(requestedWithToken));
 
     V1HelmRelease helmRelease = new V1HelmRelease()
         .apiVersion("helm.fluxcd.io/v1")

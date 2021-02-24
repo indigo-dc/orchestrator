@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2020 Santer Reply S.p.A.
+ * Copyright © 2015-2021 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -130,7 +130,7 @@ public class DeploymentServiceTest {
         .when(deploymentRepository.findAllByOwner((OidcEntityId)null, (Pageable) null))
         .thenReturn(new PageImpl<Deployment>(deployments));
 
-    Page<Deployment> pagedDeployment = deploymentService.getDeployments(null, null);
+    Page<Deployment> pagedDeployment = deploymentService.getDeployments(null, null, null);
 
     assertThat(pagedDeployment.getContent()).isEqualTo(deployments);
 
@@ -145,7 +145,7 @@ public class DeploymentServiceTest {
         .when(deploymentRepository.findAllByOwner((OidcEntityId)null,pageable))
         .thenReturn(new PageImpl<Deployment>(deployments));
 
-    Page<Deployment> pagedDeployment = deploymentService.getDeployments(pageable, null);
+    Page<Deployment> pagedDeployment = deploymentService.getDeployments(pageable, null, null);
 
     assertThat(pagedDeployment.getContent()).isEqualTo(deployments);
     assertThat(pagedDeployment.getNumberOfElements()).isEqualTo(10);

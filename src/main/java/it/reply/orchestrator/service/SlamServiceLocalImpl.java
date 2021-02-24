@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2020 Santer Reply S.p.A.
+ * Copyright © 2015-2021 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,7 +77,8 @@ public class SlamServiceLocalImpl implements SlamService {
 
   @Override
   public SlamPreferences getCustomerPreferences(OidcTokenId tokenId, @Nullable String userGroup) {
-    String slamCustomer = Optional.ofNullable(userGroup).orElse(oauth2TokenService.getOrganization(tokenId));
+    String slamCustomer = Optional.ofNullable(userGroup)
+        .orElse(oauth2TokenService.getOrganization(tokenId));
 
     return loadData().get(slamCustomer);
   }

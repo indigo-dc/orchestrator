@@ -69,7 +69,8 @@ public class SlamServiceV1Impl implements SlamService {
   @Override
   public SlamPreferences getCustomerPreferences(OidcTokenId tokenId, @Nullable String userGroup) {
 
-    String slamCustomer = Optional.ofNullable(userGroup).orElse(oauth2TokenService.getOrganization(tokenId));
+    String slamCustomer = Optional.ofNullable(userGroup)
+        .orElse(oauth2TokenService.getOrganization(tokenId));
 
     URI requestUri = UriComponentsBuilder
         .fromHttpUrl(slamProperties.getUrl() + slamProperties.getCustomerPreferencesPath())

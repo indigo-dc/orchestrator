@@ -93,6 +93,7 @@ public class CloudService implements CmdbIdentifiable {
   @Nullable
   private String parentServiceId;
 
+  @Builder.Default
   @JsonProperty("iam_enabled")
   private boolean iamEnabled = true;
 

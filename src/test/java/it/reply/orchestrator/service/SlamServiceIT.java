@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2020 Santer Reply S.p.A.
+ * Copyright © 2015-2021 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -39,7 +39,7 @@ public class SlamServiceIT extends WebAppConfigurationAwareIT {
   @Test
   @Ignore
   public void getPreferencesTest() throws Exception {
-    SlamPreferences pref = service.getCustomerPreferences(null);
+    SlamPreferences pref = service.getCustomerPreferences(null, null);
     assertEquals("4401ac5dc8cfbbb737b0a02575ee3b58", pref.getSla().get(0).getId());
   }
 
