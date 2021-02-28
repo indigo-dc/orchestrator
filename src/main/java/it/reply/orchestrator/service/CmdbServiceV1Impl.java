@@ -1,5 +1,5 @@
 /*
- * Copyright © 2015-2020 Santer Reply S.p.A.
+ * Copyright © 2015-2021 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -264,7 +264,7 @@ public class CmdbServiceV1Impl extends AbstractCmdbServiceImpl {
     }
   }
 
-/*  @Override
+  /*  @Override
   public List<Tenant> getTenantsByOrganisation(String organisationId) {
 
     URI requestUri = UriComponentsBuilder
@@ -279,11 +279,13 @@ public class CmdbServiceV1Impl extends AbstractCmdbServiceImpl {
       throw new DeploymentException(
           "Error loading tenant list for organisation <" + organisationId + "> from CMDB.", ex);
     }
-  }*/
+  }
+  */
 
   /**
-   * Temporary hack: cmdbProperties.getTenantsByOrganizationIdPath() does not work with organization names that contain slash, e.g. kube/users
-   * Therefore, as a workaround here we first get the full list of tenants and then we filter the list
+   * Temporary hack: cmdbProperties.getTenantsByOrganizationIdPath() does not work with
+   * organization names that contain slash, e.g. kube/users. Therefore, as a workaround
+   * here we first get the full list of tenants and then we filter the list
    */
   @Override
   public List<Tenant> getTenantsByOrganisation(String organisationId) {
@@ -296,7 +298,8 @@ public class CmdbServiceV1Impl extends AbstractCmdbServiceImpl {
 
     try {
       List<Tenant> tenants = getAll(requestUri, TENANTS_LIST_RESPONSE_TYPE);
-      return tenants.stream().filter(t -> Objects.nonNull(t.getIamOrganisation()) && t.getIamOrganisation().equals(organisationId)).collect(Collectors.toList());
+      return tenants.stream().filter(t -> Objects.nonNull(t.getIamOrganisation())
+                  && t.getIamOrganisation().equals(organisationId)).collect(Collectors.toList());
     } catch (RestClientException ex) {
       throw new DeploymentException(
           "Error loading tenant list for organisation <" + organisationId + "> from CMDB.", ex);
