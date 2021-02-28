@@ -57,6 +57,11 @@ public class CmdbProperties {
 
   @NotNull
   @NonNull
+  private String tenantsListPath =
+      "/tenant/list?include_docs=true";
+
+  @NotNull
+  @NonNull
   private String tenantsByOrganizationIdPath =
       "/tenant/filters/iam_organisation/{organisationId}?include_docs=true";
 
