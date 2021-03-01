@@ -1,4 +1,5 @@
 /*
+ * Copyright © 2015-2021 I.N.F.N.
  * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -277,7 +278,14 @@ public class IntegrationTestUtil {
     // Tenants: Organization 8a5377c6-a7f4-4d1c-a4cd-074ab92b6035
     mockServer
         .expect(requestTo(baseUrl
-            + "/tenant/filters/iam_organisation/8a5377c6-a7f4-4d1c-a4cd-074ab92b6035?include_docs=true"))
+            /**
+             * Temporary hack: cmdbProperties.getTenantsByOrganizationIdPath() does not work with
+             * organization names that contain slash, e.g. kube/users. Therefore, as a workaround
+             * here we first get the full list of tenants and then we filter the list
+             * refer: CmdbServiceV1Impl.java line: 268
+             */
+            //+ "/tenant/filters/iam_organisation/8a5377c6-a7f4-4d1c-a4cd-074ab92b6035?include_docs=true"))
+            + "/tenant/list?include_docs=true"))
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess(
             "{\n" +
@@ -335,7 +343,13 @@ public class IntegrationTestUtil {
             "  ]\n" +
             "}",
             MediaType.APPLICATION_JSON));
-
+    /**
+     * Temporary hack: cmdbProperties.getTenantsByOrganizationIdPath() does not work with
+     * organization names that contain slash, e.g. kube/users. Therefore, as a workaround
+     * here we first get the full list of tenants and then we filter the list
+     * refer: CmdbServiceV1Impl.java line: 268
+     */
+    /*
     // Images: Tenant 8a5377c6-a7f4-4d1c-a4cd-074ab92b6035 on provider-RECAS-BARI
     mockServer
         .expect(requestTo(baseUrl
@@ -511,7 +525,7 @@ public class IntegrationTestUtil {
             "  ]\n" +
             "}",
             MediaType.APPLICATION_JSON));
-
+     */
     // Provider: provider-UPV-GRyCAP
     mockServer.expect(requestTo(baseUrl + "/provider/id/provider-UPV-GRyCAP?include_docs=true"))
         .andExpect(method(HttpMethod.GET))
@@ -668,7 +682,14 @@ public class IntegrationTestUtil {
     // Tenants: Organization deep-hdc
     mockServer
         .expect(requestTo(baseUrl
-            + "/tenant/filters/iam_organisation/8a5377c6-a7f4-4d1c-a4cd-074ab92b6035?include_docs=true"))
+            /**
+             * Temporary hack: cmdbProperties.getTenantsByOrganizationIdPath() does not work with
+             * organization names that contain slash, e.g. kube/users. Therefore, as a workaround
+             * here we first get the full list of tenants and then we filter the list
+             * refer: CmdbServiceV1Impl.java line: 268
+             */
+            //+ "/tenant/filters/iam_organisation/8a5377c6-a7f4-4d1c-a4cd-074ab92b6035?include_docs=true"))
+            + "/tenant/list?include_docs=true"))
         .andExpect(method(HttpMethod.GET))
         .andRespond(withSuccess(
             "{}",
