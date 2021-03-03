@@ -122,7 +122,7 @@ public class DeploymentServiceTest {
   @Spy
   @Autowired
   private ObjectMapper objectMapper;
-  
+
   private static final String nodeTypeCompute = "tosca.nodes.indigo.Compute";
 
   @Test
