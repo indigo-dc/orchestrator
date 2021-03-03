@@ -122,6 +122,8 @@ public class DeploymentServiceTest {
   @Spy
   @Autowired
   private ObjectMapper objectMapper;
+  
+  private static final String nodeTypeCompute = "tosca.nodes.indigo.Compute";
 
   @Test
   public void getDeploymentsSuccessful() throws Exception {
@@ -254,7 +256,6 @@ public class DeploymentServiceTest {
 
     String nodeName1 = "server1";
     String nodeName2 = "server2";
-    String nodeType = "tosca.nodes.indigo.Compute";
 
     DeploymentRequest deploymentRequest = DeploymentRequest
         .builder()
@@ -265,7 +266,7 @@ public class DeploymentServiceTest {
 
     NodeTemplate nt = new NodeTemplate();
     nt.setCapabilities(capabilities);
-    nt.setType(nodeType);
+    nt.setType(nodeTypeCompute);
     nt.setName(nodeName1);
 
     Map<String, NodeTemplate> nts = Maps.newHashMap();
@@ -273,7 +274,7 @@ public class DeploymentServiceTest {
 
     nt = new NodeTemplate();
     nt.setCapabilities(capabilities);
-    nt.setType(nodeType);
+    nt.setType(nodeTypeCompute);
     nt.setName(nodeName2);
     nts.put(nodeName2, nt);
 
@@ -285,7 +286,7 @@ public class DeploymentServiceTest {
         .extracting(Resource::getToscaNodeName)
         .containsExactlyInAnyOrder(nodeName1, nodeName2);
     assertThat(returneDeployment.getResources()).allSatisfy(resource -> {
-      assertThat(resource.getToscaNodeType()).isEqualTo(nodeType);
+      assertThat(resource.getToscaNodeType()).isEqualTo(nodeTypeCompute);
       assertThat(resource.getState()).isEqualTo(NodeStates.INITIAL);
     });
 
@@ -311,7 +312,7 @@ public class DeploymentServiceTest {
 
     NodeTemplate nt = new NodeTemplate();
     nt.setCapabilities(capabilities);
-    nt.setType("tosca.nodes.indigo.Compute");
+    nt.setType(nodeTypeCompute);
 
     Map<String, NodeTemplate> nts = Maps.newHashMap();
     nts.put("server", nt);
@@ -329,7 +330,6 @@ public class DeploymentServiceTest {
         .build();
 
     String nodeName = "server";
-    String nodeType = "tosca.nodes.indigo.Compute";
 
     Capability capability = new Capability();
     capability.setProperties(Maps.newHashMap());
@@ -341,7 +341,7 @@ public class DeploymentServiceTest {
 
     NodeTemplate nt = new NodeTemplate();
     nt.setCapabilities(capabilities);
-    nt.setType(nodeType);
+    nt.setType(nodeTypeCompute);
     nt.setName(nodeName);
 
     Map<String, NodeTemplate> nts = Maps.newHashMap();
@@ -352,7 +352,7 @@ public class DeploymentServiceTest {
     assertThat(returneDeployment.getResources()).hasSize(2);
     assertThat(returneDeployment.getResources()).allSatisfy(resource -> {
       assertThat(resource.getToscaNodeName()).isEqualTo(nodeName);
-      assertThat(resource.getToscaNodeType()).isEqualTo(nodeType);
+      assertThat(resource.getToscaNodeType()).isEqualTo(nodeTypeCompute);
     });
 
     returneDeployment
@@ -627,20 +627,19 @@ public class DeploymentServiceTest {
   private static Map<String, NodeTemplate> getNodeTemplates() {
     String nodeName1 = "server1";
     String nodeName2 = "server2";
-    String nodeType = "tosca.nodes.indigo.Compute";
 
     Map<String, Capability> capabilities = Maps.newHashMap();
 
     NodeTemplate nt = new NodeTemplate();
     nt.setCapabilities(capabilities);
-    nt.setType(nodeType);
+    nt.setType(nodeTypeCompute);
 
     Map<String, NodeTemplate> nts = Maps.newHashMap();
     nts.put(nodeName1, nt);
 
     nt = new NodeTemplate();
     nt.setCapabilities(capabilities);
-    nt.setType(nodeType);
+    nt.setType(nodeTypeCompute);
     nts.put(nodeName2, nt);
     return nts;
   }
