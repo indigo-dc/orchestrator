@@ -55,4 +55,7 @@ public class SystemEndpoints {
   @JsonProperty("vault_url")
   private URI vaultUrl;
 
+  @Nullable
+  @JsonProperty("rucio_url")
+  private URI rucioUrl;
 }

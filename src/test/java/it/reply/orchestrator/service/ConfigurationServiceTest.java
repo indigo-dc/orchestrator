@@ -21,6 +21,7 @@ import it.reply.orchestrator.config.properties.CmdbProperties;
 import it.reply.orchestrator.config.properties.CprProperties;
 import it.reply.orchestrator.config.properties.ImProperties;
 import it.reply.orchestrator.config.properties.MonitoringProperties;
+import it.reply.orchestrator.config.properties.RucioProperties;
 import it.reply.orchestrator.config.properties.SlamProperties;
 import it.reply.orchestrator.config.properties.VaultProperties;
 import it.reply.orchestrator.dto.SystemEndpoints;
@@ -49,6 +50,7 @@ public class ConfigurationServiceTest {
   private static final URI IM_URL = URI.create("https://im.test.it");
   private static final URI MONITORING_URL = URI.create("https://monitoring.test.it");
   private static final URI VAULT_URL = URI.create("https://vault.test.it:8200");
+  private static final URI RUCIO_URL = URI.create("https://rucio.test.it:8100");
 
   @Rule
   public MockitoRule rule = MockitoJUnit.rule();
@@ -74,6 +76,9 @@ public class ConfigurationServiceTest {
   @Mock
   private VaultProperties vaultProperties;
 
+  @Mock
+  private RucioProperties rucioProperties;
+
   @Before
   public void setup() {
     when(cmdbProperties.getUrl()).thenReturn(CMDB_URL);
@@ -82,6 +87,7 @@ public class ConfigurationServiceTest {
     when(monitoringProperties.getUrl()).thenReturn(MONITORING_URL);
     when(slamProperties.getUrl()).thenReturn(SLAM_URL);
     when(vaultProperties.getUrl()).thenReturn(VAULT_URL);
+    when(rucioProperties.getUrl()).thenReturn(RUCIO_URL);
   }
 
   @Test
@@ -102,6 +108,7 @@ public class ConfigurationServiceTest {
       .imUrl(IM_URL)
       .monitoringUrl(MONITORING_URL)
       .vaultUrl(VAULT_URL)
+      .rucioUrl(RUCIO_URL)
       .build();
   }
 
