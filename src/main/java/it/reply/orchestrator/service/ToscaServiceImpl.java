@@ -18,11 +18,11 @@
 package it.reply.orchestrator.service;
 
 import alien4cloud.tosca.model.ArchiveRoot;
-import io.netty.util.internal.StringUtil;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
+import io.netty.util.internal.StringUtil;
 import it.reply.orchestrator.config.properties.OrchestratorProperties;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dto.cmdb.CloudService;
@@ -1093,31 +1093,31 @@ public class ToscaServiceImpl implements ToscaService {
 
   @Override
   public ArchiveRoot setDeploymentTags(ArchiveRoot ar,
-	  String orchestratorUrl,
-	  String deplymentId,
-	  String userEmail) {
+      String orchestratorUrl,
+      String deplymentId,
+      String userEmail) {
 
     getNodesOfType(ar, ToscaConstants.Nodes.Types.COMPUTE).stream()
-      		.forEach(computeNode -> {
-		Map<String, AbstractPropertyValue> properties =
-          Optional
-              .ofNullable(computeNode.getProperties())
-              .orElseGet(() -> {
-            	  computeNode.setProperties(new HashMap<>());
-                return computeNode.getProperties();
-              });
-		if (!properties.containsKey("tags")){
+        .forEach(computeNode -> {
+          Map<String, AbstractPropertyValue> properties =
+              Optional
+                .ofNullable(computeNode.getProperties())
+                .orElseGet(() -> {
+                  computeNode.setProperties(new HashMap<>());
+                  return computeNode.getProperties();
+                });
+          if (!properties.containsKey("tags")) {
             Map<String, Object> tags = new HashMap<>();
             ComplexPropertyValue tagsProperty = new ComplexPropertyValue(tags);
             properties.put("tags", tagsProperty);
-		}
-		ComplexPropertyValue tagsProperty = (ComplexPropertyValue)properties.get("tags");
-		tagsProperty.getValue().put("PAAS_URL", orchestratorUrl);
-		tagsProperty.getValue().put("PAAS_DEP_UUID", deplymentId);
-		if (!StringUtil.isNullOrEmpty(userEmail)) {
-			tagsProperty.getValue().put("PAAS_DEP_USER_EMAIL", userEmail);
-		}
-    });
+          }
+          ComplexPropertyValue tagsProperty = (ComplexPropertyValue)properties.get("tags");
+          tagsProperty.getValue().put("PAAS_URL", orchestratorUrl);
+          tagsProperty.getValue().put("PAAS_DEP_UUID", deplymentId);
+          if (!StringUtil.isNullOrEmpty(userEmail)) {
+            tagsProperty.getValue().put("PAAS_DEP_USER_EMAIL", userEmail);
+          }
+        });
     return ar;
   }
 

@@ -203,14 +203,16 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     //add tags
     String email = null;
     if (accessToken != null) {
-    	try {
-    		email = JwtUtils.getJwtClaimsSet(JwtUtils.parseJwt(accessToken)).getStringClaim("email");
-    	} catch (ParseException e) {}
+      try {
+        email = JwtUtils.getJwtClaimsSet(JwtUtils.parseJwt(accessToken)).getStringClaim("email");
+      } catch (ParseException e) {
+        email = null;
+      }
     }
     toscaService.setDeploymentTags(ar,
-    		orchestratorProperties.getUrl().toString(),
-    		deployment.getId(),
-    		email);
+        orchestratorProperties.getUrl().toString(),
+        deployment.getId(),
+        email);
 
     String imCustomizedTemplate = toscaService.serialize(ar);
     // Deploy on IM
