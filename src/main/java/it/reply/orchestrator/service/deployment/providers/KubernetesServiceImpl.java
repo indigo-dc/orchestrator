@@ -1,6 +1,6 @@
 /*
+ * Copyright © 2015-2021 I.N.F.N.
  * Copyright © 2015-2020 Santer Reply S.p.A.
- * Copyright © 2020-2021 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -201,7 +201,10 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     deployment.setEndpoint(name);
     CloudProviderEndpoint chosenCloudProviderEndpoint = deploymentMessage
             .getChosenCloudProviderEndpoint();
-    String namespace = oauth2TokenService.getOrganization(requestedWithToken);
+    //String namespace = oauth2TokenService.getOrganization(requestedWithToken);
+
+    String namespace = Optional.ofNullable(deployment.getUserGroup())
+                       .orElse(oauth2TokenService.getOrganization(requestedWithToken));
 
     V1HelmRelease helmRelease = new V1HelmRelease()
         .apiVersion("helm.fluxcd.io/v1")
@@ -227,7 +230,9 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
     Deployment deployment = getDeployment(deploymentMessage);
     String name = deployment.getEndpoint();
-    String namespace = oauth2TokenService.getOrganization(requestedWithToken);
+    //String namespace = oauth2TokenService.getOrganization(requestedWithToken);
+    String namespace = Optional.ofNullable(deployment.getUserGroup())
+                       .orElse(oauth2TokenService.getOrganization(requestedWithToken));
     V1HelmRelease helmRelease = null;
     try {
       helmRelease = this.executeWithHelmClientForResult(chosenCloudProviderEndpoint,
@@ -300,7 +305,9 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     deployment.setEndpoint(name);
     CloudProviderEndpoint chosenCloudProviderEndpoint = deploymentMessage
             .getChosenCloudProviderEndpoint();
-    String namespace = oauth2TokenService.getOrganization(requestedWithToken);
+    //String namespace = oauth2TokenService.getOrganization(requestedWithToken);
+    String namespace = Optional.ofNullable(deployment.getUserGroup())
+                       .orElse(oauth2TokenService.getOrganization(requestedWithToken));
 
     try {
       this.executeWithHelmClientForResult(chosenCloudProviderEndpoint, requestedWithToken,
@@ -330,7 +337,9 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
     String name = deployment.getId();
     CloudProviderEndpoint chosenCloudProviderEndpoint = deployment.getCloudProviderEndpoint();
-    String namespace = oauth2TokenService.getOrganization(requestedWithToken);
+    //String namespace = oauth2TokenService.getOrganization(requestedWithToken);
+    String namespace = Optional.ofNullable(deployment.getUserGroup())
+                       .orElse(oauth2TokenService.getOrganization(requestedWithToken));
     try {
       this.executeWithHelmClientForResult(chosenCloudProviderEndpoint, requestedWithToken,
           client -> client.delete(namespace, name));
@@ -349,7 +358,9 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
     String name = deployment.getId();
     CloudProviderEndpoint chosenCloudProviderEndpoint = deployment.getCloudProviderEndpoint();
-    String namespace = oauth2TokenService.getOrganization(requestedWithToken);
+    //String namespace = oauth2TokenService.getOrganization(requestedWithToken);
+    String namespace = Optional.ofNullable(deployment.getUserGroup())
+                       .orElse(oauth2TokenService.getOrganization(requestedWithToken));
     try {
       this.executeWithHelmClientForResult(chosenCloudProviderEndpoint, requestedWithToken,
           client -> client.get(namespace, name));
@@ -386,7 +397,10 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
       final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
 
       String name = deployment.getEndpoint();
-      String namespace = oauth2TokenService.getOrganization(requestedWithToken);
+      //String namespace = oauth2TokenService.getOrganization(requestedWithToken);
+      String namespace = Optional.ofNullable(deployment.getUserGroup())
+                       .orElse(oauth2TokenService.getOrganization(requestedWithToken));
+
       String labelSelector = String.format("app.kubernetes.io/instance=%s-%s", namespace, name);
       Map<String, NodeTemplate> nodes = Optional
           .ofNullable(ar.getTopology())

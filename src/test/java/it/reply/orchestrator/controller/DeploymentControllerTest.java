@@ -1,4 +1,5 @@
 /*
+ * Copyright © 2015-2021 I.N.F.N.
  * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -138,7 +139,7 @@ public class DeploymentControllerTest {
     deployments.get(0).setStatusReason("Some reason");
     deployments.get(1).setStatus(Status.CREATE_COMPLETE);
     Pageable pageable = ControllerTestUtils.createDefaultPageable();
-    Mockito.when(deploymentService.getDeployments(pageable, ownerIdString))
+    Mockito.when(deploymentService.getDeployments(pageable, ownerIdString, null))
         .thenReturn(new PageImpl<Deployment>(deployments, pageable, deployments.size()));
 
     mockMvc
@@ -178,7 +179,7 @@ public class DeploymentControllerTest {
     List<Deployment> deployments = ControllerTestUtils.createDeployments(5);
     Pageable pageable =
         new PageRequest(1, 2, new Sort(Direction.DESC, "createdAt"));
-    Mockito.when(deploymentService.getDeployments(pageable, null))
+    Mockito.when(deploymentService.getDeployments(pageable, null, null))
         .thenReturn(new PageImpl<Deployment>(deployments, pageable, deployments.size()));
 
     mockMvc
@@ -203,7 +204,7 @@ public class DeploymentControllerTest {
 
     List<Deployment> deployments = ControllerTestUtils.createDeployments(5);
     Pageable pageable = ControllerTestUtils.createDefaultPageable();
-    Mockito.when(deploymentService.getDeployments(pageable, null))
+    Mockito.when(deploymentService.getDeployments(pageable, null, null))
         .thenReturn(new PageImpl<Deployment>(deployments, pageable, deployments.size()));
 
     mockMvc

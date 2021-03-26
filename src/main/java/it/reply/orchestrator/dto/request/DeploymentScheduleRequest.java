@@ -1,4 +1,5 @@
 /*
+ * Copyright © 2015-2021 I.N.F.N.
  * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -65,9 +66,10 @@ public class DeploymentScheduleRequest extends DeploymentRequest {
       @NonNull Map<String, Object> parameters, @Nullable String callback,
       @Nullable Integer timeoutMins, @Nullable Integer providerTimeoutMins,
       @Nullable Integer maxProvidersRetry, boolean keepLastAttempt, @NonNull String fileExpression,
-      @NonNull String replicationExpression, @NonNull Integer numberOfReplicas) {
+      @NonNull String replicationExpression, @NonNull Integer numberOfReplicas,
+      @Nullable String group) {
     super(template, parameters, callback, timeoutMins, providerTimeoutMins, maxProvidersRetry,
-        keepLastAttempt);
+        keepLastAttempt, group);
     this.fileExpression = fileExpression;
     this.replicationExpression = replicationExpression;
     this.numberOfReplicas = numberOfReplicas;

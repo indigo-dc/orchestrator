@@ -1,4 +1,5 @@
 /*
+ * Copyright © 2015-2021 I.N.F.N.
  * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,6 +31,7 @@ import it.reply.orchestrator.dto.cmdb.wrappers.CmdbRow;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import java.net.URI;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -263,7 +265,7 @@ public class CmdbServiceV1Impl extends AbstractCmdbServiceImpl {
     }
   }
 
-  @Override
+  /*  @Override
   public List<Tenant> getTenantsByOrganisation(String organisationId) {
 
     URI requestUri = UriComponentsBuilder
@@ -274,6 +276,31 @@ public class CmdbServiceV1Impl extends AbstractCmdbServiceImpl {
 
     try {
       return getAll(requestUri, TENANTS_LIST_RESPONSE_TYPE);
+    } catch (RestClientException ex) {
+      throw new DeploymentException(
+          "Error loading tenant list for organisation <" + organisationId + "> from CMDB.", ex);
+    }
+  }
+  */
+
+  /**
+   * Temporary hack: cmdbProperties.getTenantsByOrganizationIdPath() does not work with
+   * organization names that contain slash, e.g. kube/users. Therefore, as a workaround
+   * here we first get the full list of tenants and then we filter the list
+   */
+  @Override
+  public List<Tenant> getTenantsByOrganisation(String organisationId) {
+
+    URI requestUri = UriComponentsBuilder
+        .fromHttpUrl(cmdbProperties.getUrl() + cmdbProperties.getTenantsListPath())
+        .build()
+        .normalize()
+        .toUri();
+
+    try {
+      List<Tenant> tenants = getAll(requestUri, TENANTS_LIST_RESPONSE_TYPE);
+      return tenants.stream().filter(t -> Objects.nonNull(t.getIamOrganisation())
+                  && t.getIamOrganisation().equals(organisationId)).collect(Collectors.toList());
     } catch (RestClientException ex) {
       throw new DeploymentException(
           "Error loading tenant list for organisation <" + organisationId + "> from CMDB.", ex);

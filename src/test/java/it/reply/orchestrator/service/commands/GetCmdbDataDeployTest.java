@@ -1,4 +1,5 @@
 /*
+ * Copyright © 2015-2021 I.N.F.N.
  * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,11 +18,17 @@
 package it.reply.orchestrator.service.commands;
 
 import it.reply.orchestrator.config.properties.CmdbProperties;
+import it.reply.orchestrator.controller.ControllerTestUtils;
+import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.OidcEntityId;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
+import it.reply.orchestrator.dal.repository.DeploymentRepository;
+import it.reply.orchestrator.dto.deployment.DeploymentMessage;
+import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.service.CmdbServiceV1Impl;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.util.IntegrationTestUtil;
+import it.reply.orchestrator.util.TestUtil;
 
 import static org.mockito.Matchers.eq;
 import static org.mockito.Mockito.when;
@@ -34,7 +41,6 @@ import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
-
 
 public class GetCmdbDataDeployTest extends BaseRankCloudProvidersCommandTest<GetCmdbDataDeploy> {
 
@@ -52,6 +58,9 @@ public class GetCmdbDataDeployTest extends BaseRankCloudProvidersCommandTest<Get
   @Mock
   private OAuth2TokenService oauth2TokenService;
 
+  @Mock
+  private DeploymentRepository deploymentRepository;
+
   public GetCmdbDataDeployTest() {
     super(new GetCmdbDataDeploy());
   }
@@ -68,6 +77,13 @@ public class GetCmdbDataDeployTest extends BaseRankCloudProvidersCommandTest<Get
     when(oauth2TokenService
         .getOrganization(eq(oidcTokenId)))
         .thenReturn("8a5377c6-a7f4-4d1c-a4cd-074ab92b6035");
+
+    Deployment deployment = ControllerTestUtils.createDeployment("mmd34483-d937-4578-bfdb-ebe196bf82dd");
+    DeploymentMessage generateDeployDm = TestUtil.generateDeployDm(deployment);
+    deployment.setDeploymentProvider(DeploymentProvider.IM);
+
+    when(deploymentRepository.findOne(generateDeployDm.getDeploymentId()))
+        .thenReturn(deployment);
   }
 
   @Test
@@ -181,7 +197,6 @@ public class GetCmdbDataDeployTest extends BaseRankCloudProvidersCommandTest<Get
     Assertions
         .assertThatCode(() -> execute(serializedRankCloudProvidersMessage))
         .doesNotThrowAnyException();
-
   }
 
 }

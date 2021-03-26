@@ -1,6 +1,6 @@
 /*
+ * Copyright © 2015-2021 I.N.F.N.
  * Copyright © 2015-2020 Santer Reply S.p.A.
- * Copyright © 2020-2021 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import it.reply.orchestrator.service.CmdbService;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.WorkflowConstants;
 
+import java.util.Optional;
 import java.util.Set;
 
 import java.util.stream.Collectors;
@@ -51,8 +52,10 @@ public class GetCmdbDataUpdate extends BaseDeployCommand {
     CloudProviderEndpoint cloudProviderEndpoint = deployment.getCloudProviderEndpoint();
     String cloudProviderId = deployment.getCloudProviderName();
     Set<String> serviceWithSla = Sets.newHashSet(cloudProviderEndpoint.getCpComputeServiceId());
-    String organisation = oauth2TokenService.getOrganization(
-        deploymentMessage.getRequestedWithToken());
+    //String organisation = oauth2TokenService.getOrganization(
+    //    deploymentMessage.getRequestedWithToken());
+    String organisation = Optional.ofNullable(deployment.getUserGroup())
+           .orElse(oauth2TokenService.getOrganization(deploymentMessage.getRequestedWithToken()));
     CloudProvider cloudProvider = cmdbService
         .fillCloudProviderInfo(cloudProviderId, serviceWithSla, organisation);
 

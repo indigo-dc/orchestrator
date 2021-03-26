@@ -1,4 +1,5 @@
 /*
+ * Copyright © 2015-2021 I.N.F.N.
  * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,11 +44,27 @@ public interface DeploymentRepository extends JpaRepository<Deployment, String> 
   public Page<Deployment> findAllByOwner(@Param("ownerId") OidcEntityId ownerId, Pageable pageable);
 
   @Query("select d "
+        + "from #{#entityName} d "
+        + "where d.owner.oidcEntityId = ?#{#ownerId} "
+        + "and d.userGroup = ?#{#userGroup}")
+  public Page<Deployment> findAllByOwner(@Param("ownerId") OidcEntityId ownerId,
+      @Param("userGroup") String userGroup, Pageable pageable);
+
+  @Query("select d "
       + "from #{#entityName} d "
       + "where d.owner.oidcEntityId = ?#{#ownerId} "
       + "and " + IN_SAME_ORGANIZATION)
   public Page<Deployment> findAllByOwner(@Param("requester") OidcEntity requester,
       @Param("ownerId") OidcEntityId ownerId,
+      Pageable pageable);
+
+  @Query("select d "
+      + "from #{#entityName} d "
+      + "where d.owner.oidcEntityId = ?#{#ownerId} "
+      + "and " + IN_SAME_ORGANIZATION
+      + "and d.userGroup = ?#{#userGroup}")
+  public Page<Deployment> findAllByOwner(@Param("requester") OidcEntity requester,
+      @Param("ownerId") OidcEntityId ownerId, @Param("userGroup") String userGroup,
       Pageable pageable);
 
   @Query("select d "

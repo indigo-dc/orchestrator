@@ -11,3 +11,6 @@ databaseChangeLog:
   - include:
     - file: 0009_orchestrator-deployment-schedule-2301.yaml
       relativeToChangelogFile: true
+  - include:
+    - file: 0010_orchestrator-deployment-usergroup-2401.yaml
+      relativeToChangelogFile: true

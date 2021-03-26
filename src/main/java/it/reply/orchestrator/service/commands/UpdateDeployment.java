@@ -1,4 +1,5 @@
 /*
+ * Copyright © 2015-2021 I.N.F.N.
  * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -75,7 +76,7 @@ public class UpdateDeployment extends BaseDeployCommand {
     if (!servicesIt.hasNext()) {
       if (servicesIt.getSize() == 0) {
         throw new BusinessWorkflowException(ErrorCode.RUNTIME_ERROR,
-            "No cloud providers available to deploy");
+            "No cloud provider meets the deployment requirements");
       } else {
         servicesIt.reset();
         String causes = CommonUtils

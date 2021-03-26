@@ -1,4 +1,5 @@
 /*
+ * Copyright © 2015-2021 I.N.F.N.
  * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +28,8 @@ import org.springframework.data.domain.Pageable;
 
 public interface DeploymentService {
 
-  public Page<Deployment> getDeployments(Pageable pageable, @Nullable String owner);
+  public Page<Deployment> getDeployments(Pageable pageable, @Nullable String owner,
+      @Nullable String userGroup);
 
   public Deployment getDeployment(String id);
 

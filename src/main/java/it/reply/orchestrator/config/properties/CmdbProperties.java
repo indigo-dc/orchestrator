@@ -1,4 +1,5 @@
 /*
+ * Copyright © 2015-2021 I.N.F.N.
  * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -54,6 +55,11 @@ public class CmdbProperties {
   @NonNull
   private String tenantsByServiceIdPath =
       "/service/id/{serviceId}/has_many/tenants?include_docs=true";
+
+  @NotNull
+  @NonNull
+  private String tenantsListPath =
+      "/tenant/list?include_docs=true";
 
   @NotNull
   @NonNull

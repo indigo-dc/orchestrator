@@ -1,4 +1,5 @@
 /*
+ * Copyright © 2015-2021 I.N.F.N.
  * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,8 +20,10 @@ package it.reply.orchestrator.service;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dto.slam.SlamPreferences;
 
+import javax.annotation.Nullable;
+
 public interface SlamService {
 
-  public SlamPreferences getCustomerPreferences(OidcTokenId tokenId);
+  public SlamPreferences getCustomerPreferences(OidcTokenId tokenId, @Nullable String userGroup);
 
 }

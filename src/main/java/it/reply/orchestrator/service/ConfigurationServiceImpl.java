@@ -1,5 +1,6 @@
 /*
- * Copyright © 2019 I.N.F.N.
+ * Copyright © 2015-2021 I.N.F.N.
+ * Copyright © 2015-2020 Santer Reply S.p.A.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +21,7 @@ import it.reply.orchestrator.config.properties.CmdbProperties;
 import it.reply.orchestrator.config.properties.CprProperties;
 import it.reply.orchestrator.config.properties.ImProperties;
 import it.reply.orchestrator.config.properties.MonitoringProperties;
+import it.reply.orchestrator.config.properties.RucioProperties;
 import it.reply.orchestrator.config.properties.SlamProperties;
 import it.reply.orchestrator.config.properties.VaultProperties;
 import it.reply.orchestrator.dto.SystemEndpoints;
@@ -48,6 +50,9 @@ public class ConfigurationServiceImpl implements ConfigurationService {
   @Autowired
   private VaultProperties vaultProperties;
 
+  @Autowired
+  private RucioProperties rucioProperties;
+
   /**
    * Return the system configuration endpoints.
    * @return the configuration endpoints
@@ -61,6 +66,7 @@ public class ConfigurationServiceImpl implements ConfigurationService {
         .imUrl(imProperties.getUrl())
         .monitoringUrl(monitoringProperties.getUrl())
         .vaultUrl(vaultProperties.getUrl())
+        .rucioUrl(rucioProperties.getUrl())
         .build();
   }
 

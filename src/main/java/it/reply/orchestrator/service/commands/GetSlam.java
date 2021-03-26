@@ -1,6 +1,6 @@
 /*
+ * Copyright © 2015-2021 I.N.F.N.
  * Copyright © 2015-2020 Santer Reply S.p.A.
- * Copyright © 2020-2021 I.N.F.N.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,8 @@ public class GetSlam extends BaseRankCloudProvidersCommand {
     OidcTokenId requestedWithToken = rankCloudProvidersMessage.getRequestedWithToken();
 
     rankCloudProvidersMessage.setSlamPreferences(slamService
-        .getCustomerPreferences(requestedWithToken));
+        .getCustomerPreferences(requestedWithToken, getDeployment(rankCloudProvidersMessage)
+            .getUserGroup()));
 
   }
 
