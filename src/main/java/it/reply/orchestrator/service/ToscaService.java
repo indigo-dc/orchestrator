@@ -258,6 +258,9 @@ public interface ToscaService {
 
   boolean isScalable(NodeTemplate nodeTemplate);
 
+  public ArchiveRoot setDeploymentTags(ArchiveRoot ar, String orchestratorUrl,
+	  String deplymentId, String userEmail);
+
   public ArchiveRoot setHybridDeployment(ArchiveRoot ar, String publicNetworkName,
       String privateNetworkName, String privateNetworkCidr);
 
