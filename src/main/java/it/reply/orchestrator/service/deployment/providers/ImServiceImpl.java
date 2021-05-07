@@ -38,6 +38,7 @@ import es.upv.i3m.grycap.im.rest.client.BodyContentType;
 import it.reply.orchestrator.annotation.DeploymentProviderQualifier;
 import it.reply.orchestrator.config.properties.ImProperties;
 import it.reply.orchestrator.config.properties.OidcProperties;
+import it.reply.orchestrator.config.properties.OrchestratorProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.entity.Resource;
@@ -60,10 +61,12 @@ import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.deployment.providers.factory.ImClientFactory;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
+import it.reply.orchestrator.utils.JwtUtils;
 import it.reply.orchestrator.utils.OneDataUtils;
 import it.reply.orchestrator.utils.WorkflowConstants.ErrorCode;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -104,6 +107,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   @Autowired
   private OidcProperties oidcProperties;
+
+  @Autowired
+  private OrchestratorProperties orchestratorProperties;
 
   @Autowired
   private OAuth2TokenService oauth2TokenService;
@@ -193,6 +199,20 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           computeService.getPublicNetworkName(),
           computeService.getPrivateNetworkName());
     }
+
+    //add tags
+    String email = null;
+    if (accessToken != null) {
+      try {
+        email = JwtUtils.getJwtClaimsSet(JwtUtils.parseJwt(accessToken)).getStringClaim("email");
+      } catch (ParseException e) {
+        email = null;
+      }
+    }
+    toscaService.setDeploymentTags(ar,
+        orchestratorProperties.getUrl().toString(),
+        deployment.getId(),
+        email);
 
     String imCustomizedTemplate = toscaService.serialize(ar);
     // Deploy on IM
