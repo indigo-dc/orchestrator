@@ -206,6 +206,7 @@ public class OidcProperties implements SecurityPrerequisite, InitializingBean {
 
     /**
      * Return the scopes.
+     * @return scopes the scopes
      */
     public List<String> getScopes() {
       if (scopes == null) {

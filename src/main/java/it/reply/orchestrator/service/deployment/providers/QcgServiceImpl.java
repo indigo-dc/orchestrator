@@ -281,12 +281,9 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
   /**
    * Gets the Job status.
    *
-   * @param cloudProviderEndpoint the {@link CloudProviderEndpoint} of the Qcg
-   *                              instance
-   * @param requestedWithToken    the token ID of the request
-   * @param jobId                 the ID of the Qcg job
+   * @param job the {@link Job}
    *
-   * @return the optional {@link Job}.
+   * @return status flag
    */
   protected boolean checkJobState(Job job) {
 
