@@ -6,7 +6,7 @@
 
 The INDIGO PaaS Orchestrator is a component of the PaaS layer that allows to instantiate resources on Cloud Management Frameworks \(like [OpenStack](https://www.openstack.org/) and [OpenNebula](http://opennebula.org/)\) and [Mesos](http://mesos.apache.org/) clusters.
 
-It takes the deployment requests, expressed through templates written in [TOSCA YAML Simple Profile v1.0](http://docs.oasis-open.org/tosca/TOSCA-Simple-Profile-YAML/v1.0/TOSCA-Simple-Profile-YAML-v1.0.html), and deploys them on the best cloud site available. In order to do that 1\) it gathers SLAs, monitoring info and other data from other platform services, 2\) it asks to the cloud provider ranker for a list of the best cloud sites.
+It takes the deployment requests, expressed through templates written in [TOSCA YAML Simple Profile v1.0](http://docs.oasis-open.org/tosca/TOSCA-Simple-Profile-YAML/v1.0/TOSCA-Simple-Profile-YAML-v1.0.html), and deploys them on the best cloud site available. In order to do that 1. it gathers SLAs, monitoring info and other data from other platform services, 2. it asks to the cloud provider ranker for a list of the best cloud sites.
 
 The exposed REST APIs are consumed by the Future Gateway portal. Here you can find the [REST APIs documentation](http://indigo-dc.github.io/orchestrator/restdocs/) and the [Java doc](http://indigo-dc.github.io/orchestrator/apidocs/).
 
