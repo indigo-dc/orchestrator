@@ -69,7 +69,7 @@ public class MesosFrameworkService<T extends MesosFrameworkServiceProperties> ex
    * @param publicIpAssignable
    *     the publicIpAssignable flag
    * @param supportedIdps
-   *     the supportedIdps    
+   *     the supportedIdps
    * @param properties
    *     the properties
    */

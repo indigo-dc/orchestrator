@@ -49,7 +49,7 @@ public class QcgService extends  CloudService {
    * @param region
    *     the region of the service
    * @param tenant
-   *     the tenant    
+   *     the tenant
    * @param hostname
    *     the hostname of the service
    * @param parentServiceId
@@ -61,7 +61,7 @@ public class QcgService extends  CloudService {
    * @param publicIpAssignable
    *     the publicIpAssignable flag
    * @param supportedIdps
-   *     the supportedIdps    
+   *     the supportedIdps
    */
   @Builder(builderMethodName = "qcgBuilder")
   public QcgService(
