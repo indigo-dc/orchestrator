@@ -119,7 +119,11 @@ public class DeploymentServiceImpl implements DeploymentService {
     if (StringUtils.isEmpty(owner)) {
       if (isAdmin()) {
         OidcEntity requester = oauth2TokenService.generateOidcEntityFromCurrentAuth();
-        return deploymentRepository.findAll(requester, pageable);
+        if (StringUtils.isEmpty(userGroup)) {
+          return deploymentRepository.findAll(requester, pageable);
+        } else {
+          return deploymentRepository.findAll(requester, userGroup, pageable);
+        }
       }
       owner = "me";
     }

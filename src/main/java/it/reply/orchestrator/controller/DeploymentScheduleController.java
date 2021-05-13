@@ -131,6 +131,11 @@ public class DeploymentScheduleController {
    * Get the deployment.
    *
    * @param id the deployment id
+   * @param createdBy the user that created the resource
+   * @param pageable
+   *          {@link Pageable}
+   * @param pagedAssembler
+   *          {@link PagedResourcesAssembler}
    * @return {@link DeploymentResource}
    */
   @ResponseStatus(HttpStatus.OK)

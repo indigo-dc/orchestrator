@@ -56,6 +56,8 @@ public class MesosFrameworkService<T extends MesosFrameworkServiceProperties> ex
    *     the publicService of the service
    * @param region
    *     the region of the service
+   * @param tenant
+   *     the tenant
    * @param hostname
    *     the hostname of the service
    * @param parentServiceId
@@ -66,6 +68,8 @@ public class MesosFrameworkService<T extends MesosFrameworkServiceProperties> ex
    *     the IDP protocol name
    * @param publicIpAssignable
    *     the publicIpAssignable flag
+   * @param supportedIdps
+   *     the supportedIdps
    * @param properties
    *     the properties
    */

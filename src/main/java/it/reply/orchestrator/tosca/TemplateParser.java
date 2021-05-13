@@ -60,7 +60,7 @@ public class TemplateParser {
   private ToscaParser toscaParser;
 
   /**
-   * Parse the TOSCA template (string) and get the in-memory representation.<br/>
+   * Parse the TOSCA template (string) and get the in-memory representation.
    * This also checks for validation errors.
    *
    * @param template
@@ -74,7 +74,7 @@ public class TemplateParser {
   }
 
   /**
-   * Parse the TOSCA template (string) and get the in-memory representation.<br/>
+   * Parse the TOSCA template (string) and get the in-memory representation.
    * This also checks for validation errors.
    *
    * @param filePath

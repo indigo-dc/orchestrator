@@ -60,6 +60,7 @@ public class DeploymentScheduleRequest extends DeploymentRequest {
    * @param fileExpression the file expression
    * @param replicationExpression the replication expression
    * @param numberOfReplicas the number of replicas
+   * @param group the user group
    */
   @Builder(builderMethodName = "deploymentScheduleBuilder")
   public DeploymentScheduleRequest(@NonNull String template,

@@ -53,12 +53,22 @@ public class StorageService extends CloudService {
    *     the publicService
    * @param region
    *     the region
+   * @param tenant
+   *     the tenant
    * @param hostname
    *     the hostname
    * @param parentServiceId
    *     the parent service Id
    * @param rucioRse
    *     the optional Rucio RSE name
+   * @param iamEnabled
+   *     the iamEnabled flag
+   * @param idpProtocol
+   *     the IDP protocol name
+   * @param publicIpAssignable
+   *     the publicIpAssignable flag
+   * @param supportedIdps
+   *     the supportedIdps
    */
   @Builder(builderMethodName = "storageBuilder")
   public StorageService(

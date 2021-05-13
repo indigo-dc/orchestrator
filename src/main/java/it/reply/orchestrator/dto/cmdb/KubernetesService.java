@@ -52,6 +52,8 @@ public class KubernetesService extends CloudService {
    *     the publicService of the service
    * @param region
    *     the region of the service
+   * @param tenant
+   *     the tenant
    * @param hostname
    *     the hostname of the service
    * @param parentServiceId
@@ -62,6 +64,10 @@ public class KubernetesService extends CloudService {
    *     the IDP protocol name
    * @param publicIpAssignable
    *     the publicIpAssignable flag
+   * @param supportedIdps
+   *     the supportedIdps
+   * @param workerNodesIp
+   *     the workerNodesIp
    */
   @Builder(builderMethodName = "kubernetesBuilder")
   public KubernetesService(

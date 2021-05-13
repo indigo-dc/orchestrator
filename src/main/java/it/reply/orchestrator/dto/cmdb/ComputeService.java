@@ -76,6 +76,8 @@ public class ComputeService extends CloudService {
    *     the publicService
    * @param region
    *     the region
+   * @param tenant
+   *     the tenant
    * @param hostname
    *     the hostname
    * @param parentServiceId
@@ -90,6 +92,8 @@ public class ComputeService extends CloudService {
    *     the IDP protocol name
    * @param publicIpAssignable
    *     the publicIpAssignable flag
+   * @param supportedIdps
+   *     the supportedIdps
    * @param publicNetworkName
    *     the public network name
    * @param privateNetworkCidr
