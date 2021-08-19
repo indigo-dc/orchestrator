@@ -712,7 +712,7 @@ that describes the problem. The error object has the following structure:</p>
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 404 Not Found
 Content-Type: application/json;charset=UTF-8
-Content-Length: 72
+Content-Length: 68
 
 {
   "code" : 404,
@@ -882,7 +882,7 @@ from an entry or feed to a Web resource.</p>
 <h3 id="_example_request"><a class="link" href="#_example_request">Example request</a></h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments?createdBy=ca3a7a2b-6eb8-438a-bea6-387c7f17d072@https://iam-test.indigo-datacloud.eu/' -i -H 'Accept: application/json' -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments?createdBy=3f0b468b-63d3-4536-8c07-e2406707df57@https://iam-test.indigo-datacloud.eu/' -i -H 'Accept: application/json' -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
 </div>
 </div>
 </div>
@@ -957,12 +957,12 @@ from an entry or feed to a Web resource.</p>
 <h4 id="_example_request_2"><a class="link" href="#_example_request_2">Example request</a></h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments?createdBy=ca3a7a2b-6eb8-438a-bea6-387c7f17d072@https://iam-test.indigo-datacloud.eu/' -i -H 'Accept: application/json' -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments?createdBy=3f0b468b-63d3-4536-8c07-e2406707df57@https://iam-test.indigo-datacloud.eu/' -i -H 'Accept: application/json' -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /deployments?createdBy=ca3a7a2b-6eb8-438a-bea6-387c7f17d072@https://iam-test.indigo-datacloud.eu/ HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /deployments?createdBy=3f0b468b-63d3-4536-8c07-e2406707df57@https://iam-test.indigo-datacloud.eu/ HTTP/1.1
 Accept: application/json
 Authorization: Bearer &lt;access token&gt;
 Host: localhost:8080</code></pre>
@@ -1003,7 +1003,7 @@ Host: localhost:8080</code></pre>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>content[].status</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The status of the deployment. (<a href="http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html" class="bare">http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html</a>)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The status of the deployment. (../apidocs/it/reply/orchestrator/enums/Status.html)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>content[].statusReason</code></p></td>
@@ -1039,17 +1039,17 @@ Host: localhost:8080</code></pre>
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json;charset=UTF-8
-Content-Length: 2001
+Content-Length: 1956
 
 {
   "links" : [ {
     "rel" : "self",
-    "href" : "http://localhost:8080/deployments?createdBy=ca3a7a2b-6eb8-438a-bea6-387c7f17d072@https://iam-test.indigo-datacloud.eu/"
+    "href" : "http://localhost:8080/deployments?createdBy=3f0b468b-63d3-4536-8c07-e2406707df57@https://iam-test.indigo-datacloud.eu/{&amp;userGroup}"
   } ],
   "content" : [ {
-    "uuid" : "79683304-21c8-44dd-a6ba-c68a007b5766",
-    "creationTime" : "2020-12-04T08:57+0000",
-    "updateTime" : "2020-12-04T08:57+0000",
+    "uuid" : "5b5ac1ff-8836-4340-96d2-f0e085d51124",
+    "creationTime" : "2021-08-19T15:59+0000",
+    "updateTime" : "2021-08-19T15:59+0000",
     "status" : "CREATE_FAILED",
     "statusReason" : "Some reason",
     "outputs" : { },
@@ -1057,39 +1057,39 @@ Content-Length: 2001
     "callback" : "http://localhost",
     "createdBy" : {
       "issuer" : "https://iam-test.indigo-datacloud.eu/",
-      "subject" : "ca3a7a2b-6eb8-438a-bea6-387c7f17d072"
+      "subject" : "3f0b468b-63d3-4536-8c07-e2406707df57"
     },
     "links" : [ {
       "rel" : "self",
-      "href" : "http://localhost:8080/deployments/79683304-21c8-44dd-a6ba-c68a007b5766"
+      "href" : "http://localhost:8080/deployments/5b5ac1ff-8836-4340-96d2-f0e085d51124"
     }, {
       "rel" : "resources",
-      "href" : "http://localhost:8080/deployments/79683304-21c8-44dd-a6ba-c68a007b5766/resources"
+      "href" : "http://localhost:8080/deployments/5b5ac1ff-8836-4340-96d2-f0e085d51124/resources"
     }, {
       "rel" : "template",
-      "href" : "http://localhost:8080/deployments/79683304-21c8-44dd-a6ba-c68a007b5766/template"
+      "href" : "http://localhost:8080/deployments/5b5ac1ff-8836-4340-96d2-f0e085d51124/template"
     } ]
   }, {
-    "uuid" : "49a1adfb-b268-44b8-9033-3a04c08e4144",
-    "creationTime" : "2020-12-04T08:57+0000",
-    "updateTime" : "2020-12-04T08:57+0000",
+    "uuid" : "2d91d6b3-cbc3-4d74-bb64-701ff9e3cffb",
+    "creationTime" : "2021-08-19T15:59+0000",
+    "updateTime" : "2021-08-19T15:59+0000",
     "status" : "CREATE_COMPLETE",
     "outputs" : { },
     "task" : "NONE",
     "callback" : "http://localhost",
     "createdBy" : {
       "issuer" : "https://iam-test.indigo-datacloud.eu/",
-      "subject" : "ca3a7a2b-6eb8-438a-bea6-387c7f17d072"
+      "subject" : "3f0b468b-63d3-4536-8c07-e2406707df57"
     },
     "links" : [ {
       "rel" : "self",
-      "href" : "http://localhost:8080/deployments/49a1adfb-b268-44b8-9033-3a04c08e4144"
+      "href" : "http://localhost:8080/deployments/2d91d6b3-cbc3-4d74-bb64-701ff9e3cffb"
     }, {
       "rel" : "resources",
-      "href" : "http://localhost:8080/deployments/49a1adfb-b268-44b8-9033-3a04c08e4144/resources"
+      "href" : "http://localhost:8080/deployments/2d91d6b3-cbc3-4d74-bb64-701ff9e3cffb/resources"
     }, {
       "rel" : "template",
-      "href" : "http://localhost:8080/deployments/49a1adfb-b268-44b8-9033-3a04c08e4144/template"
+      "href" : "http://localhost:8080/deployments/2d91d6b3-cbc3-4d74-bb64-701ff9e3cffb/template"
     } ]
   } ],
   "page" : {
@@ -1185,7 +1185,7 @@ Content-Length: 2001
 Content-Type: application/json
 Authorization: Bearer &lt;access token&gt;
 Host: localhost:8080
-Content-Length: 234
+Content-Length: 224
 
 {
   "template" : "template",
@@ -1261,25 +1261,25 @@ Content-Length: 234
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 201 Created
 Content-Type: application/json;charset=UTF-8
-Content-Length: 662
+Content-Length: 644
 
 {
-  "uuid" : "7b60c1ca-bd3f-4371-9124-0a629b8f86d6",
-  "creationTime" : "2020-12-04T08:57+0000",
-  "updateTime" : "2020-12-04T08:57+0000",
+  "uuid" : "fd44eed7-23ef-4e7e-9699-4ec0e7853d6b",
+  "creationTime" : "2021-08-19T15:59+0000",
+  "updateTime" : "2021-08-19T15:59+0000",
   "status" : "CREATE_IN_PROGRESS",
   "outputs" : { },
   "task" : "NONE",
   "callback" : "http://localhost:8080/callback",
   "links" : [ {
     "rel" : "self",
-    "href" : "http://localhost:8080/deployments/7b60c1ca-bd3f-4371-9124-0a629b8f86d6"
+    "href" : "http://localhost:8080/deployments/fd44eed7-23ef-4e7e-9699-4ec0e7853d6b"
   }, {
     "rel" : "resources",
-    "href" : "http://localhost:8080/deployments/7b60c1ca-bd3f-4371-9124-0a629b8f86d6/resources"
+    "href" : "http://localhost:8080/deployments/fd44eed7-23ef-4e7e-9699-4ec0e7853d6b/resources"
   }, {
     "rel" : "template",
-    "href" : "http://localhost:8080/deployments/7b60c1ca-bd3f-4371-9124-0a629b8f86d6/template"
+    "href" : "http://localhost:8080/deployments/fd44eed7-23ef-4e7e-9699-4ec0e7853d6b/template"
   } ]
 }</code></pre>
 </div>
@@ -1371,12 +1371,12 @@ Host: localhost:8080</code></pre>
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json;charset=UTF-8
-Content-Length: 711
+Content-Length: 690
 
 {
   "uuid" : "mmd34483-d937-4578-bfdb-ebe196bf82dd",
-  "creationTime" : "2020-12-04T08:57+0000",
-  "updateTime" : "2020-12-04T08:57+0000",
+  "creationTime" : "2021-08-19T15:59+0000",
+  "updateTime" : "2021-08-19T15:59+0000",
   "status" : "CREATE_FAILED",
   "statusReason" : "Some reason",
   "outputs" : {
@@ -1427,7 +1427,7 @@ Content-Length: 711
 Content-Type: application/json
 Authorization: Bearer &lt;access token&gt;
 Host: localhost:8080
-Content-Length: 234
+Content-Length: 224
 
 {
   "template" : "template",
@@ -1508,7 +1508,7 @@ Host: localhost:8080</code></pre>
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
 Content-Type: text/plain;charset=UTF-8
-Content-Length: 1125
+Content-Length: 1092
 
 {
   "vmProperties" : [ {
@@ -1590,12 +1590,12 @@ deployment log</code></pre>
 <h4 id="_example_request_9"><a class="link" href="#_example_request_9">Example request</a></h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/53f6f5b6-8a8f-4145-8a0a-26b9e7a3bca6/template' -i -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/2948c377-b508-493d-b58b-01c988a9edb3/template' -i -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /deployments/53f6f5b6-8a8f-4145-8a0a-26b9e7a3bca6/template HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /deployments/2948c377-b508-493d-b58b-01c988a9edb3/template HTTP/1.1
 Authorization: Bearer &lt;access token&gt;
 Host: localhost:8080</code></pre>
 </div>
@@ -1685,12 +1685,12 @@ topology_template:
 <h4 id="_example_request_10"><a class="link" href="#_example_request_10">Example request</a></h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/ac7a60e3-2a0e-4100-96f6-f70423d791ba/resources' -i -H 'Accept: application/json' -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/52792ad6-40e6-4864-9fd3-fabf46b03be8/resources' -i -H 'Accept: application/json' -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /deployments/ac7a60e3-2a0e-4100-96f6-f70423d791ba/resources HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /deployments/52792ad6-40e6-4864-9fd3-fabf46b03be8/resources HTTP/1.1
 Accept: application/json
 Authorization: Bearer &lt;access token&gt;
 Host: localhost:8080</code></pre>
@@ -1762,17 +1762,17 @@ Host: localhost:8080</code></pre>
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json;charset=UTF-8
-Content-Length: 1555
+Content-Length: 1511
 
 {
   "links" : [ {
     "rel" : "self",
-    "href" : "http://localhost:8080/deployments/ac7a60e3-2a0e-4100-96f6-f70423d791ba/resources?page=0&amp;size=10&amp;sort=createdAt,desc"
+    "href" : "http://localhost:8080/deployments/52792ad6-40e6-4864-9fd3-fabf46b03be8/resources?page=0&amp;size=10&amp;sort=createdAt,desc"
   } ],
   "content" : [ {
-    "uuid" : "a6a3e339-8fb0-4d19-adb3-560f4ce77b32",
-    "creationTime" : "2020-12-04T08:57+0000",
-    "updateTime" : "2020-12-04T08:57+0000",
+    "uuid" : "e823dff7-65d8-4074-8604-ef636091edc9",
+    "creationTime" : "2021-08-19T15:59+0000",
+    "updateTime" : "2021-08-19T15:59+0000",
     "physicalId" : "0",
     "state" : "CREATING",
     "toscaNodeType" : "tosca.nodes.Compute",
@@ -1780,15 +1780,15 @@ Content-Length: 1555
     "requiredBy" : [ ],
     "links" : [ {
       "rel" : "deployment",
-      "href" : "http://localhost:8080/deployments/ac7a60e3-2a0e-4100-96f6-f70423d791ba"
+      "href" : "http://localhost:8080/deployments/52792ad6-40e6-4864-9fd3-fabf46b03be8"
     }, {
       "rel" : "self",
-      "href" : "http://localhost:8080/deployments/ac7a60e3-2a0e-4100-96f6-f70423d791ba/resources/a6a3e339-8fb0-4d19-adb3-560f4ce77b32"
+      "href" : "http://localhost:8080/deployments/52792ad6-40e6-4864-9fd3-fabf46b03be8/resources/e823dff7-65d8-4074-8604-ef636091edc9"
     } ]
   }, {
-    "uuid" : "73f7254c-8123-469f-9834-16c1afbdf590",
-    "creationTime" : "2020-12-04T08:57+0000",
-    "updateTime" : "2020-12-04T08:57+0000",
+    "uuid" : "449fe6d3-3be3-43cf-b574-058d248a801a",
+    "creationTime" : "2021-08-19T15:59+0000",
+    "updateTime" : "2021-08-19T15:59+0000",
     "physicalId" : "1",
     "state" : "CREATING",
     "toscaNodeType" : "tosca.nodes.Compute",
@@ -1796,10 +1796,10 @@ Content-Length: 1555
     "requiredBy" : [ ],
     "links" : [ {
       "rel" : "deployment",
-      "href" : "http://localhost:8080/deployments/ac7a60e3-2a0e-4100-96f6-f70423d791ba"
+      "href" : "http://localhost:8080/deployments/52792ad6-40e6-4864-9fd3-fabf46b03be8"
     }, {
       "rel" : "self",
-      "href" : "http://localhost:8080/deployments/ac7a60e3-2a0e-4100-96f6-f70423d791ba/resources/73f7254c-8123-469f-9834-16c1afbdf590"
+      "href" : "http://localhost:8080/deployments/52792ad6-40e6-4864-9fd3-fabf46b03be8/resources/449fe6d3-3be3-43cf-b574-058d248a801a"
     } ]
   } ],
   "page" : {
@@ -1822,12 +1822,12 @@ Content-Length: 1555
 <h4 id="_example_request_11"><a class="link" href="#_example_request_11">Example request</a></h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/f55811db-3345-46b5-b240-f76561d5cf52/resources/156f7951-8a15-4f50-8696-6035fde5d17a' -i -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/41d35f8b-08e6-4f05-90c7-abb35145a53a/resources/4466997f-6a8b-4404-a2e4-c4945e41f348' -i -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /deployments/f55811db-3345-46b5-b240-f76561d5cf52/resources/156f7951-8a15-4f50-8696-6035fde5d17a HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /deployments/41d35f8b-08e6-4f05-90c7-abb35145a53a/resources/4466997f-6a8b-4404-a2e4-c4945e41f348 HTTP/1.1
 Authorization: Bearer &lt;access token&gt;
 Host: localhost:8080</code></pre>
 </div>
@@ -1898,23 +1898,23 @@ Host: localhost:8080</code></pre>
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json;charset=UTF-8
-Content-Length: 661
+Content-Length: 645
 
 {
-  "uuid" : "156f7951-8a15-4f50-8696-6035fde5d17a",
-  "creationTime" : "2020-12-04T08:57+0000",
-  "updateTime" : "2020-12-04T08:57+0000",
-  "physicalId" : "5eac96b9-241f-454d-a1bd-1624ad3c4408",
+  "uuid" : "4466997f-6a8b-4404-a2e4-c4945e41f348",
+  "creationTime" : "2021-08-19T15:59+0000",
+  "updateTime" : "2021-08-19T15:59+0000",
+  "physicalId" : "9695ef8e-149f-4bb6-bf39-e54a94c3c0ea",
   "state" : "CREATING",
   "toscaNodeType" : "tosca.nodes.Compute",
-  "toscaNodeName" : "node_5eac96b9-241f-454d-a1bd-1624ad3c4408",
+  "toscaNodeName" : "node_9695ef8e-149f-4bb6-bf39-e54a94c3c0ea",
   "requiredBy" : [ ],
   "links" : [ {
     "rel" : "deployment",
-    "href" : "http://localhost:8080/deployments/f55811db-3345-46b5-b240-f76561d5cf52"
+    "href" : "http://localhost:8080/deployments/41d35f8b-08e6-4f05-90c7-abb35145a53a"
   }, {
     "rel" : "self",
-    "href" : "http://localhost:8080/deployments/f55811db-3345-46b5-b240-f76561d5cf52/resources/156f7951-8a15-4f50-8696-6035fde5d17a"
+    "href" : "http://localhost:8080/deployments/41d35f8b-08e6-4f05-90c7-abb35145a53a/resources/4466997f-6a8b-4404-a2e4-c4945e41f348"
   } ]
 }</code></pre>
 </div>
@@ -2004,7 +2004,7 @@ Host: localhost:8080</code></pre>
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json;charset=UTF-8
-Content-Length: 349
+Content-Length: 342
 
 {
   "cpr_url" : "http://deep-cpr.test.infn.it:8080",
@@ -2068,12 +2068,12 @@ Content-Length: 349
 <h4 id="_example_request_13"><a class="link" href="#_example_request_13">Example request</a></h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/schedules?createdBy=aa18526c-96af-4838-bfac-78d8d54a4fb9@https://iam-test.indigo-datacloud.eu/' -i -H 'Accept: application/json' -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/schedules?createdBy=1f62aaf5-1b8c-456f-a26e-47edfc738a87@https://iam-test.indigo-datacloud.eu/' -i -H 'Accept: application/json' -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /schedules?createdBy=aa18526c-96af-4838-bfac-78d8d54a4fb9@https://iam-test.indigo-datacloud.eu/ HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /schedules?createdBy=1f62aaf5-1b8c-456f-a26e-47edfc738a87@https://iam-test.indigo-datacloud.eu/ HTTP/1.1
 Accept: application/json
 Authorization: Bearer &lt;access token&gt;
 Host: localhost:8080</code></pre>
@@ -2150,17 +2150,17 @@ Host: localhost:8080</code></pre>
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json;charset=UTF-8
-Content-Length: 1538
+Content-Length: 1492
 
 {
   "links" : [ {
     "rel" : "self",
-    "href" : "http://localhost:8080/schedules?createdBy=aa18526c-96af-4838-bfac-78d8d54a4fb9@https://iam-test.indigo-datacloud.eu/"
+    "href" : "http://localhost:8080/schedules?createdBy=1f62aaf5-1b8c-456f-a26e-47edfc738a87@https://iam-test.indigo-datacloud.eu/"
   } ],
   "content" : [ {
-    "uuid" : "526b95f9-f47a-4c6a-ba7a-8e46a6f3ac94",
-    "creationTime" : "2020-12-04T08:57+0000",
-    "updateTime" : "2020-12-04T08:57+0000",
+    "uuid" : "f8c668d4-7979-4037-a7cb-e17145a04b2a",
+    "creationTime" : "2021-08-19T15:59+0000",
+    "updateTime" : "2021-08-19T15:59+0000",
     "status" : "RUNNING",
     "replicationExpression" : "RSE_RECAS",
     "fileExpression" : "scope:name*",
@@ -2168,16 +2168,16 @@ Content-Length: 1538
     "numberOfReplicas" : 1,
     "createdBy" : {
       "issuer" : "https://iam-test.indigo-datacloud.eu/",
-      "subject" : "aa18526c-96af-4838-bfac-78d8d54a4fb9"
+      "subject" : "1f62aaf5-1b8c-456f-a26e-47edfc738a87"
     },
     "links" : [ {
       "rel" : "self",
-      "href" : "http://localhost:8080/schedules/526b95f9-f47a-4c6a-ba7a-8e46a6f3ac94"
+      "href" : "http://localhost:8080/schedules/f8c668d4-7979-4037-a7cb-e17145a04b2a"
     } ]
   }, {
-    "uuid" : "6800c7eb-873a-4aa1-baa0-f58236ef0e4d",
-    "creationTime" : "2020-12-04T08:57+0000",
-    "updateTime" : "2020-12-04T08:57+0000",
+    "uuid" : "48b6d8c9-7833-4f68-a14b-9e86e9373768",
+    "creationTime" : "2021-08-19T15:59+0000",
+    "updateTime" : "2021-08-19T15:59+0000",
     "status" : "SUSPENDED",
     "replicationExpression" : "RSE_RECAS",
     "fileExpression" : "scope:name*",
@@ -2185,11 +2185,11 @@ Content-Length: 1538
     "numberOfReplicas" : 1,
     "createdBy" : {
       "issuer" : "https://iam-test.indigo-datacloud.eu/",
-      "subject" : "aa18526c-96af-4838-bfac-78d8d54a4fb9"
+      "subject" : "1f62aaf5-1b8c-456f-a26e-47edfc738a87"
     },
     "links" : [ {
       "rel" : "self",
-      "href" : "http://localhost:8080/schedules/6800c7eb-873a-4aa1-baa0-f58236ef0e4d"
+      "href" : "http://localhost:8080/schedules/48b6d8c9-7833-4f68-a14b-9e86e9373768"
     } ]
   } ],
   "page" : {
@@ -2303,7 +2303,7 @@ Content-Length: 1538
 Content-Type: application/json
 Authorization: Bearer &lt;access token&gt;
 Host: localhost:8080
-Content-Length: 340
+Content-Length: 327
 
 {
   "template" : "template",
@@ -2387,12 +2387,12 @@ Content-Length: 340
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 201 Created
 Content-Type: application/json;charset=UTF-8
-Content-Length: 455
+Content-Length: 442
 
 {
-  "uuid" : "24b80969-708e-402c-9e5f-db77c77ebfb7",
-  "creationTime" : "2020-12-04T08:57+0000",
-  "updateTime" : "2020-12-04T08:57+0000",
+  "uuid" : "9a70b78c-59c3-4a3e-af9e-1692aaa3e101",
+  "creationTime" : "2021-08-19T15:59+0000",
+  "updateTime" : "2021-08-19T15:59+0000",
   "status" : "RUNNING",
   "replicationExpression" : "RSE_RECAS",
   "fileExpression" : "scope:name*",
@@ -2400,7 +2400,7 @@ Content-Length: 455
   "numberOfReplicas" : 1,
   "links" : [ {
     "rel" : "self",
-    "href" : "http://localhost:8080/schedules/24b80969-708e-402c-9e5f-db77c77ebfb7"
+    "href" : "http://localhost:8080/schedules/9a70b78c-59c3-4a3e-af9e-1692aaa3e101"
   } ]
 }</code></pre>
 </div>
@@ -2492,12 +2492,12 @@ Host: localhost:8080</code></pre>
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json;charset=UTF-8
-Content-Length: 441
+Content-Length: 428
 
 {
   "uuid" : "mmd34483-d937-4578-bfdb-ebe196bf82dd",
-  "creationTime" : "2020-12-04T08:57+0000",
-  "updateTime" : "2020-12-04T08:57+0000",
+  "creationTime" : "2021-08-19T15:59+0000",
+  "updateTime" : "2021-08-19T15:59+0000",
   "status" : "RUNNING",
   "replicationExpression" : "RSE_RECAS",
   "fileExpression" : "scope:name*",
@@ -2600,7 +2600,7 @@ Host: localhost:8080</code></pre>
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json;charset=UTF-8
-Content-Length: 1504
+Content-Length: 1456
 
 {
   "links" : [ {
@@ -2608,13 +2608,13 @@ Content-Length: 1504
     "href" : "http://localhost:8080/schedules/mmd34483-d937-4578-bfdb-ebe196bf82dd/events?page=0&amp;size=10&amp;sort=createdAt,desc"
   } ],
   "content" : [ {
-    "uuid" : "424b0d2b-27d7-4583-8a51-7f909f67a526",
-    "creationTime" : "2020-12-04T08:57+0000",
-    "updateTime" : "2020-12-04T08:57+0000",
+    "uuid" : "42852a30-f7fc-451c-b6c7-e35f2d17a503",
+    "creationTime" : "2021-08-19T15:59+0000",
+    "updateTime" : "2021-08-19T15:59+0000",
     "deployment" : {
-      "uuid" : "8b4f6dee-afe5-406b-84b1-1a850a93ae57",
-      "creationTime" : "2020-12-04T08:57+0000",
-      "updateTime" : "2020-12-04T08:57+0000",
+      "uuid" : "9a937514-b4a7-43b1-9bff-f9d4b0dddde7",
+      "creationTime" : "2021-08-19T15:59+0000",
+      "updateTime" : "2021-08-19T15:59+0000",
       "status" : "CREATE_IN_PROGRESS",
       "outputs" : { },
       "task" : "NONE",
@@ -2626,13 +2626,13 @@ Content-Length: 1504
     "replicationStatus" : "REPLICATING",
     "links" : [ ]
   }, {
-    "uuid" : "37442e31-e59e-4bbf-ad35-aa6cce8258ca",
-    "creationTime" : "2020-12-04T08:57+0000",
-    "updateTime" : "2020-12-04T08:57+0000",
+    "uuid" : "6c47667c-7190-4910-a04e-d78b30a8304b",
+    "creationTime" : "2021-08-19T15:59+0000",
+    "updateTime" : "2021-08-19T15:59+0000",
     "deployment" : {
-      "uuid" : "34d7f322-d016-4398-b90d-37360e26c24b",
-      "creationTime" : "2020-12-04T08:57+0000",
-      "updateTime" : "2020-12-04T08:57+0000",
+      "uuid" : "a4886e1b-f651-451d-863f-eca65c5cd3a1",
+      "creationTime" : "2021-08-19T15:59+0000",
+      "updateTime" : "2021-08-19T15:59+0000",
       "status" : "CREATE_IN_PROGRESS",
       "outputs" : { },
       "task" : "NONE",
@@ -2660,7 +2660,7 @@ Content-Length: 1504
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-12-04 08:38:43 +00:00
+Last updated 2021-08-19 15:54:14 +00:00
 </div>
 </div>
 </body>
