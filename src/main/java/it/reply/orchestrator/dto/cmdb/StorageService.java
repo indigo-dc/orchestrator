@@ -54,7 +54,7 @@ public class StorageService extends CloudService {
    * @param region
    *     the region
    * @param tenant
-   *     the tenant
+   *     the tenant    
    * @param hostname
    *     the hostname
    * @param parentServiceId
@@ -68,7 +68,7 @@ public class StorageService extends CloudService {
    * @param publicIpAssignable
    *     the publicIpAssignable flag
    * @param supportedIdps
-   *     the supportedIdps
+   *     the supportedIdps    
    */
   @Builder(builderMethodName = "storageBuilder")
   public StorageService(

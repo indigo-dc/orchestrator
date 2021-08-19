@@ -158,7 +158,7 @@ public class DeploymentScheduleControllerTest {
                     "Creation date-time (http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14)"),
                 fieldWithPath("content[].updateTime").description("Update date-time"),
                 fieldWithPath("content[].status").description(
-                    "The status of the deployment schedule"),
+                    "The status of the deployment schedule. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/DeploymentScheduleStatus.html)"),
                 fieldWithPath("content[].createdBy").description(
                     "The OIDC info of the deployment schedule's creator."),
                 fieldWithPath("content[].callback").description(
@@ -251,7 +251,7 @@ public class DeploymentScheduleControllerTest {
                     "Creation date-time (http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14)"),
                 fieldWithPath("updateTime").description("Update date-time"),
                 fieldWithPath("status").description(
-                    "The status of the deployment schedule"),
+                    "The status of the deployment schedule. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/DeploymentScheduleStatus.html)"),
                 fieldWithPath("callback").description(
                     "The endpoint used by the orchestrator to notify the progress of the deployment schedule event process."),
                 fieldWithPath("links[]").ignored())));
@@ -312,7 +312,7 @@ public class DeploymentScheduleControllerTest {
                 fieldWithPath("updateTime").description(
                     "Update date-time (http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14)"),
                 fieldWithPath("status").description(
-                    "The status of the deployment"),
+                    "The status of the deployment. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html)"),
                 fieldWithPath("callback").description(
                     "The endpoint used by the orchestrator to notify the progress of the deployment process."),
                 fieldWithPath("links[]").ignored())));

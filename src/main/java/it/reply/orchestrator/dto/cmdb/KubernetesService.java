@@ -67,7 +67,7 @@ public class KubernetesService extends CloudService {
    * @param supportedIdps
    *     the supportedIdps
    * @param workerNodesIp
-   *     the workerNodesIp
+   *     the workerNodesIp        
    */
   @Builder(builderMethodName = "kubernetesBuilder")
   public KubernetesService(

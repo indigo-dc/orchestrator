@@ -82,7 +82,7 @@ public interface DeploymentRepository extends JpaRepository<Deployment, String> 
           + "from #{#entityName} d "
           + "where " + IN_SAME_ORGANIZATION
           + "and d.userGroup = ?#{#userGroup}")
-   public Page<Deployment> findAll(@Param("requester") OidcEntity requester,
+   public Page<Deployment> findAll(@Param("requester") OidcEntity requester, 
        @Param("userGroup") String userGroup, Pageable pageable);
 
 }
