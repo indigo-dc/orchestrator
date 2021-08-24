@@ -78,7 +78,7 @@ pipeline {
                 }
             }
         }
-        
+
 
         stage('Build Javadoc and REST documentation') {
             when {
