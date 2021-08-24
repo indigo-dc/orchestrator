@@ -13,7 +13,7 @@ INDIGO PaaS Orchestrator
 [![Known Vulnerabilities](https://snyk.io/test/github/indigo-dc/orchestrator/badge.svg?style=flat-square)](https://snyk.io/test/github/indigo-dc/orchestrator)
 [![Jenkins](https://jenkins.indigo-datacloud.eu/job/Pipeline-as-code/job/orchestrator/job/master/badge/icon?style=flat-square)](https://jenkins.indigo-datacloud.eu/job/Pipeline-as-code/job/orchestrator/job/master/)
 
-The INDIGO PaaS Orchestrator is a component of the PaaS layer that allows to instantiate resources on Cloud Management Frameworks (like [OpenStack](https://www.openstack.org/) and [OpenNebula](http://opennebula.org/)) and [Mesos](http://mesos.apache.org/) clusters.
+The INDIGO PaaS Orchestrator is a component of the PaaS layer that allows to instantiate resources on Cloud Management Frameworks (like [OpenStack](https://www.openstack.org/) and [OpenNebula](http://opennebula.org/)), [Mesos](http://mesos.apache.org/) and [Kubernetes](https://kubernetes.io/) clusters.
 
 It takes the deployment requests, expressed through templates written in [TOSCA YAML Simple Profile v1.0](http://docs.oasis-open.org/tosca/TOSCA-Simple-Profile-YAML/v1.0/TOSCA-Simple-Profile-YAML-v1.0.html), and deploys them on the best cloud site available. In order to do that
  1. it gathers SLAs, monitoring info and other data from other platform services,
@@ -32,8 +32,7 @@ The PaaS Orchestrator needs the presence of the following INDIGO services:
 * [How to build](gitbook/how_to_build.md)
 * [How to deploy](gitbook/how_to_deploy.md)
 * [How to upgrade](gitbook/how_to_upgrade.md)
-* [REST APIs](http://indigo-dc.github.io/orchestrator/restdocs/)
-* [Java Doc](http://indigo-dc.github.io/orchestrator/apidocs/)
+* [REST APIs & Java Doc](http://indigo-dc.github.io/orchestrator/)
 * [Service Reference Card](gitbook/service_reference_card.md)
 
 ### Acknowledgments:

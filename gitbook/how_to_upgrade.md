@@ -32,6 +32,20 @@ The Orchestrator is released as Docker Container. In order to upgrade a deployed
 
 This section highlights important changes upgrading the PaaS Orchestrator. Each section covers the upgrade from the previous release. If you are skipping releases when upgrading, it is recommended to read the sections for all releases in between.
 
+
+### UPGRADING TO v2.5.x and v2.6.x
+
+Starting from v2.5.0-FINAL, the schema of the database used by the Orchestrator for storing deployments information has changed. Anyway, the migration is managed automatically when the service starts and the upgrade should go smoothly.
+
+As usual, it's recommended to clean the refresh tokens:
+
+```text
+mysql>use orchestrator;
+
+mysql>delete from oidc_refresh_token;
+```
+
+
 ### UPGRADING TO v2.4.x
 
 #### Upgrading to v2.4.0-FINAL
