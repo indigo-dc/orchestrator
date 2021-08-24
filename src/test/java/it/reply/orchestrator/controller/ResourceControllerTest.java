@@ -98,7 +98,7 @@ public class ResourceControllerTest {
                 fieldWithPath("content[].updateTime").description(
                     "Update date-time (http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14)"),
                 fieldWithPath("content[].state").description(
-                    "The status of the resource."),
+                    "The status of the resource. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/NodeStates.html)"),
                 fieldWithPath("content[].toscaNodeType").optional()
                     .description("The type of the represented TOSCA node"),
                 fieldWithPath("content[].toscaNodeName").optional()
@@ -148,7 +148,7 @@ public class ResourceControllerTest {
             fieldWithPath("updateTime").description(
                 "Update date-time (http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14)"),
             fieldWithPath("state").description(
-                "The status of the resource"),
+                "The status of the resource. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/NodeStates.html)"),
             fieldWithPath("toscaNodeType").optional()
                 .description("The type of the represented TOSCA node"),
             fieldWithPath("toscaNodeName").optional()

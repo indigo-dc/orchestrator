@@ -160,11 +160,11 @@ public class DeploymentControllerTest {
                     "Creation date-time (http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14)"),
                 fieldWithPath("content[].updateTime").description("Update date-time"),
                 fieldWithPath("content[].status").description(
-                    "The status of the deployment"),
+                    "The status of the deployment. (../apidocs/it/reply/orchestrator/enums/Status.html)"),
                 fieldWithPath("content[].statusReason").description(
                     "Verbose explanation of reason that lead to the deployment status (Present only if the deploy is in some error status)"),
                 fieldWithPath("content[].task").description(
-                    "The current step of the deployment process"),
+                    "The current step of the deployment process. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Task.html)"),
                 fieldWithPath("content[].createdBy").description(
                     "The OIDC info of the deployment's creator."),
                 fieldWithPath("content[].callback").description(
@@ -330,11 +330,11 @@ public class DeploymentControllerTest {
                     "Creation date-time (http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14)"),
                 fieldWithPath("updateTime").description("Update date-time"),
                 fieldWithPath("status").description(
-                    "The status of the deployment"),
+                    "The status of the deployment. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html)"),
                 fieldWithPath("statusReason").description(
                     "Verbose explanation of reason that lead to the deployment status (Present only if the deploy is in some error status)"),
                 fieldWithPath("task").description(
-                    "The current step of the deployment process"),
+                    "The current step of the deployment process. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Task.html)"),
                 fieldWithPath("callback").description(
                     "The endpoint used by the orchestrator to notify the progress of the deployment process."),
                 fieldWithPath("outputs").description("The outputs of the TOSCA document"),
@@ -426,9 +426,9 @@ public class DeploymentControllerTest {
                 fieldWithPath("updateTime").description(
                     "Update date-time (http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14)"),
                 fieldWithPath("status").description(
-                    "The status of the deployment"),
+                    "The status of the deployment. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html)"),
                 fieldWithPath("task").description(
-                    "The current step of the deployment process"),
+                    "The current step of the deployment process. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Task.html)"),
                 fieldWithPath("outputs").description("The outputs of the TOSCA document"),
                 fieldWithPath("callback").description(
                     "The endpoint used by the orchestrator to notify the progress of the deployment process."),

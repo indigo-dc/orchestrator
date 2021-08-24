@@ -1,0 +1,75 @@
+name: Build and publish REST API docs
+
+# Controls when the action will run.
+on:
+  # Triggers the workflow on push events but only for the master branch
+  push:
+    branches: [ master ]
+  create:
+    tags:
+      - v*-FINAL
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    #container:
+      #image: maven:3.5.4-jdk-8
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - uses: olegtarasov/get-tag@v2.1
+        id: tagName
+
+      - uses: actions/setup-java@v2
+        with:
+          java-version: '8'
+          distribution: adopt
+
+      - uses: stCarolas/setup-maven@v4
+        with:
+          maven-version: 3.5.4
+
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ github.ref }}
+          fetch-depth: 0
+
+      - name: setup git
+        run: |
+          git config user.name "GitHub Actions Bot"
+          git config user.email "<>"
+          git fetch --all
+
+      - name: build docs
+        run: |
+          echo ${{ steps.tagName.outputs.tag }}
+          #git checkout gh-pages
+          #git merge --ff -s recursive -X theirs --commit -m "Merge remote-tracking branch" 'origin/master'
+          rm -rf apidocs
+          rm -rf restdocs
+          mvn clean javadoc:javadoc package -P restdocs -Deditorconfig.skip=true
+
+      - name: prepare docs folder
+        run: |
+          pwd
+          mkdir -p docs
+          cp -r apidocs restdocs docs/
+          ls -latr ./docs
+          #git add -A
+          #git commit -am "Update documentation"
+          #git push origin HEAD:gh-pages
+
+      - name: Deploy 🚀
+        uses: peaceiris/actions-gh-pages@v3
+        if: ${{ github.ref != 'ref/head/master' }}
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          keep_files: true
+          # deploy the current public folder
+          # to <base url>/x.y.z version subfolder
+          publish_dir: ./docs
+          destination_dir: ${{ steps.tagName.outputs.tag }}
