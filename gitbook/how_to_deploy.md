@@ -128,7 +128,7 @@ By default the REST APIs are not authenticated; if you want to enable the IAM in
    * `orchestrator.client-secret`
      * **Description**: The Orchestrator OAuth2 client secret
    * `orchestrator.scopes` (Optional)
-     * **Description**: A list of OAuth2 scopes that will be used for token exchange. 
+     * **Description**: A list of OAuth2 scopes that will be used for token exchange.
      * **Default value**: `[ "openid", "profile", "offline_access", "fts:submit-transfer" ]`. Note: the scope `fts:submit-transfer` is required only for Rucio integration.
    * `audience`
      * **Description**: A freely generated string \(e.g. a UUID\) used to exchange tokens with Vault Server
