@@ -93,7 +93,7 @@ public class ComputeService extends CloudService {
    * @param publicIpAssignable
    *     the publicIpAssignable flag
    * @param supportedIdps
-   *     the supportedIdps 
+   *     the supportedIdps
    * @param publicNetworkName
    *     the public network name
    * @param privateNetworkCidr

@@ -1,6 +1,6 @@
 name: Build and publish REST API docs
 
-# Controls when the action will run. 
+# Controls when the action will run.
 on:
   # Triggers the workflow on push events but only for the master branch
   push:
@@ -22,16 +22,16 @@ jobs:
     steps:
       - uses: olegtarasov/get-tag@v2.1
         id: tagName
-    
+
       - uses: actions/setup-java@v2
         with:
           java-version: '8'
           distribution: adopt
-    
+
       - uses: stCarolas/setup-maven@v4
         with:
           maven-version: 3.5.4
-    
+
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v2
         with:
@@ -43,8 +43,8 @@ jobs:
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
           git fetch --all
-          
-      - name: build docs    
+
+      - name: build docs
         run: |
           echo ${{ steps.tagName.outputs.tag }}
           #git checkout gh-pages
@@ -52,7 +52,7 @@ jobs:
           rm -rf apidocs
           rm -rf restdocs
           mvn clean javadoc:javadoc package -P restdocs -Deditorconfig.skip=true
-          
+
       - name: prepare docs folder
         run: |
           pwd
