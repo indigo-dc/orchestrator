@@ -78,7 +78,7 @@ pipeline {
                 }
             }
         }
-        */
+        
 
         stage('Build Javadoc and REST documentation') {
             when {
@@ -106,7 +106,7 @@ pipeline {
                 }
             }
         }
-
+        */
         stage('Metrics') {
             agent {
                 label 'sloc'
