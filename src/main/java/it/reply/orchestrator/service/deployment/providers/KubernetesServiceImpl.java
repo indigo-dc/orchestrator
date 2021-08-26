@@ -189,14 +189,14 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     String values = ToscaUtils.extractScalar(chartNode.getProperties(), "values")
         .orElseGet(String::new);
 
-    /** Note: the release name is used to set the label instance that must
-     *  adhere to DNS-1035 naming convention: it must consist of lower case alphanumeric
-     *  characters or '-', start with an alphabetic character, and end with an alphanumeric
-     *  character
-     */
+    /* Note: the release name is used to set the label instance that must
+       adhere to DNS-1035 naming convention: it must consist of lower case alphanumeric
+       characters or '-', start with an alphabetic character, and end with an alphanumeric
+       character
+    */
     return helmRelease
         .spec(new V1HelmReleaseSpec()
-        		.releaseName(HELM_RELEASE_PREFIX + deployment.getId())
+                .releaseName(HELM_RELEASE_PREFIX + deployment.getId())
                 .chart(new V1HelmReleaseSpecChart()
                         .repository(repository)
                         .name(chartName)
@@ -219,12 +219,12 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     String namespace = Optional.ofNullable(deployment.getUserGroup())
                        .orElse(oauth2TokenService.getOrganization(requestedWithToken));
 
-
     String email = "";
     try {
-    	String accessToken = oauth2TokenService.getAccessToken(requestedWithToken);
-        email = JwtUtils.getJwtClaimsSet(JwtUtils.parseJwt(accessToken)).getStringClaim("email");
+      String accessToken = oauth2TokenService.getAccessToken(requestedWithToken);
+      email = JwtUtils.getJwtClaimsSet(JwtUtils.parseJwt(accessToken)).getStringClaim("email");
     } catch (Exception e) {
+      LOG.warn("Unable to set user email in annotations");
     }
 
     final String userEmail = email;
@@ -233,7 +233,7 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
         put("PAAS_URL", orchestratorProperties.getUrl().toString());
         put("PAAS_DEP_USER_EMAIL", userEmail);
         put("PAAS_DEP_UUID", deployment.getId());
-    }};
+      }};
 
     V1HelmRelease helmRelease = new V1HelmRelease()
         .apiVersion("helm.fluxcd.io/v1")
