@@ -29,6 +29,7 @@ import io.kubernetes.client.openapi.models.V1Status;
 import io.kubernetes.client.util.generic.GenericKubernetesApi;
 import io.kubernetes.client.util.generic.KubernetesApiResponse;
 import it.reply.orchestrator.annotation.DeploymentProviderQualifier;
+import it.reply.orchestrator.config.properties.OrchestratorProperties;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
@@ -53,9 +54,11 @@ import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.deployment.providers.factory.KubernetesClientFactory;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
+import it.reply.orchestrator.utils.JwtUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 import it.reply.orchestrator.utils.ToscaUtils;
 import it.reply.orchestrator.utils.WorkflowConstants;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -76,11 +79,16 @@ import org.yaml.snakeyaml.Yaml;
 @Slf4j
 public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
 
+  public static final String HELM_RELEASE_PREFIX = "paas-";
+
   @Autowired
   private ToscaService toscaService;
 
   @Autowired
   private KubernetesClientFactory clientFactory;
+
+  @Autowired
+  private OrchestratorProperties orchestratorProperties;
 
   @Autowired
   private OAuth2TokenService oauth2TokenService;
@@ -181,8 +189,14 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     String values = ToscaUtils.extractScalar(chartNode.getProperties(), "values")
         .orElseGet(String::new);
 
+    /* Note: the release name is used to set the label instance that must
+       adhere to DNS-1035 naming convention: it must consist of lower case alphanumeric
+       characters or '-', start with an alphabetic character, and end with an alphanumeric
+       character
+    */
     return helmRelease
         .spec(new V1HelmReleaseSpec()
+                .releaseName(HELM_RELEASE_PREFIX + deployment.getId())
                 .chart(new V1HelmReleaseSpecChart()
                         .repository(repository)
                         .name(chartName)
@@ -201,10 +215,25 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     deployment.setEndpoint(name);
     CloudProviderEndpoint chosenCloudProviderEndpoint = deploymentMessage
             .getChosenCloudProviderEndpoint();
-    //String namespace = oauth2TokenService.getOrganization(requestedWithToken);
 
     String namespace = Optional.ofNullable(deployment.getUserGroup())
                        .orElse(oauth2TokenService.getOrganization(requestedWithToken));
+
+    String email = "";
+    try {
+      String accessToken = oauth2TokenService.getAccessToken(requestedWithToken);
+      email = JwtUtils.getJwtClaimsSet(JwtUtils.parseJwt(accessToken)).getStringClaim("email");
+    } catch (Exception e) {
+      LOG.warn("Unable to set user email in annotations");
+    }
+
+    final String userEmail = email;
+
+    Map<String, String> annotations  = new HashMap<String, String>() {{
+        put("PAAS_URL", orchestratorProperties.getUrl().toString());
+        put("PAAS_DEP_USER_EMAIL", userEmail);
+        put("PAAS_DEP_UUID", deployment.getId());
+      }};
 
     V1HelmRelease helmRelease = new V1HelmRelease()
         .apiVersion("helm.fluxcd.io/v1")
@@ -212,6 +241,7 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
         .metadata(new V1ObjectMeta()
             .name(name)
             .namespace(namespace)
+         .annotations(annotations)
         );
     helmReleaseFromTosca(helmRelease, deployment);
     try {
@@ -230,7 +260,6 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
     Deployment deployment = getDeployment(deploymentMessage);
     String name = deployment.getEndpoint();
-    //String namespace = oauth2TokenService.getOrganization(requestedWithToken);
     String namespace = Optional.ofNullable(deployment.getUserGroup())
                        .orElse(oauth2TokenService.getOrganization(requestedWithToken));
     V1HelmRelease helmRelease = null;
@@ -305,7 +334,6 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     deployment.setEndpoint(name);
     CloudProviderEndpoint chosenCloudProviderEndpoint = deploymentMessage
             .getChosenCloudProviderEndpoint();
-    //String namespace = oauth2TokenService.getOrganization(requestedWithToken);
     String namespace = Optional.ofNullable(deployment.getUserGroup())
                        .orElse(oauth2TokenService.getOrganization(requestedWithToken));
 
@@ -337,7 +365,6 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
     String name = deployment.getId();
     CloudProviderEndpoint chosenCloudProviderEndpoint = deployment.getCloudProviderEndpoint();
-    //String namespace = oauth2TokenService.getOrganization(requestedWithToken);
     String namespace = Optional.ofNullable(deployment.getUserGroup())
                        .orElse(oauth2TokenService.getOrganization(requestedWithToken));
     try {
@@ -358,7 +385,6 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
     String name = deployment.getId();
     CloudProviderEndpoint chosenCloudProviderEndpoint = deployment.getCloudProviderEndpoint();
-    //String namespace = oauth2TokenService.getOrganization(requestedWithToken);
     String namespace = Optional.ofNullable(deployment.getUserGroup())
                        .orElse(oauth2TokenService.getOrganization(requestedWithToken));
     try {
@@ -396,12 +422,11 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
           .getChosenCloudProviderEndpoint();
       final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
 
-      String name = deployment.getEndpoint();
-      //String namespace = oauth2TokenService.getOrganization(requestedWithToken);
+      String name = HELM_RELEASE_PREFIX + deployment.getId();
       String namespace = Optional.ofNullable(deployment.getUserGroup())
                        .orElse(oauth2TokenService.getOrganization(requestedWithToken));
 
-      String labelSelector = String.format("app.kubernetes.io/instance=%s-%s", namespace, name);
+      String labelSelector = String.format("app.kubernetes.io/instance=%s", name);
       Map<String, NodeTemplate> nodes = Optional
           .ofNullable(ar.getTopology())
           .map(Topology::getNodeTemplates)
@@ -435,7 +460,7 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
                     null, null));
         services.getItems().forEach(service -> {
           String serviceName = service
-              .getMetadata().getName().split(namespace + "-" + name + "-")[1];
+              .getMetadata().getName().split(name + "-")[1];
           Optional
               .ofNullable(service.getSpec())
               .map(V1ServiceSpec::getPorts)
