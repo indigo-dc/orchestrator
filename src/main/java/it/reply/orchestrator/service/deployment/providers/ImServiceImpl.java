@@ -197,7 +197,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     } else {
       toscaService.setNetworkNames(ar,
           computeService.getPublicNetworkName(),
-          computeService.getPrivateNetworkName());
+          computeService.getPrivateNetworkName(),
+          computeService.getPrivateNetworkProxyHost(),
+          computeService.getPrivateNetworkProxyUser());
     }
 
     //add tags

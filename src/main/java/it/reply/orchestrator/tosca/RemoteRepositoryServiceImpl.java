@@ -20,6 +20,7 @@ package it.reply.orchestrator.tosca;
 import alien4cloud.component.ICSARRepositorySearchService;
 import alien4cloud.exception.NotFoundException;
 import alien4cloud.tosca.context.ToscaContext;
+import alien4cloud.tosca.context.ToscaContext.Context;
 import alien4cloud.tosca.model.ArchiveRoot;
 import alien4cloud.tosca.parser.ParsingContextExecution;
 
@@ -32,6 +33,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import lombok.AllArgsConstructor;
@@ -99,20 +101,63 @@ public class RemoteRepositoryServiceImpl implements ICSARRepositorySearchService
   @Override
   public <T extends AbstractToscaType> T getElementInDependencies(Class<T> elementClass,
       Set<CSARDependency> dependencies, String... keyValueFilters) {
+	  LOG.info("elementClass: {}", elementClass);
+	  Context mycontext = ToscaContext.get();
+
+	  Predicate<AbstractToscaType> filter = e -> {
+		  LOG.info("My elementId: {}", e.getElementId());
+		  EvaluationContext context = new StandardEvaluationContext(e);
+
+		  LOG.info("Class: {}", context.getRootObject().getValue());
+
+
+		  String field = keyValueFilters[0];
+	      String value = keyValueFilters[1];
+
+	      if (context.lookupVariable(field) != null) {
+
+	    	  LOG.info("NOT NULL");
+	      }
+
+		  return false;
+
+	  };
+
+	  mycontext.getElement(elementClass, filter);
+
     return (T) ToscaContext.get().getElement(elementClass, element -> {
       if (!dependencies
           .contains(new CSARDependency(element.getArchiveName(), element.getArchiveVersion()))) {
         return false;
       }
 
+      LOG.info("keyValueFilters.length: {}", keyValueFilters.length);
+      LOG.info("element: {}", element.getElementId());
+
       EvaluationContext context = new StandardEvaluationContext(element);
 
       for (int i = 0; i < keyValueFilters.length; i += 2) {
         String field = keyValueFilters[0];
         String value = keyValueFilters[1];
-        if (!value.equals(context.lookupVariable(field).toString())) {
-          return false;
+        LOG.info("i={}, value={}, field={}", i, value, field);
+
+        if (context.lookupVariable(field) == null ) {
+        	return false;
         }
+        else {
+        	 // !value.equals(context.lookupVariable(field).toString())){
+        	LOG.info("context.lookupVariable(field): {}", context.lookupVariable(field).toString());
+        }
+
+/*        try {
+
+          if (!value.equals(context.lookupVariable(field).toString())) {
+            return false;
+          }
+        }
+        catch(Exception e) {
+        	LOG.info("ERROR!!");
+        }*/
       }
       return true;
     }).orElse(null);
