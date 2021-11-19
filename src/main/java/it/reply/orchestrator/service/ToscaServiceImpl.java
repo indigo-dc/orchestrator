@@ -1242,18 +1242,24 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   private boolean setNetworkProxy(Optional<NodeTemplate> pn, String privateNetworkProxyHost,
-			String privateNetworkProxyUser) {
-	if (pn.isPresent()){
-		if (StringUtils.isNotEmpty(privateNetworkProxyHost)) {
-			Optional<String> nn = ToscaUtils.extractScalar(pn.get().getProperties(),
-	        ToscaConstants.Nodes.Properties.NETWORKPROXYHOST);
-	    if (!nn.isPresent()) {
-	      pn.get().getProperties().put(ToscaConstants.Nodes.Properties.NETWORKPROXYHOST,
-	          new ScalarPropertyValue(privateNetworkProxyHost));
-	    }
-	  }
-	  return true;
-	}
+                                 String privateNetworkProxyUser) {
+    if (pn.isPresent()) {
+      if (StringUtils.isNotEmpty(privateNetworkProxyHost)) {
+        Optional<String> nn = ToscaUtils.extractScalar(pn.get().getProperties(),
+            ToscaConstants.Nodes.Properties.NETWORKPROXYHOST);
+        if (!nn.isPresent()) {
+          pn.get().getProperties().put(ToscaConstants.Nodes.Properties.NETWORKPROXYHOST,
+                                       new ScalarPropertyValue(privateNetworkProxyHost));
+          Map<String, Object> credentials = new HashMap<>();
+          ComplexPropertyValue credentialsProperty = new ComplexPropertyValue(credentials);
+          credentials.put(ToscaConstants.Nodes.Properties.NETWORKPROXYHOSTUSER,
+                          privateNetworkProxyUser);
+          pn.get().getProperties().put(ToscaConstants.Nodes.Properties.NETWORKPROXYHOSTCRED,
+                                       credentialsProperty);
+        }
+      }
+      return true;
+    }
     return false;
   }
 
@@ -1361,8 +1367,7 @@ public class ToscaServiceImpl implements ToscaService {
     return ar;
   }
 
-
-@Override
+  @Override
   public ArchiveRoot setHybridUpdateDeployment(
       ArchiveRoot ar,
       boolean newResourcesOnDifferentService,

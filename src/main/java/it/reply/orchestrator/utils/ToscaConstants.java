@@ -92,6 +92,8 @@ public class ToscaConstants {
       public static final String NETWORKTYPE = "network_type";
       public static final String NETWORKNAME = "network_name";
       public static final String NETWORKPROXYHOST = "proxy_host";
+      public static final String NETWORKPROXYHOSTCRED = "proxy_credential";
+      public static final String NETWORKPROXYHOSTUSER = "user";
       public static final String HYBRID = "hybrid";
     }
 
