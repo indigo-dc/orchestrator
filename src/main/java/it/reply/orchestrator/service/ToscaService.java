@@ -270,7 +270,9 @@ public interface ToscaService {
 
   public ArchiveRoot setNetworkNames(ArchiveRoot ar,
       String publicNetworkName,
-      String privateNetworkName);
+      String privateNetworkName,
+      String privateNetworkProxyHost,
+      String privateNetworkProxyUser);
 
   public Map<NodeTemplate, Flavor> extractFlavorRequirements(ArchiveRoot parsingResult);
 

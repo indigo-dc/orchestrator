@@ -1241,6 +1241,28 @@ public class ToscaServiceImpl implements ToscaService {
     return false;
   }
 
+  private boolean setNetworkProxy(Optional<NodeTemplate> pn, String privateNetworkProxyHost,
+                                 String privateNetworkProxyUser) {
+    if (pn.isPresent()) {
+      if (StringUtils.isNotEmpty(privateNetworkProxyHost)) {
+        Optional<String> nn = ToscaUtils.extractScalar(pn.get().getProperties(),
+            ToscaConstants.Nodes.Properties.NETWORKPROXYHOST);
+        if (!nn.isPresent()) {
+          pn.get().getProperties().put(ToscaConstants.Nodes.Properties.NETWORKPROXYHOST,
+                                       new ScalarPropertyValue(privateNetworkProxyHost));
+          Map<String, Object> credentials = new HashMap<>();
+          ComplexPropertyValue credentialsProperty = new ComplexPropertyValue(credentials);
+          credentials.put(ToscaConstants.Nodes.Properties.NETWORKPROXYHOSTUSER,
+                          privateNetworkProxyUser);
+          pn.get().getProperties().put(ToscaConstants.Nodes.Properties.NETWORKPROXYHOSTCRED,
+                                       credentialsProperty);
+        }
+      }
+      return true;
+    }
+    return false;
+  }
+
   private boolean setHdPublicNetworkProperties(ArchiveRoot ar, String publicNetworkName) {
     Optional<NodeTemplate> pn = getNodesOfType(ar, ToscaConstants.Nodes.Types.NETWORK)
         .stream()
@@ -1312,9 +1334,11 @@ public class ToscaServiceImpl implements ToscaService {
   public ArchiveRoot setNetworkNames(
       ArchiveRoot ar,
       String publicNetworkName,
-      String privateNetworkName) {
+      String privateNetworkName,
+      String privateNetworkProxyHost,
+      String privateNetworkProxyUser) {
 
-    Optional<NodeTemplate> pn = getNodesOfType(ar, ToscaConstants.Nodes.Types.NETWORK)
+    Optional<NodeTemplate> pn = getNodesLikeType(ar, ToscaConstants.Nodes.RE.NETWORK_NODE_RE)
         .stream()
         .filter(node -> {
           Optional<String> nt = ToscaUtils.extractScalar(node.getProperties(),
@@ -1326,7 +1350,7 @@ public class ToscaServiceImpl implements ToscaService {
       setNetworkName(pn,  publicNetworkName);
     }
 
-    pn = getNodesOfType(ar, ToscaConstants.Nodes.Types.NETWORK)
+    pn = getNodesLikeType(ar, ToscaConstants.Nodes.RE.NETWORK_NODE_RE)
         .stream()
         .filter(node -> {
           Optional<String> nt = ToscaUtils.extractScalar(node.getProperties(),
@@ -1336,6 +1360,9 @@ public class ToscaServiceImpl implements ToscaService {
     if (pn.isPresent()) {
       // set private network name
       setNetworkName(pn, privateNetworkName);
+      if (isOfToscaType(pn.get(), ToscaConstants.Nodes.Types.CUSTOM_NETWORK)) {
+        setNetworkProxy(pn, privateNetworkProxyHost, privateNetworkProxyUser);
+      }
     }
     return ar;
   }

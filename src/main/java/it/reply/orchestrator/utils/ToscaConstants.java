@@ -64,6 +64,10 @@ public class ToscaConstants {
       public static final String BASE_NETWORK_NAME = "tosca.nodes.network.";
       public static final String NETWORK = BASE_NETWORK_NAME + "Network";
       public static final String PORT = BASE_NETWORK_NAME + "Port";
+
+      public static final String CUSTOM_BASE_NETWORK = "tosca.nodes.indigo.network.";
+      public static final String CUSTOM_NETWORK = "tosca.nodes.indigo.network.Network";
+
     }
 
     @UtilityClass
@@ -72,6 +76,8 @@ public class ToscaConstants {
           "^tosca\\.nodes\\.indigo\\.LRMS\\.FrontEnd\\.\\w+$";
       public static final String WORKER_NODE_RE =
           "^tosca\\.nodes\\.indigo\\.LRMS\\.WorkerNode\\.\\w+$";
+      public static final String NETWORK_NODE_RE =
+              "^tosca\\.nodes\\.(indigo\\.)?network\\.Network$";
     }
 
     @UtilityClass
@@ -85,6 +91,9 @@ public class ToscaConstants {
     public static class Properties {
       public static final String NETWORKTYPE = "network_type";
       public static final String NETWORKNAME = "network_name";
+      public static final String NETWORKPROXYHOST = "proxy_host";
+      public static final String NETWORKPROXYHOSTCRED = "proxy_credential";
+      public static final String NETWORKPROXYHOSTUSER = "user";
       public static final String HYBRID = "hybrid";
     }
 

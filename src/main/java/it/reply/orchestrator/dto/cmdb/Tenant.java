@@ -64,4 +64,12 @@ public class Tenant implements CmdbIdentifiable {
   @JsonProperty("private_network_name")
   @Nullable
   private String privateNetworkName;
+
+  @JsonProperty("private_network_proxy_host")
+  @Nullable
+  private String privateNetworkProxyHost;
+
+  @JsonProperty("private_network_proxy_user")
+  @Nullable
+  private String privateNetworkProxyUser;
 }

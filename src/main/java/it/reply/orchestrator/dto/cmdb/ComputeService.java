@@ -59,6 +59,14 @@ public class ComputeService extends CloudService {
   @Nullable
   private String privateNetworkName;
 
+  @JsonProperty("private_network_proxy_host")
+  @Nullable
+  private String privateNetworkProxyHost;
+
+  @JsonProperty("private_network_proxy_user")
+  @Nullable
+  private String privateNetworkProxyUser;
+
   /**
    * Generate a new ComputeService.
    *
@@ -100,6 +108,10 @@ public class ComputeService extends CloudService {
    *     the private network CIDR
    * @param privateNetworkName
    *     the private network name
+   * @param privateNetworkProxyHost
+   *     the private network proxy host ip/dns name
+   * @param privateNetworkProxyUser
+   *     the private network proxy host user
    */
   @Builder(builderMethodName = "computeBuilder")
   public ComputeService(
@@ -121,7 +133,9 @@ public class ComputeService extends CloudService {
       @NonNull List<SupportedIdp> supportedIdps,
       @Nullable String publicNetworkName,
       @Nullable String privateNetworkCidr,
-      @Nullable String privateNetworkName) {
+      @Nullable String privateNetworkName,
+      @Nullable String privateNetworkProxyHost,
+      @Nullable String privateNetworkProxyUser) {
     super(id, serviceType, endpoint, providerId, type, publicService, tenant, region, hostname,
             parentServiceId, iamEnabled, idpProtocol, publicIpAssignable, supportedIdps);
     this.images = CommonUtils.notNullOrDefaultValue(images, ArrayList::new);
@@ -129,6 +143,8 @@ public class ComputeService extends CloudService {
     this.publicNetworkName = publicNetworkName;
     this.privateNetworkName = privateNetworkName;
     this.privateNetworkCidr = privateNetworkCidr;
+    this.privateNetworkProxyHost = privateNetworkProxyHost;
+    this.privateNetworkProxyUser = privateNetworkProxyHost;
   }
 
   @Deprecated
