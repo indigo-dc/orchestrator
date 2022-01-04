@@ -35,6 +35,7 @@ import static org.springframework.restdocs.request.RequestDocumentation.paramete
 import static org.springframework.restdocs.request.RequestDocumentation.requestParameters;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -93,6 +94,7 @@ import org.springframework.security.oauth2.common.OAuth2AccessToken;
 import org.springframework.test.context.junit4.rules.SpringClassRule;
 import org.springframework.test.context.junit4.rules.SpringMethodRule;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.result.MockMvcResultHandlers;
 
 @WebMvcTest(controllers = DeploymentController.class, secure = false)
 @RunWith(JUnitParamsRunner.class)
@@ -133,25 +135,31 @@ public class DeploymentControllerTest {
     String ownerIdString = ownerId.getSubject()+"@"+ownerId.getIssuer();
     OidcEntity owner = new OidcEntity();
     owner.setOidcEntityId(ownerId);
+    String userGroup = "beta-testers";
     List<Deployment> deployments = ControllerTestUtils.createDeployments(2);
     deployments.forEach(deployment -> deployment.setOwner(owner));
     deployments.get(0).setStatus(Status.CREATE_FAILED);
     deployments.get(0).setStatusReason("Some reason");
+    deployments.get(0).setUserGroup(userGroup);
     deployments.get(1).setStatus(Status.CREATE_COMPLETE);
+    deployments.get(1).setUserGroup(userGroup);
     Pageable pageable = ControllerTestUtils.createDefaultPageable();
-    Mockito.when(deploymentService.getDeployments(pageable, ownerIdString, null))
+    Mockito.when(deploymentService.getDeployments(pageable, ownerIdString, userGroup))
         .thenReturn(new PageImpl<Deployment>(deployments, pageable, deployments.size()));
 
     mockMvc
-        .perform(get("/deployments?createdBy=" + ownerIdString).accept(MediaType.APPLICATION_JSON)
+        .perform(get("/deployments?createdBy=" + ownerIdString + "&userGroup=" + userGroup).accept(MediaType.APPLICATION_JSON)
             .header(HttpHeaders.AUTHORIZATION, OAuth2AccessToken.BEARER_TYPE + " <access token>"))
+        .andDo(MockMvcResultHandlers.print())
         .andExpect(status().isOk())
         .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
         .andDo(document("authentication", requestHeaders(
             headerWithName(HttpHeaders.AUTHORIZATION).description("OAuth2 bearer token"))))
         .andDo(document("deployments", preprocessRequest(prettyPrint()), preprocessResponse(prettyPrint()),
             requestParameters(parameterWithName("createdBy").description(
-                "Optional parameter to filter the deployments based on who created them. The following values can be used:\n\n* `*OIDC_subject@OIDC_issuer*`: to ask for the deployments of a generic user\n* `*me*`: shortcut to ask for the deployments created by the user making the request")),
+                "Optional parameter to filter the deployments based on who created them. The following values can be used:\n\n* `*OIDC_subject@OIDC_issuer*`: to ask for the deployments of a generic user\n* `*me*`: shortcut to ask for the deployments created by the user making the request"),
+                parameterWithName("userGroup").description(
+                "Optional parameter to filter the deployments based on the user group")),
 
             responseFields(fieldWithPath("links[]").ignored(),
 
@@ -160,13 +168,15 @@ public class DeploymentControllerTest {
                     "Creation date-time (http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14)"),
                 fieldWithPath("content[].updateTime").description("Update date-time"),
                 fieldWithPath("content[].status").description(
-                    "The status of the deployment. (../apidocs/it/reply/orchestrator/enums/Status.html)"),
+                    "The status of the deployment. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html)"),
                 fieldWithPath("content[].statusReason").description(
                     "Verbose explanation of reason that lead to the deployment status (Present only if the deploy is in some error status)"),
                 fieldWithPath("content[].task").description(
                     "The current step of the deployment process. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Task.html)"),
                 fieldWithPath("content[].createdBy").description(
                     "The OIDC info of the deployment's creator."),
+                fieldWithPath("content[].userGroup").description(
+                        "The user group of the deployment."),
                 fieldWithPath("content[].callback").description(
                     "The endpoint used by the orchestrator to notify the progress of the deployment process."),
                 fieldWithPath("content[].outputs").description("The outputs of the TOSCA document"),
@@ -236,7 +246,7 @@ public class DeploymentControllerTest {
   @Test
   public void getDeploymentSuccessfully() throws Exception {
 
-    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    String deploymentId = "34483-d937-4578-bfdb-ebe196bf82dd";
     Deployment deployment = ControllerTestUtils.createDeployment(deploymentId);
     Mockito.when(deploymentService.getDeployment(deploymentId)).thenReturn(deployment);
 
@@ -248,7 +258,7 @@ public class DeploymentControllerTest {
 
   @Test
   public void getDeploymentExtendedInfo() throws Exception {
-    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    String deploymentId = "34483-d937-4578-bfdb-ebe196bf82dd";
     String result = "{\"vmProperties\":[{\"class\":\"network\",\"id\":\"pub_network\",\"outbound\":\"yes\",\"provider_id\":\"external\"},{\"class\":\"network\",\"id\":\"priv_network\",\"provider_id\":\"provider-2099\"},{\"class\":\"system\",\"id\":\"simple_node1\",\"instance_name\":\"simple_node1-158799480931\",\"disk.0.os.flavour\":\"ubuntu\",\"disk.0.image.url\":\"ost://api.cloud.test.com/f46f7387-a371-44ec-9a2d-16a8f2a85786\",\"cpu.count\":1,\"memory.size\":2097152000,\"instance_type\":\"m1.small\",\"net_interface.1.connection\":\"pub_network\",\"net_interface.0.connection\":\"priv_network\",\"cpu.arch\":\"x86_64\",\"disk.0.free_size\":10737418240,\"disk.0.os.credentials.username\":\"cloudadm\",\"provider.type\":\"OpenStack\",\"provider.host\":\"api.cloud.test.com\",\"provider.port\":5000,\"disk.0.os.credentials.private_key\":\"\",\"state\":\"configured\",\"instance_id\":\"11d647dc-97f1-4347-8ede-ec83e2b64976\",\"net_interface.0.ip\":\"192.168.1.1\",\"net_interface.1.ip\":\"1.2.3.4\"}]}";
     Mockito.when(deploymentService.getDeploymentExtendedInfo(deploymentId, null)).thenReturn(result);
 
@@ -261,7 +271,7 @@ public class DeploymentControllerTest {
 
   @Test
   public void getDeploymentLog() throws Exception {
-    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    String deploymentId = "34483-d937-4578-bfdb-ebe196bf82dd";
     String result = "deployment log";
     Mockito.when(deploymentService.getDeploymentLog(deploymentId, null)).thenReturn(result);
 
@@ -275,7 +285,7 @@ public class DeploymentControllerTest {
   @Test
   public void deploymentHypermedia() throws Exception {
 
-    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    String deploymentId = "34483-d937-4578-bfdb-ebe196bf82dd";
     Deployment deployment = ControllerTestUtils.createDeployment(deploymentId);
     Mockito.when(deploymentService.getDeployment(deploymentId)).thenReturn(deployment);
 
@@ -303,7 +313,7 @@ public class DeploymentControllerTest {
   @Test
   public void getDeploymentWithOutputSuccessfully() throws Exception {
 
-    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    String deploymentId = "34483-d937-4578-bfdb-ebe196bf82dd";
     Deployment deployment = ControllerTestUtils.createDeployment(deploymentId);
     Map<String, Object> outputs = new HashMap<>();
     String key = "server_ip";
@@ -312,6 +322,7 @@ public class DeploymentControllerTest {
     deployment.setOutputs(outputs);
     deployment.setStatus(Status.CREATE_FAILED);
     deployment.setStatusReason("Some reason");
+    deployment.setUserGroup("beta-testers");
     Mockito.when(deploymentService.getDeployment(deploymentId)).thenReturn(deployment);
 
     mockMvc
@@ -333,6 +344,8 @@ public class DeploymentControllerTest {
                     "The status of the deployment. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html)"),
                 fieldWithPath("statusReason").description(
                     "Verbose explanation of reason that lead to the deployment status (Present only if the deploy is in some error status)"),
+                fieldWithPath("userGroup").description(
+                        "The user group the deployment was created for (as specified at creation time)."),
                 fieldWithPath("task").description(
                     "The current step of the deployment process. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Task.html)"),
                 fieldWithPath("callback").description(
@@ -344,7 +357,7 @@ public class DeploymentControllerTest {
   @Test
   public void getDeploymentNotFound() throws Exception {
 
-    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    String deploymentId = "34483-d937-4578-bfdb-ebe196bf82dd";
     Mockito.when(deploymentService.getDeployment(deploymentId))
         .thenThrow(new NotFoundException("Message"));
 
@@ -386,6 +399,7 @@ public class DeploymentControllerTest {
     DeploymentRequest request = DeploymentRequest
         .builder()
         .parameters(parameters)
+        .userGroup("beta-testers")
         .template("template")
         .callback("http://localhost:8080/callback")
         .keepLastAttempt(false)
@@ -397,6 +411,7 @@ public class DeploymentControllerTest {
     Deployment deployment = ControllerTestUtils.createDeployment();
     deployment.setCallback(request.getCallback());
     deployment.setStatus(Status.CREATE_IN_PROGRESS);
+    deployment.setUserGroup(request.getUserGroup());
     Mockito.when(deploymentService.createDeployment(request, null, null)).thenReturn(deployment);
 
     mockMvc.perform(post("/deployments").contentType(MediaType.APPLICATION_JSON)
@@ -410,6 +425,8 @@ public class DeploymentControllerTest {
                     .description("A string containing a TOSCA YAML-formatted template"),
                 fieldWithPath("parameters").optional()
                     .description("The input parameters of the deployment(Map of String, Object)"),
+                fieldWithPath("userGroup").optional()
+                    .description("The user group for which the deployment will be created (Optional, default empty string)"),
                 fieldWithPath("callback").description("The deployment callback URL (optional)"),
                 fieldWithPath("maxProvidersRetry").description(
                     "The maximum number Cloud providers on which attempt to create the deployment (Optional, default unbounded)"),
@@ -425,6 +442,7 @@ public class DeploymentControllerTest {
                     "Creation date-time (http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14)"),
                 fieldWithPath("updateTime").description(
                     "Update date-time (http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14)"),
+                fieldWithPath("userGroup").description("The user group the deployment has been created for."),
                 fieldWithPath("status").description(
                     "The status of the deployment. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html)"),
                 fieldWithPath("task").description(
@@ -447,7 +465,7 @@ public class DeploymentControllerTest {
         .callback("http://localhost:8080/callback")
         .build();
 
-    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    String deploymentId = "34483-d937-4578-bfdb-ebe196bf82dd";
     Mockito.doThrow(new NotFoundException("Message"))
         .when(deploymentService)
         .updateDeployment(deploymentId, request, null);
@@ -467,7 +485,7 @@ public class DeploymentControllerTest {
         .template("template")
         .build();
 
-    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    String deploymentId = "34483-d937-4578-bfdb-ebe196bf82dd";
     Mockito.doThrow(new ConflictException("Cannot update a deployment in DELETE_IN_PROGRESS state"))
         .when(deploymentService)
         .updateDeployment(deploymentId, request, null);
@@ -498,7 +516,7 @@ public class DeploymentControllerTest {
         .template("template")
         .build();
 
-    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    String deploymentId = "34483-d937-4578-bfdb-ebe196bf82dd";
     Mockito.doThrow(ex)
         .when(deploymentService)
         .updateDeployment(deploymentId, request, null);
@@ -519,7 +537,7 @@ public class DeploymentControllerTest {
   public void deleteDeploymentConcurrentTransientException(Exception ex)
       throws Exception {
 
-    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    String deploymentId = "34483-d937-4578-bfdb-ebe196bf82dd";
     Mockito.doThrow(ex)
         .when(deploymentService)
         .deleteDeployment(deploymentId, null);
@@ -550,7 +568,7 @@ public class DeploymentControllerTest {
         .providerTimeoutMins(10)
         .build();
 
-    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    String deploymentId = "34483-d937-4578-bfdb-ebe196bf82dd";
     Mockito.doNothing().when(deploymentService).updateDeployment(deploymentId, request, null);
 
     mockMvc.perform(put("/deployments/" + deploymentId).contentType(MediaType.APPLICATION_JSON)
@@ -573,6 +591,25 @@ public class DeploymentControllerTest {
                         "Provider timeout value, if provided, must be at least of 1 minute and equal or less than timeoutMins (Optional, default 14400 mins"),
                 fieldWithPath("keepLastAttempt").description(
                     "Whether the Orchestrator, in case of failure, will keep the resources of the last update attempt or not (Optional, default false)"))));
+
+  }
+
+  @Test
+  public void resetDeploymentSuccessfully() throws Exception {
+
+    String deploymentId = "34483-d937-4578-bfdb-ebe196bf82dd";
+    String status = "DELETE_FAILED";
+    Mockito.doNothing().when(deploymentService).resetDeployment(deploymentId, status, null);
+
+    mockMvc.perform(patch("/deployments/" + deploymentId).contentType(MediaType.APPLICATION_JSON)
+        .content("{\"status\": \"" + status + "\"}")
+        .header(HttpHeaders.AUTHORIZATION, OAuth2AccessToken.BEARER_TYPE + " <access token>"))
+
+        .andDo(document("reset-deployment", preprocessRequest(prettyPrint()),
+            preprocessResponse(prettyPrint()),
+            requestFields(
+                fieldWithPath("status")
+                    .description("State of the deployment to be set forcefully. Allowed values: DELETE_FAILED"))));
 
   }
 
@@ -618,7 +655,7 @@ public class DeploymentControllerTest {
   @Test
   public void deleteDeployment() throws Exception {
 
-    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    String deploymentId = "34483-d937-4578-bfdb-ebe196bf82dd";
     Mockito.doNothing().when(deploymentService).deleteDeployment(deploymentId, null);
 
     mockMvc
@@ -633,7 +670,7 @@ public class DeploymentControllerTest {
   @Test
   public void deleteDeploymentWithConflict() throws Exception {
 
-    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    String deploymentId = "34483-d937-4578-bfdb-ebe196bf82dd";
     Mockito.doThrow(new ConflictException("Cannot delete a deployment in DELETE_IN_PROGRESS state"))
         .when(deploymentService)
         .deleteDeployment(deploymentId, null);
@@ -644,7 +681,7 @@ public class DeploymentControllerTest {
   @Test
   public void deleteDeploymentNotFound() throws Exception {
 
-    String deploymentId = "mmd34483-d937-4578-bfdb-ebe196bf82dd";
+    String deploymentId = "34483-d937-4578-bfdb-ebe196bf82dd";
     Mockito.doThrow(new NotFoundException("The deployment <not-found> doesn't exist"))
         .when(deploymentService)
         .deleteDeployment(deploymentId, null);
