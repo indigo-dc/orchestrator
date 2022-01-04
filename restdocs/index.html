@@ -464,28 +464,35 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_example_response_4">Example response</a></li>
 </ul>
 </li>
-<li><a href="#resources-delete-deployment">Delete deployment</a>
+<li><a href="#resources-reset-deployment">Reset deployment</a>
 <ul class="sectlevel3">
+<li><a href="#_request_fields_2">Request Fields</a></li>
 <li><a href="#_example_request_6">Example request</a></li>
 <li><a href="#_example_response_5">Example response</a></li>
 </ul>
 </li>
-<li><a href="#resources-get-deployment-extended-info">Get deployment extended info</a>
+<li><a href="#resources-delete-deployment">Delete deployment</a>
 <ul class="sectlevel3">
 <li><a href="#_example_request_7">Example request</a></li>
 <li><a href="#_example_response_6">Example response</a></li>
 </ul>
 </li>
-<li><a href="#resources-get-deployment-log">Get deployment log</a>
+<li><a href="#resources-get-deployment-extended-info">Get deployment extended info</a>
 <ul class="sectlevel3">
 <li><a href="#_example_request_8">Example request</a></li>
 <li><a href="#_example_response_7">Example response</a></li>
 </ul>
 </li>
-<li><a href="#resources-get-template">Get template</a>
+<li><a href="#resources-get-deployment-log">Get deployment log</a>
 <ul class="sectlevel3">
 <li><a href="#_example_request_9">Example request</a></li>
 <li><a href="#_example_response_8">Example response</a></li>
+</ul>
+</li>
+<li><a href="#resources-get-template">Get template</a>
+<ul class="sectlevel3">
+<li><a href="#_example_request_10">Example request</a></li>
+<li><a href="#_example_response_9">Example response</a></li>
 </ul>
 </li>
 </ul>
@@ -494,16 +501,16 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel2">
 <li><a href="#resources-resources">Get Resources</a>
 <ul class="sectlevel3">
-<li><a href="#_example_request_10">Example request</a></li>
+<li><a href="#_example_request_11">Example request</a></li>
 <li><a href="#_response_structure_4">Response structure</a></li>
-<li><a href="#_example_response_9">Example response</a></li>
+<li><a href="#_example_response_10">Example response</a></li>
 </ul>
 </li>
 <li><a href="#resources-get-resource">Get resource</a>
 <ul class="sectlevel3">
-<li><a href="#_example_request_11">Example request</a></li>
+<li><a href="#_example_request_12">Example request</a></li>
 <li><a href="#_response_structure_5">Response structure</a></li>
-<li><a href="#_example_response_10">Example response</a></li>
+<li><a href="#_example_response_11">Example response</a></li>
 </ul>
 </li>
 </ul>
@@ -512,9 +519,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel2">
 <li><a href="#configuration-configuration">Get configuration</a>
 <ul class="sectlevel3">
-<li><a href="#_example_request_12">Example request</a></li>
+<li><a href="#_example_request_13">Example request</a></li>
 <li><a href="#_response_structure_6">Response structure</a></li>
-<li><a href="#_example_response_11">Example response</a></li>
+<li><a href="#_example_response_12">Example response</a></li>
 </ul>
 </li>
 </ul>
@@ -524,24 +531,24 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#resources-get-deployment-schedules">Get deployment schedules</a>
 <ul class="sectlevel3">
 <li><a href="#_request_parameters_2">Request parameters</a></li>
-<li><a href="#_example_request_13">Example request</a></li>
+<li><a href="#_example_request_14">Example request</a></li>
 <li><a href="#_response_structure_7">Response structure</a></li>
-<li><a href="#_example_response_12">Example response</a></li>
+<li><a href="#_example_response_13">Example response</a></li>
 </ul>
 </li>
 <li><a href="#resources-create-deployment-schedule">Create deployment schedule</a>
 <ul class="sectlevel3">
-<li><a href="#_request_fields_2">Request Fields</a></li>
-<li><a href="#_example_request_14">Example request</a></li>
+<li><a href="#_request_fields_3">Request Fields</a></li>
+<li><a href="#_example_request_15">Example request</a></li>
 <li><a href="#_response_structure_8">Response structure</a></li>
-<li><a href="#_example_response_13">Example response</a></li>
+<li><a href="#_example_response_14">Example response</a></li>
 </ul>
 </li>
 <li><a href="#resources-get-deployment-schedule">Get deployment schedule</a>
 <ul class="sectlevel3">
-<li><a href="#_example_request_15">Example request</a></li>
+<li><a href="#_example_request_16">Example request</a></li>
 <li><a href="#_response_structure_9">Response structure</a></li>
-<li><a href="#_example_response_14">Example response</a></li>
+<li><a href="#_example_response_15">Example response</a></li>
 </ul>
 </li>
 </ul>
@@ -550,9 +557,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel2">
 <li><a href="#resources-get-deployment-schedule-events">Get Deployment Schedule Events</a>
 <ul class="sectlevel3">
-<li><a href="#_example_request_16">Example request</a></li>
+<li><a href="#_example_request_17">Example request</a></li>
 <li><a href="#_response_structure_10">Response structure</a></li>
-<li><a href="#_example_response_15">Example response</a></li>
+<li><a href="#_example_response_16">Example response</a></li>
 </ul>
 </li>
 </ul>
@@ -882,7 +889,7 @@ from an entry or feed to a Web resource.</p>
 <h3 id="_example_request"><a class="link" href="#_example_request">Example request</a></h3>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments?createdBy=fff4b664-66ab-4b2b-83e8-0ebfdf4e477d@https://iam-test.indigo-datacloud.eu/' -i -H 'Accept: application/json' -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments?createdBy=89d2b8f2-ee11-4aa3-b97f-68c382b0cc14@https://iam-test.indigo-datacloud.eu/&amp;userGroup=beta-testers' -i -H 'Accept: application/json' -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
 </div>
 </div>
 </div>
@@ -950,6 +957,12 @@ from an entry or feed to a Web resource.</p>
 </ul>
 </div></div></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>userGroup</code></p></td>
+<td class="tableblock halign-left valign-top"><div><div class="paragraph">
+<p>Optional parameter to filter the deployments based on the user group</p>
+</div></div></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -957,12 +970,12 @@ from an entry or feed to a Web resource.</p>
 <h4 id="_example_request_2"><a class="link" href="#_example_request_2">Example request</a></h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments?createdBy=fff4b664-66ab-4b2b-83e8-0ebfdf4e477d@https://iam-test.indigo-datacloud.eu/' -i -H 'Accept: application/json' -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments?createdBy=89d2b8f2-ee11-4aa3-b97f-68c382b0cc14@https://iam-test.indigo-datacloud.eu/&amp;userGroup=beta-testers' -i -H 'Accept: application/json' -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /deployments?createdBy=fff4b664-66ab-4b2b-83e8-0ebfdf4e477d@https://iam-test.indigo-datacloud.eu/ HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /deployments?createdBy=89d2b8f2-ee11-4aa3-b97f-68c382b0cc14@https://iam-test.indigo-datacloud.eu/&amp;userGroup=beta-testers HTTP/1.1
 Accept: application/json
 Authorization: Bearer &lt;access token&gt;
 Host: localhost:8080</code></pre>
@@ -1003,7 +1016,7 @@ Host: localhost:8080</code></pre>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>content[].status</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The status of the deployment. (../apidocs/it/reply/orchestrator/enums/Status.html)</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The status of the deployment. (<a href="http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html" class="bare">http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html</a>)</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>content[].statusReason</code></p></td>
@@ -1019,6 +1032,11 @@ Host: localhost:8080</code></pre>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>content[].createdBy</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>Object</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">The OIDC info of the deployment&#8217;s creator.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>content[].userGroup</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The user group of the deployment.</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>content[].callback</code></p></td>
@@ -1039,57 +1057,59 @@ Host: localhost:8080</code></pre>
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json;charset=UTF-8
-Content-Length: 1956
+Content-Length: 2035
 
 {
   "links" : [ {
     "rel" : "self",
-    "href" : "http://localhost:8080/deployments?createdBy=fff4b664-66ab-4b2b-83e8-0ebfdf4e477d@https://iam-test.indigo-datacloud.eu/{&amp;userGroup}"
+    "href" : "http://localhost:8080/deployments?createdBy=89d2b8f2-ee11-4aa3-b97f-68c382b0cc14@https://iam-test.indigo-datacloud.eu/&amp;userGroup=beta-testers"
   } ],
   "content" : [ {
-    "uuid" : "0dce1139-593c-4893-b55f-b86e3a5344dd",
-    "creationTime" : "2022-01-03T10:34+0000",
-    "updateTime" : "2022-01-03T10:34+0000",
+    "uuid" : "712a811f-adb1-42cb-aae0-ba71eb854151",
+    "creationTime" : "2022-01-04T14:18+0000",
+    "updateTime" : "2022-01-04T14:18+0000",
     "status" : "CREATE_FAILED",
     "statusReason" : "Some reason",
     "outputs" : { },
     "task" : "NONE",
     "callback" : "http://localhost",
+    "userGroup" : "beta-testers",
     "createdBy" : {
       "issuer" : "https://iam-test.indigo-datacloud.eu/",
-      "subject" : "fff4b664-66ab-4b2b-83e8-0ebfdf4e477d"
+      "subject" : "89d2b8f2-ee11-4aa3-b97f-68c382b0cc14"
     },
     "links" : [ {
       "rel" : "self",
-      "href" : "http://localhost:8080/deployments/0dce1139-593c-4893-b55f-b86e3a5344dd"
+      "href" : "http://localhost:8080/deployments/712a811f-adb1-42cb-aae0-ba71eb854151"
     }, {
       "rel" : "resources",
-      "href" : "http://localhost:8080/deployments/0dce1139-593c-4893-b55f-b86e3a5344dd/resources"
+      "href" : "http://localhost:8080/deployments/712a811f-adb1-42cb-aae0-ba71eb854151/resources"
     }, {
       "rel" : "template",
-      "href" : "http://localhost:8080/deployments/0dce1139-593c-4893-b55f-b86e3a5344dd/template"
+      "href" : "http://localhost:8080/deployments/712a811f-adb1-42cb-aae0-ba71eb854151/template"
     } ]
   }, {
-    "uuid" : "148e4d21-b2eb-4cba-9275-d419e427728e",
-    "creationTime" : "2022-01-03T10:34+0000",
-    "updateTime" : "2022-01-03T10:34+0000",
+    "uuid" : "71f9e058-47fe-488d-ab2f-34c6c93c073b",
+    "creationTime" : "2022-01-04T14:18+0000",
+    "updateTime" : "2022-01-04T14:18+0000",
     "status" : "CREATE_COMPLETE",
     "outputs" : { },
     "task" : "NONE",
     "callback" : "http://localhost",
+    "userGroup" : "beta-testers",
     "createdBy" : {
       "issuer" : "https://iam-test.indigo-datacloud.eu/",
-      "subject" : "fff4b664-66ab-4b2b-83e8-0ebfdf4e477d"
+      "subject" : "89d2b8f2-ee11-4aa3-b97f-68c382b0cc14"
     },
     "links" : [ {
       "rel" : "self",
-      "href" : "http://localhost:8080/deployments/148e4d21-b2eb-4cba-9275-d419e427728e"
+      "href" : "http://localhost:8080/deployments/71f9e058-47fe-488d-ab2f-34c6c93c073b"
     }, {
       "rel" : "resources",
-      "href" : "http://localhost:8080/deployments/148e4d21-b2eb-4cba-9275-d419e427728e/resources"
+      "href" : "http://localhost:8080/deployments/71f9e058-47fe-488d-ab2f-34c6c93c073b/resources"
     }, {
       "rel" : "template",
-      "href" : "http://localhost:8080/deployments/148e4d21-b2eb-4cba-9275-d419e427728e/template"
+      "href" : "http://localhost:8080/deployments/71f9e058-47fe-488d-ab2f-34c6c93c073b/template"
     } ]
   } ],
   "page" : {
@@ -1135,6 +1155,11 @@ Content-Length: 1956
 <td class="tableblock halign-left valign-top"><p class="tableblock">The input parameters of the deployment(Map of String, Object)</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>userGroup</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The user group for which the deployment will be created (Optional, default empty string)</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>callback</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">The deployment callback URL (optional)</p></td>
@@ -1175,7 +1200,8 @@ Content-Length: 1956
   "timeoutMins" : 5,
   "providerTimeoutMins" : 10,
   "maxProvidersRetry" : 1,
-  "keepLastAttempt" : false
+  "keepLastAttempt" : false,
+  "userGroup" : "beta-testers"
 }'</code></pre>
 </div>
 </div>
@@ -1185,7 +1211,7 @@ Content-Length: 1956
 Content-Type: application/json
 Authorization: Bearer &lt;access token&gt;
 Host: localhost:8080
-Content-Length: 224
+Content-Length: 256
 
 {
   "template" : "template",
@@ -1196,7 +1222,8 @@ Content-Length: 224
   "timeoutMins" : 5,
   "providerTimeoutMins" : 10,
   "maxProvidersRetry" : 1,
-  "keepLastAttempt" : false
+  "keepLastAttempt" : false,
+  "userGroup" : "beta-testers"
 }</code></pre>
 </div>
 </div>
@@ -1233,6 +1260,11 @@ Content-Length: 224
 <td class="tableblock halign-left valign-top"><p class="tableblock">Update date-time (<a href="http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14" class="bare">http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14</a>)</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>userGroup</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The user group the deployment has been created for.</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>status</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">The status of the deployment. (<a href="http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html" class="bare">http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html</a>)</p></td>
@@ -1261,25 +1293,26 @@ Content-Length: 224
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 201 Created
 Content-Type: application/json;charset=UTF-8
-Content-Length: 644
+Content-Length: 676
 
 {
-  "uuid" : "759d1cd4-be38-436c-a54e-98cd170cb969",
-  "creationTime" : "2022-01-03T10:34+0000",
-  "updateTime" : "2022-01-03T10:34+0000",
+  "uuid" : "0ae8674c-043b-48d5-8cb9-80ef1de12aac",
+  "creationTime" : "2022-01-04T14:18+0000",
+  "updateTime" : "2022-01-04T14:18+0000",
   "status" : "CREATE_IN_PROGRESS",
   "outputs" : { },
   "task" : "NONE",
   "callback" : "http://localhost:8080/callback",
+  "userGroup" : "beta-testers",
   "links" : [ {
     "rel" : "self",
-    "href" : "http://localhost:8080/deployments/759d1cd4-be38-436c-a54e-98cd170cb969"
+    "href" : "http://localhost:8080/deployments/0ae8674c-043b-48d5-8cb9-80ef1de12aac"
   }, {
     "rel" : "resources",
-    "href" : "http://localhost:8080/deployments/759d1cd4-be38-436c-a54e-98cd170cb969/resources"
+    "href" : "http://localhost:8080/deployments/0ae8674c-043b-48d5-8cb9-80ef1de12aac/resources"
   }, {
     "rel" : "template",
-    "href" : "http://localhost:8080/deployments/759d1cd4-be38-436c-a54e-98cd170cb969/template"
+    "href" : "http://localhost:8080/deployments/0ae8674c-043b-48d5-8cb9-80ef1de12aac/template"
   } ]
 }</code></pre>
 </div>
@@ -1295,12 +1328,12 @@ Content-Length: 644
 <h4 id="_example_request_4"><a class="link" href="#_example_request_4">Example request</a></h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd' -i -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/34483-d937-4578-bfdb-ebe196bf82dd' -i -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /deployments/34483-d937-4578-bfdb-ebe196bf82dd HTTP/1.1
 Authorization: Bearer &lt;access token&gt;
 Host: localhost:8080</code></pre>
 </div>
@@ -1348,6 +1381,11 @@ Host: localhost:8080</code></pre>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Verbose explanation of reason that lead to the deployment status (Present only if the deploy is in some error status)</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>userGroup</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">The user group the deployment was created for (as specified at creation time).</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>task</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">The current step of the deployment process. (<a href="http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Task.html" class="bare">http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Task.html</a>)</p></td>
@@ -1371,12 +1409,12 @@ Host: localhost:8080</code></pre>
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/json;charset=UTF-8
-Content-Length: 690
+Content-Length: 710
 
 {
-  "uuid" : "mmd34483-d937-4578-bfdb-ebe196bf82dd",
-  "creationTime" : "2022-01-03T10:34+0000",
-  "updateTime" : "2022-01-03T10:34+0000",
+  "uuid" : "34483-d937-4578-bfdb-ebe196bf82dd",
+  "creationTime" : "2022-01-04T14:18+0000",
+  "updateTime" : "2022-01-04T14:18+0000",
   "status" : "CREATE_FAILED",
   "statusReason" : "Some reason",
   "outputs" : {
@@ -1384,15 +1422,16 @@ Content-Length: 690
   },
   "task" : "NONE",
   "callback" : "http://localhost",
+  "userGroup" : "beta-testers",
   "links" : [ {
     "rel" : "self",
-    "href" : "http://localhost:8080/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd"
+    "href" : "http://localhost:8080/deployments/34483-d937-4578-bfdb-ebe196bf82dd"
   }, {
     "rel" : "resources",
-    "href" : "http://localhost:8080/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd/resources"
+    "href" : "http://localhost:8080/deployments/34483-d937-4578-bfdb-ebe196bf82dd/resources"
   }, {
     "rel" : "template",
-    "href" : "http://localhost:8080/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd/template"
+    "href" : "http://localhost:8080/deployments/34483-d937-4578-bfdb-ebe196bf82dd/template"
   } ]
 }</code></pre>
 </div>
@@ -1408,7 +1447,7 @@ Content-Length: 690
 <h4 id="_example_request_5"><a class="link" href="#_example_request_5">Example request</a></h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd' -i -X PUT -H 'Content-Type: application/json' -H 'Authorization: Bearer &lt;access token&gt;' -d '{
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/34483-d937-4578-bfdb-ebe196bf82dd' -i -X PUT -H 'Content-Type: application/json' -H 'Authorization: Bearer &lt;access token&gt;' -d '{
   "template" : "template",
   "parameters" : {
     "cpus" : 1
@@ -1423,7 +1462,7 @@ Content-Length: 690
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">PUT /deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">PUT /deployments/34483-d937-4578-bfdb-ebe196bf82dd HTTP/1.1
 Content-Type: application/json
 Authorization: Bearer &lt;access token&gt;
 Host: localhost:8080
@@ -1453,27 +1492,89 @@ Content-Length: 224
 </div>
 </div>
 <div class="sect2">
-<h3 id="resources-delete-deployment"><a class="link" href="#resources-delete-deployment">Delete deployment</a></h3>
+<h3 id="resources-reset-deployment"><a class="link" href="#resources-reset-deployment">Reset deployment</a></h3>
 <div class="paragraph">
-<p>A <code>DELETE</code> request is used to delete the deployment from the id.</p>
+<p>A <code>PATCH</code> request is used to reset the deployment state given the deployment id.<br>
+<em>Usage tips: If a deployment remains stuck in DELETE_IN_PROGRESS, you can use this PATCH request to manually reset the state of the deployment to the DELETE_FAILED state. You can then try to delete the deployment again.</em></p>
+</div>
+<div class="sect3">
+<h4 id="_request_fields_2"><a class="link" href="#_request_fields_2">Request Fields</a></h4>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 33%;">
+<col style="width: 33%;">
+<col style="width: 33%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Path</th>
+<th class="tableblock halign-left valign-top">Type</th>
+<th class="tableblock halign-left valign-top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>status</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>String</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">State of the deployment to be set forcefully. Allowed values: DELETE_FAILED</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="sect3">
 <h4 id="_example_request_6"><a class="link" href="#_example_request_6">Example request</a></h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd' -i -X DELETE -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/34483-d937-4578-bfdb-ebe196bf82dd' -i -X PATCH -H 'Content-Type: application/json' -H 'Authorization: Bearer &lt;access token&gt;' -d '{
+  "status" : "DELETE_FAILED"
+}'</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">DELETE /deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">PATCH /deployments/34483-d937-4578-bfdb-ebe196bf82dd HTTP/1.1
+Content-Type: application/json
+Authorization: Bearer &lt;access token&gt;
+Host: localhost:8080
+Content-Length: 32
+
+{
+  "status" : "DELETE_FAILED"
+}</code></pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_example_response_5"><a class="link" href="#_example_response_5">Example response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 204 No Content</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="resources-delete-deployment"><a class="link" href="#resources-delete-deployment">Delete deployment</a></h3>
+<div class="paragraph">
+<p>A <code>DELETE</code> request is used to delete the deployment from the id.</p>
+</div>
+<div class="sect3">
+<h4 id="_example_request_7"><a class="link" href="#_example_request_7">Example request</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/34483-d937-4578-bfdb-ebe196bf82dd' -i -X DELETE -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">DELETE /deployments/34483-d937-4578-bfdb-ebe196bf82dd HTTP/1.1
 Authorization: Bearer &lt;access token&gt;
 Host: localhost:8080</code></pre>
 </div>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_example_response_5"><a class="link" href="#_example_response_5">Example response</a></h4>
+<h4 id="_example_response_6"><a class="link" href="#_example_response_6">Example response</a></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 204 No Content</code></pre>
@@ -1488,22 +1589,22 @@ Host: localhost:8080</code></pre>
 This may be VM information for cloud deployments or JOB information for QCG</p>
 </div>
 <div class="sect3">
-<h4 id="_example_request_7"><a class="link" href="#_example_request_7">Example request</a></h4>
+<h4 id="_example_request_8"><a class="link" href="#_example_request_8">Example request</a></h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd/extrainfo' -i -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/34483-d937-4578-bfdb-ebe196bf82dd/extrainfo' -i -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd/extrainfo HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /deployments/34483-d937-4578-bfdb-ebe196bf82dd/extrainfo HTTP/1.1
 Authorization: Bearer &lt;access token&gt;
 Host: localhost:8080</code></pre>
 </div>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_example_response_6"><a class="link" href="#_example_response_6">Example response</a></h4>
+<h4 id="_example_response_7"><a class="link" href="#_example_response_7">Example response</a></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
@@ -1554,22 +1655,22 @@ Content-Length: 1092
 <p>A <code>GET</code> request is used to retrieve the infrastructure log associated to a deployment.</p>
 </div>
 <div class="sect3">
-<h4 id="_example_request_8"><a class="link" href="#_example_request_8">Example request</a></h4>
+<h4 id="_example_request_9"><a class="link" href="#_example_request_9">Example request</a></h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd/log' -i -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/34483-d937-4578-bfdb-ebe196bf82dd/log' -i -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /deployments/mmd34483-d937-4578-bfdb-ebe196bf82dd/log HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /deployments/34483-d937-4578-bfdb-ebe196bf82dd/log HTTP/1.1
 Authorization: Bearer &lt;access token&gt;
 Host: localhost:8080</code></pre>
 </div>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_example_response_7"><a class="link" href="#_example_response_7">Example response</a></h4>
+<h4 id="_example_response_8"><a class="link" href="#_example_response_8">Example response</a></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
@@ -1587,22 +1688,22 @@ deployment log</code></pre>
 <p>A <code>GET</code> request is used to retrieve the template associated to a deployment.</p>
 </div>
 <div class="sect3">
-<h4 id="_example_request_9"><a class="link" href="#_example_request_9">Example request</a></h4>
+<h4 id="_example_request_10"><a class="link" href="#_example_request_10">Example request</a></h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/971dc474-6f37-4b99-97d0-a3e8d4c3f9d8/template' -i -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/def4818c-e90d-47b8-bc53-f407f8dc8ba6/template' -i -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /deployments/971dc474-6f37-4b99-97d0-a3e8d4c3f9d8/template HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /deployments/def4818c-e90d-47b8-bc53-f407f8dc8ba6/template HTTP/1.1
 Authorization: Bearer &lt;access token&gt;
 Host: localhost:8080</code></pre>
 </div>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_example_response_8"><a class="link" href="#_example_response_8">Example response</a></h4>
+<h4 id="_example_response_9"><a class="link" href="#_example_response_9">Example response</a></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
@@ -1682,15 +1783,15 @@ topology_template:
 <p>A <code>GET</code> request is used to list all the resources of a deployment.</p>
 </div>
 <div class="sect3">
-<h4 id="_example_request_10"><a class="link" href="#_example_request_10">Example request</a></h4>
+<h4 id="_example_request_11"><a class="link" href="#_example_request_11">Example request</a></h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/596f0ad9-a74c-459f-b1d1-796c68dcb9f5/resources' -i -H 'Accept: application/json' -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/3115081f-b884-4d32-bd9f-9744d2c99955/resources' -i -H 'Accept: application/json' -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /deployments/596f0ad9-a74c-459f-b1d1-796c68dcb9f5/resources HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /deployments/3115081f-b884-4d32-bd9f-9744d2c99955/resources HTTP/1.1
 Accept: application/json
 Authorization: Bearer &lt;access token&gt;
 Host: localhost:8080</code></pre>
@@ -1757,7 +1858,7 @@ Host: localhost:8080</code></pre>
 </table>
 </div>
 <div class="sect3">
-<h4 id="_example_response_9"><a class="link" href="#_example_response_9">Example response</a></h4>
+<h4 id="_example_response_10"><a class="link" href="#_example_response_10">Example response</a></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
@@ -1767,12 +1868,12 @@ Content-Length: 1511
 {
   "links" : [ {
     "rel" : "self",
-    "href" : "http://localhost:8080/deployments/596f0ad9-a74c-459f-b1d1-796c68dcb9f5/resources?page=0&amp;size=10&amp;sort=createdAt,desc"
+    "href" : "http://localhost:8080/deployments/3115081f-b884-4d32-bd9f-9744d2c99955/resources?page=0&amp;size=10&amp;sort=createdAt,desc"
   } ],
   "content" : [ {
-    "uuid" : "2ba0754e-7b1c-41c4-a5c3-726b75d1f6ac",
-    "creationTime" : "2022-01-03T10:34+0000",
-    "updateTime" : "2022-01-03T10:34+0000",
+    "uuid" : "a7b2aa2f-d55a-440f-abd0-56024490b7c9",
+    "creationTime" : "2022-01-04T14:18+0000",
+    "updateTime" : "2022-01-04T14:18+0000",
     "physicalId" : "0",
     "state" : "CREATING",
     "toscaNodeType" : "tosca.nodes.Compute",
@@ -1780,15 +1881,15 @@ Content-Length: 1511
     "requiredBy" : [ ],
     "links" : [ {
       "rel" : "deployment",
-      "href" : "http://localhost:8080/deployments/596f0ad9-a74c-459f-b1d1-796c68dcb9f5"
+      "href" : "http://localhost:8080/deployments/3115081f-b884-4d32-bd9f-9744d2c99955"
     }, {
       "rel" : "self",
-      "href" : "http://localhost:8080/deployments/596f0ad9-a74c-459f-b1d1-796c68dcb9f5/resources/2ba0754e-7b1c-41c4-a5c3-726b75d1f6ac"
+      "href" : "http://localhost:8080/deployments/3115081f-b884-4d32-bd9f-9744d2c99955/resources/a7b2aa2f-d55a-440f-abd0-56024490b7c9"
     } ]
   }, {
-    "uuid" : "80c4a90e-6da1-4a82-9fab-05aa7b865f37",
-    "creationTime" : "2022-01-03T10:34+0000",
-    "updateTime" : "2022-01-03T10:34+0000",
+    "uuid" : "81a0e38e-9c91-41a1-95d6-1dfd8ac2ee84",
+    "creationTime" : "2022-01-04T14:18+0000",
+    "updateTime" : "2022-01-04T14:18+0000",
     "physicalId" : "1",
     "state" : "CREATING",
     "toscaNodeType" : "tosca.nodes.Compute",
@@ -1796,10 +1897,10 @@ Content-Length: 1511
     "requiredBy" : [ ],
     "links" : [ {
       "rel" : "deployment",
-      "href" : "http://localhost:8080/deployments/596f0ad9-a74c-459f-b1d1-796c68dcb9f5"
+      "href" : "http://localhost:8080/deployments/3115081f-b884-4d32-bd9f-9744d2c99955"
     }, {
       "rel" : "self",
-      "href" : "http://localhost:8080/deployments/596f0ad9-a74c-459f-b1d1-796c68dcb9f5/resources/80c4a90e-6da1-4a82-9fab-05aa7b865f37"
+      "href" : "http://localhost:8080/deployments/3115081f-b884-4d32-bd9f-9744d2c99955/resources/81a0e38e-9c91-41a1-95d6-1dfd8ac2ee84"
     } ]
   } ],
   "page" : {
@@ -1819,15 +1920,15 @@ Content-Length: 1511
 <p>A <code>GET</code> request is used to retrieve the resource from the id.</p>
 </div>
 <div class="sect3">
-<h4 id="_example_request_11"><a class="link" href="#_example_request_11">Example request</a></h4>
+<h4 id="_example_request_12"><a class="link" href="#_example_request_12">Example request</a></h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/f5c70e7c-bcfd-4c0e-bd4b-78154a3610cf/resources/f9f45ac9-d6ca-4faf-b028-8fc9e8c79a16' -i -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/deployments/e001f949-0bc8-4cc4-9be0-e10b802a35cb/resources/09559d45-bce8-46c8-845d-ed37951e483c' -i -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /deployments/f5c70e7c-bcfd-4c0e-bd4b-78154a3610cf/resources/f9f45ac9-d6ca-4faf-b028-8fc9e8c79a16 HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /deployments/e001f949-0bc8-4cc4-9be0-e10b802a35cb/resources/09559d45-bce8-46c8-845d-ed37951e483c HTTP/1.1
 Authorization: Bearer &lt;access token&gt;
 Host: localhost:8080</code></pre>
 </div>
@@ -1893,7 +1994,7 @@ Host: localhost:8080</code></pre>
 </table>
 </div>
 <div class="sect3">
-<h4 id="_example_response_10"><a class="link" href="#_example_response_10">Example response</a></h4>
+<h4 id="_example_response_11"><a class="link" href="#_example_response_11">Example response</a></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
@@ -1901,20 +2002,20 @@ Content-Type: application/json;charset=UTF-8
 Content-Length: 645
 
 {
-  "uuid" : "f9f45ac9-d6ca-4faf-b028-8fc9e8c79a16",
-  "creationTime" : "2022-01-03T10:34+0000",
-  "updateTime" : "2022-01-03T10:34+0000",
-  "physicalId" : "a52b7d89-1919-40f7-9bfb-3b5a5bce3bd6",
+  "uuid" : "09559d45-bce8-46c8-845d-ed37951e483c",
+  "creationTime" : "2022-01-04T14:18+0000",
+  "updateTime" : "2022-01-04T14:18+0000",
+  "physicalId" : "b29a9158-0356-48a0-851f-96084c245512",
   "state" : "CREATING",
   "toscaNodeType" : "tosca.nodes.Compute",
-  "toscaNodeName" : "node_a52b7d89-1919-40f7-9bfb-3b5a5bce3bd6",
+  "toscaNodeName" : "node_b29a9158-0356-48a0-851f-96084c245512",
   "requiredBy" : [ ],
   "links" : [ {
     "rel" : "deployment",
-    "href" : "http://localhost:8080/deployments/f5c70e7c-bcfd-4c0e-bd4b-78154a3610cf"
+    "href" : "http://localhost:8080/deployments/e001f949-0bc8-4cc4-9be0-e10b802a35cb"
   }, {
     "rel" : "self",
-    "href" : "http://localhost:8080/deployments/f5c70e7c-bcfd-4c0e-bd4b-78154a3610cf/resources/f9f45ac9-d6ca-4faf-b028-8fc9e8c79a16"
+    "href" : "http://localhost:8080/deployments/e001f949-0bc8-4cc4-9be0-e10b802a35cb/resources/09559d45-bce8-46c8-845d-ed37951e483c"
   } ]
 }</code></pre>
 </div>
@@ -1935,7 +2036,7 @@ Content-Length: 645
 <p>A <code>GET</code> request is used to retrieve the endpoints of the services used by the Orchestrator.</p>
 </div>
 <div class="sect3">
-<h4 id="_example_request_12"><a class="link" href="#_example_request_12">Example request</a></h4>
+<h4 id="_example_request_13"><a class="link" href="#_example_request_13">Example request</a></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/configuration' -i -H 'Accept: application/json'</code></pre>
@@ -1999,7 +2100,7 @@ Host: localhost:8080</code></pre>
 </table>
 </div>
 <div class="sect3">
-<h4 id="_example_response_11"><a class="link" href="#_example_response_11">Example response</a></h4>
+<h4 id="_example_response_12"><a class="link" href="#_example_response_12">Example response</a></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
@@ -2065,15 +2166,15 @@ Content-Length: 342
 </table>
 </div>
 <div class="sect3">
-<h4 id="_example_request_13"><a class="link" href="#_example_request_13">Example request</a></h4>
+<h4 id="_example_request_14"><a class="link" href="#_example_request_14">Example request</a></h4>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/schedules?createdBy=9edc246f-78d9-4250-b189-d5d51cac9564@https://iam-test.indigo-datacloud.eu/' -i -H 'Accept: application/json' -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
+<pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/schedules?createdBy=c43983e2-d822-4526-98f7-c96db856a53e@https://iam-test.indigo-datacloud.eu/' -i -H 'Accept: application/json' -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /schedules?createdBy=9edc246f-78d9-4250-b189-d5d51cac9564@https://iam-test.indigo-datacloud.eu/ HTTP/1.1
+<pre class="highlight nowrap"><code class="language-http" data-lang="http">GET /schedules?createdBy=c43983e2-d822-4526-98f7-c96db856a53e@https://iam-test.indigo-datacloud.eu/ HTTP/1.1
 Accept: application/json
 Authorization: Bearer &lt;access token&gt;
 Host: localhost:8080</code></pre>
@@ -2145,7 +2246,7 @@ Host: localhost:8080</code></pre>
 </table>
 </div>
 <div class="sect3">
-<h4 id="_example_response_12"><a class="link" href="#_example_response_12">Example response</a></h4>
+<h4 id="_example_response_13"><a class="link" href="#_example_response_13">Example response</a></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
@@ -2155,12 +2256,12 @@ Content-Length: 1492
 {
   "links" : [ {
     "rel" : "self",
-    "href" : "http://localhost:8080/schedules?createdBy=9edc246f-78d9-4250-b189-d5d51cac9564@https://iam-test.indigo-datacloud.eu/"
+    "href" : "http://localhost:8080/schedules?createdBy=c43983e2-d822-4526-98f7-c96db856a53e@https://iam-test.indigo-datacloud.eu/"
   } ],
   "content" : [ {
-    "uuid" : "15ad03ce-5888-4b68-89df-be567a9d1700",
-    "creationTime" : "2022-01-03T10:34+0000",
-    "updateTime" : "2022-01-03T10:34+0000",
+    "uuid" : "cb2b04cc-5507-4918-ba94-9b9b831c469f",
+    "creationTime" : "2022-01-04T14:18+0000",
+    "updateTime" : "2022-01-04T14:18+0000",
     "status" : "RUNNING",
     "replicationExpression" : "RSE_RECAS",
     "fileExpression" : "scope:name*",
@@ -2168,16 +2269,16 @@ Content-Length: 1492
     "numberOfReplicas" : 1,
     "createdBy" : {
       "issuer" : "https://iam-test.indigo-datacloud.eu/",
-      "subject" : "9edc246f-78d9-4250-b189-d5d51cac9564"
+      "subject" : "c43983e2-d822-4526-98f7-c96db856a53e"
     },
     "links" : [ {
       "rel" : "self",
-      "href" : "http://localhost:8080/schedules/15ad03ce-5888-4b68-89df-be567a9d1700"
+      "href" : "http://localhost:8080/schedules/cb2b04cc-5507-4918-ba94-9b9b831c469f"
     } ]
   }, {
-    "uuid" : "f3add5ad-e6a7-4e8e-98c0-e1bbdabcae56",
-    "creationTime" : "2022-01-03T10:34+0000",
-    "updateTime" : "2022-01-03T10:34+0000",
+    "uuid" : "04bc7e1d-0c76-41c4-b561-56bc1311a3b4",
+    "creationTime" : "2022-01-04T14:18+0000",
+    "updateTime" : "2022-01-04T14:18+0000",
     "status" : "SUSPENDED",
     "replicationExpression" : "RSE_RECAS",
     "fileExpression" : "scope:name*",
@@ -2185,11 +2286,11 @@ Content-Length: 1492
     "numberOfReplicas" : 1,
     "createdBy" : {
       "issuer" : "https://iam-test.indigo-datacloud.eu/",
-      "subject" : "9edc246f-78d9-4250-b189-d5d51cac9564"
+      "subject" : "c43983e2-d822-4526-98f7-c96db856a53e"
     },
     "links" : [ {
       "rel" : "self",
-      "href" : "http://localhost:8080/schedules/f3add5ad-e6a7-4e8e-98c0-e1bbdabcae56"
+      "href" : "http://localhost:8080/schedules/04bc7e1d-0c76-41c4-b561-56bc1311a3b4"
     } ]
   } ],
   "page" : {
@@ -2209,7 +2310,7 @@ Content-Length: 1492
 <p>A <code>POST</code> request is used to create a deployment schedule.</p>
 </div>
 <div class="sect3">
-<h4 id="_request_fields_2"><a class="link" href="#_request_fields_2">Request Fields</a></h4>
+<h4 id="_request_fields_3"><a class="link" href="#_request_fields_3">Request Fields</a></h4>
 <table class="tableblock frame-all grid-all spread">
 <colgroup>
 <col style="width: 33%;">
@@ -2278,7 +2379,7 @@ Content-Length: 1492
 </table>
 </div>
 <div class="sect3">
-<h4 id="_example_request_14"><a class="link" href="#_example_request_14">Example request</a></h4>
+<h4 id="_example_request_15"><a class="link" href="#_example_request_15">Example request</a></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/schedules' -i -X POST -H 'Content-Type: application/json' -H 'Authorization: Bearer &lt;access token&gt;' -d '{
@@ -2382,7 +2483,7 @@ Content-Length: 327
 </table>
 </div>
 <div class="sect3">
-<h4 id="_example_response_13"><a class="link" href="#_example_response_13">Example response</a></h4>
+<h4 id="_example_response_14"><a class="link" href="#_example_response_14">Example response</a></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 201 Created
@@ -2390,9 +2491,9 @@ Content-Type: application/json;charset=UTF-8
 Content-Length: 442
 
 {
-  "uuid" : "2a0a1af4-6ed4-4257-b18d-8fd92e2b43bc",
-  "creationTime" : "2022-01-03T10:34+0000",
-  "updateTime" : "2022-01-03T10:34+0000",
+  "uuid" : "ad2d95a9-dd27-43ca-89a5-53fcf010d3f7",
+  "creationTime" : "2022-01-04T14:18+0000",
+  "updateTime" : "2022-01-04T14:18+0000",
   "status" : "RUNNING",
   "replicationExpression" : "RSE_RECAS",
   "fileExpression" : "scope:name*",
@@ -2400,7 +2501,7 @@ Content-Length: 442
   "numberOfReplicas" : 1,
   "links" : [ {
     "rel" : "self",
-    "href" : "http://localhost:8080/schedules/2a0a1af4-6ed4-4257-b18d-8fd92e2b43bc"
+    "href" : "http://localhost:8080/schedules/ad2d95a9-dd27-43ca-89a5-53fcf010d3f7"
   } ]
 }</code></pre>
 </div>
@@ -2413,7 +2514,7 @@ Content-Length: 442
 <p>A <code>GET</code> request is used to retrieve a deployment schedule from the id.</p>
 </div>
 <div class="sect3">
-<h4 id="_example_request_15"><a class="link" href="#_example_request_15">Example request</a></h4>
+<h4 id="_example_request_16"><a class="link" href="#_example_request_16">Example request</a></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/schedules/mmd34483-d937-4578-bfdb-ebe196bf82dd' -i -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
@@ -2487,7 +2588,7 @@ Host: localhost:8080</code></pre>
 </table>
 </div>
 <div class="sect3">
-<h4 id="_example_response_14"><a class="link" href="#_example_response_14">Example response</a></h4>
+<h4 id="_example_response_15"><a class="link" href="#_example_response_15">Example response</a></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
@@ -2496,8 +2597,8 @@ Content-Length: 428
 
 {
   "uuid" : "mmd34483-d937-4578-bfdb-ebe196bf82dd",
-  "creationTime" : "2022-01-03T10:34+0000",
-  "updateTime" : "2022-01-03T10:34+0000",
+  "creationTime" : "2022-01-04T14:18+0000",
+  "updateTime" : "2022-01-04T14:18+0000",
   "status" : "RUNNING",
   "replicationExpression" : "RSE_RECAS",
   "fileExpression" : "scope:name*",
@@ -2526,7 +2627,7 @@ Content-Length: 428
 <p>A <code>GET</code> request is used to list all the events of a deployment schedule.</p>
 </div>
 <div class="sect3">
-<h4 id="_example_request_16"><a class="link" href="#_example_request_16">Example request</a></h4>
+<h4 id="_example_request_17"><a class="link" href="#_example_request_17">Example request</a></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/schedules/mmd34483-d937-4578-bfdb-ebe196bf82dd/events' -i -H 'Authorization: Bearer &lt;access token&gt;'</code></pre>
@@ -2595,7 +2696,7 @@ Host: localhost:8080</code></pre>
 </table>
 </div>
 <div class="sect3">
-<h4 id="_example_response_15"><a class="link" href="#_example_response_15">Example response</a></h4>
+<h4 id="_example_response_16"><a class="link" href="#_example_response_16">Example response</a></h4>
 <div class="listingblock">
 <div class="content">
 <pre class="highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
@@ -2608,13 +2709,13 @@ Content-Length: 1456
     "href" : "http://localhost:8080/schedules/mmd34483-d937-4578-bfdb-ebe196bf82dd/events?page=0&amp;size=10&amp;sort=createdAt,desc"
   } ],
   "content" : [ {
-    "uuid" : "df91cbe5-c55b-4f02-bfaa-d25af3da929e",
-    "creationTime" : "2022-01-03T10:34+0000",
-    "updateTime" : "2022-01-03T10:34+0000",
+    "uuid" : "02b1f8ac-d51e-4e00-8d0b-43e6a2d50135",
+    "creationTime" : "2022-01-04T14:18+0000",
+    "updateTime" : "2022-01-04T14:18+0000",
     "deployment" : {
-      "uuid" : "2b974b59-b7cb-4fc4-9ed4-c13256351be9",
-      "creationTime" : "2022-01-03T10:34+0000",
-      "updateTime" : "2022-01-03T10:34+0000",
+      "uuid" : "24ccbd07-7d07-4b28-82ef-c841a5fcfb27",
+      "creationTime" : "2022-01-04T14:18+0000",
+      "updateTime" : "2022-01-04T14:18+0000",
       "status" : "CREATE_IN_PROGRESS",
       "outputs" : { },
       "task" : "NONE",
@@ -2626,13 +2727,13 @@ Content-Length: 1456
     "replicationStatus" : "REPLICATING",
     "links" : [ ]
   }, {
-    "uuid" : "7ce992d0-8133-4d93-b35f-15a3dd6f5261",
-    "creationTime" : "2022-01-03T10:34+0000",
-    "updateTime" : "2022-01-03T10:34+0000",
+    "uuid" : "a0d6ef11-ef25-43ae-9c4f-6c33fdee3050",
+    "creationTime" : "2022-01-04T14:18+0000",
+    "updateTime" : "2022-01-04T14:18+0000",
     "deployment" : {
-      "uuid" : "2bba5c73-26b8-4846-a178-9648417f2ec0",
-      "creationTime" : "2022-01-03T10:34+0000",
-      "updateTime" : "2022-01-03T10:34+0000",
+      "uuid" : "a5221e41-7150-43b3-9fdb-6006cd0d74c7",
+      "creationTime" : "2022-01-04T14:18+0000",
+      "updateTime" : "2022-01-04T14:18+0000",
       "status" : "CREATE_IN_PROGRESS",
       "outputs" : { },
       "task" : "NONE",
@@ -2660,7 +2761,7 @@ Content-Length: 1456
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2022-01-03 10:30:36 +00:00
+Last updated 2022-01-04 14:13:17 +00:00
 </div>
 </div>
 </body>
