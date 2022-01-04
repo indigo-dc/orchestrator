@@ -213,6 +213,25 @@ include::{snippets}/update-deployment/http-request.adoc[]
 include::{snippets}/update-deployment/http-response.adoc[]
 
 
+[[resources-reset-deployment]]
+=== Reset deployment
+
+A `PATCH` request is used to reset the deployment state given the deployment id. +
+_Usage tips: If a deployment remains stuck in DELETE_IN_PROGRESS, you can use this PATCH request to manually reset the state of the deployment to the DELETE_FAILED state. You can then try to delete the deployment again._
+
+==== Request Fields
+include::{snippets}/reset-deployment/request-fields.adoc[]
+
+==== Example request
+
+include::{snippets}/reset-deployment/curl-request.adoc[]
+
+include::{snippets}/reset-deployment/http-request.adoc[]
+
+
+==== Example response
+
+include::{snippets}/reset-deployment/http-response.adoc[]
 
 
 [[resources-delete-deployment]]
