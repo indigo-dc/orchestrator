@@ -39,6 +39,9 @@ public interface DeploymentService {
   public void updateDeployment(String id, DeploymentRequest request,
       OidcTokenId requestedWithToken);
 
+  public void resetDeployment(String id, String status,
+      OidcTokenId requestedWithToken);
+
   public void deleteDeployment(String id, OidcTokenId requestedWithToken);
 
   public String getDeploymentLog(String id, OidcTokenId requestedWithToken);
