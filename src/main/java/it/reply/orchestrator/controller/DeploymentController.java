@@ -150,6 +150,41 @@ public class DeploymentController {
     deploymentService.updateDeployment(id, request, requestedWithToken);
   }
 
+  static class DeploymentStatus {
+    private String status;
+
+    public void setStatus(String status) {
+      this.status = status;
+    }
+
+    public String getStatus() {
+      return this.status;
+    }
+  }
+
+  /**
+   * Reset the deployment status to an error state.
+   *
+   * @param id
+   *          the deployment id
+   * @param status
+   *          {@link DeploymentStatus}
+   */
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  @RequestMapping(value = "/deployments/{deploymentId}", method = RequestMethod.PATCH,
+      produces = MediaType.APPLICATION_JSON_VALUE)
+  @PreAuthorize(OFFLINE_ACCESS_REQUIRED_CONDITION)
+  public void resetDeployment(@PathVariable("deploymentId") String id,
+      @Valid @RequestBody DeploymentStatus status) {
+    OidcEntity owner = null;
+    OidcTokenId requestedWithToken = null;
+    if (oidcProperties.isEnabled()) {
+      owner = oauth2Tokenservice.getOrGenerateOidcEntityFromCurrentAuth();
+      requestedWithToken = oauth2Tokenservice.exchangeCurrentAccessToken();
+    }
+    deploymentService.resetDeployment(id, status.getStatus(), requestedWithToken);
+  }
+
   /**
    * Get the deployment.
    *

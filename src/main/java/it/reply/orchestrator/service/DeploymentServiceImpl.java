@@ -446,6 +446,33 @@ public class DeploymentServiceImpl implements DeploymentService {
 
   }
 
+  @Override
+  @Transactional
+  public void resetDeployment(String id, String status, OidcTokenId requestedWithToken) {
+    Deployment deployment = getDeployment(id);
+    MdcUtils.setDeploymentId(deployment.getId());
+    LOG.debug("Resetting deployment status to {}\n", status);
+    throwIfNotOwned(deployment);
+
+    Status resetStatus = Status.valueOf(status);
+    if (resetStatus != Status.DELETE_FAILED) {
+      throw new BadRequestException(
+        String.format("Cannot reset deployment: illegal status %s.", status));
+    }
+
+    if (deployment.getStatus() != Status.DELETE_IN_PROGRESS) {
+      throw new ConflictException(String.format("Cannot reset a deployment in %s state",
+                 deployment.getStatus().toString()));
+    }
+
+    deployment.setStatus(resetStatus);
+    deployment.setStatusReason(null);
+    deployment.setTask(Task.NONE);
+
+    deployment = deploymentRepository.save(deployment);
+
+  }
+
   private void createResources(Deployment deployment, Map<String, NodeTemplate> nodes) {
 
     // calculate graph
