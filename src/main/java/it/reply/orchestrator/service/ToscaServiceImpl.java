@@ -645,10 +645,15 @@ public class ToscaServiceImpl implements ToscaService {
         new Filter<>(Flavor::getMemSize, (a, b) -> b >= a),
         new Filter<>(Flavor::getDiskSize, (a, b) -> b >= a),
         new Filter<>(Flavor::getNumGpus, (a, b) -> b >= a),
-        new Filter<>(Flavor::getGpuVendor, String::equalsIgnoreCase),
-        new Filter<>(Flavor::getGpuModel, String::equalsIgnoreCase),
         new Filter<>(Flavor::getInfinibandSupport, (a, b) -> !a || (b != null ? b : false))
     );
+    // if gpus are required, filter also on vendor and model
+    if (requiredFlavorMetadata.getNumGpus() > 0) {
+      fallbackFieldExtractors.add(new Filter<>(Flavor::getGpuVendor, (a, b) ->
+                                 (a != null && a.length() > 0 ? a.equalsIgnoreCase(b) : true)));
+      fallbackFieldExtractors.add(new Filter<>(Flavor::getGpuModel, (a, b) ->
+                                 (a != null && a.length() > 0 ? a.equalsIgnoreCase(b) : true)));
+    }
     Stream<Flavor> flavorStream = cloudProviderServiceFlavors.stream();
 
     boolean filteredOnSomeField = false;
