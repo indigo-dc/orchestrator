@@ -648,7 +648,7 @@ public class ToscaServiceImpl implements ToscaService {
         new Filter<>(Flavor::getInfinibandSupport, (a, b) -> !a || (b != null ? b : false))
     );
     // if gpus are required, filter also on vendor and model
-    if (requiredFlavorMetadata.getNumGpus() > 0) {
+    if (Optional.ofNullable(requiredFlavorMetadata.getNumGpus()).orElse(0) > 0) {
       fallbackFieldExtractors.add(new Filter<>(Flavor::getGpuVendor, (a, b) ->
                                  (a != null && a.length() > 0 ? a.equalsIgnoreCase(b) : true)));
       fallbackFieldExtractors.add(new Filter<>(Flavor::getGpuModel, (a, b) ->
