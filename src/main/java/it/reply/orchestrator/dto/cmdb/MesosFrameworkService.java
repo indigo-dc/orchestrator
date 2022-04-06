@@ -17,6 +17,7 @@
 
 package it.reply.orchestrator.dto.cmdb;
 
+import java.util.Collections;
 import java.util.List;
 import javax.validation.constraints.NotNull;
 
@@ -92,7 +93,7 @@ public class MesosFrameworkService<T extends MesosFrameworkServiceProperties> ex
       @NonNull T properties) {
     super(id, serviceType, endpoint, microversion, providerId, type, publicService,
           tenant, region, hostname, parentServiceId, iamEnabled, idpProtocol,
-          publicIpAssignable, supportedIdps, null);
+          publicIpAssignable, supportedIdps, Collections.<VolumeType>emptyList());
     this.properties = properties;
   }
 }
