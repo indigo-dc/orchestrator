@@ -146,6 +146,7 @@ public class CloudProviderEndpointServiceImpl {
     }
 
     cpe.cpEndpoint(computeService.getEndpoint());
+    cpe.microversion(computeService.getMicroversion());
     cpe.cpComputeServiceId(computeService.getId());
     cpe.tenant(computeService.getTenant());
     cpe.region(computeService.getRegion());

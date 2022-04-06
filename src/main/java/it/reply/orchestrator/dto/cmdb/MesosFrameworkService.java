@@ -77,6 +77,7 @@ public class MesosFrameworkService<T extends MesosFrameworkServiceProperties> ex
       @NonNull String id,
       @NonNull String serviceType,
       @NonNull String endpoint,
+      @Nullable String microversion,
       @NonNull String providerId,
       @NonNull CloudServiceType type,
       boolean publicService,
@@ -89,8 +90,9 @@ public class MesosFrameworkService<T extends MesosFrameworkServiceProperties> ex
       boolean publicIpAssignable,
       @NonNull List<SupportedIdp> supportedIdps,
       @NonNull T properties) {
-    super(id, serviceType, endpoint, providerId, type, publicService, tenant, region, hostname,
-            parentServiceId, iamEnabled, idpProtocol, publicIpAssignable, supportedIdps);
+    super(id, serviceType, endpoint, microversion, providerId, type, publicService,
+          tenant, region, hostname, parentServiceId, iamEnabled, idpProtocol,
+          publicIpAssignable, supportedIdps, null);
     this.properties = properties;
   }
 }

@@ -199,6 +199,26 @@ public class PrefilterCloudProviders extends BaseRankCloudProvidersCommand {
 
     discardProvidersAndServices(providersToDiscard, servicesToDiscard, rankCloudProvidersMessage);
 
+    rankCloudProvidersMessage
+        .getCloudProviders()
+        .forEach((cloudProviderName, cloudProvider) -> {
+          cloudProvider
+              .getServicesOfType(ComputeService.class)
+              .forEach(cloudService -> {
+                boolean hasMatchingTypes = toscaService
+                    .contextualizeVolumeTypes(ar, cloudService)
+                    .get(Boolean.FALSE)
+                    .isEmpty();
+                if (!hasMatchingTypes) {
+                  // Failed to match all required volume types -> discard provider
+                  LOG.debug(
+                      "Discarded service {} of provider {} {}", cloudService.getId(),
+                      cloudProvider.getId(), "because it doesn't match volume types requirements");
+                  addServiceToDiscard(servicesToDiscard, cloudService);
+                }
+              });
+        });
+
     // Filter out providers that do not support the requested images
 
     // Filter provider by image contextualization check

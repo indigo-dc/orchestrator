@@ -66,6 +66,8 @@ public class KubernetesService extends CloudService {
    *     the publicIpAssignable flag
    * @param supportedIdps
    *     the supportedIdps
+   * @param volumeTypes
+   *     the volumeTypes
    * @param workerNodesIp
    *     the workerNodesIp
    */
@@ -74,6 +76,7 @@ public class KubernetesService extends CloudService {
       @NonNull String id,
       @NonNull String serviceType,
       @NonNull String endpoint,
+      @Nullable String microversion,
       @NonNull String providerId,
       @NonNull CloudServiceType type,
       boolean publicService,
@@ -85,9 +88,11 @@ public class KubernetesService extends CloudService {
       @NonNull String idpProtocol,
       boolean publicIpAssignable,
       @NonNull List<SupportedIdp> supportedIdps,
+      @NonNull List<VolumeType> volumeTypes,
       @NonNull List<String> workerNodesIp) {
-    super(id, serviceType, endpoint, providerId, type, publicService, tenant, region, hostname,
-            parentServiceId, iamEnabled, idpProtocol, publicIpAssignable, supportedIdps);
+    super(id, serviceType, endpoint, microversion, providerId, type, publicService,
+            tenant, region, hostname, parentServiceId, iamEnabled, idpProtocol,
+            publicIpAssignable, supportedIdps, volumeTypes);
     this.workerNodesIp = workerNodesIp;
   }
 
