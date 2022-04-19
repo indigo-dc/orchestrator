@@ -658,6 +658,13 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
               client -> client.getInfrastructureState(deploymentEndpoint));
 
       LOG.debug(infrastructureState.getFormattedInfrastructureStateString());
+
+      if (infrastructureState.getState().equalsIgnoreCase("UNKNOWN")) {
+        ResponseError error = new ResponseError("Infrastructure state UNKNOWN", 500);
+        ImClientErrorException ex = new ImClientErrorException(error);
+        throw handleImClientException(ex);
+      }
+
     } catch (ImClientErrorException exception) {
       if (exception.getResponseError().is404Error()) {
         return true;
