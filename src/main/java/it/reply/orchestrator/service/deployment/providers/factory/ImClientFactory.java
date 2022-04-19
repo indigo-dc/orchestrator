@@ -106,6 +106,9 @@ public class ImClientFactory {
             .withPassword(accessToken)
             .withHost(endpoint);
         cloudProviderEndpoint
+            .getMicroversion()
+            .ifPresent(cred::withMicroversion);
+        cloudProviderEndpoint
             .getRegion()
             .ifPresent(cred::withServiceRegion);
         cloudProviderEndpoint

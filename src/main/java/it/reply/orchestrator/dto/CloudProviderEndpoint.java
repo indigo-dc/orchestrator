@@ -76,6 +76,10 @@ public class CloudProviderEndpoint {
 
   @Nullable
   @JsonProperty
+  private String microversion;
+
+  @Nullable
+  @JsonProperty
   private String tenant;
 
   @Nullable
@@ -146,6 +150,11 @@ public class CloudProviderEndpoint {
   @JsonIgnore
   public Optional<String> getRegion() {
     return Optional.ofNullable(region);
+  }
+
+  @JsonIgnore
+  public Optional<String> getMicroversion() {
+    return Optional.ofNullable(microversion);
   }
 
   /**

@@ -68,6 +68,8 @@ public class ToscaConstants {
       public static final String CUSTOM_BASE_NETWORK = "tosca.nodes.indigo.network.";
       public static final String CUSTOM_NETWORK = "tosca.nodes.indigo.network.Network";
 
+      public static final String VOLUME = BASE_INDIGO_NAME +  "BlockStorage";
+
     }
 
     @UtilityClass

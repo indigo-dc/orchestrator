@@ -41,11 +41,16 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class MarathonService extends MesosFrameworkService<MarathonServiceProperties> {
 
+  /**
+   * Create a new MarathonService.
+   * */
+
   @Builder(builderMethodName = "marathonBuilder")
   public MarathonService(
       @NonNull String id,
       @NonNull String serviceType,
       @NonNull String endpoint,
+      @Nullable String microversion,
       @NonNull String providerId,
       @NonNull CloudServiceType type,
       boolean publicService,
@@ -58,8 +63,9 @@ public class MarathonService extends MesosFrameworkService<MarathonServiceProper
       boolean publicIpAssignable,
       @NonNull List<SupportedIdp> supportedIdps,
       @NonNull MarathonServiceProperties properties) {
-    super(id, serviceType, endpoint, providerId, type, publicService, tenant, region, hostname,
-          parentServiceId, iamEnabled, idpProtocol, publicIpAssignable, supportedIdps, properties);
+    super(id, serviceType, endpoint, microversion, providerId, type, publicService,
+          tenant, region, hostname, parentServiceId, iamEnabled, idpProtocol,
+          publicIpAssignable, supportedIdps, properties);
   }
 
   @Data

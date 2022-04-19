@@ -20,6 +20,7 @@ package it.reply.orchestrator.service;
 import alien4cloud.tosca.model.ArchiveRoot;
 
 import it.reply.orchestrator.dal.entity.Resource;
+import it.reply.orchestrator.dto.cmdb.CloudService.VolumeType;
 import it.reply.orchestrator.dto.cmdb.ComputeService;
 import it.reply.orchestrator.dto.cmdb.Flavor;
 import it.reply.orchestrator.dto.cmdb.Image;
@@ -96,6 +97,20 @@ public interface ToscaService {
    */
   public Map<Boolean, Map<NodeTemplate, Image>> contextualizeImages(ArchiveRoot parsingResult,
       ComputeService computeService);
+
+  /**
+   * Find matches for volume type in 'tosca.nodes.indigo.BlockStorage' in the
+   * TOSCA template with the provider-specific identifier.
+   *
+   * @param parsingResult
+   *          the in-memory TOSCA template.
+   * @param computeService
+   *          the chosen cloud compute service data.
+   *
+   * @return Map of Contextualized volume types
+   */
+  public Map<Boolean, Map<NodeTemplate, VolumeType>> contextualizeVolumeTypes(
+      ArchiveRoot parsingResult, ComputeService computeService);
 
   /**
    * Verifies that all the template's required inputs are present in the user's input list.
@@ -248,6 +263,8 @@ public interface ToscaService {
 
   public Map<NodeTemplate, Image> extractImageRequirements(ArchiveRoot parsingResult);
 
+  public Map<NodeTemplate, VolumeType> extractVolumeRequirements(ArchiveRoot parsingResult);
+
   boolean isLikeToscaType(NodeTemplate node, String regexNodeType);
 
   boolean isOfToscaType(NodeTemplate node, String nodeType);
@@ -280,6 +297,10 @@ public interface ToscaService {
       ComputeService computeService);
 
   public void contextualizeAndReplaceFlavors(ArchiveRoot parsingResult,
+      ComputeService computeService,
+      DeploymentProvider deploymentProvider);
+
+  public void contextualizeAndReplaceVolumeTypes(ArchiveRoot parsingResult,
       ComputeService computeService,
       DeploymentProvider deploymentProvider);
 

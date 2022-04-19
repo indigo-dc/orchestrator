@@ -63,6 +63,10 @@ public class CloudService implements CmdbIdentifiable {
   @NotNull
   private String endpoint;
 
+  @JsonProperty("microversion")
+  @Nullable
+  String microversion;
+
   @JsonProperty("provider_id")
   @NonNull
   @NotNull
@@ -126,11 +130,39 @@ public class CloudService implements CmdbIdentifiable {
 
   }
 
+  @Data
+  @AllArgsConstructor
+  public static class VolumeType {
+
+    @Nullable
+    @JsonProperty("qos")
+    private String qos;
+
+    @JsonProperty("name")
+    private String name;
+
+    /**
+     * Default constructor.
+     */
+    public VolumeType() {
+      this.qos = null;
+      this.name = null;
+
+    }
+
+  }
+
   @Builder.Default
   @JsonProperty("supported_idps")
   @NonNull
   @NotNull
   private List<SupportedIdp> supportedIdps = new ArrayList<>();
+
+  @Builder.Default
+  @JsonProperty("volume_types")
+  @NonNull
+  @NotNull
+  private List<VolumeType> volumeTypes = new ArrayList<>();
 
   private static final String INDIGO_SERVICE_PREFIX = "eu.indigo-datacloud";
   private static final String EGI_SERVICE_PREFIX = "eu.egi.cloud";
@@ -159,6 +191,7 @@ public class CloudService implements CmdbIdentifiable {
   @Deprecated
   protected CloudService() {
     supportedIdps = new ArrayList<>();
+    volumeTypes = new ArrayList<>();
   }
 
   /**

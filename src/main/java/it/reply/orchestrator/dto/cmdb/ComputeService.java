@@ -76,6 +76,8 @@ public class ComputeService extends CloudService {
    *     the serviceType
    * @param endpoint
    *     the endpoint
+   * @param microversion
+   *     the microversion
    * @param providerId
    *     the providerId
    * @param type
@@ -102,6 +104,8 @@ public class ComputeService extends CloudService {
    *     the publicIpAssignable flag
    * @param supportedIdps
    *     the supportedIdps
+   * @param volumeTypes
+   *     the volumeTypes
    * @param publicNetworkName
    *     the public network name
    * @param privateNetworkCidr
@@ -118,6 +122,7 @@ public class ComputeService extends CloudService {
       @NonNull String id,
       @NonNull String serviceType,
       @NonNull String endpoint,
+      @Nullable String microversion,
       @NonNull String providerId,
       @NonNull CloudServiceType type,
       boolean publicService,
@@ -131,13 +136,15 @@ public class ComputeService extends CloudService {
       @NonNull String idpProtocol,
       boolean publicIpAssignable,
       @NonNull List<SupportedIdp> supportedIdps,
+      @NonNull List<VolumeType> volumeTypes,
       @Nullable String publicNetworkName,
       @Nullable String privateNetworkCidr,
       @Nullable String privateNetworkName,
       @Nullable String privateNetworkProxyHost,
       @Nullable String privateNetworkProxyUser) {
-    super(id, serviceType, endpoint, providerId, type, publicService, tenant, region, hostname,
-            parentServiceId, iamEnabled, idpProtocol, publicIpAssignable, supportedIdps);
+    super(id, serviceType, endpoint, microversion, providerId, type, publicService,
+            tenant, region, hostname, parentServiceId, iamEnabled, idpProtocol,
+            publicIpAssignable, supportedIdps, volumeTypes);
     this.images = CommonUtils.notNullOrDefaultValue(images, ArrayList::new);
     this.flavors = CommonUtils.notNullOrDefaultValue(flavors, ArrayList::new);
     this.publicNetworkName = publicNetworkName;
