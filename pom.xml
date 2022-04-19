@@ -673,6 +673,7 @@
           <excludes>
             <exclude>**/*.jar</exclude>
             <exclude>**/*.war</exclude>
+            <exclude>.github/**</exclude>
             <exclude>src/main/java/it/reply/orchestrator/dto/kubernetes/fluxcd/**</exclude>
           </excludes>
         </configuration>
