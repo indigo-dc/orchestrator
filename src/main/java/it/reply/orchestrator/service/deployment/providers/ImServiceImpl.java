@@ -184,6 +184,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         .currentService(ComputeService.class);
     toscaService.contextualizeAndReplaceImages(ar, computeService, DeploymentProvider.IM);
     toscaService.contextualizeAndReplaceFlavors(ar, computeService, DeploymentProvider.IM);
+    toscaService.contextualizeAndReplaceVolumeTypes(ar, computeService, DeploymentProvider.IM);
 
     List<CloudProviderEndpoint> cloudProviderEndpoints =
         deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
@@ -565,6 +566,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
     toscaService.contextualizeAndReplaceImages(newAr, computeService, DeploymentProvider.IM);
     toscaService.contextualizeAndReplaceFlavors(newAr, computeService, DeploymentProvider.IM);
+    toscaService.contextualizeAndReplaceVolumeTypes(newAr, computeService, DeploymentProvider.IM);
 
     // FIXME: There's not check if the Template actually changed!
     deployment.setTemplate(toscaService.updateTemplate(template));

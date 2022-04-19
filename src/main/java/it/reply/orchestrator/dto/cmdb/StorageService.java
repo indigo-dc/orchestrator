@@ -18,6 +18,8 @@
 package it.reply.orchestrator.dto.cmdb;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.Collections;
 import java.util.List;
 import lombok.AccessLevel;
 import lombok.Builder;
@@ -75,6 +77,7 @@ public class StorageService extends CloudService {
       @NonNull String id,
       @NonNull String serviceType,
       @NonNull String endpoint,
+      @Nullable String microversion,
       @NonNull String providerId,
       @NonNull CloudServiceType type,
       boolean publicService,
@@ -87,8 +90,9 @@ public class StorageService extends CloudService {
       @Nullable String idpProtocol,
       boolean publicIpAssignable,
       @NonNull List<SupportedIdp> supportedIdps) {
-    super(id, serviceType, endpoint, providerId, type, publicService, region, tenant, hostname,
-            parentServiceId, iamEnabled, idpProtocol, publicIpAssignable, supportedIdps);
+    super(id, serviceType, endpoint, microversion, providerId, type, publicService,
+          region, tenant, hostname, parentServiceId, iamEnabled, idpProtocol,
+          publicIpAssignable, supportedIdps, Collections.<VolumeType>emptyList());
     this.rucioRse = rucioRse;
   }
 

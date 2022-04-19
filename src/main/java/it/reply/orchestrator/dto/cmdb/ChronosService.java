@@ -37,11 +37,16 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class ChronosService extends MesosFrameworkService<ChronosServiceProperties> {
 
+  /**
+   * Create a new ChronosService.
+   * */
+
   @Builder(builderMethodName = "chronosBuilder")
   public ChronosService(
       @NonNull String id,
       @NonNull String serviceType,
       @NonNull String endpoint,
+      @Nullable String microversion,
       @NonNull String providerId,
       @NonNull CloudServiceType type,
       boolean publicService,
@@ -54,8 +59,9 @@ public class ChronosService extends MesosFrameworkService<ChronosServiceProperti
       boolean publicIpAssignable,
       @NonNull List<SupportedIdp> supportedIdps,
       @NonNull ChronosServiceProperties properties) {
-    super(id, serviceType, endpoint, providerId, type, publicService, tenant, region, hostname,
-          parentServiceId, iamEnabled, idpProtocol, publicIpAssignable, supportedIdps, properties);
+    super(id, serviceType, endpoint, microversion, providerId, type, publicService,
+          tenant, region, hostname, parentServiceId, iamEnabled, idpProtocol,
+          publicIpAssignable, supportedIdps, properties);
   }
 
   @Data

@@ -26,6 +26,7 @@ import io.netty.util.internal.StringUtil;
 import it.reply.orchestrator.config.properties.OrchestratorProperties;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dto.cmdb.CloudService;
+import it.reply.orchestrator.dto.cmdb.CloudService.VolumeType;
 import it.reply.orchestrator.dto.cmdb.ComputeService;
 import it.reply.orchestrator.dto.cmdb.Flavor;
 import it.reply.orchestrator.dto.cmdb.Flavor.FlavorBuilder;
@@ -210,6 +211,24 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
+  public void contextualizeAndReplaceVolumeTypes(ArchiveRoot parsingResult,
+      ComputeService computeService,
+      DeploymentProvider deploymentProvider) {
+    Map<Boolean, Map<NodeTemplate, VolumeType>> contextualizedVolumeTypes =
+            contextualizeVolumeTypes(parsingResult, computeService);
+    Preconditions.checkState(contextualizedVolumeTypes.get(Boolean.FALSE).isEmpty(),
+        "Error contextualizing volume types; types for nodes %s couldn't be contextualized",
+        contextualizedVolumeTypes
+            .get(Boolean.FALSE)
+            .keySet()
+            .stream()
+            .map(NodeTemplate::getName)
+            .collect(Collectors.toList()));
+    replaceVolumeType(contextualizedVolumeTypes.get(Boolean.TRUE),
+                      computeService, deploymentProvider);
+  }
+
+  @Override
   public Map<NodeTemplate, Image> extractImageRequirements(ArchiveRoot parsingResult) {
 
     Map<String, Function<ImageBuilder, Function<String, ImageBuilder>>>
@@ -368,6 +387,57 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
   @Override
+  public Map<NodeTemplate, VolumeType> extractVolumeRequirements(ArchiveRoot parsingResult) {
+    // Only indigo.BlockStorage nodes are relevant
+    return getNodesOfType(parsingResult, ToscaConstants.Nodes.Types.VOLUME)
+        .stream()
+        .map(node -> {
+          VolumeType vt = new VolumeType();
+          Optional<String> propertyType = ToscaUtils.extractScalar(node.getProperties(), "type");
+          if (propertyType.isPresent() && !propertyType.get().isEmpty()) {
+            vt.setName(propertyType.get());
+          }
+          return new SimpleEntry<>(node, vt);
+        })
+        .filter(t -> t.getValue().getName() != null)
+        .collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+  }
+
+  @Override
+  public Map<Boolean, Map<NodeTemplate, VolumeType>> contextualizeVolumeTypes(
+      ArchiveRoot parsingResult, ComputeService computeService) {
+    try {
+      return extractVolumeRequirements(parsingResult).entrySet().stream().map(entry -> {
+        NodeTemplate node = entry.getKey();
+        VolumeType volumeType = entry.getValue();
+
+        final Optional<VolumeType> vt;
+        vt = computeService.getVolumeTypes().stream().filter(t -> {
+          // search match on type name or QoS published in cmdb
+          return t.getName().equals(volumeType.getName())
+                || t.getQos().equals(volumeType.getName());
+        }).findFirst();
+
+        if (vt.isPresent()) {
+          LOG.debug(
+              "Found volume type match in service <{}> of provider <{}>: {}/{}",
+              computeService.getId(), computeService.getProviderId(),
+              vt.get().getQos(), vt.get().getName());
+        } else {
+          LOG.debug("Couldn't find a volume type match in service <{}> of provider <{}>",
+              computeService.getId(), computeService.getProviderId());
+        }
+        return new SimpleEntry<>(node, vt);
+      }).collect(Collectors.partitioningBy(entry -> entry.getValue().isPresent(),
+          // do not use the Collectors.toMap() because it doesn't play nice with null values
+          // https://bugs.openjdk.java.net/browse/JDK-8148463
+          CommonUtils.toMap(Entry::getKey, entry -> entry.getValue().orElse(null))));
+    } catch (RuntimeException ex) {
+      throw new RuntimeException("Failed to contextualize some volume types", ex);
+    }
+  }
+
+  @Override
   public Map<Boolean, Map<NodeTemplate, Flavor>> contextualizeFlavors(ArchiveRoot parsingResult,
       ComputeService computeService) {
     try {
@@ -456,6 +526,15 @@ public class ToscaServiceImpl implements ToscaService {
       });
       String flavorName = flavor.getFlavorName();
       osCapability.getProperties().put("instance_type", new ScalarPropertyValue(flavorName));
+    });
+  }
+
+  private void replaceVolumeType(Map<NodeTemplate, VolumeType> contextualizedVolumes,
+      ComputeService cloudService, DeploymentProvider deploymentProvider) {
+    contextualizedVolumes.forEach((node, vtype) -> {
+      LOG.debug("Updating node <{}> with volume type <{}/{}>",
+                 node.getName(), vtype.getQos(), vtype.getName());
+      node.getProperties().put("type", new ScalarPropertyValue(vtype.getName()));
     });
   }
 

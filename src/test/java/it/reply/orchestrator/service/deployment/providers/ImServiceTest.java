@@ -171,6 +171,7 @@ public class ImServiceTest extends ToscaParserAwareTest {
         .serviceType(OPENSTACK_COMPUTE_SERVICE)
         .hostname("example.com")
         .supportedIdps(new ArrayList<>())
+        .volumeTypes(new ArrayList<>())
         .build();
     CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(new CloudServiceWf(cs)));
     csi.next();
@@ -220,6 +221,7 @@ public class ImServiceTest extends ToscaParserAwareTest {
         .serviceType(OPENSTACK_COMPUTE_SERVICE)
         .hostname("example.com")
         .supportedIdps(new ArrayList<>())
+        .volumeTypes(new ArrayList<>())
         .build();
     CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(new CloudServiceWf(cs)));
     csi.next();
@@ -301,6 +303,7 @@ public class ImServiceTest extends ToscaParserAwareTest {
         .serviceType(OPENSTACK_COMPUTE_SERVICE)
         .hostname("example.com")
         .supportedIdps(new ArrayList<>())
+        .volumeTypes(new ArrayList<>())
         .build();
     CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(new CloudServiceWf(cs)));
     csi.next();
@@ -836,6 +839,7 @@ public class ImServiceTest extends ToscaParserAwareTest {
         .serviceType(OPENSTACK_COMPUTE_SERVICE)
         .hostname("example.com")
         .supportedIdps(new ArrayList<>())
+        .volumeTypes(new ArrayList<>())
         .build();
     CloudServicesOrderedIterator csi = new CloudServicesOrderedIterator(Lists.newArrayList(new CloudServiceWf(cs)));
     csi.next();
@@ -923,6 +927,7 @@ public class ImServiceTest extends ToscaParserAwareTest {
         .serviceType(OPENSTACK_COMPUTE_SERVICE)
         .hostname("example.com")
         .supportedIdps(new ArrayList<>())
+        .volumeTypes(new ArrayList<>())
         .build();
     List<CloudService> services = new ArrayList<>();
     services.add(cs);
