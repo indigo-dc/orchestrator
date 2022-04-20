@@ -1338,6 +1338,7 @@ public class ToscaServiceImpl implements ToscaService {
           ComplexPropertyValue credentialsProperty = new ComplexPropertyValue(credentials);
           credentials.put(ToscaConstants.Nodes.Properties.NETWORKPROXYHOSTUSER,
                           privateNetworkProxyUser);
+          credentials.put(ToscaConstants.Nodes.Properties.NETWORKPROXYHOSTTOKEN, "");
           pn.get().getProperties().put(ToscaConstants.Nodes.Properties.NETWORKPROXYHOSTCRED,
                                        credentialsProperty);
         }
