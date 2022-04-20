@@ -96,6 +96,7 @@ public class ToscaConstants {
       public static final String NETWORKPROXYHOST = "proxy_host";
       public static final String NETWORKPROXYHOSTCRED = "proxy_credential";
       public static final String NETWORKPROXYHOSTUSER = "user";
+      public static final String NETWORKPROXYHOSTTOKEN = "token";
       public static final String HYBRID = "hybrid";
     }
 
