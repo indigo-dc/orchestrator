@@ -1,0 +1,11 @@
+databaseChangeLog:
+- changeSet:
+    id: 0011_orchestrator-refresh-token-size-2501
+    author: m.antonacci
+    comment: >
+      Increase size for oidc_refresh_token.refresh_token_value to accomodate larger tokens issued by Keycloack-based EGI Checkin
+    changes:
+    - modifyDataType:
+        columnName: refresh_token_value
+        newDataType: VARCHAR(1024) 
+        tableName: oidc_refresh_token
