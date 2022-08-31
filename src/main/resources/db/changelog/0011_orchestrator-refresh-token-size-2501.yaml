@@ -7,5 +7,5 @@ databaseChangeLog:
     changes:
     - modifyDataType:
         columnName: refresh_token_value
-        newDataType: VARCHAR(1024) 
+        newDataType: VARCHAR(1024)
         tableName: oidc_refresh_token
