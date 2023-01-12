@@ -34,6 +34,7 @@ import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.cmdb.KubernetesService;
+import it.reply.orchestrator.dto.deployment.ActionMessage;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.kubernetes.fluxcd.V1HelmRelease;
 import it.reply.orchestrator.dto.kubernetes.fluxcd.V1HelmReleaseList;
@@ -493,5 +494,20 @@ public class KubernetesServiceImpl extends AbstractDeploymentProviderService {
           deployment.getParameters(), runtimeProperties));
     }
     super.finalizeDeploy(deploymentMessage);
+  }
+
+  @Override
+  public boolean doAction(ActionMessage deploymentMessage) {
+    throw new UnsupportedOperationException("Kubernetes deployments do not support actions.");
+  }
+
+  @Override
+  public boolean isActionComplete(ActionMessage deploymentMessage) {
+    throw new UnsupportedOperationException("Kubernetes deployments do not support actions.");
+  }
+
+  @Override
+  public void validateAction(ActionMessage deploymentMessage) {
+    throw new UnsupportedOperationException("Kubernetes deployments do not support actions.");
   }
 }

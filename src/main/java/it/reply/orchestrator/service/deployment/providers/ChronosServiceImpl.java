@@ -39,6 +39,7 @@ import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.cmdb.ChronosService;
 import it.reply.orchestrator.dto.cmdb.ChronosService.ChronosServiceProperties;
+import it.reply.orchestrator.dto.deployment.ActionMessage;
 import it.reply.orchestrator.dto.deployment.ChronosJobsOrderedIterator;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.mesos.MesosContainer;
@@ -753,5 +754,20 @@ public class ChronosServiceImpl extends AbstractMesosDeploymentService<ChronosJo
     volume.setContainerPath(volumeMountSegments.get(0));
     volume.setMode(volumeMountSegments.get(1).toUpperCase(Locale.US));
     return volume;
+  }
+
+  @Override
+  public boolean doAction(ActionMessage deploymentMessage) {
+    throw new UnsupportedOperationException("Chronos deployments do not support actions.");
+  }
+
+  @Override
+  public boolean isActionComplete(ActionMessage deploymentMessage) {
+    throw new UnsupportedOperationException("Chronos deployments do not support actions.");
+  }
+
+  @Override
+  public void validateAction(ActionMessage deploymentMessage) {
+    throw new UnsupportedOperationException("Chronos deployments do not support actions.");
   }
 }

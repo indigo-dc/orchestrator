@@ -19,6 +19,7 @@ package it.reply.orchestrator.service.deployment.providers;
 
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.repository.DeploymentRepository;
+import it.reply.orchestrator.dto.deployment.ActionMessage;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.enums.Status;
 
@@ -38,6 +39,10 @@ public abstract class AbstractDeploymentProviderService implements DeploymentPro
   private DeploymentStatusHelper deploymentStatusHelper;
 
   protected Deployment getDeployment(DeploymentMessage deploymentMessage) {
+    return deploymentRepository.findOne(deploymentMessage.getDeploymentId());
+  }
+
+  protected Deployment getDeployment(ActionMessage deploymentMessage) {
     return deploymentRepository.findOne(deploymentMessage.getDeploymentId());
   }
 

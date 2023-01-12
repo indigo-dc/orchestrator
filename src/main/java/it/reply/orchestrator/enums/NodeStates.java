@@ -70,6 +70,11 @@ public enum NodeStates {
   STOPPING(true),
 
   /**
+   * Node is stopped.
+   */
+  STOPPED(false),
+
+  /**
    * Node is transitioning from its current state to one where it is deleted and its state is no
    * longer tracked by the instance model.
    */

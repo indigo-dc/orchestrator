@@ -99,7 +99,7 @@ public class DeploymentResourceAssembler
           .withSelfRel());
       resource.add(ControllerLinkBuilder
           .linkTo(DummyInvocationUtils.methodOn(ResourceController.class, entity.getId())
-              .getResources(entity.getId(), null, null))
+              .getResources(entity.getId(), null, null, null))
           .withRel("resources"));
       resource.add(ControllerLinkBuilder
           .linkTo(DummyInvocationUtils.methodOn(TemplateController.class)

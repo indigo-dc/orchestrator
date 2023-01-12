@@ -17,6 +17,7 @@
 
 package it.reply.orchestrator.service.deployment.providers;
 
+import it.reply.orchestrator.dto.deployment.ActionMessage;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.exception.service.DeploymentException;
 
@@ -115,5 +116,11 @@ public interface DeploymentProviderService {
   public Optional<String> getDeploymentLog(DeploymentMessage deploymentMessage);
 
   public Optional<String> getDeploymentExtendedInfo(DeploymentMessage deploymentMessage);
+
+  public void validateAction(ActionMessage deploymentMessage);
+
+  public boolean doAction(ActionMessage deploymentMessage);
+
+  public boolean isActionComplete(ActionMessage deploymentMessage);
 
 }

@@ -41,7 +41,8 @@ public class WorkflowReference extends UuidIdentifiable {
   public enum Action {
     CREATE,
     UPDATE,
-    DELETE
+    DELETE,
+    EXECUTE
   }
 
   @Column(name = "process_id", unique = true, nullable = false, updatable = false)
