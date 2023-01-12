@@ -11,6 +11,7 @@ local.properties
 .settings/
 .loadpath
 target/
+.vscode/
 
 # Eclipse Core
 .project
@@ -49,3 +50,7 @@ target/
 # Builded war file
 /docker/*.war
 /docker/*.jar
+
+# Builded docs
+apidocs/
+restdocs/
