@@ -51,6 +51,11 @@ public class MonitoringServiceImpl implements MonitoringService {
   @Override
   public Group getProviderData(String providerId) {
 
+    if (monitoringProperties.getUrl() == null) {
+      throw new DeploymentException(
+          "Error fetching monitoring data for provider <" + providerId + ">");
+    }
+
     URI requestUri = UriComponentsBuilder
         .fromHttpUrl(monitoringProperties.getUrl() + monitoringProperties.getProviderMetricsPath())
         .buildAndExpand(providerId)
