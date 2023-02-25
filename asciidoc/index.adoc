@@ -317,6 +317,7 @@ This REST resource represents a TOSCA node of the template.
 === Get Resources
 
 A `GET` request is used to list all the resources of a deployment.
+Resources can be filtered by tosca node type using the query parameter `type` (see below).
 
 ==== Example request
 
@@ -332,7 +333,22 @@ include::{snippets}/resources/response-fields.adoc[]
 
 include::{snippets}/resources/http-response.adoc[]
 
+=== Get resources filtered by tosca node type
 
+=== Request parameters
+
+[cols=",a"]
+include::{snippets}/filtered-resources/request-parameters.adoc[]
+
+==== Example request
+
+include::{snippets}/filtered-resources/curl-request.adoc[]
+
+include::{snippets}/filtered-resources/http-request.adoc[]
+
+==== Example response
+
+include::{snippets}/filtered-resources/http-response.adoc[]
 
 
 [[resources-get-resource]]
@@ -355,6 +371,24 @@ include::{snippets}/get-resource/response-fields.adoc[]
 include::{snippets}/get-resource/http-response.adoc[]
 
 
+[[resources-actions]]
+=== Execute action on a resource
+
+A `POST` request is used to perform a specific action on the resource.
+Currently the supported action types are: `start` and `stop`; these can be executed only on compute nodes (i.e. resources of types derived by `tosca.nodes.Compute`) of cloud deployments.
+
+==== Request Fields
+include::{snippets}/stop-resource-success/request-fields.adoc[]
+
+==== Example request
+
+include::{snippets}/stop-resource-success/curl-request.adoc[]
+
+include::{snippets}/stop-resource-success/http-request.adoc[]
+
+==== Example response
+
+include::{snippets}/stop-resource-success/http-response.adoc[]
 
 
 [[overview-configuration]]

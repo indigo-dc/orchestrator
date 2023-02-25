@@ -15,25 +15,34 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.service;
+package it.reply.orchestrator.dto.deployment;
 
-import it.reply.orchestrator.dal.entity.OidcTokenId;
-import it.reply.orchestrator.dal.entity.Resource;
+import javax.validation.constraints.NotNull;
 
-import java.util.List;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
-public interface ResourceService {
+@Data
+@EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
+public class ActionMessage extends BaseWorkflowMessage {
 
-  public Page<Resource> getResources(String deploymentId, Pageable pageable);
+  private boolean pollComplete;
+  private boolean actionComplete;
 
-  public List<Resource> getResources(String deploymentId, String type);
+  private String action;
 
-  public Resource getResource(String uuid, String deploymentId);
+  @NonNull
+  @NotNull
+  private String resourceId;
 
-  public boolean doAction(String deploymentId, String resourceId,
-      String action, OidcTokenId requestedWithToken);
+  public ActionMessage(String resourceId) {
+    this.resourceId = resourceId;
+  }
 
+  public ActionMessage() {
+  }
 }

@@ -34,7 +34,6 @@ import es.upv.i3m.grycap.im.pojo.Property;
 import es.upv.i3m.grycap.im.pojo.ResponseError;
 import es.upv.i3m.grycap.im.pojo.VirtualMachineInfo;
 import es.upv.i3m.grycap.im.rest.client.BodyContentType;
-
 import it.reply.orchestrator.annotation.DeploymentProviderQualifier;
 import it.reply.orchestrator.config.properties.ImProperties;
 import it.reply.orchestrator.config.properties.OidcProperties;
@@ -45,12 +44,14 @@ import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.cmdb.ComputeService;
+import it.reply.orchestrator.dto.deployment.ActionMessage;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
 import it.reply.orchestrator.enums.Status;
 import it.reply.orchestrator.enums.Task;
+import it.reply.orchestrator.exception.http.BadRequestException;
 import it.reply.orchestrator.exception.service.BusinessWorkflowException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.function.ThrowingConsumer;
@@ -63,6 +64,7 @@ import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.JwtUtils;
 import it.reply.orchestrator.utils.OneDataUtils;
+import it.reply.orchestrator.utils.ToscaConstants;
 import it.reply.orchestrator.utils.WorkflowConstants.ErrorCode;
 
 import java.io.IOException;
@@ -814,4 +816,144 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     super.updateResources(deployment, status);
   }
 
+  @Override
+  public boolean doAction(ActionMessage deploymentMessage) {
+    Deployment deployment = getDeployment(deploymentMessage);
+
+    final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
+
+    String accessToken = null;
+    if (oidcProperties.isEnabled()) {
+      accessToken = oauth2TokenService.getAccessToken(requestedWithToken);
+    }
+
+    Resource resource = resourceRepository.findByIdAndDeployment_id(
+             deploymentMessage.getResourceId(),
+             deploymentMessage.getDeploymentId()).orElseThrow(() ->
+              new IllegalArgumentException(
+              String.format("Resource <%s> in deployment <%s> not found",
+                deploymentMessage.getResourceId(), deploymentMessage.getDeploymentId())));
+
+    List<CloudProviderEndpoint> cloudProviderEndpoints =
+        deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
+
+    // Execute action on VM through IM
+    String action = deploymentMessage.getAction();
+    try {
+      switch (action) {
+        case "start":
+          resource.setState(NodeStates.STARTING);
+          LOG.info("Starting VM of deployment <{}>", deploymentMessage.getDeploymentId());
+          executeWithClient(cloudProviderEndpoints, requestedWithToken,
+              client -> client.startVm(deployment.getEndpoint(), resource.getIaasId()));
+          break;
+        case "stop":
+          resource.setState(NodeStates.STOPPING);
+          LOG.info("Stopping VM of deployment <{}>", deploymentMessage.getDeploymentId());
+          executeWithClient(cloudProviderEndpoints, requestedWithToken,
+              client -> client.stopVm(deployment.getEndpoint(), resource.getIaasId()));
+          break;
+        default:
+          throw new IllegalArgumentException("Invalid action " + action);
+      }
+    } catch (ImClientException ex) {
+      throw handleImClientException(ex);
+    }
+    resourceRepository.save(resource);
+    return true;
+  }
+
+  @Override
+  public boolean isActionComplete(ActionMessage deploymentMessage) {
+
+    Deployment deployment = getDeployment(deploymentMessage);
+
+    Resource resource = resourceRepository.findByIdAndDeployment_id(
+             deploymentMessage.getResourceId(),
+             deploymentMessage.getDeploymentId()).orElseThrow(() -> new IllegalArgumentException(
+              String.format("Resource <%s> in deployment <%s> not found",
+                            deploymentMessage.getResourceId(),
+                            deploymentMessage.getDeploymentId())));
+
+    final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
+
+    List<CloudProviderEndpoint> cloudProviderEndpoints =
+        deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
+
+    try {
+
+      VirtualMachineInfo vmInfo =
+          executeWithClientForResult(cloudProviderEndpoints, requestedWithToken,
+              client -> client.getVmInfo(deployment.getEndpoint(), resource.getIaasId()));
+
+      String state = (String) vmInfo.getVmProperties()
+          .stream()
+          .filter(Objects::nonNull)
+          .filter(properties -> "system".equals(properties.get("class")))
+          .map(properties -> properties.get("state")).findAny().get();
+
+      String action = deploymentMessage.getAction();
+      boolean complete = false;
+
+      switch (action) {
+        case "start":
+          if (state.equals("configured")) {
+            resource.setState(NodeStates.STARTED);
+            complete = true;
+          }
+          break;
+        case "stop":
+          if (state.equals("stopped")) {
+            resource.setState(NodeStates.STOPPED);
+            complete = true;
+          }
+          break;
+        default:
+      }
+      // update the metadata attached to the resource
+      writeVmInfoToResource(resource, vmInfo);
+      resourceRepository.save(resource);
+      return complete;
+
+    } catch (ImClientException exception) {
+      throw handleImClientException(exception);
+    }
+  }
+
+  @Override
+  public void validateAction(ActionMessage deploymentMessage) {
+    Resource resource = resourceRepository.findByIdAndDeployment_id(
+             deploymentMessage.getResourceId(),
+             deploymentMessage.getDeploymentId()).orElseThrow(() ->
+              new IllegalArgumentException(
+              String.format("Resource <%s> in deployment <%s> not found",
+                deploymentMessage.getResourceId(), deploymentMessage.getDeploymentId())));
+
+    if (!toscaService.isOfToscaType(resource, ToscaConstants.Nodes.Types.COMPUTE)) {
+      throw new BadRequestException("Actions not supported on node of type "
+                                     + resource.getToscaNodeType().toString());
+    }
+
+    String action = deploymentMessage.getAction();
+    switch (action) {
+      case "start":
+        LOG.debug("Validating request to start VM of deployment <{}>",
+                  deploymentMessage.getDeploymentId());
+        if (! resource.getState().equals(NodeStates.STOPPED)) {
+          throw new BadRequestException("Cannot start node in state "
+                                        + resource.getState().toString());
+        }
+        break;
+      case "stop":
+        LOG.info("Validating request to stio VM of deployment <{}>",
+                 deploymentMessage.getDeploymentId());
+        if (! resource.getState().equals(NodeStates.STARTED)) {
+          throw new BadRequestException("Cannot stop node in state "
+                                        + resource.getState().toString());
+        }
+        break;
+      default:
+        throw new IllegalArgumentException("Invalid action " + action);
+    }
+  }
 }

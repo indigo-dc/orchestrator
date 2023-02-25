@@ -32,6 +32,7 @@ import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.cmdb.MarathonService;
 import it.reply.orchestrator.dto.cmdb.MarathonService.MarathonServiceProperties;
+import it.reply.orchestrator.dto.deployment.ActionMessage;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.mesos.MesosContainer;
 import it.reply.orchestrator.dto.mesos.MesosContainer.Type;
@@ -742,6 +743,21 @@ public class MarathonServiceImpl extends AbstractMesosDeploymentService<Marathon
     throw new BusinessWorkflowException(ErrorCode.CLOUD_PROVIDER_ERROR,
         "Error executing request to Marathon service",
         new DeploymentException(sb.toString()));
+  }
+
+  @Override
+  public boolean doAction(ActionMessage deploymentMessage) {
+    throw new UnsupportedOperationException("Marathon deployments do not support actions.");
+  }
+
+  @Override
+  public boolean isActionComplete(ActionMessage deploymentMessage) {
+    throw new UnsupportedOperationException("Marathon deployments do not support actions.");
+  }
+
+  @Override
+  public void validateAction(ActionMessage deploymentMessage) {
+    throw new UnsupportedOperationException("Marathon deployments do not support actions.");
   }
 
 }

@@ -22,8 +22,10 @@ import it.reply.orchestrator.resource.common.AbstractResource;
 import it.reply.orchestrator.utils.CommonUtils;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 import javax.validation.constraints.NotNull;
 
@@ -56,16 +58,20 @@ public class BaseResource extends AbstractResource {
   @NonNull
   private List<String> requiredBy = new ArrayList<>();
 
+  @Nullable
+  private Map<String, String> metadata;
+
   @Builder
   protected BaseResource(@NonNull String uuid, @Nullable Date creationTime,
       @Nullable Date updateTime, @Nullable String physicalId,
       @Nullable NodeStates state, @Nullable String toscaNodeType, @Nullable String toscaNodeName,
-      @Nullable List<String> requiredBy) {
+      @Nullable List<String> requiredBy, @Nullable Map<String, String> metadata) {
     super(uuid, creationTime, updateTime, physicalId);
     this.state = state;
     this.toscaNodeType = toscaNodeType;
     this.toscaNodeName = toscaNodeName;
     this.requiredBy = CommonUtils.notNullOrDefaultValue(requiredBy, ArrayList::new);
+    this.metadata = CommonUtils.notNullOrDefaultValue(metadata, Collections.emptyMap());
   }
 
 }

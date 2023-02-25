@@ -15,25 +15,32 @@
  * limitations under the License.
  */
 
-package it.reply.orchestrator.service;
+package it.reply.orchestrator.dto.request;
 
-import it.reply.orchestrator.dal.entity.OidcTokenId;
-import it.reply.orchestrator.dal.entity.Resource;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import java.util.List;
+import javax.validation.constraints.NotNull;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
 
-public interface ResourceService {
+import org.checkerframework.checker.nullness.qual.NonNull;
 
-  public Page<Resource> getResources(String deploymentId, Pageable pageable);
+@Data
+@Builder
+@AllArgsConstructor(access = AccessLevel.PROTECTED)
+@JsonIgnoreProperties(ignoreUnknown = false)
+public class ActionRequest {
 
-  public List<Resource> getResources(String deploymentId, String type);
+  @NotNull(message = "An action type must be provided")
+  @NonNull
+  private String type;
 
-  public Resource getResource(String uuid, String deploymentId);
-
-  public boolean doAction(String deploymentId, String resourceId,
-      String action, OidcTokenId requestedWithToken);
+  @SuppressWarnings("null")
+  @Deprecated
+  protected ActionRequest() {
+  }
 
 }

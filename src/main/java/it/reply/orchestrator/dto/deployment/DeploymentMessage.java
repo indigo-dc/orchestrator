@@ -76,6 +76,7 @@ public class DeploymentMessage extends BaseWorkflowMessage {
   private boolean deleteComplete;
   private boolean pollComplete;
   private boolean skipPollInterval;
+  private boolean actionComplete;
 
   @NonNull
   @NotNull

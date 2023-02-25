@@ -17,30 +17,27 @@
 
 package it.reply.orchestrator.service.commands;
 
-import it.reply.orchestrator.exception.service.BusinessWorkflowException;
+import it.reply.orchestrator.dto.deployment.ActionMessage;
 import it.reply.orchestrator.utils.WorkflowConstants;
-import it.reply.orchestrator.utils.WorkflowConstants.ErrorCode;
-import it.reply.orchestrator.utils.WorkflowUtil;
-
-import lombok.AllArgsConstructor;
 
 import org.flowable.engine.delegate.DelegateExecution;
 import org.springframework.stereotype.Component;
 
-@Component(WorkflowConstants.Delegate.HANDLE_TIMEOUT)
-@AllArgsConstructor
-public class HandleTimeout extends BaseJavaDelegate {
+@Component(WorkflowConstants.Delegate.PERFORM_ACTION)
+public class PerformAction extends BaseActionCommand {
 
   @Override
-  public void customExecute(DelegateExecution execution) {
-    WorkflowUtil.persistAndPropagateError(execution,
-        new BusinessWorkflowException(ErrorCode.RUNTIME_ERROR,
-            "Timeout: Maximum execution time exceeded."));
+  public void execute(DelegateExecution execution, ActionMessage deploymentMessage) {
+
+    boolean actionComplete =
+        getDeploymentProviderService(deploymentMessage).doAction(deploymentMessage);
+
+    deploymentMessage.setActionComplete(actionComplete);
   }
 
   @Override
   protected String getErrorMessagePrefix() {
-    return "Error handling process timeout";
+    return "Error performing action";
   }
 
 }

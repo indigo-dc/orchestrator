@@ -47,6 +47,7 @@ public class BaseResourceAssembler extends ResourceAssemblerSupport<Resource, Ba
         .state(entity.getState())
         .toscaNodeType(entity.getToscaNodeType())
         .toscaNodeName(entity.getToscaNodeName())
+        .metadata(entity.getMetadata())
         .build();
     resource
         .add(ControllerLinkBuilder.linkTo(DummyInvocationUtils.methodOn(DeploymentController.class)

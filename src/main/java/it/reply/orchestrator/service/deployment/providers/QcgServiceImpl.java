@@ -41,6 +41,7 @@ import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.dto.CloudProviderEndpoint;
+import it.reply.orchestrator.dto.deployment.ActionMessage;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
 import it.reply.orchestrator.dto.deployment.QcgJobsOrderedIterator;
 import it.reply.orchestrator.dto.onedata.OneData;
@@ -695,5 +696,21 @@ public class QcgServiceImpl extends AbstractDeploymentProviderService {
     }
     sb.append("]");
     return Optional.of(sb.toString());
+  }
+
+  @Override
+  public boolean doAction(ActionMessage deploymentMessage) {
+    throw new UnsupportedOperationException("Qcg job deployments do not support actions.");
+  }
+
+  @Override
+  public boolean isActionComplete(ActionMessage deploymentMessage) {
+    throw new UnsupportedOperationException("Qcg job deployments do not support actions.");
+  }
+
+  @Override
+  public void validateAction(ActionMessage deploymentMessage) {
+    throw new UnsupportedOperationException("Qcg job deployments do not support actions.");
+
   }
 }

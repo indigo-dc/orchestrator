@@ -21,6 +21,8 @@ import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.OidcEntity;
 import it.reply.orchestrator.dal.entity.OidcTokenId;
 import it.reply.orchestrator.dto.request.DeploymentRequest;
+import it.reply.orchestrator.enums.DeploymentProvider;
+import it.reply.orchestrator.enums.DeploymentType;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.springframework.data.domain.Page;
@@ -32,6 +34,26 @@ public interface DeploymentService {
       @Nullable String userGroup);
 
   public Deployment getDeployment(String id);
+
+  /**
+   * Infer deployment type from provider.
+   * @param deploymentProvider the provider
+  */
+  public static DeploymentType inferDeploymentType(
+                DeploymentProvider deploymentProvider) {
+    switch (deploymentProvider) {
+      case CHRONOS:
+        return DeploymentType.CHRONOS;
+      case MARATHON:
+        return DeploymentType.MARATHON;
+      case QCG:
+        return DeploymentType.QCG;
+      case HEAT:
+      case IM:
+      default:
+        return DeploymentType.TOSCA;
+    }
+  }
 
   public Deployment createDeployment(DeploymentRequest request, OidcEntity owner,
       OidcTokenId requestedWithToken);
@@ -47,4 +69,7 @@ public interface DeploymentService {
   public String getDeploymentLog(String id, OidcTokenId requestedWithToken);
 
   public String getDeploymentExtendedInfo(String id, OidcTokenId requestedWithToken);
+
+  public void throwIfNotOwned(Deployment deployment);
+
 }

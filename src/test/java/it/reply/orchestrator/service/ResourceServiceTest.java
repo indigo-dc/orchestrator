@@ -22,18 +22,24 @@ import static org.junit.Assert.assertEquals;
 import it.reply.orchestrator.controller.ControllerTestUtils;
 import it.reply.orchestrator.dal.entity.Deployment;
 import it.reply.orchestrator.dal.entity.Resource;
+import it.reply.orchestrator.dal.repository.DeploymentRepository;
 import it.reply.orchestrator.dal.repository.ResourceRepository;
 import it.reply.orchestrator.exception.http.NotFoundException;
 
+import org.flowable.engine.impl.RuntimeServiceImpl;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.List;
 import java.util.Optional;
@@ -45,14 +51,27 @@ public class ResourceServiceTest {
   private ResourceRepository resourceRepository;
 
   @Mock
+  private DeploymentRepository deploymentRepository;
+
+  @Mock
   private DeploymentService deploymentService;
+
+  @Mock
+  private RuntimeServiceImpl wfService;
+
+  @Mock
+  private ToscaService toscaService;
+
+  @Spy
+  @Autowired
+  private ObjectMapper objectMapper;
 
   private ResourceService service;
 
   @Before
   public void setUp() {
     MockitoAnnotations.initMocks(this);
-    service = new ResourceServiceImpl(resourceRepository, deploymentService);
+    service = new ResourceServiceImpl(resourceRepository, deploymentService, objectMapper, wfService, toscaService);
   }
 
   @Test(expected = NotFoundException.class)
@@ -112,4 +131,5 @@ public class ResourceServiceTest {
     assertEquals(expectedResource, actualResource);
 
   }
+
 }

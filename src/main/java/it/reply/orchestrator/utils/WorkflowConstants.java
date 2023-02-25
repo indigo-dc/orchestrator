@@ -46,6 +46,7 @@ public class WorkflowConstants {
     public static final String UPDATE = "Update";
     public static final String RANK_CLOUD_PROVIDERS = "RankCloudProviders";
     public static final String MOVE_DATA_AND_DEPLOY = "Move Data and Deploy";
+    public static final String OPERATE_RESOURCES = "DoAction";
   }
 
   @UtilityClass
@@ -77,5 +78,8 @@ public class WorkflowConstants {
     public static final String CHECK_MAIN_REPLICATION_RULE = "checkMainReplicationRule";
     public static final String CHECK_TEMP_REPLICATION_RULE = "checkTempReplicationRule";
     public static final String DELETE_TEMP_REPLICATION_RULE = "deleteTempReplicationRule";
+    public static final String VALIDATE_ACTION = "validateAction";
+    public static final String PERFORM_ACTION = "performAction";
+    public static final String POLL_ACTION = "pollAction";
   }
 }

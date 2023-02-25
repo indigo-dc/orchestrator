@@ -188,7 +188,11 @@ public class DeploymentServiceImpl implements DeploymentService {
     }
   }
 
-  private void throwIfNotOwned(Deployment deployment) {
+  /**
+   * Throw exception if the access to the deployment is not authorized.
+   * @param  deployment the deployment object
+  */
+  public void throwIfNotOwned(Deployment deployment) {
     if (oidcProperties.isEnabled()) {
       OidcEntityId requesterId = oauth2TokenService.generateOidcEntityIdFromCurrentAuth();
       OidcEntity owner = deployment.getOwner();
@@ -311,21 +315,6 @@ public class DeploymentServiceImpl implements DeploymentService {
     return DeploymentType.TOSCA;
   }
 
-  private static DeploymentType inferDeploymentType(DeploymentProvider deploymentProvider) {
-    switch (deploymentProvider) {
-      case CHRONOS:
-        return DeploymentType.CHRONOS;
-      case MARATHON:
-        return DeploymentType.MARATHON;
-      case QCG:
-        return DeploymentType.QCG;
-      case HEAT:
-      case IM:
-      default:
-        return DeploymentType.TOSCA;
-    }
-  }
-
   @Override
   @Transactional
   public void deleteDeployment(String uuid, OidcTokenId requestedWithToken) {
@@ -358,7 +347,8 @@ public class DeploymentServiceImpl implements DeploymentService {
       deploymentRepository.delete(deployment);
       return;
     }
-    DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
+    DeploymentType deploymentType = DeploymentService.inferDeploymentType(
+        deployment.getDeploymentProvider());
 
     // Build deployment message
     DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType,
@@ -410,7 +400,8 @@ public class DeploymentServiceImpl implements DeploymentService {
     }
     deployment = deploymentRepository.save(deployment);
 
-    DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
+    DeploymentType deploymentType = DeploymentService.inferDeploymentType(
+        deployment.getDeploymentProvider());
 
     // Build deployment message
     DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType,
@@ -524,7 +515,8 @@ public class DeploymentServiceImpl implements DeploymentService {
     LOG.debug("Retrieving infrastructure log for deployment {}", id);
     throwIfNotOwned(deployment);
 
-    DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
+    DeploymentType deploymentType = DeploymentService.inferDeploymentType(
+        deployment.getDeploymentProvider());
 
     // Build deployment message
     DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType,
@@ -549,7 +541,8 @@ public class DeploymentServiceImpl implements DeploymentService {
     LOG.debug("Retrieving infrastructure extra info for deployment {}", id);
     throwIfNotOwned(deployment);
 
-    DeploymentType deploymentType = inferDeploymentType(deployment.getDeploymentProvider());
+    DeploymentType deploymentType = DeploymentService.inferDeploymentType(
+        deployment.getDeploymentProvider());
 
     // Build deployment message
     DeploymentMessage deploymentMessage = buildDeploymentMessage(deployment, deploymentType,
