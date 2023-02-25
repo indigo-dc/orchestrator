@@ -49,12 +49,4 @@ target/
 # Builded war file
 /docker/*.war
 /docker/*.jar
-src/main/resources/application.properties
-src/main/resources/security.yml
-.vscode/launch.json
-.vscode/settings.json
-ignite/README.txt
-ignite/work/marshaller/-460393002.classname0
-ignite/work/marshaller/-1327618522.classname0
-ignite/work/marshaller/1651944940.classname0
-src/main/resources/application.properties
+src/test/java/it/reply/orchestrator/dal/entity/ReplicationRuleTest.java
