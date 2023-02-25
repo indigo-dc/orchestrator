@@ -49,3 +49,4 @@ target/
 # Builded war file
 /docker/*.war
 /docker/*.jar
+src/test/java/it/reply/orchestrator/dal/entity/ReplicationRuleTest.java

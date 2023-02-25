@@ -34,8 +34,8 @@ import org.springframework.validation.annotation.Validated;
 @NoArgsConstructor
 public class MonitoringProperties {
 
-  @NotNull
-  @NonNull
+  // @NotNull
+  // @NonNull
   private URI url;
 
   @NotNull
