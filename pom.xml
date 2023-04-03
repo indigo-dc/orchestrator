@@ -21,7 +21,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>it.reply</groupId>
   <artifactId>orchestrator</artifactId>
-  <version>2.8.0-FINAL</version>
+  <version>2.8.1-SNAPSHOT</version>
   <packaging>war</packaging>
   <name>orchestrator</name>
 
@@ -44,7 +44,7 @@
     <url>https://github.com/indigo-dc/orchestrator</url>
     <connection>scm:git:https://github.com/indigo-dc/orchestrator.git</connection>
     <developerConnection>scm:git:https://github.com/indigo-dc/orchestrator.git</developerConnection>
-    <tag>v2.8.0-FINAL</tag>
+    <tag>releases/2-8-stable</tag>
   </scm>
 
   <organization>
