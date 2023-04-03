@@ -525,7 +525,11 @@ public class ToscaServiceImpl implements ToscaService {
         return capability;
       });
       String flavorName = flavor.getFlavorName();
-      osCapability.getProperties().put("instance_type", new ScalarPropertyValue(flavorName));
+      Map<String, AbstractPropertyValue> properties = osCapability.getProperties();
+      properties.put("instance_type", new ScalarPropertyValue(flavorName));
+      if (properties.get("disk_size") != null) {
+        properties.remove("disk_size");
+      }
     });
   }
 
