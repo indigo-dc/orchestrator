@@ -90,7 +90,7 @@ public class IamUserInfo extends DefaultUserInfo {
   }
 
   public String getOrganizationName() {
-    return Optional.ofNullable(organizationName).orElse("egi.eu");
+    return Optional.ofNullable(organizationName).orElse("infn-cloud");
   }
 
   @Override
