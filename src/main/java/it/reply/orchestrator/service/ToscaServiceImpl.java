@@ -80,6 +80,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.alien4cloud.tosca.model.definitions.AbstractPropertyValue;
 import org.alien4cloud.tosca.model.definitions.ComplexPropertyValue;
 import org.alien4cloud.tosca.model.definitions.DeploymentArtifact;
+import org.alien4cloud.tosca.model.definitions.IValue;
 import org.alien4cloud.tosca.model.definitions.PropertyDefinition;
 import org.alien4cloud.tosca.model.definitions.ScalarPropertyValue;
 import org.alien4cloud.tosca.model.templates.Capability;
@@ -1207,6 +1208,84 @@ public class ToscaServiceImpl implements ToscaService {
           }
         });
     return ar;
+  }
+
+
+  public ArchiveRoot setDeploymentClientIam_old(ArchiveRoot ar) {
+
+    getNodesOfType(ar, "tosca.nodes.indigo.iam.client").stream()
+        .forEach(iamNode -> {
+          Map<String, IValue> attributes =
+              Optional
+                .ofNullable(iamNode.getAttributes())
+                .orElseGet(() -> {
+                  iamNode.setAttributes(new HashMap<>());
+                  return iamNode.getAttributes();
+                });
+          if (!attributes.containsKey("client_id")) {
+            Map<String, Object> clientIam = new HashMap<>();
+            ComplexPropertyValue clientIamAttribute = new ComplexPropertyValue(clientIam);
+            attributes.put("client_id", clientIamAttribute);
+          }
+          //ComplexPropertyValue clientIamAttributeWrite = (ComplexPropertyValue)attributes.get("client_id");
+          //clientIamAttributeWrite.getValue().put("client_id", "test");
+          //String clientIamAttributeWrite = attributes.get("client_id");
+          //clientIamAttributeWrite.put("client_id", "pippo");
+          attributes.put("client_id", new ScalarPropertyValue("test_pippo"));
+          attributes.put("token", new ScalarPropertyValue("test_pluto"));
+        });
+    return ar;
+  }
+
+  public ArchiveRoot setDeploymentClientIam(ArchiveRoot ar, String client_id, String token) {
+
+    getNodesOfType(ar, "tosca.nodes.indigo.iam.client").stream()
+        .forEach(iamNode -> {
+          Map<String, AbstractPropertyValue> properties =
+              Optional
+                .ofNullable(iamNode.getProperties())
+                .orElseGet(() -> {
+                  iamNode.setProperties(new HashMap<>());
+                  return iamNode.getProperties();
+                });
+          if (!properties.containsKey("client_id")) {
+            Map<String, Object> clientIam = new HashMap<>();
+            ComplexPropertyValue clientIamAttribute = new ComplexPropertyValue(clientIam);
+            properties.put("client_id", clientIamAttribute);
+          }
+          //ComplexPropertyValue clientIamAttributeWrite = (ComplexPropertyValue)properties.get("client_id");
+          properties.put("client_id", new ScalarPropertyValue(client_id));
+          properties.put("token", new ScalarPropertyValue(token));
+          //clientIamAttributeWrite.getValue().put("client_id", "test");
+          //String clientIamAttributeWrite = attributes.get("client_id");
+          //clientIamAttributeWrite.put("client_id", "test");
+        });
+    return ar;
+  }
+
+  private void setDeploymentClientIam(Map<NodeTemplate, Flavor> contextualizedFlavors,
+      ComputeService cloudService, DeploymentProvider deploymentProvider) {
+    contextualizedFlavors.forEach((node, flavor) -> {
+      Map<String, Capability> capabilities =
+          Optional.ofNullable(node.getCapabilities()).orElseGet(() -> {
+            node.setCapabilities(new HashMap<>());
+            return node.getCapabilities();
+          });
+      // The node doesn't have an OS Capability -> need to add a dummy one to hold a
+      // random image for underlying deployment systems
+      Capability osCapability = capabilities.computeIfAbsent(HOST_CAPABILITY_NAME, key -> {
+        LOG.debug("Generating default Container capability for node <{}>", node.getName());
+        Capability capability = new Capability();
+        capability.setType("tosca.capabilities.indigo.Container");
+        return capability;
+      });
+      String flavorName = flavor.getFlavorName();
+      Map<String, AbstractPropertyValue> properties = osCapability.getProperties();
+      properties.put("instance_type", new ScalarPropertyValue(flavorName));
+      if (properties.get("disk_size") != null) {
+        properties.remove("disk_size");
+      }
+    });
   }
 
   @Override

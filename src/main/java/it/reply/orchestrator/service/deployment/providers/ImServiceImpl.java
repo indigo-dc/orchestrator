@@ -60,7 +60,9 @@ import it.reply.orchestrator.service.IndigoInputsPreProcessorService;
 import it.reply.orchestrator.service.IndigoInputsPreProcessorService.RuntimeProperties;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.deployment.providers.factory.ImClientFactory;
+import it.reply.orchestrator.service.security.CustomOAuth2TemplateFactory;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
+import it.reply.orchestrator.service.IamService;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.JwtUtils;
 import it.reply.orchestrator.utils.OneDataUtils;
@@ -83,6 +85,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import lombok.extern.slf4j.Slf4j;
+import mesosphere.dcos.client.model.AuthenticateResponse;
 
 import org.alien4cloud.tosca.model.templates.NodeTemplate;
 import org.alien4cloud.tosca.model.templates.Topology;
@@ -91,12 +94,34 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+
+import it.reply.orchestrator.config.security.AuthenticatedWebSecurityConfig;
+import it.reply.orchestrator.service.security.CustomOAuth2Template;
+import org.mitre.openid.connect.client.service.ClientConfigurationService;
+import org.mitre.oauth2.model.RegisteredClient;
+import org.mitre.openid.connect.client.service.impl.StaticClientConfigurationService;
+
+
 
 @Service
 @DeploymentProviderQualifier(DeploymentProvider.IM)
 @EnableConfigurationProperties(ImProperties.class)
 @Slf4j
 public class ImServiceImpl extends AbstractDeploymentProviderService {
+
+  private IamService iamService = new IamService();
+  private RestTemplate restTemplate = new RestTemplate();
+  private String iamClientScopes = "openid profile email offline_access iam:admin.write iam:admin.read";
+
+  @Autowired
+  private CustomOAuth2TemplateFactory templateFactory;
+
+  @Autowired
+  private AuthenticatedWebSecurityConfig webSecurityConfig;
+
+  @Autowired
+  private StaticClientConfigurationService staticClientConfigurationService;
 
   @Autowired
   private ToscaService toscaService;
@@ -161,6 +186,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   @Override
   public boolean doDeploy(DeploymentMessage deploymentMessage) {
+    //AuthenticatedWebSecurityConfig plutone = new AuthenticatedWebSecurityConfig();
+    //CustomOAuth2TemplateFactory ciccio = new CustomOAuth2TemplateFactory();
     Deployment deployment = getDeployment(deploymentMessage);
 
     resourceRepository
@@ -175,6 +202,61 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     ArchiveRoot ar = prepareTemplate(deployment.getTemplate(), deployment, deploymentMessage);
 
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
+
+    Map<Boolean, Set<Resource>> resources =
+        resourceRepository
+            .findByDeployment_id(deployment.getId())
+            .stream()
+            .collect(Collectors.partitioningBy(resource -> resource.getIaasId() != null,
+                Collectors.toSet()));
+
+    String clientIdCreated = "";
+    String tokenCredentials = "";
+    String firstClientKey = "";
+    String clientId = "";
+    String clientSecret = "";
+    for (Resource resource : resources.get(false)) {
+      Map<String,String> resourceMetadata = resource.getMetadata();
+      LOG.info("{}",resource.getToscaNodeType());
+      //if (resource.getToscaNodeType().equals("tosca.nodes.indigo.iam.client") && resourceMetadata == null){
+      if (resource.getToscaNodeType().equals("tosca.nodes.indigo.iam.client")){
+        LOG.info("\n\n ################ \n\n");
+        Map<String, RegisteredClient> clients = staticClientConfigurationService.getClients();
+        // Verificare se il client desiderato esiste nella mappa
+        if (!clients.isEmpty()) {
+        //if (clients.containsKey(desiredIssuer)) {
+          // Ottenere il client desiderato dalla mappa
+          firstClientKey = clients.keySet().iterator().next();
+          //RegisteredClient firstClient = clients.values().iterator().next();
+          RegisteredClient firstClient = clients.get(firstClientKey);
+
+          // Estrarre il campo clientId dal client desiderato
+          clientId = firstClient.getClientId();
+          clientSecret = firstClient.getClientSecret();
+
+          // Ora hai il campo clientId e ClientSecret per il client desiderato
+          LOG.info("ClientId is: {}", clientId);
+          LOG.info("ClientSecret is: {}", clientSecret);
+          //System.out.println("ClientId " + desiredIssuer + ": " + clientId);
+          
+          //creo il client IAM
+          clientIdCreated = iamService.createClient(restTemplate, iamService.getEndpoint(restTemplate, firstClientKey, "registration_endpoint"));
+
+          //prendo il token con client_credentials
+          tokenCredentials = iamService.getToken(restTemplate, clientId, clientSecret, iamClientScopes, iamService.getEndpoint(restTemplate, firstClientKey, "token_endpoint"));
+
+        } else {
+          // Il cliente desiderato non esiste nella mappa
+          LOG.error("Nessun client presente");
+        }
+        
+        //Map<String,String> resourceMetadata = resource.getMetadata();
+        resourceMetadata = new HashMap<>();
+        resourceMetadata.put("client_id", clientIdCreated);
+        resourceMetadata.put("token", tokenCredentials);
+        resource.setMetadata(resourceMetadata);
+      }
+    }
 
     String accessToken = null;
     if (oidcProperties.isEnabled()) {
@@ -218,6 +300,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         orchestratorProperties.getUrl().toString(),
         deployment.getId(),
         email);
+    
+    toscaService.setDeploymentClientIam(ar, clientIdCreated, tokenCredentials);
 
     String imCustomizedTemplate = toscaService.serialize(ar);
     // Deploy on IM
@@ -230,6 +314,14 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           infrastructureId);
       deployment.setEndpoint(infrastructureId);
     } catch (ImClientException ex) {
+      for (Resource resource : resources.get(false)) {
+        LOG.info("{}",resource.getToscaNodeType());
+        //if (resource.getToscaNodeType().equals("tosca.nodes.indigo.iam.client") && resourceMetadata == null){
+        if (resource.getToscaNodeType().equals("tosca.nodes.indigo.iam.client")){
+          String token_endpoint = iamService.getEndpoint(restTemplate, firstClientKey, "token_endpoint");
+          iamService.deleteClient(clientIdCreated, firstClientKey, iamService.getToken(restTemplate, clientId, clientSecret, iamClientScopes, token_endpoint));
+        }
+      }
       throw handleImClientException(ex);
     }
     return true;
@@ -617,10 +709,39 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   public boolean doUndeploy(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
 
+    Map<Boolean, Set<Resource>> resources =
+        resourceRepository
+            .findByDeployment_id(deployment.getId())
+            .stream()
+            .collect(Collectors.partitioningBy(resource -> resource.getIaasId() != null,
+                Collectors.toSet()));
+
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
 
     String deploymentEndpoint = deployment.getEndpoint();
     if (deploymentEndpoint != null) {
+      for (Resource resource : resources.get(false)) {
+        LOG.info("{}",resource.getToscaNodeType());
+        if (resource.getToscaNodeType().equals("tosca.nodes.indigo.iam.client")){
+          Map<String,String> resourceMetadata = resource.getMetadata();
+          LOG.info("\n\n ################ \n\n");
+          String clientIdCreated = resourceMetadata.get("client_id");
+          Map<String, RegisteredClient> clients = staticClientConfigurationService.getClients();
+          String iamUrl = "";
+          String token_endpoint = "";
+          // Verificare se il cliente desiderato esiste nella mappa
+          if (!clients.isEmpty()) {
+            iamUrl = clients.keySet().iterator().next();
+            RegisteredClient firstClient = clients.get(iamUrl);
+
+            // Estrarre il campo clientId dal cliente desiderato
+            String clientId = firstClient.getClientId();
+            String clientSecret = firstClient.getClientSecret();
+            token_endpoint = iamService.getEndpoint(restTemplate, iamUrl, "token_endpoint");
+            iamService.deleteClient(clientIdCreated, iamUrl, iamService.getToken(restTemplate, clientId, clientSecret, iamClientScopes, token_endpoint));
+          }
+        }
+      }
       deployment.setTask(Task.DEPLOYER);
 
       List<CloudProviderEndpoint> cloudProviderEndpoints =
@@ -755,6 +876,49 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     }
 
     for (Resource resource : resources.get(false)) {
+      /*Map<String,String> resourceMetadata = resource.getMetadata();
+      LOG.info("{}",resource.getToscaNodeType());
+      if (resource.getToscaNodeType().equals("tosca.nodes.indigo.iam.client") && resourceMetadata == null){
+        LOG.info("\n\n ################ \n\n");
+        Map<String, RegisteredClient> clients = staticClientConfigurationService.getClients();
+        String firstClientKey = "";
+        String clientIdCreated = "";
+        String tokenCredentials = "";
+        // Verificare se il client desiderato esiste nella mappa
+        if (!clients.isEmpty()) {
+        //if (clients.containsKey(desiredIssuer)) {
+          // Ottenere il client desiderato dalla mappa
+          firstClientKey = clients.keySet().iterator().next();
+          //RegisteredClient firstClient = clients.values().iterator().next();
+          RegisteredClient firstClient = clients.get(firstClientKey);
+
+          // Estrarre il campo clientId dal client desiderato
+          String clientId = firstClient.getClientId();
+          String clientSecret = firstClient.getClientSecret();
+
+          // Ora hai il campo clientId e ClientSecret per il client desiderato
+          LOG.info("ClientId is: {}", clientId);
+          LOG.info("ClientSecret is: {}", clientSecret);
+          //System.out.println("ClientId " + desiredIssuer + ": " + clientId);
+          
+          //creo il client IAM
+          clientIdCreated = iamService.createClient(restTemplate, iamService.getEndpoint(restTemplate, firstClientKey, "registration_endpoint"));
+
+          //prendo il token con client_credentials
+          tokenCredentials = iamService.getToken(restTemplate, clientId, clientSecret, iamClientScopes, iamService.getEndpoint(restTemplate, firstClientKey, "token_endpoint"));
+
+        } else {
+          // Il cliente desiderato non esiste nella mappa
+          LOG.error("Nessun client presente");
+        }
+        
+        //Map<String,String> resourceMetadata = resource.getMetadata();
+        resourceMetadata = new HashMap<>();
+        resourceMetadata.put("client_id", clientIdCreated);
+        resourceMetadata.put("token", tokenCredentials);
+        resource.setMetadata(resourceMetadata);
+      }
+*/
       Collection<String> vmIds = vmMap.get(resource.getToscaNodeName());
       vmIds.stream().findAny().ifPresent(vmId -> {
         resource.setIaasId(vmId);
