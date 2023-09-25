@@ -19,9 +19,6 @@ import org.mitre.oauth2.model.RegisteredClient;
 
 public class IamService {
 
-  private static final String iamClientScopes = "openid profile email offline_access iam:admin.write";
-  //private static final String iamConfig = "https://iotwins-iam.cloud.cnaf.infn.it/.well-known/openid-configuration";
-
   public String getEndpoint(RestTemplate restTemplate, String iamUrl, String endpointName){
     String iamConfig = iamUrl + ".well-known/openid-configuration";
     ResponseEntity<String> response = restTemplate.getForEntity(iamConfig, String.class);
@@ -112,9 +109,6 @@ public class IamService {
       "    \"https://another.client.example/oidc\"\n" +
       "  ],\n" +
       "  \"client_name\": \"test_giommi_registration_2\",\n" +
-      "  \"contacts\": [\n" +
-      "    \"luca.giommi@cnaf.infn.it\"\n" +
-      "  ],\n" +
       "  \"token_endpoint_auth_method\": \"client_secret_basic\",\n" +
       "  \"scope\": \"openid email profile offline_access\",\n" +
       "  \"grant_types\": [\n" +
@@ -165,15 +159,6 @@ public class IamService {
               e.printStackTrace();
               return "";
           }
-
-      //if (responseEntity.getStatusCode() == HttpStatus.OK) {
-      //String responseBody = responseEntity.getBody();
-      //System.out.println("Risposta del server: " + responseBody);
-      //} else {
-      //System.err.println("La richiesta POST non ha avuto successo. Status code: " + responseEntity.getStatusCode());
-      //}
-
-      //deleteClient();
   }
     
     public void deleteClient(String clientId, String iamUrl, String token){
