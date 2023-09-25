@@ -207,10 +207,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
             .stream()
             .collect(Collectors.partitioningBy(resource -> resource.getIaasId() != null,
                 Collectors.toSet()));
-
+    
+    String issuerUser = requestedWithToken.getOidcEntityId().getIssuer();
     String clientIdCreated = "";
     String tokenCredentials = "";
-    String firstClientKey = "";
     String clientId = "";
     String clientSecret = "";
     for (Resource resource : resources.get(false)) {
@@ -219,12 +219,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         LOG.info("\n\n ################ \n\n");
         Map<String, RegisteredClient> clients = staticClientConfigurationService.getClients();
         // Verificare se il client desiderato esiste nella mappa
-        if (!clients.isEmpty()) {
-        //if (clients.containsKey(desiredIssuer)) {
+        if (!clients.isEmpty() && !issuerUser.isEmpty() && clients.containsKey(issuerUser)) {
           // Ottenere il client desiderato dalla mappa
-          firstClientKey = clients.keySet().iterator().next();
-          //RegisteredClient firstClient = clients.values().iterator().next();
-          RegisteredClient firstClient = clients.get(firstClientKey);
+          RegisteredClient firstClient = clients.get(issuerUser);
 
           // Estrarre il campo clientId dal client desiderato
           clientId = firstClient.getClientId();
@@ -236,10 +233,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           //System.out.println("ClientId " + desiredIssuer + ": " + clientId);
           
           //creo il client IAM
-          clientIdCreated = iamService.createClient(restTemplate, iamService.getEndpoint(restTemplate, firstClientKey, "registration_endpoint"));
+          clientIdCreated = iamService.createClient(restTemplate, iamService.getEndpoint(restTemplate, issuerUser, "registration_endpoint"));
 
           //prendo il token con client_credentials
-          tokenCredentials = iamService.getToken(restTemplate, clientId, clientSecret, iamClientScopes, iamService.getEndpoint(restTemplate, firstClientKey, "token_endpoint"));
+          tokenCredentials = iamService.getToken(restTemplate, clientId, clientSecret, iamClientScopes, iamService.getEndpoint(restTemplate, issuerUser, "token_endpoint"));
 
         } else {
           // Il cliente desiderato non esiste nella mappa
@@ -313,8 +310,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       for (Resource resource : resources.get(false)) {
         LOG.info("{}",resource.getToscaNodeType());
         if (resource.getToscaNodeType().equals("tosca.nodes.indigo.iam.client")){
-          String token_endpoint = iamService.getEndpoint(restTemplate, firstClientKey, "token_endpoint");
-          iamService.deleteClient(clientIdCreated, firstClientKey, iamService.getToken(restTemplate, clientId, clientSecret, iamClientScopes, token_endpoint));
+          String token_endpoint = iamService.getEndpoint(restTemplate, issuerUser, "token_endpoint");
+          iamService.deleteClient(clientIdCreated, issuerUser, iamService.getToken(restTemplate, clientId, clientSecret, iamClientScopes, token_endpoint));
         }
       }
       throw handleImClientException(ex);
