@@ -106,14 +106,15 @@ public class IamService {
       }
   }
 
-  public String createClient(RestTemplate restTemplate, String iamRegistration){
+  public String createClient(RestTemplate restTemplate, String iamRegistration, String uuid, String userEmail){
       //String iamRegistration = "https://iotwins-iam.cloud.cnaf.infn.it/iam/api/client-registration";
 
       String jsonRequestBody = "{\n" +
       "  \"redirect_uris\": [\n" +
       "    \"https://another.client.example/oidc\"\n" +
       "  ],\n" +
-      "  \"client_name\": \"test_giommi_registration_2\",\n" +
+      "  \"client_name\": \"paas:" + uuid + "\",\n" +
+      "  \"contacts\": [\n" + "\"" + userEmail + "\"\n" + "  ],\n" +
       "  \"token_endpoint_auth_method\": \"client_secret_basic\",\n" +
       "  \"scope\": \"openid email profile offline_access\",\n" +
       "  \"grant_types\": [\n" +

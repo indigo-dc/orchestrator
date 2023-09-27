@@ -201,6 +201,21 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
 
+    String accessToken = null;
+    if (oidcProperties.isEnabled()) {
+      accessToken = oauth2TokenService.getAccessToken(requestedWithToken);
+    }
+
+    //add tags
+    String email = null;
+    if (accessToken != null) {
+      try {
+        email = JwtUtils.getJwtClaimsSet(JwtUtils.parseJwt(accessToken)).getStringClaim("email");
+      } catch (ParseException e) {
+        email = null;
+      }
+    }
+
     Map<Boolean, Set<Resource>> resources =
         resourceRepository
             .findByDeployment_id(deployment.getId())
@@ -209,10 +224,13 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
                 Collectors.toSet()));
     
     String issuerUser = requestedWithToken.getOidcEntityId().getIssuer();
+
     String clientIdCreated = "";
     String tokenCredentials = "";
     String clientId = "";
     String clientSecret = "";
+    String uuid = deployment.getId();
+
     for (Resource resource : resources.get(false)) {
       LOG.info("{}",resource.getToscaNodeType());
       if (resource.getToscaNodeType().equals("tosca.nodes.indigo.iam.client")){
@@ -237,7 +255,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           //System.out.println("ClientId " + desiredIssuer + ": " + clientId);
           
           //creo il client IAM
-          clientIdCreated = iamService.createClient(restTemplate, iamService.getEndpoint(restTemplate, issuerUser, "registration_endpoint"));
+          clientIdCreated = iamService.createClient(restTemplate, iamService.getEndpoint(restTemplate, issuerUser, "registration_endpoint"), uuid, email);
 
           //prendo il token con client_credentials
           tokenCredentials = iamService.getToken(restTemplate, clientId, clientSecret, iamClientScopes, iamService.getEndpoint(restTemplate, issuerUser, "token_endpoint"));
@@ -257,10 +275,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       }
     }
 
-    String accessToken = null;
-    if (oidcProperties.isEnabled()) {
-      accessToken = oauth2TokenService.getAccessToken(requestedWithToken);
-    }
     toscaService.addElasticClusterParameters(ar, deployment.getId(), accessToken);
     ComputeService computeService = deploymentMessage
         .getCloudServicesOrderedIterator()
@@ -286,15 +300,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           computeService.getPrivateNetworkProxyUser());
     }
 
-    //add tags
-    String email = null;
-    if (accessToken != null) {
-      try {
-        email = JwtUtils.getJwtClaimsSet(JwtUtils.parseJwt(accessToken)).getStringClaim("email");
-      } catch (ParseException e) {
-        email = null;
-      }
-    }
     toscaService.setDeploymentTags(ar,
         orchestratorProperties.getUrl().toString(),
         deployment.getId(),
@@ -725,7 +730,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
             LOG.info("\n\n ################ \n\n");
             String clientIdCreated = resourceMetadata.get("client_id");
             Map<String, RegisteredClient> clients = staticClientConfigurationService.getClients();
-            String iamUrl = "https://iotwins-iam.cloud.cnaf.infn.it/";
+            String iamUrl = resourceMetadata.get("issuer");
             String token_endpoint = "";
             // Verificare se il client desiderato esiste nella mappa
             if (!clients.isEmpty()) {
