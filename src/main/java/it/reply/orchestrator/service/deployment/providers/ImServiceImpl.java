@@ -216,6 +216,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     for (Resource resource : resources.get(false)) {
       LOG.info("{}",resource.getToscaNodeType());
       if (resource.getToscaNodeType().equals("tosca.nodes.indigo.iam.client")){
+        if (!iamService.checkIam(issuerUser)) {
+          LOG.error("Only an IAM provider is supported");
+          return true;
+        }
         LOG.info("\n\n ################ \n\n");
         Map<String, RegisteredClient> clients = staticClientConfigurationService.getClients();
         // Verificare se il client desiderato esiste nella mappa
@@ -238,16 +242,18 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           //prendo il token con client_credentials
           tokenCredentials = iamService.getToken(restTemplate, clientId, clientSecret, iamClientScopes, iamService.getEndpoint(restTemplate, issuerUser, "token_endpoint"));
 
+          Map<String,String> resourceMetadata = resource.getMetadata();
+          resourceMetadata = new HashMap<>();
+          resourceMetadata.put("client_id", clientIdCreated);
+          resourceMetadata.put("token", tokenCredentials);
+          resourceMetadata.put("issuer", issuerUser);
+          resource.setMetadata(resourceMetadata);
+
         } else {
           // Il cliente desiderato non esiste nella mappa
           LOG.error("Nessun client presente");
+          //guarda eccezioni non legate all'im
         }
-        
-        Map<String,String> resourceMetadata = resource.getMetadata();
-        resourceMetadata = new HashMap<>();
-        resourceMetadata.put("client_id", clientIdCreated);
-        resourceMetadata.put("token", tokenCredentials);
-        resource.setMetadata(resourceMetadata);
       }
     }
 
@@ -713,27 +719,26 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     String deploymentEndpoint = deployment.getEndpoint();
 
     for (Resource resource : resources.get(false)) {
-      LOG.info("{}",resource.getToscaNodeType());
-      if (resource.getToscaNodeType().equals("tosca.nodes.indigo.iam.client")){
-        Map<String,String> resourceMetadata = resource.getMetadata();
-        LOG.info("\n\n ################ \n\n");
-        String clientIdCreated = resourceMetadata.get("client_id");
-        Map<String, RegisteredClient> clients = staticClientConfigurationService.getClients();
-        String iamUrl = "";
-        String token_endpoint = "";
-        // Verificare se il cliente desiderato esiste nella mappa
-        if (!clients.isEmpty()) {
-          iamUrl = clients.keySet().iterator().next();
-          RegisteredClient firstClient = clients.get(iamUrl);
+          LOG.info("{}",resource.getToscaNodeType());
+          if (resource.getToscaNodeType().equals("tosca.nodes.indigo.iam.client")){
+            Map<String,String> resourceMetadata = resource.getMetadata();
+            LOG.info("\n\n ################ \n\n");
+            String clientIdCreated = resourceMetadata.get("client_id");
+            Map<String, RegisteredClient> clients = staticClientConfigurationService.getClients();
+            String iamUrl = "https://iotwins-iam.cloud.cnaf.infn.it/";
+            String token_endpoint = "";
+            // Verificare se il client desiderato esiste nella mappa
+            if (!clients.isEmpty()) {
+              RegisteredClient firstClient = clients.get(iamUrl);
 
-          // Estrarre il campo clientId dal cliente desiderato
-          String clientId = firstClient.getClientId();
-          String clientSecret = firstClient.getClientSecret();
-          token_endpoint = iamService.getEndpoint(restTemplate, iamUrl, "token_endpoint");
-          iamService.deleteClient(clientIdCreated, iamUrl, iamService.getToken(restTemplate, clientId, clientSecret, iamClientScopes, token_endpoint));
+              // Estrarre il campo clientId dal cliente desiderato
+              String clientId = firstClient.getClientId();
+              String clientSecret = firstClient.getClientSecret();
+              token_endpoint = iamService.getEndpoint(restTemplate, iamUrl, "token_endpoint");
+              iamService.deleteClient(clientIdCreated, iamUrl, iamService.getToken(restTemplate, clientId, clientSecret, iamClientScopes, token_endpoint));
+            }
+          }
         }
-      }
-    }
 
     if (deploymentEndpoint != null) {
       deployment.setTask(Task.DEPLOYER);

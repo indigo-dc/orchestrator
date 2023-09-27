@@ -13,9 +13,14 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Base64;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 
 import org.mitre.oauth2.model.RegisteredClient;
+
+import java.net.URL;
 
 public class IamService {
 
@@ -161,33 +166,128 @@ public class IamService {
           }
   }
     
-    public void deleteClient(String clientId, String iamUrl, String token){
-      // Crea un oggetto HttpHeaders e aggiungi il token come autorizzazione
-      HttpHeaders headers = new HttpHeaders();
-      headers.set("Authorization", "Bearer " + token);
+  public void deleteClient(String clientId, String iamUrl, String token){
+    // Crea un oggetto HttpHeaders e aggiungi il token come autorizzazione
+    HttpHeaders headers = new HttpHeaders();
+    headers.set("Authorization", "Bearer " + token);
 
-      // Crea l'oggetto HttpEntity che contiene l'intestazione con il token
-      HttpEntity<?> requestEntity = new HttpEntity<>(headers);
+    // Crea l'oggetto HttpEntity che contiene l'intestazione con il token
+    HttpEntity<?> requestEntity = new HttpEntity<>(headers);
 
-      // URL del servizio REST su cui eseguire la richiesta DELETE
-      String deleteUrl = iamUrl + "iam/api/clients/" + clientId; // Sostituisci con l'URL corretto
+    // URL del servizio REST su cui eseguire la richiesta DELETE
+    String deleteUrl = iamUrl + "iam/api/clients/" + clientId; // Sostituisci con l'URL corretto
 
-      // Crea un oggetto RestTemplate
-      RestTemplate restTemplate = new RestTemplate();
+    // Crea un oggetto RestTemplate
+    RestTemplate restTemplate = new RestTemplate();
 
-      // Effettua la richiesta DELETE
-      ResponseEntity<String> responseEntity = restTemplate.exchange(
-          deleteUrl,
-          HttpMethod.DELETE,
-          requestEntity,
-          String.class
-      );
+    // Effettua la richiesta DELETE
+    ResponseEntity<String> responseEntity = restTemplate.exchange(
+        deleteUrl,
+        HttpMethod.DELETE,
+        requestEntity,
+        String.class
+    );
 
-      // Verifica la risposta
-      if (responseEntity.getStatusCode() == HttpStatus.NO_CONTENT) {
-          System.out.println("La richiesta DELETE ha avuto successo.");
-      } else {
-          System.err.println("La richiesta DELETE non ha avuto successo. Status code: " + responseEntity.getStatusCode());
-      }
+    // Verifica la risposta
+    if (responseEntity.getStatusCode() == HttpStatus.NO_CONTENT) {
+        System.out.println("La richiesta DELETE ha avuto successo.");
+    } else {
+        System.err.println("La richiesta DELETE non ha avuto successo. Status code: " + responseEntity.getStatusCode());
+    }
   }
+
+  public boolean checkIam(String idpUrl) {
+    try {
+
+      // Effettua la richiesta HTTP GET all'endpoint
+      HttpURLConnection connection = (HttpURLConnection) new URL(idpUrl + "actuator/info").openConnection();
+      connection.setRequestMethod("GET");
+
+      // Legge la risposta dal server
+      BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+      StringBuilder response = new StringBuilder();
+      String line;
+      while ((line = reader.readLine()) != null) {
+          response.append(line);
+      }
+      reader.close();
+
+        // Analizza il JSON con Jackson
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode jsonNode = objectMapper.readTree(response.toString());
+
+        // Estrai il valore di build:name dal JSON
+        String buildName = jsonNode
+                .path("build")
+                .path("name")
+                .asText();
+
+        // Verifica se il valore di build:name contiene "iam" (ignorando maiuscole e minuscole)
+        if (buildName.toLowerCase().contains("iam")) {
+            System.out.println("Il valore build:name contiene 'iam'.");
+            return true;
+        } else {
+            System.out.println("Il valore build:name non contiene 'iam'.");
+            return false;
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+        return false;
+    }
+  }
+
+  public static void main(String args[]){
+    test("https://iotwins-iam.cloud.cnaf.infn.it/");
+  }
+
+  public static boolean test(String idpUrl) {
+    // Crea un oggetto RestTemplate
+    RestTemplate restTemplate = new RestTemplate();
+
+    // URL dell'endpoint da contattare
+    String endpointURL = idpUrl + "actuator/info";
+
+    // Crea le intestazioni HTTP con un'intestazione "Accept" per accettare JSON
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_JSON);
+
+    // Crea una richiesta HTTP con le intestazioni
+    HttpEntity<String> requestEntity = new HttpEntity<>(headers);
+
+    // Esegui la richiesta HTTP e ottieni la risposta come ResponseEntity<String>
+    ResponseEntity<String> responseEntity = restTemplate.exchange(
+        endpointURL,
+        HttpMethod.GET,
+        requestEntity,
+        String.class
+    );
+
+    // Ottieni il corpo della risposta come stringa JSON
+    String responseBody = responseEntity.getBody();
+
+    // Utilizza Jackson per analizzare la risposta JSON
+    try {
+        ObjectMapper objectMapper = new ObjectMapper();
+        JsonNode jsonNode = objectMapper.readTree(responseBody);
+
+        // Accedi ai campi JSON come desiderato, ad esempio:
+        String buildName = jsonNode
+                .path("build")
+                .path("name")
+                .asText();
+
+        // Verifica se il valore build:name contiene "iam" (ignorando maiuscole e minuscole)
+        if (buildName.toLowerCase().contains("iam")) {
+            System.out.println("Il valore build:name contiene 'iam'.");
+            return true;
+        } else {
+            System.out.println("Il valore build:name non contiene 'iam'.");
+            return false;
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+        return false;
+    }
+}
+
 }
