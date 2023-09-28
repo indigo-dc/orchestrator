@@ -243,11 +243,11 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         // Verificare se il client desiderato esiste nella mappa
         if (!clients.isEmpty() && !issuerUser.isEmpty() && clients.containsKey(issuerUser)) {
           // Ottenere il client desiderato dalla mappa
-          RegisteredClient firstClient = clients.get(issuerUser);
+          RegisteredClient orchestratorClient = clients.get(issuerUser);
 
           // Estrarre il campo clientId dal client desiderato
-          clientId = firstClient.getClientId();
-          clientSecret = firstClient.getClientSecret();
+          clientId = orchestratorClient.getClientId();
+          clientSecret = orchestratorClient.getClientSecret();
 
           // Ora hai il campo clientId e ClientSecret per il client desiderato
           LOG.info("ClientId is: {}", clientId);
@@ -260,8 +260,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           //prendo il token con client_credentials
           tokenCredentials = iamService.getToken(restTemplate, clientId, clientSecret, iamClientScopes, iamService.getEndpoint(restTemplate, issuerUser, "token_endpoint"));
 
-          Map<String,String> resourceMetadata = resource.getMetadata();
-          resourceMetadata = new HashMap<>();
+          Map<String,String> resourceMetadata = new HashMap<>();
           resourceMetadata.put("client_id", clientIdCreated);
           resourceMetadata.put("token", tokenCredentials);
           resourceMetadata.put("issuer", issuerUser);
@@ -734,11 +733,11 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
             String token_endpoint = "";
             // Verificare se il client desiderato esiste nella mappa
             if (!clients.isEmpty()) {
-              RegisteredClient firstClient = clients.get(iamUrl);
+              RegisteredClient orchestratorClient = clients.get(iamUrl);
 
               // Estrarre il campo clientId dal cliente desiderato
-              String clientId = firstClient.getClientId();
-              String clientSecret = firstClient.getClientSecret();
+              String clientId = orchestratorClient.getClientId();
+              String clientSecret = orchestratorClient.getClientSecret();
               token_endpoint = iamService.getEndpoint(restTemplate, iamUrl, "token_endpoint");
               iamService.deleteClient(clientIdCreated, iamUrl, iamService.getToken(restTemplate, clientId, clientSecret, iamClientScopes, token_endpoint));
             }

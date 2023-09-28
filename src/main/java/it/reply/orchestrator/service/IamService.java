@@ -21,153 +21,158 @@ import java.net.HttpURLConnection;
 import org.mitre.oauth2.model.RegisteredClient;
 
 import java.net.URL;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 public class IamService {
 
-  public String getEndpoint(RestTemplate restTemplate, String iamUrl, String endpointName){
-    String iamConfig = iamUrl + ".well-known/openid-configuration";
-    ResponseEntity<String> response = restTemplate.getForEntity(iamConfig, String.class);
-    String responseBody = "";
-    if (response.getStatusCode() == HttpStatus.OK) {
-      responseBody = response.getBody();
-      System.out.println("Corpo della risposta: " + responseBody);
-      ObjectMapper objectMapper = new ObjectMapper();
-      try {
-        JsonNode jsonNode = objectMapper.readTree(responseBody);
+  private ObjectMapper objectMapper;
+  private static final String WELL_KNOWN_ENDPOINT = ".well-known/openid-configuration";
 
-        // Estrai il campo "registration_endpoint" dal JSON
-        String registration_endpoint = jsonNode.get(endpointName).asText();
+  public IamService (){
+    objectMapper = new ObjectMapper();
+  }
 
-        // Stampa il valore di registration_endpoint
-        System.out.println("endpoint: " + registration_endpoint);
-        return registration_endpoint;
-      }
-      catch (IOException e) {
-        e.printStackTrace();
-        return responseBody;
-      }
+  public String getEndpoint(RestTemplate restTemplate, String url, String endpointName){
+    ResponseEntity<String> responseEntity = restTemplate.getForEntity(url + WELL_KNOWN_ENDPOINT, String.class);
+    if (!HttpStatus.OK.equals(responseEntity.getStatusCode())){
+      LOG.error("The request was unsuccessful. Status code: {}", responseEntity.getStatusCode());
+      return "";
     }
-    else {
-      return "La richiesta non ha avuto successo. Status code: " + response.getStatusCode();
+    String responseBody = responseEntity.getBody();
+    LOG.debug("Body of the request: {}", responseBody);
+    JsonNode jsonNode = null;
+    try {
+      // Extract "endpointName" from Json
+      jsonNode = objectMapper.readTree(responseBody).get(endpointName);
+    } catch (IOException e) {
+      LOG.error(e.getMessage());
+      return "";
+    } catch (NullPointerException e){
+      LOG.error("{} not found", endpointName);
+      return "";
     }
+
+    String urlEndpoint = jsonNode.asText();
+
+    // Stampa il valore di registration_endpoint
+    LOG.debug("endpoint: {}", urlEndpoint);
+    return urlEndpoint;
   }
   
 
   public String getToken(RestTemplate restTemplate, String iamClientId, String iamClientSecret, String iamClientScopes, String iamTokenEndpoint){
 
-      // Imposta l'autenticazione di base nell'intestazione "Authorization"
-      HttpHeaders headers = new HttpHeaders();
-      String auth = iamClientId + ":" + iamClientSecret;
-      byte[] authBytes = auth.getBytes();
-      byte[] base64CredsBytes = Base64.getEncoder().encode(authBytes);
-      String base64Creds = new String(base64CredsBytes);
-      headers.add("Authorization", "Basic " + base64Creds);
+    // Set basic authentication in the "Authorization" header
+    HttpHeaders headers = new HttpHeaders();
+    String auth = String.format("%s:%s", iamClientId, iamClientSecret);
+    byte[] authBytes = auth.getBytes();
+    byte[] base64CredsBytes = Base64.getEncoder().encode(authBytes);
+    String base64Creds = new String(base64CredsBytes);
+    headers.add("Authorization", "Basic " + base64Creds);
 
-      // Crea un oggetto MultiValueMap per i dati del corpo
-      MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
-      requestBody.add("grant_type", "client_credentials");
-      requestBody.add("scope", iamClientScopes);
+    // Create a MultiValueMap object for the body data
+    MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
+    requestBody.add("grant_type", "client_credentials");
+    requestBody.add("scope", iamClientScopes);
 
-      // Crea un oggetto HttpEntity che contiene le intestazioni e il corpo
-      HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
+    // Create an HttpEntity object that contains the headers and body
+    HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
 
-      // Esegui la richiesta HTTP POST
-      ResponseEntity<String> responseEntity = restTemplate.exchange(
-          iamTokenEndpoint,
-          HttpMethod.POST,
-          requestEntity,
-          String.class
-      );
+    // Do the HTTP POST request
+    ResponseEntity<String> responseEntity = restTemplate.exchange(
+        iamTokenEndpoint,
+        HttpMethod.POST,
+        requestEntity,
+        String.class
+    );
 
-      // Verifica la risposta
-      if (responseEntity.getStatusCode() == HttpStatus.OK) {
-          String responseBody = responseEntity.getBody();
-          System.out.println("Risposta del server: " + responseBody);
+    // Verify the response
+    if (!HttpStatus.OK.equals(responseEntity.getStatusCode())){
+      LOG.error("The request was unsuccessful. Status code: {}", responseEntity.getStatusCode());
+      return "";
+    }
 
-          ObjectMapper objectMapper = new ObjectMapper();
+    String responseBody = responseEntity.getBody();
+    LOG.debug("Body of the request: {}", responseBody);
+    JsonNode jsonNode = null;
+    try {
+      // Extract "access_token" from Json
+      jsonNode = objectMapper.readTree(responseBody).get("access_token");
+    } catch (IOException e) {
+      LOG.error(e.getMessage());
+      return "";
+    } catch (NullPointerException e){
+      LOG.error("access_token not found");
+      return "";
+    }
 
-          try {
-          // Analizza il JSON in un oggetto JsonNode
-          JsonNode jsonNode = objectMapper.readTree(responseBody);
-
-          // Estrai il campo "access_token" dal JSON
-          String access_token = jsonNode.get("access_token").asText();
-
-          // Stampa il valore di access_token
-          System.out.println("access_token: " + access_token);
-          return access_token;
-          }
-          catch (IOException e) {
-              e.printStackTrace();
-              return "";
-          }
-      } else {
-          return "La richiesta POST non ha avuto successo. Status code: " + responseEntity.getStatusCode();
-      }
+    String access_token = jsonNode.asText();
+    return access_token;
   }
 
   public String createClient(RestTemplate restTemplate, String iamRegistration, String uuid, String userEmail){
-      //String iamRegistration = "https://iotwins-iam.cloud.cnaf.infn.it/iam/api/client-registration";
+    String jsonRequestBody = "{\n" +
+    "  \"redirect_uris\": [\n" +
+    "    \"https://another.client.example/oidc\"\n" +
+    "  ],\n" +
+    "  \"client_name\": \"paas:" + uuid + "\",\n" +
+    "  \"contacts\": [\n" +
+    "    \"" + userEmail + "\"\n" + 
+    "  ],\n" +
+    "  \"token_endpoint_auth_method\": \"client_secret_basic\",\n" +
+    "  \"scope\": \"openid email profile offline_access\",\n" +
+    "  \"grant_types\": [\n" +
+    "    \"refresh_token\",\n" +
+    "    \"authorization_code\"\n" +
+    "  ],\n" +
+    "  \"response_types\": [\n" +
+    "    \"code\"\n" +
+    "  ]\n" +
+    "}";
 
-      String jsonRequestBody = "{\n" +
-      "  \"redirect_uris\": [\n" +
-      "    \"https://another.client.example/oidc\"\n" +
-      "  ],\n" +
-      "  \"client_name\": \"paas:" + uuid + "\",\n" +
-      "  \"contacts\": [\n" + "\"" + userEmail + "\"\n" + "  ],\n" +
-      "  \"token_endpoint_auth_method\": \"client_secret_basic\",\n" +
-      "  \"scope\": \"openid email profile offline_access\",\n" +
-      "  \"grant_types\": [\n" +
-      "    \"refresh_token\",\n" +
-      "    \"authorization_code\"\n" +
-      "  ],\n" +
-      "  \"response_types\": [\n" +
-      "    \"code\"\n" +
-      "  ]\n" +
-      "}";
+    //String jsonOutput = objectMapper.writeValueAsString(jsonRequestBody);
 
-      // Crea un oggetto HttpHeaders per specificare il tipo di contenuto JSON
-      HttpHeaders headers = new HttpHeaders();
-      headers.setContentType(MediaType.APPLICATION_JSON);
+    // Create an HttpHeaders object to specify the JSON content type
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_JSON);
 
-      // Crea l'oggetto HttpEntity che contiene il corpo della richiesta e le intestazioni
-      HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
+    // Create the HttpEntity object that contains the request body and headers
+    HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
 
-      // URL del servizio REST che riceve la richiesta POST
-      String postUrl = iamRegistration; // Sostituisci con l'URL corretto
+    // Do the POST request
+    ResponseEntity<String> responseEntity = restTemplate.exchange(
+        iamRegistration,
+        HttpMethod.POST,
+        requestEntity,
+        String.class
+    );
 
+    // Verify the response
+    if (!HttpStatus.CREATED.equals(responseEntity.getStatusCode())){
+      LOG.error("The request was unsuccessful. Status code: {}", responseEntity.getStatusCode());
+      return "";
+    }
 
-      // Effettua la richiesta POST
-      ResponseEntity<String> responseEntity = restTemplate.exchange(
-          postUrl,
-          HttpMethod.POST,
-          requestEntity,
-          String.class
-      );
+    String responseBody = responseEntity.getBody();
+    LOG.debug("Body of the request: {}", responseBody);
+    JsonNode jsonNode = null;
+    try {
+      // Extract "client_id" from Json
+      jsonNode = objectMapper.readTree(responseBody).get("client_id");
+    } catch (IOException e) {
+      LOG.error(e.getMessage());
+      return "";
+    } catch (NullPointerException e){
+      LOG.error("client_id not found");
+      return "";
+    }
 
-      String responseBody = responseEntity.getBody();
-      System.out.println("Risposta del server: " + responseBody);
-
-      ObjectMapper objectMapper = new ObjectMapper();
-
-      try {
-          // Analizza il JSON in un oggetto JsonNode
-          JsonNode jsonNode = objectMapper.readTree(responseBody);
-
-          // Estrai il campo "client_id" dal JSON
-          String clientId = jsonNode.get("client_id").asText();
-
-          // Utilizza il valore di clientId
-          System.out.println("client_id: " + clientId);
-          return clientId;
-          }
-          catch (IOException e) {
-              e.printStackTrace();
-              return "";
-          }
+    String clientId = jsonNode.asText();
+    return clientId;
   }
     
-  public void deleteClient(String clientId, String iamUrl, String token){
+  public boolean deleteClient(String clientId, String iamUrl, String token){
     // Crea un oggetto HttpHeaders e aggiungi il token come autorizzazione
     HttpHeaders headers = new HttpHeaders();
     headers.set("Authorization", "Bearer " + token);
@@ -190,11 +195,14 @@ public class IamService {
     );
 
     // Verifica la risposta
-    if (responseEntity.getStatusCode() == HttpStatus.NO_CONTENT) {
+    return HttpStatus.NO_CONTENT.equals(responseEntity.getStatusCode());
+    /*if (responseEntity.getStatusCode() == HttpStatus.NO_CONTENT) {
         System.out.println("La richiesta DELETE ha avuto successo.");
+        return true;
     } else {
         System.err.println("La richiesta DELETE non ha avuto successo. Status code: " + responseEntity.getStatusCode());
-    }
+        return false;
+    }*/
   }
 
   public boolean checkIam(String idpUrl) {
