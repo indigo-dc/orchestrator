@@ -62,7 +62,7 @@ import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.deployment.providers.factory.ImClientFactory;
 import it.reply.orchestrator.service.security.CustomOAuth2TemplateFactory;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
-import it.reply.orchestrator.service.IamService;
+import it.reply.orchestrator.service.IamServiceImpl;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.JwtUtils;
 import it.reply.orchestrator.utils.OneDataUtils;
@@ -110,7 +110,7 @@ import org.mitre.openid.connect.client.service.impl.StaticClientConfigurationSer
 @Slf4j
 public class ImServiceImpl extends AbstractDeploymentProviderService {
 
-  private IamService iamService = new IamService();
+  private IamServiceImpl iamServiceImpl = new IamServiceImpl();
   private RestTemplate restTemplate = new RestTemplate();
   private String iamClientScopes = "openid profile email offline_access iam:admin.write iam:admin.read";
 
@@ -234,7 +234,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     for (Resource resource : resources.get(false)) {
       LOG.info("{}",resource.getToscaNodeType());
       if (resource.getToscaNodeType().equals("tosca.nodes.indigo.iam.client")){
-        if (!iamService.checkIam(issuerUser)) {
+        if (!iamServiceImpl.checkIam(restTemplate, issuerUser)) {
           LOG.error("Only an IAM provider is supported");
           return true;
         }
@@ -255,10 +255,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           //System.out.println("ClientId " + desiredIssuer + ": " + clientId);
           
           //creo il client IAM
-          clientIdCreated = iamService.createClient(restTemplate, iamService.getEndpoint(restTemplate, issuerUser, "registration_endpoint"), uuid, email);
+          clientIdCreated = iamServiceImpl.createClient(restTemplate, iamServiceImpl.getEndpoint(restTemplate, issuerUser, "registration_endpoint"), uuid, email);
 
           //prendo il token con client_credentials
-          tokenCredentials = iamService.getToken(restTemplate, clientId, clientSecret, iamClientScopes, iamService.getEndpoint(restTemplate, issuerUser, "token_endpoint"));
+          tokenCredentials = iamServiceImpl.getToken(restTemplate, clientId, clientSecret, iamClientScopes, iamServiceImpl.getEndpoint(restTemplate, issuerUser, "token_endpoint"));
 
           Map<String,String> resourceMetadata = new HashMap<>();
           resourceMetadata.put("client_id", clientIdCreated);
@@ -269,7 +269,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         } else {
           // Il cliente desiderato non esiste nella mappa
           LOG.error("Nessun client presente");
-          //guarda eccezioni non legate all'im
+          //guarda eccezioni non legate all'im. Qui devi lanciare una eccezione per feromare
         }
       }
     }
@@ -317,11 +317,12 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           infrastructureId);
       deployment.setEndpoint(infrastructureId);
     } catch (ImClientException ex) {
+      // da capire qua come togliere
       for (Resource resource : resources.get(false)) {
         LOG.info("{}",resource.getToscaNodeType());
         if (resource.getToscaNodeType().equals("tosca.nodes.indigo.iam.client")){
-          String token_endpoint = iamService.getEndpoint(restTemplate, issuerUser, "token_endpoint");
-          iamService.deleteClient(clientIdCreated, issuerUser, iamService.getToken(restTemplate, clientId, clientSecret, iamClientScopes, token_endpoint));
+          String token_endpoint = iamServiceImpl.getEndpoint(restTemplate, issuerUser, "token_endpoint");
+          iamServiceImpl.deleteClient(clientIdCreated, issuerUser, iamServiceImpl.getToken(restTemplate, clientId, clientSecret, iamClientScopes, token_endpoint));
         }
       }
       throw handleImClientException(ex);
@@ -738,8 +739,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
               // Estrarre il campo clientId dal cliente desiderato
               String clientId = orchestratorClient.getClientId();
               String clientSecret = orchestratorClient.getClientSecret();
-              token_endpoint = iamService.getEndpoint(restTemplate, iamUrl, "token_endpoint");
-              iamService.deleteClient(clientIdCreated, iamUrl, iamService.getToken(restTemplate, clientId, clientSecret, iamClientScopes, token_endpoint));
+              token_endpoint = iamServiceImpl.getEndpoint(restTemplate, iamUrl, "token_endpoint");
+              iamServiceImpl.deleteClient(clientIdCreated, iamUrl, iamServiceImpl.getToken(restTemplate, clientId, clientSecret, iamClientScopes, token_endpoint));
             }
           }
         }
