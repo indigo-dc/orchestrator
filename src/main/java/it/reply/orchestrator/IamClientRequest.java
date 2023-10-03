@@ -27,7 +27,7 @@ public class IamClientRequest {
         this.responseTypes = responseTypes;
     }
     
-    // Getter e setter per redirectUris
+    // Getter and setter for redirectUris
 
     public List<String> getRedirectUris() {
         return redirectUris;
@@ -37,7 +37,7 @@ public class IamClientRequest {
         this.redirectUris = redirectUris;
     }
 
-    // Getter e setter per clientName
+    // Getter and setter for clientName
 
     public String getClientName() {
         return clientName;
@@ -47,7 +47,7 @@ public class IamClientRequest {
         this.clientName = clientName;
     }
 
-    // Getter e setter per contacts
+    // Getter and setter for contacts
 
     public List<String> getContacts() {
         return contacts;
@@ -57,7 +57,7 @@ public class IamClientRequest {
         this.contacts = contacts;
     }
 
-    // Getter e setter per tokenEndpointAuthMethod
+    // Getter and setter for tokenEndpointAuthMethod
 
     public String getTokenEndpointAuthMethod() {
         return tokenEndpointAuthMethod;
@@ -67,7 +67,7 @@ public class IamClientRequest {
         this.tokenEndpointAuthMethod = tokenEndpointAuthMethod;
     }
 
-    // Getter e setter per scope
+    // Getter and setter for scope
 
     public String getScope() {
         return scope;
@@ -77,7 +77,7 @@ public class IamClientRequest {
         this.scope = scope;
     }
 
-    // Getter e setter per contacts
+    // Getter and setter for grantTypes
 
     public List<String> getGrantTypes() {
         return grantTypes;
@@ -87,7 +87,7 @@ public class IamClientRequest {
         this.grantTypes = grantTypes;
     }
 
-    // Getter e setter per contacts
+    // Getter and setter for responseTypes
 
     public List<String> getResponseTypes() {
         return responseTypes;

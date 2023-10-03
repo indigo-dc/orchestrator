@@ -23,13 +23,14 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 
-import org.mitre.oauth2.model.RegisteredClient;
-
 import java.net.URL;
 import lombok.extern.slf4j.Slf4j;
 
 import it.reply.orchestrator.IamClientRequest;
 
+import org.springframework.stereotype.Service;
+
+@Service
 @Slf4j
 public class IamServiceImpl implements IamService {
 
@@ -40,10 +41,15 @@ public class IamServiceImpl implements IamService {
   private static final String SCOPE = "openid email profile offline_access";
   private static final List<String> GRANT_TYPES = Lists.newArrayList("refresh_token", "authorization_code");
   private static final List<String> RESPONSE_TYPES = Lists.newArrayList("code");
+  private static final String ORCHESTRATOR_SCOPES = "openid profile email offline_access iam:admin.write iam:admin.read";
    
   public IamServiceImpl (){
     objectMapper = new ObjectMapper();
   }
+
+  public String getOrchestratorScopes() {
+    return ORCHESTRATOR_SCOPES;
+}
 
   public String getEndpoint(RestTemplate restTemplate, String url, String endpointName){
     ResponseEntity<String> responseEntity = restTemplate.getForEntity(url + WELL_KNOWN_ENDPOINT, String.class);
@@ -66,9 +72,6 @@ public class IamServiceImpl implements IamService {
     }
 
     String urlEndpoint = jsonNode.asText();
-
-    // Stampa il valore di registration_endpoint
-    LOG.debug("endpoint: {}", urlEndpoint);
     return urlEndpoint;
   }
   
@@ -153,7 +156,7 @@ public class IamServiceImpl implements IamService {
         LOG.debug("{}", jsonRequestBody);
     }
     catch(JsonProcessingException e) {
-        e.getMessage();
+        LOG.error(e.getMessage());
         return "";
     }
 
@@ -193,7 +196,7 @@ public class IamServiceImpl implements IamService {
     }
 
     String clientId = jsonNode.asText();
-    LOG.debug("The client {} has been successfully created", clientId);
+    LOG.debug("The client with client_id {} has been successfully created", clientId);
     return clientId;
   }
     
@@ -227,54 +230,6 @@ public class IamServiceImpl implements IamService {
 
     LOG.debug("The client {} has been successfully deleted", clientId);
     return true;
-    /*if (responseEntity.getStatusCode() == HttpStatus.NO_CONTENT) {
-        System.out.println("La richiesta DELETE ha avuto successo.");
-        return true;
-    } else {
-        System.err.println("La richiesta DELETE non ha avuto successo. Status code: " + responseEntity.getStatusCode());
-        return false;
-    }*/
-  }
-
-  public boolean checkIam_old(String idpUrl) {
-    try {
-
-      // Effettua la richiesta HTTP GET all'endpoint
-      HttpURLConnection connection = (HttpURLConnection) new URL(idpUrl + "actuator/info").openConnection();
-      //fai un blocco try catch per il tipo di eccezione IOException
-      connection.setRequestMethod("GET");
-
-      // Legge la risposta dal server
-      BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-      StringBuilder response = new StringBuilder();
-      String line;
-      while ((line = reader.readLine()) != null) {
-          response.append(line);
-      }
-      reader.close();
-
-        // Analizza il JSON con Jackson
-        ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode jsonNode = objectMapper.readTree(response.toString());
-
-        // Estrai il valore di build:name dal JSON
-        String buildName = jsonNode
-                .path("build")
-                .path("name")
-                .asText();
-
-        // Verifica se il valore di build:name contiene "iam" (ignorando maiuscole e minuscole)
-        if (buildName.toLowerCase().contains("iam")) {
-            System.out.println("Il valore build:name contiene 'iam'.");
-            return true;
-        } else {
-            System.out.println("Il valore build:name non contiene 'iam'.");
-            return false;
-        }
-    } catch (Exception e) {
-        e.printStackTrace();
-        return false;
-    }
   }
 
    public static void main(String args[]){
