@@ -18,12 +18,8 @@ import com.google.common.collect.Lists;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
 
-import java.net.URL;
 import lombok.extern.slf4j.Slf4j;
 
 import it.reply.orchestrator.IamClientRequest;
@@ -54,8 +50,9 @@ public class IamServiceImpl implements IamService {
   public String getEndpoint(RestTemplate restTemplate, String url, String endpointName){
     ResponseEntity<String> responseEntity = restTemplate.getForEntity(url + WELL_KNOWN_ENDPOINT, String.class);
     if (!HttpStatus.OK.equals(responseEntity.getStatusCode())){
-      LOG.error("The request was unsuccessful. Status code: {}", responseEntity.getStatusCode());
-      return "";
+      String errorMessage = String.format("The request was unsuccessful. Status code: %s", responseEntity.getStatusCode());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage);
     }
     String responseBody = responseEntity.getBody();
     LOG.debug("Body of the request: {}", responseBody);
@@ -65,10 +62,11 @@ public class IamServiceImpl implements IamService {
       jsonNode = objectMapper.readTree(responseBody).get(endpointName);
     } catch (IOException e) {
       LOG.error(e.getMessage());
-      return "";
+      throw new IamServiceException(e.getMessage(), e);
     } catch (NullPointerException e){
-      LOG.error("{} not found", endpointName);
-      return "";
+      String errorMessage = String.format("%s endpoint not found", endpointName);
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage);
     }
 
     String urlEndpoint = jsonNode.asText();
@@ -76,7 +74,7 @@ public class IamServiceImpl implements IamService {
   }
   
 
-  public String getToken(RestTemplate restTemplate, String iamClientId, String iamClientSecret, String iamClientScopes, String iamTokenEndpoint){
+  public String getTokenClientCredentials(RestTemplate restTemplate, String iamClientId, String iamClientSecret, String iamClientScopes, String iamTokenEndpoint){
 
     // Set basic authentication in the "Authorization" header
     HttpHeaders headers = new HttpHeaders();
@@ -104,8 +102,10 @@ public class IamServiceImpl implements IamService {
 
     // Verify the response
     if (!HttpStatus.OK.equals(responseEntity.getStatusCode())){
-      LOG.error("The request was unsuccessful. Status code: {}", responseEntity.getStatusCode());
-      return "";
+      String errorMessage = String.format("Impossible to create a token with client credentials as grant type." +
+          "The request was unsuccessful. Status code: %s", responseEntity.getStatusCode());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage);
     }
 
     String responseBody = responseEntity.getBody();
@@ -115,18 +115,20 @@ public class IamServiceImpl implements IamService {
       // Extract "access_token" from Json
       jsonNode = objectMapper.readTree(responseBody).get("access_token");
     } catch (IOException e) {
-      LOG.error(e.getMessage());
-      return "";
+      LOG.error("Impossible to create a token with client credentials as grant type: " + e.getMessage());
+      throw new IamServiceException(e.getMessage(), e);
     } catch (NullPointerException e){
-      LOG.error("access_token not found");
-      return "";
+      String errorMessage ="access_token endpoint not found";
+      LOG.error("Impossible to create a token with client credentials as grant type: " + errorMessage);
+      throw new IamServiceException(errorMessage);
     }
 
     String access_token = jsonNode.asText();
+    LOG.debug("access token with client credentials as grant type successfully created");
     return access_token;
   }
 
-  public String createClient(RestTemplate restTemplate, String iamRegistration, String uuid, String userEmail){
+  public String createClient(RestTemplate restTemplate, String iamRegistration, String uuid, String userEmail) {
     /*String jsonRequestBody = "{\n" +
     "  \"redirect_uris\": [\n" +
     "    \"https://another.client.example/oidc\"\n" +
@@ -156,8 +158,7 @@ public class IamServiceImpl implements IamService {
         LOG.debug("{}", jsonRequestBody);
     }
     catch(JsonProcessingException e) {
-        LOG.error(e.getMessage());
-        return "";
+        throw new IamServiceException(e.getMessage(), e);
     }
 
     // Create an HttpHeaders object to specify the JSON content type
@@ -176,9 +177,10 @@ public class IamServiceImpl implements IamService {
     );
 
     // Verify the response
-    if (!HttpStatus.CREATED.equals(responseEntity.getStatusCode())){
-      LOG.error("The request was unsuccessful. Status code: {}", responseEntity.getStatusCode());
-      return "";
+    if (!HttpStatus.CREATED.equals(responseEntity.getStatusCode())) {
+      String errorMessage = String.format("The request was unsuccessful. Status code: %s", responseEntity.getStatusCode());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage);
     }
 
     String responseBody = responseEntity.getBody();
@@ -188,11 +190,13 @@ public class IamServiceImpl implements IamService {
       // Extract "client_id" from Json
       jsonNode = objectMapper.readTree(responseBody).get("client_id");
     } catch (IOException e) {
-      LOG.error(e.getMessage());
-      return "";
+      LOG.error("No IAM client created: " + e.getMessage());
+      throw new IamServiceException(e.getMessage(), e);
     } catch (NullPointerException e){
-      LOG.error("client_id not found");
-      return "";
+      String errorMessage = "client_id not found";
+      LOG.error(errorMessage);
+      LOG.error("No IAM client created: " + errorMessage);
+      throw new IamServiceException(errorMessage);
     }
 
     String clientId = jsonNode.asText();
@@ -224,11 +228,12 @@ public class IamServiceImpl implements IamService {
 
     // Check the response
     if (!HttpStatus.NO_CONTENT.equals(responseEntity.getStatusCode())){
-      LOG.error("The delete was unsuccessful. Status code: {}", responseEntity.getStatusCode());
-      return false;
+      String errorMessage = String.format("The delete was unsuccessful. Status code: %s", responseEntity.getStatusCode());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage);
     }
 
-    LOG.debug("The client {} has been successfully deleted", clientId);
+    LOG.info("The client with client_id {} has been successfully deleted", clientId);
     return true;
   }
 
@@ -259,8 +264,9 @@ public class IamServiceImpl implements IamService {
 
     // Check the response
     if (!HttpStatus.OK.equals(responseEntity.getStatusCode())){
-      LOG.error("The request to {} was unsuccessful. Status code: {}", endpointURL, responseEntity.getStatusCode());
-      return false;
+      String errorMessage = String.format("The request to %s was unsuccessful. Status code: %s", endpointURL, responseEntity.getStatusCode());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage);
     }
 
     // Get the response body as a JSON string
@@ -286,7 +292,7 @@ public class IamServiceImpl implements IamService {
         }
     } catch (IOException e) {
       LOG.error(e.getMessage());
-      return false;
+      throw new IamServiceException(e.getMessage(), e);
     }
   }
 }

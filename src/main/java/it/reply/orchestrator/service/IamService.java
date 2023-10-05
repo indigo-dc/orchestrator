@@ -8,7 +8,7 @@ public interface IamService {
 
   public String getEndpoint(RestTemplate restTemplate, String url, String endpointName);
 
-  public String getToken(RestTemplate restTemplate, String iamClientId, String iamClientSecret, String iamClientScopes, String iamTokenEndpoint);
+  public String getTokenClientCredentials(RestTemplate restTemplate, String iamClientId, String iamClientSecret, String iamClientScopes, String iamTokenEndpoint);
 
   public String createClient(RestTemplate restTemplate, String iamRegistration, String uuid, String userEmail);
 
