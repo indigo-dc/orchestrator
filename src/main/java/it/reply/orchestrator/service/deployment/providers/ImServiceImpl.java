@@ -763,7 +763,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
               String clientIdCreated = resourceMetadata.get("client_id");
               Map<String, RegisteredClient> clients = staticClientConfigurationService.getClients();
               String iamUrl = resourceMetadata.get("issuer");
-              String token_endpoint = "";
+              String token_endpoint = null;
               
               // Extract clientId and clientSecret of the orchestrator
               RegisteredClient orchestratorClient = clients.get(iamUrl);

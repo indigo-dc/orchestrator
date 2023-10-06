@@ -3,6 +3,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
 import org.springframework.http.HttpEntity;
@@ -11,7 +13,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 
@@ -48,34 +49,50 @@ public class IamServiceImpl implements IamService {
 }
 
   public String getEndpoint(RestTemplate restTemplate, String url, String endpointName){
-    ResponseEntity<String> responseEntity = restTemplate.getForEntity(url + WELL_KNOWN_ENDPOINT, String.class);
+    ResponseEntity<String> responseEntity;
+    try{
+      responseEntity = restTemplate.getForEntity(url + WELL_KNOWN_ENDPOINT, String.class);
+    } catch (HttpClientErrorException e){
+      String errorMessage = String.format("The %s endpoint cannot be contacted. Status code: %s",
+          WELL_KNOWN_ENDPOINT, e.getStatusCode());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage, e);
+    } catch (RestClientException e){
+      String errorMessage = String.format("The %s endpoint cannot be contacted. %s",
+          WELL_KNOWN_ENDPOINT, e.getMessage());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage, e);
+    }
+
     if (!HttpStatus.OK.equals(responseEntity.getStatusCode())){
-      String errorMessage = String.format("The request was unsuccessful. Status code: %s", responseEntity.getStatusCode());
+      String errorMessage = String.format("The %s endpoint cannot be contacted. Status code: %s",
+          WELL_KNOWN_ENDPOINT, responseEntity.getStatusCode());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage);
     }
+
     String responseBody = responseEntity.getBody();
     LOG.debug("Body of the request: {}", responseBody);
-    JsonNode jsonNode = null;
+    String urlEndpoint = null;
     try {
       // Extract "endpointName" from Json
-      jsonNode = objectMapper.readTree(responseBody).get(endpointName);
+      urlEndpoint = objectMapper.readTree(responseBody).get(endpointName).asText();
     } catch (IOException e) {
-      LOG.error(e.getMessage());
-      throw new IamServiceException(e.getMessage(), e);
+      String errorMessage = String.format("The endpoint %s cannot be obtained. %s", endpointName, e.getMessage());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage, e);
     } catch (NullPointerException e){
       String errorMessage = String.format("%s endpoint not found", endpointName);
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage);
     }
 
-    String urlEndpoint = jsonNode.asText();
     return urlEndpoint;
   }
   
 
-  public String getTokenClientCredentials(RestTemplate restTemplate, String iamClientId, String iamClientSecret, String iamClientScopes, String iamTokenEndpoint){
-
+  public String getTokenClientCredentials(RestTemplate restTemplate, String iamClientId, String iamClientSecret,
+      String iamClientScopes, String iamTokenEndpoint){
     // Set basic authentication in the "Authorization" header
     HttpHeaders headers = new HttpHeaders();
     String auth = String.format("%s:%s", iamClientId, iamClientSecret);
@@ -93,37 +110,52 @@ public class IamServiceImpl implements IamService {
     HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(requestBody, headers);
 
     // Do the HTTP POST request
-    ResponseEntity<String> responseEntity = restTemplate.exchange(
-        iamTokenEndpoint,
-        HttpMethod.POST,
-        requestEntity,
-        String.class
+    ResponseEntity<String> responseEntity;
+    try{
+      responseEntity = restTemplate.exchange(
+          iamTokenEndpoint,
+          HttpMethod.POST,
+          requestEntity,
+          String.class
     );
+    } catch (HttpClientErrorException e){
+      String errorMessage = String.format("Impossible to create a token with client credentials as grant type." +
+          "Status code: %s", e.getStatusCode());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage, e);
+    } catch (RestClientException e){
+      String errorMessage = String.format("Impossible to create a token with client credentials as grant type. %s",
+          e.getMessage());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage, e);
+    }
 
     // Verify the response
     if (!HttpStatus.OK.equals(responseEntity.getStatusCode())){
       String errorMessage = String.format("Impossible to create a token with client credentials as grant type." +
-          "The request was unsuccessful. Status code: %s", responseEntity.getStatusCode());
+          "Status code: %s", responseEntity.getStatusCode());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage);
     }
 
     String responseBody = responseEntity.getBody();
     LOG.debug("Body of the request: {}", responseBody);
-    JsonNode jsonNode = null;
+    String access_token = null;
     try {
       // Extract "access_token" from Json
-      jsonNode = objectMapper.readTree(responseBody).get("access_token");
+      access_token = objectMapper.readTree(responseBody).get("access_token").asText();
     } catch (IOException e) {
-      LOG.error("Impossible to create a token with client credentials as grant type: " + e.getMessage());
-      throw new IamServiceException(e.getMessage(), e);
+      String errorMessage = String.format("Impossible to create a token with client credentials as grant type. %s",
+          e.getMessage());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage, e);
     } catch (NullPointerException e){
-      String errorMessage ="access_token endpoint not found";
-      LOG.error("Impossible to create a token with client credentials as grant type: " + errorMessage);
-      throw new IamServiceException(errorMessage);
+      String errorMessage = "Impossible to create a token with client credentials as grant type:" + 
+          "access_token endpoint not found";
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage, e);
     }
 
-    String access_token = jsonNode.asText();
     LOG.debug("access token with client credentials as grant type successfully created");
     return access_token;
   }
@@ -152,13 +184,15 @@ public class IamServiceImpl implements IamService {
     List<String> contacts = Arrays.asList(userEmail);
     String jsonRequestBody = "";
 
-    IamClientRequest iamClientRequest = new IamClientRequest(REDIRECT_URIS, clientName, contacts, TOKEN_ENDPOINT_AUTH_METHOD, SCOPE, GRANT_TYPES, RESPONSE_TYPES);
+    IamClientRequest iamClientRequest = new IamClientRequest(REDIRECT_URIS, clientName, contacts,
+        TOKEN_ENDPOINT_AUTH_METHOD, SCOPE, GRANT_TYPES, RESPONSE_TYPES);
     try {
         jsonRequestBody = objectMapper.writeValueAsString(iamClientRequest);
         LOG.debug("{}", jsonRequestBody);
     }
     catch(JsonProcessingException e) {
-        throw new IamServiceException(e.getMessage(), e);
+        String errorMessage = String.format("No IAM client created. %s", e.getMessage());
+        throw new IamServiceException(errorMessage, e);
     }
 
     // Create an HttpHeaders object to specify the JSON content type
@@ -169,37 +203,48 @@ public class IamServiceImpl implements IamService {
     HttpEntity<String> requestEntity = new HttpEntity<>(jsonRequestBody, headers);
 
     // Do the POST request
-    ResponseEntity<String> responseEntity = restTemplate.exchange(
-        iamRegistration,
-        HttpMethod.POST,
-        requestEntity,
-        String.class
+    ResponseEntity<String> responseEntity;
+    try{
+      responseEntity = restTemplate.exchange(
+          iamRegistration,
+          HttpMethod.POST,
+          requestEntity,
+          String.class
     );
+    } catch (HttpClientErrorException e){
+      String errorMessage = String.format("No IAM client created. Status code: %s", e.getStatusCode());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage, e);
+    } catch (RestClientException e){
+      String errorMessage = String.format("No IAM client created. %s", e.getMessage());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage, e);
+    }
 
     // Verify the response
     if (!HttpStatus.CREATED.equals(responseEntity.getStatusCode())) {
-      String errorMessage = String.format("The request was unsuccessful. Status code: %s", responseEntity.getStatusCode());
+      String errorMessage = String.format("No IAM client created. Status code: %s",
+          responseEntity.getStatusCode());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage);
     }
 
     String responseBody = responseEntity.getBody();
     LOG.debug("Body of the request: {}", responseBody);
-    JsonNode jsonNode = null;
+    String clientId = null;
     try {
       // Extract "client_id" from Json
-      jsonNode = objectMapper.readTree(responseBody).get("client_id");
+      clientId = objectMapper.readTree(responseBody).get("client_id").asText();
     } catch (IOException e) {
-      LOG.error("No IAM client created: " + e.getMessage());
-      throw new IamServiceException(e.getMessage(), e);
-    } catch (NullPointerException e){
-      String errorMessage = "client_id not found";
+      String errorMessage = String.format("No IAM client created. %s", e.getMessage());
       LOG.error(errorMessage);
-      LOG.error("No IAM client created: " + errorMessage);
-      throw new IamServiceException(errorMessage);
+      throw new IamServiceException(errorMessage, e);
+    } catch (NullPointerException e){
+      String errorMessage = String.format("No IAM client created: client_id not found");
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage, e);
     }
 
-    String clientId = jsonNode.asText();
     LOG.debug("The client with client_id {} has been successfully created", clientId);
     return clientId;
   }
@@ -219,16 +264,30 @@ public class IamServiceImpl implements IamService {
     RestTemplate restTemplate = new RestTemplate();
 
     // Do the DELETE request
-    ResponseEntity<String> responseEntity = restTemplate.exchange(
-        deleteUrl,
-        HttpMethod.DELETE,
-        requestEntity,
-        String.class
-    );
+    ResponseEntity<String> responseEntity;
+    try{
+      responseEntity = restTemplate.exchange(
+          deleteUrl,
+          HttpMethod.DELETE,
+          requestEntity,
+          String.class
+      );
+    } catch (HttpClientErrorException e){
+      String errorMessage = String.format("The delete of the client with client_id %s was unsuccessful. " + 
+        "Status code: %s", clientId, e.getStatusCode());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage, e);
+    } catch (RestClientException e){
+      String errorMessage = String.format("The delete of the client with client_id %s was unsuccessful. %s",
+          e.getMessage());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage, e);
+    } 
 
     // Check the response
     if (!HttpStatus.NO_CONTENT.equals(responseEntity.getStatusCode())){
-      String errorMessage = String.format("The delete was unsuccessful. Status code: %s", responseEntity.getStatusCode());
+      String errorMessage = String.format("The delete of the client with client_id %s was unsuccessful. " + 
+        "Status code: %s", clientId, responseEntity.getStatusCode());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage);
     }
@@ -241,6 +300,7 @@ public class IamServiceImpl implements IamService {
     IamService iamService = new IamServiceImpl();
     RestTemplate restTemplate = new RestTemplate();
     iamService.checkIam(restTemplate, "https://iotwins-iam.cloud.cnaf.infn.it/");
+    //iamService.checkIam(restTemplate, "https://registry.gitlab.com/v2/ahmadalkhansa/testing/manifests/policy-dev");
   }
 
   public boolean checkIam(RestTemplate restTemplate, String idpUrl) {
@@ -255,16 +315,29 @@ public class IamServiceImpl implements IamService {
     HttpEntity<String> requestEntity = new HttpEntity<>(headers);
 
     // Do the HTTP request
-    ResponseEntity<String> responseEntity = restTemplate.exchange(
-        endpointURL,
-        HttpMethod.GET,
-        requestEntity,
-        String.class
-    );
+    ResponseEntity<String> responseEntity;
+    try{
+      responseEntity = restTemplate.exchange(
+          endpointURL,
+          HttpMethod.GET,
+          requestEntity,
+          String.class
+      );
+    } catch (HttpClientErrorException e){
+      String errorMessage = String.format("Cannot say if %s is an url related to an IAM or not. Status code: %s",
+          endpointURL, e.getStatusCode());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage, e);
+    } catch (RestClientException e){
+      String errorMessage = String.format("Cannot say if %s is an url related to an IAM or not. %s");
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage, e);
+    }
 
     // Check the response
     if (!HttpStatus.OK.equals(responseEntity.getStatusCode())){
-      String errorMessage = String.format("The request to %s was unsuccessful. Status code: %s", endpointURL, responseEntity.getStatusCode());
+      String errorMessage = String.format("Cannot say if %s is an url related to an IAM or not. Status code: %s",
+          endpointURL, responseEntity.getStatusCode());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage);
     }
@@ -274,15 +347,11 @@ public class IamServiceImpl implements IamService {
 
     // Analyze the JSON response
     try {
-        JsonNode jsonNode = objectMapper.readTree(responseBody);
-
         // Access the build:name field
-        String buildName = jsonNode
-                .path("build")
-                .path("name")
-                .asText();
+        String buildName = objectMapper.readTree(responseBody)
+            .get("build").get("name").asText();
 
-        // Check if build:name value contains "iam" (ignoring case)
+        // Check if the value contains "iam" (ignoring case)
         if (buildName.toLowerCase().contains("iam")) {
           LOG.debug("{} is an IAM", idpUrl);
             return true;
@@ -291,8 +360,15 @@ public class IamServiceImpl implements IamService {
             return false;
         }
     } catch (IOException e) {
-      LOG.error(e.getMessage());
-      throw new IamServiceException(e.getMessage(), e);
+      String errorMessage = String.format("Cannot say if %s is an url related to an IAM or not. %s", endpointURL,
+          e.getMessage());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage, e);
+    } catch (NullPointerException e) {
+      String errorMessage = String.format("Cannot say if %s is an url related to an IAM or not." +
+          "The build:name field does not exist", endpointURL);
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage, e);
     }
   }
 }
