@@ -244,6 +244,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           throw new IamServiceException(errorMessage);
         }
 
+        String nodeName = resource.getToscaNodeName();
         Map<String, RegisteredClient> clients = staticClientConfigurationService.getClients();
 
         if (clients.isEmpty()) {
@@ -292,6 +293,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           resourceMetadata.put("token", tokenCredentials);
           resourceMetadata.put("issuer", issuerUser);
           resource.setMetadata(resourceMetadata);
+          toscaService.setDeploymentClientIam(ar, nodeName, clientIdCreated, tokenCredentials);
         }
       }
     }
@@ -326,8 +328,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         orchestratorProperties.getUrl().toString(),
         deployment.getId(),
         email);
-    
-    toscaService.setDeploymentClientIam(ar, clientIdCreated, tokenCredentials);
 
     String imCustomizedTemplate = toscaService.serialize(ar);
     // Deploy on IM

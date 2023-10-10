@@ -1211,7 +1211,7 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
 
-  public ArchiveRoot setDeploymentClientIam(ArchiveRoot ar, String client_id, String token) {
+  public ArchiveRoot setDeploymentClientIam(ArchiveRoot ar, String nodeName, String client_id, String token) {
     getNodesOfType(ar, "tosca.nodes.indigo.iam.client").stream()
         .forEach(iamNode -> {
           Map<String, AbstractPropertyValue> properties =
@@ -1221,15 +1221,17 @@ public class ToscaServiceImpl implements ToscaService {
                   iamNode.setProperties(new HashMap<>());
                   return iamNode.getProperties();
                 });
-          if (!properties.containsKey("client_id")) {
-            Map<String, Object> clientIam = new HashMap<>();
-            ComplexPropertyValue clientIamAttribute = new ComplexPropertyValue(clientIam);
-            properties.put("client_id", clientIamAttribute);
+          if (iamNode.getName().equals(nodeName)) {
+            properties.put("client_id", new ScalarPropertyValue(client_id));
+            properties.put("token", new ScalarPropertyValue(token));
           }
-          properties.put("client_id", new ScalarPropertyValue(client_id));
-          properties.put("token", new ScalarPropertyValue(token));
         });
     return ar;
+  }
+
+  public String getIamIssuer(ArchiveRoot ar) {
+    // to be written
+    return "";
   }
 
   @Override
