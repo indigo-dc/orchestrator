@@ -280,7 +280,7 @@ public interface ToscaService {
 
   public ArchiveRoot setDeploymentClientIam(ArchiveRoot ar, String nodeName, String client_id, String token);
 
-  public String getIamIssuer(ArchiveRoot ar);
+  public Map<String, String> getIamIssuer(ArchiveRoot ar);
 
   public ArchiveRoot setHybridDeployment(ArchiveRoot ar, String publicNetworkName,
       String privateNetworkName, String privateNetworkCidr);

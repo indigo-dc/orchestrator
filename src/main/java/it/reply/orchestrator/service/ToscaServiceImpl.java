@@ -1229,9 +1229,26 @@ public class ToscaServiceImpl implements ToscaService {
     return ar;
   }
 
-  public String getIamIssuer(ArchiveRoot ar) {
-    // to be written
-    return "";
+  public Map<String, String> getIamIssuer(ArchiveRoot ar) {
+    Map<String, String> nodeIssuers = new HashMap<>();
+    getNodesOfType(ar, "tosca.nodes.indigo.iam.client").stream()
+        .forEach(iamNode -> {
+          Map<String, AbstractPropertyValue> properties =
+              Optional
+                .ofNullable(iamNode.getProperties())
+                .orElseGet(() -> {
+                  iamNode.setProperties(new HashMap<>());
+                  return iamNode.getProperties();
+                });
+        String nodeName = iamNode.getName();
+        String issuer = null;
+        if (properties.containsKey("issuer")){
+          ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)  properties.get("issuer");
+          issuer = scalarPropertyValue.getValue();
+        }
+        nodeIssuers.put(nodeName, issuer);
+        });
+    return nodeIssuers;
   }
 
   @Override

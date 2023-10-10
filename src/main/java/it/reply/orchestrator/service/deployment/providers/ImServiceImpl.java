@@ -234,17 +234,21 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     String orchestratorClientId = null;
     String orchestratorClientSecret = null;
     String uuid = deployment.getId();
+    Map<String, String> iamIssuer = toscaService.getIamIssuer(ar);
 
     LOG.debug("Loop on resources related to the deployment");
     for (Resource resource : resources.get(false)) {
       LOG.debug("Found node of type: {}",resource.getToscaNodeType());
       if (resource.getToscaNodeType().equals("tosca.nodes.indigo.iam.client")){
+        String nodeName = resource.getToscaNodeName();
+        if (iamIssuer.get(nodeName) != null){
+          issuerUser = iamIssuer.get(nodeName);
+        }
         if (!iamService.checkIam(restTemplate, issuerUser)) {
           String errorMessage = "Only an IAM provider is supported";
           throw new IamServiceException(errorMessage);
         }
 
-        String nodeName = resource.getToscaNodeName();
         Map<String, RegisteredClient> clients = staticClientConfigurationService.getClients();
 
         if (clients.isEmpty()) {
