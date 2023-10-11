@@ -1251,6 +1251,28 @@ public class ToscaServiceImpl implements ToscaService {
     return nodeIssuers;
   }
 
+  public Map<String, String> getIamScopes(ArchiveRoot ar) {
+    Map<String, String> nodeScopes = new HashMap<>();
+    getNodesOfType(ar, "tosca.nodes.indigo.iam.client").stream()
+        .forEach(iamNode -> {
+          Map<String, AbstractPropertyValue> properties =
+              Optional
+                .ofNullable(iamNode.getProperties())
+                .orElseGet(() -> {
+                  iamNode.setProperties(new HashMap<>());
+                  return iamNode.getProperties();
+                });
+        String nodeName = iamNode.getName();
+        String scopes = null;
+        if (properties.containsKey("scopes")){
+          ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)  properties.get("scopes");
+          scopes = scalarPropertyValue.getValue();
+        }
+        nodeScopes.put(nodeName, scopes);
+        });
+    return nodeScopes;
+  }
+
   @Override
   public ArchiveRoot setHybridDeployment(ArchiveRoot ar,
       String publicNetworkName,

@@ -34,6 +34,7 @@ import es.upv.i3m.grycap.im.pojo.Property;
 import es.upv.i3m.grycap.im.pojo.ResponseError;
 import es.upv.i3m.grycap.im.pojo.VirtualMachineInfo;
 import es.upv.i3m.grycap.im.rest.client.BodyContentType;
+import it.reply.orchestrator.WellKnownResponse;
 import it.reply.orchestrator.annotation.DeploymentProviderQualifier;
 import it.reply.orchestrator.config.properties.ImProperties;
 import it.reply.orchestrator.config.properties.OidcProperties;
@@ -240,7 +241,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     String orchestratorClientId = null;
     String orchestratorClientSecret = null;
     String uuid = deployment.getId();
+    String scopes = null;
     Map<String, String> iamIssuer = null;
+    Map<String, String> iamScopes = null;
 
     LOG.debug("Loop on resources related to the deployment");
     for (Resource resource : resources.get(false)) {
@@ -250,6 +253,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         if (iamIssuer == null){
           // create a map node_name:issuer for the tosca.nodes.indigo.iam.client nodes
           iamIssuer = toscaService.getIamIssuer(ar);
+          iamScopes = toscaService.getIamScopes(ar);
         }
         if (iamIssuer.get(nodeName) != null){
           issuerUser = iamIssuer.get(nodeName);
@@ -290,17 +294,27 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
         // Get metadata of the resource and if it is empty create a client and set metadata
         Map<String,String> resourceMetadata = resource.getMetadata();
+
+        WellKnownResponse wellKnownResponse = iamService.getWellKnown(restTemplate, issuerUser);
+
+        if (iamScopes.get(nodeName) != null){
+          scopes = iamScopes.get(nodeName);
+        }
+        else {
+          scopes = String.join(" ", wellKnownResponse.getScopesSupported());
+        }
+
         if (resourceMetadata == null){
           // Create an IAM client
           clientIdCreated = iamService.createClient(
               restTemplate,
-              iamService.getEndpoint(restTemplate, issuerUser, "registration_endpoint"),
-              uuid, email);
+              wellKnownResponse.getRegistrationEndpoint(),
+              uuid, email, scopes);
 
           // Request a token with client_credentials as grant type
           tokenCredentials = iamService.getTokenClientCredentials(
               restTemplate, orchestratorClientId, orchestratorClientSecret, iamService.getOrchestratorScopes(),
-              iamService.getEndpoint(restTemplate, issuerUser, "token_endpoint"));
+              wellKnownResponse.getTokenEndpoint());
           
           resourceMetadata = new HashMap<>();
           resourceMetadata.put("client_id", clientIdCreated);

@@ -13,17 +13,21 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.io.IOException;
 
 import lombok.extern.slf4j.Slf4j;
 
 import it.reply.orchestrator.IamClientRequest;
+import it.reply.orchestrator.WellKnownResponse;
 
 import org.springframework.stereotype.Service;
 
@@ -47,6 +51,56 @@ public class IamServiceImpl implements IamService {
   public String getOrchestratorScopes() {
     return ORCHESTRATOR_SCOPES;
 }
+
+  public WellKnownResponse getWellKnown(RestTemplate restTemplate, String issuer){
+    ResponseEntity<String> responseEntity;
+    WellKnownResponse wellKnownResponse = new WellKnownResponse();
+    try{
+      responseEntity = restTemplate.getForEntity(issuer + WELL_KNOWN_ENDPOINT, String.class);
+    } catch (HttpClientErrorException e){
+      String errorMessage = String.format("The %s endpoint cannot be contacted. Status code: %s",
+          WELL_KNOWN_ENDPOINT, e.getStatusCode());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage, e);
+    } catch (RestClientException e){
+      String errorMessage = String.format("The %s endpoint cannot be contacted. %s",
+          WELL_KNOWN_ENDPOINT, e.getMessage());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage, e);
+    }
+
+    if (!HttpStatus.OK.equals(responseEntity.getStatusCode())){
+      String errorMessage = String.format("The %s endpoint cannot be contacted. Status code: %s",
+          WELL_KNOWN_ENDPOINT, responseEntity.getStatusCode());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage);
+    }
+
+    JsonNode responseJson = null;
+    try {
+      responseJson = objectMapper.readTree(responseEntity.getBody());
+      // Extract "endpointName" from Json
+    } catch (IOException e) {
+      String errorMessage = String.format("Error in contacting %s. %s", issuer + WELL_KNOWN_ENDPOINT, e.getMessage());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage, e);
+    } 
+
+    try {
+      wellKnownResponse.setRegistrationEndpoint(responseJson.get("registration_endpoint").asText());
+      wellKnownResponse.setTokenEndpoint(responseJson.get("token_endpoint").asText());
+      List<String> listOfScopes = new ArrayList<>();
+      for (JsonNode scope : responseJson.get("scopes_supported")){
+        listOfScopes.add(scope.asText());
+      }
+      wellKnownResponse.setScopesSupported(listOfScopes);
+    } catch (NullPointerException e){
+      String errorMessage = String.format("Necessary enpoint/s not found in configuration");
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage);
+    }
+    return wellKnownResponse;
+  }
 
   public String getEndpoint(RestTemplate restTemplate, String url, String endpointName){
     ResponseEntity<String> responseEntity;
@@ -160,7 +214,7 @@ public class IamServiceImpl implements IamService {
     return access_token;
   }
 
-  public String createClient(RestTemplate restTemplate, String iamRegistration, String uuid, String userEmail) {
+  public String createClient(RestTemplate restTemplate, String iamRegistration, String uuid, String userEmail, String scopes) {
     /*String jsonRequestBody = "{\n" +
     "  \"redirect_uris\": [\n" +
     "    \"https://another.client.example/oidc\"\n" +
@@ -185,7 +239,7 @@ public class IamServiceImpl implements IamService {
     String jsonRequestBody = "";
 
     IamClientRequest iamClientRequest = new IamClientRequest(REDIRECT_URIS, clientName, contacts,
-        TOKEN_ENDPOINT_AUTH_METHOD, SCOPE, GRANT_TYPES, RESPONSE_TYPES);
+        TOKEN_ENDPOINT_AUTH_METHOD, scopes, GRANT_TYPES, RESPONSE_TYPES);
     try {
         jsonRequestBody = objectMapper.writeValueAsString(iamClientRequest);
         LOG.debug("{}", jsonRequestBody);
