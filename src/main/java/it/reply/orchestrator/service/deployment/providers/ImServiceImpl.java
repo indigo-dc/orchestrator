@@ -214,11 +214,17 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     if (accessToken != null) {
       try {
         email = JwtUtils.getJwtClaimsSet(JwtUtils.parseJwt(accessToken)).getStringClaim("email");
-        issuerUser = JwtUtils.getJwtClaimsSet(JwtUtils.parseJwt(accessToken)).getStringClaim("iss");
       } catch (ParseException e) {
-        LOG.error(e.getMessage());
+        LOG.debug(e.getMessage());
         email = null;
-        issuerUser = null;
+      }
+      try {
+         issuerUser = JwtUtils.getJwtClaimsSet(JwtUtils.parseJwt(accessToken)).getStringClaim("iss");
+      } catch (ParseException e) {
+        String errorMessage = String.format("Issuer not found in user's token. %s",
+        e.getMessage());
+        LOG.error(errorMessage);
+        throw new IamServiceException(errorMessage, e);
       }
     }
 
@@ -234,13 +240,17 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     String orchestratorClientId = null;
     String orchestratorClientSecret = null;
     String uuid = deployment.getId();
-    Map<String, String> iamIssuer = toscaService.getIamIssuer(ar);
+    Map<String, String> iamIssuer = null;
 
     LOG.debug("Loop on resources related to the deployment");
     for (Resource resource : resources.get(false)) {
       LOG.debug("Found node of type: {}",resource.getToscaNodeType());
       if (resource.getToscaNodeType().equals("tosca.nodes.indigo.iam.client")){
         String nodeName = resource.getToscaNodeName();
+        if (iamIssuer == null){
+          // create a map node_name:issuer for the tosca.nodes.indigo.iam.client nodes
+          iamIssuer = toscaService.getIamIssuer(ar);
+        }
         if (iamIssuer.get(nodeName) != null){
           issuerUser = iamIssuer.get(nodeName);
         }
