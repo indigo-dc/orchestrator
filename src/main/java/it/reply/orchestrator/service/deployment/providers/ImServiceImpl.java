@@ -19,6 +19,7 @@ package it.reply.orchestrator.service.deployment.providers;
 
 import alien4cloud.tosca.model.ArchiveRoot;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
@@ -188,8 +189,212 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     return ar;
   }
 
+  public void iamAction(Deployment deployment, VirtualMachineInfo vmInfo){
+    String email = null;
+    String issuerUser = null;
+
+    Map<Boolean, Set<Resource>> resources =
+        resourceRepository
+            .findByDeployment_id(deployment.getId())
+            .stream()
+            .collect(Collectors.partitioningBy(resource -> resource.getIaasId() != null,
+                Collectors.toSet()));
+
+    String clientIdCreated = null;
+    String orchestratorClientId = null;
+    String orchestratorClientSecret = null;
+    String uuid = deployment.getId();
+    String scopes = null;
+
+    LOG.debug("Loop on resources related to the deployment");
+    for (Resource resource : resources.get(false)) {
+      LOG.debug("Found node of type: {}",resource.getToscaNodeType());
+      if (resource.getToscaNodeType().equals("tosca.nodes.indigo.iam.client")){
+        String nodeName = resource.getToscaNodeName();
+
+        Map<String, RegisteredClient> clients = staticClientConfigurationService.getClients();
+        // Get metadata of the resource and if it is empty create a client and set metadata
+        Map<String,String> resourceMetadata = resource.getMetadata();
+        issuerUser = resourceMetadata.get("issuer");
+        email = resourceMetadata.get("email");
+
+        // Get the orchestrator client for a specific issuer
+        RegisteredClient orchestratorClient = clients.get(issuerUser);
+
+        // Extract the clientId and clientSecret field
+        orchestratorClientId = orchestratorClient.getClientId();
+        orchestratorClientSecret = orchestratorClient.getClientSecret();
+        LOG.info("client_id of the orchestrator is: {}", orchestratorClientId);
+        LOG.debug("client_secret of the orchestrator is: {}", orchestratorClientSecret);
+
+
+
+        WellKnownResponse wellKnownResponse = iamService.getWellKnown(restTemplate, issuerUser);
+        scopes = String.join(" ", wellKnownResponse.getScopesSupported());
+        String ip = (String) vmInfo.getVmProperties()
+          .stream()
+          .filter(Objects::nonNull)
+          .filter(properties -> "system".equals(properties.get("class")))
+          .map(properties -> properties.get("net_interface.1.ip")).findAny().get();
+
+        if (clientIdCreated == null){
+          // Create an IAM client
+          clientIdCreated = iamService.createClient(
+              restTemplate,
+              wellKnownResponse.getRegistrationEndpoint(),
+              uuid, email, scopes);
+        }
+        resourceMetadata.put("client_id", clientIdCreated);
+        resourceMetadata.put("ip", ip);
+      }
+    }
+  }
+
   @Override
   public boolean doDeploy(DeploymentMessage deploymentMessage) {
+    Deployment deployment = getDeployment(deploymentMessage);
+
+    resourceRepository
+        .findByDeployment_id(deployment.getId())
+        .stream()
+        .filter(resource -> resource.getState() == NodeStates.INITIAL)
+        .forEach(resource -> resource.setState(NodeStates.CREATING));
+
+    // Update status of the deployment
+    deployment.setTask(Task.DEPLOYER);
+
+    ArchiveRoot ar = prepareTemplate(deployment.getTemplate(), deployment, deploymentMessage);
+
+    final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
+
+    String accessToken = null;
+    if (oidcProperties.isEnabled()) {
+      accessToken = oauth2TokenService.getAccessToken(requestedWithToken);
+    }
+
+    Map<Boolean, Set<Resource>> resources =
+        resourceRepository
+            .findByDeployment_id(deployment.getId())
+            .stream()
+            .collect(Collectors.partitioningBy(resource -> resource.getIaasId() != null,
+                Collectors.toSet()));
+
+    String email = null;
+    String issuerUser = null;
+    if (accessToken != null) {
+      try {
+        email = JwtUtils.getJwtClaimsSet(JwtUtils.parseJwt(accessToken)).getStringClaim("email");
+      } catch (ParseException e) {
+        LOG.debug(e.getMessage());
+        email = null;
+      } 
+      try {
+            issuerUser = JwtUtils.getJwtClaimsSet(JwtUtils.parseJwt(accessToken)).getStringClaim("iss");
+        } catch (ParseException e) {
+          String errorMessage = String.format("Issuer not found in user's token. %s",
+          e.getMessage());
+          LOG.error(errorMessage);
+          throw new IamServiceException(errorMessage, e);
+        }
+    }
+
+    Map<String, String> iamIssuer = null;
+    Map<String, String> iamScopes = null;
+
+    LOG.debug("Loop on resources related to the deployment");
+    for (Resource resource : resources.get(false)) {
+      LOG.debug("Found node of type: {}",resource.getToscaNodeType());
+      if (resource.getToscaNodeType().equals("tosca.nodes.indigo.iam.client")){
+        String nodeName = resource.getToscaNodeName();
+        if (iamIssuer == null){
+          // create a map node_name:issuer for the tosca.nodes.indigo.iam.client nodes
+          iamIssuer = toscaService.getIamIssuer(ar);
+          iamScopes = toscaService.getIamScopes(ar);
+        }
+        if (iamIssuer.get(nodeName) != null){
+          issuerUser = iamIssuer.get(nodeName);
+        }
+        if (!iamService.checkIam(restTemplate, issuerUser)) {
+          String errorMessage = "Only an IAM provider is supported";
+          throw new IamServiceException(errorMessage);
+        }
+
+        Map<String, RegisteredClient> clients = staticClientConfigurationService.getClients();
+
+        if (clients.isEmpty()) {
+          String errorMessage = "There are no clients related to the orchestrator";
+          LOG.error(errorMessage);
+          throw new IamServiceException(errorMessage);
+        }
+
+        if (issuerUser.isEmpty()) {
+          String errorMessage = "No issuer found in user's token";
+          LOG.error(errorMessage);
+          throw new IamServiceException(errorMessage);
+        }
+
+        if (!clients.containsKey(issuerUser)){
+          String errorMessage = "There are no orchestrator clients belonging to the identity provider that issued the user's token";
+          LOG.error(errorMessage);
+          throw new IamServiceException(errorMessage);
+        }
+
+        Map<String,String> resourceMetadata = new HashMap<>();
+        resourceMetadata.put("issuer", issuerUser);
+        resourceMetadata.put("email", email);
+        resource.setMetadata(resourceMetadata);
+      }
+    }
+
+    toscaService.addElasticClusterParameters(ar, deployment.getId(), accessToken);
+    ComputeService computeService = deploymentMessage
+        .getCloudServicesOrderedIterator()
+        .currentService(ComputeService.class);
+    toscaService.contextualizeAndReplaceImages(ar, computeService, DeploymentProvider.IM);
+    toscaService.contextualizeAndReplaceFlavors(ar, computeService, DeploymentProvider.IM);
+    toscaService.contextualizeAndReplaceVolumeTypes(ar, computeService, DeploymentProvider.IM);
+
+    List<CloudProviderEndpoint> cloudProviderEndpoints =
+        deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
+
+    if (toscaService.isHybridDeployment(ar)) {
+      toscaService.setHybridDeployment(ar,
+          computeService.getPublicNetworkName(),
+          computeService.getPrivateNetworkName(),
+          computeService.getPrivateNetworkCidr()
+      );
+    } else {
+      toscaService.setNetworkNames(ar,
+          computeService.getPublicNetworkName(),
+          computeService.getPrivateNetworkName(),
+          computeService.getPrivateNetworkProxyHost(),
+          computeService.getPrivateNetworkProxyUser());
+    }
+
+    //add tags
+    toscaService.setDeploymentTags(ar,
+        orchestratorProperties.getUrl().toString(),
+        deployment.getId(),
+        email);
+
+    String imCustomizedTemplate = toscaService.serialize(ar);
+    // Deploy on IM
+    try {
+      String infrastructureId =
+          executeWithClientForResult(cloudProviderEndpoints, requestedWithToken,
+              client -> client.createInfrastructureAsync(imCustomizedTemplate,
+                BodyContentType.TOSCA)).getInfrastructureId();
+      LOG.info("InfrastructureId for deployment <{}> is: {}", deploymentMessage.getDeploymentId(),
+          infrastructureId);
+      deployment.setEndpoint(infrastructureId);
+    } catch (ImClientException ex) {
+      throw handleImClientException(ex);
+    }
+    return true;
+  }
+
+  //@Override
+  public boolean doDeploy_old(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
 
     resourceRepository
@@ -304,7 +509,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           scopes = String.join(" ", wellKnownResponse.getScopesSupported());
         }
 
-        if (resourceMetadata == null){
+        if (clientIdCreated == null){
           // Create an IAM client
           clientIdCreated = iamService.createClient(
               restTemplate,
@@ -371,8 +576,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       /*for (Resource resource : resources.get(false)) {
         LOG.info("{}",resource.getToscaNodeType());
         if (resource.getToscaNodeType().equals("tosca.nodes.indigo.iam.client")){
-          String token_endpoint = iamService.getEndpoint(restTemplate, issuerUser, "token_endpoint");
-          iamService.deleteClient(clientIdCreated, issuerUser, iamService.getTokenClientCredentials(restTemplate, orchestratorClientId, orchestratorClientSecret, iamService.getOrchestratorScopes(), token_endpoint));
+          Map<String,String> resourceMetadata = resource.getMetadata();
+          String pippo;
+          //String token_endpoint = iamService.getEndpoint(restTemplate, issuerUser, "token_endpoint");
+          //iamService.deleteClient(clientIdCreated, issuerUser, iamService.getTokenClientCredentials(restTemplate, orchestratorClientId, orchestratorClientSecret, iamService.getOrchestratorScopes(), token_endpoint));
         }
       }*/
       throw handleImClientException(ex);
@@ -393,7 +600,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   @Override
   public boolean isDeployed(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
-
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
 
     List<CloudProviderEndpoint> cloudProviderEndpoints =
@@ -410,6 +616,28 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
       switch (infrastructureState.getEnumState()) {
         case CONFIGURED:
+          Map<Boolean, Set<Resource>> resources =
+        resourceRepository
+            .findByDeployment_id(deployment.getId())
+            .stream()
+            .collect(Collectors.partitioningBy(resource -> resource.getIaasId() != null,
+                Collectors.toSet()));
+          String ip = null;
+          VirtualMachineInfo vmInfo = null;
+
+          for (Resource resource : resources.get(true)) {
+            LOG.debug("Found node of type: {}",resource.getToscaNodeType());
+            String nodeName = resource.getToscaNodeName();
+            if (nodeName.equals("simple_node")){
+              Map<String,String> resourceMetadata = resource.getMetadata();
+              try{
+              vmInfo = new ObjectMapper().readValue(resourceMetadata.get(VMINFO), VirtualMachineInfo.class);
+              } catch (Exception e){
+                LOG.error(e.getMessage());
+              }
+              }
+            }
+          iamAction(deployment, vmInfo);
           return true;
         case FAILED:
         case UNCONFIGURED:

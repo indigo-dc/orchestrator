@@ -1221,6 +1221,16 @@ public class ToscaServiceImpl implements ToscaService {
                   iamNode.setProperties(new HashMap<>());
                   return iamNode.getProperties();
                 });
+          if (!properties.containsKey("client_id")) {
+            Map<String, Object> clientIam = new HashMap<>();
+            ComplexPropertyValue clientIamProperty = new ComplexPropertyValue(clientIam);
+            properties.put("client_id", clientIamProperty);
+          }
+          if (!properties.containsKey("token")) {
+            Map<String, Object> tokenIam = new HashMap<>();
+            ComplexPropertyValue tokenAttribute = new ComplexPropertyValue(tokenIam);
+            properties.put("token", tokenAttribute);
+          }
           if (iamNode.getName().equals(nodeName)) {
             properties.put("client_id", new ScalarPropertyValue(client_id));
             properties.put("token", new ScalarPropertyValue(token));
