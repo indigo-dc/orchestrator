@@ -21,7 +21,9 @@ import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.io.IOException;
 
@@ -215,7 +217,7 @@ public class IamServiceImpl implements IamService {
     return access_token;
   }
 
-  public String createClient(RestTemplate restTemplate, String iamRegistration, String uuid, String userEmail, String scopes) {
+  public Map<String,String> createClient(RestTemplate restTemplate, String iamRegistration, String uuid, String userEmail, String scopes) {
     /*String jsonRequestBody = "{\n" +
     "  \"redirect_uris\": [\n" +
     "    \"https://another.client.example/oidc\"\n" +
@@ -287,21 +289,27 @@ public class IamServiceImpl implements IamService {
     String responseBody = responseEntity.getBody();
     LOG.debug("Body of the request: {}", responseBody);
     String clientId = null;
+    String clientSecret = null;
     try {
       // Extract "client_id" from Json
       clientId = objectMapper.readTree(responseBody).get("client_id").asText();
+      clientSecret = objectMapper.readTree(responseBody).get("client_secret").asText();
     } catch (IOException e) {
       String errorMessage = String.format("No IAM client created. %s", e.getMessage());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } catch (NullPointerException e){
-      String errorMessage = String.format("No IAM client created: client_id not found");
+      String errorMessage = String.format("No IAM client created: client_id and/or client_secret not found");
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     }
 
-    LOG.debug("The client with client_id {} has been successfully created", clientId);
-    return clientId;
+    Map<String, String> clientCreated = new HashMap<>();
+    clientCreated.put("client_id", clientId);
+    clientCreated.put("client_secret", clientSecret);
+    LOG.debug("The client with client_id {} and client_secret {} has been successfully created",
+        clientId, clientSecret);
+    return clientCreated;
   }
     
   public boolean deleteClient(String clientId, String iamUrl, String token){

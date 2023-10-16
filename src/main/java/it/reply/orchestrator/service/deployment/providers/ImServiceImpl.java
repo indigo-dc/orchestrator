@@ -86,6 +86,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import com.google.common.collect.Lists;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -189,18 +190,35 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     return ar;
   }
 
-  public void iamAction(Deployment deployment, VirtualMachineInfo vmInfo){
-    String email = null;
-    String issuerUser = null;
-
+  public void iamUpdate(Deployment deployment){
     Map<Boolean, Set<Resource>> resources =
         resourceRepository
             .findByDeployment_id(deployment.getId())
             .stream()
             .collect(Collectors.partitioningBy(resource -> resource.getIaasId() != null,
                 Collectors.toSet()));
+          String ip = null;
+          VirtualMachineInfo vmInfo = null;
+
+          /*for (Resource resource : resources.get(true)) {
+            LOG.debug("Found node of type: {}",resource.getToscaNodeType());
+            String nodeName = resource.getToscaNodeName();
+            if (nodeName.equals("simple_node")){
+              Map<String,String> resourceMetadata = resource.getMetadata();
+              try{
+              vmInfo = new ObjectMapper().readValue(resourceMetadata.get(VMINFO), VirtualMachineInfo.class);
+              } catch (Exception e){
+                LOG.error(e.getMessage());
+              }
+              }
+            }*/
+    String email = null;
+    String issuerUser = null;
 
     String clientIdCreated = null;
+    String clientSecretCreated = null;
+    String redirectUri = null;
+    String referenceNode = null;
     String orchestratorClientId = null;
     String orchestratorClientSecret = null;
     String uuid = deployment.getId();
@@ -216,7 +234,11 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         // Get metadata of the resource and if it is empty create a client and set metadata
         Map<String,String> resourceMetadata = resource.getMetadata();
         issuerUser = resourceMetadata.get("issuer");
-        email = resourceMetadata.get("email");
+        clientIdCreated = resourceMetadata.get("client_id");
+        clientSecretCreated = resourceMetadata.get("client_secret");
+        redirectUri = resourceMetadata.get("redirect_uri");
+        referenceNode = resourceMetadata.get("reference_node");
+
 
         // Get the orchestrator client for a specific issuer
         RegisteredClient orchestratorClient = clients.get(issuerUser);
@@ -230,28 +252,19 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
 
         WellKnownResponse wellKnownResponse = iamService.getWellKnown(restTemplate, issuerUser);
-        scopes = String.join(" ", wellKnownResponse.getScopesSupported());
-        String ip = (String) vmInfo.getVmProperties()
+
+        /*String ip = (String) vmInfo.getVmProperties()
           .stream()
           .filter(Objects::nonNull)
           .filter(properties -> "system".equals(properties.get("class")))
-          .map(properties -> properties.get("net_interface.1.ip")).findAny().get();
-
-        if (clientIdCreated == null){
-          // Create an IAM client
-          clientIdCreated = iamService.createClient(
-              restTemplate,
-              wellKnownResponse.getRegistrationEndpoint(),
-              uuid, email, scopes);
+          .map(properties -> properties.get("net_interface.1.ip")).findAny().get();*/
         }
-        resourceMetadata.put("client_id", clientIdCreated);
-        resourceMetadata.put("ip", ip);
+        //resourceMetadata.put("ip", ip);
       }
     }
-  }
 
-  @Override
-  public boolean doDeploy(DeploymentMessage deploymentMessage) {
+  //@Override
+  public boolean doDeploy_simplified(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
 
     resourceRepository
@@ -393,8 +406,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     return true;
   }
 
-  //@Override
-  public boolean doDeploy_old(DeploymentMessage deploymentMessage) {
+  @Override
+  public boolean doDeploy(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
 
     resourceRepository
@@ -441,12 +454,12 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
             .collect(Collectors.partitioningBy(resource -> resource.getIaasId() != null,
                 Collectors.toSet()));
 
-    String clientIdCreated = null;
-    String tokenCredentials = null;
+    Map<String,String> clientCreated = null;
     String orchestratorClientId = null;
     String orchestratorClientSecret = null;
     String uuid = deployment.getId();
     String scopes = null;
+    Map<String,Map<String,String>> iamTemplate = null;
     Map<String, String> iamIssuer = null;
     Map<String, String> iamScopes = null;
 
@@ -455,13 +468,15 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       LOG.debug("Found node of type: {}",resource.getToscaNodeType());
       if (resource.getToscaNodeType().equals("tosca.nodes.indigo.iam.client")){
         String nodeName = resource.getToscaNodeName();
-        if (iamIssuer == null){
+        //if (iamIssuer == null){
+        if (iamTemplate == null){
           // create a map node_name:issuer for the tosca.nodes.indigo.iam.client nodes
-          iamIssuer = toscaService.getIamIssuer(ar);
-          iamScopes = toscaService.getIamScopes(ar);
+          //iamIssuer = toscaService.getIamIssuer(ar);
+          //iamScopes = toscaService.getIamScopes(ar);
+          iamTemplate = toscaService.getIamProperties(ar);
         }
-        if (iamIssuer.get(nodeName) != null){
-          issuerUser = iamIssuer.get(nodeName);
+        if (iamTemplate.get(nodeName) != null){
+          issuerUser = iamTemplate.get(nodeName).get("issuer");
         }
         if (!iamService.checkIam(restTemplate, issuerUser)) {
           String errorMessage = "Only an IAM provider is supported";
@@ -502,31 +517,37 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
         WellKnownResponse wellKnownResponse = iamService.getWellKnown(restTemplate, issuerUser);
 
-        if (iamScopes.get(nodeName) != null){
-          scopes = iamScopes.get(nodeName);
+        //if (iamScopes.get(nodeName) != null){
+          if (iamTemplate.get(nodeName).get("scopes") != null){
+          scopes = iamTemplate.get(nodeName).get("scopes");
+          List<String> inputList = Lists.newArrayList(scopes.split(" "));
+          try{
+            inputList.retainAll(wellKnownResponse.getScopesSupported());
+          } catch (Exception e){
+            String errorMessage = String.format("Impossible to set IAM scopes. " + e.getMessage());
+            LOG.error(errorMessage);
+            throw new IamServiceException(errorMessage, e);
+          }
+          scopes = String.join(" ", inputList);
         }
         else {
           scopes = String.join(" ", wellKnownResponse.getScopesSupported());
         }
 
-        if (clientIdCreated == null){
-          // Create an IAM client
-          clientIdCreated = iamService.createClient(
-              restTemplate,
-              wellKnownResponse.getRegistrationEndpoint(),
-              uuid, email, scopes);
 
-          // Request a token with client_credentials as grant type
-          tokenCredentials = iamService.getTokenClientCredentials(
-              restTemplate, orchestratorClientId, orchestratorClientSecret, iamService.getOrchestratorScopes(),
-              wellKnownResponse.getTokenEndpoint());
+        if (clientCreated == null){
+          // Create an IAM client
+          clientCreated = iamService.createClient(restTemplate, wellKnownResponse.getRegistrationEndpoint(),
+              uuid, email, scopes);
           
           resourceMetadata = new HashMap<>();
-          resourceMetadata.put("client_id", clientIdCreated);
-          resourceMetadata.put("token", tokenCredentials);
+          resourceMetadata.put("client_id", clientCreated.get("client_id"));
+          resourceMetadata.put("client_secret", clientCreated.get("client_secret"));
           resourceMetadata.put("issuer", issuerUser);
+          resourceMetadata.put("redirect_uri", iamTemplate.get(nodeName).get("redirect_uri"));
+          resourceMetadata.put("reference_node", iamTemplate.get(nodeName).get("reference_node"));
           resource.setMetadata(resourceMetadata);
-          toscaService.setDeploymentClientIam(ar, nodeName, clientIdCreated, tokenCredentials);
+          toscaService.setDeploymentClientIam(ar, nodeName, clientCreated.get("client_id"), clientCreated.get("client_secret"));
         }
       }
     }
@@ -588,7 +609,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     try {
       // tutto il codice
     } catch (IamServiceException e) {
-      if (clientIdCreated != null) {
+      if (clientCreated != null) {
         // delete client
         
       }
@@ -616,28 +637,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
       switch (infrastructureState.getEnumState()) {
         case CONFIGURED:
-          Map<Boolean, Set<Resource>> resources =
-        resourceRepository
-            .findByDeployment_id(deployment.getId())
-            .stream()
-            .collect(Collectors.partitioningBy(resource -> resource.getIaasId() != null,
-                Collectors.toSet()));
-          String ip = null;
-          VirtualMachineInfo vmInfo = null;
-
-          for (Resource resource : resources.get(true)) {
-            LOG.debug("Found node of type: {}",resource.getToscaNodeType());
-            String nodeName = resource.getToscaNodeName();
-            if (nodeName.equals("simple_node")){
-              Map<String,String> resourceMetadata = resource.getMetadata();
-              try{
-              vmInfo = new ObjectMapper().readValue(resourceMetadata.get(VMINFO), VirtualMachineInfo.class);
-              } catch (Exception e){
-                LOG.error(e.getMessage());
-              }
-              }
-            }
-          iamAction(deployment, vmInfo);
+          iamUpdate(deployment);
           return true;
         case FAILED:
         case UNCONFIGURED:

@@ -284,6 +284,8 @@ public interface ToscaService {
 
   public Map<String, String> getIamScopes(ArchiveRoot ar);
 
+  public Map<String,Map<String,String>> getIamProperties(ArchiveRoot ar);
+
   public ArchiveRoot setHybridDeployment(ArchiveRoot ar, String publicNetworkName,
       String privateNetworkName, String privateNetworkCidr);
 

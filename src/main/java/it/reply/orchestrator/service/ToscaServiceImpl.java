@@ -1211,7 +1211,7 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
 
-  public ArchiveRoot setDeploymentClientIam(ArchiveRoot ar, String nodeName, String client_id, String token) {
+  public ArchiveRoot setDeploymentClientIam(ArchiveRoot ar, String nodeName, String client_id, String client_secret) {
     getNodesOfType(ar, "tosca.nodes.indigo.iam.client").stream()
         .forEach(iamNode -> {
           Map<String, AbstractPropertyValue> properties =
@@ -1226,14 +1226,14 @@ public class ToscaServiceImpl implements ToscaService {
             ComplexPropertyValue clientIamProperty = new ComplexPropertyValue(clientIam);
             properties.put("client_id", clientIamProperty);
           }
-          if (!properties.containsKey("token")) {
+          if (!properties.containsKey("client_secret")) {
             Map<String, Object> tokenIam = new HashMap<>();
             ComplexPropertyValue tokenAttribute = new ComplexPropertyValue(tokenIam);
-            properties.put("token", tokenAttribute);
+            properties.put("client_secret", tokenAttribute);
           }
           if (iamNode.getName().equals(nodeName)) {
             properties.put("client_id", new ScalarPropertyValue(client_id));
-            properties.put("token", new ScalarPropertyValue(token));
+            properties.put("client_secret", new ScalarPropertyValue(client_secret));
           }
         });
     return ar;
@@ -1281,6 +1281,48 @@ public class ToscaServiceImpl implements ToscaService {
         nodeScopes.put(nodeName, scopes);
         });
     return nodeScopes;
+  }
+
+  public Map<String,Map<String,String>> getIamProperties(ArchiveRoot ar){
+    Map<String,Map<String,String>> nodeProperties = new HashMap<>();
+    Map<String, String> innerMap = new HashMap<>();
+    getNodesOfType(ar, "tosca.nodes.indigo.iam.client").stream()
+        .forEach(iamNode -> {
+          Map<String, AbstractPropertyValue> properties =
+              Optional
+                .ofNullable(iamNode.getProperties())
+                .orElseGet(() -> {
+                  iamNode.setProperties(new HashMap<>());
+                  return iamNode.getProperties();
+                });
+        String nodeName = iamNode.getName();
+        String scopes = null;
+        String issuer = null;
+        String redirect_uri = null;
+        String reference_node = null;
+        if (properties.containsKey("issuer")){
+          ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)  properties.get("issuer");
+          issuer = scalarPropertyValue.getValue();
+        }
+        if (properties.containsKey("scopes")){
+          ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)  properties.get("scopes");
+          scopes = scalarPropertyValue.getValue();
+        }
+        if (properties.containsKey("redirect_uri")){
+          ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)  properties.get("redirect_uri");
+          redirect_uri = scalarPropertyValue.getValue();
+        }
+        if (properties.containsKey("reference_node")){
+          ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)  properties.get("reference_node");
+          reference_node = scalarPropertyValue.getValue();
+        }
+        innerMap.put("issuer", issuer);
+        innerMap.put("scopes", scopes);
+        innerMap.put("redirect_uri", redirect_uri);
+        innerMap.put("reference_node", reference_node);
+        nodeProperties.put(nodeName,innerMap);
+        });
+    return nodeProperties;
   }
 
   @Override

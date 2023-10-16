@@ -3,6 +3,8 @@ package it.reply.orchestrator.service;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.List;
+import java.util.Map;
+
 import it.reply.orchestrator.WellKnownResponse;
 
 public interface IamService {
@@ -15,7 +17,7 @@ public interface IamService {
 
   public String getTokenClientCredentials(RestTemplate restTemplate, String iamClientId, String iamClientSecret, String iamClientScopes, String iamTokenEndpoint);
 
-  public String createClient(RestTemplate restTemplate, String iamRegistration, String uuid, String userEmail, String scopes);
+  public Map<String,String> createClient(RestTemplate restTemplate, String iamRegistration, String uuid, String userEmail, String scopes);
 
   public boolean deleteClient(String clientId, String iamUrl, String token);
 
