@@ -21,4 +21,8 @@ public interface IamService {
 
   public boolean checkIam(RestTemplate restTemplate, String idpUrl);
 
+  public String getInfoIamClient(String clientId, String iamUrl, String token);
+
+  public String updateClient(String clientId, String iamUrl, String token, String jsonUpdated);
+
 }

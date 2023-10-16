@@ -15,6 +15,7 @@ import org.springframework.http.MediaType;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 
 import java.util.ArrayList;
@@ -425,4 +426,101 @@ public class IamServiceImpl implements IamService {
       throw new IamServiceException(errorMessage, e);
     }
   }
+
+  public String getInfoIamClient(String clientId, String iamUrl, String token){
+    // Create an HttpHeaders object and add the token as authorization
+    HttpHeaders headers = new HttpHeaders();
+    headers.set("Authorization", "Bearer " + token);
+
+    // Create the HttpEntity object that contains the header with the token
+    HttpEntity<?> requestEntity = new HttpEntity<>(headers);
+
+    // URL of the REST service to contact to perform the DELETE request
+    String getUrl = iamUrl + "iam/api/clients/" + clientId;
+
+    // Create a RestTemplate object
+    RestTemplate restTemplate = new RestTemplate();
+
+    // Do the GET request
+    ResponseEntity<String> responseEntity;
+    try{
+      responseEntity = restTemplate.exchange(
+          getUrl,
+          HttpMethod.GET,
+          requestEntity,
+          String.class
+      );
+    } catch (HttpClientErrorException e){
+      String errorMessage = String.format("Obtaining of information about the client with client_id %s was unsuccessful. " + 
+        "Status code: %s", clientId, e.getStatusCode());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage, e);
+    } catch (RestClientException e){
+      String errorMessage = String.format("Obtaining of information about the client with client_id %s was unsuccessful. %s",
+          e.getMessage());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage, e);
+    } 
+    System.out.println("Corpo della risposta:\n" + responseEntity.getBody());
+    // Check the response
+    if (!HttpStatus.OK.equals(responseEntity.getStatusCode())){
+      String errorMessage = String.format("Obtaining of information about the client with client_id %s was unsuccessful. " + 
+        "Status code: %s", clientId, responseEntity.getStatusCode());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage);
+    }
+
+    LOG.info("Information about the client with client_id {} has been successfully obtained", clientId);
+    return responseEntity.getBody();
+  }
+  
+  public String updateClient(String clientId, String iamUrl, String token, String jsonUpdated){
+    // Create an HttpHeaders object and add the token as authorization
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_JSON);
+    headers.set("Authorization", "Bearer " + token);
+
+    // Create the HttpEntity object that contains the header with the token
+    HttpEntity<?> requestEntity = new HttpEntity<>(jsonUpdated, headers);
+
+    // URL of the REST service to contact to perform the DELETE request
+    String getUrl = iamUrl + "iam/api/clients/" + clientId;
+
+    // Create a RestTemplate object
+    RestTemplate restTemplate = new RestTemplate();
+
+    // Do the GET request
+    ResponseEntity<String> responseEntity;
+    try{
+      responseEntity = restTemplate.exchange(
+          getUrl,
+          HttpMethod.PUT,
+          requestEntity,
+          String.class
+      );
+    } catch (HttpClientErrorException e){
+      String errorMessage = String.format("The update of the client with client_id %s was unsuccessful. " + 
+        "Status code: %s", clientId, e.getStatusCode());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage, e);
+    } catch (RestClientException e){
+      String errorMessage = String.format("The update of the client with client_id %s was unsuccessful. %s",
+          e.getMessage());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage, e);
+    } 
+    System.out.println("Corpo della risposta:\n" + responseEntity.getBody());
+    // Check the response
+    if (!HttpStatus.OK.equals(responseEntity.getStatusCode())){
+      String errorMessage = String.format("The update of the client with client_id %s was unsuccessful. " + 
+        "Status code: %s", clientId, responseEntity.getStatusCode());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage);
+    }
+
+    LOG.info("The info of the client with client_id {} has been successfully updated", clientId);
+    return responseEntity.getBody();
+  }
+
+
 }
