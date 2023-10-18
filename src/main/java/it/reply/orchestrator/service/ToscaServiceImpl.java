@@ -1211,7 +1211,7 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
 
-  public ArchiveRoot setDeploymentClientIam(ArchiveRoot ar, String nodeName, String client_id, String client_secret) {
+  public ArchiveRoot setDeploymentClientIam(ArchiveRoot ar, String nodeName, String issuer, String client_id, String registration_access_token) {
     getNodesOfType(ar, "tosca.nodes.indigo.iam.client").stream()
         .forEach(iamNode -> {
           Map<String, AbstractPropertyValue> properties =
@@ -1221,19 +1221,27 @@ public class ToscaServiceImpl implements ToscaService {
                   iamNode.setProperties(new HashMap<>());
                   return iamNode.getProperties();
                 });
+          /*if (!properties.containsKey("issuer")) {
+            Map<String, Object> issuerIam = new HashMap<>();
+            ComplexPropertyValue clientIamIssuer = new ComplexPropertyValue(issuerIam);
+            properties.put("issuer", clientIamIssuer);
+          }
           if (!properties.containsKey("client_id")) {
             Map<String, Object> clientIam = new HashMap<>();
             ComplexPropertyValue clientIamProperty = new ComplexPropertyValue(clientIam);
             properties.put("client_id", clientIamProperty);
           }
-          if (!properties.containsKey("client_secret")) {
+          if (!properties.containsKey("registration_access_token")) {
             Map<String, Object> tokenIam = new HashMap<>();
             ComplexPropertyValue tokenAttribute = new ComplexPropertyValue(tokenIam);
-            properties.put("client_secret", tokenAttribute);
-          }
+            properties.put("registration_access_token", tokenAttribute);
+          }*/
           if (iamNode.getName().equals(nodeName)) {
+            if (!properties.containsKey("issuer")){
+            properties.put("issuer", new ScalarPropertyValue(issuer));
+            }
             properties.put("client_id", new ScalarPropertyValue(client_id));
-            properties.put("client_secret", new ScalarPropertyValue(client_secret));
+            properties.put("registration_access_token", new ScalarPropertyValue(registration_access_token));
           }
         });
     return ar;
@@ -1285,7 +1293,6 @@ public class ToscaServiceImpl implements ToscaService {
 
   public Map<String,Map<String,String>> getIamProperties(ArchiveRoot ar){
     Map<String,Map<String,String>> nodeProperties = new HashMap<>();
-    Map<String, String> innerMap = new HashMap<>();
     getNodesOfType(ar, "tosca.nodes.indigo.iam.client").stream()
         .forEach(iamNode -> {
           Map<String, AbstractPropertyValue> properties =
@@ -1295,11 +1302,10 @@ public class ToscaServiceImpl implements ToscaService {
                   iamNode.setProperties(new HashMap<>());
                   return iamNode.getProperties();
                 });
+        Map<String, String> innerMap = new HashMap<>();
         String nodeName = iamNode.getName();
         String scopes = null;
         String issuer = null;
-        String redirect_uri = null;
-        String reference_node = null;
         if (properties.containsKey("issuer")){
           ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)  properties.get("issuer");
           issuer = scalarPropertyValue.getValue();
@@ -1308,18 +1314,8 @@ public class ToscaServiceImpl implements ToscaService {
           ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)  properties.get("scopes");
           scopes = scalarPropertyValue.getValue();
         }
-        if (properties.containsKey("redirect_uri")){
-          ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)  properties.get("redirect_uri");
-          redirect_uri = scalarPropertyValue.getValue();
-        }
-        if (properties.containsKey("reference_node")){
-          ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)  properties.get("reference_node");
-          reference_node = scalarPropertyValue.getValue();
-        }
         innerMap.put("issuer", issuer);
         innerMap.put("scopes", scopes);
-        innerMap.put("redirect_uri", redirect_uri);
-        innerMap.put("reference_node", reference_node);
         nodeProperties.put(nodeName,innerMap);
         });
     return nodeProperties;

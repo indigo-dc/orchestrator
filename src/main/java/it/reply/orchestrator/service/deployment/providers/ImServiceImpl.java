@@ -430,6 +430,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
     String email = null;
     String issuerUser = null;
+    String sub = null;
     if (accessToken != null) {
       try {
         email = JwtUtils.getJwtClaimsSet(JwtUtils.parseJwt(accessToken)).getStringClaim("email");
@@ -441,6 +442,14 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
          issuerUser = JwtUtils.getJwtClaimsSet(JwtUtils.parseJwt(accessToken)).getStringClaim("iss");
       } catch (ParseException e) {
         String errorMessage = String.format("Issuer not found in user's token. %s",
+        e.getMessage());
+        LOG.error(errorMessage);
+        throw new IamServiceException(errorMessage, e);
+      }
+      try {
+         sub = JwtUtils.getJwtClaimsSet(JwtUtils.parseJwt(accessToken)).getStringClaim("sub");
+      } catch (ParseException e) {
+        String errorMessage = String.format("Sub not found in user's token. %s",
         e.getMessage());
         LOG.error(errorMessage);
         throw new IamServiceException(errorMessage, e);
@@ -462,6 +471,20 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     Map<String,Map<String,String>> iamTemplate = null;
     Map<String, String> iamIssuer = null;
     Map<String, String> iamScopes = null;
+    String issuerNode = null;
+    Map<String, RegisteredClient> clients = staticClientConfigurationService.getClients();
+
+    if (clients.isEmpty()) {
+      String errorMessage = "There are no clients related to the orchestrator";
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage);
+    }
+
+    if (issuerUser.isEmpty()) {
+      String errorMessage = "No issuer found in user's token";
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage);
+    }
 
     LOG.debug("Loop on resources related to the deployment");
     for (Resource resource : resources.get(false)) {
@@ -475,36 +498,25 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           //iamScopes = toscaService.getIamScopes(ar);
           iamTemplate = toscaService.getIamProperties(ar);
         }
-        if (iamTemplate.get(nodeName) != null){
-          issuerUser = iamTemplate.get(nodeName).get("issuer");
+        if (iamTemplate.get(nodeName).get("issuer") != null){
+          issuerNode = iamTemplate.get(nodeName).get("issuer");
         }
-        if (!iamService.checkIam(restTemplate, issuerUser)) {
+        else {
+          issuerNode = issuerUser;
+        }
+        if (!iamService.checkIam(restTemplate, issuerNode)) {
           String errorMessage = "Only an IAM provider is supported";
           throw new IamServiceException(errorMessage);
         }
 
-        Map<String, RegisteredClient> clients = staticClientConfigurationService.getClients();
-
-        if (clients.isEmpty()) {
-          String errorMessage = "There are no clients related to the orchestrator";
-          LOG.error(errorMessage);
-          throw new IamServiceException(errorMessage);
-        }
-
-        if (issuerUser.isEmpty()) {
-          String errorMessage = "No issuer found in user's token";
-          LOG.error(errorMessage);
-          throw new IamServiceException(errorMessage);
-        }
-
-        if (!clients.containsKey(issuerUser)){
+        if (!clients.containsKey(issuerNode)){
           String errorMessage = "There are no orchestrator clients belonging to the identity provider that issued the user's token";
           LOG.error(errorMessage);
           throw new IamServiceException(errorMessage);
         }
 
         // Get the orchestrator client for a specific issuer
-        RegisteredClient orchestratorClient = clients.get(issuerUser);
+        RegisteredClient orchestratorClient = clients.get(issuerNode);
 
         // Extract the clientId and clientSecret field
         orchestratorClientId = orchestratorClient.getClientId();
@@ -515,9 +527,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         // Get metadata of the resource and if it is empty create a client and set metadata
         Map<String,String> resourceMetadata = resource.getMetadata();
 
-        WellKnownResponse wellKnownResponse = iamService.getWellKnown(restTemplate, issuerUser);
+        WellKnownResponse wellKnownResponse = iamService.getWellKnown(restTemplate, issuerNode);
 
-        //if (iamScopes.get(nodeName) != null){
+          //if (iamScopes.get(nodeName) != null){
           if (iamTemplate.get(nodeName).get("scopes") != null){
           scopes = iamTemplate.get(nodeName).get("scopes");
           List<String> inputList = Lists.newArrayList(scopes.split(" "));
@@ -534,20 +546,25 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           scopes = String.join(" ", wellKnownResponse.getScopesSupported());
         }
 
+        // Request a token with client_credentials as grant type
+        String tokenCredentials = iamService.getTokenClientCredentials(
+            restTemplate, orchestratorClientId, orchestratorClientSecret, iamService.getOrchestratorScopes(),
+            wellKnownResponse.getTokenEndpoint());
 
-        if (clientCreated == null){
+        if (resource.getMetadata() == null){
           // Create an IAM client
           clientCreated = iamService.createClient(restTemplate, wellKnownResponse.getRegistrationEndpoint(),
               uuid, email, scopes);
           
           resourceMetadata = new HashMap<>();
+          resourceMetadata.put("issuer", issuerNode);
           resourceMetadata.put("client_id", clientCreated.get("client_id"));
-          resourceMetadata.put("client_secret", clientCreated.get("client_secret"));
-          resourceMetadata.put("issuer", issuerUser);
-          resourceMetadata.put("redirect_uri", iamTemplate.get(nodeName).get("redirect_uri"));
-          resourceMetadata.put("reference_node", iamTemplate.get(nodeName).get("reference_node"));
+          resourceMetadata.put("registration_access_token", clientCreated.get("registration_access_token"));
           resource.setMetadata(resourceMetadata);
-          toscaService.setDeploymentClientIam(ar, nodeName, clientCreated.get("client_id"), clientCreated.get("client_secret"));
+          if (issuerNode.equals(issuerUser)){
+            iamService.assignOwnership(clientCreated.get("client_id"), issuerNode, sub, tokenCredentials);
+          }
+          toscaService.setDeploymentClientIam(ar, nodeName, issuerNode, clientCreated.get("client_id"), clientCreated.get("registration_access_token"));
         }
       }
     }
@@ -594,7 +611,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           infrastructureId);
       deployment.setEndpoint(infrastructureId);
     } catch (ImClientException ex) {
-      /*for (Resource resource : resources.get(false)) {
+      for (Resource resource : resources.get(false)) {
         LOG.info("{}",resource.getToscaNodeType());
         if (resource.getToscaNodeType().equals("tosca.nodes.indigo.iam.client")){
           Map<String,String> resourceMetadata = resource.getMetadata();
@@ -602,7 +619,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           //String token_endpoint = iamService.getEndpoint(restTemplate, issuerUser, "token_endpoint");
           //iamService.deleteClient(clientIdCreated, issuerUser, iamService.getTokenClientCredentials(restTemplate, orchestratorClientId, orchestratorClientSecret, iamService.getOrchestratorScopes(), token_endpoint));
         }
-      }*/
+      }
       throw handleImClientException(ex);
     }
 
@@ -637,7 +654,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
       switch (infrastructureState.getEnumState()) {
         case CONFIGURED:
-          iamUpdate(deployment);
+          //iamUpdate(deployment);
           return true;
         case FAILED:
         case UNCONFIGURED:
@@ -1016,21 +1033,25 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           if (resource.getToscaNodeType().equals("tosca.nodes.indigo.iam.client")){
             Map<String,String> resourceMetadata = resource.getMetadata();
             if (resourceMetadata != null && resourceMetadata.containsKey("client_id")){
+              //Map<String, RegisteredClient> clients = staticClientConfigurationService.getClients();
               String clientIdCreated = resourceMetadata.get("client_id");
-              Map<String, RegisteredClient> clients = staticClientConfigurationService.getClients();
               String iamUrl = resourceMetadata.get("issuer");
-              String token_endpoint = null;
+              String registration_access_token = resourceMetadata.get("registration_access_token");
+              WellKnownResponse wellKnownResponse = iamService.getWellKnown(restTemplate, iamUrl);
+              //String token_endpoint = null;
               
               // Extract clientId and clientSecret of the orchestrator
-              RegisteredClient orchestratorClient = clients.get(iamUrl);
-              String clientId = orchestratorClient.getClientId();
-              String clientSecret = orchestratorClient.getClientSecret();
+              //RegisteredClient orchestratorClient = clients.get(iamUrl);
+              //String clientId = orchestratorClient.getClientId();
+              //String clientSecret = orchestratorClient.getClientSecret();
 
               // Request a token with client_credentials as grant type
-              token_endpoint = iamService.getEndpoint(restTemplate, iamUrl, "token_endpoint");
+              //token_endpoint = iamService.getEndpoint(restTemplate, iamUrl, "token_endpoint");
 
               // Delete the client
-              iamService.deleteClient(clientIdCreated, iamUrl, iamService.getTokenClientCredentials(restTemplate, clientId, clientSecret, iamService.getOrchestratorScopes(), token_endpoint));
+              //iamService.deleteClient(clientIdCreated, iamUrl, iamService.getTokenClientCredentials(restTemplate, clientId, clientSecret, iamService.getOrchestratorScopes(), token_endpoint));
+              // Delete the client
+              iamService.deleteClient(clientIdCreated, wellKnownResponse.getRegistrationEndpoint(), registration_access_token);
             }
             else {
               LOG.info("Found node of type tosca.nodes.indigo.iam.client but no client is registered in metadata");

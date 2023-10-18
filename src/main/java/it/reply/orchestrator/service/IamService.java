@@ -27,4 +27,6 @@ public interface IamService {
 
   public String updateClient(String clientId, String iamUrl, String token, String jsonUpdated);
 
+  public boolean assignOwnership(String clientId, String iamUrl, String accountId, String token);
+
 }

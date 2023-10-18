@@ -289,26 +289,26 @@ public class IamServiceImpl implements IamService {
     String responseBody = responseEntity.getBody();
     LOG.debug("Body of the request: {}", responseBody);
     String clientId = null;
-    String clientSecret = null;
+    String registrationAccessToken = null;
     try {
       // Extract "client_id" from Json
       clientId = objectMapper.readTree(responseBody).get("client_id").asText();
-      clientSecret = objectMapper.readTree(responseBody).get("client_secret").asText();
+      registrationAccessToken = objectMapper.readTree(responseBody).get("registration_access_token").asText();
     } catch (IOException e) {
       String errorMessage = String.format("No IAM client created. %s", e.getMessage());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } catch (NullPointerException e){
-      String errorMessage = String.format("No IAM client created: client_id and/or client_secret not found");
+      String errorMessage = String.format("No IAM client created: client_id and/or registration_access_token not found");
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     }
 
     Map<String, String> clientCreated = new HashMap<>();
     clientCreated.put("client_id", clientId);
-    clientCreated.put("client_secret", clientSecret);
-    LOG.debug("The client with client_id {} and client_secret {} has been successfully created",
-        clientId, clientSecret);
+    clientCreated.put("registration_access_token", registrationAccessToken);
+    LOG.debug("The client with client_id {} and registration_access_token {} has been successfully created",
+        clientId, registrationAccessToken);
     return clientCreated;
   }
     
@@ -321,7 +321,9 @@ public class IamServiceImpl implements IamService {
     HttpEntity<?> requestEntity = new HttpEntity<>(headers);
 
     // URL of the REST service to contact to perform the DELETE request
-    String deleteUrl = iamUrl + "iam/api/clients/" + clientId;
+    String deleteUrl = iamUrl + "/" + clientId;
+    LOG.info(deleteUrl);
+    LOG.info(token);
 
     // Create a RestTemplate object
     RestTemplate restTemplate = new RestTemplate();
@@ -359,11 +361,60 @@ public class IamServiceImpl implements IamService {
     return true;
   }
 
+  public boolean assignOwnership(String clientId, String iamUrl, String accountId, String token){
+    // Create an HttpHeaders object and add the token as authorization
+    HttpHeaders headers = new HttpHeaders();
+    headers.set("Authorization", "Bearer " + token);
+
+    // Create the HttpEntity object that contains the header with the token
+    HttpEntity<?> requestEntity = new HttpEntity<>(headers);
+
+    // URL of the REST service to contact to assign the ownership of a client
+    String assignOwnershipUrl = iamUrl + "iam/api/clients/" + clientId + "/owners/" + accountId;
+
+    LOG.info(assignOwnershipUrl);
+    LOG.info(token);
+
+    // Create a RestTemplate object
+    RestTemplate restTemplate = new RestTemplate();
+
+    // Do the DELETE request
+    ResponseEntity<String> responseEntity;
+    try{
+      responseEntity = restTemplate.exchange(
+          assignOwnershipUrl,
+          HttpMethod.POST,
+          requestEntity,
+          String.class
+      );
+    } catch (HttpClientErrorException e){
+      String errorMessage = String.format("The update of the client with client_id %s was unsuccessful. " + 
+        "Status code: %s", clientId, e.getStatusCode());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage, e);
+    } catch (RestClientException e){
+      String errorMessage = String.format("The update of the client with client_id %s was unsuccessful. %s",
+          e.getMessage());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage, e);
+    } 
+
+    // Check the response
+    if (!HttpStatus.CREATED.equals(responseEntity.getStatusCode())){
+      String errorMessage = String.format("The update of the client with client_id %s was unsuccessful. " + 
+        "Status code: %s", clientId, responseEntity.getStatusCode());
+      LOG.error(errorMessage);
+      throw new IamServiceException(errorMessage);
+    }
+
+    LOG.info("The client with client_id {} has been successfully updated", clientId);
+    return true;
+  }
+
    public static void main(String args[]){
     IamService iamService = new IamServiceImpl();
     RestTemplate restTemplate = new RestTemplate();
-    iamService.checkIam(restTemplate, "https://iotwins-iam.cloud.cnaf.infn.it/");
-    //iamService.checkIam(restTemplate, "https://registry.gitlab.com/v2/ahmadalkhansa/testing/manifests/policy-dev");
+    
   }
 
   public boolean checkIam(RestTemplate restTemplate, String idpUrl) {
@@ -444,7 +495,7 @@ public class IamServiceImpl implements IamService {
     HttpEntity<?> requestEntity = new HttpEntity<>(headers);
 
     // URL of the REST service to contact to perform the DELETE request
-    String getUrl = iamUrl + "iam/api/clients/" + clientId;
+    String getUrl = iamUrl + clientId;
 
     // Create a RestTemplate object
     RestTemplate restTemplate = new RestTemplate();
@@ -491,8 +542,8 @@ public class IamServiceImpl implements IamService {
     // Create the HttpEntity object that contains the header with the token
     HttpEntity<?> requestEntity = new HttpEntity<>(jsonUpdated, headers);
 
-    // URL of the REST service to contact to perform the DELETE request
-    String getUrl = iamUrl + "iam/api/clients/" + clientId;
+    // URL of the REST service to contact to perform the update request
+    String updateUrl = iamUrl + clientId;
 
     // Create a RestTemplate object
     RestTemplate restTemplate = new RestTemplate();
@@ -501,7 +552,7 @@ public class IamServiceImpl implements IamService {
     ResponseEntity<String> responseEntity;
     try{
       responseEntity = restTemplate.exchange(
-          getUrl,
+          updateUrl,
           HttpMethod.PUT,
           requestEntity,
           String.class
