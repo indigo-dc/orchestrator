@@ -1211,7 +1211,8 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
 
-  public ArchiveRoot setDeploymentClientIam(ArchiveRoot ar, Map<String,Map<String,String>> iamTemplateOutput) {
+  public ArchiveRoot setDeploymentClientIam(
+      ArchiveRoot ar, Map<String,Map<String,String>> iamTemplateOutput) {
     getNodesOfType(ar, "tosca.nodes.indigo.iam.client").stream()
         .forEach(iamNode -> {
           Map<String, AbstractPropertyValue> properties =
@@ -1222,14 +1223,18 @@ public class ToscaServiceImpl implements ToscaService {
                   return iamNode.getProperties();
                 });
           String iamNodeName = iamNode.getName();
-          properties.put("issuer", new ScalarPropertyValue(iamTemplateOutput.get(iamNodeName).get("issuer")));
-          properties.put("client_id", new ScalarPropertyValue(iamTemplateOutput.get(iamNodeName).get("client_id")));
-          properties.put("registration_access_token", new ScalarPropertyValue(iamTemplateOutput.get(iamNodeName).get("registration_access_token")));
+          properties.put("issuer",
+              new ScalarPropertyValue(iamTemplateOutput.get(iamNodeName).get("issuer")));
+          properties.put("client_id",
+              new ScalarPropertyValue(iamTemplateOutput.get(iamNodeName).get("client_id")));
+          properties.put("registration_access_token",
+              new ScalarPropertyValue(iamTemplateOutput.get(iamNodeName).get("registration_access_token")));
         });
     return ar;
   }
 
-  public ArchiveRoot setDeploymentClientIam_old(ArchiveRoot ar, String nodeName, String issuer, String client_id, String registration_access_token) {
+  public ArchiveRoot setDeploymentClientIam_old(
+        ArchiveRoot ar, String nodeName, String issuer, String client_id, String registration_access_token) {
     getNodesOfType(ar, "tosca.nodes.indigo.iam.client").stream()
         .forEach(iamNode -> {
           Map<String, AbstractPropertyValue> properties =
