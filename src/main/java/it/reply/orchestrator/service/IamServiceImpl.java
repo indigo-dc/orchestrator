@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
+import it.reply.orchestrator.dal.entity.Resource;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,6 +25,7 @@ import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.io.IOException;
 
@@ -411,10 +413,18 @@ public class IamServiceImpl implements IamService {
     return true;
   }
 
-   public static void main(String args[]){
-    IamService iamService = new IamServiceImpl();
-    RestTemplate restTemplate = new RestTemplate();
-    
+  public boolean deleteAllClients(RestTemplate restTemplate, Map<Boolean, Set<Resource>> resources){
+    for (Resource resource : resources.get(false)) {
+      LOG.info("{}",resource.getToscaNodeType());
+      if (resource.getToscaNodeType().equals("tosca.nodes.indigo.iam.client")){
+        Map<String,String> resourceMetadata = resource.getMetadata();
+        if (resourceMetadata != null){
+          WellKnownResponse wellKnownResponse = getWellKnown(restTemplate, resourceMetadata.get("issuer"));
+          deleteClient(resourceMetadata.get("client_id"), wellKnownResponse.getRegistrationEndpoint(), resourceMetadata.get("registration_access_token"));
+        }
+      }
+    }
+    return true;
   }
 
   public boolean checkIam(RestTemplate restTemplate, String idpUrl) {

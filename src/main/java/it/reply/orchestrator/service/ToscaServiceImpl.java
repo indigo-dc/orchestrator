@@ -1211,7 +1211,25 @@ public class ToscaServiceImpl implements ToscaService {
   }
 
 
-  public ArchiveRoot setDeploymentClientIam(ArchiveRoot ar, String nodeName, String issuer, String client_id, String registration_access_token) {
+  public ArchiveRoot setDeploymentClientIam(ArchiveRoot ar, Map<String,Map<String,String>> iamTemplateOutput) {
+    getNodesOfType(ar, "tosca.nodes.indigo.iam.client").stream()
+        .forEach(iamNode -> {
+          Map<String, AbstractPropertyValue> properties =
+              Optional
+                .ofNullable(iamNode.getProperties())
+                .orElseGet(() -> {
+                  iamNode.setProperties(new HashMap<>());
+                  return iamNode.getProperties();
+                });
+          String iamNodeName = iamNode.getName();
+          properties.put("issuer", new ScalarPropertyValue(iamTemplateOutput.get(iamNodeName).get("issuer")));
+          properties.put("client_id", new ScalarPropertyValue(iamTemplateOutput.get(iamNodeName).get("client_id")));
+          properties.put("registration_access_token", new ScalarPropertyValue(iamTemplateOutput.get(iamNodeName).get("registration_access_token")));
+        });
+    return ar;
+  }
+
+  public ArchiveRoot setDeploymentClientIam_old(ArchiveRoot ar, String nodeName, String issuer, String client_id, String registration_access_token) {
     getNodesOfType(ar, "tosca.nodes.indigo.iam.client").stream()
         .forEach(iamNode -> {
           Map<String, AbstractPropertyValue> properties =
@@ -1306,6 +1324,7 @@ public class ToscaServiceImpl implements ToscaService {
         String nodeName = iamNode.getName();
         String scopes = null;
         String issuer = null;
+        String accountId = null;
         if (properties.containsKey("issuer")){
           ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)  properties.get("issuer");
           issuer = scalarPropertyValue.getValue();
@@ -1314,8 +1333,13 @@ public class ToscaServiceImpl implements ToscaService {
           ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)  properties.get("scopes");
           scopes = scalarPropertyValue.getValue();
         }
+        if (properties.containsKey("accountId")){
+          ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)  properties.get("accountId");
+          accountId = scalarPropertyValue.getValue();
+        }
         innerMap.put("issuer", issuer);
         innerMap.put("scopes", scopes);
+        innerMap.put("accountId", accountId);
         nodeProperties.put(nodeName,innerMap);
         });
     return nodeProperties;
