@@ -558,52 +558,51 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         if (iamTemplateInput.get(nodeName).get("scopes") != null){
           scopes = iamTemplateInput.get(nodeName).get("scopes");
           List<String> inputList = Lists.newArrayList(scopes.split(" "));
-        try {
-          inputList.retainAll(wellKnownResponse.getScopesSupported());
-        } catch (Exception e){
-          String errorMessage = String.format("Impossible to set IAM scopes. " + e.getMessage());
-          LOG.error(errorMessage);
-          throw new IamServiceException(errorMessage, e);
-        }
+          try {
+            inputList.retainAll(wellKnownResponse.getScopesSupported());
+          } catch (Exception e){
+            String errorMessage = String.format("Impossible to set IAM scopes. " + e.getMessage());
+            LOG.error(errorMessage);
+            throw new IamServiceException(errorMessage, e);
+          }
           scopes = String.join(" ", inputList);
         }
         else {
           scopes = String.join(" ", wellKnownResponse.getScopesSupported());
         }
 
-        // Request a token with client_credentials with the orchestrator client, when necessary
         String tokenCredentials = null;
-        if (iamTemplateInput.get(nodeName).get("accountId") != null || issuerNode.equals(issuerUser)){
-        tokenCredentials = iamService.getTokenClientCredentials(
-            restTemplate, orchestratorClientId, orchestratorClientSecret, iamService.getOrchestratorScopes(),
-            wellKnownResponse.getTokenEndpoint());
-        }
 
         // Create an IAM client
         clientCreated = iamService.createClient(restTemplate, wellKnownResponse.getRegistrationEndpoint(),
             uuid, email, scopes);
         
+        // Set metadata and set TOSCA template properties of the tosca.nodes.indigo.iam.client node
+        Map<String,String> resourceMetadata = new HashMap<>();
+        resourceMetadata.put("issuer", issuerNode);
+        resourceMetadata.put("client_id", clientCreated.get("client_id"));
+        resourceMetadata.put("registration_access_token", clientCreated.get("registration_access_token"));
+        resource.setMetadata(resourceMetadata);
+        iamTemplateOutput.put(nodeName, resourceMetadata);
+        
         try{
-          // Set metadata and set TOSCA template properties of the tosca.nodes.indigo.iam.client node
-          Map<String,String> resourceMetadata = new HashMap<>();
-          resourceMetadata.put("issuer", issuerNode);
-          resourceMetadata.put("client_id", clientCreated.get("client_id"));
-          resourceMetadata.put("registration_access_token", clientCreated.get("registration_access_token"));
-          resource.setMetadata(resourceMetadata);
-          iamTemplateOutput.put(nodeName, resourceMetadata);
-          if (iamTemplateInput.get(nodeName).get("accountId") != null){
-            iamService.assignOwnership(clientCreated.get("client_id"), issuerNode, iamTemplateInput.get(nodeName).get("accountId"), tokenCredentials);
+          // Request a token with client_credentials with the orchestrator client, when necessary
+          if (iamTemplateInput.get(nodeName).get("owner") != null || issuerNode.equals(issuerUser)){
+        tokenCredentials = iamService.getTokenClientCredentials(
+            restTemplate, orchestratorClientId, orchestratorClientSecret, iamService.getOrchestratorScopes(),
+            wellKnownResponse.getTokenEndpoint());
           }
-          if (iamTemplateInput.get(nodeName).get("accountId") == null && issuerNode.equals(issuerUser)){
+          // Assign ownership for the client when possible
+          if (iamTemplateInput.get(nodeName).get("owner") != null){
+            iamService.assignOwnership(clientCreated.get("client_id"), issuerNode,
+                iamTemplateInput.get(nodeName).get("owner"), tokenCredentials);
+          }
+          if (iamTemplateInput.get(nodeName).get("owner") == null && issuerNode.equals(issuerUser)){
             iamService.assignOwnership(clientCreated.get("client_id"), issuerNode, sub, tokenCredentials);
           }
         } catch (Exception e) {
-          // If some error occurred, delete all the created IAM clients
-          iamService.deleteAllClients(restTemplate, resources);
-          //iamService.deleteClient(clientCreated.get("client_id"), wellKnownResponse.getRegistrationEndpoint(), clientCreated.get("registration_access_token"));
-          throw e;
+          // If some error occurred, do not delete all the clients, just do not set the owner of a problem customer
         }
-        //toscaService.setDeploymentClientIam(ar, nodeName, issuerNode, clientCreated.get("client_id"), clientCreated.get("registration_access_token"));
       }
     }
 
@@ -1019,37 +1018,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
 
     String deploymentEndpoint = deployment.getEndpoint();
-    LOG.debug("Loop on resources related to the deployment");
-    for (Resource resource : resources.get(false)) {
-      LOG.debug("Found node of type: {}",resource.getToscaNodeType());
-          if (resource.getToscaNodeType().equals("tosca.nodes.indigo.iam.client")){
-            Map<String,String> resourceMetadata = resource.getMetadata();
-            if (resourceMetadata != null && resourceMetadata.containsKey("client_id")){
-              //Map<String, RegisteredClient> clients = staticClientConfigurationService.getClients();
-              String clientIdCreated = resourceMetadata.get("client_id");
-              String iamUrl = resourceMetadata.get("issuer");
-              String registration_access_token = resourceMetadata.get("registration_access_token");
-              WellKnownResponse wellKnownResponse = iamService.getWellKnown(restTemplate, iamUrl);
-              //String token_endpoint = null;
-              
-              // Extract clientId and clientSecret of the orchestrator
-              //RegisteredClient orchestratorClient = clients.get(iamUrl);
-              //String clientId = orchestratorClient.getClientId();
-              //String clientSecret = orchestratorClient.getClientSecret();
-
-              // Request a token with client_credentials as grant type
-              //token_endpoint = iamService.getEndpoint(restTemplate, iamUrl, "token_endpoint");
-
-              // Delete the client
-              //iamService.deleteClient(clientIdCreated, iamUrl, iamService.getTokenClientCredentials(restTemplate, clientId, clientSecret, iamService.getOrchestratorScopes(), token_endpoint));
-              // Delete the client
-              iamService.deleteClient(clientIdCreated, wellKnownResponse.getRegistrationEndpoint(), registration_access_token);
-            }
-            else {
-              LOG.info("Found node of type tosca.nodes.indigo.iam.client but no client is registered in metadata");
-            }
-          }
-        }
 
     if (deploymentEndpoint != null) {
       deployment.setTask(Task.DEPLOYER);
@@ -1069,6 +1037,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         throw handleImClientException(exception);
       }
     }
+
+    // Delete all IAM clients if there are resources of type tosca.nodes.indigo.iam.client
+    iamService.deleteAllClients(restTemplate, resources);
+
     return true;
   }
 

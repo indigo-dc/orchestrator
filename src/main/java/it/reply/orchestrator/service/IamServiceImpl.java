@@ -180,12 +180,12 @@ public class IamServiceImpl implements IamService {
     } catch (HttpClientErrorException e){
       String errorMessage = String.format("Impossible to create a token with client credentials as grant type." +
           "Status code: %s", e.getStatusCode());
-      LOG.error(errorMessage);
+      LOG.warn(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } catch (RestClientException e){
       String errorMessage = String.format("Impossible to create a token with client credentials as grant type. %s",
           e.getMessage());
-      LOG.error(errorMessage);
+      LOG.warn(errorMessage);
       throw new IamServiceException(errorMessage, e);
     }
 
@@ -193,7 +193,7 @@ public class IamServiceImpl implements IamService {
     if (!HttpStatus.OK.equals(responseEntity.getStatusCode())){
       String errorMessage = String.format("Impossible to create a token with client credentials as grant type." +
           "Status code: %s", responseEntity.getStatusCode());
-      LOG.error(errorMessage);
+      LOG.warn(errorMessage);
       throw new IamServiceException(errorMessage);
     }
 
@@ -206,16 +206,16 @@ public class IamServiceImpl implements IamService {
     } catch (IOException e) {
       String errorMessage = String.format("Impossible to create a token with client credentials as grant type. %s",
           e.getMessage());
-      LOG.error(errorMessage);
+      LOG.warn(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } catch (NullPointerException e){
       String errorMessage = "Impossible to create a token with client credentials as grant type:" + 
           "access_token endpoint not found";
-      LOG.error(errorMessage);
+      LOG.warn(errorMessage);
       throw new IamServiceException(errorMessage, e);
     }
 
-    LOG.debug("access token with client credentials as grant type successfully created");
+    LOG.debug("Access token with client credentials as grant type successfully created");
     return access_token;
   }
 
@@ -355,7 +355,7 @@ public class IamServiceImpl implements IamService {
     if (!HttpStatus.NO_CONTENT.equals(responseEntity.getStatusCode())){
       String errorMessage = String.format("The delete of the client with client_id %s was unsuccessful. " + 
         "Status code: %s", clientId, responseEntity.getStatusCode());
-      LOG.error(errorMessage);
+      LOG.debug(errorMessage);
       throw new IamServiceException(errorMessage);
     }
 
@@ -363,7 +363,7 @@ public class IamServiceImpl implements IamService {
     return true;
   }
 
-  public boolean assignOwnership(String clientId, String iamUrl, String accountId, String token){
+  public boolean assignOwnership(String clientId, String iamUrl, String owner, String token){
     // Create an HttpHeaders object and add the token as authorization
     HttpHeaders headers = new HttpHeaders();
     headers.set("Authorization", "Bearer " + token);
@@ -372,7 +372,7 @@ public class IamServiceImpl implements IamService {
     HttpEntity<?> requestEntity = new HttpEntity<>(headers);
 
     // URL of the REST service to contact to assign the ownership of a client
-    String assignOwnershipUrl = iamUrl + "iam/api/clients/" + clientId + "/owners/" + accountId;
+    String assignOwnershipUrl = iamUrl + "iam/api/clients/" + clientId + "/owners/" + owner;
 
     LOG.info(assignOwnershipUrl);
     LOG.info(token);
@@ -380,7 +380,7 @@ public class IamServiceImpl implements IamService {
     // Create a RestTemplate object
     RestTemplate restTemplate = new RestTemplate();
 
-    // Do the DELETE request
+    // Do the POST request
     ResponseEntity<String> responseEntity;
     try{
       responseEntity = restTemplate.exchange(
@@ -390,26 +390,26 @@ public class IamServiceImpl implements IamService {
           String.class
       );
     } catch (HttpClientErrorException e){
-      String errorMessage = String.format("The update of the client with client_id %s was unsuccessful. " + 
+      String errorMessage = String.format("The owner of the client with client_id %s cannot be set. " + 
         "Status code: %s", clientId, e.getStatusCode());
-      LOG.error(errorMessage);
+      LOG.warn(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } catch (RestClientException e){
-      String errorMessage = String.format("The update of the client with client_id %s was unsuccessful. %s",
+      String errorMessage = String.format("The owner of the client with client_id %s cannot be set. %s",
           e.getMessage());
-      LOG.error(errorMessage);
+      LOG.warn(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } 
 
     // Check the response
     if (!HttpStatus.CREATED.equals(responseEntity.getStatusCode())){
-      String errorMessage = String.format("The update of the client with client_id %s was unsuccessful. " + 
+      String errorMessage = String.format("The owner of the client with client_id %s cannot be set. " + 
         "Status code: %s", clientId, responseEntity.getStatusCode());
-      LOG.error(errorMessage);
+      LOG.warn(errorMessage);
       throw new IamServiceException(errorMessage);
     }
 
-    LOG.info("The client with client_id {} has been successfully updated", clientId);
+    LOG.info("The owner of the client with client_id {} has been successfully set", clientId);
     return true;
   }
 
@@ -418,9 +418,14 @@ public class IamServiceImpl implements IamService {
       LOG.info("{}",resource.getToscaNodeType());
       if (resource.getToscaNodeType().equals("tosca.nodes.indigo.iam.client")){
         Map<String,String> resourceMetadata = resource.getMetadata();
-        if (resourceMetadata != null){
+        if (resourceMetadata != null && resourceMetadata.containsKey("client_id") && 
+            resourceMetadata.containsKey("registration_access_token")){
           WellKnownResponse wellKnownResponse = getWellKnown(restTemplate, resourceMetadata.get("issuer"));
-          deleteClient(resourceMetadata.get("client_id"), wellKnownResponse.getRegistrationEndpoint(), resourceMetadata.get("registration_access_token"));
+          deleteClient(resourceMetadata.get("client_id"), wellKnownResponse.getRegistrationEndpoint(),
+              resourceMetadata.get("registration_access_token"));
+        }
+        else {
+          LOG.info("Found node of type tosca.nodes.indigo.iam.client but no client is registered in metadata");
         }
       }
     }
@@ -504,7 +509,7 @@ public class IamServiceImpl implements IamService {
     // Create the HttpEntity object that contains the header with the token
     HttpEntity<?> requestEntity = new HttpEntity<>(headers);
 
-    // URL of the REST service to contact to perform the DELETE request
+    // URL of the REST service to contact to perform the request
     String getUrl = iamUrl + clientId;
 
     // Create a RestTemplate object
