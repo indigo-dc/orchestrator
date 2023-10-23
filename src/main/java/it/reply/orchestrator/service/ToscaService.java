@@ -278,13 +278,7 @@ public interface ToscaService {
   public ArchiveRoot setDeploymentTags(ArchiveRoot ar, String orchestratorUrl,
       String deplymentId, String userEmail);
 
-  //public ArchiveRoot setDeploymentClientIam(ArchiveRoot ar, String nodeName, String issuer, String client_id, String token);
-
   public ArchiveRoot setDeploymentClientIam(ArchiveRoot ar, Map<String,Map<String,String>> iamTemplateOutput);
-
-  public Map<String, String> getIamIssuer(ArchiveRoot ar);
-
-  public Map<String, String> getIamScopes(ArchiveRoot ar);
 
   public Map<String,Map<String,String>> getIamProperties(ArchiveRoot ar);
 

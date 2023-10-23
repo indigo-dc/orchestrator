@@ -80,7 +80,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.alien4cloud.tosca.model.definitions.AbstractPropertyValue;
 import org.alien4cloud.tosca.model.definitions.ComplexPropertyValue;
 import org.alien4cloud.tosca.model.definitions.DeploymentArtifact;
-import org.alien4cloud.tosca.model.definitions.IValue;
 import org.alien4cloud.tosca.model.definitions.PropertyDefinition;
 import org.alien4cloud.tosca.model.definitions.ScalarPropertyValue;
 import org.alien4cloud.tosca.model.templates.Capability;
@@ -114,6 +113,8 @@ public class ToscaServiceImpl implements ToscaService {
   public static final String REQUIREMENT_DEPENDENCY_RELATIONSHIP = "tosca.relationships.DependsOn";
   public static final String REQUIREMENT_HOST_CAPABILITY = "tosca.capabilities.Container";
   public static final String REQUIREMENT_HOST_RELATIONSHIP = "tosca.relationships.HostedOn";
+
+  public static final String IAM_TOSCA_NODE_TYPE = "tosca.nodes.indigo.iam.client";
 
   @Autowired
   private IndigoInputsPreProcessorService indigoInputsPreProcessorService;
@@ -1210,10 +1211,9 @@ public class ToscaServiceImpl implements ToscaService {
     return ar;
   }
 
-
   public ArchiveRoot setDeploymentClientIam(
       ArchiveRoot ar, Map<String,Map<String,String>> iamTemplateOutput) {
-    getNodesOfType(ar, "tosca.nodes.indigo.iam.client").stream()
+    getNodesOfType(ar, IAM_TOSCA_NODE_TYPE).stream()
         .forEach(iamNode -> {
           Map<String, AbstractPropertyValue> properties =
               Optional
@@ -1233,90 +1233,9 @@ public class ToscaServiceImpl implements ToscaService {
     return ar;
   }
 
-  public ArchiveRoot setDeploymentClientIam_old(
-        ArchiveRoot ar, String nodeName, String issuer, String client_id, String registration_access_token) {
-    getNodesOfType(ar, "tosca.nodes.indigo.iam.client").stream()
-        .forEach(iamNode -> {
-          Map<String, AbstractPropertyValue> properties =
-              Optional
-                .ofNullable(iamNode.getProperties())
-                .orElseGet(() -> {
-                  iamNode.setProperties(new HashMap<>());
-                  return iamNode.getProperties();
-                });
-          /*if (!properties.containsKey("issuer")) {
-            Map<String, Object> issuerIam = new HashMap<>();
-            ComplexPropertyValue clientIamIssuer = new ComplexPropertyValue(issuerIam);
-            properties.put("issuer", clientIamIssuer);
-          }
-          if (!properties.containsKey("client_id")) {
-            Map<String, Object> clientIam = new HashMap<>();
-            ComplexPropertyValue clientIamProperty = new ComplexPropertyValue(clientIam);
-            properties.put("client_id", clientIamProperty);
-          }
-          if (!properties.containsKey("registration_access_token")) {
-            Map<String, Object> tokenIam = new HashMap<>();
-            ComplexPropertyValue tokenAttribute = new ComplexPropertyValue(tokenIam);
-            properties.put("registration_access_token", tokenAttribute);
-          }*/
-          if (iamNode.getName().equals(nodeName)) {
-            if (!properties.containsKey("issuer")){
-            properties.put("issuer", new ScalarPropertyValue(issuer));
-            }
-            properties.put("client_id", new ScalarPropertyValue(client_id));
-            properties.put("registration_access_token", new ScalarPropertyValue(registration_access_token));
-          }
-        });
-    return ar;
-  }
-
-  public Map<String, String> getIamIssuer(ArchiveRoot ar) {
-    Map<String, String> nodeIssuers = new HashMap<>();
-    getNodesOfType(ar, "tosca.nodes.indigo.iam.client").stream()
-        .forEach(iamNode -> {
-          Map<String, AbstractPropertyValue> properties =
-              Optional
-                .ofNullable(iamNode.getProperties())
-                .orElseGet(() -> {
-                  iamNode.setProperties(new HashMap<>());
-                  return iamNode.getProperties();
-                });
-        String nodeName = iamNode.getName();
-        String issuer = null;
-        if (properties.containsKey("issuer")){
-          ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)  properties.get("issuer");
-          issuer = scalarPropertyValue.getValue();
-        }
-        nodeIssuers.put(nodeName, issuer);
-        });
-    return nodeIssuers;
-  }
-
-  public Map<String, String> getIamScopes(ArchiveRoot ar) {
-    Map<String, String> nodeScopes = new HashMap<>();
-    getNodesOfType(ar, "tosca.nodes.indigo.iam.client").stream()
-        .forEach(iamNode -> {
-          Map<String, AbstractPropertyValue> properties =
-              Optional
-                .ofNullable(iamNode.getProperties())
-                .orElseGet(() -> {
-                  iamNode.setProperties(new HashMap<>());
-                  return iamNode.getProperties();
-                });
-        String nodeName = iamNode.getName();
-        String scopes = null;
-        if (properties.containsKey("scopes")){
-          ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)  properties.get("scopes");
-          scopes = scalarPropertyValue.getValue();
-        }
-        nodeScopes.put(nodeName, scopes);
-        });
-    return nodeScopes;
-  }
-
   public Map<String,Map<String,String>> getIamProperties(ArchiveRoot ar){
     Map<String,Map<String,String>> nodeProperties = new HashMap<>();
-    getNodesOfType(ar, "tosca.nodes.indigo.iam.client").stream()
+    getNodesOfType(ar, IAM_TOSCA_NODE_TYPE).stream()
         .forEach(iamNode -> {
           Map<String, AbstractPropertyValue> properties =
               Optional

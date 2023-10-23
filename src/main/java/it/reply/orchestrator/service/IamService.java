@@ -2,12 +2,11 @@ package it.reply.orchestrator.service;
 
 import org.springframework.web.client.RestTemplate;
 import it.reply.orchestrator.dal.entity.Resource;
+import it.reply.orchestrator.dto.iam.WellKnownResponse;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import it.reply.orchestrator.WellKnownResponse;
 
 public interface IamService {
 

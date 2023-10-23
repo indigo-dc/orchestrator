@@ -1,4 +1,4 @@
-package it.reply.orchestrator;
+package it.reply.orchestrator.dto.iam;
 
 import java.util.List;
 

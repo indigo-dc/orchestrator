@@ -18,6 +18,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.common.collect.Lists;
 import it.reply.orchestrator.dal.entity.Resource;
+import it.reply.orchestrator.dto.iam.IamClientRequest;
+import it.reply.orchestrator.dto.iam.WellKnownResponse;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -26,13 +28,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.io.IOException;
 
 import lombok.extern.slf4j.Slf4j;
-
-import it.reply.orchestrator.IamClientRequest;
-import it.reply.orchestrator.WellKnownResponse;
 
 import org.springframework.stereotype.Service;
 
@@ -41,10 +39,10 @@ import org.springframework.stereotype.Service;
 public class IamServiceImpl implements IamService {
 
   private ObjectMapper objectMapper;
+  public static final String IAM_TOSCA_NODE_TYPE = "tosca.nodes.indigo.iam.client";
   private static final String WELL_KNOWN_ENDPOINT = ".well-known/openid-configuration";
   private static final List<String> REDIRECT_URIS = Lists.newArrayList("https://another.client.example/oidc");
   private static final String TOKEN_ENDPOINT_AUTH_METHOD = "client_secret_basic";
-  private static final String SCOPE = "openid email profile offline_access";
   private static final List<String> GRANT_TYPES = Lists.newArrayList("refresh_token", "authorization_code");
   private static final List<String> RESPONSE_TYPES = Lists.newArrayList("code");
   private static final String ORCHESTRATOR_SCOPES = "openid profile email offline_access iam:admin.write iam:admin.read";
@@ -178,7 +176,7 @@ public class IamServiceImpl implements IamService {
           String.class
     );
     } catch (HttpClientErrorException e){
-      String errorMessage = String.format("Impossible to create a token with client credentials as grant type." +
+      String errorMessage = String.format("Impossible to create a token with client credentials as grant type. " +
           "Status code: %s", e.getStatusCode());
       LOG.warn(errorMessage);
       throw new IamServiceException(errorMessage, e);
@@ -191,7 +189,7 @@ public class IamServiceImpl implements IamService {
 
     // Verify the response
     if (!HttpStatus.OK.equals(responseEntity.getStatusCode())){
-      String errorMessage = String.format("Impossible to create a token with client credentials as grant type." +
+      String errorMessage = String.format("Impossible to create a token with client credentials as grant type. " +
           "Status code: %s", responseEntity.getStatusCode());
       LOG.warn(errorMessage);
       throw new IamServiceException(errorMessage);
@@ -209,7 +207,7 @@ public class IamServiceImpl implements IamService {
       LOG.warn(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } catch (NullPointerException e){
-      String errorMessage = "Impossible to create a token with client credentials as grant type:" + 
+      String errorMessage = "Impossible to create a token with client credentials as grant type: " +
           "access_token endpoint not found";
       LOG.warn(errorMessage);
       throw new IamServiceException(errorMessage, e);
@@ -220,25 +218,6 @@ public class IamServiceImpl implements IamService {
   }
 
   public Map<String,String> createClient(RestTemplate restTemplate, String iamRegistration, String uuid, String userEmail, String scopes) {
-    /*String jsonRequestBody = "{\n" +
-    "  \"redirect_uris\": [\n" +
-    "    \"https://another.client.example/oidc\"\n" +
-    "  ],\n" +
-    "  \"client_name\": \"paas:" + uuid + "\",\n" +
-    "  \"contacts\": [\n" +
-    "    \"" + userEmail + "\"\n" + 
-    "  ],\n" +
-    "  \"token_endpoint_auth_method\": \"client_secret_basic\",\n" +
-    "  \"scope\": \"openid email profile offline_access\",\n" +
-    "  \"grant_types\": [\n" +
-    "    \"refresh_token\",\n" +
-    "    \"authorization_code\"\n" +
-    "  ],\n" +
-    "  \"response_types\": [\n" +
-    "    \"code\"\n" +
-    "  ]\n" +
-    "}";*/
-
     String clientName = "paas:" + uuid;
     List<String> contacts = Arrays.asList(userEmail);
     String jsonRequestBody = "";
@@ -324,8 +303,6 @@ public class IamServiceImpl implements IamService {
 
     // URL of the REST service to contact to perform the DELETE request
     String deleteUrl = iamUrl + "/" + clientId;
-    LOG.info(deleteUrl);
-    LOG.info(token);
 
     // Create a RestTemplate object
     RestTemplate restTemplate = new RestTemplate();
@@ -363,6 +340,25 @@ public class IamServiceImpl implements IamService {
     return true;
   }
 
+  public boolean deleteAllClients(RestTemplate restTemplate, Map<Boolean, Set<Resource>> resources){
+    for (Resource resource : resources.get(false)) {
+      LOG.info("{}",resource.getToscaNodeType());
+      if (resource.getToscaNodeType().equals(IAM_TOSCA_NODE_TYPE)){
+        Map<String,String> resourceMetadata = resource.getMetadata();
+        if (resourceMetadata != null && resourceMetadata.containsKey("client_id") && 
+            resourceMetadata.containsKey("registration_access_token")){
+          WellKnownResponse wellKnownResponse = getWellKnown(restTemplate, resourceMetadata.get("issuer"));
+          deleteClient(resourceMetadata.get("client_id"), wellKnownResponse.getRegistrationEndpoint(),
+              resourceMetadata.get("registration_access_token"));
+        }
+        else {
+          LOG.info("Found node of type {} but no client is registered in metadata", IAM_TOSCA_NODE_TYPE);
+        }
+      }
+    }
+    return true;
+  }
+
   public boolean assignOwnership(String clientId, String iamUrl, String owner, String token){
     // Create an HttpHeaders object and add the token as authorization
     HttpHeaders headers = new HttpHeaders();
@@ -390,45 +386,27 @@ public class IamServiceImpl implements IamService {
           String.class
       );
     } catch (HttpClientErrorException e){
-      String errorMessage = String.format("The owner of the client with client_id %s cannot be set. " + 
-        "Status code: %s", clientId, e.getStatusCode());
+      String errorMessage = String.format("The owner of the client with client_id %s cannot be set to " +
+      "the user with Id %s. Status code: %s", clientId, owner, e.getStatusCode());
       LOG.warn(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } catch (RestClientException e){
-      String errorMessage = String.format("The owner of the client with client_id %s cannot be set. %s",
-          e.getMessage());
+      String errorMessage = String.format("The owner of the client with client_id %s cannot be set to " +
+      "the user with Id %s. %s", owner, e.getMessage());
       LOG.warn(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } 
 
     // Check the response
     if (!HttpStatus.CREATED.equals(responseEntity.getStatusCode())){
-      String errorMessage = String.format("The owner of the client with client_id %s cannot be set. " + 
-        "Status code: %s", clientId, responseEntity.getStatusCode());
+      String errorMessage = String.format("The owner of the client with client_id %s cannot be set to " +
+      "the user with Id %s. Status code: %s", clientId, owner, responseEntity.getStatusCode());
       LOG.warn(errorMessage);
       throw new IamServiceException(errorMessage);
     }
 
-    LOG.info("The owner of the client with client_id {} has been successfully set", clientId);
-    return true;
-  }
-
-  public boolean deleteAllClients(RestTemplate restTemplate, Map<Boolean, Set<Resource>> resources){
-    for (Resource resource : resources.get(false)) {
-      LOG.info("{}",resource.getToscaNodeType());
-      if (resource.getToscaNodeType().equals("tosca.nodes.indigo.iam.client")){
-        Map<String,String> resourceMetadata = resource.getMetadata();
-        if (resourceMetadata != null && resourceMetadata.containsKey("client_id") && 
-            resourceMetadata.containsKey("registration_access_token")){
-          WellKnownResponse wellKnownResponse = getWellKnown(restTemplate, resourceMetadata.get("issuer"));
-          deleteClient(resourceMetadata.get("client_id"), wellKnownResponse.getRegistrationEndpoint(),
-              resourceMetadata.get("registration_access_token"));
-        }
-        else {
-          LOG.info("Found node of type tosca.nodes.indigo.iam.client but no client is registered in metadata");
-        }
-      }
-    }
+    LOG.info("The owner of the client with client_id {} has been successfully set to " +
+    "the user with Id {}", clientId, owner);
     return true;
   }
 
