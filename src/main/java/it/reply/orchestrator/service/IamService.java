@@ -22,7 +22,7 @@ public interface IamService {
 
   public boolean deleteClient(String clientId, String iamUrl, String token);
 
-  public boolean deleteAllClients(RestTemplate restTemplate, Map<Boolean, Set<Resource>> resources);
+  public void deleteAllClients(RestTemplate restTemplate, Map<Boolean, Set<Resource>> resources);
 
   public boolean checkIam(RestTemplate restTemplate, String idpUrl);
 
@@ -30,6 +30,6 @@ public interface IamService {
 
   public String updateClient(String clientId, String iamUrl, String token, String jsonUpdated);
 
-  public boolean assignOwnership(String clientId, String iamUrl, String accountId, String token);
+  public void assignOwnership(String clientId, String iamUrl, String accountId, String token);
 
 }

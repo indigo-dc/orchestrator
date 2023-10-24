@@ -82,9 +82,9 @@ public class IamServiceImpl implements IamService {
     JsonNode responseJson = null;
     try {
       responseJson = objectMapper.readTree(responseEntity.getBody());
-      // Extract "endpointName" from Json
     } catch (IOException e) {
-      String errorMessage = String.format("Error in contacting %s. %s", issuer + WELL_KNOWN_ENDPOINT, e.getMessage());
+      String errorMessage = String.format("Error in contacting %s. %s",
+          issuer + WELL_KNOWN_ENDPOINT, e.getMessage());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } 
@@ -129,13 +129,13 @@ public class IamServiceImpl implements IamService {
     }
 
     String responseBody = responseEntity.getBody();
-    LOG.debug("Body of the request: {}", responseBody);
     String urlEndpoint = null;
     try {
       // Extract "endpointName" from Json
       urlEndpoint = objectMapper.readTree(responseBody).get(endpointName).asText();
     } catch (IOException e) {
-      String errorMessage = String.format("The endpoint %s cannot be obtained. %s", endpointName, e.getMessage());
+      String errorMessage = String.format("The endpoint %s cannot be obtained. %s",
+          endpointName, e.getMessage());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } catch (NullPointerException e){
@@ -143,13 +143,12 @@ public class IamServiceImpl implements IamService {
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage);
     }
-
     return urlEndpoint;
   }
   
 
-  public String getTokenClientCredentials(RestTemplate restTemplate, String iamClientId, String iamClientSecret,
-      String iamClientScopes, String iamTokenEndpoint){
+  public String getTokenClientCredentials(RestTemplate restTemplate, String iamClientId,
+      String iamClientSecret, String iamClientScopes, String iamTokenEndpoint){
     // Set basic authentication in the "Authorization" header
     HttpHeaders headers = new HttpHeaders();
     String auth = String.format("%s:%s", iamClientId, iamClientSecret);
@@ -196,7 +195,6 @@ public class IamServiceImpl implements IamService {
     }
 
     String responseBody = responseEntity.getBody();
-    LOG.debug("Body of the request: {}", responseBody);
     String access_token = null;
     try {
       // Extract "access_token" from Json
@@ -217,7 +215,8 @@ public class IamServiceImpl implements IamService {
     return access_token;
   }
 
-  public Map<String,String> createClient(RestTemplate restTemplate, String iamRegistration, String uuid, String userEmail, String scopes) {
+  public Map<String,String> createClient(RestTemplate restTemplate, String iamRegistration,
+      String uuid, String userEmail, String scopes) {
     String clientName = "paas:" + uuid;
     List<String> contacts = Arrays.asList(userEmail);
     String jsonRequestBody = "";
@@ -226,7 +225,6 @@ public class IamServiceImpl implements IamService {
         TOKEN_ENDPOINT_AUTH_METHOD, scopes, GRANT_TYPES, RESPONSE_TYPES);
     try {
         jsonRequestBody = objectMapper.writeValueAsString(iamClientRequest);
-        LOG.debug("{}", jsonRequestBody);
     }
     catch(JsonProcessingException e) {
         String errorMessage = String.format("No IAM client created. %s", e.getMessage());
@@ -268,24 +266,25 @@ public class IamServiceImpl implements IamService {
     }
 
     String responseBody = responseEntity.getBody();
-    LOG.debug("Body of the request: {}", responseBody);
     String clientId = null;
     String registrationAccessToken = null;
+    Map<String, String> clientCreated = new HashMap<>();
     try {
-      // Extract "client_id" from Json
+      // Extract "client_id", and "registration_access_token" from Json
       clientId = objectMapper.readTree(responseBody).get("client_id").asText();
-      registrationAccessToken = objectMapper.readTree(responseBody).get("registration_access_token").asText();
+      registrationAccessToken = objectMapper.readTree(responseBody)
+          .get("registration_access_token").asText();
     } catch (IOException e) {
       String errorMessage = String.format("No IAM client created. %s", e.getMessage());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } catch (NullPointerException e){
-      String errorMessage = String.format("No IAM client created: client_id and/or registration_access_token not found");
+      String errorMessage = String.format(
+          "No IAM client created: client_id and/or registration_access_token not found");
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     }
 
-    Map<String, String> clientCreated = new HashMap<>();
     clientCreated.put("client_id", clientId);
     clientCreated.put("registration_access_token", registrationAccessToken);
     LOG.debug("The client with client_id {} and registration_access_token {} has been successfully created",
@@ -317,6 +316,10 @@ public class IamServiceImpl implements IamService {
           String.class
       );
     } catch (HttpClientErrorException e){
+      if (HttpStatus.NOT_FOUND.equals(e.getStatusCode())){
+        LOG.warn("The client with client_id {} was not found", clientId);
+        return false;
+      }
       String errorMessage = String.format("The delete of the client with client_id %s was unsuccessful. " + 
         "Status code: %s", clientId, e.getStatusCode());
       LOG.error(errorMessage);
@@ -340,9 +343,9 @@ public class IamServiceImpl implements IamService {
     return true;
   }
 
-  public boolean deleteAllClients(RestTemplate restTemplate, Map<Boolean, Set<Resource>> resources){
+  public void deleteAllClients(RestTemplate restTemplate, Map<Boolean, Set<Resource>> resources){
     for (Resource resource : resources.get(false)) {
-      LOG.info("{}",resource.getToscaNodeType());
+      LOG.info("Found node of type: {}", resource.getToscaNodeType());
       if (resource.getToscaNodeType().equals(IAM_TOSCA_NODE_TYPE)){
         Map<String,String> resourceMetadata = resource.getMetadata();
         if (resourceMetadata != null && resourceMetadata.containsKey("client_id") && 
@@ -356,10 +359,9 @@ public class IamServiceImpl implements IamService {
         }
       }
     }
-    return true;
   }
 
-  public boolean assignOwnership(String clientId, String iamUrl, String owner, String token){
+  public void assignOwnership(String clientId, String iamUrl, String owner, String token){
     // Create an HttpHeaders object and add the token as authorization
     HttpHeaders headers = new HttpHeaders();
     headers.set("Authorization", "Bearer " + token);
@@ -369,9 +371,6 @@ public class IamServiceImpl implements IamService {
 
     // URL of the REST service to contact to assign the ownership of a client
     String assignOwnershipUrl = iamUrl + "iam/api/clients/" + clientId + "/owners/" + owner;
-
-    LOG.info(assignOwnershipUrl);
-    LOG.info(token);
 
     // Create a RestTemplate object
     RestTemplate restTemplate = new RestTemplate();
@@ -407,7 +406,6 @@ public class IamServiceImpl implements IamService {
 
     LOG.info("The owner of the client with client_id {} has been successfully set to " +
     "the user with Id {}", clientId, owner);
-    return true;
   }
 
   public boolean checkIam(RestTemplate restTemplate, String idpUrl) {
@@ -467,8 +465,8 @@ public class IamServiceImpl implements IamService {
             return false;
         }
     } catch (IOException e) {
-      String errorMessage = String.format("Cannot say if %s is an url related to an IAM or not. %s", endpointURL,
-          e.getMessage());
+      String errorMessage = String.format("Cannot say if %s is an url related to an IAM or not. %s",
+          endpointURL, e.getMessage());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } catch (NullPointerException e) {
@@ -508,8 +506,8 @@ public class IamServiceImpl implements IamService {
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } catch (RestClientException e){
-      String errorMessage = String.format("Obtaining of information about the client with client_id %s was unsuccessful. %s",
-          e.getMessage());
+      String errorMessage = String.format("Obtaining of information about the client with client_id %s " +
+          "was unsuccessful. %s", e.getMessage());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } 

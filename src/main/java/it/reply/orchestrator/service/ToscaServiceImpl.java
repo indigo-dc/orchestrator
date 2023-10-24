@@ -1228,7 +1228,8 @@ public class ToscaServiceImpl implements ToscaService {
           properties.put("client_id",
               new ScalarPropertyValue(iamTemplateOutput.get(iamNodeName).get("client_id")));
           properties.put("registration_access_token",
-              new ScalarPropertyValue(iamTemplateOutput.get(iamNodeName).get("registration_access_token")));
+              new ScalarPropertyValue(
+              iamTemplateOutput.get(iamNodeName).get("registration_access_token")));
         });
     return ar;
   }
@@ -1246,19 +1247,19 @@ public class ToscaServiceImpl implements ToscaService {
                 });
         Map<String, String> innerMap = new HashMap<>();
         String nodeName = iamNode.getName();
-        String scopes = null;
         String issuer = null;
+        String scopes = null;
         String owner = null;
         if (properties.containsKey("issuer")){
-          ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)  properties.get("issuer");
+          ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)properties.get("issuer");
           issuer = scalarPropertyValue.getValue();
         }
         if (properties.containsKey("scopes")){
-          ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)  properties.get("scopes");
+          ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)properties.get("scopes");
           scopes = scalarPropertyValue.getValue();
         }
         if (properties.containsKey("owner")){
-          ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)  properties.get("owner");
+          ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)properties.get("owner");
           owner = scalarPropertyValue.getValue();
         }
         innerMap.put("issuer", issuer);
