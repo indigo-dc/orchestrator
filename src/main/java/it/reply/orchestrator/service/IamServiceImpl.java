@@ -345,12 +345,13 @@ public class IamServiceImpl implements IamService {
 
   public void deleteAllClients(RestTemplate restTemplate, Map<Boolean, Set<Resource>> resources){
     for (Resource resource : resources.get(false)) {
-      LOG.info("Found node of type: {}", resource.getToscaNodeType());
       if (resource.getToscaNodeType().equals(IAM_TOSCA_NODE_TYPE)){
         Map<String,String> resourceMetadata = resource.getMetadata();
         if (resourceMetadata != null && resourceMetadata.containsKey("client_id") && 
             resourceMetadata.containsKey("registration_access_token")){
           WellKnownResponse wellKnownResponse = getWellKnown(restTemplate, resourceMetadata.get("issuer"));
+          LOG.info("Deleting client with client_id {} and issuer {}",
+              resourceMetadata.get("client_id"), resourceMetadata.get("issuer"));
           deleteClient(resourceMetadata.get("client_id"), wellKnownResponse.getRegistrationEndpoint(),
               resourceMetadata.get("registration_access_token"));
         }
@@ -386,12 +387,12 @@ public class IamServiceImpl implements IamService {
       );
     } catch (HttpClientErrorException e){
       String errorMessage = String.format("The owner of the client with client_id %s cannot be set to " +
-      "the user with Id %s. Status code: %s", clientId, owner, e.getStatusCode());
+      "the user with Id %s (issuer %s). Status code: %s", clientId, owner, iamUrl, e.getStatusCode());
       LOG.warn(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } catch (RestClientException e){
       String errorMessage = String.format("The owner of the client with client_id %s cannot be set to " +
-      "the user with Id %s. %s", owner, e.getMessage());
+      "the user with Id %s (issuer %s). %s", clientId, owner, iamUrl, e.getMessage());
       LOG.warn(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } 
@@ -399,7 +400,7 @@ public class IamServiceImpl implements IamService {
     // Check the response
     if (!HttpStatus.CREATED.equals(responseEntity.getStatusCode())){
       String errorMessage = String.format("The owner of the client with client_id %s cannot be set to " +
-      "the user with Id %s. Status code: %s", clientId, owner, responseEntity.getStatusCode());
+      "the user with Id %s (issuer %s). Status code: %s", clientId, owner, iamUrl, responseEntity.getStatusCode());
       LOG.warn(errorMessage);
       throw new IamServiceException(errorMessage);
     }
@@ -458,10 +459,8 @@ public class IamServiceImpl implements IamService {
 
         // Check if the value contains "iam" (ignoring case)
         if (buildName.toLowerCase().contains("iam")) {
-          LOG.debug("{} is an IAM", idpUrl);
             return true;
         } else {
-            LOG.debug("{} is not an IAM", idpUrl);
             return false;
         }
     } catch (IOException e) {

@@ -286,25 +286,18 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
     // Loop over the deployment resources and create an IAM client for all the
     // IAM_TOSCA_NODE_TYPE nodes requested
-    LOG.debug("Loop over resources related to the deployment");
     for (Resource resource : resources.get(false)) {
-      LOG.debug("Found node of type: {}", resource.getToscaNodeType());
       if (resource.getToscaNodeType().equals(IAM_TOSCA_NODE_TYPE)){
         String nodeName = resource.getToscaNodeName();
+        LOG.info("Found node of type: {}. Node name: {}", IAM_TOSCA_NODE_TYPE, nodeName);
         String scopes;
         String issuerNode;
         String tokenCredentials = null;
         Map<String,String> clientCreated = new HashMap<>();
 
-        // Get properties of IAM_TOSCA_NODE_TYPE nodes from the TOSCA template and check
-        // if there are client related to the orchestrator
+        // Get properties of IAM_TOSCA_NODE_TYPE nodes from the TOSCA template
         if (iamTemplateInput == null){
           iamTemplateInput = toscaService.getIamProperties(ar);
-          if (clients.isEmpty()) {
-            String errorMessage = "There are no clients related to the orchestrator";
-            LOG.error(errorMessage);
-            throw new IamServiceException(errorMessage);
-          }
         }
 
         // Set the issuer of the current node
@@ -323,24 +316,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           iamService.deleteAllClients(restTemplate, resources);
           throw new IamServiceException(errorMessage);
         }
-
-        // Check if there is an orchestrator client belonging to the identity provider requested
-        // by the IAM_TOSCA_NODE_TYPE node
-        if (!clients.containsKey(issuerNode)){
-          String errorMessage = String.format("There is no orchestrator client belonging to the " +
-              "identity provider: %s", issuerNode);
-          LOG.error(errorMessage);
-          iamService.deleteAllClients(restTemplate, resources);
-          throw new IamServiceException(errorMessage);
-        }
-
-        // Get the orchestrator client related to the issuer of the node and extract
-        // client_id and client_secret
-        RegisteredClient orchestratorClient = clients.get(issuerNode);
-        String orchestratorClientId = orchestratorClient.getClientId();
-        String orchestratorClientSecret = orchestratorClient.getClientSecret();
-        LOG.info("client_id of the orchestrator is: {}", orchestratorClientId);
-        LOG.debug("client_secret of the orchestrator is: {}", orchestratorClientSecret);
         
         // Extract the useful information of the IAM issuer from the wellknown endpoint
         WellKnownResponse wellKnownResponse = iamService.getWellKnown(restTemplate, issuerNode);
@@ -352,7 +327,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           try {
             inputList.retainAll(wellKnownResponse.getScopesSupported());
           } catch (RuntimeException e){
-            String errorMessage = String.format("Impossible to set IAM scopes. " + e.getMessage());
+            String errorMessage = String.format("Impossible to set IAM scopes of node %s. %s",
+                nodeName, e.getMessage());
             LOG.error(errorMessage);
             iamService.deleteAllClients(restTemplate, resources);
             throw new IamServiceException(errorMessage, e);
@@ -365,6 +341,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
         // Create an IAM client
         try {
+        LOG.info("Creating client with the identity provider {}", issuerNode);
         clientCreated = iamService.createClient(restTemplate,
             wellKnownResponse.getRegistrationEndpoint(), uuid, email, scopes);
         } catch (IamServiceException e) {
@@ -381,7 +358,19 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         resource.setMetadata(resourceMetadata);
         iamTemplateOutput.put(nodeName, resourceMetadata);
         
-        try{
+        if (!clients.containsKey(issuerNode)){
+          String errorMessage = String.format("There is no orchestrator client belonging to the " +
+              "identity provider: %s. Impossible to set the ownership of the client with client_id %s",
+              issuerNode, clientCreated.get("client_id"));
+          LOG.warn(errorMessage);
+        }
+        else try{
+          // Get the orchestrator client related to the issuer of the node and extract
+          // client_id and client_secret
+          RegisteredClient orchestratorClient = clients.get(issuerNode);
+          String orchestratorClientId = orchestratorClient.getClientId();
+          String orchestratorClientSecret = orchestratorClient.getClientSecret();
+
           // Request a token with client_credentials with the orchestrator client, when necessary
           if (iamTemplateInput.get(nodeName).get("owner") != null ||
               issuerNode.equals(issuerUser)){
@@ -400,6 +389,11 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
                 issuerNode, sub, tokenCredentials);
           }
         } catch (IamServiceException e) {
+          if (tokenCredentials == null){
+            String errorMessage = String.format("Impossible to set the ownership of the client " +
+            "with client_id %s and issuer %s", clientCreated.get("client_id"), issuerNode);
+          LOG.warn(errorMessage);
+          }
           // If some error occurred, do not delete all the clients,
           // just do not set the owner of a problem customer
         }
