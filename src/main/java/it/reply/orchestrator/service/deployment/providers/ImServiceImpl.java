@@ -425,6 +425,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   @Override
   public boolean isDeployed(DeploymentMessage deploymentMessage) {
     Deployment deployment = getDeployment(deploymentMessage);
+
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
 
     List<CloudProviderEndpoint> cloudProviderEndpoints =
