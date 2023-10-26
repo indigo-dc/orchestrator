@@ -115,6 +115,12 @@ public class ToscaServiceImpl implements ToscaService {
   public static final String REQUIREMENT_HOST_RELATIONSHIP = "tosca.relationships.HostedOn";
 
   public static final String IAM_TOSCA_NODE_TYPE = "tosca.nodes.indigo.iam.client";
+  public static final String ISSUER = "issuer";
+  public static final String SCOPES = "scopes";
+  public static final String OWNER = "owner";
+  private static final String CLIENT_ID = "client_id";
+  private static final String REGISTRATION_ACCESS_TOKEN = "registration_access_token";
+
 
   @Autowired
   private IndigoInputsPreProcessorService indigoInputsPreProcessorService;
@@ -1223,13 +1229,13 @@ public class ToscaServiceImpl implements ToscaService {
                   return iamNode.getProperties();
                 });
           String iamNodeName = iamNode.getName();
-          properties.put("issuer",
-              new ScalarPropertyValue(iamTemplateOutput.get(iamNodeName).get("issuer")));
-          properties.put("client_id",
-              new ScalarPropertyValue(iamTemplateOutput.get(iamNodeName).get("client_id")));
-          properties.put("registration_access_token",
+          properties.put(ISSUER,
+              new ScalarPropertyValue(iamTemplateOutput.get(iamNodeName).get(ISSUER)));
+          properties.put(CLIENT_ID,
+              new ScalarPropertyValue(iamTemplateOutput.get(iamNodeName).get(CLIENT_ID)));
+          properties.put(REGISTRATION_ACCESS_TOKEN,
               new ScalarPropertyValue(
-              iamTemplateOutput.get(iamNodeName).get("registration_access_token")));
+              iamTemplateOutput.get(iamNodeName).get(REGISTRATION_ACCESS_TOKEN)));
         });
     return ar;
   }
@@ -1250,21 +1256,21 @@ public class ToscaServiceImpl implements ToscaService {
         String issuer = null;
         String scopes = null;
         String owner = null;
-        if (properties.containsKey("issuer")){
-          ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)properties.get("issuer");
+        if (properties.containsKey(ISSUER)){
+          ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)properties.get(ISSUER);
           issuer = scalarPropertyValue.getValue();
         }
-        if (properties.containsKey("scopes")){
-          ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)properties.get("scopes");
+        if (properties.containsKey(SCOPES)){
+          ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)properties.get(SCOPES);
           scopes = scalarPropertyValue.getValue();
         }
-        if (properties.containsKey("owner")){
-          ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)properties.get("owner");
+        if (properties.containsKey(OWNER)){
+          ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue)properties.get(OWNER);
           owner = scalarPropertyValue.getValue();
         }
-        innerMap.put("issuer", issuer);
-        innerMap.put("scopes", scopes);
-        innerMap.put("owner", owner);
+        innerMap.put(ISSUER, issuer);
+        innerMap.put(SCOPES, scopes);
+        innerMap.put(OWNER, owner);
         nodeProperties.put(nodeName,innerMap);
         });
     return nodeProperties;

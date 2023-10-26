@@ -46,6 +46,8 @@ public class IamServiceImpl implements IamService {
   private static final List<String> GRANT_TYPES = Lists.newArrayList("refresh_token", "authorization_code");
   private static final List<String> RESPONSE_TYPES = Lists.newArrayList("code");
   private static final String ORCHESTRATOR_SCOPES = "openid profile email offline_access iam:admin.write iam:admin.read";
+  private static final String CLIENT_ID = "client_id";
+  private static final String REGISTRATION_ACCESS_TOKEN = "registration_access_token";
    
   public IamServiceImpl (){
     objectMapper = new ObjectMapper();
@@ -229,10 +231,10 @@ public class IamServiceImpl implements IamService {
     String registrationAccessToken = null;
     Map<String, String> clientCreated = new HashMap<>();
     try {
-      // Extract "client_id", and "registration_access_token" from Json
-      clientId = objectMapper.readTree(responseBody).get("client_id").asText();
+      // Extract "CLIENT_ID", and "registration_access_token" from Json
+      clientId = objectMapper.readTree(responseBody).get(CLIENT_ID).asText();
       registrationAccessToken = objectMapper.readTree(responseBody)
-          .get("registration_access_token").asText();
+          .get(REGISTRATION_ACCESS_TOKEN).asText();
     } catch (IOException e) {
       String errorMessage = String.format("No IAM client created. %s", e.getMessage());
       LOG.error(errorMessage);
@@ -243,8 +245,8 @@ public class IamServiceImpl implements IamService {
       throw new IamServiceException(errorMessage, e);
     }
 
-    clientCreated.put("client_id", clientId);
-    clientCreated.put("registration_access_token", registrationAccessToken);
+    clientCreated.put(CLIENT_ID, clientId);
+    clientCreated.put(REGISTRATION_ACCESS_TOKEN, registrationAccessToken);
     LOG.debug("The client with client_id {} and registration_access_token {} has been successfully created",
         clientId, registrationAccessToken);
     return clientCreated;
@@ -305,13 +307,13 @@ public class IamServiceImpl implements IamService {
     for (Resource resource : resources.get(false)) {
       if (resource.getToscaNodeType().equals(IAM_TOSCA_NODE_TYPE)){
         Map<String,String> resourceMetadata = resource.getMetadata();
-        if (resourceMetadata != null && resourceMetadata.containsKey("client_id") && 
-            resourceMetadata.containsKey("registration_access_token")){
+        if (resourceMetadata != null && resourceMetadata.containsKey(CLIENT_ID) && 
+            resourceMetadata.containsKey(REGISTRATION_ACCESS_TOKEN)){
           WellKnownResponse wellKnownResponse = getWellKnown(restTemplate, resourceMetadata.get("issuer"));
           LOG.info("Deleting client with client_id {} and issuer {}",
-              resourceMetadata.get("client_id"), resourceMetadata.get("issuer"));
-          deleteClient(resourceMetadata.get("client_id"), wellKnownResponse.getRegistrationEndpoint(),
-              resourceMetadata.get("registration_access_token"));
+              resourceMetadata.get(CLIENT_ID), resourceMetadata.get("issuer"));
+          deleteClient(resourceMetadata.get(CLIENT_ID), wellKnownResponse.getRegistrationEndpoint(),
+              resourceMetadata.get(REGISTRATION_ACCESS_TOKEN));
         }
         else {
           LOG.info("Found node of type {} but no client is registered in metadata", IAM_TOSCA_NODE_TYPE);

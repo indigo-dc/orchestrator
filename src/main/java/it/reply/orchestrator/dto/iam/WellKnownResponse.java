@@ -11,7 +11,9 @@ public class WellKnownResponse {
     private String registrationEndpoint;
     private String tokenEndpoint;
 
-    public WellKnownResponse(){}
+    public WellKnownResponse(){
+        // Use the setter functions to set the attributes of the class
+    }
 
     public List<String> getScopesSupported() {
         return scopesSupported;

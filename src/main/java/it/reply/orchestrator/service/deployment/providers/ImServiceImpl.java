@@ -121,7 +121,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     this.imClientFactory = imClientFactory;
   }
 
-  private RestTemplate restTemplate;
+  private final RestTemplate restTemplate;
 
   @Autowired
   private IamService iamService;
@@ -152,6 +152,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   private static final String VMINFO = "VirtualMachineInfo";
   public static final String IAM_TOSCA_NODE_TYPE = "tosca.nodes.indigo.iam.client";
+  public static final String ISSUER = "issuer";
+  public static final String OWNER = "owner";
+  private static final String CLIENT_ID = "client_id";
 
   protected <R> R executeWithClientForResult(List<CloudProviderEndpoint> cloudProviderEndpoints,
       @Nullable OidcTokenId requestedWithToken,
@@ -305,8 +308,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         }
 
         // Set the issuer of the current node
-        if (iamTemplateInput.get(nodeName).get("issuer") != null){
-          issuerNode = iamTemplateInput.get(nodeName).get("issuer");
+        if (iamTemplateInput.get(nodeName).get(ISSUER) != null){
+          issuerNode = iamTemplateInput.get(nodeName).get(ISSUER);
         }
         else {
           issuerNode = issuerUser;
@@ -355,8 +358,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         
         // Set metadata and set TOSCA template properties of the IAM_TOSCA_NODE_TYPE node
         Map<String,String> resourceMetadata = new HashMap<>();
-        resourceMetadata.put("issuer", issuerNode);
-        resourceMetadata.put("client_id", clientCreated.get("client_id"));
+        resourceMetadata.put(ISSUER, issuerNode);
+        resourceMetadata.put(CLIENT_ID, clientCreated.get(CLIENT_ID));
         resourceMetadata.put("registration_access_token",
             clientCreated.get("registration_access_token"));
         resource.setMetadata(resourceMetadata);
@@ -365,7 +368,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         if (!clients.containsKey(issuerNode)){
           String errorMessage = String.format("There is no orchestrator client belonging to the " +
               "identity provider: %s. Impossible to set the ownership of the client with client_id %s",
-              issuerNode, clientCreated.get("client_id"));
+              issuerNode, clientCreated.get(CLIENT_ID));
           LOG.warn(errorMessage);
         }
         else try{
@@ -376,26 +379,26 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           String orchestratorClientSecret = orchestratorClient.getClientSecret();
 
           // Request a token with client_credentials with the orchestrator client, when necessary
-          if (iamTemplateInput.get(nodeName).get("owner") != null ||
+          if (iamTemplateInput.get(nodeName).get(OWNER) != null ||
               issuerNode.equals(issuerUser)){
             tokenCredentials = iamService.getTokenClientCredentials(
                 restTemplate, orchestratorClientId, orchestratorClientSecret,
                 iamService.getOrchestratorScopes(), wellKnownResponse.getTokenEndpoint());
           }
           // Assign ownership for the client when possible
-          if (iamTemplateInput.get(nodeName).get("owner") != null){
-            iamService.assignOwnership(clientCreated.get("client_id"), issuerNode,
-                iamTemplateInput.get(nodeName).get("owner"), tokenCredentials);
+          if (iamTemplateInput.get(nodeName).get(OWNER) != null){
+            iamService.assignOwnership(clientCreated.get(CLIENT_ID), issuerNode,
+                iamTemplateInput.get(nodeName).get(OWNER), tokenCredentials);
           }
-          if (iamTemplateInput.get(nodeName).get("owner") == null &&
+          if (iamTemplateInput.get(nodeName).get(OWNER) == null &&
               issuerNode.equals(issuerUser)){
-            iamService.assignOwnership(clientCreated.get("client_id"),
+            iamService.assignOwnership(clientCreated.get(CLIENT_ID),
                 issuerNode, sub, tokenCredentials);
           }
         } catch (IamServiceException e) {
           if (tokenCredentials == null){
             String errorMessage = String.format("Impossible to set the ownership of the client " +
-            "with client_id %s and issuer %s", clientCreated.get("client_id"), issuerNode);
+            "with client_id %s and issuer %s", clientCreated.get(CLIENT_ID), issuerNode);
           LOG.warn(errorMessage);
           }
           // If some error occurred, do not delete all the clients,
