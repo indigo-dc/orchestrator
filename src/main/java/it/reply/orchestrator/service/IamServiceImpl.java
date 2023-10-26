@@ -50,7 +50,6 @@ public class IamServiceImpl implements IamService {
   private static final String REGISTRATION_ACCESS_TOKEN = "registration_access_token";
   private static final String AUTHORIZATION = "Authorization";
   private static final String BEARER = "Bearer ";
-  private static final String STATUS_CODE = "Status code: %s";
    
   public IamServiceImpl (){
     objectMapper = new ObjectMapper();
@@ -61,24 +60,25 @@ public class IamServiceImpl implements IamService {
 }
 
   public WellKnownResponse getWellKnown(RestTemplate restTemplate, String issuer){
-    String commonMessage = "The %s endpoint cannot be contacted. ";
     ResponseEntity<String> responseEntity;
     WellKnownResponse wellKnownResponse = new WellKnownResponse();
     try{
       responseEntity = restTemplate.getForEntity(issuer + WELL_KNOWN_ENDPOINT, String.class);
     } catch (HttpClientErrorException e){
-      String errorMessage = String.format(commonMessage + STATUS_CODE, WELL_KNOWN_ENDPOINT, e.getStatusCode());
+      String errorMessage = String.format("The %s endpoint cannot be contacted. Status code: %s",
+          WELL_KNOWN_ENDPOINT, e.getStatusCode());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } catch (RestClientException e){
-      String errorMessage = String.format(commonMessage + e.getMessage(), WELL_KNOWN_ENDPOINT);
+      String errorMessage = String.format("The %s endpoint cannot be contacted. %s",
+          WELL_KNOWN_ENDPOINT, e.getMessage());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     }
 
     if (!HttpStatus.OK.equals(responseEntity.getStatusCode())){
-      String errorMessage = String.format(commonMessage + STATUS_CODE, WELL_KNOWN_ENDPOINT,
-          responseEntity.getStatusCode());
+      String errorMessage = String.format("The %s endpoint cannot be contacted. Status code: %s",
+          WELL_KNOWN_ENDPOINT, responseEntity.getStatusCode());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage);
     }
@@ -112,8 +112,6 @@ public class IamServiceImpl implements IamService {
 
   public String getTokenClientCredentials(RestTemplate restTemplate, String iamClientId,
       String iamClientSecret, String iamClientScopes, String iamTokenEndpoint){
-    String commonMessage = "Impossible to create a token with client credentials as grant type. ";
-
     // Set basic authentication in the "Authorization" header
     HttpHeaders headers = new HttpHeaders();
     String auth = String.format("%s:%s", iamClientId, iamClientSecret);
@@ -140,18 +138,21 @@ public class IamServiceImpl implements IamService {
           String.class
     );
     } catch (HttpClientErrorException e){
-      String errorMessage = String.format(commonMessage + STATUS_CODE, e.getStatusCode());
+      String errorMessage = String.format("Impossible to create a token with client credentials as grant type. " +
+          "Status code: %s", e.getStatusCode());
       LOG.warn(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } catch (RestClientException e){
-      String errorMessage = String.format(commonMessage + e.getMessage());
+      String errorMessage = String.format("Impossible to create a token with client credentials as grant type. %s",
+          e.getMessage());
       LOG.warn(errorMessage);
       throw new IamServiceException(errorMessage, e);
     }
 
     // Verify the response
     if (!HttpStatus.OK.equals(responseEntity.getStatusCode())){
-      String errorMessage = String.format(commonMessage + STATUS_CODE, responseEntity.getStatusCode());
+      String errorMessage = String.format("Impossible to create a token with client credentials as grant type. " +
+          "Status code: %s", responseEntity.getStatusCode());
       LOG.warn(errorMessage);
       throw new IamServiceException(errorMessage);
     }
@@ -162,11 +163,13 @@ public class IamServiceImpl implements IamService {
       // Extract "access_token" from Json
       accessToken = objectMapper.readTree(responseBody).get("access_token").asText();
     } catch (IOException e) {
-      String errorMessage = String.format(commonMessage + e.getMessage());
+      String errorMessage = String.format("Impossible to create a token with client credentials as grant type. %s",
+          e.getMessage());
       LOG.warn(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } catch (NullPointerException e){
-      String errorMessage = commonMessage + "access_token endpoint not found";
+      String errorMessage = "Impossible to create a token with client credentials as grant type: " +
+          "access_token endpoint not found";
       LOG.warn(errorMessage);
       throw new IamServiceException(errorMessage, e);
     }
@@ -177,7 +180,6 @@ public class IamServiceImpl implements IamService {
 
   public Map<String,String> createClient(RestTemplate restTemplate, String iamRegistration,
       String uuid, String userEmail, String scopes) {
-    String commonMessage = "No IAM client created. ";
     String clientName = "paas:" + uuid;
     List<String> contacts = Arrays.asList(userEmail);
     String jsonRequestBody = "";
@@ -188,7 +190,7 @@ public class IamServiceImpl implements IamService {
         jsonRequestBody = objectMapper.writeValueAsString(iamClientRequest);
     }
     catch(JsonProcessingException e) {
-        String errorMessage = String.format(commonMessage + e.getMessage());
+        String errorMessage = String.format("No IAM client created. %s", e.getMessage());
         throw new IamServiceException(errorMessage, e);
     }
 
@@ -209,18 +211,18 @@ public class IamServiceImpl implements IamService {
           String.class
     );
     } catch (HttpClientErrorException e){
-      String errorMessage = String.format(commonMessage + STATUS_CODE, e.getStatusCode());
+      String errorMessage = String.format("No IAM client created. Status code: %s", e.getStatusCode());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } catch (RestClientException e){
-      String errorMessage = String.format(commonMessage + e.getMessage());
+      String errorMessage = String.format("No IAM client created. %s", e.getMessage());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     }
 
     // Verify the response
     if (!HttpStatus.CREATED.equals(responseEntity.getStatusCode())) {
-      String errorMessage = String.format(commonMessage + STATUS_CODE,
+      String errorMessage = String.format("No IAM client created. Status code: %s",
           responseEntity.getStatusCode());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage);
@@ -236,11 +238,11 @@ public class IamServiceImpl implements IamService {
       registrationAccessToken = objectMapper.readTree(responseBody)
           .get(REGISTRATION_ACCESS_TOKEN).asText();
     } catch (IOException e) {
-      String errorMessage = String.format(commonMessage + e.getMessage());
+      String errorMessage = String.format("No IAM client created. %s", e.getMessage());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } catch (NullPointerException e){
-      String errorMessage = commonMessage + "client_id and/or registration_access_token not found";
+      String errorMessage = "No IAM client created: client_id and/or registration_access_token not found";
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     }
@@ -253,8 +255,6 @@ public class IamServiceImpl implements IamService {
   }
     
   public boolean deleteClient(String clientId, String iamUrl, String token){
-    String commonMessage = "The delete of the client with client_id %s was unsuccessful. ";
-
     // Create an HttpHeaders object and add the token as authorization
     HttpHeaders headers = new HttpHeaders();
     headers.set(AUTHORIZATION, BEARER + token);
@@ -282,18 +282,21 @@ public class IamServiceImpl implements IamService {
         LOG.warn("The client with client_id {} was not found", clientId);
         return false;
       }
-      String errorMessage = String.format(commonMessage + STATUS_CODE, clientId, e.getStatusCode());
+      String errorMessage = String.format("The delete of the client with client_id %s was unsuccessful. " + 
+        "Status code: %s", clientId, e.getStatusCode());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } catch (RestClientException e){
-      String errorMessage = String.format(commonMessage + e.getMessage());
+      String errorMessage = String.format("The delete of the client with client_id %s was unsuccessful. %s",
+          e.getMessage());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } 
 
     // Check the response
     if (!HttpStatus.NO_CONTENT.equals(responseEntity.getStatusCode())){
-      String errorMessage = String.format(commonMessage + STATUS_CODE, clientId, responseEntity.getStatusCode());
+      String errorMessage = String.format("The delete of the client with client_id %s was unsuccessful. " + 
+        "Status code: %s", clientId, responseEntity.getStatusCode());
       LOG.debug(errorMessage);
       throw new IamServiceException(errorMessage);
     }
@@ -322,9 +325,6 @@ public class IamServiceImpl implements IamService {
   }
 
   public void assignOwnership(String clientId, String iamUrl, String owner, String token){
-    String commonMessage = "The owner of the client with client_id %s cannot be set to " +
-      "the user with Id %s (issuer %s). ";
-
     // Create an HttpHeaders object and add the token as authorization
     HttpHeaders headers = new HttpHeaders();
     headers.set(AUTHORIZATION, BEARER + token);
@@ -348,19 +348,21 @@ public class IamServiceImpl implements IamService {
           String.class
       );
     } catch (HttpClientErrorException e){
-      String errorMessage = String.format(commonMessage + STATUS_CODE, clientId, owner, iamUrl, e.getStatusCode());
+      String errorMessage = String.format("The owner of the client with client_id %s cannot be set to " +
+      "the user with Id %s (issuer %s). Status code: %s", clientId, owner, iamUrl, e.getStatusCode());
       LOG.warn(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } catch (RestClientException e){
-      String errorMessage = String.format(commonMessage + e.getMessage(), clientId, owner, iamUrl);
+      String errorMessage = String.format("The owner of the client with client_id %s cannot be set to " +
+      "the user with Id %s (issuer %s). %s", clientId, owner, iamUrl, e.getMessage());
       LOG.warn(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } 
 
     // Check the response
     if (!HttpStatus.CREATED.equals(responseEntity.getStatusCode())){
-      String errorMessage = String.format(commonMessage + STATUS_CODE, clientId, owner, iamUrl,
-          responseEntity.getStatusCode());
+      String errorMessage = String.format("The owner of the client with client_id %s cannot be set to " +
+      "the user with Id %s (issuer %s). Status code: %s", clientId, owner, iamUrl, responseEntity.getStatusCode());
       LOG.warn(errorMessage);
       throw new IamServiceException(errorMessage);
     }
@@ -370,8 +372,6 @@ public class IamServiceImpl implements IamService {
   }
 
   public boolean checkIam(RestTemplate restTemplate, String idpUrl) {
-    String commonMessage = "Cannot say if %s is an url related to an IAM or not. ";
-
     // URL of the endpoint to be contacted
     String endpointURL = idpUrl + "actuator/info";
 
@@ -392,18 +392,21 @@ public class IamServiceImpl implements IamService {
           String.class
       );
     } catch (HttpClientErrorException e){
-      String errorMessage = String.format(commonMessage + STATUS_CODE, endpointURL, e.getStatusCode());
+      String errorMessage = String.format("Cannot say if %s is an url related to an IAM or not. Status code: %s",
+          endpointURL, e.getStatusCode());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } catch (RestClientException e){
-      String errorMessage = String.format(commonMessage + e.getMessage(), endpointURL);
+      String errorMessage = String.format("Cannot say if %s is an url related to an IAM or not. %s",
+          endpointURL, e.getMessage());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     }
 
     // Check the response
     if (!HttpStatus.OK.equals(responseEntity.getStatusCode())){
-      String errorMessage = String.format(commonMessage + STATUS_CODE, endpointURL, responseEntity.getStatusCode());
+      String errorMessage = String.format("Cannot say if %s is an url related to an IAM or not. Status code: %s",
+          endpointURL, responseEntity.getStatusCode());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage);
     }
@@ -420,19 +423,19 @@ public class IamServiceImpl implements IamService {
         // Check if the value contains "iam" (ignoring case)
         return buildName.toLowerCase().contains("iam");
     } catch (IOException e) {
-      String errorMessage = String.format(commonMessage + e.getMessage(), endpointURL);
+      String errorMessage = String.format("Cannot say if %s is an url related to an IAM or not. %s",
+          endpointURL, e.getMessage());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } catch (NullPointerException e) {
-      String errorMessage = String.format(commonMessage + "The build:name field does not exist", endpointURL);
+      String errorMessage = String.format("Cannot say if %s is an url related to an IAM or not." +
+          "The build:name field does not exist", endpointURL);
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     }
   }
 
   public String getInfoIamClient(String clientId, String iamUrl, String token){
-    String commonMessage = "Obtaining of information about the client with client_id %s was unsuccessful. ";
-
     // Create an HttpHeaders object and add the token as authorization
     HttpHeaders headers = new HttpHeaders();
     headers.set(AUTHORIZATION, BEARER + token);
@@ -456,17 +459,20 @@ public class IamServiceImpl implements IamService {
           String.class
       );
     } catch (HttpClientErrorException e){
-      String errorMessage = String.format(commonMessage + STATUS_CODE, clientId, e.getStatusCode());
+      String errorMessage = String.format("Obtaining of information about the client with client_id %s was unsuccessful. " + 
+        "Status code: %s", clientId, e.getStatusCode());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } catch (RestClientException e){
-      String errorMessage = String.format(commonMessage + e.getMessage());
+      String errorMessage = String.format("Obtaining of information about the client with client_id %s " +
+          "was unsuccessful. %s", e.getMessage());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } 
     // Check the response
     if (!HttpStatus.OK.equals(responseEntity.getStatusCode())){
-      String errorMessage = String.format(commonMessage + STATUS_CODE, clientId, responseEntity.getStatusCode());
+      String errorMessage = String.format("Obtaining of information about the client with client_id %s was unsuccessful. " + 
+        "Status code: %s", clientId, responseEntity.getStatusCode());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage);
     }
@@ -476,8 +482,6 @@ public class IamServiceImpl implements IamService {
   }
   
   public String updateClient(String clientId, String iamUrl, String token, String jsonUpdated){
-    String commonMessage = "The update of the client with client_id %s was unsuccessful. ";
-
     // Create an HttpHeaders object and add the token as authorization
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_JSON);
@@ -502,17 +506,20 @@ public class IamServiceImpl implements IamService {
           String.class
       );
     } catch (HttpClientErrorException e){
-      String errorMessage = String.format(commonMessage + STATUS_CODE, clientId, e.getStatusCode());
+      String errorMessage = String.format("The update of the client with client_id %s was unsuccessful. " + 
+        "Status code: %s", clientId, e.getStatusCode());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } catch (RestClientException e){
-      String errorMessage = String.format(commonMessage + e.getMessage());
+      String errorMessage = String.format("The update of the client with client_id %s was unsuccessful. %s",
+          e.getMessage());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } 
     // Check the response
     if (!HttpStatus.OK.equals(responseEntity.getStatusCode())){
-      String errorMessage = String.format(commonMessage + STATUS_CODE, clientId, responseEntity.getStatusCode());
+      String errorMessage = String.format("The update of the client with client_id %s was unsuccessful. " + 
+        "Status code: %s", clientId, responseEntity.getStatusCode());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage);
     }
