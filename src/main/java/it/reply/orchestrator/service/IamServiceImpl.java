@@ -48,6 +48,8 @@ public class IamServiceImpl implements IamService {
   private static final String ORCHESTRATOR_SCOPES = "openid profile email offline_access iam:admin.write iam:admin.read";
   private static final String CLIENT_ID = "client_id";
   private static final String REGISTRATION_ACCESS_TOKEN = "registration_access_token";
+  private static final String AUTHORIZATION = "Authorization";
+  private static final String BEARER = "Bearer ";
    
   public IamServiceImpl (){
     objectMapper = new ObjectMapper();
@@ -116,7 +118,7 @@ public class IamServiceImpl implements IamService {
     byte[] authBytes = auth.getBytes();
     byte[] base64CredsBytes = Base64.getEncoder().encode(authBytes);
     String base64Creds = new String(base64CredsBytes);
-    headers.add("Authorization", "Basic " + base64Creds);
+    headers.add(AUTHORIZATION, "Basic " + base64Creds);
 
     // Create a MultiValueMap object for the body data
     MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>();
@@ -255,7 +257,7 @@ public class IamServiceImpl implements IamService {
   public boolean deleteClient(String clientId, String iamUrl, String token){
     // Create an HttpHeaders object and add the token as authorization
     HttpHeaders headers = new HttpHeaders();
-    headers.set("Authorization", "Bearer " + token);
+    headers.set(AUTHORIZATION, BEARER + token);
 
     // Create the HttpEntity object that contains the header with the token
     HttpEntity<?> requestEntity = new HttpEntity<>(headers);
@@ -325,7 +327,7 @@ public class IamServiceImpl implements IamService {
   public void assignOwnership(String clientId, String iamUrl, String owner, String token){
     // Create an HttpHeaders object and add the token as authorization
     HttpHeaders headers = new HttpHeaders();
-    headers.set("Authorization", "Bearer " + token);
+    headers.set(AUTHORIZATION, BEARER + token);
 
     // Create the HttpEntity object that contains the header with the token
     HttpEntity<?> requestEntity = new HttpEntity<>(headers);
@@ -436,7 +438,7 @@ public class IamServiceImpl implements IamService {
   public String getInfoIamClient(String clientId, String iamUrl, String token){
     // Create an HttpHeaders object and add the token as authorization
     HttpHeaders headers = new HttpHeaders();
-    headers.set("Authorization", "Bearer " + token);
+    headers.set(AUTHORIZATION, BEARER + token);
 
     // Create the HttpEntity object that contains the header with the token
     HttpEntity<?> requestEntity = new HttpEntity<>(headers);
@@ -483,7 +485,7 @@ public class IamServiceImpl implements IamService {
     // Create an HttpHeaders object and add the token as authorization
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_JSON);
-    headers.set("Authorization", "Bearer " + token);
+    headers.set(AUTHORIZATION, BEARER + token);
 
     // Create the HttpEntity object that contains the header with the token
     HttpEntity<?> requestEntity = new HttpEntity<>(jsonUpdated, headers);
