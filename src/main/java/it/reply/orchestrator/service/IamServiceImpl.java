@@ -98,52 +98,11 @@ public class IamServiceImpl implements IamService {
       }
       wellKnownResponse.setScopesSupported(listOfScopes);
     } catch (NullPointerException e){
-      String errorMessage = String.format("Necessary enpoint/s not found in configuration");
+      String errorMessage = "Necessary enpoint/s not found in configuration";
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage);
     }
     return wellKnownResponse;
-  }
-
-  public String getEndpoint(RestTemplate restTemplate, String url, String endpointName){
-    ResponseEntity<String> responseEntity;
-    try{
-      responseEntity = restTemplate.getForEntity(url + WELL_KNOWN_ENDPOINT, String.class);
-    } catch (HttpClientErrorException e){
-      String errorMessage = String.format("The %s endpoint cannot be contacted. Status code: %s",
-          WELL_KNOWN_ENDPOINT, e.getStatusCode());
-      LOG.error(errorMessage);
-      throw new IamServiceException(errorMessage, e);
-    } catch (RestClientException e){
-      String errorMessage = String.format("The %s endpoint cannot be contacted. %s",
-          WELL_KNOWN_ENDPOINT, e.getMessage());
-      LOG.error(errorMessage);
-      throw new IamServiceException(errorMessage, e);
-    }
-
-    if (!HttpStatus.OK.equals(responseEntity.getStatusCode())){
-      String errorMessage = String.format("The %s endpoint cannot be contacted. Status code: %s",
-          WELL_KNOWN_ENDPOINT, responseEntity.getStatusCode());
-      LOG.error(errorMessage);
-      throw new IamServiceException(errorMessage);
-    }
-
-    String responseBody = responseEntity.getBody();
-    String urlEndpoint = null;
-    try {
-      // Extract "endpointName" from Json
-      urlEndpoint = objectMapper.readTree(responseBody).get(endpointName).asText();
-    } catch (IOException e) {
-      String errorMessage = String.format("The endpoint %s cannot be obtained. %s",
-          endpointName, e.getMessage());
-      LOG.error(errorMessage);
-      throw new IamServiceException(errorMessage, e);
-    } catch (NullPointerException e){
-      String errorMessage = String.format("%s endpoint not found", endpointName);
-      LOG.error(errorMessage);
-      throw new IamServiceException(errorMessage);
-    }
-    return urlEndpoint;
   }
   
 

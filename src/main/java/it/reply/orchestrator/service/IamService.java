@@ -14,8 +14,6 @@ public interface IamService {
 
   public WellKnownResponse getWellKnown(RestTemplate restTemplate, String issuer);
 
-  public String getEndpoint(RestTemplate restTemplate, String url, String endpointName);
-
   public String getTokenClientCredentials(RestTemplate restTemplate, String iamClientId, String iamClientSecret, String iamClientScopes, String iamTokenEndpoint);
 
   public Map<String,String> createClient(RestTemplate restTemplate, String iamRegistration, String uuid, String userEmail, String scopes);
