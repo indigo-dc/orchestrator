@@ -154,10 +154,10 @@ public class IamServiceImpl implements IamService {
     }
 
     String responseBody = responseEntity.getBody();
-    String access_token = null;
+    String accessToken = null;
     try {
       // Extract "access_token" from Json
-      access_token = objectMapper.readTree(responseBody).get("access_token").asText();
+      accessToken = objectMapper.readTree(responseBody).get("access_token").asText();
     } catch (IOException e) {
       String errorMessage = String.format("Impossible to create a token with client credentials as grant type. %s",
           e.getMessage());
@@ -171,7 +171,7 @@ public class IamServiceImpl implements IamService {
     }
 
     LOG.debug("Access token with client credentials as grant type successfully created");
-    return access_token;
+    return accessToken;
   }
 
   public Map<String,String> createClient(RestTemplate restTemplate, String iamRegistration,
@@ -238,8 +238,7 @@ public class IamServiceImpl implements IamService {
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } catch (NullPointerException e){
-      String errorMessage = String.format(
-          "No IAM client created: client_id and/or registration_access_token not found");
+      String errorMessage = "No IAM client created: client_id and/or registration_access_token not found";
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     }
@@ -418,11 +417,7 @@ public class IamServiceImpl implements IamService {
             .get("build").get("name").asText();
 
         // Check if the value contains "iam" (ignoring case)
-        if (buildName.toLowerCase().contains("iam")) {
-            return true;
-        } else {
-            return false;
-        }
+        return buildName.toLowerCase().contains("iam");
     } catch (IOException e) {
       String errorMessage = String.format("Cannot say if %s is an url related to an IAM or not. %s",
           endpointURL, e.getMessage());
@@ -470,7 +465,6 @@ public class IamServiceImpl implements IamService {
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } 
-    System.out.println("Corpo della risposta:\n" + responseEntity.getBody());
     // Check the response
     if (!HttpStatus.OK.equals(responseEntity.getStatusCode())){
       String errorMessage = String.format("Obtaining of information about the client with client_id %s was unsuccessful. " + 
@@ -518,7 +512,6 @@ public class IamServiceImpl implements IamService {
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } 
-    System.out.println("Corpo della risposta:\n" + responseEntity.getBody());
     // Check the response
     if (!HttpStatus.OK.equals(responseEntity.getStatusCode())){
       String errorMessage = String.format("The update of the client with client_id %s was unsuccessful. " + 

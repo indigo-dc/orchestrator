@@ -110,8 +110,15 @@ import org.mitre.openid.connect.client.service.impl.StaticClientConfigurationSer
 @Slf4j
 public class ImServiceImpl extends AbstractDeploymentProviderService {
 
-  public ImServiceImpl (RestTemplateBuilder restTemplateBuilder){
+  @Autowired
+  public ImServiceImpl (RestTemplateBuilder restTemplateBuilder,
+      CustomOAuth2TemplateFactory templateFactory,
+      StaticClientConfigurationService staticClientConfigurationService,
+      ImClientFactory imClientFactory){
     this.restTemplate = restTemplateBuilder.build();
+    this.templateFactory = templateFactory;
+    this.staticClientConfigurationService = staticClientConfigurationService;
+    this.imClientFactory = imClientFactory;
   }
 
   private RestTemplate restTemplate;
@@ -119,11 +126,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   @Autowired
   private IamService iamService;
 
-  @Autowired
-  private CustomOAuth2TemplateFactory templateFactory;
+  private final CustomOAuth2TemplateFactory templateFactory;
 
-  @Autowired
-  private StaticClientConfigurationService staticClientConfigurationService;
+  private final StaticClientConfigurationService staticClientConfigurationService;
 
   @Autowired
   private ToscaService toscaService;
@@ -143,8 +148,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   @Autowired
   private OAuth2TokenService oauth2TokenService;
 
-  @Autowired
-  private ImClientFactory imClientFactory;
+  private final ImClientFactory imClientFactory;
 
   private static final String VMINFO = "VirtualMachineInfo";
   public static final String IAM_TOSCA_NODE_TYPE = "tosca.nodes.indigo.iam.client";
@@ -442,7 +446,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
       switch (infrastructureState.getEnumState()) {
         case CONFIGURED:
-          //iamUpdate(deployment);
           return true;
         case FAILED:
         case UNCONFIGURED:
