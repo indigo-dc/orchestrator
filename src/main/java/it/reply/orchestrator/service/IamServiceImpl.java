@@ -435,7 +435,8 @@ public class IamServiceImpl implements IamService {
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     } catch (RestClientException e){
-      String errorMessage = String.format("Cannot say if %s is an url related to an IAM or not. %s");
+      String errorMessage = String.format("Cannot say if %s is an url related to an IAM or not. %s",
+          endpointURL, e.getMessage());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
     }
