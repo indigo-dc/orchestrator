@@ -46,7 +46,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn -Dcheckstyle.skip -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar -Pcoverage
+        run: mvn -Dcheckstyle.skip -B org.sonarsource.scanner.maven:sonar-maven-plugin:sonar 
                  -Dsonar.projectKey=indigo-dc_orchestrator
                  -Dsonar.organization=indigo-dc
                  -Dsonar.host.url=https://sonarcloud.io
