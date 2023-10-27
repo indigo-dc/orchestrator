@@ -15,7 +15,6 @@ public class IamClientRequest {
     private List<String> grantTypes;
     private List<String> responseTypes;
 
-
     public IamClientRequest(List<String> redirectUris, String clientName, List<String> contacts,
             String tokenEndpointAuthMethod, String scope, List<String> grantTypes, List<String> responseTypes) {
         this.redirectUris = redirectUris;
