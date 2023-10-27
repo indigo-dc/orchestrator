@@ -346,6 +346,13 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           scopes = String.join(" ", wellKnownResponse.getScopesSupported());
         }
 
+        if (scopes.isEmpty()){
+          String errorMessage = "Zero scopes allowed provided are not sufficient to create a client";
+          LOG.error(errorMessage);
+          iamService.deleteAllClients(restTemplate, resources);
+          throw new IamServiceException(errorMessage);
+        }
+
         // Create an IAM client
         try {
         LOG.info("Creating client with the identity provider {}", issuerNode);
