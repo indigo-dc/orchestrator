@@ -26,7 +26,7 @@ public class IamClientRequest {
         this.grantTypes = grantTypes;
         this.responseTypes = responseTypes;
     }
-    
+
     // Getter and setter for redirectUris
 
     public List<String> getRedirectUris() {

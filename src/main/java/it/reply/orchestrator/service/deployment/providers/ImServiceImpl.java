@@ -323,7 +323,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           iamService.deleteAllClients(restTemplate, resources);
           throw new IamServiceException(errorMessage);
         }
-        
+
         // Extract the useful information of the IAM issuer from the wellknown endpoint
         WellKnownResponse wellKnownResponse = iamService.getWellKnown(restTemplate, issuerNode);
 
@@ -362,7 +362,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           iamService.deleteAllClients(restTemplate, resources);
           throw e;
         }
-        
+
         // Set metadata and set TOSCA template properties of the IAM_TOSCA_NODE_TYPE node
         Map<String,String> resourceMetadata = new HashMap<>();
         resourceMetadata.put(ISSUER, issuerNode);
@@ -371,7 +371,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
             clientCreated.get("registration_access_token"));
         resource.setMetadata(resourceMetadata);
         iamTemplateOutput.put(nodeName, resourceMetadata);
-        
+
         if (!clients.containsKey(issuerNode)){
           String errorMessage = String.format("There is no orchestrator client belonging to the " +
               "identity provider: %s. Impossible to set the ownership of the client with client_id %s",
