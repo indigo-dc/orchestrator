@@ -65,7 +65,7 @@ public class IamServiceImpl implements IamService {
     try{
       responseEntity = restTemplate.getForEntity(issuer + WELL_KNOWN_ENDPOINT, String.class);
     } catch (HttpClientErrorException e){
-      String errorMessage = String.format("The %s endpoint cannot be contacted. Status code: %s",
+      String errorMessage = String.format("The %s endpoint cannot be contacted. Status code: %s ",
           WELL_KNOWN_ENDPOINT, e.getStatusCode());
       LOG.error(errorMessage);
       throw new IamServiceException(errorMessage, e);
