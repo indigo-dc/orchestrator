@@ -1133,7 +1133,7 @@ public class ToscaServiceImpl implements ToscaService {
 
   /**
    * Set a new capability at the specified node.
-   * 
+   *
    * @param node           the node to add the new capability
    * @param typeCapability the type of the capability
    * @param nameCapability the name of the capability
@@ -1152,7 +1152,7 @@ public class ToscaServiceImpl implements ToscaService {
 
   /**
    * Set a new requirement at the specified node.
-   * 
+   *
    * @param node              the node to add the new requirement
    * @param nameRequirement   name of the requirement
    * @param targetRequirement target of the requirement
