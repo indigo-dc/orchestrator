@@ -18,7 +18,6 @@
 package it.reply.orchestrator.service;
 
 import alien4cloud.tosca.model.ArchiveRoot;
-
 import it.reply.orchestrator.dal.entity.Resource;
 import it.reply.orchestrator.dto.cmdb.CloudService.VolumeType;
 import it.reply.orchestrator.dto.cmdb.ComputeService;
@@ -30,12 +29,10 @@ import it.reply.orchestrator.dto.policies.ToscaPolicy;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.PrivateNetworkType;
 import it.reply.orchestrator.exception.service.ToscaException;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
 import org.alien4cloud.tosca.model.definitions.AbstractPropertyValue;
 import org.alien4cloud.tosca.model.definitions.DeploymentArtifact;
 import org.alien4cloud.tosca.model.definitions.PropertyDefinition;
@@ -182,7 +179,8 @@ public interface ToscaService {
 
   public Optional<Capability> getNodeCapabilityByName(NodeTemplate node, String propertyName);
 
-  public Optional<DeploymentArtifact> getNodeArtifactByName(NodeTemplate node, String artifactName);
+  public Optional<DeploymentArtifact> getNodeArtifactByName(NodeTemplate node,
+      String artifactName);
 
   public List<RelationshipTemplate> getRelationshipTemplatesByCapabilityName(
       Map<String, RelationshipTemplate> relationships, String capabilityName);
@@ -278,7 +276,8 @@ public interface ToscaService {
   public ArchiveRoot setDeploymentTags(ArchiveRoot ar, String orchestratorUrl,
       String deplymentId, String userEmail);
 
-  public ArchiveRoot setDeploymentClientIam(ArchiveRoot ar, Map<String,Map<String,String>> iamTemplateOutput);
+  public ArchiveRoot setDeploymentClientIam(ArchiveRoot ar,
+      Map<String,Map<String,String>> iamTemplateOutput);
 
   public Map<String,Map<String,String>> getIamProperties(ArchiveRoot ar);
 

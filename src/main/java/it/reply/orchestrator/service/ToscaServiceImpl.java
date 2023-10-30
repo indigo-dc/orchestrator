@@ -18,7 +18,6 @@
 package it.reply.orchestrator.service;
 
 import alien4cloud.tosca.model.ArchiveRoot;
-
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Lists;
@@ -50,7 +49,6 @@ import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 import it.reply.orchestrator.utils.ToscaConstants.Nodes;
 import it.reply.orchestrator.utils.ToscaUtils;
-
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
@@ -72,11 +70,9 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.validation.ValidationException;
 import javax.validation.constraints.NotNull;
-
 import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
 import org.alien4cloud.tosca.model.definitions.AbstractPropertyValue;
 import org.alien4cloud.tosca.model.definitions.ComplexPropertyValue;
 import org.alien4cloud.tosca.model.definitions.DeploymentArtifact;
@@ -188,7 +184,8 @@ public class ToscaServiceImpl implements ToscaService {
   public void contextualizeAndReplaceImages(ArchiveRoot parsingResult,
       ComputeService computeService,
       DeploymentProvider deploymentProvider) {
-    Map<Boolean, Map<NodeTemplate, Image>> contextualizedImages = contextualizeImages(parsingResult, computeService);
+    Map<Boolean, Map<NodeTemplate, Image>> contextualizedImages =
+        contextualizeImages(parsingResult, computeService);
     Preconditions.checkState(contextualizedImages.get(Boolean.FALSE).isEmpty(),
         "Error contextualizing images; images for nodes %s couldn't be contextualized",
         contextualizedImages
@@ -204,7 +201,8 @@ public class ToscaServiceImpl implements ToscaService {
   public void contextualizeAndReplaceFlavors(ArchiveRoot parsingResult,
       ComputeService computeService,
       DeploymentProvider deploymentProvider) {
-    Map<Boolean, Map<NodeTemplate, Flavor>> contextualizedImages = contextualizeFlavors(parsingResult, computeService);
+    Map<Boolean, Map<NodeTemplate, Flavor>> contextualizedImages =
+        contextualizeFlavors(parsingResult, computeService);
     Preconditions.checkState(contextualizedImages.get(Boolean.FALSE).isEmpty(),
         "Error contextualizing flavors; flavors for nodes %s couldn't be contextualized",
         contextualizedImages
@@ -220,7 +218,8 @@ public class ToscaServiceImpl implements ToscaService {
   public void contextualizeAndReplaceVolumeTypes(ArchiveRoot parsingResult,
       ComputeService computeService,
       DeploymentProvider deploymentProvider) {
-    Map<Boolean, Map<NodeTemplate, VolumeType>> contextualizedVolumeTypes = contextualizeVolumeTypes(parsingResult,
+    Map<Boolean, Map<NodeTemplate, VolumeType>> contextualizedVolumeTypes =
+        contextualizeVolumeTypes(parsingResult,
         computeService);
     Preconditions.checkState(contextualizedVolumeTypes.get(Boolean.FALSE).isEmpty(),
         "Error contextualizing volume types; types for nodes %s couldn't be contextualized",
@@ -237,7 +236,8 @@ public class ToscaServiceImpl implements ToscaService {
   @Override
   public Map<NodeTemplate, Image> extractImageRequirements(ArchiveRoot parsingResult) {
 
-    Map<String, Function<ImageBuilder, Function<String, ImageBuilder>>> capabilityPropertiesMapping = new HashMap<>();
+    Map<String, Function<ImageBuilder, Function<String, ImageBuilder>>>
+        capabilityPropertiesMapping = new HashMap<>();
 
     capabilityPropertiesMapping.put("image",
         imageMetadataBuilder -> imageMetadataBuilder::imageName);
@@ -297,7 +297,8 @@ public class ToscaServiceImpl implements ToscaService {
   @Override
   public Map<NodeTemplate, Flavor> extractFlavorRequirements(ArchiveRoot parsingResult) {
 
-    Map<String, Function<FlavorBuilder, Function<String, FlavorBuilder>>> capabilityPropertiesMapping = new HashMap<>();
+    Map<String, Function<FlavorBuilder, Function<String, FlavorBuilder>>>
+        capabilityPropertiesMapping = new HashMap<>();
 
     capabilityPropertiesMapping.put("instance_type",
         flavorMetadataBuilder -> flavorMetadataBuilder::flavorName);
@@ -483,10 +484,11 @@ public class ToscaServiceImpl implements ToscaService {
   private void replaceImage(Map<NodeTemplate, Image> contextualizedImages,
       ComputeService cloudService, DeploymentProvider deploymentProvider) {
     contextualizedImages.forEach((node, image) -> {
-      Map<String, Capability> capabilities = Optional.ofNullable(node.getCapabilities()).orElseGet(() -> {
-        node.setCapabilities(new HashMap<>());
-        return node.getCapabilities();
-      });
+      Map<String, Capability> capabilities =
+          Optional.ofNullable(node.getCapabilities()).orElseGet(() -> {
+            node.setCapabilities(new HashMap<>());
+            return node.getCapabilities();
+          });
       // The node doesn't have an OS Capability -> need to add a dummy one to hold a
       // random image for underlying deployment systems
       Capability osCapability = capabilities.computeIfAbsent(OS_CAPABILITY_NAME, key -> {
@@ -518,10 +520,11 @@ public class ToscaServiceImpl implements ToscaService {
   private void replaceFlavor(Map<NodeTemplate, Flavor> contextualizedFlavors,
       ComputeService cloudService, DeploymentProvider deploymentProvider) {
     contextualizedFlavors.forEach((node, flavor) -> {
-      Map<String, Capability> capabilities = Optional.ofNullable(node.getCapabilities()).orElseGet(() -> {
-        node.setCapabilities(new HashMap<>());
-        return node.getCapabilities();
-      });
+      Map<String, Capability> capabilities =
+          Optional.ofNullable(node.getCapabilities()).orElseGet(() -> {
+            node.setCapabilities(new HashMap<>());
+            return node.getCapabilities();
+          });
       // The node doesn't have an OS Capability -> need to add a dummy one to hold a
       // random image for underlying deployment systems
       Capability osCapability = capabilities.computeIfAbsent(HOST_CAPABILITY_NAME, key -> {
@@ -659,11 +662,13 @@ public class ToscaServiceImpl implements ToscaService {
     // Extract Docker tag if available
     String[] requiredImageNameSplit = requiredImageName.split(":");
     String requiredImageBaseName = requiredImageNameSplit[0];
-    String requiredImageTag = (requiredImageNameSplit.length > 1 ? requiredImageNameSplit[1] : null);
+    String requiredImageTag =
+        (requiredImageNameSplit.length > 1 ? requiredImageNameSplit[1] : null);
 
     String[] availableImageNameSplit = availableImageName.split(":");
     String availableImageBaseName = availableImageNameSplit[0];
-    String availableImageTag = (availableImageNameSplit.length > 1 ? availableImageNameSplit[1] : null);
+    String availableImageTag =
+        (availableImageNameSplit.length > 1 ? availableImageNameSplit[1] : null);
 
     // Match name
     boolean nameMatch = requiredImageBaseName.equals(availableImageBaseName);
@@ -738,9 +743,11 @@ public class ToscaServiceImpl implements ToscaService {
     // if gpus are required, filter also on vendor and model
     if (Optional.ofNullable(requiredFlavorMetadata.getNumGpus()).orElse(0) > 0) {
       fallbackFieldExtractors.add(
-          new Filter<>(Flavor::getGpuVendor, (a, b) -> (a != null && a.length() > 0 ? a.equalsIgnoreCase(b) : true)));
+          new Filter<>(Flavor::getGpuVendor, (a, b) ->
+              (a != null && a.length() > 0 ? a.equalsIgnoreCase(b) : true)));
       fallbackFieldExtractors.add(
-          new Filter<>(Flavor::getGpuModel, (a, b) -> (a != null && a.length() > 0 ? a.equalsIgnoreCase(b) : true)));
+          new Filter<>(Flavor::getGpuModel, (a, b) ->
+              (a != null && a.length() > 0 ? a.equalsIgnoreCase(b) : true)));
     }
     Stream<Flavor> flavorStream = cloudProviderServiceFlavors.stream();
 
@@ -1103,14 +1110,16 @@ public class ToscaServiceImpl implements ToscaService {
   public DirectedMultigraph<NodeTemplate, RelationshipTemplate> buildNodeGraph(
       Map<String, NodeTemplate> nodes, boolean checkForCycles) {
 
-    DirectedMultigraph<NodeTemplate, RelationshipTemplate> graph = new DirectedMultigraph<>(RelationshipTemplate.class);
+    DirectedMultigraph<NodeTemplate, RelationshipTemplate> graph =
+        new DirectedMultigraph<>(RelationshipTemplate.class);
 
     nodes.entrySet().forEach(nodeEntry -> {
       NodeTemplate toNode = nodeEntry.getValue();
       graph.addVertex(toNode);
 
-      Map<String, RelationshipTemplate> relationships = Optional.ofNullable(toNode.getRelationships())
-          .orElseGet(HashMap::new);
+      Map<String, RelationshipTemplate> relationships =
+          Optional.ofNullable(toNode.getRelationships())
+            .orElseGet(HashMap::new);
 
       relationships.values().forEach(relationship -> {
         NodeTemplate fromNode = nodes.get(relationship.getTarget());
@@ -1139,10 +1148,11 @@ public class ToscaServiceImpl implements ToscaService {
    * @param nameCapability the name of the capability
    */
   public void setNodeCapability(NodeTemplate node, String typeCapability, String nameCapability) {
-    Map<String, Capability> capabilities = Optional.ofNullable(node.getCapabilities()).orElseGet(() -> {
-      node.setCapabilities(new HashMap<>());
-      return node.getCapabilities();
-    });
+    Map<String, Capability> capabilities =
+        Optional.ofNullable(node.getCapabilities()).orElseGet(() -> {
+          node.setCapabilities(new HashMap<>());
+          return node.getCapabilities();
+        });
     capabilities.computeIfAbsent(nameCapability, key -> {
       Capability capability = new Capability();
       capability.setType(typeCapability);
@@ -1161,10 +1171,11 @@ public class ToscaServiceImpl implements ToscaService {
   public void setNodeRequirement(NodeTemplate node, String nameRequirement,
       String targetRequirement,
       String typeRequirement) {
-    Map<String, RelationshipTemplate> req = Optional.ofNullable(node.getRelationships()).orElseGet(() -> {
-      node.setRelationships(new HashMap<>());
-      return node.getRelationships();
-    });
+    Map<String, RelationshipTemplate> req =
+        Optional.ofNullable(node.getRelationships()).orElseGet(() -> {
+          node.setRelationships(new HashMap<>());
+          return node.getRelationships();
+        });
     req.computeIfAbsent(nameRequirement, key -> {
       RelationshipTemplate rt = new RelationshipTemplate();
       rt.setRequirementName(nameRequirement);
@@ -1204,60 +1215,60 @@ public class ToscaServiceImpl implements ToscaService {
     return ar;
   }
 
-  public ArchiveRoot setDeploymentClientIam(
-      ArchiveRoot ar, Map<String, Map<String, String>> iamTemplateOutput) {
-    getNodesOfType(ar, IAM_TOSCA_NODE_TYPE).stream()
-        .forEach(iamNode -> {
-          Map<String, AbstractPropertyValue> properties = Optional
-              .ofNullable(iamNode.getProperties())
-              .orElseGet(() -> {
-                iamNode.setProperties(new HashMap<>());
-                return iamNode.getProperties();
-              });
-          String iamNodeName = iamNode.getName();
-          properties.put(ISSUER,
-              new ScalarPropertyValue(iamTemplateOutput.get(iamNodeName).get(ISSUER)));
-          properties.put(CLIENT_ID,
-              new ScalarPropertyValue(iamTemplateOutput.get(iamNodeName).get(CLIENT_ID)));
-          properties.put(REGISTRATION_ACCESS_TOKEN,
-              new ScalarPropertyValue(
-                  iamTemplateOutput.get(iamNodeName).get(REGISTRATION_ACCESS_TOKEN)));
-        });
+  @Override
+  public ArchiveRoot setDeploymentClientIam(ArchiveRoot ar,
+      Map<String, Map<String, String>> iamTemplateOutput) {
+    getNodesOfType(ar, IAM_TOSCA_NODE_TYPE).stream().forEach(iamNode -> {
+      Map<String, AbstractPropertyValue> properties =
+          Optional.ofNullable(iamNode.getProperties()).orElseGet(() -> {
+            iamNode.setProperties(new HashMap<>());
+            return iamNode.getProperties();
+          });
+
+      String iamNodeName = iamNode.getName();
+      properties.put(ISSUER,
+          new ScalarPropertyValue(iamTemplateOutput.get(iamNodeName).get(ISSUER)));
+      properties.put(CLIENT_ID,
+          new ScalarPropertyValue(iamTemplateOutput.get(iamNodeName).get(CLIENT_ID)));
+      properties.put(REGISTRATION_ACCESS_TOKEN, new ScalarPropertyValue(
+          iamTemplateOutput.get(iamNodeName).get(REGISTRATION_ACCESS_TOKEN)));
+    });
     return ar;
   }
 
+  @Override
   public Map<String, Map<String, String>> getIamProperties(ArchiveRoot ar) {
     Map<String, Map<String, String>> nodeProperties = new HashMap<>();
-    getNodesOfType(ar, IAM_TOSCA_NODE_TYPE).stream()
-        .forEach(iamNode -> {
-          Map<String, AbstractPropertyValue> properties = Optional
-              .ofNullable(iamNode.getProperties())
-              .orElseGet(() -> {
-                iamNode.setProperties(new HashMap<>());
-                return iamNode.getProperties();
-              });
-          Map<String, String> innerMap = new HashMap<>();
-          String nodeName = iamNode.getName();
-          String issuer = null;
-          String scopes = null;
-          String owner = null;
-          if (properties.containsKey(ISSUER)) {
-            ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue) properties.get(ISSUER);
-            issuer = scalarPropertyValue.getValue();
-          }
-          if (properties.containsKey(SCOPES)) {
-            ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue) properties.get(SCOPES);
-            scopes = scalarPropertyValue.getValue();
-          }
-          if (properties.containsKey(OWNER)) {
-            ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue) properties.get(OWNER);
-            owner = scalarPropertyValue.getValue();
-          }
-          innerMap.put(ISSUER, issuer);
-          innerMap.put(SCOPES, scopes);
-          innerMap.put(OWNER, owner);
-          nodeProperties.put(nodeName, innerMap);
-        });
+    getNodesOfType(ar, IAM_TOSCA_NODE_TYPE).stream().forEach(iamNode -> {
+      Map<String, AbstractPropertyValue> properties =
+          Optional.ofNullable(iamNode.getProperties()).orElseGet(() -> {
+            iamNode.setProperties(new HashMap<>());
+            return iamNode.getProperties();
+          });
+
+      String issuer = null;
+      String scopes = null;
+      String owner = null;
+      if (properties.containsKey(ISSUER)) {
+        ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue) properties.get(ISSUER);
+        issuer = scalarPropertyValue.getValue();
+      }
+      if (properties.containsKey(SCOPES)) {
+        ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue) properties.get(SCOPES);
+        scopes = scalarPropertyValue.getValue();
+      }
+      if (properties.containsKey(OWNER)) {
+        ScalarPropertyValue scalarPropertyValue = (ScalarPropertyValue) properties.get(OWNER);
+        owner = scalarPropertyValue.getValue();
+      }
+
+      Map<String, String> innerMap = new HashMap<>();
+      innerMap.put(ISSUER, issuer);
+      innerMap.put(SCOPES, scopes);
+      innerMap.put(OWNER, owner);
+      String nodeName = iamNode.getName();
+      nodeProperties.put(nodeName, innerMap);
+    });
     return nodeProperties;
   }
 
@@ -1294,21 +1305,24 @@ public class ToscaServiceImpl implements ToscaService {
                     // find "host" node in "lmrs_front_end" -> "lrms_server"
                     lrmsNode.getRelationships().forEach((s1, r1) -> {
                       if (r1.getRequirementName().contains("host")) {
-                        NodeTemplate hostNode = ar.getTopology().getNodeTemplates().get(r1.getTarget());
+                        NodeTemplate hostNode =
+                            ar.getTopology().getNodeTemplates().get(r1.getTarget());
 
                         // get lrms_server properties
-                        Map<String, Capability> capabilities = Optional.ofNullable(hostNode.getCapabilities())
-                            .orElseGet(() -> {
-                              hostNode.setCapabilities(new HashMap<>());
-                              return hostNode.getCapabilities();
-                            });
+                        Map<String, Capability> capabilities =
+                            Optional.ofNullable(hostNode.getCapabilities())
+                              .orElseGet(() -> {
+                                hostNode.setCapabilities(new HashMap<>());
+                                return hostNode.getCapabilities();
+                              });
 
                         // create "endpoint" if absent in "lrms_server"
-                        Capability endpointCapability = capabilities.computeIfAbsent("endpoint", key -> {
-                          Capability capability = new Capability();
-                          capability.setType("tosca.capabilities.indigo.Endpoint");
-                          return capability;
-                        });
+                        Capability endpointCapability =
+                            capabilities.computeIfAbsent("endpoint", key -> {
+                              Capability capability = new Capability();
+                              capability.setType("tosca.capabilities.indigo.Endpoint");
+                              return capability;
+                            });
                         Map<String, AbstractPropertyValue> endpointCapabilityProperties = Optional
                             .ofNullable(endpointCapability.getProperties()).orElseGet(() -> {
                               endpointCapability.setProperties(new HashMap<>());
@@ -1321,7 +1335,8 @@ public class ToscaServiceImpl implements ToscaService {
                         endpointCapabilityProperties.put("ports", portPropProperty);
 
                         Map<String, Object> openvpnProp = new HashMap<>();
-                        ComplexPropertyValue openvpnPropProperty = new ComplexPropertyValue(openvpnProp);
+                        ComplexPropertyValue openvpnPropProperty =
+                            new ComplexPropertyValue(openvpnProp);
                         openvpnProp.put("protocol", "udp");
                         openvpnProp.put("source", "1194");
                         portProp.put("openvpn", openvpnPropProperty);
@@ -1657,29 +1672,31 @@ public class ToscaServiceImpl implements ToscaService {
     getNodesOfType(ar, ToscaConstants.Nodes.Types.CENTRAL_POINT).stream()
         .forEach(centralPointNode -> {
           getNodesOfType(ar, ToscaConstants.Nodes.Types.CLIENT).stream()
-              .forEach(node -> getNodesOfType(ar, ToscaConstants.Nodes.Types.ELASTIC_CLUSTER).stream()
-                  .forEach(elasticClusterNode -> elasticClusterNode.getRelationships().forEach((s, r) -> {
-                    if (r.getRequirementName().contains("wn")) {
-                      NodeTemplate wnNode = ar.getTopology().getNodeTemplates()
-                          .get(r.getTarget());
-                      // add requirement : dependency: nameVrClient
-                      this.setNodeRequirement(wnNode, "dependency", node.getName(),
-                          REQUIREMENT_DEPENDENCY_RELATIONSHIP);
-                      wnNode.getRelationships().forEach((s1, r1) -> {
-                        if (r1.getRequirementName().contains("host")) {
-                          // add at vrC : requirement : host : (lrms_wn)
-                          // : central_point : (indigovr_cp)
-                          this.setNodeRequirement(node, "host", r1.getTarget(),
-                              REQUIREMENT_HOST_RELATIONSHIP);
-                          this.setNodeCapability(centralPointNode, "tosca.capabilities.Endpoint",
-                              ToscaConstants.Nodes.Capabilities.CENTRALPOINT);
-                          this.setNodeRequirement(node,
-                              ToscaConstants.Nodes.Capabilities.CENTRALPOINT,
-                              centralPointNode.getName(), REQUIREMENT_DEPENDENCY_RELATIONSHIP);
+              .forEach(node -> getNodesOfType(ar, ToscaConstants.Nodes.Types.ELASTIC_CLUSTER)
+                  .stream().forEach(elasticClusterNode -> elasticClusterNode.getRelationships()
+                      .forEach((s, r) -> {
+                        if (r.getRequirementName().contains("wn")) {
+                          NodeTemplate wnNode =
+                              ar.getTopology().getNodeTemplates().get(r.getTarget());
+                          // add requirement : dependency: nameVrClient
+                          this.setNodeRequirement(wnNode, "dependency", node.getName(),
+                              REQUIREMENT_DEPENDENCY_RELATIONSHIP);
+                          wnNode.getRelationships().forEach((s1, r1) -> {
+                            if (r1.getRequirementName().contains("host")) {
+                              // add at vrC : requirement : host : (lrms_wn)
+                              // : central_point : (indigovr_cp)
+                              this.setNodeRequirement(node, "host", r1.getTarget(),
+                                  REQUIREMENT_HOST_RELATIONSHIP);
+                              this.setNodeCapability(centralPointNode,
+                                  "tosca.capabilities.Endpoint",
+                                  ToscaConstants.Nodes.Capabilities.CENTRALPOINT);
+                              this.setNodeRequirement(node,
+                                  ToscaConstants.Nodes.Capabilities.CENTRALPOINT,
+                                  centralPointNode.getName(), REQUIREMENT_DEPENDENCY_RELATIONSHIP);
+                            }
+                          });
                         }
-                      });
-                    }
-                  })));
+                      })));
         });
     return ar;
   }
