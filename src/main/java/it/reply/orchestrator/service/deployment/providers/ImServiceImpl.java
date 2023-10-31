@@ -88,6 +88,7 @@ import org.alien4cloud.tosca.model.templates.NodeTemplate;
 import org.alien4cloud.tosca.model.templates.Topology;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.mitre.oauth2.model.RegisteredClient;
+import org.mitre.openid.connect.client.service.ClientConfigurationService;
 import org.mitre.openid.connect.client.service.impl.StaticClientConfigurationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -114,7 +115,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   private CustomOAuth2TemplateFactory templateFactory;
 
   @Autowired
-  private StaticClientConfigurationService staticClientConfigurationService;
+  private ClientConfigurationService staticClientConfigurationService;
 
   @Autowired
   private ToscaService toscaService;
@@ -271,13 +272,13 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         String issuerNode;
         String tokenCredentials = null;
         Map<String, String> clientCreated = new HashMap<>();
-        Map<String, RegisteredClient> orchestratorClients = new HashMap<>();
+        final Map<String, RegisteredClient> orchestratorClients =
+            ((StaticClientConfigurationService) staticClientConfigurationService).getClients();
 
         // Get properties of IAM_TOSCA_NODE_TYPE nodes from the TOSCA template and
         // get information about the clients related to the orchestrator
         if (iamTemplateInput == null) {
           iamTemplateInput = toscaService.getIamProperties(ar);
-          orchestratorClients = staticClientConfigurationService.getClients();
         }
 
         // Set the issuer of the current node
