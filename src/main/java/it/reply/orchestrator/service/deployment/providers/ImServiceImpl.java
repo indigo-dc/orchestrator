@@ -91,7 +91,6 @@ import org.mitre.oauth2.model.RegisteredClient;
 import org.mitre.openid.connect.client.service.impl.StaticClientConfigurationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -105,25 +104,17 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   /**
    * Constructor of the ImServiceImpl class.
    */
-  @Autowired
-  public ImServiceImpl(RestTemplateBuilder restTemplateBuilder,
-      CustomOAuth2TemplateFactory templateFactory,
-      StaticClientConfigurationService staticClientConfigurationService,
-      ImClientFactory imClientFactory) {
-    this.restTemplate = restTemplateBuilder.build();
-    this.templateFactory = templateFactory;
-    this.staticClientConfigurationService = staticClientConfigurationService;
-    this.imClientFactory = imClientFactory;
-  }
 
-  private final RestTemplate restTemplate;
+  private RestTemplate restTemplate;
 
   @Autowired
   private IamService iamService;
 
-  private final CustomOAuth2TemplateFactory templateFactory;
+  @Autowired
+  private CustomOAuth2TemplateFactory templateFactory;
 
-  private final StaticClientConfigurationService staticClientConfigurationService;
+  @Autowired
+  private StaticClientConfigurationService staticClientConfigurationService;
 
   @Autowired
   private ToscaService toscaService;
@@ -143,7 +134,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   @Autowired
   private OAuth2TokenService oauth2TokenService;
 
-  private final ImClientFactory imClientFactory;
+  @Autowired
+  private ImClientFactory imClientFactory;
 
   private static final String VMINFO = "VirtualMachineInfo";
   public static final String IAM_TOSCA_NODE_TYPE = "tosca.nodes.indigo.iam.client";
@@ -188,6 +180,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   @Override
   public boolean doDeploy(DeploymentMessage deploymentMessage) {
+    restTemplate = new RestTemplate();
     Deployment deployment = getDeployment(deploymentMessage);
     String uuid = deployment.getId();
 
@@ -268,9 +261,6 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     Map<String, Map<String, String>> iamTemplateInput = null;
     Map<String, Map<String, String>> iamTemplateOutput = new HashMap<>();
 
-    // Get information about the clients related to the orchestrator
-    Map<String, RegisteredClient> clients = staticClientConfigurationService.getClients();
-
     // Loop over the deployment resources and create an IAM client for all the
     // IAM_TOSCA_NODE_TYPE nodes requested
     for (Resource resource : resources.get(false)) {
@@ -281,10 +271,13 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         String issuerNode;
         String tokenCredentials = null;
         Map<String, String> clientCreated = new HashMap<>();
+        Map<String, RegisteredClient> orchestratorClients = new HashMap<>();
 
-        // Get properties of IAM_TOSCA_NODE_TYPE nodes from the TOSCA template
+        // Get properties of IAM_TOSCA_NODE_TYPE nodes from the TOSCA template and
+        // get information about the clients related to the orchestrator
         if (iamTemplateInput == null) {
           iamTemplateInput = toscaService.getIamProperties(ar);
+          orchestratorClients = staticClientConfigurationService.getClients();
         }
 
         // Set the issuer of the current node
@@ -352,7 +345,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         resource.setMetadata(resourceMetadata);
         iamTemplateOutput.put(nodeName, resourceMetadata);
 
-        if (!clients.containsKey(issuerNode)) {
+        if (!orchestratorClients.containsKey(issuerNode)) {
           String errorMessage = String.format("There is no orchestrator client belonging to the "
               + "identity provider: %s. Impossible to set the ownership of the client with "
               + "client_id %s", issuerNode, clientCreated.get(CLIENT_ID));
@@ -361,7 +354,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           try {
             // Get the orchestrator client related to the issuer of the node and extract
             // client_id and client_secret
-            RegisteredClient orchestratorClient = clients.get(issuerNode);
+            RegisteredClient orchestratorClient = orchestratorClients.get(issuerNode);
             String orchestratorClientId = orchestratorClient.getClientId();
             String orchestratorClientSecret = orchestratorClient.getClientSecret();
 
@@ -763,6 +756,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   @Override
   public boolean doUndeploy(DeploymentMessage deploymentMessage) {
+    restTemplate = new RestTemplate();
     Deployment deployment = getDeployment(deploymentMessage);
 
     Map<Boolean, Set<Resource>> resources =
