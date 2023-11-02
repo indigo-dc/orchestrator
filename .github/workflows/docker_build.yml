@@ -51,7 +51,7 @@ jobs:
         id: docker_meta
         uses: crazy-max/ghaction-docker-meta@v2
         with:
-          images: indigodatacloud/orchestrator
+          images: indigopaas/orchestrator
           tags: |
             type=sha
             type=semver,pattern={{raw}}
