@@ -168,11 +168,11 @@ public class DeploymentControllerTest {
                     "Creation date-time (http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14)"),
                 fieldWithPath("content[].updateTime").description("Update date-time"),
                 fieldWithPath("content[].status").description(
-                    "The status of the deployment. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html)"),
+                    "The status of the deployment. (http://indigo-paas.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html)"),
                 fieldWithPath("content[].statusReason").description(
                     "Verbose explanation of reason that lead to the deployment status (Present only if the deploy is in some error status)"),
                 fieldWithPath("content[].task").description(
-                    "The current step of the deployment process. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Task.html)"),
+                    "The current step of the deployment process. (http://indigo-paas.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Task.html)"),
                 fieldWithPath("content[].createdBy").description(
                     "The OIDC info of the deployment's creator."),
                 fieldWithPath("content[].userGroup").description(
@@ -341,13 +341,13 @@ public class DeploymentControllerTest {
                     "Creation date-time (http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14)"),
                 fieldWithPath("updateTime").description("Update date-time"),
                 fieldWithPath("status").description(
-                    "The status of the deployment. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html)"),
+                    "The status of the deployment. (http://indigo-paas.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html)"),
                 fieldWithPath("statusReason").description(
                     "Verbose explanation of reason that lead to the deployment status (Present only if the deploy is in some error status)"),
                 fieldWithPath("userGroup").description(
                         "The user group the deployment was created for (as specified at creation time)."),
                 fieldWithPath("task").description(
-                    "The current step of the deployment process. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Task.html)"),
+                    "The current step of the deployment process. (http://indigo-paas.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Task.html)"),
                 fieldWithPath("callback").description(
                     "The endpoint used by the orchestrator to notify the progress of the deployment process."),
                 fieldWithPath("outputs").description("The outputs of the TOSCA document"),
@@ -444,9 +444,9 @@ public class DeploymentControllerTest {
                     "Update date-time (http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14)"),
                 fieldWithPath("userGroup").description("The user group the deployment has been created for."),
                 fieldWithPath("status").description(
-                    "The status of the deployment. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html)"),
+                    "The status of the deployment. (http://indigo-paas.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Status.html)"),
                 fieldWithPath("task").description(
-                    "The current step of the deployment process. (http://indigo-dc.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Task.html)"),
+                    "The current step of the deployment process. (http://indigo-paas.github.io/orchestrator/apidocs/it/reply/orchestrator/enums/Task.html)"),
                 fieldWithPath("outputs").description("The outputs of the TOSCA document"),
                 fieldWithPath("callback").description(
                     "The endpoint used by the orchestrator to notify the progress of the deployment process."),
