@@ -18,13 +18,12 @@
 package it.reply.orchestrator.service.deployment.providers;
 
 import alien4cloud.tosca.model.ArchiveRoot;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Strings;
 import com.google.common.collect.HashMultimap;
+import com.google.common.collect.Lists;
 import com.google.common.collect.MoreCollectors;
 import com.google.common.collect.Multimap;
-
 import es.upv.i3m.grycap.im.InfrastructureManager;
 import es.upv.i3m.grycap.im.exceptions.ImClientErrorException;
 import es.upv.i3m.grycap.im.exceptions.ImClientException;
@@ -46,6 +45,7 @@ import it.reply.orchestrator.dto.CloudProviderEndpoint;
 import it.reply.orchestrator.dto.cmdb.ComputeService;
 import it.reply.orchestrator.dto.deployment.ActionMessage;
 import it.reply.orchestrator.dto.deployment.DeploymentMessage;
+import it.reply.orchestrator.dto.iam.WellKnownResponse;
 import it.reply.orchestrator.dto.workflow.CloudServicesOrderedIterator;
 import it.reply.orchestrator.enums.DeploymentProvider;
 import it.reply.orchestrator.enums.NodeStates;
@@ -56,17 +56,19 @@ import it.reply.orchestrator.exception.service.BusinessWorkflowException;
 import it.reply.orchestrator.exception.service.DeploymentException;
 import it.reply.orchestrator.function.ThrowingConsumer;
 import it.reply.orchestrator.function.ThrowingFunction;
+import it.reply.orchestrator.service.IamService;
+import it.reply.orchestrator.service.IamServiceException;
 import it.reply.orchestrator.service.IndigoInputsPreProcessorService;
 import it.reply.orchestrator.service.IndigoInputsPreProcessorService.RuntimeProperties;
 import it.reply.orchestrator.service.ToscaService;
 import it.reply.orchestrator.service.deployment.providers.factory.ImClientFactory;
+import it.reply.orchestrator.service.security.CustomOAuth2TemplateFactory;
 import it.reply.orchestrator.service.security.OAuth2TokenService;
 import it.reply.orchestrator.utils.CommonUtils;
 import it.reply.orchestrator.utils.JwtUtils;
 import it.reply.orchestrator.utils.OneDataUtils;
 import it.reply.orchestrator.utils.ToscaConstants;
 import it.reply.orchestrator.utils.WorkflowConstants.ErrorCode;
-
 import java.io.IOException;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -81,22 +83,39 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import lombok.extern.slf4j.Slf4j;
-
 import org.alien4cloud.tosca.model.templates.NodeTemplate;
 import org.alien4cloud.tosca.model.templates.Topology;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.mitre.oauth2.model.RegisteredClient;
+import org.mitre.openid.connect.client.service.ClientConfigurationService;
+import org.mitre.openid.connect.client.service.impl.StaticClientConfigurationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 @Service
 @DeploymentProviderQualifier(DeploymentProvider.IM)
 @EnableConfigurationProperties(ImProperties.class)
 @Slf4j
 public class ImServiceImpl extends AbstractDeploymentProviderService {
+
+  /**
+   * Constructor of the ImServiceImpl class.
+   */
+
+  private RestTemplate restTemplate;
+
+  @Autowired
+  private IamService iamService;
+
+  @Autowired
+  private CustomOAuth2TemplateFactory templateFactory;
+
+  @Autowired
+  private ClientConfigurationService staticClientConfigurationService;
 
   @Autowired
   private ToscaService toscaService;
@@ -120,6 +139,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   private ImClientFactory imClientFactory;
 
   private static final String VMINFO = "VirtualMachineInfo";
+  public static final String IAM_TOSCA_NODE_TYPE = "tosca.nodes.indigo.iam.client";
+  public static final String ISSUER = "issuer";
+  public static final String OWNER = "owner";
+  private static final String CLIENT_ID = "client_id";
 
   protected <R> R executeWithClientForResult(List<CloudProviderEndpoint> cloudProviderEndpoints,
       @Nullable OidcTokenId requestedWithToken,
@@ -138,11 +161,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
   }
 
   private static boolean isUnauthorized(ImClientErrorException error) {
-    return Optional
-        .ofNullable(error.getResponseError())
-        .map(ResponseError::getCode)
-        .filter(code -> code.equals(HttpStatus.UNAUTHORIZED.value()))
-        .isPresent();
+    return Optional.ofNullable(error.getResponseError()).map(ResponseError::getCode)
+        .filter(code -> code.equals(HttpStatus.UNAUTHORIZED.value())).isPresent();
   }
 
   protected ArchiveRoot prepareTemplate(String template, Deployment deployment,
@@ -161,11 +181,11 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   @Override
   public boolean doDeploy(DeploymentMessage deploymentMessage) {
+    restTemplate = new RestTemplate();
     Deployment deployment = getDeployment(deploymentMessage);
+    String uuid = deployment.getId();
 
-    resourceRepository
-        .findByDeployment_id(deployment.getId())
-        .stream()
+    resourceRepository.findByDeployment_id(deployment.getId()).stream()
         .filter(resource -> resource.getState() == NodeStates.INITIAL)
         .forEach(resource -> resource.setState(NodeStates.CREATING));
 
@@ -180,10 +200,36 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     if (oidcProperties.isEnabled()) {
       accessToken = oauth2TokenService.getAccessToken(requestedWithToken);
     }
+
+    String email = null;
+    String issuerUser = null;
+    String sub = null;
+    if (accessToken != null) {
+      try {
+        email = JwtUtils.getJwtClaimsSet(JwtUtils.parseJwt(accessToken)).getStringClaim("email");
+      } catch (ParseException e) {
+        LOG.debug(e.getMessage());
+        email = null;
+      }
+      try {
+        issuerUser = JwtUtils.getJwtClaimsSet(JwtUtils.parseJwt(accessToken)).getStringClaim("iss");
+      } catch (ParseException e) {
+        String errorMessage = String.format("Issuer not found in user's token. %s", e.getMessage());
+        LOG.error(errorMessage);
+        throw new IamServiceException(errorMessage, e);
+      }
+      try {
+        sub = JwtUtils.getJwtClaimsSet(JwtUtils.parseJwt(accessToken)).getStringClaim("sub");
+      } catch (ParseException e) {
+        String errorMessage = String.format("Sub not found in user's token. %s", e.getMessage());
+        LOG.error(errorMessage);
+        throw new IamServiceException(errorMessage, e);
+      }
+    }
+
     toscaService.addElasticClusterParameters(ar, deployment.getId(), accessToken);
-    ComputeService computeService = deploymentMessage
-        .getCloudServicesOrderedIterator()
-        .currentService(ComputeService.class);
+    ComputeService computeService =
+        deploymentMessage.getCloudServicesOrderedIterator().currentService(ComputeService.class);
     toscaService.contextualizeAndReplaceImages(ar, computeService, DeploymentProvider.IM);
     toscaService.contextualizeAndReplaceFlavors(ar, computeService, DeploymentProvider.IM);
     toscaService.contextualizeAndReplaceVolumeTypes(ar, computeService, DeploymentProvider.IM);
@@ -192,46 +238,179 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
 
     if (toscaService.isHybridDeployment(ar)) {
-      toscaService.setHybridDeployment(ar,
-          computeService.getPublicNetworkName(),
-          computeService.getPrivateNetworkName(),
-          computeService.getPrivateNetworkCidr()
-      );
+      toscaService.setHybridDeployment(ar, computeService.getPublicNetworkName(),
+          computeService.getPrivateNetworkName(), computeService.getPrivateNetworkCidr());
     } else {
-      toscaService.setNetworkNames(ar,
-          computeService.getPublicNetworkName(),
-          computeService.getPrivateNetworkName(),
-          computeService.getPrivateNetworkProxyHost(),
+      toscaService.setNetworkNames(ar, computeService.getPublicNetworkName(),
+          computeService.getPrivateNetworkName(), computeService.getPrivateNetworkProxyHost(),
           computeService.getPrivateNetworkProxyUser());
     }
 
-    //add tags
-    String email = null;
-    if (accessToken != null) {
-      try {
-        email = JwtUtils.getJwtClaimsSet(JwtUtils.parseJwt(accessToken)).getStringClaim("email");
-      } catch (ParseException e) {
-        email = null;
+    // add tags
+    toscaService.setDeploymentTags(ar, orchestratorProperties.getUrl().toString(),
+        deployment.getId(), email);
+
+    // Get resources linked to the deployment
+    Map<Boolean, Set<Resource>> resources =
+        resourceRepository.findByDeployment_id(deployment.getId()).stream().collect(Collectors
+            .partitioningBy(resource -> resource.getIaasId() != null, Collectors.toSet()));
+
+    // Define a map of properties of the TOSCA template related to the
+    // IAM_TOSCA_NODE_TYPE
+    // nodes as input of the orchestrator and a map of those to be submitted to the
+    // IM
+    Map<String, Map<String, String>> iamTemplateInput = null;
+    Map<String, Map<String, String>> iamTemplateOutput = new HashMap<>();
+
+    // Loop over the deployment resources and create an IAM client for all the
+    // IAM_TOSCA_NODE_TYPE nodes requested
+    for (Resource resource : resources.get(false)) {
+      if (resource.getToscaNodeType().equals(IAM_TOSCA_NODE_TYPE)) {
+        String nodeName = resource.getToscaNodeName();
+        LOG.info("Found node of type: {}. Node name: {}", IAM_TOSCA_NODE_TYPE, nodeName);
+        String scopes;
+        String issuerNode;
+        String tokenCredentials = null;
+        Map<String, String> clientCreated = new HashMap<>();
+        final Map<String, RegisteredClient> orchestratorClients =
+            ((StaticClientConfigurationService) staticClientConfigurationService).getClients();
+
+        // Get properties of IAM_TOSCA_NODE_TYPE nodes from the TOSCA template and
+        // get information about the clients related to the orchestrator
+        if (iamTemplateInput == null) {
+          iamTemplateInput = toscaService.getIamProperties(ar);
+        }
+
+        // Set the issuer of the current node
+        if (iamTemplateInput.get(nodeName).get(ISSUER) != null) {
+          issuerNode = iamTemplateInput.get(nodeName).get(ISSUER);
+        } else {
+          issuerNode = issuerUser;
+        }
+
+        // Check if the issuer is an IAM
+        if (!iamService.checkIam(restTemplate, issuerNode)) {
+          String errorMessage =
+              String.format("%s is not an IAM. Only IAM providers are supported", issuerNode);
+          LOG.error(errorMessage);
+          iamService.deleteAllClients(restTemplate, resources);
+          throw new IamServiceException(errorMessage);
+        }
+
+        // Extract the useful information of the IAM issuer from the wellknown endpoint
+        WellKnownResponse wellKnownResponse = iamService.getWellKnown(restTemplate, issuerNode);
+
+        // Set the scopes of the requested client
+        if (iamTemplateInput.get(nodeName).get("scopes") != null) {
+          scopes = iamTemplateInput.get(nodeName).get("scopes");
+          List<String> inputList = Lists.newArrayList(scopes.split(" "));
+          try {
+            inputList.retainAll(wellKnownResponse.getScopesSupported());
+          } catch (RuntimeException e) {
+            String errorMessage = String.format("Impossible to set IAM scopes of node %s. %s",
+                nodeName, e.getMessage());
+            LOG.error(errorMessage);
+            iamService.deleteAllClients(restTemplate, resources);
+            throw new IamServiceException(errorMessage, e);
+          }
+          scopes = String.join(" ", inputList);
+        } else {
+          scopes = String.join(" ", wellKnownResponse.getScopesSupported());
+        }
+
+        if (scopes.isEmpty()) {
+          String errorMessage =
+              "Zero scopes allowed provided are not sufficient to create a client";
+          LOG.error(errorMessage);
+          iamService.deleteAllClients(restTemplate, resources);
+          throw new IamServiceException(errorMessage);
+        }
+
+        // Create an IAM client
+        try {
+          LOG.info("Creating client with the identity provider {}", issuerNode);
+          clientCreated = iamService.createClient(restTemplate,
+              wellKnownResponse.getRegistrationEndpoint(), uuid, email, scopes);
+        } catch (IamServiceException e) {
+          iamService.deleteAllClients(restTemplate, resources);
+          throw e;
+        }
+
+        // Set metadata and set TOSCA template properties of the IAM_TOSCA_NODE_TYPE
+        // node
+        Map<String, String> resourceMetadata = new HashMap<>();
+        resourceMetadata.put(ISSUER, issuerNode);
+        resourceMetadata.put(CLIENT_ID, clientCreated.get(CLIENT_ID));
+        resourceMetadata.put("registration_access_token",
+            clientCreated.get("registration_access_token"));
+        resource.setMetadata(resourceMetadata);
+        iamTemplateOutput.put(nodeName, resourceMetadata);
+
+        if (!orchestratorClients.containsKey(issuerNode)) {
+          String errorMessage = String.format("There is no orchestrator client belonging to the "
+              + "identity provider: %s. Impossible to set the ownership of the client with "
+              + "client_id %s", issuerNode, clientCreated.get(CLIENT_ID));
+          LOG.warn(errorMessage);
+        } else {
+          try {
+            // Get the orchestrator client related to the issuer of the node and extract
+            // client_id and client_secret
+            RegisteredClient orchestratorClient = orchestratorClients.get(issuerNode);
+            String orchestratorClientId = orchestratorClient.getClientId();
+            String orchestratorClientSecret = orchestratorClient.getClientSecret();
+
+            // Request a token with client_credentials with the orchestrator client, when
+            // necessary
+            if (iamTemplateInput.get(nodeName).get(OWNER) != null
+                || issuerNode.equals(issuerUser)) {
+              tokenCredentials = iamService.getTokenClientCredentials(restTemplate,
+                  orchestratorClientId, orchestratorClientSecret,
+                  iamService.getOrchestratorScopes(), wellKnownResponse.getTokenEndpoint());
+            }
+            // Assign ownership for the client when possible
+            if (iamTemplateInput.get(nodeName).get(OWNER) != null) {
+              iamService.assignOwnership(restTemplate, clientCreated.get(CLIENT_ID), issuerNode,
+                  iamTemplateInput.get(nodeName).get(OWNER), tokenCredentials);
+            }
+            if (iamTemplateInput.get(nodeName).get(OWNER) == null
+                && issuerNode.equals(issuerUser)) {
+              iamService.assignOwnership(restTemplate, clientCreated.get(CLIENT_ID), issuerNode,
+                  sub, tokenCredentials);
+            }
+          } catch (IamServiceException e) {
+            if (tokenCredentials == null) {
+              String errorMessage = String.format(
+                  "Impossible to set the ownership of the client "
+                      + "with client_id %s and issuer %s",
+                  clientCreated.get(CLIENT_ID), issuerNode);
+              LOG.warn(errorMessage);
+            }
+            // If some error occurred, do not delete all the clients,
+            // just do not set the owner of a problem customer
+          }
+        }
       }
     }
-    toscaService.setDeploymentTags(ar,
-        orchestratorProperties.getUrl().toString(),
-        deployment.getId(),
-        email);
+
+    // Update the template with properties of IAM_TOSCA_NODE_TYPE nodes
+    toscaService.setDeploymentClientIam(ar, iamTemplateOutput);
 
     String imCustomizedTemplate = toscaService.serialize(ar);
+
     // Deploy on IM
     try {
-      String infrastructureId =
-          executeWithClientForResult(cloudProviderEndpoints, requestedWithToken,
-              client -> client.createInfrastructureAsync(imCustomizedTemplate,
-                BodyContentType.TOSCA)).getInfrastructureId();
+      String infrastructureId = executeWithClientForResult(cloudProviderEndpoints,
+          requestedWithToken,
+          client -> client.createInfrastructureAsync(imCustomizedTemplate, BodyContentType.TOSCA))
+              .getInfrastructureId();
       LOG.info("InfrastructureId for deployment <{}> is: {}", deploymentMessage.getDeploymentId(),
           infrastructureId);
       deployment.setEndpoint(infrastructureId);
     } catch (ImClientException ex) {
+      iamService.deleteAllClients(restTemplate, resources);
       throw handleImClientException(ex);
     }
+
     return true;
   }
 
@@ -259,15 +438,13 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         case FAILED:
         case UNCONFIGURED:
           Optional<String> additionalErrorInfo = getAdditionalErrorInfo(deploymentMessage);
-          StringBuilder sb =
-              new StringBuilder(
-                  "Some error occurred during the contextualization of the IM infrastructure\n")
-                      .append(infrastructureState.getFormattedInfrastructureStateString());
+          StringBuilder sb = new StringBuilder(
+              "Some error occurred during the contextualization of the IM infrastructure\n")
+                  .append(infrastructureState.getFormattedInfrastructureStateString());
           additionalErrorInfo.ifPresent(s -> sb.append("\n").append(s));
 
           throw new BusinessWorkflowException(ErrorCode.CLOUD_PROVIDER_ERROR,
-              "Error deploying the infrastructure",
-              new DeploymentException(sb.toString()));
+              "Error deploying the infrastructure", new DeploymentException(sb.toString()));
         default:
           return false;
       }
@@ -326,17 +503,15 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     Deployment deployment = getDeployment(deploymentMessage);
 
     Map<Boolean, Set<Resource>> resources =
-        resourceRepository
-            .findByDeployment_id(deployment.getId())
-            .stream()
-            .collect(Collectors.partitioningBy(resource ->
-              (resource.getIaasId() != null && resource.getMetadata() != null),
+        resourceRepository.findByDeployment_id(deployment.getId()).stream()
+            .collect(Collectors.partitioningBy(
+                resource -> (resource.getIaasId() != null && resource.getMetadata() != null),
                 Collectors.toSet()));
     StringBuilder sb = new StringBuilder();
     sb.append("[");
     boolean first = true;
     for (Resource resource : resources.get(true)) {
-      Map<String,String> resourceMetadata = resource.getMetadata();
+      Map<String, String> resourceMetadata = resource.getMetadata();
       if (resourceMetadata != null && resourceMetadata.containsKey(VMINFO)) {
         if (!first) {
           sb.append(",");
@@ -360,10 +535,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
 
     try {
-      deployment
-          .setOutputs(executeWithClientForResult(cloudProviderEndpoints, requestedWithToken,
-              client -> client.getInfrastructureOutputs(deployment.getEndpoint()))
-                  .getOutputs());
+      deployment.setOutputs(executeWithClientForResult(cloudProviderEndpoints, requestedWithToken,
+          client -> client.getInfrastructureOutputs(deployment.getEndpoint())).getOutputs());
     } catch (ImClientException exception) {
       throw handleImClientException(exception);
     }
@@ -432,15 +605,9 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
       InfrastructureState infrastructureState = executeWithClientForResult(cloudProviderEndpoints,
           requestedWithToken, client -> client.getInfrastructureState(deployment.getEndpoint()));
-      Set<String> exsistingVms =
-          Optional
-              .ofNullable(infrastructureState.getVmStates())
-              .map(Map::keySet)
-              .orElseGet(LinkedHashSet::new);
-      deployment
-          .getResources()
-          .stream()
-          .filter(resource -> resource.getIaasId() != null)
+      Set<String> exsistingVms = Optional.ofNullable(infrastructureState.getVmStates())
+          .map(Map::keySet).orElseGet(LinkedHashSet::new);
+      deployment.getResources().stream().filter(resource -> resource.getIaasId() != null)
           .forEach(resource -> {
             if (!exsistingVms.remove(resource.getIaasId())) {
               resource.setIaasId(null); // exclude it from the IM invocation so we will not get 404
@@ -459,35 +626,24 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
     updateResources(deployment, deployment.getStatus());
 
-    boolean newResourcesOnDifferentService = !chosenCloudProviderEndpoint
-            .getCpComputeServiceId()
-            .equals(deployment.getCloudProviderEndpoint().getCpComputeServiceId());
+    boolean newResourcesOnDifferentService = !chosenCloudProviderEndpoint.getCpComputeServiceId()
+        .equals(deployment.getCloudProviderEndpoint().getCpComputeServiceId());
 
-    ComputeService computeService = deploymentMessage
-        .getCloudServicesOrderedIterator()
-        .firstService(ComputeService.class);
+    ComputeService computeService =
+        deploymentMessage.getCloudServicesOrderedIterator().firstService(ComputeService.class);
 
     if (deploymentMessage.isHybrid()) {
-      toscaService.setHybridUpdateDeployment(newAr,
-          newResourcesOnDifferentService,
-          computeService.getPublicNetworkName(),
-          computeService.getPrivateNetworkName(),
+      toscaService.setHybridUpdateDeployment(newAr, newResourcesOnDifferentService,
+          computeService.getPublicNetworkName(), computeService.getPrivateNetworkName(),
           computeService.getPrivateNetworkCidr());
     }
 
-    Map<String, NodeTemplate> newNodes =
-        Optional
-            .ofNullable(newAr.getTopology())
-            .map(Topology::getNodeTemplates)
-            .orElseGet(Collections::emptyMap);
+    Map<String, NodeTemplate> newNodes = Optional.ofNullable(newAr.getTopology())
+        .map(Topology::getNodeTemplates).orElseGet(Collections::emptyMap);
 
-    deployment
-        .getResources()
-        .stream()
-        .collect(Collectors.groupingBy(Resource::getToscaNodeName))
+    deployment.getResources().stream().collect(Collectors.groupingBy(Resource::getToscaNodeName))
         .forEach((name, resources) -> {
-          Optional<NodeTemplate> optionalNewNode = CommonUtils
-              .getFromOptionalMap(newNodes, name);
+          Optional<NodeTemplate> optionalNewNode = CommonUtils.getFromOptionalMap(newNodes, name);
           if (!optionalNewNode.isPresent()) {
             // no node with same name in updated template
             resources.forEach(resource -> {
@@ -497,41 +653,33 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           } else {
             NodeTemplate newNode = optionalNewNode.get();
             String toscaType = newNode.getType();
-            Map<Boolean, List<Resource>> resourcesWithRightType = resources
-                .stream()
-                .collect(Collectors.partitioningBy(
-                    resource -> toscaType.equals(resource.getToscaNodeType())));
-            resourcesWithRightType
-                .get(false)
-                .forEach(resource -> {
-                  resource.setState(NodeStates.DELETING);
-                  resourcesToRemove.add(resource);
-                });
+            Map<Boolean, List<Resource>> resourcesWithRightType =
+                resources.stream().collect(Collectors
+                    .partitioningBy(resource -> toscaType.equals(resource.getToscaNodeType())));
+            resourcesWithRightType.get(false).forEach(resource -> {
+              resource.setState(NodeStates.DELETING);
+              resourcesToRemove.add(resource);
+            });
 
             List<String> removalList = toscaService.getRemovalList(newNode);
             toscaService.removeRemovalList(newNode);
 
             removalList.forEach(resourceId -> {
-              Resource resource =
-                  resourcesWithRightType
-                      .get(true)
-                      .stream()
-                      .filter(elem -> resourceId.equals(elem.getId()))
-                      .collect(
-                          MoreCollectors.toOptional())
-                      .orElseThrow(() -> new DeploymentException(
-                          String.format("Unknown resource with id %s, name %s and type %s",
-                              resourceId, name, toscaType)));
+              Resource resource = resourcesWithRightType.get(true).stream()
+                  .filter(elem -> resourceId.equals(elem.getId()))
+                  .collect(MoreCollectors.toOptional())
+                  .orElseThrow(() -> new DeploymentException(
+                      String.format("Unknown resource with id %s, name %s and type %s", resourceId,
+                          name, toscaType)));
               resource.setState(NodeStates.DELETING);
               resourcesToRemove.add(resource);
             });
             long newCount = toscaService.getCount(newNode).orElse(1L);
-            List<Resource> remainingResources = resources
-                .stream()
-                .filter(resource -> resource.getState() != NodeStates.DELETING)
-                // null (thus no IaaS resources) first
-                .sorted(Comparator.comparing(resource -> resource.getIaasId() != null ? 1 : 0))
-                .collect(Collectors.toList());
+            List<Resource> remainingResources =
+                resources.stream().filter(resource -> resource.getState() != NodeStates.DELETING)
+                    // null (thus no IaaS resources) first
+                    .sorted(Comparator.comparing(resource -> resource.getIaasId() != null ? 1 : 0))
+                    .collect(Collectors.toList());
 
             for (int i = 0; i < remainingResources.size() - newCount; ++i) {
               Resource resource = remainingResources.get(i);
@@ -543,9 +691,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
     newNodes.forEach((name, newNode) -> {
 
-      List<Resource> resources = deployment
-          .getResources()
-          .stream()
+      List<Resource> resources = deployment.getResources().stream()
           .filter(resource -> name.equals(resource.getToscaNodeName())
               && newNode.getType().equals(resource.getToscaNodeType())
               && resource.getState() != NodeStates.DELETING)
@@ -573,10 +719,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     // FIXME: There's not check if the Template actually changed!
     deployment.setTemplate(toscaService.updateTemplate(template));
 
-    resourcesToRemove
-        .stream()
-        .map(Resource::getIaasId)
-        .filter(Objects::nonNull)
+    resourcesToRemove.stream().map(Resource::getIaasId).filter(Objects::nonNull)
         .forEach(vmsToRemove::add);
 
     try {
@@ -599,9 +742,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
       cloudProviderEndpoints.add(0, chosenCloudProviderEndpoint);
 
-      executeWithClientForResult(cloudProviderEndpoints,
-          requestedWithToken, client -> client.addResource(deployment.getEndpoint(),
-              templateToDeploy, BodyContentType.TOSCA));
+      executeWithClientForResult(cloudProviderEndpoints, requestedWithToken, client -> client
+          .addResource(deployment.getEndpoint(), templateToDeploy, BodyContentType.TOSCA));
     } catch (ImClientException exception) {
       throw handleImClientException(exception);
     }
@@ -615,11 +757,17 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   @Override
   public boolean doUndeploy(DeploymentMessage deploymentMessage) {
+    restTemplate = new RestTemplate();
     Deployment deployment = getDeployment(deploymentMessage);
+
+    Map<Boolean, Set<Resource>> resources =
+        resourceRepository.findByDeployment_id(deployment.getId()).stream().collect(Collectors
+            .partitioningBy(resource -> resource.getIaasId() != null, Collectors.toSet()));
 
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
 
     String deploymentEndpoint = deployment.getEndpoint();
+
     if (deploymentEndpoint != null) {
       deployment.setTask(Task.DEPLOYER);
 
@@ -638,6 +786,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
         throw handleImClientException(exception);
       }
     }
+
+    // Delete all IAM clients if there are resources of type IAM_TOSCA_NODE_TYPE
+    iamService.deleteAllClients(restTemplate, resources);
+
     return true;
   }
 
@@ -655,9 +807,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     List<CloudProviderEndpoint> cloudProviderEndpoints =
         deployment.getCloudProviderEndpoint().getAllCloudProviderEndpoint();
     try {
-      InfrastructureState infrastructureState =
-          executeWithClientForResult(cloudProviderEndpoints, requestedWithToken,
-              client -> client.getInfrastructureState(deploymentEndpoint));
+      InfrastructureState infrastructureState = executeWithClientForResult(cloudProviderEndpoints,
+          requestedWithToken, client -> client.getInfrastructureState(deploymentEndpoint));
 
       LOG.debug(infrastructureState.getFormattedInfrastructureStateString());
 
@@ -693,8 +844,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
    *
    */
   private void bindResources(DeploymentMessage deploymentMessage,
-      InfrastructureState infrastructureState)
-      throws ImClientException {
+      InfrastructureState infrastructureState) throws ImClientException {
 
     Deployment deployment = getDeployment(deploymentMessage);
     String infrastructureId = deployment.getEndpoint();
@@ -707,38 +857,30 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     Multimap<String, String> vmMap = HashMultimap.create();
     Map<String, VirtualMachineInfo> vmMapInfo = new HashMap<>();
     for (String vmId : infrastructureState.getVmStates().keySet()) {
-      VirtualMachineInfo vmInfo =
-          executeWithClientForResult(cloudProviderEndpoints, requestedWithToken,
-              client -> client.getVmInfo(infrastructureId, vmId));
-      vmInfo
-          .getVmProperties()
-          .stream()
-          .filter(Objects::nonNull)
+      VirtualMachineInfo vmInfo = executeWithClientForResult(cloudProviderEndpoints,
+          requestedWithToken, client -> client.getVmInfo(infrastructureId, vmId));
+      vmInfo.getVmProperties().stream().filter(Objects::nonNull)
           .filter(properties -> "system".equals(properties.get("class")))
-          .map(properties -> properties.get("id"))
-          .filter(Objects::nonNull)
-          .map(Object::toString)
-          .findAny()
-          .ifPresent(toscaNodeName -> {
+          .map(properties -> properties.get("id")).filter(Objects::nonNull).map(Object::toString)
+          .findAny().ifPresent(toscaNodeName -> {
             vmMap.put(toscaNodeName, vmId);
             vmMapInfo.put(vmId, vmInfo);
           });
     }
 
     Map<Boolean, Set<Resource>> resources =
-        resourceRepository
-            .findByDeployment_id(deployment.getId())
-            .stream()
-            .collect(Collectors.partitioningBy(resource -> resource.getIaasId() != null,
-                Collectors.toSet()));
+        resourceRepository.findByDeployment_id(deployment.getId()).stream().collect(Collectors
+            .partitioningBy(resource -> resource.getIaasId() != null, Collectors.toSet()));
 
     for (Resource bindedResource : resources.get(true)) {
       boolean vmIsPresent =
           vmMap.get(bindedResource.getToscaNodeName()).remove(bindedResource.getIaasId());
       if (!vmIsPresent) {
         if (bindedResource.getState() != NodeStates.DELETING) {
-          // the node isn't supposed to be deleted -> put it again in the pool of bindable resources
-          // TODO maybe throw an error? Eventual consistency (for update) should already have been
+          // the node isn't supposed to be deleted -> put it again in the pool of bindable
+          // resources
+          // TODO maybe throw an error? Eventual consistency (for update) should already
+          // have been
           // handled
           LOG.warn("Resource <{}> in status {} unbinded from VM <{}> which doesn't exist anymore.",
               bindedResource.getId(), bindedResource.getState(), bindedResource.getIaasId());
@@ -768,9 +910,8 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     }
   }
 
-  private void writeVmInfoToResource(Resource bindedResource,
-      VirtualMachineInfo vmInfo) {
-    Map<String,String> resourceMetadata = bindedResource.getMetadata();
+  private void writeVmInfoToResource(Resource bindedResource, VirtualMachineInfo vmInfo) {
+    Map<String, String> resourceMetadata = bindedResource.getMetadata();
     if (resourceMetadata == null) {
       resourceMetadata = new HashMap<>();
       bindedResource.setMetadata(resourceMetadata);
@@ -778,16 +919,15 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     VirtualMachineInfo vmOldInfo = null;
     if (resourceMetadata.containsKey(VMINFO)) {
       try {
-        vmOldInfo = new ObjectMapper().readValue(resourceMetadata.get(VMINFO),
-            VirtualMachineInfo.class);
+        vmOldInfo =
+            new ObjectMapper().readValue(resourceMetadata.get(VMINFO), VirtualMachineInfo.class);
       } catch (IOException e) {
         throw new DeploymentException("Error deserializing VM Info", e);
       }
     }
     if (vmOldInfo == null || !vmInfo.equals(vmOldInfo)) {
       try {
-        resourceMetadata.put(VMINFO,
-            new ObjectMapper().writeValueAsString(vmInfo));
+        resourceMetadata.put(VMINFO, new ObjectMapper().writeValueAsString(vmInfo));
       } catch (IOException e) {
         throw new DeploymentException("Error serializing VM Info", e);
       }
@@ -798,8 +938,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
     if (ex instanceof ImClientServerErrorException) {
       ResponseError responseError = ((ImClientServerErrorException) ex).getResponseError();
       return new BusinessWorkflowException(ErrorCode.CLOUD_PROVIDER_ERROR,
-          responseError.getFormattedErrorMessage(),
-          ex);
+          responseError.getFormattedErrorMessage(), ex);
     } else if (ex instanceof ImClientErrorException) {
       ResponseError responseError = ((ImClientErrorException) ex).getResponseError();
       return new DeploymentException(
@@ -810,8 +949,10 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   @Override
   protected void updateResources(Deployment deployment, Status status) {
-    // // WARNING: In IM we don't have the resource mapping yet, so we update all the resources
-    // // FIXME Remove once IM handles single nodes state update!!!! And pay attention to the
+    // // WARNING: In IM we don't have the resource mapping yet, so we update all
+    // the resources
+    // // FIXME Remove once IM handles single nodes state update!!!! And pay
+    // attention to the
     // // AbstractDeploymentProviderService.updateOnError method!
     super.updateResources(deployment, status);
   }
@@ -827,11 +968,11 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
       accessToken = oauth2TokenService.getAccessToken(requestedWithToken);
     }
 
-    Resource resource = resourceRepository.findByIdAndDeployment_id(
-             deploymentMessage.getResourceId(),
-             deploymentMessage.getDeploymentId()).orElseThrow(() ->
-              new IllegalArgumentException(
-              String.format("Resource <%s> in deployment <%s> not found",
+    Resource resource = resourceRepository
+        .findByIdAndDeployment_id(deploymentMessage.getResourceId(),
+            deploymentMessage.getDeploymentId())
+        .orElseThrow(() -> new IllegalArgumentException(
+            String.format("Resource <%s> in deployment <%s> not found",
                 deploymentMessage.getResourceId(), deploymentMessage.getDeploymentId())));
 
     List<CloudProviderEndpoint> cloudProviderEndpoints =
@@ -868,12 +1009,12 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
     Deployment deployment = getDeployment(deploymentMessage);
 
-    Resource resource = resourceRepository.findByIdAndDeployment_id(
-             deploymentMessage.getResourceId(),
-             deploymentMessage.getDeploymentId()).orElseThrow(() -> new IllegalArgumentException(
-              String.format("Resource <%s> in deployment <%s> not found",
-                            deploymentMessage.getResourceId(),
-                            deploymentMessage.getDeploymentId())));
+    Resource resource = resourceRepository
+        .findByIdAndDeployment_id(deploymentMessage.getResourceId(),
+            deploymentMessage.getDeploymentId())
+        .orElseThrow(() -> new IllegalArgumentException(
+            String.format("Resource <%s> in deployment <%s> not found",
+                deploymentMessage.getResourceId(), deploymentMessage.getDeploymentId())));
 
     final OidcTokenId requestedWithToken = deploymentMessage.getRequestedWithToken();
 
@@ -886,9 +1027,7 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
           executeWithClientForResult(cloudProviderEndpoints, requestedWithToken,
               client -> client.getVmInfo(deployment.getEndpoint(), resource.getIaasId()));
 
-      String state = (String) vmInfo.getVmProperties()
-          .stream()
-          .filter(Objects::nonNull)
+      String state = (String) vmInfo.getVmProperties().stream().filter(Objects::nonNull)
           .filter(properties -> "system".equals(properties.get("class")))
           .map(properties -> properties.get("state")).findAny().get();
 
@@ -922,34 +1061,34 @@ public class ImServiceImpl extends AbstractDeploymentProviderService {
 
   @Override
   public void validateAction(ActionMessage deploymentMessage) {
-    Resource resource = resourceRepository.findByIdAndDeployment_id(
-             deploymentMessage.getResourceId(),
-             deploymentMessage.getDeploymentId()).orElseThrow(() ->
-              new IllegalArgumentException(
-              String.format("Resource <%s> in deployment <%s> not found",
+    Resource resource = resourceRepository
+        .findByIdAndDeployment_id(deploymentMessage.getResourceId(),
+            deploymentMessage.getDeploymentId())
+        .orElseThrow(() -> new IllegalArgumentException(
+            String.format("Resource <%s> in deployment <%s> not found",
                 deploymentMessage.getResourceId(), deploymentMessage.getDeploymentId())));
 
     if (!toscaService.isOfToscaType(resource, ToscaConstants.Nodes.Types.COMPUTE)) {
-      throw new BadRequestException("Actions not supported on node of type "
-                                     + resource.getToscaNodeType().toString());
+      throw new BadRequestException(
+          "Actions not supported on node of type " + resource.getToscaNodeType().toString());
     }
 
     String action = deploymentMessage.getAction();
     switch (action) {
       case "start":
         LOG.debug("Validating request to start VM of deployment <{}>",
-                  deploymentMessage.getDeploymentId());
-        if (! resource.getState().equals(NodeStates.STOPPED)) {
-          throw new BadRequestException("Cannot start node in state "
-                                        + resource.getState().toString());
+            deploymentMessage.getDeploymentId());
+        if (!resource.getState().equals(NodeStates.STOPPED)) {
+          throw new BadRequestException(
+              "Cannot start node in state " + resource.getState().toString());
         }
         break;
       case "stop":
         LOG.info("Validating request to stio VM of deployment <{}>",
-                 deploymentMessage.getDeploymentId());
-        if (! resource.getState().equals(NodeStates.STARTED)) {
-          throw new BadRequestException("Cannot stop node in state "
-                                        + resource.getState().toString());
+            deploymentMessage.getDeploymentId());
+        if (!resource.getState().equals(NodeStates.STARTED)) {
+          throw new BadRequestException(
+              "Cannot stop node in state " + resource.getState().toString());
         }
         break;
       default:

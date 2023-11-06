@@ -18,13 +18,13 @@
 package it.reply.orchestrator.config.specific;
 
 import com.github.springtestdbunit.DbUnitTestExecutionListener;
-
 import it.reply.orchestrator.IntegrationTest;
 import it.reply.orchestrator.annotation.SpringTestProfile;
-
 import org.junit.experimental.categories.Category;
 import org.junit.runner.RunWith;
+import org.mitre.openid.connect.client.service.ClientConfigurationService;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestExecutionListeners;
 import org.springframework.test.context.TestExecutionListeners.MergeMode;
@@ -39,4 +39,6 @@ import org.springframework.transaction.annotation.Transactional;
 @TestExecutionListeners(listeners = { DbUnitTestExecutionListener.class },
     mergeMode = MergeMode.MERGE_WITH_DEFAULTS)
 public abstract class WebAppConfigurationAwareIT {
+  @MockBean
+  private ClientConfigurationService staticClientConfigurationService;
 }
