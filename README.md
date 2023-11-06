@@ -4,14 +4,11 @@ INDIGO PaaS Orchestrator
 ============================
 
 
-[![GitHub license](https://img.shields.io/github/license/indigo-dc/orchestrator.svg?maxAge=2592000&style=flat-square)](https://github.com/indigo-dc/orchestrator/blob/master/LICENSE)
-[![GitHub release](https://img.shields.io/github/release/indigo-dc/orchestrator.svg?maxAge=3600&style=flat-square)](https://github.com/indigo-dc/orchestrator/releases/latest)
-
-[![Travis](https://img.shields.io/travis/indigo-dc/orchestrator/master.svg?maxAge=3600&style=flat-square)](https://travis-ci.org/indigo-dc/orchestrator)
-[![Codecov](https://img.shields.io/codecov/c/github/indigo-dc/orchestrator.svg?maxAge=3600&style=flat-square)](https://codecov.io/gh/indigo-dc/orchestrator)
-[![SonarQube Tech Debt](https://img.shields.io/sonar/https/sonarcloud.io/it.reply%3Aorchestrator/tech_debt.svg?maxAge=3600&style=flat-square)](https://sonarcloud.io/dashboard?id=it.reply%3Aorchestrator)
-[![Known Vulnerabilities](https://snyk.io/test/github/indigo-dc/orchestrator/badge.svg?style=flat-square)](https://snyk.io/test/github/indigo-dc/orchestrator)
-[![Jenkins](https://jenkins.indigo-datacloud.eu/job/Pipeline-as-code/job/orchestrator/job/master/badge/icon?style=flat-square)](https://jenkins.indigo-datacloud.eu/job/Pipeline-as-code/job/orchestrator/job/master/)
+[![GitHub license](https://img.shields.io/github/license/indigo-paas/orchestrator.svg?maxAge=2592000&style=flat-square)](https://github.com/indigo-paas/orchestrator/blob/master/LICENSE)
+[![GitHub release](https://img.shields.io/github/release/indigo-paas/orchestrator.svg?maxAge=3600&style=flat-square)](https://github.com/indigo-paas/orchestrator/releases/latest)
+[![Coverage](https://sonarcloud.io/api/project_badges/measure?project=indigo-paas_orchestrator&metric=coverage)](https://sonarcloud.io/summary/new_code?id=indigo-paas_orchestrator)
+[![Technical Debt](https://sonarcloud.io/api/project_badges/measure?project=indigo-paas_orchestrator&metric=sqale_index)](https://sonarcloud.io/summary/new_code?id=indigo-paas_orchestrator)
+[![Vulnerabilities](https://sonarcloud.io/api/project_badges/measure?project=indigo-paas_orchestrator&metric=vulnerabilities)](https://sonarcloud.io/summary/new_code?id=indigo-paas_orchestrator)
 
 The INDIGO PaaS Orchestrator is a component of the PaaS layer that allows to instantiate resources on Cloud Management Frameworks (like [OpenStack](https://www.openstack.org/) and [OpenNebula](http://opennebula.org/)), [Mesos](http://mesos.apache.org/) and [Kubernetes](https://kubernetes.io/) clusters.
 
@@ -32,7 +29,7 @@ The PaaS Orchestrator needs the presence of the following INDIGO services:
 * [How to build](gitbook/how_to_build.md)
 * [How to deploy](gitbook/how_to_deploy.md)
 * [How to upgrade](gitbook/how_to_upgrade.md)
-* [REST APIs & Java Doc](http://indigo-dc.github.io/orchestrator/)
+* [REST APIs & Java Doc](http://indigo-paas.github.io/orchestrator/)
 * [Service Reference Card](gitbook/service_reference_card.md)
 
 ### Acknowledgments:
